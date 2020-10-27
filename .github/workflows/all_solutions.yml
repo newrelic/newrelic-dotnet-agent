@@ -1,9 +1,8 @@
 name: .NET Agent All Solutions Build
 
+# Does not run on PUSH since we have already ran all the test
 on:
   pull_request:
-    branches: [ main ]
-  push:
     branches: [ main ]
   workflow_dispatch:
 
@@ -11,11 +10,20 @@ env:
   scripts_path: ${{ github.workspace }}\build\scripts
   tools_path: ${{ github.workspace }}\build\Tools
   DOTNET_NOLOGO: true
-  #<other env vars here>
 
 jobs:
 
+  cancel-previous-workflow-runs:
+    name: Cancel Previous Runs
+    runs-on: ubuntu-latest
+    steps:
+    - uses: rokroskar/workflow-run-cleanup-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-test-windows-profiler:
+    needs: cancel-previous-workflow-runs
+    if: ${{ always() }}
     name: Build Windows Profiler
 
     runs-on: windows-2019
@@ -24,13 +32,27 @@ jobs:
       profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
       profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
       output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
-      #<other env vars here>
+      profiler_md5: ""
 
     steps:
     - name: Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
+
+    - name: MD5 Profiler
+      run: |
+        pip install checksumdir
+        $profsum = checksumdir -a md5 ${{ env.profiler_path }}
+        echo "profiler_md5=${profsum}" >> $GITHUB_ENV
+      shell: powershell
+
+    - name: Cache Profiler  https://unix.stackexchange.com/questions/35832/how-do-i-get-the-md5-sum-of-a-directorys-contents-as-one-sum
+      id: cache-profiler-win
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
+        key: ${{ runner.os }}-primes
 
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.0.1
@@ -64,12 +86,13 @@ jobs:
     - name: Archive Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: profiler-${{ github.run_id }}
-        path: |
-          ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
+        name: profiler
+        path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
         if-no-files-found: error
 
   build-test-linux-profiler:
+    needs: cancel-previous-workflow-runs
+    if: ${{ always() }}
     name: Build Linux Profiler
 
     runs-on: ubuntu-18.04
@@ -108,7 +131,7 @@ jobs:
     - name: Archive Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: profiler-${{ github.run_id }}
+        name: profiler
         path: |
           ${{ github.workspace }}/src/Agent/_profilerBuild/
         if-no-files-found: error
@@ -147,7 +170,7 @@ jobs:
     - name: Download Profiler Artifacts Before Agent Build
       uses: actions/download-artifact@v2
       with:
-        name: profiler-${{ github.run_id }}
+        name: profiler
         path: ${{ github.workspace }}/src/Agent/_profilerBuild/
     
     - name: Install dependencies for FullAgent.sln
@@ -171,7 +194,7 @@ jobs:
     - name: Archive FullAgent Home folders
       uses: actions/upload-artifact@v2
       with:
-        name: homefolders-${{ github.run_id }}
+        name: homefolders
         path: |
           ${{ github.workspace }}\src\Agent\newrelichome_x64
           ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr
@@ -249,90 +272,9 @@ jobs:
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
-        name: test-results-${{ github.run_id }}
+        name: test-results
         path: ${{ github.workspace }}\TestResults
         if-no-files-found: error
-
-  publish-test-results:
-    needs: build-test-fullagent-msi
-    if: ${{ always() }}
-    name: Publish Test Results
-
-    runs-on: windows-2019
-
-    env:
-      results_name: ""
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          ref: gh-pages
-          fetch-depth: 0
-
-      - name: Download Test Results Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: test-results-${{ github.run_id }}
-          path: testresults
-
-      - name: Move Test Results
-        run: |
-          Write-Host "Change to testresults"
-          cd testresults
-
-          Write-Host "Create the folder"
-          $resultname = "fullagent_msi-${{ github.run_id }}".ToLower().Replace(" ", "")
-          Write-Host "::set-env name=results_name::$resultname"
-
-          Write-Host "Check if testresults folder exists, create if not."
-          if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults" )) {
-            New-Item -Path "${{ github.workspace }}\docs" -Name "testresults" -ItemType "directory" }
-          
-          Write-Host "Check if test run results ($resultname) folder exists, create if not."
-          if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults\$resultname" )) {
-            New-Item -Path "${{ github.workspace }}\docs\testresults" -Name "$resultname" -ItemType "directory" }
-
-          Write-Host "Copy the files and overwrite if already exists"
-          Copy-Item .\* -Destination ${{ github.workspace }}\docs\testresults\$resultname\ -Force
-
-          Write-Host "Confirm Folder Exists"
-          Test-Path "${{ github.workspace }}\docs\testresults\$resultname"
-        shell: powershell
-
-      - name: Commit files
-        run: |
-          Write-Host "git config"
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
-          Write-Host "Stage files in git"
-          $ErrorActionPreference = 'Continue'
-          git add -A
-
-          Write-Host "git commit"
-          git commit -am "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
-
-          Write-Host "git pull"
-          git pull
-        shell: powershell
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          branch: gh-pages
-          github_token: ${{ secrets.GITHUB_TOKEN }}    
-
-      - name: Create Check-run with test results
-        uses: LouisBrunner/checks-action@v1.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          name: "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
-          status: completed
-          conclusion: neutral
-          output: |
-            { "summary": "${{ steps.test.outputs.summary }}",
-            "text_description": "[FullAgent Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/agent-results.html) [AWS Lambda Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/lambda-results.html" }
 
   build-integration-tests:
     needs: build-test-fullagent-msi
@@ -367,7 +309,7 @@ jobs:
     - name: Archive Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: integrationtests-${{ github.run_id }}
+        name: integrationtests
         path: |
           ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
           ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
@@ -404,6 +346,17 @@ jobs:
         Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
         MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
       shell: powershell
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: unboundedintegrationtests
+        path: |
+          ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
+          ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
+          ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
+          !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
+        if-no-files-found: error
 
   build-platform-tests: 
     needs: build-test-fullagent-msi
@@ -458,86 +411,199 @@ jobs:
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
       
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
-      - name: Set up secrets
-        env:
-          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
-        run: |
-          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
-        shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
+    - name: Set up secrets
+      env:
+        INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+      run: |
+        "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+      shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
-      - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
-        with:
-          name: homefolders-${{ github.run_id }}
-          path: src/Agent
+    - name: Download Agent Home Folders
+      uses: actions/download-artifact@v2
+      with:
+        name: homefolders
+        path: src/Agent
 
-      - name: Download Integration Test Artifacts
-        uses: actions/download-artifact/@v2
-        with:
-          name: integrationtests-${{ github.run_id }}
-          # Should not need a path because the integration test artifacts are archived with the full directory structure
+    - name: Download Integration Test Artifacts
+      uses: actions/download-artifact/@v2
+      with:
+        name: integrationtests
+        # Should not need a path because the integration test artifacts are archived with the full directory structure
 
-      - name: Install dependencies
-        run: |
-          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-          pip install aiohttp
-        shell: powershell
+    - name: Install dependencies
+      run: |
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+        pip install aiohttp
+      shell: powershell
 
-      - name: Run Integration Tests
-        run: |
-          if ($Env:enhanced_logging -eq $True) {
-            Write-Host "List ports in use"
-            netstat -no  
-          }
+    - name: Run Integration Tests
+      run: |
+        if ($Env:enhanced_logging -eq $True) {
+          Write-Host "List ports in use"
+          netstat -no  
+        }
 
-          Write-Host "Run tests"
-          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel none -xmlv1 C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
-          
-          if ($Env:enhanced_logging -eq $True) {
-            Write-Host "Get HostableWebCore errors (if any)"
-            Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
-  
-            Write-Host "Get .NET Runtime errors (if any)"
-            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
-          }
-        shell: powershell
-
-      - name: Archive Test Artifacts
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: integration-test-artifacts-${{ matrix.namespace }}-${{ github.run_id }}
-          path: |
-            C:\IntegrationTestWorkingDirectory\**\*.log
-            C:\IntegrationTestWorkingDirectory\**\*.config
-            C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
-          if-no-files-found: error
-          
-  combine-integration-test-results:
-    needs: run-integration-tests
-    if: ${{ always() }}
-    name: Combine Integration Test Results
+        Write-Host "Run tests"
+        ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel none -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
         
+        if ($Env:enhanced_logging -eq $True) {
+          Write-Host "Get HostableWebCore errors (if any)"
+          Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
+
+          Write-Host "Get .NET Runtime errors (if any)"
+          Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+        }
+      shell: powershell
+
+    - name: Archive IntegrationTestWorkingDirectory on Failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: integration-test-artifacts
+        path: |
+          C:\IntegrationTestWorkingDirectory\**\*.log
+          C:\IntegrationTestWorkingDirectory\**\*.config
+        if-no-files-found: error
+
+    - name: Archive Test Artifacts
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: integration-test-artifacts
+        path: |
+          C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
+        if-no-files-found: error
+
+  run-unbounded-tests:
+    needs: [build-unbounded-tests]
+    name: Run Unbounded Tests
+
     runs-on: windows-2019
-        
+    strategy:
+      matrix:
+        namespace: [ Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, Oracle, Postgres, RabbitMq, Redis ]
+      fail-fast: false # we don't want one test failure in one namespace to kill the other runs
+
+    env:
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
+      unbounded_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net461/NewRelic.Agent.UnboundedIntegrationTests.dll
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+      enhanced_logging: false
+
     steps:
-      - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v2
-        
-      - name: Combine Integration Results
-        run: |
-          mkdir all-integration-test-results
-          Get-ChildItem -Path .\integration-test-artifacts* -Include *.xml -Recurse | ForEach-Object { cp $_.FullName .\all-integration-test-results }
-        shell: powershell
-        
-      - name: Upload combined artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: all-integration-test-results-${{ github.run_id }}
-          path: ./all-integration-test-results
-          if-no-files-found: error
+    - name: My IP
+      run: (Invoke-WebRequest -uri "http://ifconfig.me/ip").Content
+      shell: powershell
+      
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Download Agent Home Folders
+      uses: actions/download-artifact@v2
+      with:
+        name: homefolders
+        path: src/Agent
+
+    - name: Download Unbounded Integration Test Artifacts
+      uses: actions/download-artifact/@v2
+      with:
+        name: unboundedintegrationtests
+        # Should not need a path because the integration test artifacts are archived with the full directory structure
+    
+    - name: Setup TLS
+      run: |
+        $registryRootPath = "HKCU:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols"
+        $tls10 = "TLS 1.0"
+        $tls11 = "TLS 1.1"
+        $tls12 = "TLS 1.2"
+        $client = "Client"
+        $server = "Server"
+        $registryPaths = @(
+        "$registryRootPath\$tls10\$client",
+        "$registryRootPath\$tls10\$server",
+        "$registryRootPath\$tls11\$client",
+        "$registryRootPath\$tls11\$server",
+        "$registryRootPath\$tls12\$client",
+        "$registryRootPath\$tls12\$server"
+        )
+        $name = "Enabled"
+        $value = "1"
+        foreach ($registryPath in $registryPaths) {
+          if(!(Test-Path $registryPath)) {
+            New-Item -Path $registryPath -Force | Out-Null
+            New-ItemProperty -Path $registryPath -Name $name -Value $value -PropertyType DWORD -Force | Out-Null
+          }
+          else {
+            New-ItemProperty -Path $registryPath -Name $name -Value $value -PropertyType DWORD -Force | Out-Null
+          }
+        }  
+      shell: powershell
+
+    - name: Install dependencies
+      run: |
+        Write-Host "Installing HostableWebCore Feature"
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+        Write-Host "Installing Msmq Features"
+        Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server -All
+        Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP -All
+        Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Triggers -All
+
+        if ("${{ matrix.namespace }}" -eq "MsSql") {
+          Write-Host "Installing MSSQL CLI"
+          msiexec /i "${{ github.workspace }}\build\Tools\sqlncli.msi" IACCEPTSQLNCLILICENSETERMS=YES /quiet /qn /norestart
+          Start-Sleep 20 # Need to wait for install to finish -- takes only a few seconds, but we need to be sure.
+        }
+      shell: powershell
+
+    - name: Set up secrets
+      env:
+        INTEGRATION_TEST_SECRETS: ${{ secrets.UNBOUNDED_TEST_SECRETS }}
+      run: |
+        "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+      shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
+
+    - name: Run Unbounded Integration Tests
+      run: |
+        if ($Env:enhanced_logging -eq $True) {
+          Write-Host "List ports in use"
+          netstat -no  
+        }
+
+        ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel none -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+
+        if ($Env:enhanced_logging -eq $True) {
+          Write-Host "Get HostableWebCore errors (if any)"
+          Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
+
+          Write-Host "Get .NET Runtime errors (if any)"
+          Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+        }
+      shell: powershell
+
+    - name: Archive IntegrationTestWorkingDirectory on Failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: integration-test-artifacts
+        path: |
+          C:\IntegrationTestWorkingDirectory\**\*.log
+          C:\IntegrationTestWorkingDirectory\**\*.config
+        if-no-files-found: error
+
+    - name: Archive Test Artifacts
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: integration-test-artifacts
+        path: |
+          C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
+        if-no-files-found: error
