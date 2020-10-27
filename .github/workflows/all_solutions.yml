@@ -449,7 +449,7 @@ jobs:
         }
 
         Write-Host "Run tests"
-        ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel none -xmlv1 C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+        ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel none -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
         
         if ($Env:enhanced_logging -eq $True) {
           Write-Host "Get HostableWebCore errors (if any)"
@@ -578,7 +578,7 @@ jobs:
           netstat -no  
         }
 
-        ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel none -xmlv1 C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+        ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel none -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
 
         if ($Env:enhanced_logging -eq $True) {
           Write-Host "Get HostableWebCore errors (if any)"
