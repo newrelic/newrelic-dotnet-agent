@@ -4,6 +4,8 @@ name: .NET Agent All Solutions Build
 on:
   pull_request:
     branches: [ main ]
+  release:
+    types: [ published ]
   workflow_dispatch:
 
 env:
