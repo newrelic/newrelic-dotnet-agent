@@ -140,7 +140,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             testCase.UserAttributes.ForEach(attr => tx.AddCustomAttribute(attr.Key, attr.Value));
             tx.TransactionMetadata.SetCrossApplicationReferrerTripId("");
             // ACT
-            var browserMonitoringScript = _browserMonitoringScriptMaker.GetScript(tx);
+            var browserMonitoringScript = _browserMonitoringScriptMaker.GetScript(tx, null);
 
             // ASSERT
             var extractedConfigurationDataJson = Regex.Match(browserMonitoringScript, @"NREUM.info = (\{.+\})").Groups[1].Value;

@@ -263,9 +263,9 @@ namespace NewRelic.Agent.Api
         ///   &lt;body&gt;
         ///   ...
         /// </code></example>
-        public static string GetBrowserTimingHeader()
+        public static string GetBrowserTimingHeader(string? nonce)
         {
-            return _agentApiImplementation?.GetBrowserTimingHeader() ?? string.Empty;
+            return _agentApiImplementation?.GetBrowserTimingHeader(nonce) ?? string.Empty;
         }
 
         /// <summary> (This method is obsolete) gets browser timing footer. </summary>

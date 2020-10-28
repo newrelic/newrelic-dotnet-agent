@@ -10,12 +10,13 @@ using NewRelic.Core;
 using NewRelic.Core.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Web;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {
     public interface IBrowserMonitoringScriptMaker
     {
-        string GetScript(IInternalTransaction transaction);
+        string GetScript(IInternalTransaction transaction, string nonce);
     }
 
     public class BrowserMonitoringScriptMaker : IBrowserMonitoringScriptMaker
@@ -40,7 +41,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             _attribDefSvc = attribDefSvc;
         }
 
-        public string GetScript(IInternalTransaction transaction)
+        public string GetScript(IInternalTransaction transaction, string nonce)
         {
             if (string.IsNullOrEmpty(_configurationService.Configuration.BrowserMonitoringJavaScriptAgent))
                 return null;
@@ -73,11 +74,13 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             if (Log.IsFinestEnabled)
                 transaction.LogFinest("RUM: TryGetBrowserTimingHeader success.");
 
+            var scriptNonce = nonce is null ? "" : $@" nonce=""{HttpUtility.HtmlAttributeEncode(nonce)}""";
+
             // The JavaScript variable NREUMQ stands for New Relic End User Metric "Q". This was the name before marketing renamed "EUM" to "RUM".
             // We can't change the name of the variable since: (a) we have to be consistent across agents, and (b) it has to be in sync with the rum.js file which is downloaded from NR servers.
             var javascriptAgentConfiguration = $"window.NREUM||(NREUM={{}});NREUM.info = {browserConfigurationData.ToJsonString()}";
             var javascriptAgent = _configurationService.Configuration.BrowserMonitoringJavaScriptAgent;
-            return $"<script type=\"text/javascript\">{javascriptAgentConfiguration}</script><script type=\"text/javascript\">{javascriptAgent}</script>";
+            return $"<script type=\"text/javascript\"{scriptNonce}>{javascriptAgentConfiguration}</script><script type=\"text/javascript\"{scriptNonce}>{javascriptAgent}</script>";
         }
 
         private BrowserMonitoringConfigurationData GetBrowserConfigurationData(IInternalTransaction transaction, TransactionMetricName transactionMetricName, string licenseKey)

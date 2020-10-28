@@ -168,6 +168,7 @@ namespace NewRelic.Agent.Api
         /// <summary> Returns the HTML snippet to be inserted into the header of HTML pages to enable Real
         /// User Monitoring. The HTML will instruct the browser to fetch a small JavaScript file and
         /// start the page timer. Supports web applications only. </summary>
+        /// <param name="nonce">An optional per-request, cryptographic nonce used by a <c>Content-Security-Policy</c> <c>script-src</c> policy.</param>
         ///
         /// <returns> An HTML string to be embedded in a page header. </returns>
         ///
@@ -179,7 +180,7 @@ namespace NewRelic.Agent.Api
         ///   &lt;body&gt;
         ///   ...
         /// </code></example>
-        string GetBrowserTimingHeader();
+        string GetBrowserTimingHeader(string? nonce);
 
         /// <summary> (This method is obsolete) gets browser timing footer. </summary>
         ///
