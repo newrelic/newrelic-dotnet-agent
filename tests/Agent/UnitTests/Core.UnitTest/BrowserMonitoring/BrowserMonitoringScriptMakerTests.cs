@@ -85,9 +85,24 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
 
-            var script = _browserMonitoringScriptMaker.GetScript(transaction);
+            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
             const string expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":1000,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
+            Assert.AreEqual(expectedScript, script);
+        }
+
+        [Test]
+        public void GetScript_ReturnsValidScriptWithNonce_UnderNormalConditions()
+        {
+            UpdateDefaultConfiguration();
+            Mock.Arrange(() => _configuration.CaptureAttributes).Returns(false);
+            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
+
+            var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
+
+            var script = _browserMonitoringScriptMaker.GetScript(transaction, "TmV3IFJlbGlj");
+
+            const string expectedScript = @"<script type=""text/javascript"" nonce=""TmV3IFJlbGlj"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":1000,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"" nonce=""TmV3IFJlbGlj"">the agent</script>";
             Assert.AreEqual(expectedScript, script);
         }
 
@@ -100,7 +115,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             var transaction = BuildTestTransaction(applicationTime: TimeSpan.FromSeconds(2));
 
-            var script = _browserMonitoringScriptMaker.GetScript(transaction);
+            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
             const string expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":0,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
             Assert.AreEqual(expectedScript, script);
@@ -122,7 +137,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
             var tripId = transaction.TransactionMetadata.CrossApplicationReferrerTripId ?? transaction.Guid;
 
-            var script = _browserMonitoringScriptMaker.GetScript(transaction);
+            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
             var expectedFormattedAttributes = $"{{\"a\":{{\"nr.tripId\":\"{tripId}\",\"original_url\":\"http://www.google.com\"}},\"u\":{{\"foo\":\"bar\"}}}}";
 
@@ -136,7 +151,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         {
             var transaction = BuildTestTransaction();
 
-            var script = _browserMonitoringScriptMaker.GetScript(transaction);
+            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
             var expectedObfuscatedTransactionMetricName = Strings.ObfuscateStringWithKey("prefix/suffix", "license key");
             var actualObfuscatedTransactionMetricName = Regex.Match(script, @"""transactionName"":""([^""]+)""").Groups[1].Value;
@@ -149,7 +164,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var transaction = BuildTestTransaction();
             Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns(null as string);
 
-            var script = _browserMonitoringScriptMaker.GetScript(transaction);
+            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
             Assert.Null(script);
         }
@@ -160,7 +175,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns(string.Empty);
             var transaction = BuildTestTransaction();
 
-            var script = _browserMonitoringScriptMaker.GetScript(transaction);
+            var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
 
             Assert.Null(script);
         }
@@ -171,7 +186,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(null as string);
             var transaction = BuildTestTransaction();
 
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
+            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
         }
 
         [Test]
@@ -180,7 +195,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(string.Empty);
             var transaction = BuildTestTransaction();
 
-            Assert.Throws<Exception>(() => _browserMonitoringScriptMaker.GetScript(transaction));
+            Assert.Throws<Exception>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
         }
 
         [Test]
@@ -189,7 +204,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             Mock.Arrange(() => _configuration.BrowserMonitoringBeaconAddress).Returns(null as string);
             var transaction = BuildTestTransaction();
 
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
+            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
         }
 
         [Test]
@@ -198,7 +213,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             Mock.Arrange(() => _configuration.BrowserMonitoringErrorBeaconAddress).Returns(null as string);
             var transaction = BuildTestTransaction();
 
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
+            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
         }
 
         [Test]
@@ -207,7 +222,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             Mock.Arrange(() => _configuration.BrowserMonitoringKey).Returns(null as string);
             var transaction = BuildTestTransaction();
 
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
+            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
         }
 
         [Test]
@@ -216,7 +231,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             Mock.Arrange(() => _configuration.BrowserMonitoringApplicationId).Returns(null as string);
             var transaction = BuildTestTransaction();
 
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
+            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
         }
 
         [Test]
@@ -225,7 +240,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgentFile).Returns(null as string);
             var transaction = BuildTestTransaction();
 
-            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
+            Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction, null));
         }
 
         private IInternalTransaction BuildTestTransaction(TimeSpan? queueTime = null, TimeSpan? applicationTime = null)

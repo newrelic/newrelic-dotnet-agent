@@ -502,7 +502,7 @@ namespace NewRelic.Agent.Core.Api
         ///   &lt;body&gt;
         ///   ...
         /// </code></example>
-        public string GetBrowserTimingHeader()
+        public string GetBrowserTimingHeader(string? nonce)
         {
             using (new IgnoreWork())
             {
@@ -519,7 +519,7 @@ namespace NewRelic.Agent.Core.Api
                 // The transaction's name must be frozen if we're going to generate a RUM script
                 transaction.CandidateTransactionName.Freeze(TransactionNameFreezeReason.ManualBrowserScriptInjection);
 
-                return _browserMonitoringScriptMaker.GetScript(transaction) ?? string.Empty;
+                return _browserMonitoringScriptMaker.GetScript(transaction, nonce) ?? string.Empty;
             }
         }
 
