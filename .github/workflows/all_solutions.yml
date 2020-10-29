@@ -122,7 +122,7 @@ jobs:
 
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-test-fullagent-msi:
-    needs: [ build-test-windows-profiler, build-test-linux-profiler ]
+    needs: [ build-windows-profiler, build-linux-profiler ]
     name: Build and Test FullAgent and MSIInstaller
     runs-on: windows-2019
 
