@@ -178,6 +178,20 @@ jobs:
         MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
       shell: powershell
 
+    - name: Create agent_version.txt
+      run: |
+        $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
+        Write-Host "Agent version $agentVersion"
+        $agentVersion | Out-File -FilePath ${{ github.workspace }}\agent_version.txt -encoding utf8
+      shell: powershell
+      
+    - name: Create agent_version.txt artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: agent-version
+        path: ${{ github.workspace }}\agent_version.txt
+        if-no-files-found: error
+
     - name: Archive FullAgent Home folders
       uses: actions/upload-artifact@v2
       with:
