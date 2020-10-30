@@ -239,6 +239,13 @@ jobs:
           path: ${{ github.workspace }}\src\_build
           if-no-files-found: error
 
+      - name: Archive NewRelic.OpenTracing.AmazonLambda.Tracer
+        uses: actions/upload-artifact@v2
+        with:
+          name: NewRelic.OpenTracing.AmazonLambda.Tracer
+          path: ${{ github.workspace }}\src\AwsLambda\AwsLambdaOpenTracer\bin\Release\netstandard2.0-ILRepacked
+          if-no-files-found: error
+
       - name: Unit Tests
         run: |
           # Write-Host ${{ env.scripts_path }}\DotNet-Agent-CI-UnitTests.ps1
