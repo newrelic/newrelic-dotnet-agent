@@ -201,6 +201,13 @@ jobs:
           name: NewRelic.NuGetHelper
           path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\bin
           if-no-files-found: error
+          
+      - name: Archive NewRelic.Agent.Extensions
+        uses: actions/upload-artifact@v2
+        with:
+          name: NewRelic.Agent.Extensions
+          path: ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\Release
+          if-no-files-found: error
 
       - name: Archive FullAgent Home folders
         uses: actions/upload-artifact@v2
@@ -640,6 +647,12 @@ jobs:
         with:
           name: NewRelic.NuGetHelper
           path: build/NewRelic.NuGetHelper/bin
+      
+      - name: Download NewRelic.Agent.Extensions
+        uses: actions/download-artifact@v2
+        with:
+          name: NewRelic.Agent.Extensions
+          path: src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions/bin/Release
 
       - name: Run ArtifactBuilder
         run: |
