@@ -187,13 +187,6 @@ jobs:
           name: agent-version
           path: ${{ github.workspace }}\agent_version.txt
           if-no-files-found: error
-
-      - name: Archive _build Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: build-folder-artifacts
-          path: ${{ github.workspace }}\src\_build
-          if-no-files-found: error
       
       - name: Archive NewRelic.NuGetHelper
         uses: actions/upload-artifact@v2
@@ -238,6 +231,13 @@ jobs:
           Write-Host "MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}"
           MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
         shell: powershell
+
+      - name: Archive _build Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-folder-artifacts
+          path: ${{ github.workspace }}\src\_build
+          if-no-files-found: error
 
       - name: Unit Tests
         run: |
