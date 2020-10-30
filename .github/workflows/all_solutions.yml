@@ -661,6 +661,12 @@ jobs:
           name: NewRelic.Agent.Extensions
           path: src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions/bin/Release
 
+      - name: Download NewRelic.OpenTracing.AmazonLambda.Tracer
+        uses: actions/download-artifact@v2
+        with:
+          name: NewRelic.OpenTracing.AmazonLambda.Tracer
+          path: src/AwsLambda/AwsLambdaOpenTracer/bin/Release/netstandard2.0-ILRepacked
+
       - name: Run ArtifactBuilder
         run: |
           ${{ github.workspace }}\build\package.ps1 -configuration Release -IncludeDownloadSite
