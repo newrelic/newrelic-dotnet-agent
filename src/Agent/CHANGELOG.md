@@ -11,7 +11,7 @@ New Feature Description
 Fixes Issue [#XX](https://github.com/newrelic/newrelic-dotnet-agent/issues/XX)
 
 ### Fixes
-Fixes Issue [#XX](https://github.com/newrelic/newrelic-dotnet-agent/issues/XX)
+Fixes Issue [#337](https://github.com/newrelic/newrelic-dotnet-agent/issues/337) by removing obsolete code which was causing memory growth associated with a large number of transaction names.
 
 ## [8.34] - 2020-10-26
 
