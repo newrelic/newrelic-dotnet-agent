@@ -195,7 +195,7 @@ jobs:
           path: ${{ github.workspace }}\src\_build
           if-no-files-found: error
       
-        - name: Archive NewRelic.NuGetHelper
+      - name: Archive NewRelic.NuGetHelper
         uses: actions/upload-artifact@v2
         with:
           name: NewRelic.NuGetHelper
