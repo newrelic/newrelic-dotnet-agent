@@ -21,11 +21,6 @@ namespace NewRelic.Agent.Core.Metrics
     /// </summary>
     public class MetricNameService : ConfigurationBasedService, IMetricNameService
     {
-        private static readonly TransactionMetricName NormalizedWebTransactionMetricName = new TransactionMetricName(MetricNames.WebTransactionPrefix, "Normalized/*");
-        private static readonly TransactionMetricName NormalizedOtherTransactionMetricName = new TransactionMetricName(MetricNames.OtherTransactionPrefix, "Normalized/*");
-
-        private readonly Utils.HashSet<string> _transactionNames = new Utils.HashSet<string>();
-
         #region Public API
 
         public string NormalizeUrl(string url)
@@ -71,9 +66,6 @@ namespace NewRelic.Agent.Core.Metrics
 
             // Renaming rules are not allowed to change the first segment of a transaction name
             var newTransactionName = GetTransactionMetricName(newPrefixedTransactionName, proposedTransactionName, shouldIgnore);
-
-            if (!IsMetricNameAllowed(newPrefixedTransactionName))
-                return proposedTransactionName.IsWebTransactionName ? NormalizedWebTransactionMetricName : NormalizedOtherTransactionMetricName;
 
             return newTransactionName;
         }
@@ -181,28 +173,6 @@ namespace NewRelic.Agent.Core.Metrics
                 return segment;
 
             return "*";
-        }
-
-        /// <summary>
-        /// Checks if the given metric name is whitelisted according to the "black hole"
-        /// 
-        /// This logic is an implementation of the "black hole" rule.
-        /// </summary>
-        /// <param name="metricName"></param>
-        /// <returns>True if the name is on (or is added to) the whitelist, else false</returns>
-        private bool IsMetricNameAllowed(string metricName)
-        {
-            lock (_transactionNames)
-            {
-                // If metric name is already in whitelist, allow it through
-                if (_transactionNames.Contains(metricName))
-                    return true;
-
-                // Otherwise, add the name to the whitelist and then allow it through
-                _transactionNames.Add(metricName);
-
-                return true;
-            }
         }
 
         #endregion
