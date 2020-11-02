@@ -21,9 +21,6 @@ namespace NewRelic.Agent.Core.Metrics
     /// </summary>
     public class MetricNameService : ConfigurationBasedService, IMetricNameService
     {
-        private static readonly TransactionMetricName NormalizedWebTransactionMetricName = new TransactionMetricName(MetricNames.WebTransactionPrefix, "Normalized/*");
-        private static readonly TransactionMetricName NormalizedOtherTransactionMetricName = new TransactionMetricName(MetricNames.OtherTransactionPrefix, "Normalized/*");
-
         #region Public API
 
         public string NormalizeUrl(string url)
