@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public abstract class AgentLogBase
     {
-        public const string LogLineContextDataRegex = @"\[pid: \d+, tid: \d+\] ";
+        public const string LogLineContextDataRegex = @"\[pid: \d+, tid: [\w-#:(,\/.)]+\] ";
         public const string InfoLogLinePrefixRegex = @"^.*?NewRelic\s+INFO: " + LogLineContextDataRegex;
         public const string DebugLogLinePrefixRegex = @"^.*?NewRelic\s+DEBUG: " + LogLineContextDataRegex;
         public const string ErrorLogLinePrefixRegex = @"^.*?NewRelic\s+ERROR: " + LogLineContextDataRegex;
