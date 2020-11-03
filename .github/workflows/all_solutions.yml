@@ -627,7 +627,7 @@ jobs:
           if-no-files-found: error
   
   run-artifactbuilder:
-    needs: build-test-fullagent-msi
+    needs: [ create-package-rpm ]
     name: Run ArtifactBuilder
     runs-on: windows-2019
 
@@ -677,4 +677,52 @@ jobs:
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\build\BuildArtifacts
+          if-no-files-found: error
+
+  create-package-rpm:
+    needs: build-test-fullagent-msi
+    name: Create RPM Package
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      
+      - name: Download _build Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build-folder-artifacts
+          path: src/_build
+
+      - name: Download Agent Home Folders
+        uses: actions/download-artifact@v2
+        with:
+          name: homefolders
+          path: src/Agent
+      
+      - name: Download Agent Version
+        uses: actions/download-artifact@v2
+        with:
+          name: agent-version
+          path: ${{ github.workspace }}
+
+      - name: Build RPM
+        run: |
+          sudo apt install dos2unix -y
+          dos2unix ${{ github.workspace }}/agent_version.txt
+          agentVersion=$(head -n 1 ${{ github.workspace }}/agent_version.txt)
+          agentVersion=${agentVersion/$'\r\n\t'}
+          cd ${{ github.workspace }}/build/Linux
+          docker-compose build
+          docker-compose run -e AGENT_VERSION=$agentVersion build_rpm
+          #docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
+        shell: bash
+      
+      - name: Archive Package Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-folder-artifacts
+          path: ${{ github.workspace }}/src/_build
           if-no-files-found: error
