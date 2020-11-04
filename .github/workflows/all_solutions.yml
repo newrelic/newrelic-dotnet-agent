@@ -663,6 +663,12 @@ jobs:
           fileName: 'gpg.tar.bz2'
           encodedString: ${{ secrets.GPG_KEY }}
 
+      - name: Copy GPG Key to keys
+        run: |
+          mkdir ${{ github.workspace }}/build/Linux/keys
+          cp -f ${{ steps.write_gpgkey.outputs.filePath }} ${{ github.workspace }}/build/Linux/keys/gpg.tar.bz2
+        shell: bash
+
       - name: Build RPM
         run: |
           sudo apt install dos2unix -y
@@ -671,7 +677,7 @@ jobs:
           agentVersion=${agentVersion/$'\r\n\t'}
           cd ${{ github.workspace }}/build/Linux
           docker-compose build
-          docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=${{ steps.write_gpgkey.outputs.filePath }} build_rpm
+          docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
         shell: bash
       
       - name: Archive Package Artifacts
