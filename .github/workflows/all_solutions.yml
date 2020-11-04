@@ -214,10 +214,16 @@ jobs:
             ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
           if-no-files-found: error
 
-      - name: Create Self-signed code signing cert
+      - name: Get Code Signing Certificate
+        id: write_cert
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: 'newrelic_code_sign_cert.pfx'
+          encodedString: ${{ secrets.SIGNING_CERT }}
+          
+      - name: Install Code Signing Certificate
         run: |
-          Write-Host "New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)"
-          New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)
+          certutil.exe -f -user -p ${{ secrets.CERT_PASSPHRASE }} -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot
         shell: powershell
 
       - name: Build MsiInstaller.sln x86
