@@ -709,9 +709,8 @@ jobs:
         run: |
           sudo apt install dos2unix -y
           dos2unix ${{ github.workspace }}/agent_version.txt
-          agentVersion=$(< ${{ github.workspace }}/agent_version.txt)
-          agentVersion=${agentVersion%.*}
-          agentVersion+=".0"
+          agentVersion=$(head -n 1 ${{ github.workspace }}/agent_version.txt)
+          agentVersion=${agentVersion/$'\r\n\t'}
           cd ${{ github.workspace }}/build/Linux
           docker-compose build
           docker-compose run -e AGENT_VERSION=$agentVersion build_deb
