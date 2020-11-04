@@ -675,8 +675,56 @@ jobs:
           path: ${{ github.workspace }}/src/_build
           if-no-files-found: error
 
+  create-package-deb:
+    needs: build-test-fullagent-msi
+    if: ${{ github.event.release }}
+    name: Create Debian package
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+        
+      - name: Download Agent Home Folders
+        uses: actions/download-artifact@v2
+        with:
+          name: homefolders
+          path: src/Agent
+
+      - name: Download _build Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build-folder-artifacts
+          path: src/_build
+
+      - name: Download agent_version.txt
+        uses: actions/download-artifact@v2
+        with:
+          name: agent-version
+          path: ${{ github.workspace }}
+
+      - name: Build debian package
+        run: |
+          sudo apt install dos2unix -y
+          dos2unix ${{ github.workspace }}/agent_version.txt
+          agentVersion=$(head -n 1 ${{ github.workspace }}/agent_version.txt)
+          agentVersion=${agentVersion/$'\r\n\t'}
+          cd ${{ github.workspace }}/build/Linux
+          docker-compose build
+          docker-compose run -e AGENT_VERSION=$agentVersion build_deb
+        shell: bash
+        
+      - name: Archive Package Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-folder-artifacts
+          path: ${{ github.workspace }}/src/_build
+          if-no-files-found: error
+
   run-artifactbuilder:
-    needs: [ create-package-rpm ]
+    needs: [ create-package-rpm, create-package-deb ]
     if: ${{ github.event.release }}
     name: Run ArtifactBuilder
     runs-on: windows-2019
