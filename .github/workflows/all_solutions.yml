@@ -626,7 +626,7 @@ jobs:
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
           if-no-files-found: error
 
-  create-package-rpm:
+  create-linux-packages:
     needs: build-test-fullagent-msi
     if: ${{ github.event.release }}
     name: Create RPM Package
@@ -664,6 +664,7 @@ jobs:
           agentVersion=${agentVersion/$'\r\n\t'}
           cd ${{ github.workspace }}/build/Linux
           docker-compose build
+          docker-compose run -e AGENT_VERSION=$agentVersion build_deb
           docker-compose run -e AGENT_VERSION=$agentVersion build_rpm
           #docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
         shell: bash
