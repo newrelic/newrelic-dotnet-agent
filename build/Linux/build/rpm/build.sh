@@ -46,7 +46,7 @@ if [ -z "$AGENT_VERSION" ]; then
         exit -1
     fi
 fi
-echo "AGENT_VERSION=$AGENT_VERSION"
+echo "AGENT_VERSION=|$AGENT_VERSION|"
 TARGET_SYSTEM_INSTALL_PATH="/usr/local/${PACKAGE_NAME}"
 SPECFILE="/rpm/${PACKAGE_NAME}.spec"
 

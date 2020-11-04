@@ -1,6 +1,6 @@
 build_deb: 
     build: ./build/deb 
-    command: bash -c "dos2unix /deb/build.sh && /deb/build.sh"
+    command: bash -c "dos2unix /deb/build.sh && chmod 755 /deb/build.sh && /deb/build.sh"
     volumes: 
         - ../../src/_build/CoreArtifacts:/release
         - ../../src/Agent:/data
@@ -11,7 +11,7 @@ build_deb:
 
 build_rpm: 
     build: ./build/rpm
-    command: bash -c "dos2unix /rpm/build.sh && /rpm/build.sh"
+    command: bash -c "dos2unix /rpm/build.sh && chmod 777 /rpm/build.sh && /rpm/build.sh"
     volumes: 
         - ../../src/_build/CoreArtifacts:/release
         - ../../src/Agent:/data
@@ -23,7 +23,7 @@ build_rpm:
 
 test_debian: 
     build: ./test/distros/debian
-    command: bash -c "dos2unix /test/test.sh &>/dev/null && /test/test.sh"
+    command: bash -c "dos2unix /test/test.sh &>/dev/null && chmod 777 /test/test.sh && /test/test.sh"
     volumes:
         - ../../src/_build/CoreArtifacts:/release
         - ./test/scripts:/test
@@ -32,7 +32,7 @@ test_debian:
 
 test_centos: 
     build: ./test/distros/centos
-    command: bash -c "dos2unix /test/test.sh &>/dev/null && /test/test.sh"
+    command: bash -c "dos2unix /test/test.sh &>/dev/null && chmod 777 /test/test.sh && /test/test.sh"
     volumes:
         - ../../src/_build/CoreArtifacts:/release
         - ./test/scripts:/test
