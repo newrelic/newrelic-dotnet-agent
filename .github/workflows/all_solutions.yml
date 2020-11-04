@@ -677,7 +677,7 @@ jobs:
           if-no-files-found: error
 
   run-artifactbuilder:
-    needs: [ create-package-rpm ]
+    needs: [ create-linux-packages ]
     if: ${{ github.event.release }}
     name: Run ArtifactBuilder
     runs-on: windows-2019
