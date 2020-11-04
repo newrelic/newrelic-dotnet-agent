@@ -1,6 +1,6 @@
 build_deb: 
     build: ./build/deb 
-    command: bash -c "dos2unix /deb/build.sh && chmod 755 /deb/build.sh && /deb/build.sh"
+    command: bash -c "dos2unix /deb/build.sh && chmod 755 /deb && /deb/build.sh"
     volumes: 
         - ../../src/_build/CoreArtifacts:/release
         - ../../src/Agent:/data
