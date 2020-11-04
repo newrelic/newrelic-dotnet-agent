@@ -656,6 +656,13 @@ jobs:
           name: agent-version
           path: ${{ github.workspace }}
 
+      - name: Get GPG Key
+        id: write_gpgkey
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: 'gpg.tar.bz2'
+          encodedString: ${{ secrets.GPG_KEY }}
+
       - name: Build RPM
         run: |
           sudo apt install dos2unix -y
@@ -664,8 +671,7 @@ jobs:
           agentVersion=${agentVersion/$'\r\n\t'}
           cd ${{ github.workspace }}/build/Linux
           docker-compose build
-          docker-compose run -e AGENT_VERSION=$agentVersion build_rpm
-          #docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
+          docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=${{ steps.write_gpgkey.outputs.filePath }} build_rpm
         shell: bash
       
       - name: Archive Package Artifacts
