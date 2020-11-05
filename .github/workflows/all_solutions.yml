@@ -792,5 +792,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: deploy-artifacts
-          path: ${{ github.workspace }}\build\BuildArtifacts
+          path: |
+            ${{ github.workspace }}\build\BuildArtifacts
+            ${{ github.workspace }}\deploy
           if-no-files-found: error
