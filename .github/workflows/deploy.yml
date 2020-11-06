@@ -9,6 +9,10 @@ on:
       run_id:
         description: 'Run ID of the Release Workflow (all_solutions.yml) triggered but creating a release.'
         required: true
+      deploy:
+        description: 'If "true", deploy the Artifacts. If "false", do everything except deploy.'
+        required: true
+        default: 'false'
 
 env:
   DOTNET_NOLOGO: true
@@ -16,7 +20,7 @@ env:
 jobs:
 
   get-external-artifacts:
-    name: Get Deploy Artifacts
+    name: Get and Publish Deploy Artifacts Locally
     runs-on: ubuntu-latest
     steps:
       - name: Download Deploy Artifacts
@@ -42,7 +46,6 @@ jobs:
           name: deploy-tooling
           path: ${{ github.workspace }}/deploy/
           if-no-files-found: error
-
 
   deploy-downloadsite:
     needs: get-external-artifacts
@@ -72,14 +75,18 @@ jobs:
           New-Item -ItemType directory -Path .\latest_release -Force
           Copy-Item .\working_dir\* .\latest_release\ -Force -Recurse
           cd .\latest_release
-          aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
+
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
+          }
           cd ..
 
           New-Item -Force -ItemType directory -Path .\previous_releases\${{ github.event.inputs.agent_version }}
           Copy-Item .\working_dir\* ".\previous_releases\${{ github.event.inputs.agent_version }}\" -Force -Recurse
-
           cd .\previous_releases\${{ github.event.inputs.agent_version }}
-          aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
+          }
         shell: powershell
 
   deploy-nuget:
@@ -107,7 +114,9 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgent\NewRelic.Agent.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgent\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent').TrimStart('.').TrimEnd('.nupkg')
-          C:\nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
         shell: powershell
 
       - name: Deploy Agent API to Nuget
@@ -115,7 +124,9 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgentApi\NewRelic.Agent.Api.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgentApi\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Api').TrimStart('.').TrimEnd('.nupkg')
-          C:\nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
         shell: powershell
 
       - name: Deploy Azure Cloud Services to Nuget
@@ -123,7 +134,9 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureCloudServices\NewRelicWindowsAzure.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureCloudServices\$packageName
           $version = $packageName.TrimStart('NewRelicWindowsAzure').TrimStart('.').TrimEnd('.nupkg')
-          C:\nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
         shell: powershell
 
       - name: Deploy Azure WebSites-x64 to Nuget
@@ -131,7 +144,9 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\NewRelic.Azure.WebSites.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
-          C:\nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
         shell: powershell
 
       - name: Deploy Azure WebSites-x86 to Nuget
@@ -139,10 +154,13 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\NewRelic.Azure.WebSites.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
-          C:\nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
         shell: powershell
 
   deploy-linux:
+    needs: get-external-artifacts
     name: Deploy Linux to APT and YUM
     runs-on: ubuntu-latest
     steps:
@@ -156,7 +174,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: deploy-tooling
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/deploy
 
       - name: Get GPG Key
         id: write_gpgkey
@@ -202,7 +220,9 @@ jobs:
 
           # Run docker-compose
           docker-compose build
-          docker-compose run deploy_packages
+          if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
+            docker-compose run deploy_packages
+          fi
         shell: bash
 
         
