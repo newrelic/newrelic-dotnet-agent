@@ -79,6 +79,10 @@ jobs:
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
             aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
           }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete"
+          }
           cd ..
 
           New-Item -Force -ItemType directory -Path .\previous_releases\${{ github.event.inputs.agent_version }}
@@ -86,6 +90,10 @@ jobs:
           cd .\previous_releases\${{ github.event.inputs.agent_version }}
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
             aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete"
           }
         shell: powershell
 
@@ -117,6 +125,10 @@ jobs:
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+          }
         shell: powershell
 
       - name: Deploy Agent API to Nuget
@@ -126,6 +138,10 @@ jobs:
           $version = $packageName.TrimStart('NewRelic.Agent.Api').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
 
@@ -137,6 +153,10 @@ jobs:
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+          }
         shell: powershell
 
       - name: Deploy Azure WebSites-x64 to Nuget
@@ -147,6 +167,10 @@ jobs:
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+          }
         shell: powershell
 
       - name: Deploy Azure WebSites-x86 to Nuget
@@ -156,6 +180,10 @@ jobs:
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
 
@@ -222,6 +250,9 @@ jobs:
           docker-compose build
           if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
             docker-compose run deploy_packages
+          else
+            echo "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            echo "docker-compose run deploy_packages"
           fi
         shell: bash
 
