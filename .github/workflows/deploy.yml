@@ -4,15 +4,27 @@ on:
   workflow_dispatch:
     inputs:
       agent_version:
-        description: 'Agent Version to RELEASE. Format: X.X.X'
+        description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
         required: true
       run_id:
-        description: 'Run ID of the Release Workflow (all_solutions.yml) triggered but creating a release.'
+        description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
       deploy:
-        description: 'If "true", deploy the Artifacts. If "false", do everything except deploy.'
+        description: 'If "true", deploy the artifacts. If "false", do everything except deploy.'
         required: true
         default: 'false'
+      downloadsite:
+        description: 'If "true", will run the deploy-downloadsite job. If "false", will not.'
+        required: true
+        default: 'true'
+      nuget:
+        description: 'If "true", will run the deploy-nuget job. If "false", will not.'
+        required: true
+        default: 'true'
+      linux:
+        description: 'If "true", will run the deploy-linux job. If "false", will not.'
+        required: true
+        default: 'true'
 
 env:
   DOTNET_NOLOGO: true
@@ -49,6 +61,7 @@ jobs:
 
   deploy-downloadsite:
     needs: get-external-artifacts
+    if: ${{ github.event.inputs.downloadsite == 'true' }}
     name: Deploy MSI and Scriptable to Download Site
     runs-on: windows-2019
 
@@ -75,7 +88,6 @@ jobs:
           New-Item -ItemType directory -Path .\latest_release -Force
           Copy-Item .\working_dir\* .\latest_release\ -Force -Recurse
           cd .\latest_release
-
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
             aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
           }
@@ -83,8 +95,8 @@ jobs:
             Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
             Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete"
           }
-          cd ..
 
+          cd ..
           New-Item -Force -ItemType directory -Path .\previous_releases\${{ github.event.inputs.agent_version }}
           Copy-Item .\working_dir\* ".\previous_releases\${{ github.event.inputs.agent_version }}\" -Force -Recurse
           cd .\previous_releases\${{ github.event.inputs.agent_version }}
@@ -99,6 +111,7 @@ jobs:
 
   deploy-nuget:
     needs: get-external-artifacts
+    if: ${{ github.event.inputs.nuget == 'true' }}
     name: Deploy Agent to NuGet
     runs-on: windows-2019
 
@@ -189,6 +202,7 @@ jobs:
 
   deploy-linux:
     needs: get-external-artifacts
+    if: ${{ github.event.inputs.linux == 'true' }}
     name: Deploy Linux to APT and YUM
     runs-on: ubuntu-latest
     steps:
@@ -213,8 +227,8 @@ jobs:
 
       - name: Move Artifacts an GPG Key to Staging Location
         run: |
-          cp *.rpm ${{ github.workspace }}/deploy/linux/packages
-          cp *.deb ${{ github.workspace }}/deploy/linux/packages
+          cp LinuxRpm/*.rpm ${{ github.workspace }}/deploy/linux/packages
+          cp LinuxDeb/*.deb ${{ github.workspace }}/deploy/linux/packages
           cp -f ${{ steps.write_gpgkey.outputs.filePath }} ${{ github.workspace }}/deploy/linux/deploy_scripts/gpg.tar.bz2
         shell: bash
 
@@ -226,7 +240,7 @@ jobs:
           if [ $agent_version_count -lt 3 ] || [ $agent_version_count -gt 4 ] ; then
             echo "::error Supplied agent version from Workflow (${{ github.event.inputs.agent_version }}) is malformed.  It needs to be like 8.29.0 or 8.29.0.0"
             exit 1
-          elif[] ; then
+          elif [ $agent_version_count -eq 4 ] ; then
             AGENT_VERSION=${{ github.event.inputs.agent_version }}
           else
             AGENT_VERSION=${{ github.event.inputs.agent_version }}.0
