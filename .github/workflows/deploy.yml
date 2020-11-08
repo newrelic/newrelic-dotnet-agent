@@ -77,14 +77,25 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: deploy-artifacts
-          path: ${{ github.workspace }}\working_dir
+          path: ${{ github.workspace }}\staging_dir
 
-      - name: Deploy to Download Site
+      - name: Move Artifacts to working_dir
+        run: |
+          $installers = Get-ChildItem -Path .\staging_dir -Include *.msi,*.zip -Recurse
+          foreach ($installer in $installers) {
+            Copy-Item -Path $installer.FullName -Destination .\working_dir\
+          }
+        shell: powershell
+
+      - name: Create Version-less Installers
         run: |
           Copy-Item .\working_dir\newrelic-agent-win-x64-*.msi .\working_dir\NewRelicDotNetAgent_x64.msi -Force -Recurse
           Copy-Item .\working_dir\newrelic-agent-win-x86-*.msi .\working_dir\NewRelicDotNetAgent_x86.msi -Force -Recurse
           Copy-Item .\working_dir\newrelic-agent-*-scriptable-installer.zip .\working_dir\NewRelic.Agent.Installer.zip -Force -Recurse
+        shell: powershell
 
+      - name: Deploy latest_release to Download Site
+        run: |
           New-Item -ItemType directory -Path .\latest_release -Force
           Copy-Item .\working_dir\* .\latest_release\ -Force -Recurse
           cd .\latest_release
@@ -93,19 +104,21 @@ jobs:
           }
           else {
             Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
-            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete"
+            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
+        shell: powershell
 
-          cd ..
-          New-Item -Force -ItemType directory -Path .\previous_releases\${{ github.event.inputs.agent_version }}
+      - name: Deploy previous_release to Download Site
+        run: |
+          New-Item -ItemType directory -Path .\previous_releases\${{ github.event.inputs.agent_version }} -Force
           Copy-Item .\working_dir\* ".\previous_releases\${{ github.event.inputs.agent_version }}\" -Force -Recurse
           cd .\previous_releases\${{ github.event.inputs.agent_version }}
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
-            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
+            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include "*" --exclude ".DS_Store" --delete --profile $profileName
           }
           else {
             Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
-            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete"
+            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete --profile $profileName"
           }
         shell: powershell
 
@@ -232,7 +245,7 @@ jobs:
           cp -f ${{ steps.write_gpgkey.outputs.filePath }} ${{ github.workspace }}/deploy/linux/deploy_scripts/gpg.tar.bz2
         shell: bash
 
-      - name: Build Container
+      - name: Prepare docker.env
         run: |
           # Confirm that the version is in the proper format.
           IFS='.' read -ra agent_version_array <<< "${{ github.event.inputs.agent_version }}"
@@ -259,8 +272,11 @@ jobs:
           echo "PROD_TEST_S3=${{ secrets.PROD_TEST_S3 }}" >> docker.env
           echo "TEST_TEST_S3=${{ secrets.TEST_TEST_S3 }}" >> docker.env
           echo "TEST_PRIV_S3=${{ secrets.TEST_PRIV_S3 }}" >> docker.env
+        shell: bash
 
-          # Run docker-compose
+      - name: Build and Run Container
+        run: |
+          cd ${{ github.workspace }}/deploy/linux/
           docker-compose build
           if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
             docker-compose run deploy_packages
