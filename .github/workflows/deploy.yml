@@ -81,10 +81,7 @@ jobs:
 
       - name: Move Artifacts to working_dir
         run: |
-          $installers = Get-ChildItem -Path .\staging_dir -Include *.msi,*.zip -Recurse
-          foreach ($installer in $installers) {
-            Copy-Item -Path $installer.FullName -Destination .\working_dir\
-          }
+          Copy-Item -Path .\staging_dir\build\BuildArtifacts\DownloadSite -Destination .\working_dir -Recurse
         shell: powershell
 
       - name: Create Version-less Installers
