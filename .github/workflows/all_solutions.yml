@@ -30,7 +30,6 @@ jobs:
     runs-on: windows-2019
 
     env:
-      profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
       profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
       output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
 
@@ -43,6 +42,12 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.1
 
+      - name: Get Profiler Hash
+        id: profiler-hash
+        run: |
+          Write-Host "::set-output name=hash::${{ hashFiles('src\Agent\NewRelic\Profiler') }}"
+        shell: powershell
+
       - name: Clean out _profilerBuild directory
         run: |
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
@@ -51,19 +56,29 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-release" -Recurse -Force  -ErrorAction SilentlyContinue
         shell: powershell
 
+      - name: Cache Profiler
+        id: cache-profiler
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/**/*
+          key: windows-profiler-${{ steps.profiler-hash.outputs.hash }}
+
       - name: Install dependencies
+        if: steps.cache-profiler.outputs.cache-hit != 'true'
         run: |
           Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.profiler_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
           ${{ env.tools_path }}\nuget.exe restore ${{ env.profiler_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
         shell: powershell
 
       - name: Build x64
+        if: steps.cache-profiler.outputs.cache-hit != 'true'
         run: |
           Write-Host "MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
           MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
         
       - name: Build x86
+        if: steps.cache-profiler.outputs.cache-hit != 'true'
         run: |
           Write-Host "MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
           MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
@@ -92,6 +107,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get Profiler Hash
+        id: profiler-hash
+        run: |
+          echo "::set-output name=hash::${{ hashFiles('src/Agent/NewRelic/Profiler') }}"
+        shell: bash
+
       - name: Clean out _profilerBuild directory
         run: |
           rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.*
@@ -100,7 +121,15 @@ jobs:
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release
         shell: bash
 
+      - name: Cache Profiler
+        id: cache-profiler
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/**/*
+          key: linux-profiler-${{ steps.profiler-hash.outputs.hash }}
+
       - name: Build Linux Profler
+        if: steps.cache-profiler.outputs.cache-hit != 'true'
         run: |
           cd ${{ env.profiler_path }}
           docker-compose build build
@@ -108,6 +137,7 @@ jobs:
         shell: bash
 
       - name: Move Profiler to staging folder
+        if: steps.cache-profiler.outputs.cache-hit != 'true'
         run: |
           mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/
           mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/libNewRelicProfiler.so
@@ -324,13 +354,28 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.1
 
+      - name: Get IntegrationTests Hash
+        id: integrationtests-hash
+        run: |
+          Write-Host "::set-output name=hash::${{ hashFiles('tests\Agent\IntegrationTests') }}"
+        shell: powershell
+
+      - name: Cache Tests
+        id: cache-integrationtests  # same for integration and unbounded since they are so intertwined.
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/tests/Agent/IntegrationTests/**/*
+          key: integrationtests-${{ steps.integrationtests-hash.outputs.hash }
+
       - name: Install dependencies for IntegrationTests.sln
+        if: steps.cache-integrationtests.outputs.cache-hit != 'true'
         run: |
           Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.integration_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
           ${{ env.tools_path }}\nuget.exe restore ${{ env.integration_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
         shell: powershell
 
       - name: Build IntegrationTests.sln
+        if: steps.cache-integrationtests.outputs.cache-hit != 'true'
         run: |
           Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
           MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
@@ -364,13 +409,28 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.1
 
+      - name: Get UnboundedIntegrationTests Hash
+        id: unboundedtests-hash
+        run: |
+          Write-Host "::set-output name=hash::${{ hashFiles('tests\Agent\IntegrationTests') }}"
+        shell: powershell
+
+      - name: Cache Tests
+        id: cache-integrationtests # same for integration and unbounded since they are so intertwined.
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/tests/Agent/IntegrationTests/**/*
+          key: integrationtests-${{ steps.unboundedtests-hash.outputs.hash }
+
       - name: Install dependencies for UnboundedIntegrationTests.sln
+        if: steps.cache-integrationtests.outputs.cache-hit != 'true'
         run: |
           Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.unbounded_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
           ${{ env.tools_path }}\nuget.exe restore ${{ env.unbounded_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
         shell: powershell
 
       - name: Build UnboundedIntegrationTests.sln
+        if: steps.cache-integrationtests.outputs.cache-hit != 'true'
         run: |
           Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
           MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
@@ -404,13 +464,30 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.1
 
+      - name: Get PlatformTests Hash
+        id: platformtests-hash
+        run: |
+          Write-Host "::set-output name=hash::${{ hashFiles('tests\Agent\IntegrationTests','tests\Agent\PlatformTests') }}"
+        shell: powershell
+
+      - name: Cache Tests
+        id: cache-platformtests # same for integration and unbounded since they are so intertwined.
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ github.workspace }}/tests/Agent/IntegrationTests/**/*
+            ${{ github.workspace }}/tests/Agent/PlatformTests/**/*
+          key: platformtests-${{ steps.platformtests-hash.outputs.hash }
+
       - name: Install dependencies for PlatformTests.sln
+        if: steps.cache-platformtests.outputs.cache-hit != 'true'
         run: |
           Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.platform_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
           ${{ env.tools_path }}\nuget.exe restore ${{ env.platform_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
         shell: powershell
 
       - name: Build PlatformTests.sln
+        if: steps.cache-platformtests.outputs.cache-hit != 'true'
         run: |
           Write-Host "MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}"
           MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}
