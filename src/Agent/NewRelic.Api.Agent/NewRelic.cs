@@ -721,7 +721,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetUserParameters({0},{1},{2})", nameof(userName), nameof(accountName), nameof(productName)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.SetUserParameters({nameof(userName)},{nameof(accountName)},{nameof(productName)})");
             }
             catch
             {
@@ -747,7 +747,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.RecordCustomEvent({0},{1})", nameof(eventType), nameof(attributes)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.RecordCustomEvent({nameof(eventType)},{nameof(attributes)})");
             }
             catch
             {
@@ -801,7 +801,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetApplicationName({0},{1},{2})", nameof(applicationName), nameof(applicationName2), nameof(applicationName3)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.SetApplicationName({nameof(applicationName)},{nameof(applicationName2)},{nameof(applicationName3)})");
             }
             catch
             {
