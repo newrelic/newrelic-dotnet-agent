@@ -86,7 +86,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.RecordMetric({0},{1})", nameof(name), nameof(value)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.RecordMetric({nameof(name)},{nameof(value)})");
             }
             catch
             {
@@ -114,7 +114,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.RecordResponseTimeMetric({0},{1})", nameof(name), nameof(millis)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.RecordResponseTimeMetric({nameof(name)},{nameof(millis)})");
             }
             catch
             {
@@ -138,7 +138,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.IncrementCounter({0})", nameof(name)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.IncrementCounter({nameof(name)})");
             }
             catch
             {
@@ -189,7 +189,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", nameof(exception), nameof(parameters)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(exception)},{nameof(parameters)})");
             }
             catch
             {
@@ -236,7 +236,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", nameof(exception), nameof(parameters)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(exception)},{nameof(parameters)})");
             }
             catch
             {
@@ -273,7 +273,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0})", nameof(exception)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(exception)})");
             }
             catch
             {
@@ -320,7 +320,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", nameof(message), nameof(parameters)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)})");
             }
             catch
             {
@@ -367,7 +367,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", nameof(message), nameof(parameters)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)})");
             }
             catch
             {
@@ -417,7 +417,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1},{2})", nameof(message), nameof(parameters), nameof(isExpected)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)},{nameof(isExpected)})");
             }
             catch
             {
@@ -467,7 +467,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1},{2})", nameof(message), nameof(parameters), nameof(isExpected)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)},{nameof(isExpected)})");
             }
             catch
             {
@@ -498,7 +498,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.AddCustomParameter({0},{1})", nameof(key), nameof(value)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.AddCustomParameter({nameof(key)},{nameof(value)})");
             }
             catch
             {
@@ -527,7 +527,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.AddCustomParameter({0},{1})", nameof(key), nameof(value)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.AddCustomParameter({nameof(key)},{nameof(value)})");
             }
             catch
             {
@@ -556,7 +556,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetTransactionName({0},{1})", nameof(category), nameof(name)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.SetTransactionName({nameof(category)},{nameof(name)})");
             }
             catch
             {
@@ -573,7 +573,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetUri({0})", nameof(uri)));
+                System.Diagnostics.Trace.WriteLine($"NewRelic.SetUri({nameof(uri)})");
             }
             catch
             {
@@ -694,7 +694,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine("NewRelic.DisableBrowserMonitoring()");
+                System.Diagnostics.Trace.WriteLine($"NewRelic.DisableBrowserMonitoring({nameof(overrideManual)})");
             }
             catch
             {
@@ -721,7 +721,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine("NewRelic.SetUserParameters(String userName, String accountName, String productName)");
+                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetUserParameters({0},{1},{2})", nameof(userName), nameof(accountName), nameof(productName)));
             }
             catch
             {
@@ -801,7 +801,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine("NewRelic.SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null)");
+                System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetApplicationName({0},{1},{2})", nameof(applicationName), nameof(applicationName2), nameof(applicationName3)));
             }
             catch
             {
