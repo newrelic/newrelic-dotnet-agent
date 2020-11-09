@@ -365,7 +365,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/tests/Agent/IntegrationTests/**/*
-          key: integrationtests-${{ steps.integrationtests-hash.outputs.hash }
+          key: integrationtests-${{ steps.integrationtests-hash.outputs.hash }}
 
       - name: Install dependencies for IntegrationTests.sln
         if: steps.cache-integrationtests.outputs.cache-hit != 'true'
@@ -420,7 +420,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/tests/Agent/IntegrationTests/**/*
-          key: integrationtests-${{ steps.unboundedtests-hash.outputs.hash }
+          key: integrationtests-${{ steps.unboundedtests-hash.outputs.hash }}
 
       - name: Install dependencies for UnboundedIntegrationTests.sln
         if: steps.cache-integrationtests.outputs.cache-hit != 'true'
@@ -477,7 +477,7 @@ jobs:
           path: |
             ${{ github.workspace }}/tests/Agent/IntegrationTests/**/*
             ${{ github.workspace }}/tests/Agent/PlatformTests/**/*
-          key: platformtests-${{ steps.platformtests-hash.outputs.hash }
+          key: platformtests-${{ steps.platformtests-hash.outputs.hash }}
 
       - name: Install dependencies for PlatformTests.sln
         if: steps.cache-platformtests.outputs.cache-hit != 'true'
