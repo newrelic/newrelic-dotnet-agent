@@ -682,7 +682,7 @@ jobs:
           agentVersion=$(head -n 1 ${{ github.workspace }}/agent_version.txt)
           agentVersion=${agentVersion/$'\r\n\t'}
           cd ${{ github.workspace }}/build/Linux
-          docker-compose build
+          docker-compose build build_rpm
           docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
         shell: bash
       
@@ -730,7 +730,7 @@ jobs:
           agentVersion=$(head -n 1 ${{ github.workspace }}/agent_version.txt)
           agentVersion=${agentVersion/$'\r\n\t'}
           cd ${{ github.workspace }}/build/Linux
-          docker-compose build
+          docker-compose build build_deb
           docker-compose run -e AGENT_VERSION=$agentVersion build_deb
         shell: bash
         
@@ -792,5 +792,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: deploy-artifacts
-          path: ${{ github.workspace }}\build\BuildArtifacts
+          path: |
+            ${{ github.workspace }}\build\BuildArtifacts
+            ${{ github.workspace }}\deploy
           if-no-files-found: error

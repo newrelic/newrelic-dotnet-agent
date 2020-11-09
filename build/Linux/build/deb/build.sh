@@ -58,3 +58,7 @@ cp /common/agentinfo.json .
 
 # create tar ball
 tar cvfz /release/${PACKAGE_FILE_BASENAME}.tar.gz -C ${INSTALL_LOCATION} ..
+
+if [ $? -gt 0 ] ; then
+    echo "::error Docker run exited with code: $?"
+fi
