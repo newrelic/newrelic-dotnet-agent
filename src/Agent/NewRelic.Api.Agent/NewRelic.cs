@@ -18,10 +18,10 @@ using System.Runtime.CompilerServices;
 //
 // The documentation we publish for the API is derived by XSLT transformation from this file.
 // As such, the method documentation here MUST be clear, descriptive, helpful, accurate and up-to-date.
-// There's no point in documenting the companion functions in the NewRelic.Core/NewRelic.Agent.Core/Agentapi.cs file.
+// There's no point in documenting the companion functions in the NewRelic.Core/NewRelic.Agent.Core/AgentApi.cs file.
 //
 // All public functions here must have the EXACTLY the same type signature
-// as their non-stub counterparts in NewRelic.Core/NewRelic.Agent.Core/Agentapi.cs file.
+// as their non-stub counterparts in NewRelic.Core/NewRelic.Agent.Core/AgentApi.cs file.
 namespace NewRelic.Api.Agent
 {
     /// <summary>
@@ -40,7 +40,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         private static void InitializePublicAgent(object publicAgent)
         {
-            System.Diagnostics.Trace.WriteLine($"NewRelic.InitializePublicAgent({publicAgent})");
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.InitializePublicAgent({nameof(publicAgent)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         private static readonly IAgent _publicAgent = new Agent();
@@ -77,7 +84,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void RecordMetric(string name, float value)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.RecordMetric({0},{1})", name, value));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.RecordMetric({nameof(name)},{nameof(value)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -98,7 +112,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void RecordResponseTimeMetric(string name, long millis)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.RecordResponseTimeMetric({0},{1})", name, millis));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.RecordResponseTimeMetric({nameof(name)},{nameof(millis)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -115,7 +136,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void IncrementCounter(string name)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.IncrementCounter({0})", name));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.IncrementCounter({nameof(name)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         #endregion
@@ -159,7 +187,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void NoticeError(Exception exception, IDictionary<string, string>? parameters)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", exception, parameters));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(exception)},{nameof(parameters)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -199,7 +234,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void NoticeError(Exception exception, IDictionary<string, object>? parameters)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", exception, parameters));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(exception)},{nameof(parameters)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -229,7 +271,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void NoticeError(Exception exception)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0})", exception));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(exception)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -269,7 +318,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void NoticeError(string message, IDictionary<string, string>? parameters)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", message, parameters));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -309,7 +365,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void NoticeError(string message, IDictionary<string, object>? parameters)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", message, parameters));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -352,7 +415,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void NoticeError(string message, IDictionary<string, string>? parameters, bool isExpected)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1},{2})", message, parameters, isExpected));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)},{nameof(isExpected)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -395,7 +465,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void NoticeError(string message, IDictionary<string, object>? parameters, bool isExpected)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1},{2})", message, parameters, isExpected));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)},{nameof(isExpected)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         #endregion
@@ -419,7 +496,14 @@ namespace NewRelic.Api.Agent
         [Obsolete("This method will be deprecated in future versions of the API.  Use GetAgent().CurrentTransaction.AddCustomAttribute(string, object) instead.")]
         public static void AddCustomParameter(string key, IConvertible value)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.AddCustomParameter({0},{1})", key, value));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.AddCustomParameter({nameof(key)},{nameof(value)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -441,7 +525,14 @@ namespace NewRelic.Api.Agent
         [Obsolete("This method will be deprecated in future versions of the API.  Use GetAgent().CurrentTransaction.AddCustomAttribute(string, object) instead.")]
         public static void AddCustomParameter(string key, string value)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.AddCustomParameter({0},{1})", key, value));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.AddCustomParameter({nameof(key)},{nameof(value)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -463,7 +554,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void SetTransactionName(string? category, string name)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetTransactionName({0},{1})", category, name));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.SetTransactionName({nameof(category)},{nameof(name)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -473,7 +571,14 @@ namespace NewRelic.Api.Agent
         /// <param name="uri">The uri of the web transaction</param>
         public static void SetTransactionUri(Uri uri)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetUri({0})", uri));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.SetUri({nameof(uri)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -488,7 +593,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void IgnoreTransaction()
         {
-            System.Diagnostics.Trace.WriteLine("NewRelic.IgnoreTransaction()");
+            try
+            {
+                System.Diagnostics.Trace.WriteLine("NewRelic.IgnoreTransaction()");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -503,7 +615,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void IgnoreApdex()
         {
-            System.Diagnostics.Trace.WriteLine("NewRelic.IgnoreApdex()");
+            try
+            {
+                System.Diagnostics.Trace.WriteLine("NewRelic.IgnoreApdex()");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         #endregion
@@ -528,7 +647,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static string GetBrowserTimingHeader()
         {
-            System.Diagnostics.Trace.WriteLine("NewRelic.GetBrowserTimingHeader()");
+            try
+            {
+                System.Diagnostics.Trace.WriteLine("NewRelic.GetBrowserTimingHeader()");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
             return "<!-- New Relic Header -->";
         }
 
@@ -566,7 +692,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void DisableBrowserMonitoring(bool overrideManual = false)
         {
-            System.Diagnostics.Trace.WriteLine("NewRelic.DisableBrowserMonitoring()");
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.DisableBrowserMonitoring({nameof(overrideManual)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -586,7 +719,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void SetUserParameters(string? userName, string? accountName, string? productName)
         {
-            System.Diagnostics.Trace.WriteLine("NewRelic.SetUserParameters(String userName, String accountName, String productName)");
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.SetUserParameters({nameof(userName)},{nameof(accountName)},{nameof(productName)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         #endregion
@@ -605,7 +745,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void RecordCustomEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes)
         {
-            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.RecordCustomEvent({0},{1})", eventType, attributes));
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.RecordCustomEvent({nameof(eventType)},{nameof(attributes)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         #endregion
@@ -625,7 +772,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void StartAgent()
         {
-            System.Diagnostics.Trace.WriteLine("NewRelic.StartAgent()");
+            try
+            {
+                System.Diagnostics.Trace.WriteLine("NewRelic.StartAgent()");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -645,7 +799,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void SetApplicationName(string applicationName, string? applicationName2 = null, string? applicationName3 = null)
         {
-            System.Diagnostics.Trace.WriteLine("NewRelic.SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null)");
+            try
+            {
+                System.Diagnostics.Trace.WriteLine($"NewRelic.SetApplicationName({nameof(applicationName)},{nameof(applicationName2)},{nameof(applicationName3)})");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
         }
 
         /// <summary>
@@ -669,7 +830,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
         {
-            System.Diagnostics.Trace.WriteLine("NewRelic.GetRequestMetadata()");
+            try
+            {
+                System.Diagnostics.Trace.WriteLine("NewRelic.GetRequestMetadata()");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
             return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
@@ -697,7 +865,14 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
         {
-            System.Diagnostics.Trace.WriteLine("NewRelic.GetResponseMetadata()");
+            try
+            {
+                System.Diagnostics.Trace.WriteLine("NewRelic.GetResponseMetadata()");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
             return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
