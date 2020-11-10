@@ -234,7 +234,7 @@ jobs:
           fileName: 'gpg.tar.bz2'
           encodedString: ${{ secrets.GPG_KEY }}
 
-      - name: Move Artifacts an GPG Key to Staging Location
+      - name: Move Artifacts and GPG Key to Staging Location
         run: |
           cp LinuxRpm/*.rpm ${{ github.workspace }}/deploy/linux/packages
           cp LinuxDeb/*.deb ${{ github.workspace }}/deploy/linux/packages
@@ -274,6 +274,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}/deploy/linux/
           find . -name "*.bash" |xargs chmod a+x
+          find . -type f |xargs dos2unix
           docker-compose build
           if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
             docker-compose run deploy_packages
