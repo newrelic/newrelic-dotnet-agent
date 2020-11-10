@@ -81,7 +81,7 @@ jobs:
 
       - name: Move Artifacts to working_dir
         run: |
-          Copy-Item -Path .\staging_dir\build\BuildArtifacts\DownloadSite -Destination .\working_dir -Recurse
+          Copy-Item -Path .\staging_dir\DownloadSite -Destination .\working_dir -Recurse
         shell: powershell
 
       - name: Create Version-less Installers
@@ -138,7 +138,7 @@ jobs:
       - name: Setup NuGet API Key
         run: |
           nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
-        shell: powershell
+        shell: pwsh
 
       - name: Deploy Agent to Nuget
         run: |
@@ -274,6 +274,7 @@ jobs:
       - name: Build and Run Container
         run: |
           cd ${{ github.workspace }}/deploy/linux/
+          find . -name "*.bash" |xargs chmod a+x
           docker-compose build
           if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
             docker-compose run deploy_packages
