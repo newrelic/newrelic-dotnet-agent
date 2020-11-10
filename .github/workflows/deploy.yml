@@ -274,6 +274,7 @@ jobs:
       - name: Build and Run Container
         run: |
           cd ${{ github.workspace }}/deploy/linux/
+          find . -name "*.bash" |xargs chmod a+x
           docker-compose build
           if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
             docker-compose run deploy_packages
