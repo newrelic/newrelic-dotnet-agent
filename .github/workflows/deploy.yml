@@ -81,7 +81,7 @@ jobs:
 
       - name: Move Artifacts to working_dir
         run: |
-          Copy-Item -Path .\staging_dir\build\BuildArtifacts\DownloadSite -Destination .\working_dir -Recurse
+          Copy-Item -Path .\staging_dir\DownloadSite -Destination .\working_dir -Recurse
         shell: powershell
 
       - name: Create Version-less Installers
