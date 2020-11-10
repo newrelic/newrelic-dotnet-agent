@@ -5,7 +5,7 @@ services:
     # This was necessary to be able to debug using strace
     #    security_opt:
     #        - seccomp:unconfined
-        command: bash -c "/data/deploy.bash"
+        command: bash -c "chmod 777 /data/deploy.bash && chmod 777 /deployscripts/deploy-packages.bash && /data/deploy.bash"
         volumes: 
             - .:/data
             - ./packages:/packages
