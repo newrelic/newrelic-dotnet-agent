@@ -40,7 +40,7 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation.NetCore
             _fixture.Initialize();
         }
 
-        [Fact(Skip = "These tests will not be run until .NET 5 is officially released.")]
+        [Fact]
         public void Test()
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
