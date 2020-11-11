@@ -321,6 +321,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup .NET 5.0
+        uses: actions/setup-dotnet@v1
+        with:
+            dotnet-version: '5.0.100'
+
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.1
 
@@ -360,6 +365,11 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Setup .NET 5.0
+        uses: actions/setup-dotnet@v1
+        with:
+            dotnet-version: '5.0.100'
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.1
@@ -442,6 +452,11 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Setup .NET 5.0
+        uses: actions/setup-dotnet@v1
+        with:
+            dotnet-version: '5.0.100'
 
       - name: Set up secrets
         env:
@@ -531,6 +546,11 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Setup .NET 5.0
+        uses: actions/setup-dotnet@v1
+        with:
+            dotnet-version: '5.0.100'
 
       - name: Download Agent Home Folders
         uses: actions/download-artifact@v2
