@@ -110,11 +110,11 @@ jobs:
           Copy-Item .\working_dir\* ".\previous_releases\${{ github.event.inputs.agent_version }}\" -Force -Recurse
           cd .\previous_releases\${{ github.event.inputs.agent_version }}
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
-            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include "*" --exclude ".DS_Store" --delete --profile $profileName
+            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include "*" --exclude ".DS_Store" --delete
           }
           else {
             Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
-            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete --profile $profileName"
+            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
 
