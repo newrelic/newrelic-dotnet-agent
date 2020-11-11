@@ -57,6 +57,7 @@ jobs:
         shell: powershell
 
       - name: Cache Profiler
+        if: ${{ github.event.pull_request || github.event.workflow_dispatch }}
         id: cache-profiler
         uses: actions/cache@v2
         with:
@@ -122,6 +123,7 @@ jobs:
         shell: bash
 
       - name: Cache Profiler
+        if: ${{ github.event.pull_request || github.event.workflow_dispatch }}
         id: cache-profiler
         uses: actions/cache@v2
         with:
