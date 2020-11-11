@@ -41,7 +41,9 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1.0.2
+        with:
+          vs-version: '[16.8,16.9)'
 
       - name: Clean out _profilerBuild directory
         run: |
@@ -137,7 +139,9 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1.0.2
+        with:
+          vs-version: '[16.8,16.9)'
 
       - name: Setup VSTest Path
         uses: darenm/Setup-VSTest@v1
@@ -327,7 +331,9 @@ jobs:
             dotnet-version: '5.0.100'
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1.0.2
+        with:
+          vs-version: '[16.8,16.9)'
 
       - name: Install dependencies for IntegrationTests.sln
         run: |
@@ -372,7 +378,9 @@ jobs:
             dotnet-version: '5.0.100'
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1.0.2
+        with:
+          vs-version: '[16.8,16.9)'
 
       - name: Install dependencies for UnboundedIntegrationTests.sln
         run: |
@@ -412,7 +420,9 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1.0.2
+        with:
+          vs-version: '[16.8,16.9)'
 
       - name: Install dependencies for PlatformTests.sln
         run: |
