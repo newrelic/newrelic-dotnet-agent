@@ -100,7 +100,6 @@ jobs:
 
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
-      #<other env vars here>
 
     steps:
       - name: Checkout
@@ -363,7 +362,7 @@ jobs:
         shell: powershell
 
       - name: Cache Tests
-        id: cache-integrationtests  # same for integration and unbounded since they are so intertwined.
+        id: cache-integrationtests
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/tests/Agent/IntegrationTests/**/*
@@ -418,7 +417,7 @@ jobs:
         shell: powershell
 
       - name: Cache Tests
-        id: cache-integrationtests # same for integration and unbounded since they are so intertwined.
+        id: cache-integrationtests
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/tests/Agent/IntegrationTests/**/*
@@ -473,7 +472,7 @@ jobs:
         shell: powershell
 
       - name: Cache Tests
-        id: cache-platformtests # same for integration and unbounded since they are so intertwined.
+        id: cache-platformtests
         uses: actions/cache@v2
         with:
           path: |
