@@ -66,13 +66,6 @@ jobs:
     runs-on: windows-2019
 
     steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
-
       - name: Download Deploy Artifacts
         uses: actions/download-artifact@v2
         with:
@@ -81,7 +74,7 @@ jobs:
 
       - name: Move Artifacts to working_dir
         run: |
-          Copy-Item -Path .\staging_dir\build\BuildArtifacts\DownloadSite -Destination .\working_dir -Recurse
+          Copy-Item -Path .\staging_dir\DownloadSite -Destination .\working_dir -Recurse
         shell: powershell
 
       - name: Create Version-less Installers
@@ -93,6 +86,9 @@ jobs:
 
       - name: Deploy latest_release to Download Site
         run: |
+          $Env:AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          $Env:AWS_DEFAULT_REGION="us-west-2"
           New-Item -ItemType directory -Path .\latest_release -Force
           Copy-Item .\working_dir\* .\latest_release\ -Force -Recurse
           cd .\latest_release
@@ -103,21 +99,24 @@ jobs:
             Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
             Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
-        shell: powershell
+        shell: pwsh
 
       - name: Deploy previous_release to Download Site
         run: |
+          $Env:AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          $Env:AWS_DEFAULT_REGION="us-west-2"
           New-Item -ItemType directory -Path .\previous_releases\${{ github.event.inputs.agent_version }} -Force
           Copy-Item .\working_dir\* ".\previous_releases\${{ github.event.inputs.agent_version }}\" -Force -Recurse
           cd .\previous_releases\${{ github.event.inputs.agent_version }}
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
-            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include "*" --exclude ".DS_Store" --delete --profile $profileName
+            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include "*" --exclude ".DS_Store" --delete
           }
           else {
             Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
-            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete --profile $profileName"
+            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
-        shell: powershell
+        shell: pwsh
 
   deploy-nuget:
     needs: get-external-artifacts
@@ -138,7 +137,7 @@ jobs:
       - name: Setup NuGet API Key
         run: |
           nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
-        shell: powershell
+        shell: pwsh
 
       - name: Deploy Agent to Nuget
         run: |
@@ -216,6 +215,12 @@ jobs:
     name: Deploy Linux to APT and YUM
     runs-on: ubuntu-latest
     steps:
+      - name: Install dos2unix
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y dos2unix
+        shell: bash
+        
       - name: Download Deploy Artifacts
         uses: actions/download-artifact@v2
         with:
@@ -235,7 +240,7 @@ jobs:
           fileName: 'gpg.tar.bz2'
           encodedString: ${{ secrets.GPG_KEY }}
 
-      - name: Move Artifacts an GPG Key to Staging Location
+      - name: Move Artifacts and GPG Key to Staging Location
         run: |
           cp LinuxRpm/*.rpm ${{ github.workspace }}/deploy/linux/packages
           cp LinuxDeb/*.deb ${{ github.workspace }}/deploy/linux/packages
@@ -262,8 +267,8 @@ jobs:
           echo "AGENT_VERSION=$AGENT_VERSION" >> docker.env
           echo "ACTION=release" >> docker.env
           echo "S3_BUCKET=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> docker.env
-          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> docker.env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}" >> docker.env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}" >> docker.env
           echo "GPG_KEYS=/deployscripts/gpg.tar.bz2" >> docker.env
           echo "PROD_MAIN_S3=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
           echo "PROD_TEST_S3=${{ secrets.PROD_TEST_S3 }}" >> docker.env
@@ -274,6 +279,8 @@ jobs:
       - name: Build and Run Container
         run: |
           cd ${{ github.workspace }}/deploy/linux/
+          find . -name "*.bash" |xargs chmod a+x
+          find . -type f |xargs dos2unix
           docker-compose build
           if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
             docker-compose run deploy_packages
