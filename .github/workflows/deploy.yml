@@ -267,8 +267,8 @@ jobs:
           echo "AGENT_VERSION=$AGENT_VERSION" >> docker.env
           echo "ACTION=release" >> docker.env
           echo "S3_BUCKET=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> docker.env
-          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> docker.env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}" >> docker.env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}" >> docker.env
           echo "GPG_KEYS=/deployscripts/gpg.tar.bz2" >> docker.env
           echo "PROD_MAIN_S3=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
           echo "PROD_TEST_S3=${{ secrets.PROD_TEST_S3 }}" >> docker.env
