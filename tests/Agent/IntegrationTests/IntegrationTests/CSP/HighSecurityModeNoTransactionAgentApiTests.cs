@@ -13,13 +13,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
     [NetFrameworkTest]
-    public class HighSecurityModeNoTransactionAgentApiTests : IClassFixture<RemoteServiceFixtures.HSMAgentApiExecutor>
+    public class HighSecurityModeNoTransactionAgentApiTests : NewRelicIntegrationTest<RemoteServiceFixtures.HSMAgentApiExecutor>
     {
 
         private readonly RemoteServiceFixtures.HSMAgentApiExecutor _fixture;
         private const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
 
-        public HighSecurityModeNoTransactionAgentApiTests(RemoteServiceFixtures.HSMAgentApiExecutor fixture, ITestOutputHelper output)
+        public HighSecurityModeNoTransactionAgentApiTests(RemoteServiceFixtures.HSMAgentApiExecutor fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-            var errorEventPayload = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
+            var errorEventPayload = _fixture.AgentLog.GetErrorEventPayloads().FirstOrDefault();
 
             NrAssert.Multiple
                 (

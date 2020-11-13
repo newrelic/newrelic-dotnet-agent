@@ -18,6 +18,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTests", "Integra
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}"
+	ProjectSection(SolutionItems) = preProject
+		Applications\AspNet5BasicWebApiApplication\AspNet5BasicWebApiApplication.csproj = Applications\AspNet5BasicWebApiApplication\AspNet5BasicWebApiApplication.csproj
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomAttributesWebApi", "Applications\CustomAttributesWebApi\CustomAttributesWebApi.csproj", "{9E5D7614-414C-427E-83A9-2A723409F45D}"
 EndProject

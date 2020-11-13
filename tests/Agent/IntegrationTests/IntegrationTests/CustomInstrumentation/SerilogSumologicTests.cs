@@ -12,11 +12,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetCoreTest]
-    public class SerilogSumologicSyncTests : IClassFixture<RemoteServiceFixtures.SerilogSumologicFixture>
+    public class SerilogSumologicSyncTests : NewRelicIntegrationTest<RemoteServiceFixtures.SerilogSumologicFixture>
     {
         private readonly RemoteServiceFixtures.SerilogSumologicFixture _fixture;
 
-        public SerilogSumologicSyncTests(RemoteServiceFixtures.SerilogSumologicFixture fixture, ITestOutputHelper output, bool synchronousMethodFirst = true)
+        public SerilogSumologicSyncTests(RemoteServiceFixtures.SerilogSumologicFixture fixture, ITestOutputHelper output, bool synchronousMethodFirst = true) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

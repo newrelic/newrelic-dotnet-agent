@@ -18,11 +18,11 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
     /// Instrumentations occur in this test are AspNetCore and HttpClient.
     /// </summary>
     [NetCoreTest]
-    public class HttpClientW3CTestsNetCore : IClassFixture<AspNetCoreDistTraceRequestChainFixture>
+    public class HttpClientW3CTestsNetCore : NewRelicIntegrationTest<AspNetCoreDistTraceRequestChainFixture>
     {
         private readonly AspNetCoreDistTraceRequestChainFixture _fixture;
 
-        private const int ExpectedTransactionCount = 2;
+        private const int ExpectedTransactionCount = 1;
 
         private const string TestTraceId = "12345678901234567890123456789012";
         private const string TestTraceParent = "1234567890123456";
@@ -30,6 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
         private const string TestOtherVendorEntries = "rojo=1,congo=2";
 
         public HttpClientW3CTestsNetCore(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

@@ -14,13 +14,14 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
     [NetCoreTest]
-    public class AspNetCoreGenericWebHostTests : IClassFixture<RemoteServiceFixtures.AspNetCore3FeaturesFixture>
+    public class AspNetCoreGenericWebHostTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCore3FeaturesFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCore3FeaturesFixture _fixture;
 
         private const int ExpectedTransactionCount = 2;
 
         public AspNetCoreGenericWebHostTests(RemoteServiceFixtures.AspNetCore3FeaturesFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -84,7 +85,7 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
                 () => Assert.Equal("ExceptionMessage", errorTraces[0].Message),
                 () => Assert.NotEmpty(errorTraces[0].Attributes.StackTrace),
                 () => Assert.Single(errorEvents),
-                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0].Events[0])
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0])
             );
         }
 

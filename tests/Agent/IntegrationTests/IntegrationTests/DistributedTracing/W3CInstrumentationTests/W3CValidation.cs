@@ -46,11 +46,11 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
     /// This makes troubleshooting a bit more difficult since you have to dig through the output for the test and find the failures.
     /// </summary>
     [NetFrameworkTest]
-    public class W3CValidation : IClassFixture<ConsoleDynamicMethodFixtureFW>
+    public class W3CValidation : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW>
     {
         protected readonly ConsoleDynamicMethodFixtureFW _fixture;
 
-        public W3CValidation(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output)
+        public W3CValidation(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

@@ -11,7 +11,7 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
-    public class GetBrowserTimingHeaderAutoOn : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class GetBrowserTimingHeaderAutoOn : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
@@ -19,6 +19,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         private string _htmlContentAfterCallToGetBrowserTiming;
 
         public GetBrowserTimingHeaderAutoOn(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -46,6 +47,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         public void Test()
         {
             NrAssert.Multiple(
+                () => Assert.NotNull(_browserTimingHeader),
+                () => Assert.NotNull(_htmlContentAfterCallToGetBrowserTiming),
                 () => Assert.Contains("NREUM", _browserTimingHeader),
                 ShouldNotAutoInstrumentAfterCallToGetBrowserTimingHeader
             );

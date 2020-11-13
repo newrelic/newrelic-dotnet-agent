@@ -24,7 +24,7 @@ namespace AspNetCoreDistTracingApplication.Controllers
             }
             catch (Exception ex)
             {
-                return $"Exception occured in {nameof(SecondCallController)} calling [{nextUrl}]: {ex}";
+                return $"Exception occurred in {nameof(SecondCallController)} calling [{nextUrl}]: {ex}";
             }
         }
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -12,12 +13,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetFrameworkTest]
-    public class BasicAspWebService : IClassFixture<RemoteServiceFixtures.BasicAspWebService>
+    public class BasicAspWebService : NewRelicIntegrationTest<RemoteServiceFixtures.BasicAspWebService>
     {
 
         private readonly RemoteServiceFixtures.BasicAspWebService _fixture;
 
         public BasicAspWebService(RemoteServiceFixtures.BasicAspWebService fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -37,7 +39,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 exerciseApplication: () =>
                 {
                     _fixture.InvokeAsyncCall();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex);
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
                 });
             _fixture.Initialize();
         }

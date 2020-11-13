@@ -15,11 +15,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
     [NetFrameworkTest]
-    public class HighSecurityAndCustomAttributes : IClassFixture<HSMCustomAttributesWebApi>
+    public class HighSecurityAndCustomAttributes : NewRelicIntegrationTest<HSMCustomAttributesWebApi>
     {
         private readonly HSMCustomAttributesWebApi _fixture;
 
-        public HighSecurityAndCustomAttributes(HSMCustomAttributesWebApi fixture, ITestOutputHelper output)
+        public HighSecurityAndCustomAttributes(HSMCustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
             Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample);
 
             var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-            var errorEventPayload = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
+            var errorEvent = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
 
             var unexpectedErrorCustomAttributes = new List<string>
             {
@@ -68,7 +68,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
 
             NrAssert.Multiple(
                 () => Assertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorCustomAttributes, ErrorTraceAttributeType.Intrinsic, errorTrace),
-                () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorCustomAttributes, EventAttributeType.User, errorEventPayload.Events[0])
+                () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorCustomAttributes, EventAttributeType.User, errorEvent)
             );
         }
     }

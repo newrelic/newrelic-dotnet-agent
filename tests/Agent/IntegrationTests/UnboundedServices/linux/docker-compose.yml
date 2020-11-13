@@ -4,6 +4,7 @@ rabbitmq:
         - "4369:4369"
         - "5671-5672:5671-5672"
         - "25672:25672"
+        - "15691-15692"
     hostname: my-rabbit
     container_name: RabbitmqServer
 
@@ -30,6 +31,10 @@ couchbase:
     ports:
         - "8091-8094:8091-8094"
         - "11210:11210"
+        - "8095-8096"
+        - "11207"
+        - "11211"
+        - "18091-18096"
     environment:
         # These credentials are only used to configure the Couchbase container 
         # for use by the integration tests. You can change these to any value 
@@ -78,6 +83,9 @@ db2:
     privileged: true
     ports:
         - "50000:50000"
+        - "22"
+        - "55000"
+        - "60006-60007"
     environment:
         - LICENSE=accept
         # These credentials are only used to configure the Db2 container for 
@@ -93,6 +101,7 @@ mysql:
     command: mysqld --default-authentication-plugin=mysql_native_password
     ports:
         - "3306:3306"
+        - "33060"
     environment:
         # These credentials are only used to configure the MySql container 
         # for use by the integration tests. They must match the values from 

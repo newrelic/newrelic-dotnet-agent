@@ -15,7 +15,7 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CatInbound
 {
     [NetFrameworkTest]
-    public class CatEnabledWithFullInboundHeaders : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class CatEnabledWithFullInboundHeaders : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
 
         private RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
@@ -23,7 +23,7 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
 
         private HttpResponseHeaders _responseHeaders;
 
-        public CatEnabledWithFullInboundHeaders(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public CatEnabledWithFullInboundHeaders(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

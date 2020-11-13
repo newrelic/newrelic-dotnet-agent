@@ -14,11 +14,11 @@ using NewRelic.Testing.Assertions;
 namespace NewRelic.Agent.IntegrationTests.Owin
 {
     [NetFrameworkTest]
-    public class OwinCATChainTests : IClassFixture<OwinTracingChainFixture>
+    public class OwinCATChainTests : NewRelicIntegrationTest<OwinTracingChainFixture>
     {
         private readonly OwinTracingChainFixture _fixture;
 
-        public OwinCATChainTests(OwinTracingChainFixture fixture, ITestOutputHelper output)
+        public OwinCATChainTests(OwinTracingChainFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

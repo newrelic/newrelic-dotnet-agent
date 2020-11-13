@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public abstract class AgentLogBase
     {
-        public const string LogLineContextDataRegex = @"\[pid: \d+, tid: \d+\] ";
+        public const string LogLineContextDataRegex = @"\[pid: \d+, tid: .+\] ";
         public const string InfoLogLinePrefixRegex = @"^.*?NewRelic\s+INFO: " + LogLineContextDataRegex;
         public const string DebugLogLinePrefixRegex = @"^.*?NewRelic\s+DEBUG: " + LogLineContextDataRegex;
         public const string ErrorLogLinePrefixRegex = @"^.*?NewRelic\s+ERROR: " + LogLineContextDataRegex;
@@ -294,12 +294,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region ErrorEvents
 
-        public IEnumerable<ErrorEventPayload> GetErrorEvents()
+        public IEnumerable<ErrorEventPayload> GetErrorEventPayloads()
         {
             return TryGetLogLines(ErrorEventDataLogLineRegex)
                 .Select(match => TryExtractJson(match, 1))
                 .Select(json => JsonConvert.DeserializeObject<ErrorEventPayload>(json))
                 .Where(errorEvent => errorEvent != null);
+        }
+
+        public IEnumerable<ErrorEventEvents> GetErrorEvents()
+        {
+            return GetErrorEventPayloads().SelectMany(payload => payload.Events);
         }
 
         #endregion ErrorEvents

@@ -330,7 +330,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 ErrorCollectorIgnoreMessages = _configuration.IgnoreErrorMessagesForAgentSettings,
                 ErrorCollectorExpectedClasses = _configuration.ExpectedErrorClassesForAgentSettings,
                 ErrorCollectorExpectedMessages = _configuration.ExpectedErrorMessagesForAgentSettings,
-                ErrorCollectoryExpectedStatusCodes = _configuration.ExpectedErrorStatusCodesForAgentSettings,
+                ErrorCollectorExpectedStatusCodes = _configuration.ExpectedErrorStatusCodesForAgentSettings,
                 TransactionTracerStackThreshold = _configuration.TransactionTracerStackThreshold.TotalSeconds,
                 TransactionTracerExplainEnabled = _configuration.SqlExplainPlansEnabled,
                 TransactionTracerExplainThreshold = _configuration.SqlExplainPlanThreshold.TotalSeconds,

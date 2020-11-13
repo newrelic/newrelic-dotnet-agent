@@ -12,12 +12,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
-    public class CallStackFallbackMvc : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class CallStackFallbackMvc : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
 
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
         public CallStackFallbackMvc(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

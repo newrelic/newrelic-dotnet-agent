@@ -23,9 +23,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
     {
     public:
         InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls) :
-            _instrumentationPoints(new InstrumentationPointSet()),
-            _invalidFileCount(0)
+            _instrumentationPointsSet(new InstrumentationPointSet())
         {
+
             // pull instrumentation points from every xml string
             for (auto instrumentationXml : *instrumentationXmls)
             {
@@ -42,15 +42,20 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                     continue;
                 }
             }
+
+            LogInfo("Identified ", _instrumentationPointsSet->size(), " Instrumentation points in .xml files");
+            
         }
 
         InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints) :
-            _instrumentationPoints(instrumentationPoints),
-            _invalidFileCount(0)
-        {}
+            _instrumentationPointsSet(instrumentationPoints)
+        {
+            _instrumentationPointsSet = instrumentationPoints;
 
-        InstrumentationPointSetPtr GetInstrumentationPoints() {
-            return _instrumentationPoints;
+            for (auto instrumentationPoint : *instrumentationPoints)
+            {
+                (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()] = instrumentationPoint;
+            }
         }
 
         uint16_t GetInvalidFileCount()
@@ -58,15 +63,13 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return _invalidFileCount;
         }
 
+        InstrumentationPointSetPtr GetInstrumentationPoints() const
+        {
+            return _instrumentationPointsSet;
+        }
+
         InstrumentationPointPtr TryGetInstrumentationPoint(const MethodRewriter::IFunctionPtr function) const
         {
-            SignatureParser::MethodSignaturePtr methodSignature = SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end());
-            InstrumentationPointPtr ipToFind(new InstrumentationPoint());
-            ipToFind->AssemblyName = function->GetAssemblyName();
-            ipToFind->ClassName = function->GetTypeName();
-            ipToFind->MethodName = function->GetFunctionName();
-            ipToFind->Parameters = std::unique_ptr<xstring_t>(new xstring_t(methodSignature->ToString(function->GetTokenResolver())));
-
             // Temporarily specifically ignore System.Net.Http.HttpClient instrumentation for .Net 5 and greater, and System.Net.Http.SocketsHttpHandler for framework less than .Net 5
             // until version checking from instrumentation xml is supported.
             if (IsHttpClient5OrGreater(function) || IsSocketsHttpHandlerLessThan5(function))
@@ -74,23 +77,49 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 return nullptr;
             }
 
-            auto instPoint = TryGetInstrumentationPoint(ipToFind);
+            const auto methodSignature = SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end());
+            const auto params = methodSignature->ToString(function->GetTokenResolver());
+            const auto instPoint = TryGetInstrumentationPoint(function->GetAssemblyName(), function->GetTypeName(), function->GetFunctionName(), params);
+
             return instPoint;
         }
 
     private:
 
-        InstrumentationPointPtr TryGetInstrumentationPoint(const InstrumentationPointPtr ipToFind) const
+        InstrumentationPointPtr TryGetInstrumentationPoint(
+            const xstring_t& assemblyName,
+            const xstring_t& className,
+            const xstring_t& methodName,
+            const xstring_t& parameters) const
         {
-            for (auto current : *_instrumentationPoints)
+            auto matchKey = InstrumentationPoint::GetMatchKey(assemblyName, className, methodName, parameters);
+            auto matchInstrumentation = TryGetInstrumentationPoint(matchKey);
+
+            if (matchInstrumentation != nullptr)
             {
-                if (current == ipToFind)
-                {
-                    return current;
-                }
+                return matchInstrumentation;
             }
 
-            return nullptr;
+            matchKey = InstrumentationPoint::GetMatchKey(assemblyName, className, methodName);
+            return TryGetInstrumentationPoint(matchKey);
+        }
+
+        InstrumentationPointPtr TryGetInstrumentationPoint(const InstrumentationPointPtr ipToFind) const
+        {
+            auto const key = ipToFind->GetMatchKey();
+
+            return TryGetInstrumentationPoint(key);
+        }
+
+        InstrumentationPointPtr TryGetInstrumentationPoint(const xstring_t& key) const
+        {
+            auto matches = _instrumentationPointsMap->find(key);
+            if (matches == _instrumentationPointsMap->end())
+            {
+                return nullptr;
+            }
+
+            return matches->second;
         }
 
         bool IsHttpClient5OrGreater(const MethodRewriter::IFunctionPtr function) const
@@ -171,6 +200,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             instrumentationPoint->ClassName = GetAttributeOrEmptyString(matchNode, _X("className"));
             instrumentationPoint->MethodName = GetAttributeOrEmptyString(matcherNode, _X("methodName"));
             instrumentationPoint->Parameters = TryGetAttribute(matcherNode, _X("parameters"));
+
+            // void as the parameters means parameterless method call (not all overloads)
+            if (instrumentationPoint->Parameters != nullptr && Strings::AreEqualCaseInsensitive(*(instrumentationPoint->Parameters), _X("void")))
+            {
+                instrumentationPoint->Parameters = std::unique_ptr<xstring_t>(new xstring_t());
+            }
 
             // sdaubin : I'm sure we could allow some mscorlib methods to be instrumented because we're able to 
             // append methods onto an mscorlib exception class.  But we'd need to do something like we do for those
@@ -273,6 +308,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             auto instrumentationPoints = SplitInstrumentationPointsOnClassNames(instrumentationPoint);
 
             for (auto iPoint : instrumentationPoints) {
+
                 // check if this method has already been instrumented -- if so, log a warning
                 auto existingInstrumentation = TryGetInstrumentationPoint(iPoint);
                 if (existingInstrumentation != nullptr)
@@ -282,7 +318,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 }
 
                 // finally add the new instrumentation point(s) to our set of instrumentation points
-                _instrumentationPoints->insert(iPoint);
+                (*_instrumentationPointsMap)[iPoint->GetMatchKey()] = iPoint;
+                _instrumentationPointsSet->insert(iPoint);
             }
         }
 
@@ -358,8 +395,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         }
 
     private:
-        InstrumentationPointSetPtr _instrumentationPoints;
-        uint16_t _invalidFileCount;
+        InstrumentationPointMapPtr _instrumentationPointsMap = InstrumentationPointMapPtr(new InstrumentationPointMap());
+        InstrumentationPointSetPtr _instrumentationPointsSet;
+        uint16_t _invalidFileCount = 0;
     };
     typedef std::shared_ptr<InstrumentationConfiguration> InstrumentationConfigurationPtr;
 }}}

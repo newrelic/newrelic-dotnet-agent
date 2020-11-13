@@ -19,13 +19,14 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Files: Integration.Testing.RenameOriginalXmlFileTest.xml, Integration.Testing.RenameTargetXmlFileTest.xml
     /// </summary>
     [NetCoreTest]
-    public class RejitRenameFile : IClassFixture<AspNetCoreReJitMvcApplicationFixture>
+    public abstract class RejitRenameFileBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture:AspNetCoreReJitMvcApplicationFixture
     {
         private readonly AspNetCoreReJitMvcApplicationFixture _fixture;
 
         private readonly string _renameOriginalFileFilePath;
 
-        public RejitRenameFile(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+        protected RejitRenameFileBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
 
@@ -93,7 +94,15 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         }
     }
 
-    public class RejitRenameFileWithTieredCompilation : RejitRenameFile, IClassFixture<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+    public class RejitRenameFile : RejitRenameFileBase<AspNetCoreReJitMvcApplicationFixture>
+    {
+        public RejitRenameFile(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class RejitRenameFileWithTieredCompilation : RejitRenameFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
     {
         public RejitRenameFileWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
             : base(fixture, output)

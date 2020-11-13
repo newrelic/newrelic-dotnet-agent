@@ -3,6 +3,7 @@
 Tests the integration of the New Relic .NET agent with various .NET applications. This test suite will only run on Windows.
 
 ## Installation
+Requires Visual Studio 2019 Version 16.8 or greater.
 
 ### Additional items to install
 * ASP.NET and web development workload for Visual Studio 2019.

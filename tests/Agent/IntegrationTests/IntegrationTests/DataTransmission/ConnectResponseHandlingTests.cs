@@ -15,13 +15,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.DataTransmission
 {
     [NetFrameworkTest]
-    public class ConnectResponseHandlingTests : IClassFixture<MvcWithCollectorFixture>
+    public class ConnectResponseHandlingTests : NewRelicIntegrationTest<MvcWithCollectorFixture>
     {
         private readonly MvcWithCollectorFixture _fixture;
         private IEnumerable<CollectedRequest> _collectedRequests = null;
         private HeaderValidationData _requestHeaderMapValidationData = new HeaderValidationData();
 
-        public ConnectResponseHandlingTests(MvcWithCollectorFixture fixture, ITestOutputHelper output)
+        public ConnectResponseHandlingTests(MvcWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
                 {
                     _fixture.Get();
                     _fixture.AgentLog.WaitForLogLine(AgentLogFile.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
                     _collectedRequests = _fixture.GetCollectedRequests();
                     _requestHeaderMapValidationData = _fixture.GetRequestHeaderMapValidationData();
                 }

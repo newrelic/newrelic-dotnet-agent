@@ -21,8 +21,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private Action _setupConfiguration;
         private Action _exerciseApplication;
+        
 
         private bool _initialized;
+
+        public void SetTestClassType(Type testClassType)
+        {
+            RemoteApplication?.SetTestClassType(testClassType);
+        }
 
         public int? ExitCode => RemoteApplication?.ExitCode;
 
@@ -78,8 +84,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             get { return RemoteApplication.KeepWorkingDirectory; }
             set { RemoteApplication.KeepWorkingDirectory = value; }
         }
-
-        public bool DelayKill;
 
         protected virtual int MaxTries => 2;
 
@@ -204,12 +208,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 try
                 {
-                    var appIsExercisedNormally = true;
+                    var retryTest = false;
+                    var exceptionInExerciseApplication = false;
+                    var applicationHadNonZeroExitCode = false;
+
 
                     do
                     {
                         TestLogger?.WriteLine("Test Home" + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
-                        appIsExercisedNormally = true;
+
+                        // reset these for each loop iteration
+                        exceptionInExerciseApplication = false;
+                        applicationHadNonZeroExitCode = false;
+                        retryTest = false;
 
                         RemoteApplication.TestLogger = new XUnitTestLogger(TestLogger);
 
@@ -229,73 +240,63 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         catch (Exception ex)
                         {
-                            appIsExercisedNormally = false;
+                            exceptionInExerciseApplication = true;
                             TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.ToString());
                         }
                         finally
                         {
-                            if (!DelayKill)
+
+                            ShutdownRemoteApplication();
+
+                            if (captureStandardOutput)
                             {
-                                ShutdownRemoteApplication();
+                                RemoteApplication.CapturedOutput.WriteProcessOutputToLog("RemoteApplication:");
 
-                                if (captureStandardOutput)
+                                // Most of our tests run in HostedWebCore, but some don't, e.g. the self-hosted
+                                // WCF tests. For the HWC tests we carefully validate the console output in order
+                                // to detect process-level failures that may cause test flickers. For the self-
+                                // hosted tests, unfortunately, we just punt that.
+                                if (RemoteApplication.ValidateHostedWebCoreOutput)
                                 {
-                                    RemoteApplication.CapturedOutput.WriteProcessOutputToLog("RemoteApplication:");
-
-                                    // Most of our tests run in HostedWebCore, but some don't, e.g. the self-hosted
-                                    // WCF tests. For the HWC tests we carefully validate the console output in order
-                                    // to detect process-level failures that may cause test flickers. For the self-
-                                    // hosted tests, unfortunately, we just punt that.
-                                    if (RemoteApplication.ValidateHostedWebCoreOutput)
-                                    {
-                                        SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
-                                    }
-                                    else
-                                    {
-                                        TestLogger?.WriteLine("Note: child process is not required for log validation because _remoteApplication.ValidateHostedWebCoreOutput = false");
-                                    }
+                                    SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
                                 }
                                 else
                                 {
-                                    TestLogger?.WriteLine("Note: child process application does not redirect output because _remoteApplication.CaptureStandardOutput = false. HostedWebCore validation cannot take place without the standard output. This is common for non-web and self-hosted applications.");
+                                    TestLogger?.WriteLine("Note: child process is not required for log validation because _remoteApplication.ValidateHostedWebCoreOutput = false");
                                 }
-
-                                RemoteApplication.WaitForExit();
-
-                                appIsExercisedNormally = RemoteApplication.ExitCode == 0;
-
-                                TestLogger?.WriteLine($"Remote application exited with a {(appIsExercisedNormally ? "success" : "failure")} exit code of {RemoteApplication.ExitCode}.");
-
                             }
                             else
                             {
-                                TestLogger?.WriteLine("Note: Due to DelayKill being used, no process output or agent log validation was performed to verify that the application started and ran successfully.");
+                                TestLogger?.WriteLine("Note: child process application does not redirect output because _remoteApplication.CaptureStandardOutput = false. HostedWebCore validation cannot take place without the standard output. This is common for non-web and self-hosted applications.");
                             }
 
-                            if (!appIsExercisedNormally && DelayKill)
+                            RemoteApplication.WaitForExit();
+
+                            applicationHadNonZeroExitCode = RemoteApplication.ExitCode != 0;
+
+                            TestLogger?.WriteLine($"Remote application exited with a {(applicationHadNonZeroExitCode ? "failure" : "success")} exit code of {RemoteApplication.ExitCode}.");
+
+                            retryTest = exceptionInExerciseApplication || applicationHadNonZeroExitCode;
+
+                            if (retryTest)
                             {
-                                RemoteApplication.Kill();
-
-                                if (captureStandardOutput)
-                                {
-                                    RemoteApplication.CapturedOutput.WriteProcessOutputToLog("[RemoteApplicationFixture]: Initialize");
-                                }
-
-                                RemoteApplication.WaitForExit();
+                                var message = $"Retrying test. Exception caught when exercising test app = {exceptionInExerciseApplication}, application had non-zero exit code = {applicationHadNonZeroExitCode}.";
+                                TestLogger?.WriteLine(message);
+                                Thread.Sleep(1000);
+                                numberOfTries++;
                             }
-
-                            Thread.Sleep(1000);
-
-                            numberOfTries++;
                         }
-                    } while (!appIsExercisedNormally && numberOfTries < MaxTries);
 
-                    if (!appIsExercisedNormally)
+                    } while (retryTest && numberOfTries < MaxTries);
+
+                    if (retryTest)
                     {
-                        TestLogger?.WriteLine($"Test App wasn't exercised normally after {MaxTries} tries.");
-                        throw new Exception($"Test App wasn't exercised normally after {MaxTries} tries.");
+                        var message = ($"Test failed after {MaxTries} tries.");
+                        TestLogger?.WriteLine(message);
+                        throw new Exception(message);
                     }
                 }
+
                 finally
                 {
                     TestLogger?.WriteLine("===== Begin Agent log file =====");

@@ -14,12 +14,13 @@ using NewRelic.Testing.Assertions;
 namespace NewRelic.Agent.IntegrationTests.Owin
 {
     [NetFrameworkTest]
-    public class OwinMiddlewareExceptionTests : IClassFixture<RemoteServiceFixtures.OwinWebApiFixture>
+    public abstract class OwinMiddlewareExceptionTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture: RemoteServiceFixtures.OwinWebApiFixture
     {
         private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
 
         // The base test class runs tests for Owin 2; the derived classes test Owin 3 and 4
-        public OwinMiddlewareExceptionTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
+        protected OwinMiddlewareExceptionTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -82,24 +83,33 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assert.NotEmpty(errorTraces),
-                () => Assert.NotEmpty(_fixture.AgentLog.GetErrorEvents()),
+                () => Assert.NotEmpty(errorEvents),
                 () => Assert.Equal("WebTransaction/StatusCode/500", errorTraces[0].Path),
                 () => Assert.Equal(expectedExceptionClassName, errorTraces[0].ExceptionClassName),
                 () => Assert.Equal(expectedExceptionMessage, errorTraces[0].Message),
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[0]),
-                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0].Events[0])
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0])
             );
         }
     }
 
-    public class Owin3MiddlewareExceptionTests : OwinMiddlewareExceptionTests, IClassFixture<RemoteServiceFixtures.Owin3WebApiFixture>
+    public class OwinMiddlewareExceptionTests : OwinMiddlewareExceptionTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
+    {
+        public OwinMiddlewareExceptionTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class Owin3MiddlewareExceptionTests : OwinMiddlewareExceptionTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
     {
         public Owin3MiddlewareExceptionTests(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
-    public class Owin4MiddlewareExceptionTests : OwinMiddlewareExceptionTests, IClassFixture<RemoteServiceFixtures.Owin4WebApiFixture>
+
+    public class Owin4MiddlewareExceptionTests : OwinMiddlewareExceptionTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
     {
         public Owin4MiddlewareExceptionTests(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)

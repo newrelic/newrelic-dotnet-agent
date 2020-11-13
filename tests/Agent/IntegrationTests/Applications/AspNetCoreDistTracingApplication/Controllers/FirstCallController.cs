@@ -23,7 +23,7 @@ namespace AspNetCoreDistTracingApplication.Controllers
             }
             catch (Exception ex)
             {
-                var result = $"Exception occured in {nameof(FirstCallController)} calling [{nextUrl}]: {ex}";
+                var result = $"Exception occurred in {nameof(FirstCallController)} calling [{nextUrl}]: {ex}";
                 return result;
             }
         }

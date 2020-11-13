@@ -13,11 +13,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Errors
 {
     [NetFrameworkTest]
-    public class ErrorTraceMvc : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class ErrorTraceMvc : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public ErrorTraceMvc(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper testLogger)
+        public ErrorTraceMvc(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper testLogger) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;
@@ -49,13 +49,13 @@ namespace NewRelic.Agent.IntegrationTests.Errors
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// error metrics
-				new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 1},
+                // error metrics
+                new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/MVC/DefaultController/ThrowException", callCount = 1},
 
-				// other
-				new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
+                // other
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
@@ -71,8 +71,8 @@ namespace NewRelic.Agent.IntegrationTests.Errors
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// These metrics won't get generated because of the exception
-				new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
+                // These metrics won't get generated because of the exception
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/ThrowException", callCount = 1 },
 
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Integrated Pipeline" },
@@ -114,7 +114,8 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 () => Assert.True(transactionEvents.Count == 1, $"Expected 1 transaction event but found {transactionEvents.Count}"),
                 () => Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[0]),
                 () => Assert.Single(errorEvents),
-                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0].Events[0]), () => Assertions.TransactionEventHasAttributes(expectedErrorTransactionEventAttributes2, TransactionEventAttributeType.Intrinsic, transactionEvents[0])
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0]),
+                () => Assertions.TransactionEventHasAttributes(expectedErrorTransactionEventAttributes2, TransactionEventAttributeType.Intrinsic, transactionEvents[0])
             );
         }
     }

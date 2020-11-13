@@ -112,7 +112,7 @@ In the example below, an abstract base test fixture has been designed.  Specific
 
 ```Csharp
 
-public abstract class DotNetPerfMetricsTests<TFixture> : IClassFixture<TFixture> where TFixture:ConsoleDynamicMethodFixture
+public abstract class DotNetPerfMetricsTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture:ConsoleDynamicMethodFixture
 {
 
 	public DotNetPerfMetricsTests(TFixture fixture, ITestOutputHelper output)

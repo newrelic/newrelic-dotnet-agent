@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
-    public class NewRelicMetadataEnvTests : IClassFixture<RemoteServiceFixtures.AgentApiExecutor>
+    public class NewRelicMetadataEnvTests : NewRelicIntegrationTest<RemoteServiceFixtures.AgentApiExecutor>
     {
         private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;
         private readonly Dictionary<string, string> _envs = new Dictionary<string, string>
@@ -23,6 +23,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         };
 
         public NewRelicMetadataEnvTests(RemoteServiceFixtures.AgentApiExecutor fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

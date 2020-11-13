@@ -13,12 +13,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetFrameworkTest]
-    public class BasicOpenRastaApplication : IClassFixture<RemoteServiceFixtures.BasicOpenRastaApplication>
+    public class BasicOpenRastaApplication : NewRelicIntegrationTest<RemoteServiceFixtures.BasicOpenRastaApplication>
     {
 
         private readonly RemoteServiceFixtures.BasicOpenRastaApplication _fixture;
 
-        public BasicOpenRastaApplication(RemoteServiceFixtures.BasicOpenRastaApplication fixture, ITestOutputHelper output)
+        public BasicOpenRastaApplication(RemoteServiceFixtures.BasicOpenRastaApplication fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
