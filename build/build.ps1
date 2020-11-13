@@ -104,22 +104,27 @@ $agentVersion = (Get-Item "$rootDirectory\src\_build\AnyCPU-$Configuration\NewRe
 # Linux Packaging #
 ###################
 
+Write-Host "===================================="
+Write-Host "Executing Linux builds in Docker for Agent Version: $agentVersion"
+Push-Location "$rootDirectory\build\Linux"
+# Build the docker images
+docker-compose build
+# Build the Debian package
+docker-compose run -e AGENT_VERSION=$agentVersion build_deb
+# Build the RPM package, signing it if a key was supplied
 if (!($gpgKeyPath -eq "")) {
-    Write-Host "===================================="
-    Write-Host "Executing Linux builds in Docker for Agent Version: $agentVersion"
-    Push-Location "$rootDirectory\build\Linux"
-    docker-compose build
-    docker-compose run -e AGENT_VERSION=$agentVersion build_deb
     New-Item keys -Type Directory -Force
     Copy-Item $gpgKeyPath .\keys\gpg.tar.bz2 -Force
     docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
-    Pop-Location
-    Write-Host "===================================="
+} else {
+    docker-compose run -e AGENT_VERSION=$agentVersion build_rpm
+}
+Pop-Location
+Write-Host "===================================="
 
-    if ($LastExitCode -ne 0) {
-        Write-Host "Error building Linux agent. Exiting with code: $LastExitCode."
-        exit $LastExitCode
-    }
+if ($LastExitCode -ne 0) {
+    Write-Host "Error building Linux agent. Exiting with code: $LastExitCode."
+    exit $LastExitCode
 }
 
 ##########################
