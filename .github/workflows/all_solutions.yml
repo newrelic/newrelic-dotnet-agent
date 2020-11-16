@@ -229,8 +229,8 @@ jobs:
           certutil.exe -f -user -p ${{ secrets.CERT_PASSPHRASE }} -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot
         shell: powershell
       
-      - name: Create Self-signed code signing cert
-        if: ${{ github.event.pull_request }}
+      - name: Create Self-signed code signing cert  
+        if: ${{ github.event.pull_request || github.event.workflow_dispatch }}
         run: |
           Write-Host "New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)"
           New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)
