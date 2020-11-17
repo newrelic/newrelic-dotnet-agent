@@ -41,7 +41,7 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1
 
       - name: Clean out _profilerBuild directory
         run: |
@@ -137,7 +137,7 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1
 
       - name: Setup VSTest Path
         uses: darenm/Setup-VSTest@v1
@@ -214,13 +214,15 @@ jobs:
             ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
           if-no-files-found: error
 
-      - name: Get Code Signing Certificate
+      - name: Convert Code Signing Certificate Into File
         if: ${{ github.event.release }}
         id: write_cert
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: 'newrelic_code_sign_cert.pfx'
-          encodedString: ${{ secrets.SIGNING_CERT }}
+        run: |
+          $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
+          $bytes = [Convert]::FromBase64String('${{ secrets.SIGNING_CERT }}')
+          [IO.File]::WriteAllBytes($filePath, $bytes)
+          Write-Host "::set-output name=filePath::$filePath"
+        shell: powershell
           
       - name: Install Code Signing Certificate
         if: ${{ github.event.release }}
@@ -332,7 +334,7 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1
 
       - name: Install dependencies for IntegrationTests.sln
         run: |
@@ -372,7 +374,7 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1
 
       - name: Install dependencies for UnboundedIntegrationTests.sln
         run: |
@@ -412,7 +414,7 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1
 
       - name: Install dependencies for PlatformTests.sln
         run: |
@@ -687,12 +689,13 @@ jobs:
           name: agent-version
           path: ${{ github.workspace }}
 
-      - name: Get GPG Key
+      - name: Convert GPG Key Into File
         id: write_gpgkey
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: 'gpg.tar.bz2'
-          encodedString: ${{ secrets.GPG_KEY }}
+        run: |
+          filePath="/tmp/gpg.tar.bz2"
+          echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
+          echo "::set-output name=filePath::$filePath"
+        shell: bash
 
       - name: Copy GPG Key to keys
         run: |
