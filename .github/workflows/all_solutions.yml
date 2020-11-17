@@ -214,13 +214,15 @@ jobs:
             ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
           if-no-files-found: error
 
-      - name: Get Code Signing Certificate
+      - name: Convert Code Signing Certificate Into File
         if: ${{ github.event.release }}
         id: write_cert
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: 'newrelic_code_sign_cert.pfx'
-          encodedString: ${{ secrets.SIGNING_CERT }}
+        run: |
+          $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
+          $bytes = [Convert]::FromBase64String('${{ secrets.SIGNING_CERT }}')
+          [IO.File]::WriteAllBytes($filePath, $bytes)
+          Write-Host "::set-output name=filePath::$filePath"
+        shell: powershell
           
       - name: Install Code Signing Certificate
         if: ${{ github.event.release }}
@@ -687,12 +689,13 @@ jobs:
           name: agent-version
           path: ${{ github.workspace }}
 
-      - name: Get GPG Key
+      - name: Convert GPG Key Into File
         id: write_gpgkey
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: 'gpg.tar.bz2'
-          encodedString: ${{ secrets.GPG_KEY }}
+        run: |
+          filePath="/tmp/gpg.tar.bz2"
+          echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
+          echo "::set-output name=filePath::$filePath"
+        shell: bash
 
       - name: Copy GPG Key to keys
         run: |
