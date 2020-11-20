@@ -137,7 +137,7 @@ namespace ParsingTests
         {
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "set @FOO=17; set @BAR=18;");
             Assert.IsNotNull(parsedDatabaseStatement);
-            Assert.AreEqual("foo", parsedDatabaseStatement.Model);
+            Assert.AreEqual("bar", parsedDatabaseStatement.Model);
             Assert.AreEqual("set", parsedDatabaseStatement.Operation);
         }
 
@@ -471,6 +471,17 @@ namespace ParsingTests
             Assert.IsNotNull(parsedDatabaseStatement);
             Assert.AreEqual("(subquery)", parsedDatabaseStatement.Model, string.Format($"Expected model (subquery) but was {parsedDatabaseStatement.Model}", "(subquery)", parsedDatabaseStatement.Model));
             Assert.AreEqual("select", parsedDatabaseStatement.Operation, string.Format($"Expected operation select but was {parsedDatabaseStatement.Operation}", "select", parsedDatabaseStatement.Operation));
+        }
+
+        [Test]
+        public void SqlParserTest_IgnoreSetStatements()
+        {
+            // We want to prioritize the "EXEC" over the leading SET statements
+            const string test = "SET CONTEXT_INFO = @0; SET NOCOUNT ON; EXEC dbo.spSomeProconOurSystem";
+
+            var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
+            Assert.IsNotNull(parsedDatabaseStatement);
+            Assert.AreEqual("ExecuteProcedure", parsedDatabaseStatement.Operation, string.Format($"Expected operation select but was {parsedDatabaseStatement.Operation}", "ExecuteProcedure", parsedDatabaseStatement.Operation));
         }
 
         /// <summary>

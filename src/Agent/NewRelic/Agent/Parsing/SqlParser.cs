@@ -72,6 +72,7 @@ namespace NewRelic.Parsing
         private const string SingleSqlStatementPhrase = @"^[^;]*[\s;]*$";
 
         private const string CommentPhrase = @"/\*.*?\*/"; //The ? makes the searching lazy
+        private const string LeadingSetPhrase = @"^(?:\s*\bset\b.+?\;)+(?=.*\w+.*)";
         private const string StartObjectNameSeparator = @"[\s\(\[`\""]*";
         private const string EndObjectNameSeparator = @"[\s\)\]`\""]*";
         private const string ValidObjectName = @"([^,;\[\s\]\(\)`\""\.]*)";
@@ -94,6 +95,7 @@ namespace NewRelic.Parsing
         private const string DeclareString = DeclarePhrase + VariableNamePhrase;
 
         private static readonly Regex CommentPattern = new Regex(CommentPhrase, RegexOptions.Compiled | RegexOptions.Singleline);
+        private static readonly Regex LeadingSetPattern = new Regex(LeadingSetPhrase, RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
         private static readonly Regex ValidMetricNameMatcher = new Regex(MetricNamePhrase, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex SingleSqlStatementMatcher = new Regex(SingleSqlStatementPhrase, PatternSwitches);
         private static readonly Regex SelectRegex = new Regex(SelectString, PatternSwitches);
@@ -128,6 +130,12 @@ namespace NewRelic.Parsing
                 }
                 // Remove comments.
                 var statement = CommentPattern.Replace(commandText, string.Empty).TrimStart();
+
+                if (!IsSingleSqlStatement(statement))
+                {
+                    // Remove leading SET commands
+                    statement = LeadingSetPattern.Replace(statement, string.Empty).TrimStart();
+                }
 
                 return _statementParser(datastoreVendor, commandType, commandText, statement);
             }
