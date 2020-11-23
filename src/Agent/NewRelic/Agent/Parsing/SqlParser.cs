@@ -39,7 +39,7 @@ namespace NewRelic.Parsing
         private const string SqlParamPrefix = "@";
 
         // Regex Phrases
-        private const string SelectPhrase = @"(?=^\bset\b.*;\s*\bselect\b|^\bselect\b).*?\s+";
+        private const string SelectPhrase = @"^\bselect\b.*?\s+";
         private const string InsertPhrase = @"^insert\s+into\s+";
         private const string UpdatePhrase = @"^update\s+";
         private const string DeletePhrase = @"^delete\s+";
@@ -134,6 +134,9 @@ namespace NewRelic.Parsing
                 if (!IsSingleSqlStatement(statement))
                 {
                     // Remove leading SET commands
+
+                    // Trimming any trailing semicolons is necessary to avoid having the LeadingSetPattern
+                    // match a SQL statement that ONLY contains SET commands, which would leave us with nothing
                     statement = statement.TrimEnd(';');
                     statement = LeadingSetPattern.Replace(statement, string.Empty).TrimStart();
                 }
