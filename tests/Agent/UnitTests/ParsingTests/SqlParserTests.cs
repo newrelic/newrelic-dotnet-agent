@@ -133,7 +133,7 @@ namespace ParsingTests
         }
 
         [Test]
-        public void SqlParserTest_TestCompoundStatement()
+        public void SqlParserTest_TestCompoundSetStatement()
         {
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "set @FOO=17; set @BAR=18;");
             Assert.IsNotNull(parsedDatabaseStatement);
@@ -473,15 +473,19 @@ namespace ParsingTests
             Assert.AreEqual("select", parsedDatabaseStatement.Operation, string.Format($"Expected operation select but was {parsedDatabaseStatement.Operation}", "select", parsedDatabaseStatement.Operation));
         }
 
-        [Test]
-        public void SqlParserTest_IgnoreSetStatements()
+        [TestCase("SELECT * FROM people", "select")]
+        [TestCase("INSERT INTO people(firstname, lastname) values ('alice', 'smith');", "insert")]
+        [TestCase("UPDATE dude SET man = 'yeah' WHERE id = 123", "update")]
+        [TestCase("DELETE FROM actors WHERE title = 'The Dude'", "delete")]
+        [TestCase("EXEC dbo.spSomeProcOnOurSystem", "ExecuteProcedure")]
+        public void SqlParserTest_IgnoreSetStatements(string commandText, string operation)
         {
-            // We want to prioritize the "EXEC" over the leading SET statements
-            const string test = "SET CONTEXT_INFO = @0; SET NOCOUNT ON; EXEC dbo.spSomeProconOurSystem";
+            // We want to prioritize the 'real' command over the leading SET statements
+            var test = "SET CONTEXT_INFO = @0; SET NOCOUNT ON; " + commandText;
 
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
             Assert.IsNotNull(parsedDatabaseStatement);
-            Assert.AreEqual("ExecuteProcedure", parsedDatabaseStatement.Operation, string.Format($"Expected operation select but was {parsedDatabaseStatement.Operation}", "ExecuteProcedure", parsedDatabaseStatement.Operation));
+            Assert.AreEqual(operation, parsedDatabaseStatement.Operation, $"Expected operation {operation} but was {parsedDatabaseStatement.Operation}");
         }
 
         /// <summary>
