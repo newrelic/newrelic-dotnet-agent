@@ -466,13 +466,16 @@ namespace ParsingTests
             // after the FROM contains a parentheses.  Here's an example that works, from Marina and now part of the test
             // DotNetTestApp/test.sqlserver.aspx
             const string test = "SELECT * FROM (SELECT * FROM [dbo].[Account] Where UserId like 'John') as test";
+            const string expectedModel = "(subquery)";
+            const string expectedOperation = "select";
 
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
             Assert.IsNotNull(parsedDatabaseStatement);
-            Assert.AreEqual("(subquery)", parsedDatabaseStatement.Model, string.Format($"Expected model (subquery) but was {parsedDatabaseStatement.Model}", "(subquery)", parsedDatabaseStatement.Model));
-            Assert.AreEqual("select", parsedDatabaseStatement.Operation, string.Format($"Expected operation select but was {parsedDatabaseStatement.Operation}", "select", parsedDatabaseStatement.Operation));
+            Assert.AreEqual(expectedModel, parsedDatabaseStatement.Model, $"Expected model {expectedModel} but was {parsedDatabaseStatement.Model}");
+            Assert.AreEqual(expectedOperation, parsedDatabaseStatement.Operation, $"Expected operation {expectedOperation} but was {parsedDatabaseStatement.Operation}");
         }
 
+        [Test]
         [TestCase("SELECT * FROM people", "select")]
         [TestCase("INSERT INTO people(firstname, lastname) values ('alice', 'smith');", "insert")]
         [TestCase("UPDATE dude SET man = 'yeah' WHERE id = 123", "update")]
