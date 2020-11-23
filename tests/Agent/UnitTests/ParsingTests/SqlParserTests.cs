@@ -137,7 +137,7 @@ namespace ParsingTests
         {
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "set @FOO=17; set @BAR=18;");
             Assert.IsNotNull(parsedDatabaseStatement);
-            Assert.AreEqual("bar", parsedDatabaseStatement.Model);
+            Assert.AreEqual("foo", parsedDatabaseStatement.Model);
             Assert.AreEqual("set", parsedDatabaseStatement.Operation);
         }
 

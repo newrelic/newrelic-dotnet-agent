@@ -72,7 +72,7 @@ namespace NewRelic.Parsing
         private const string SingleSqlStatementPhrase = @"^[^;]*[\s;]*$";
 
         private const string CommentPhrase = @"/\*.*?\*/"; //The ? makes the searching lazy
-        private const string LeadingSetPhrase = @"^(?:\s*\bset\b.+?\;)+(?=.*\w+.*)";
+        private const string LeadingSetPhrase = @"^(?:\s*\bset\b.+?\;)+(?!(\s*\bset\b))";
         private const string StartObjectNameSeparator = @"[\s\(\[`\""]*";
         private const string EndObjectNameSeparator = @"[\s\)\]`\""]*";
         private const string ValidObjectName = @"([^,;\[\s\]\(\)`\""\.]*)";
@@ -134,6 +134,7 @@ namespace NewRelic.Parsing
                 if (!IsSingleSqlStatement(statement))
                 {
                     // Remove leading SET commands
+                    statement = statement.TrimEnd(';');
                     statement = LeadingSetPattern.Replace(statement, string.Empty).TrimStart();
                 }
 
