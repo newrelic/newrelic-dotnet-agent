@@ -37,6 +37,7 @@ namespace NewRelic.Parsing
         private static readonly ConcurrentDictionary<DatastoreVendor, ParsedSqlStatement> _nullParsedStatementStore = new ConcurrentDictionary<DatastoreVendor, ParsedSqlStatement>();
 
         private const string SqlParamPrefix = "@";
+        private const char SemiColon = ';';
 
         // Regex Phrases
         private const string SelectPhrase = @"^\bselect\b.*?\s+";
@@ -137,7 +138,7 @@ namespace NewRelic.Parsing
 
                     // Trimming any trailing semicolons is necessary to avoid having the LeadingSetPattern
                     // match a SQL statement that ONLY contains SET commands, which would leave us with nothing
-                    statement = statement.TrimEnd(';');
+                    statement = statement.TrimEnd(SemiColon);
                     statement = LeadingSetPattern.Replace(statement, string.Empty).TrimStart();
                 }
 
