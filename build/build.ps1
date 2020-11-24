@@ -70,9 +70,9 @@ $solutions = [Ordered]@{
 
 Write-Host "Restoring NuGet packages"
 foreach ($sln in $solutions.Keys) {
-    & $nugetPath restore $sln -NoCache -Source "https://www.nuget.org/api/v2"
+    & $msBuildPath /restore $sln
     if ($LastExitCode -ne 0) {
-        Write-Host "Error during NuGet restore. Exiting with code: $LastExitCode.."
+        Write-Host "Error during MSBuild /restore. Exiting with code: $LastExitCode.."
         exit $LastExitCode
     }
 }

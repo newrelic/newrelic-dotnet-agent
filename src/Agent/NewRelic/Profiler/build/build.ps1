@@ -47,7 +47,7 @@ if ($Platform -eq "all") {
 
 if ($restoreNuget) {
     Write-Host "-- Profiler build: Restoring NuGet packages"
-    & $nugetPath restore $profilerSolutionPath -Source "https://www.nuget.org/api/v2"
+    & $msBuildPath /restore $profilerSolutionPath
     ExitIfFailLastExitCode
 }
 
