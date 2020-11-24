@@ -51,22 +51,16 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-release" -Recurse -Force  -ErrorAction SilentlyContinue
         shell: powershell
 
-      - name: Install dependencies
-        run: |
-          Write-Host "MSBuild.exe /restore ${{ env.profiler_solution_path }}"
-          MSBuild.exe /restore ${{ env.profiler_solution_path }}
-        shell: powershell
-
       - name: Build x64
         run: |
-          Write-Host "MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+          MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
         
       - name: Build x86
         run: |
-          Write-Host "MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+          MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
 
       - name: Archive Artifacts
@@ -155,23 +149,11 @@ jobs:
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
-      
-      - name: Install dependencies for FullAgent.sln
-        run: |
-          Write-Host "MSBuild.exe /restore ${{ env.fullagent_solution_path }}"
-          MSBuild.exe /restore ${{ env.fullagent_solution_path }}
-        shell: powershell
-
-      - name: Install dependencies for MsiInstaller.sln
-        run: |
-          Write-Host "MSBuild.exe /restore ${{ env.msi_solution_path }}"
-          MSBuild.exe /restore ${{ env.msi_solution_path }}
-        shell: powershell
-      
+            
       - name: Build FullAgent.sln
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
         shell: powershell
 
       - name: Create agent_version.txt
@@ -240,14 +222,14 @@ jobs:
 
       - name: Build MsiInstaller.sln x86
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}
         shell: powershell
 
       - name: Build MsiInstaller.sln x64
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
         shell: powershell
 
       - name: Archive _build Artifacts
@@ -336,16 +318,10 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1
 
-      - name: Install dependencies for IntegrationTests.sln
-        run: |
-          Write-Host "MSBuild.exe /restore ${{ env.integration_solution_path }}"
-          MSBuild.exe /restore ${{ env.integration_solution_path }}
-        shell: powershell
-
       - name: Build IntegrationTests.sln
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
         shell: powershell
 
       - name: Archive Artifacts
@@ -376,16 +352,10 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1
 
-      - name: Install dependencies for UnboundedIntegrationTests.sln
-        run: |
-          Write-Host "MSBuild.exe /restore ${{ env.unbounded_solution_path }}"
-          MSBuild.exe /restore ${{ env.unbounded_solution_path }}
-        shell: powershell
-
       - name: Build UnboundedIntegrationTests.sln
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
         shell: powershell
 
       - name: Archive Artifacts
@@ -416,16 +386,10 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1
 
-      - name: Install dependencies for PlatformTests.sln
-        run: |
-          Write-Host "MSBuild.exe /restore ${{ env.platform_solution_path }}"
-          MSBuild.exe /restore ${{ env.platform_solution_path }}
-        shell: powershell
-
       - name: Build PlatformTests.sln
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}
         shell: powershell
 
   run-integration-tests:
