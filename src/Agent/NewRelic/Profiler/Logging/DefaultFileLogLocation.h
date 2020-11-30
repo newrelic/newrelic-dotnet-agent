@@ -82,7 +82,8 @@ namespace NewRelic { namespace Profiler { namespace Logger
         {
             auto home = _system->TryGetEnvironmentVariable(_X("HOME_EXPANDED"));
 
-            return home && StartsWith(*home, _X("C:\\DWASFiles\\Sites\\"));
+            // makes no assumption about drive letter (e.g. C:, D:)
+            return home && Contains(*home, _X(":\\DWASFiles\\Sites")); 
         }
 
         const xstring_t GetAzureWebSiteLogDirectory()
@@ -104,16 +105,16 @@ namespace NewRelic { namespace Profiler { namespace Logger
             return _X("NEWRELIC_PROFILER_LOG_DIRECTORY");
         }
 
-        bool StartsWith(xstring_t longerString, xstring_t shorterString)
+        bool Contains(xstring_t envVarValue, xstring_t searchValue)
         {
-            // if the shorter string is not actually shorter then the longer string doesn't start with the shorter one
-            if (longerString.length() < shorterString.length())
+            // if the envVarValue is shorter than searchValue, then obviously it is not contained within
+            if (envVarValue.length() < searchValue.length())
             {
                 return false;
             }
 
-            // compare the strings up to the length of the shorter string, returning true if they are equal
-            return longerString.compare(0, shorterString.length(), shorterString) == 0;
+            // find the searchValue in the envVarValue
+            return envVarValue.find(searchValue) != std::string::npos;
         }
     };
 
