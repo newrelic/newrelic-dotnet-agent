@@ -25,9 +25,11 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			var env = new SystemInterfaces.Environment();
 			var currentDirectory = Directory.GetCurrentDirectory();
-			var environment = env.GetEnvironmentVariable("EnvironmentName");
+            var environment = env.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            if (string.IsNullOrEmpty(environment))
+                environment = env.GetEnvironmentVariable("EnvironmentName");
 
-			var builder = new ConfigurationBuilder()
+            var builder = new ConfigurationBuilder()
 				.SetBasePath(currentDirectory)
 				.AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
 
@@ -51,8 +53,8 @@ namespace NewRelic.Agent.Core.Configuration
 
 			if (Log.IsDebugEnabled)
 			{
-				if (string.IsNullOrWhiteSpace(value)) Log.Debug($"Reading value from appsettings.json: '{key}' not defined. Searched: {_appSettingsFilePaths}.");
-				else Log.Debug($"Reading value from appsettings.json: '{key}={value}'");
+				if (string.IsNullOrWhiteSpace(value)) Log.Debug($"Reading value from appsettings.json and appsettings.*.json: '{key}' not defined. Searched: {_appSettingsFilePaths}.");
+				else Log.Debug($"Reading value from appsettings.json and appsettings.*.json: '{key}={value}'");
 			}
 
 			return value;
