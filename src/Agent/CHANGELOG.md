@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 * **New Feature Template** <br/>
 New Feature Description
-Fixes Issue [#XX](https://github.com/newrelic/newrelic-dotnet-agent/issues/XX)
+
+### Fixes
+Fixes Issue [#224](https://github.com/newrelic/newrelic-dotnet-agent/issues/224): leading "SET" commands will be ignored when parsing compound SQL statements.([#370](https://github.com/newrelic/newrelic-dotnet-agent/pull/370))
+
 
 ## [8.35] - 2020-11-09
 
