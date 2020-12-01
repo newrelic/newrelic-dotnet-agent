@@ -167,12 +167,12 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         {
             auto systemCalls = std::make_shared<SystemCalls>();
 
-            systemCalls->environmentVariables[L"ALLUSERSPROFILE"] = L"D:\\Foo\\ProgramData\\Bar";
+            systemCalls->environmentVariables[L"ALLUSERSPROFILE"] = L"C:\\Foo\\ProgramData\\Bar";
             systemCalls->environmentVariables[L"HOME_EXPANDED"] = L"D:\\DWASFiles\\Sites\\MySite";
-            systemCalls->environmentVariables[L"HOME"] = L"D:\\Home";
+            systemCalls->environmentVariables[L"HOME"] = L"C:\\Home";
 
             auto fileName = DefaultFileLogLocation(systemCalls).GetPathAndFileName();
-            Assert::AreEqual(std::wstring(L"D:\\Home\\LogFiles\\NewRelic\\NewRelic.Profiler.1234.log"), fileName);
+            Assert::AreEqual(std::wstring(L"C:\\Home\\LogFiles\\NewRelic\\NewRelic.Profiler.1234.log"), fileName);
         }
 
         TEST_METHOD(when_directory_exists_do_not_create_directory)
