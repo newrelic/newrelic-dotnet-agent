@@ -43,6 +43,7 @@ namespace NewRelic.Providers.Wrapper.WebApi2
             transaction.SetWebTransactionName(WebTransactionType.WebAPI, transactionName, TransactionNamePriority.FrameworkHigh);
 
             var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
+            segment.DurationShouldBeDeductedFromParent = true;
 
             return Delegates.GetAsyncDelegateFor<Task<HttpResponseMessage>>(agent, segment);
         }
