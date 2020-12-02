@@ -5,8 +5,6 @@ using System;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.Configuration;
-using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Segments
 {
@@ -22,6 +20,7 @@ namespace NewRelic.Agent.Core.Segments
 
         public bool IsValid => false;
         public bool DurationShouldBeDeductedFromParent { get; set; } = false;
+        public bool AlwaysDeductChildDuration { private get; set; } = false;
         public bool IsLeaf => false;
         public bool IsExternal => false;
         public string SpanId => null;

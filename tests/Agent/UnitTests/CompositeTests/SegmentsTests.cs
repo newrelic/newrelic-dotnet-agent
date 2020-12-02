@@ -737,6 +737,29 @@ namespace CompositeTests
         }
 
         [Test]
+        public void ChildDurationShouldNotCountTowardsParentsExclusiveTimeIfDeductDurationTrue()
+        {
+            var childSegmentDuration = TimeSpan.FromMilliseconds(100);
+
+            var tx = _agent.CreateTransaction(
+                isWeb: false,
+                category: "testing",
+                transactionDisplayName: "test",
+                doNotTrackAsUnitOfWork: true);
+            var segment = (Segment)_agent.StartCustomSegmentOrThrow("parentSegment");
+            segment.AlwaysDeductChildDuration = true;
+
+            var childSegment = _agent.StartCustomSegmentOrThrow("childSegment");
+            Thread.Sleep(childSegmentDuration);
+            childSegment.End();
+
+            segment.End();
+            tx.End();
+
+            Assert.Less(segment.ExclusiveDurationOrZero, childSegmentDuration);
+        }
+
+        [Test]
         public void SegmentEndWithExceptionCapturesErrorAttributes()
         {
             var tx = _agent.CreateTransaction(
