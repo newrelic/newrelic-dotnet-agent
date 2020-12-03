@@ -12,6 +12,8 @@ New Feature Description
 ### Fixes
 Fixes Issue [#224](https://github.com/newrelic/newrelic-dotnet-agent/issues/224): leading "SET" commands will be ignored when parsing compound SQL statements.([#370](https://github.com/newrelic/newrelic-dotnet-agent/pull/370))
 
+Fixes Issue [#93](https://github.com/newrelic/newrelic-dotnet-agent/issues/93): Update Async Timing Calculations ([#370](https://github.com/newrelic/newrelic-dotnet-agent/pull/374))
+
 
 ## [8.35] - 2020-11-09
 

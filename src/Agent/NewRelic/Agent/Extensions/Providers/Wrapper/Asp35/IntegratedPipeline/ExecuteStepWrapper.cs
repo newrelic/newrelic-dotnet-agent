@@ -92,7 +92,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
             segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, requestNotification);
             segment.AlwaysDeductChildDuration = true;
 
-        httpContext.Items[HttpContextActions.HttpContextSegmentKey] = segment;
+            httpContext.Items[HttpContextActions.HttpContextSegmentKey] = segment;
             httpContext.Items[HttpContextActions.HttpContextSegmentTypeKey] = requestNotification;
 
             return Delegates.NoOp;
