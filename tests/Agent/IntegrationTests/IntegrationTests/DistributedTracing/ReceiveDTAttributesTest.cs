@@ -14,11 +14,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing
 {
     [NetFrameworkTest]
-    public class ReceiveDTAttributesTest : IClassFixture<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
+    public class ReceiveDTAttributesTest : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
     {
         private readonly RemoteServiceFixtures.DTBasicMVCApplicationFixture _fixture;
 
-        public ReceiveDTAttributesTest(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output)
+        public ReceiveDTAttributesTest(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
             var transactionEventExpectedAttributes = new List<string>(expectedAttributes) { "parentId" };
 
             var transactionEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
-            var errorEvent = _fixture.AgentLog.GetErrorEvents().First().Events.First();
+            var errorEvent = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
             var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()
                 .FirstOrDefault(sample => sample.Path == @"WebTransaction/MVC/DistributedTracingController/ReceivePayload");

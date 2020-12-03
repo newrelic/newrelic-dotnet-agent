@@ -19,11 +19,12 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
     /// Files: Integration.Testing.AddNodeTest.xml
     /// </summary>
     [NetFrameworkTest]
-    public class RejitAddNode : IClassFixture<AspNetFrameworkReJitMvcApplicationFixture>
+    public class RejitAddNode : NewRelicIntegrationTest<AspNetFrameworkReJitMvcApplicationFixture>
     {
         private readonly AspNetFrameworkReJitMvcApplicationFixture _fixture;
 
         public RejitAddNode(AspNetFrameworkReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
 

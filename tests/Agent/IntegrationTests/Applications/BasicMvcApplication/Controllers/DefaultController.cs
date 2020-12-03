@@ -19,22 +19,10 @@ namespace BasicMvcApplication.Controllers
             return View();
         }
 
-        // GET: Fast
-        public ActionResult Fast()
-        {
-            return View();
-        }
-
         // GET: Query
         public ActionResult Query(string data)
         {
             return View("Index");
-        }
-
-        [Route("foo/bar")]
-        public ActionResult AttributeControllerAction()
-        {
-            return View();
         }
 
         // GET: Ignored
@@ -52,7 +40,7 @@ namespace BasicMvcApplication.Controllers
 
             Thread.Sleep(TimeSpan.FromSeconds(1));
 
-            return View();
+            return View("Index");
         }
 
         [HttpGet]
@@ -64,7 +52,9 @@ namespace BasicMvcApplication.Controllers
         [HttpGet]
         public ActionResult SimulateLostTransaction()
         {
-            WebRequest.Create("http://www.google.com").GetResponse();
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+            WebRequest.Create("https://www.newrelic.com").GetResponse();
 
             // Simulate lost transaction by clearing HttpContext
             HttpContext?.Items?.Clear();
@@ -74,15 +64,17 @@ namespace BasicMvcApplication.Controllers
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            return View();
+            return View("Index");
         }
 
         [HttpGet]
         public async Task<string> HttpClient()
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
             // Do at least one request with a base address to ensure that we handle combining URLs correctly
-            await new HttpClient { BaseAddress = new Uri("http://www.google.com") }.GetStringAsync("/search");
-            await new HttpClient().GetStringAsync("http://www.yahoo.com");
+            await new HttpClient { BaseAddress = new Uri("https://www.newrelic.com") }.GetStringAsync("/about");
+            await new HttpClient().GetStringAsync("https://docs.newrelic.com");
 
             return "Worked";
         }
@@ -90,12 +82,14 @@ namespace BasicMvcApplication.Controllers
         [HttpGet]
         public async Task<string> HttpClientTaskCancelled()
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
             try
             {
                 using (var client = new HttpClient())
                 {
                     client.Timeout = new TimeSpan(5);
-                    await client.GetStringAsync("http://www.bing.com");
+                    await client.GetStringAsync("https://www.newrelic.org");
                 }
             }
             catch (Exception)
@@ -116,7 +110,7 @@ namespace BasicMvcApplication.Controllers
         public ActionResult GetHtmlWithCallToGetBrowserTimingHeader()
         {
             NewRelic.Api.Agent.NewRelic.GetBrowserTimingHeader();
-            return View();
+            return View("Index");
         }
 
         public string NotHtmlContentType()
@@ -134,7 +128,7 @@ namespace BasicMvcApplication.Controllers
         public ActionResult StartAgent()
         {
             NewRelic.Api.Agent.NewRelic.StartAgent();
-            return View();
+            return View("Index");
         }
 
         public string Chained(string chainedServerName, string chainedPortNumber, string chainedAction)

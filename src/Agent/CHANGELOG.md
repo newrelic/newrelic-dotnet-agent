@@ -8,13 +8,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 * **New Feature Template** <br/>
 New Feature Description
-Fixes Issue [#XX](https://github.com/newrelic/newrelic-dotnet-agent/issues/XX)
 
+### Fixes
+Fixes Issue [#224](https://github.com/newrelic/newrelic-dotnet-agent/issues/224): leading "SET" commands will be ignored when parsing compound SQL statements. ([#370](https://github.com/newrelic/newrelic-dotnet-agent/pull/370))
+Fixes Issue [#226](https://github.com/newrelic/newrelic-dotnet-agent/issues/226): the profiler ignores drive letter in `HOME_EXPANDED` when detecting running in Azure Web Apps. ([#373](https://github.com/newrelic/newrelic-dotnet-agent/pull/373))
+
+Fixes Issue [#9](https://github.com/newrelic/newrelic-dotnet-agent/issues/9) where the agent failed to read settings from `appsettings.{environment}.json` files. ([#372](https://github.com/newrelic/newrelic-dotnet-agent/pull/372))
+
+## [8.35] - 2020-11-09
+
+### New Features
+* **.NET 5 GA Support** <br/>
+We have validated that this version of the agent is compatible with .NET 5 GA. See the [compatibility and requirements for .NET Core](https://docs.newrelic.com/docs/agents/net-agent/getting-started/net-agent-compatibility-requirements-net-core) page for more details.
+
+### Fixes
+Fixes Issue [#337](https://github.com/newrelic/newrelic-dotnet-agent/issues/337) by removing obsolete code which was causing memory growth associated with a large number of transaction names.
+PR [#348](https://github.com/newrelic/newrelic-dotnet-agent/pull/348): guards against potential exceptions being thrown from the agent API when the agent is not attached.  
+
+## [8.34] - 2020-10-26
+
+### New Features
+* **.NET 5 RC2 Support** <br/>
+We have validated that this version of the agent is compatible with .NET 5 Release Candidate 2.
+
+### Fixes
+* Fixes issue [#301](https://github.com/newrelic/newrelic-dotnet-agent/issues/301) where the agent incorrectly parses server-side configuration causing agent to shutdown.([#310](https://github.com/newrelic/newrelic-dotnet-agent/pull/310))
+* Modifies WCF Instrumentation to address [#314](https://github.com/newrelic/newrelic-dotnet-agent/issues/314) by minimizing the reliance upon handled exceptions during the  attempt to capture CAT and DT payloads.
+
+## [8.33] - 2020-10-12
 
 ### Fixes
 * Fixes [#223](https://github.com/newrelic/newrelic-dotnet-agent/issues/223) so the agent can be compatible with ASP.NET Core 5 RC1.
-
-
+* Fixes issue in .NET 5 applications where external calls made with HttpClient may not get instrumented. For example, calls made with `HttpClient.GetStringAsync` would be missed. ([#235](https://github.com/newrelic/newrelic-dotnet-agent/pull/235))
+* Fixes issue [#257](https://github.com/newrelic/newrelic-dotnet-agent/issues/223) where .NET Standard Libraries that do not reference `mscorlib` fail to be instrumented in .NET Framework applications.
+* Reduces the performance impact of large amounts of instrumentation. See issue [#269](https://github.com/newrelic/newrelic-dotnet-agent/issues/269) for more information.
 
 ## [8.32] - 2020-09-17
 
@@ -196,8 +223,11 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.32.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.35.0...HEAD
 
+[8.35]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.34.0...v8.35.0
+[8.34]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.33.0...v8.34.0
+[8.33]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.32.0...v8.33.0
 [8.32]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.31.0...v8.32.0
 [8.31]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.30.0...v8.31.0
 [8.30]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.29.0...v8.30.0

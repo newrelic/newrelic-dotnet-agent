@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             // ARRANGE
             var transaction = BuildTestTransaction(statusCode: 200, uri: "http://foo.com");
-            transaction.TransactionMetadata.AddUserAttribute("foo", "bar");
+            transaction.AddCustomAttribute("foo", "bar");
             var errorData = MakeErrorData();
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
 
@@ -110,10 +110,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var unfilteredIntrinsicsDic = attributes.GetAttributeValues(AttributeClassification.Intrinsics)
                 .Where(x=>x.AttributeDefinition.IsAvailableForAny(AttributeDestinations.TransactionEvent))
-                .ToDictionary(x => x.AttributeDefinition);
+                .GroupBy(x=>x.AttributeDefinition)
+                .ToDictionary(x => x.Key, x=>x.Last());
 
             var filteredIntrinsicsDic = transactionEvent.AttributeValues.GetAttributeValues(AttributeClassification.Intrinsics)
-                .ToDictionary(x => x.AttributeDefinition);
+                .GroupBy(x => x.AttributeDefinition)
+                .ToDictionary(x => x.Key, x => x.Last());
 
             // ASSERT
             NrAssert.Multiple(
@@ -236,14 +238,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => adaptiveSampler.ComputeSampled(ref priority)).Returns(sampled);
             internalTransaction.SetSampled(adaptiveSampler);
 
-            var transactionMetadata = internalTransaction.TransactionMetadata;
-            PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeUserAttributes);
+            PopulateTransactionMetadataBuilder(internalTransaction, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeUserAttributes);
 
             return internalTransaction;
         }
 
-        private void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, ErrorData exceptionData = null, ErrorData customErrorData = null, bool isSynthetics = true, bool isCAT = true, string referrerUri = null, bool includeUserAttributes = false)
+        private void PopulateTransactionMetadataBuilder(IInternalTransaction transaction, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, ErrorData exceptionData = null, ErrorData customErrorData = null, bool isSynthetics = true, bool isCAT = true, string referrerUri = null, bool includeUserAttributes = false)
         {
+            var metadata = transaction.TransactionMetadata;
+
             if (uri != null)
                 metadata.SetUri(uri);
             if (statusCode != null)
@@ -273,7 +276,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             if (includeUserAttributes)
             {
-                metadata.AddUserAttribute("sample.user.attribute", "user attribute string");
+                transaction.AddCustomAttribute("sample.user.attribute", "user attribute string");
             }
 
             if (isSynthetics)

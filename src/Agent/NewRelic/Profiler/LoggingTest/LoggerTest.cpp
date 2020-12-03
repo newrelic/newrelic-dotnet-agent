@@ -168,8 +168,8 @@ namespace NewRelic {
                         constexpr size_t expected_num_msgs = 2;
                         Assert::AreEqual(expected_num_msgs, msgs.size());
                         auto itr = std::begin(msgs);
-                        Assert::IsTrue(std::regex_match(*itr++, std::wregex(TRACE_PREFIX_REGEX L"Enter\\: NewRelic\\:\\:Profiler\\:\\:Logger\\:\\:Test\\:\\:LoggerTest\\:\\:logger_test_log_scope_enter_leave on .+\\\\loggertest.cpp\\(\\d+\\)")));
-                        Assert::IsTrue(std::regex_match(*itr++, std::wregex(TRACE_PREFIX_REGEX L"Leave\\: NewRelic\\:\\:Profiler\\:\\:Logger\\:\\:Test\\:\\:LoggerTest\\:\\:logger_test_log_scope_enter_leave on .+\\\\loggertest.cpp\\(\\d+\\)")));
+                        Assert::IsTrue(std::regex_match(*itr++, std::wregex(TRACE_PREFIX_REGEX L"Enter\\: NewRelic\\:\\:Profiler\\:\\:Logger\\:\\:Test\\:\\:LoggerTest\\:\\:logger_test_log_scope_enter_leave on .+\\\\LoggerTest.cpp\\(\\d+\\)")));
+                        Assert::IsTrue(std::regex_match(*itr++, std::wregex(TRACE_PREFIX_REGEX L"Leave\\: NewRelic\\:\\:Profiler\\:\\:Logger\\:\\:Test\\:\\:LoggerTest\\:\\:logger_test_log_scope_enter_leave on .+\\\\LoggerTest.cpp\\(\\d+\\)")));
                     }
 
                     TEST_METHOD(logger_test_example_uses_from_solution)

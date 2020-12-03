@@ -1253,7 +1253,7 @@ namespace CompositeTests
                 new ExpectedAttribute {Key = "key3", Value = "3.1"},
 
 				// Singles should be left as singles
-				new ExpectedAttribute {Key = "key4", Value = 4.0d}
+				new ExpectedAttribute {Key = "key4", Value = 4.0f}
             };
 
             TransactionTraceAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, transactionTrace);

@@ -97,6 +97,9 @@
     <PackageReference Include="MySql.Data">
       <Version>6.9.8</Version>
     </PackageReference>
+    <PackageReference Include="MySqlConnector">
+      <Version>1.0.1</Version>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>9.0.1</Version>
     </PackageReference>
@@ -149,6 +152,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\CouchbaseController.cs" />
     <Compile Include="Controllers\IbmDb2Controller.cs" />
+    <Compile Include="Controllers\MySqlConnectorController.cs" />
     <Compile Include="Controllers\PostgresController.cs" />
     <Compile Include="Controllers\OracleController.cs" />
     <Compile Include="Controllers\MySqlController.cs" />

@@ -20,11 +20,12 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
     /// Files: Integration.Testing.AddAttributeTest.xml
     /// </summary>
     [NetFrameworkTest]
-    public class RejitAddAttribute : IClassFixture<AspNetFrameworkReJitMvcApplicationFixture>
+    public class RejitAddAttribute : NewRelicIntegrationTest<AspNetFrameworkReJitMvcApplicationFixture>
     {
         private readonly AspNetFrameworkReJitMvcApplicationFixture _fixture;
 
         public RejitAddAttribute(AspNetFrameworkReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
 

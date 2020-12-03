@@ -19,11 +19,12 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Files: Integration.Testing.DeleteAttributeTest.xml
     /// </summary>
     [NetCoreTest]
-    public class RejitDeleteAttribute : IClassFixture<AspNetCoreReJitMvcApplicationFixture>
+    public abstract class RejitDeleteAttributeBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture: AspNetCoreReJitMvcApplicationFixture
     {
         private readonly AspNetCoreReJitMvcApplicationFixture _fixture;
 
-        public RejitDeleteAttribute(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+        protected RejitDeleteAttributeBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
 
@@ -82,7 +83,15 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         }
     }
 
-    public class RejitDeleteAttributeWithTieredCompilation : RejitDeleteAttribute, IClassFixture<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+    public class RejitDeleteAttribute : RejitDeleteAttributeBase<AspNetCoreReJitMvcApplicationFixture>
+    {
+        public RejitDeleteAttribute(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class RejitDeleteAttributeWithTieredCompilation : RejitDeleteAttributeBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
     {
         public RejitDeleteAttributeWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
             : base(fixture, output)
