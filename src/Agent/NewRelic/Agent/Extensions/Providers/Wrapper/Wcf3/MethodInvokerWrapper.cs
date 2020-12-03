@@ -209,6 +209,10 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             if (!isTAP || _methodNamesStart.Contains(instrumentedMethodName))
             {
                 segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, transactionName);
+                if (isTAP)
+                {
+                    segment.AlwaysDeductChildDuration = true;
+                }
             }
 
             Guid? wrapperExecutionID = null;
