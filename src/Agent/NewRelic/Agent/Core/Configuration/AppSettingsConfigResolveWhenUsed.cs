@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETSTANDARD2_0
+using System;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using NewRelic.Core.Logging;
@@ -24,7 +25,16 @@ namespace NewRelic.Agent.Core.Configuration
         private static IConfigurationRoot InitializeConfiguration()
         {
             var env = new SystemInterfaces.Environment();
-            var currentDirectory = Directory.GetCurrentDirectory();
+            var applicationDirectory = string.Empty;
+            try
+            {
+                applicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            }
+            catch (AppDomainUnloadedException)
+            {
+                // Fall back to previous behavior
+                applicationDirectory = Directory.GetCurrentDirectory();
+            }
             var environment = env.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             if (string.IsNullOrEmpty(environment))
             {
@@ -32,7 +42,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
 
             var builder = new ConfigurationBuilder()
-                .SetBasePath(currentDirectory)
+                .SetBasePath(applicationDirectory)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
 
             if (!string.IsNullOrEmpty(environment))
@@ -40,8 +50,8 @@ namespace NewRelic.Agent.Core.Configuration
                 builder.AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false);
             }
 
-            var appSettingsPath = Path.Combine(currentDirectory, "appsettings.json");
-            var appSettingsEnvPath = Path.Combine(currentDirectory, $"appsettings.{environment}.json");
+            var appSettingsPath = Path.Combine(applicationDirectory, "appsettings.json");
+            var appSettingsEnvPath = Path.Combine(applicationDirectory, $"appsettings.{environment}.json");
             _appSettingsFilePaths = !string.IsNullOrEmpty(environment) ? string.Join(", ", appSettingsPath, appSettingsEnvPath) : appSettingsPath;
 
             return builder.Build();
