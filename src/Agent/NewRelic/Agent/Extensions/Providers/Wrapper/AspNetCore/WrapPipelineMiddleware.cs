@@ -48,6 +48,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
                 transaction.DetachFromPrimary(); //Remove from thread-local type storage
 
                 segment = SetupSegment(transaction, context);
+                segment.AlwaysDeductChildDuration = true;
 
                 ProcessHeaders(context);
 
