@@ -50,7 +50,6 @@ namespace NewRelic.Agent.Core.Samplers
             catch (Exception ex)
             {
                 Log.Error($"Unable to get Threadpool stats sample.  No .Net Threadpool metrics will be reported.  Error : {ex}");
-                Stop();
                 Dispose();
             }
         }
