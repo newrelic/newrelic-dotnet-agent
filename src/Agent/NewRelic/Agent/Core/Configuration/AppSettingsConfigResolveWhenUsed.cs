@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static IConfigurationRoot InitializeConfiguration()
         {
-            var env = new SystemInterfaces.Environment();
+            // Get application base directory, where appsettings*.json will be if they exist
             var applicationDirectory = string.Empty;
             try
             {
@@ -32,18 +32,21 @@ namespace NewRelic.Agent.Core.Configuration
             }
             catch (AppDomainUnloadedException)
             {
-                // Fall back to previous behavior
+                // Fall back to previous behavior of agents <=8.35.0
                 applicationDirectory = Directory.GetCurrentDirectory();
-            }
-            var environment = env.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            if (string.IsNullOrEmpty(environment))
-            {
-                environment = env.GetEnvironmentVariable("EnvironmentName");
             }
 
             var builder = new ConfigurationBuilder()
                 .SetBasePath(applicationDirectory)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
+
+            // Determine if there might be an environment-specific appsettings file
+            var env = new SystemInterfaces.Environment();
+            var environment = env.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            if (string.IsNullOrEmpty(environment))
+            {
+                environment = env.GetEnvironmentVariable("EnvironmentName");
+            }
 
             if (!string.IsNullOrEmpty(environment))
             {
