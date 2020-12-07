@@ -27,9 +27,19 @@ namespace NewRelic.Agent.Core.JsonConverters
                     }
 
                     writer.WritePropertyName(attribVal.AttributeDefinition.Name);
-                    writer.WriteValue(outputValue);
+
+                    // Causes an exception since this type is unsupported by the JsonConverter
+                    if (outputValue.GetType().ToString() == "Microsoft.Extensions.Primitives.StringValues")
+                    {
+                        writer.WriteValue(outputValue.ToString());
+                    }
+                    else
+                    {
+                        writer.WriteValue(outputValue);
+                    }
                 }
             }
+
             writer.WriteEndObject();
         }
 
