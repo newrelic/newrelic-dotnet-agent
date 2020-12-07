@@ -74,8 +74,6 @@ namespace NewRelic.Agent.Core.Samplers
         {
             base.Stop();
             _listener?.StopListening();
-            //_listener?.Dispose();
-            //_listener = null;
         }
 
         public override void Dispose()
@@ -106,10 +104,7 @@ namespace NewRelic.Agent.Core.Samplers
             if (eventSource.Guid == EventSourceIdToMonitor)
             {
                 _eventSource = eventSource;
-
-                //EnableEvents(eventSource, EventLevel.LogAlways, (EventKeywords)_threadpool_Keyword);
                 StartListening();
-
                 base.OnEventSourceCreated(eventSource);
             }
         }
@@ -154,7 +149,10 @@ namespace NewRelic.Agent.Core.Samplers
 
         public override void StartListening()
         {
-            EnableEvents(_eventSource, EventLevel.LogAlways, (EventKeywords)_threadpool_Keyword);
+            if (_eventSource != null)
+            {
+                EnableEvents(_eventSource, EventLevel.LogAlways, (EventKeywords)_threadpool_Keyword);
+            }
         }
     }
 

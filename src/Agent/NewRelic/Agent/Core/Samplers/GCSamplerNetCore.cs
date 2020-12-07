@@ -110,7 +110,7 @@ namespace NewRelic.Agent.Core.Samplers
                 }
 
                 _listener = _listener ?? _eventListenerFactory();
-                _listener.StartListening(); // TODO: consequences if already listening?
+                _listener.StartListening();
             }
             catch (Exception ex)
             {
@@ -123,8 +123,6 @@ namespace NewRelic.Agent.Core.Samplers
         {
             base.Stop();
             _listener?.StopListening();
-            //_listener?.Dispose();
-            //_listener = null;
         }
 
         public override void Dispose()
@@ -179,7 +177,6 @@ namespace NewRelic.Agent.Core.Samplers
             if (eventSource.Guid == EventSourceIDToMonitor)
             {
                 _eventSource = eventSource;
-                //EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)GCKeyword);
                 StartListening();
                 base.OnEventSourceCreated(eventSource);
             }

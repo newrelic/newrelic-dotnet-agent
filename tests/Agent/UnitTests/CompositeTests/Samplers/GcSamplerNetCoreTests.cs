@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core.Samplers
         }
 
         [Test]
-        public void SamplerDisposesEventListenerWhenStopped()
+        public void SamplerDoesNotDisposesEventListenerWhenStopped()
         {
             var samplerWasStopped = false;
             var listenerWasDisposed = false;
@@ -117,7 +117,7 @@ namespace NewRelic.Agent.Core.Samplers
 
             //Assert
             Assert.IsTrue(samplerWasStopped);
-            Assert.IsTrue(listenerWasDisposed);
+            Assert.IsFalse(listenerWasDisposed);
         }
 
         [Test]
