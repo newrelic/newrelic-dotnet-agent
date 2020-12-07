@@ -18,6 +18,8 @@ Fix Issue [#93](https://github.com/newrelic/newrelic-dotnet-agent/issues/93): wh
 
 Fixes Issue [#9](https://github.com/newrelic/newrelic-dotnet-agent/issues/9) where the agent failed to read settings from `appsettings.{environment}.json` files. ([#372](https://github.com/newrelic/newrelic-dotnet-agent/pull/372))
 
+Resolves Issue [#234](https://github.com/newrelic/newrelic-dotnet-agent/issues/234) by reducing the likelihood of a Fatal CLR Error. ([#376](https://github.com/newrelic/newrelic-dotnet-agent/pull/376))
+
 
 ## [8.35] - 2020-11-09
 
