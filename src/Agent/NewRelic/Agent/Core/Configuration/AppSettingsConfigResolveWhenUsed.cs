@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if NETSTANDARD2_0
+using System;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using NewRelic.Core.Logging;
@@ -23,25 +24,37 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static IConfigurationRoot InitializeConfiguration()
         {
+            // Get application base directory, where appsettings*.json will be if they exist
+            var applicationDirectory = string.Empty;
+            try
+            {
+                applicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            }
+            catch (AppDomainUnloadedException)
+            {
+                // Fall back to previous behavior of agents <=8.35.0
+                applicationDirectory = Directory.GetCurrentDirectory();
+            }
+
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(applicationDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
+
+            // Determine if there might be an environment-specific appsettings file
             var env = new SystemInterfaces.Environment();
-            var currentDirectory = Directory.GetCurrentDirectory();
             var environment = env.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             if (string.IsNullOrEmpty(environment))
             {
                 environment = env.GetEnvironmentVariable("EnvironmentName");
             }
 
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(currentDirectory)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
-
             if (!string.IsNullOrEmpty(environment))
             {
                 builder.AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false);
             }
 
-            var appSettingsPath = Path.Combine(currentDirectory, "appsettings.json");
-            var appSettingsEnvPath = Path.Combine(currentDirectory, $"appsettings.{environment}.json");
+            var appSettingsPath = Path.Combine(applicationDirectory, "appsettings.json");
+            var appSettingsEnvPath = Path.Combine(applicationDirectory, $"appsettings.{environment}.json");
             _appSettingsFilePaths = !string.IsNullOrEmpty(environment) ? string.Join(", ", appSettingsPath, appSettingsEnvPath) : appSettingsPath;
 
             return builder.Build();
