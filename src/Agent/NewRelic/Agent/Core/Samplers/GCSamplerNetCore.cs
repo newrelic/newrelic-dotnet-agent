@@ -89,7 +89,7 @@ namespace NewRelic.Agent.Core.Samplers
             catch (Exception ex)
             {
                 Log.Error($"Unable to get Garbage Collection event listener sample.  Further .NetCore GC metrics will not be collected.  Error : {ex}");
-                Stop();
+                Dispose();
             }
         }
 
