@@ -116,6 +116,7 @@ namespace NewRelic.Agent.Core.Samplers
             {
                 Log.Error($"Unable to start Garbage Collection Event Listener Sample.  Further .NetCore GC metrics will not be captured.  Error: {ex}");
                 Stop();
+                Dispose();
             }
         }
 
