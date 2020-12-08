@@ -120,6 +120,50 @@ namespace NewRelic.Agent.Core.Samplers
             Assert.IsTrue(listenerWasDisposed);
         }
 
+
+        [Test]
+        public void SamplerDoesNotDisposeEventListenerWhenStopped()
+        {
+            var samplerWasStopped = false;
+            var listenerWasDisposed = false;
+
+            var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
+
+            Mock.Arrange(() => mockListener.Dispose())
+                .DoInstead(() => { listenerWasDisposed = true; });
+
+            Mock.Arrange(() => mockListener.StopListening())
+                .DoInstead(() => { samplerWasStopped = true; });
+
+            //This is our mechanism for stopping the sampler.  If a config change is used, it starts/stops 3x which makes
+            //it difficult to determine current state.  Instead, stop listening in the eventListener's sample method.
+            Mock.Arrange(() => mockListener.Sample())
+                .DoInstead(() => mockListener.StopListening());
+
+            Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
+            {
+                return mockListener;
+            };
+
+            var mockScheduler = Mock.Create<IScheduler>();
+
+            //Prevents the scheduler from actually running
+            Mock.Arrange(() => _mockScheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+                .DoNothing();
+
+            var sampler = new GCSamplerNetCore(mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
+
+            //Act
+            sampler.Start();
+
+            //Cause error which will shut down the sampler
+            sampler.Sample();
+
+            //Assert
+            Assert.IsTrue(samplerWasStopped);
+            Assert.IsFalse(listenerWasDisposed);
+        }
+
         [Test]
         public void SamplerDisposesEventListenerWhenDisposed()
         {
