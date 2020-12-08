@@ -17,6 +17,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Primitives;
 
 namespace CompositeTests
 {
@@ -2256,6 +2257,10 @@ namespace CompositeTests
             segment.AddCustomAttribute("key8", null);
             segment.AddCustomAttribute("", dtm2);
 
+            var singleStringValue = new StringValues("avalue");
+            var multiStringValue = new StringValues(new[] { "onevalue", "twovalue", "threevalue" });
+            segment.AddCustomAttribute("key9a", singleStringValue);
+            segment.AddCustomAttribute("key9b", multiStringValue);
 
             var expectedAttributes = new[]
             {
@@ -2265,7 +2270,9 @@ namespace CompositeTests
                 new ExpectedAttribute(){ Key = "key4", Value = 4.0d},
                 new ExpectedAttribute(){ Key = "key5", Value = true},
                 new ExpectedAttribute(){ Key = "key6", Value = dtm1.ToString("o")},
-                new ExpectedAttribute(){ Key = "key7", Value = dtm2.ToString("o")}
+                new ExpectedAttribute(){ Key = "key7", Value = dtm2.ToString("o")},
+                new ExpectedAttribute(){ Key = "key9a", Value = "avalue"},
+                new ExpectedAttribute(){ Key = "key9b", Value = "onevalue,twovalue,threevalue"}
             };
 
             var unexpectedAttributes = new[]
