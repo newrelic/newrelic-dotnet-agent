@@ -117,7 +117,7 @@ namespace NewRelic.Agent.Core.Samplers
 
             //Assert
             Assert.IsTrue(samplerWasStopped);
-            Assert.IsFalse(listenerWasDisposed);
+            Assert.IsTrue(listenerWasDisposed);
         }
 
         [Test]
