@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 New Feature Description
 
 ### Fixes
+* **New Fixes Template** <br/>
+New Fixes Description
+
+## [8.36] - 2020-12-08
+
+### Fixes
 * Fixes Issue [#224](https://github.com/newrelic/newrelic-dotnet-agent/issues/224): leading "SET" commands will be ignored when parsing compound SQL statements. ([#370](https://github.com/newrelic/newrelic-dotnet-agent/pull/370))
 * Fixes Issue [#226](https://github.com/newrelic/newrelic-dotnet-agent/issues/226): the profiler ignores drive letter in `HOME_EXPANDED` when detecting running in Azure Web Apps. ([#373](https://github.com/newrelic/newrelic-dotnet-agent/pull/373))
 * Fixes Issue [#93](https://github.com/newrelic/newrelic-dotnet-agent/issues/93): when the parent methods are blocked by their asynchronous child methods, the agent deducts the child methods' duration from the parent methods' exclusive duration.([#374](https://github.com/newrelic/newrelic-dotnet-agent/pull/374))
