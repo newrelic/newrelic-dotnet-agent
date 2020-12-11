@@ -40,7 +40,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
                 {
                     _headerExists = fixture.GetMessageQueue_RabbitMQ_SendReceive_HeaderExists("Test Message");
                     _headerValue = fixture.GetMessageQueue_RabbitMQ_SendReceive_HeaderValue("Test Message");
-                    fixture.GetMessageQueue_RabbitMQ_SendReceiveWithEventingConsumer_HeaderValue("Test Message");
+                    fixture.GetMessageQueue_RabbitMQ_SendReceiveWithEventingConsumer("Test Message");
                 }
             );
             fixture.Initialize();

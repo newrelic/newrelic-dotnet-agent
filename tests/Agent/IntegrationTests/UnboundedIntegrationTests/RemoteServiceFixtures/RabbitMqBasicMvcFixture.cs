@@ -137,4 +137,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         #endregion
     }
+
+    public class RabbitMqLegacyBasicMvcFixture : RabbitMqBasicMvcFixture
+    {
+        private const string ApplicationName = "RabbitMqLegacyBasicMvcApplication";
+
+        public RabbitMqLegacyBasicMvcFixture()
+            : base(ApplicationName)
+        {
+        }
+    }
 }
