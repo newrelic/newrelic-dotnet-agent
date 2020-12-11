@@ -478,6 +478,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreStackExchangeRedisWrapperComponent" Guid="{9278332C-3059-48F3-BD18-84C4323583DA}">
         <File Id="CoreStackExchangeRedisWrapperFile" Name="NewRelic.Providers.Wrapper.StackExchangeRedis.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.dll"/>
       </Component>
+      <Component Id="CoreRabbitMqWrapperComponent" Guid="{758394DD-AB71-4E58-8E18-BF1135F8B2C2}">
+        <File Id="CoreRabbitMqWrapperFile" Name="NewRelic.Providers.Wrapper.RabbitMq.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.RabbitMq.dll"/>
+      </Component>
 
       <!-- Reference libraries -->
       <Component Id="CoreNewRelicCoreReferenceComponent" Guid="{DD2BE979-7D4B-47EA-9FBE-F6B381D70E0B}">
@@ -585,6 +588,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreStackExchangeRedisInstrumentationComponent" Guid="{D7D3D2F7-1001-405A-9844-8640A39C5B9F}">
         <File Id="CoreStackExchangeRedisInstrumentationFile" Name="NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreRabbitMqInstrumentationComponent" Guid="{1CDC18CC-992A-4386-BC4D-DE87A85D9568}">
+        <File Id="CoreRabbitMqInstrumentationFile" Name="NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 
