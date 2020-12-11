@@ -15,9 +15,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         private readonly IList<string> _queues = new List<string>();
         private readonly IList<string> _exchanges = new List<string>();
 
-        public RabbitMqBasicMvcFixture() : base(new RemoteWebApplication("RabbitMqBasicMvcApplication", ApplicationType.Unbounded))
-        {
+        private const string ApplicationName = "RabbitMqBasicMvcApplication";
 
+        public RabbitMqBasicMvcFixture() : this(ApplicationName)
+        {
+        }
+
+        protected RabbitMqBasicMvcFixture(string applicationName) : base(new RemoteWebApplication(applicationName, ApplicationType.Unbounded))
+        {
         }
 
         private string GenerateQueue()
