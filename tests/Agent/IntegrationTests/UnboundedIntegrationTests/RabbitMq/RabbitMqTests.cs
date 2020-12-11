@@ -12,14 +12,15 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
     [NetFrameworkTest]
-    public class RabbitMqTests : NewRelicIntegrationTest<RemoteServiceFixtures.RabbitMqBasicMvcFixture>
+    public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : RemoteServiceFixtures.RabbitMqBasicMvcFixture
     {
         private readonly RemoteServiceFixtures.RabbitMqBasicMvcFixture _fixture;
 
         private string _sendReceiveQueue;
         private string _purgeQueue;
 
-        public RabbitMqTests(RemoteServiceFixtures.RabbitMqBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
+        protected RabbitMqTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -97,4 +98,21 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 
         }
     }
+
+    public class RabbitMqTests : RabbitMqTestsBase<RemoteServiceFixtures.RabbitMqBasicMvcFixture>
+    {
+        public RabbitMqTests(RemoteServiceFixtures.RabbitMqBasicMvcFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class RabbitMqLegacyTests : RabbitMqTestsBase<RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture>
+    {
+        public RabbitMqLegacyTests(RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
 }
