@@ -35,6 +35,7 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb26.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Sql.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RabbitMq.dll",
             };
 
             var wrapperXmls = new[]
@@ -45,6 +46,7 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb26.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml",
             };
 
             ExtensionXsd = $@"{SourceHomeBuilderPath}\extensions\extension.xsd";
