@@ -77,13 +77,24 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
             var queuePurgeTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/RabbitMQController/RabbitMQ_QueuePurge");
             var sendReceiveTopicTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/RabbitMQController/RabbitMQ_SendReceiveTopic");
 
+            var expectedTransactionTraceSegments = new List<string>
+            {
+                $"MessageBroker/RabbitMQ/Queue/Consume/Named/{_sendReceiveQueue}"
+            };
+
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"WebTransaction/MVC/RabbitMQController/RabbitMQ_SendReceive");
+
+
             Assertions.MetricsExist(expectedMetrics, metrics);
 
             NrAssert.Multiple(
                 () => Assert.NotNull(sendReceiveTransactionEvent),
                 () => Assert.NotNull(sendReceiveTempQueueTransactionEvent),
                 () => Assert.NotNull(queuePurgeTransactionEvent),
-                () => Assert.NotNull(sendReceiveTopicTransactionEvent)
+                () => Assert.NotNull(sendReceiveTopicTransactionEvent),
+                () => Assert.NotNull(transactionSample),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
+
             );
 
             Assertions.MetricsExist(expectedMetrics, metrics);
