@@ -15,7 +15,6 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
     {
         private const string TempQueuePrefix = "amq.";
         private const string BasicPropertiesType = "RabbitMQ.Client.Framing.BasicProperties";
-
         public const string VendorName = "RabbitMQ";
         public const string AssemblyName = "RabbitMQ.Client";
         public const string TypeName = "RabbitMQ.Client.Framing.Impl.Model";
