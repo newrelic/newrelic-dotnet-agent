@@ -6,8 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -16,16 +14,17 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
     [NetFrameworkTest]
-    public class RabbitMqDistributedTracingTests : NewRelicIntegrationTest<RemoteServiceFixtures.RabbitMqBasicMvcFixture>
+    public abstract class RabbitMqDistributedTracingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : RemoteServiceFixtures.RabbitMqBasicMvcFixture
     {
         // regex for payload
         private const string PayloadRegex = "{\"v\":\\[\\d,\\d\\],\"d\":{\"ty\":\"App\",\"ac\":\"\\d{1,9}\",\"ap\":\"\\d{1,9}\",\"tr\":\"\\w{16,32}\",\"pr\":\\d.\\d{5,6},\"sa\":true,\"ti\":\\d{10,16},\"tk\":\"\\w{0,16}\",\"tx\":\"\\w{16,16}\",\"id\":\"\\w{16,16}\"}}";
 
         private bool _headerExists;
         private string _headerValue;
-        private RabbitMqBasicMvcFixture _fixture;
+        private RemoteServiceFixtures.RabbitMqBasicMvcFixture _fixture;
 
-        public RabbitMqDistributedTracingTests(RemoteServiceFixtures.RabbitMqBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public RabbitMqDistributedTracingTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             fixture.TestLogger = output;
@@ -87,4 +86,21 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 
         }
     }
+
+    public class RabbitMqDistributedTracingTests : RabbitMqDistributedTracingTestsBase<RemoteServiceFixtures.RabbitMqBasicMvcFixture>
+    {
+        public RabbitMqDistributedTracingTests(RemoteServiceFixtures.RabbitMqBasicMvcFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class RabbitMqLegacyDistributedTracingTests : RabbitMqDistributedTracingTestsBase<RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture>
+    {
+        public RabbitMqLegacyDistributedTracingTests(RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
 }
