@@ -79,7 +79,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         }
 
         public ConsoleDynamicMethodFixture(string applicationDirectoryName, string executableName, string targetFramework, bool isCoreApp, TimeSpan timeout)
-            : base(new RemoteConsoleApplication(applicationDirectoryName, executableName, targetFramework, ApplicationType.Bounded, isCoreApp, isCoreApp)
+            : base(new RemoteConsoleApplication(applicationDirectoryName, executableName, targetFramework, ApplicationType.Shared, isCoreApp, isCoreApp)
                   .SetTimeout(timeout)
                   .ExposeStandardInput(true))
         {

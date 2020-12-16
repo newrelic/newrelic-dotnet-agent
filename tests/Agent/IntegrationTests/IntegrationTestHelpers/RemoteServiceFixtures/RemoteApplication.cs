@@ -245,7 +245,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     applicationsFolder = "UnboundedApplications";
                     break;
                 case ApplicationType.Shared:
-                    applicationsFolder = Path.Combine("Shared", "Applications");
+                    applicationsFolder = "SharedApplications";
                     break;
                 default:
                     applicationsFolder = "Applications";
