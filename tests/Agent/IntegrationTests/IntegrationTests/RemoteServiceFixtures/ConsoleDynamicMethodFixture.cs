@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public string IntegrationTestAppPath => RemoteApplication.SourceApplicationsDirectoryPath;
 
-        public ConsoleDynamicMethodFixtureFW() : base(ApplicationDirectoryName, ExecutableName, null, false, DefaultTimeout)
+        public ConsoleDynamicMethodFixtureFW() : base(ApplicationDirectoryName, ExecutableName, "net471", false, DefaultTimeout)
         {
         }
     }
