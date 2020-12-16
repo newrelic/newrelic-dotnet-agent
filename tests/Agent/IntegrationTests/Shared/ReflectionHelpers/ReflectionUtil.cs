@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace NewRelic.Agent.IntegrationTests.ApplicationHelpers
+namespace NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers
 {
     /// <summary>
     /// Helpers that deal with reflections.  Useful to ientifying which assemblies 

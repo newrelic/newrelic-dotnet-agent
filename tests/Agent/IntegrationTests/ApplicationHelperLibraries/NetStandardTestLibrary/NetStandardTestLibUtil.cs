@@ -3,7 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using NewRelic.Agent.IntegrationTests.ApplicationHelpers;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 
 namespace NetStandardTestLibrary
 {

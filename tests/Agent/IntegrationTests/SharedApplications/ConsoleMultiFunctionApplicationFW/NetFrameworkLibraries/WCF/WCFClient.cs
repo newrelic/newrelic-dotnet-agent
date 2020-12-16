@@ -4,7 +4,7 @@
 
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf;
-using NewRelic.Agent.IntegrationTests.ApplicationHelpers;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using System;
 using System.Reflection;

@@ -4,9 +4,8 @@
 
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTests.ApplicationHelpers;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;

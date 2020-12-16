@@ -3,8 +3,7 @@
 
 
 using LibGit2Sharp;
-using NewRelic.Agent.IntegrationTests.ApplicationHelpers;
-using System;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System.IO;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries

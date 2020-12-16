@@ -1,11 +1,10 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.IO;
 using System.Reflection;
 
-namespace NewRelic.Agent.IntegrationTests.ApplicationHelpers
+namespace NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers
 {
     [Library]
     public static class AssemblyHelper

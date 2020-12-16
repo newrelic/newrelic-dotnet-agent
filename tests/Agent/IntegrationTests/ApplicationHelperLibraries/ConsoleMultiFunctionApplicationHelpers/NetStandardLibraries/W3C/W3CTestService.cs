@@ -3,7 +3,7 @@
 
 
 using MultiFunctionApplicationHelpers.NetStandardLibraries.Owin;
-using NewRelic.Agent.IntegrationTests.ApplicationHelpers;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.W3C

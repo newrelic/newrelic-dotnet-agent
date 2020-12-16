@@ -8,7 +8,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
-namespace NewRelic.Agent.IntegrationTests.ApplicationHelpers
+namespace NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers
 {
     /// <summary>
     /// Provides utilities that allow execution of a method using reflection
