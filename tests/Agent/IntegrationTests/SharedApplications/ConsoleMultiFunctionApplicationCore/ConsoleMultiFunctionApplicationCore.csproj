@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ApplicationHelperLibraries\ConsoleMultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj" />
-    <ProjectReference Include="..\..\ApplicationHelperLibraries\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
+    <ProjectReference Include="..\Common\MultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj" />
+    <ProjectReference Include="..\Common\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
   </ItemGroup>
 
 </Project>
