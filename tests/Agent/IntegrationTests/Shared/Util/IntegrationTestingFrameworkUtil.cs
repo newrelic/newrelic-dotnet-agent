@@ -8,7 +8,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 
-namespace NewRelic.Agent.IntegrationTests.ApplicationHelpers
+namespace NewRelic.Agent.IntegrationTests.Shared.Util
 {
     /// <summary>
     /// Helper class for testing applications to interact with the

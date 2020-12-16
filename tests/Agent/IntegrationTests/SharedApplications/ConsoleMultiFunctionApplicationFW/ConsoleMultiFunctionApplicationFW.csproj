@@ -27,7 +27,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\ApplicationHelperLibraries\ConsoleMultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj" />
-    <ProjectReference Include="..\..\ApplicationHelperLibraries\IntegrationTestFrameworkHelpers\IntegrationTestFrameworkHelpers.csproj" />
     <ProjectReference Include="..\..\ApplicationHelperLibraries\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
     <ProjectReference Include="..\..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
     <ProjectReference Include="..\..\Shared\Shared.csproj" />
