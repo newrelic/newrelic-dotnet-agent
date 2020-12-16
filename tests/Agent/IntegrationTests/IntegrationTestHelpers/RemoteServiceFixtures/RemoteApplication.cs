@@ -235,10 +235,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected RemoteApplication(ApplicationType applicationType, bool isCoreApp = false)
         {
-            //var applicationsFolder = applicationType == ApplicationType.Bounded
-            //    ? "Applications"
-            //    : "UnboundedApplications";
-            var applicationsFolder = "Applications";
+            string applicationsFolder;
             switch (applicationType)
             {
                 case ApplicationType.Unbounded:
@@ -253,8 +250,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
             SourceApplicationsDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, applicationsFolder);
             IsCoreApp = isCoreApp;
-            var keepWorkingDirEnvVarValue = 0;
-            if (int.TryParse(Environment.GetEnvironmentVariable("NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY"), out keepWorkingDirEnvVarValue))
+            if (int.TryParse(Environment.GetEnvironmentVariable("NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY"), out var keepWorkingDirEnvVarValue))
             {
                 KeepWorkingDirectory = (keepWorkingDirEnvVarValue == 1);
             }
