@@ -4,8 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Messaging;
-using Couchbase.N1QL;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {

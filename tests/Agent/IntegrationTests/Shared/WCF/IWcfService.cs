@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+#if NETFRAMEWORK
 using System;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Threading.Tasks;
 
-namespace NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf
+namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
 {
     [ServiceContract(ConfigurationName = "IWcfService")]
     public interface IWcfService
@@ -83,3 +84,5 @@ namespace NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf
 
     }
 }
+
+#endif

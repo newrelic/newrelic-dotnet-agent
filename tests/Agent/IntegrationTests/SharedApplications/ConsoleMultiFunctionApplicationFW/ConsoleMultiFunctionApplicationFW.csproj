@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net471</TargetFrameworks>
     <OutputType>Exe</OutputType>
@@ -30,8 +30,5 @@
     <ProjectReference Include="..\Common\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
     <ProjectReference Include="..\..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
     <ProjectReference Include="..\..\Shared\Shared.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>

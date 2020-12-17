@@ -3,7 +3,7 @@
 
 
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf;
+using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit.Abstractions;
 

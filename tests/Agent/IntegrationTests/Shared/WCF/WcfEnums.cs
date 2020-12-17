@@ -1,8 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
-namespace NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf
+#if NETFRAMEWORK
+namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
 {
     public enum WCFBindingType
     {
@@ -22,3 +22,4 @@ namespace NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf
         EventBasedAsync
     }
 }
+#endif

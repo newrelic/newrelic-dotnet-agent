@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf;
+using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
@@ -146,44 +146,44 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
                 new Assertions.ExpectedMetric(){ callCount = expectedTrxCount, metricName = "WebTransaction" },
                 new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * 2, metricName="Supportability/Events/TransactionError/Seen"},
 
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.SyncGetData" },
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.SyncThrowException" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
+                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
 
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.SyncGetData" },
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.SyncThrowException" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
+                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
 
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncGetData" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncThrowExceptionAtStart" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncThrowExceptionAtEnd" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
 
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncGetData" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.EndAsyncGetData" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncGetData" },
 
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncThrowExceptionAtStart" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncThrowExceptionAtEnd" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.EndAsyncThrowExceptionAtEnd" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncThrowExceptionAtEnd" },
 
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.TAPGetData" },
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.TAPThrowException" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
+                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException" },
 
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.TAPGetData" },
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.TAPThrowException" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
+                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException" },
 
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.TAPGetData", metricScope = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.TAPGetData" },
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.TAPThrowException", metricScope = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.TAPThrowException"  },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPGetData" },
+                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.TAPThrowException"  },
 
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.SyncGetData", metricScope = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.SyncGetData" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncGetData", metricScope = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncGetData" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.EndAsyncGetData", metricScope = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncGetData" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncGetData", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
 
-                new Assertions.ExpectedMetric(){ callCount =2, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.SyncThrowException", metricScope = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.SyncThrowException" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncThrowExceptionAtStart", metricScope = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncThrowExceptionAtStart" },
+                new Assertions.ExpectedMetric(){ callCount =2, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtStart" },
 
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncThrowExceptionAtEnd", metricScope = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncThrowExceptionAtEnd" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "DotNet/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.EndAsyncThrowExceptionAtEnd", metricScope = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncThrowExceptionAtEnd" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = $"DotNet/{SharedWcfLibraryNamespace}.IWcfService.EndAsyncThrowExceptionAtEnd", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncThrowExceptionAtEnd" },
 
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "External/www.google.com/Stream/GET", metricScope = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.BeginAsyncGetData" },
-                new Assertions.ExpectedMetric(){ callCount =1, metricName = "External/www.google.com/Stream/GET", metricScope = "WebTransaction/WCF/NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.IWcfService.SyncGetData" }
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = "External/www.google.com/Stream/GET", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.BeginAsyncGetData" },
+                new Assertions.ExpectedMetric(){ callCount =1, metricName = "External/www.google.com/Stream/GET", metricScope = $"WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData" }
             };
 
             Assertions.MetricsExist(expectedMetrics, LogHelpers.MetricValues);

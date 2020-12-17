@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+#if NETFRAMEWORK
 using System;
 using System.Linq;
 using System.Messaging;
 
-namespace DotNet_Msmq_Shared
+namespace NewRelic.Agent.IntegrationTests.Shared.Util
 {
     public static class MessageQueueUtil
     {
@@ -37,3 +38,4 @@ namespace DotNet_Msmq_Shared
         }
     }
 }
+#endif

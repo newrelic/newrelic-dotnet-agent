@@ -1,13 +1,13 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
+#if NETFRAMEWORK
 using System;
 using System.Net;
 using System.ServiceModel;
 using System.Threading.Tasks;
 
-namespace NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf
+namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
 {
     [ServiceBehavior(IncludeExceptionDetailInFaults = true)]
     public class WcfService : IWcfService
@@ -228,3 +228,4 @@ namespace NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf
         }
     }
 }
+#endif

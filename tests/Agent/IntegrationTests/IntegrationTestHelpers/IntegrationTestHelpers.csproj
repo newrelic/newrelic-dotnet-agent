@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net461</TargetFrameworks>
     <RootNamespace>NewRelic.Agent.IntegrationTestHelpers</RootNamespace>
@@ -18,11 +18,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Management" />
-    <Reference Include="System.Messaging" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.ServiceModel.Web" />
   </ItemGroup>
 </Project>

@@ -3,9 +3,8 @@
 
 
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf;
+using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using System;
@@ -63,6 +62,8 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         protected readonly string _relativePath;
 
         protected const string IIS_SERVICENAME = "WcfService.svc";
+        protected const string SharedWcfLibraryNamespace = "NewRelic.Agent.IntegrationTests.Shared.Wcf";
+
 
         protected string IISWebAppPublishPath => Path.Combine(_fixture.IntegrationTestAppPath, "WcfAppIisHosted", "Deploy");
 

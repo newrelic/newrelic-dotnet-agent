@@ -4,7 +4,7 @@
 
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf;
+using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System;
 using System.Collections.Generic;
@@ -58,13 +58,6 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
 
         private void ConfigureBinding(WCFBindingType bindingType, string relativePath, int port)
         {
-            //	<services>
-            //		<service name="NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.WcfService">
-            //			<endpoint address="___relativePath___" contract="IWcfService" binding="___bindingType___">
-            //			</endpoint>
-            //	 </service>
-            //	</services>
-
             //Clean out any bindings that are in the Web.Config
             CommonUtils.DeleteXmlNode(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel" }, "services");
@@ -76,7 +69,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
             //services/service/Name
             CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel", "services", "service" },
-                "name", "NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf.WcfService");
+                "name", "NewRelic.Agent.IntegrationTests.Shared.Wcf.WcfService");
 
             //services/service/endpoint - Address
             CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",

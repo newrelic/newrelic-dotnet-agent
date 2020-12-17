@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf;
+using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using System;
 using System.Net;
 using System.ServiceModel;

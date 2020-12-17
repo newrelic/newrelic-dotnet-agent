@@ -1,10 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
+#if NETFRAMEWORK
 using System;
 
-namespace NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf
+namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
 {
     public partial class GetCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs
     {
@@ -26,3 +26,5 @@ namespace NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf
         }
     }
 }
+
+#endif
