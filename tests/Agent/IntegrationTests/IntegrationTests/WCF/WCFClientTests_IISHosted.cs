@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
-using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.WCF.Client.IIS
