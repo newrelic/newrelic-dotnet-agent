@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using DotNet_Msmq_Shared;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using NewRelic.Agent.IntegrationTests.Shared.Util;
 using System;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
