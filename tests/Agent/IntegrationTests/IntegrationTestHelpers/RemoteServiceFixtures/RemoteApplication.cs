@@ -15,7 +15,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     public enum ApplicationType
     {
         Bounded,
-        Unbounded
+        Unbounded,
+        Shared
     }
 
     public abstract class RemoteApplication : IDisposable
@@ -234,13 +235,22 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected RemoteApplication(ApplicationType applicationType, bool isCoreApp = false)
         {
-            var applicationsFolder = applicationType == ApplicationType.Bounded
-                ? "Applications"
-                : "UnboundedApplications";
+            string applicationsFolder;
+            switch (applicationType)
+            {
+                case ApplicationType.Unbounded:
+                    applicationsFolder = "UnboundedApplications";
+                    break;
+                case ApplicationType.Shared:
+                    applicationsFolder = "SharedApplications";
+                    break;
+                default:
+                    applicationsFolder = "Applications";
+                    break;
+            }
             SourceApplicationsDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, applicationsFolder);
             IsCoreApp = isCoreApp;
-            var keepWorkingDirEnvVarValue = 0;
-            if (int.TryParse(Environment.GetEnvironmentVariable("NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY"), out keepWorkingDirEnvVarValue))
+            if (int.TryParse(Environment.GetEnvironmentVariable("NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY"), out var keepWorkingDirEnvVarValue))
             {
                 KeepWorkingDirectory = (keepWorkingDirEnvVarValue == 1);
             }

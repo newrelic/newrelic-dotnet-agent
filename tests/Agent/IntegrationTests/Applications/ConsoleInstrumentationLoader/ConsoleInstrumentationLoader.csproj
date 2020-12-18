@@ -60,9 +60,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ApplicationHelperLibraries\ReflectionHelpers\ReflectionHelpers.csproj">
-      <Project>{1ebd3244-3889-490f-a418-7c665a2d6219}</Project>
-      <Name>ReflectionHelpers</Name>
+    <ProjectReference Include="..\..\Shared\Shared.csproj">
+      <Project>{f4b857c6-8458-41c7-9254-f9ce97bb473a}</Project>
+      <Name>Shared</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
