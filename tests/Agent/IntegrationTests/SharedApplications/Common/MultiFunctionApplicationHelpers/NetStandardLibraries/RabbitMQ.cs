@@ -16,7 +16,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
     class RabbitMQ
     {
         private static readonly ConnectionFactory ChannelFactory = new ConnectionFactory() { HostName = RabbitMqConfiguration.RabbitMqServerIp };
-        private static IModel Channel = ChannelFactory.CreateConnection().CreateModel();
+        private static readonly IConnection Connection = ChannelFactory.CreateConnection();
+        private static IModel Channel = Connection.CreateModel();
 
         [LibraryMethod]
         [Transaction]
@@ -61,8 +62,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         public void SendReceiveTopic(string exchangeName, string topicName, string message)
         {
             //Publish
-            Channel.ExchangeDeclare(exchange: exchangeName,
-                                    type: "topic");
+            Channel.ExchangeDeclare(exchange: exchangeName, type: "topic");
 
             var routingKey = topicName;
             var body = Encoding.UTF8.GetBytes(message);
@@ -125,6 +125,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         public void DeleteExchange(string exchangeName)
         {
             Channel.ExchangeDeleteNoWait(exchangeName, false);
+        }
+
+        [LibraryMethod]
+        public void Shutdown()
+        {
+            Logger.Info("Closing RabbitMQ Channel...");
+            Channel.Close();
+            Logger.Info("channel closed");
+            Logger.Info("Closing RabbitMQ Connection...");
+            Connection.Close();
+            Logger.Info("Connection closed");
         }
 
         private void DeclareQueue(string queueName)
