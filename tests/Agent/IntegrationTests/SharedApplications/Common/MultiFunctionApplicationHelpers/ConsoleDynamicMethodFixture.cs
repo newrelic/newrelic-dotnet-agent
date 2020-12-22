@@ -10,17 +10,37 @@ using System.Linq;
 namespace MultiFunctionApplicationHelpers
 {
 
-    public class ConsoleDynamicMethodFixtureFW : ConsoleDynamicMethodFixture
+    public class ConsoleDynamicMethodFixtureFW471 : ConsoleDynamicMethodFixtureFWSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureFW471() : base("net471")
+        {
+        }
+    }
+
+    public class ConsoleDynamicMethodFixtureFW461 : ConsoleDynamicMethodFixtureFWSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureFW461() : base("net461")
+        {
+        }
+    }
+
+    public abstract class ConsoleDynamicMethodFixtureFWSpecificVersion : ConsoleDynamicMethodFixture
     {
         private static readonly string ApplicationDirectoryName = @"ConsoleMultiFunctionApplicationFW";
         private static readonly string ExecutableName = $"{ApplicationDirectoryName}.exe";
 
+        // TODO: is this needed?
         public string IntegrationTestAppPath => RemoteApplication.SourceApplicationsDirectoryPath;
 
-        public ConsoleDynamicMethodFixtureFW() : base(ApplicationDirectoryName, ExecutableName, "net471", false, DefaultTimeout)
+        /// <summary>
+        /// Use this .ctor to specify a specific .NET framework version to target.
+        /// </summary>
+        /// <param name="targetFramework">The framework target to use when running the application. This parameter must match one of the targetFramework values defined in ConsoleMultiFunctionApplicationFW.csproj </param>
+        public ConsoleDynamicMethodFixtureFWSpecificVersion(string targetFramework) : base(ApplicationDirectoryName, ExecutableName, targetFramework, false, DefaultTimeout)
         {
         }
     }
+
 
     public class ConsoleDynamicMethodFixtureCore22 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {

@@ -15,11 +15,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
     [NetFrameworkTest]
-    public abstract class RabbitMqW3cTracingTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW>
+    public abstract class RabbitMqW3cTracingTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW471>
     {
         protected readonly string _metricScopeBase = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ";
 
-        public RabbitMqW3cTracingTests(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output)  : base(fixture)
+        public RabbitMqW3cTracingTests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)  : base(fixture)
         {
             fixture.TestLogger = output;
             fixture.Actions
@@ -38,11 +38,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 
     public class RabbitMqW3cTracingBasicTest : RabbitMqW3cTracingTests
     {
-        private ConsoleDynamicMethodFixtureFW _fixture;
+        private ConsoleDynamicMethodFixtureFW471 _fixture;
 
         private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
 
-        public RabbitMqW3cTracingBasicTest(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output)
+        public RabbitMqW3cTracingBasicTest(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
         : base(fixture, output)
         {
             _fixture = fixture;
@@ -94,11 +94,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 
     public class RabbitMqW3cTracingEventingConsumerTest : RabbitMqW3cTracingTests
     {
-        private ConsoleDynamicMethodFixtureFW _fixture;
+        private ConsoleDynamicMethodFixtureFW471 _fixture;
 
         private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
 
-        public RabbitMqW3cTracingEventingConsumerTest(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output)
+        public RabbitMqW3cTracingEventingConsumerTest(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
         : base(fixture, output)
         {
             _fixture = fixture;
