@@ -4,10 +4,8 @@
 
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Testing.Assertions;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -16,10 +14,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
     [NetFrameworkTest]
     public abstract class RabbitMqDistributedTracingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture : ConsoleDynamicMethodFixtureFW471
+        where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
-        private ConsoleDynamicMethodFixtureFW471 _fixture;
+        private ConsoleDynamicMethodFixture _fixture;
 
         public RabbitMqDistributedTracingTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
@@ -69,12 +67,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         }
     }
 
-    //public class RabbitMqLegacyDistributedTracingTests : RabbitMqDistributedTracingTestsBase<RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture>
-    //{
-    //    public RabbitMqLegacyDistributedTracingTests(RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture fixture, ITestOutputHelper output)
-    //        : base(fixture, output)
-    //    {
-    //    }
-    //}
+    public class RabbitMqLegacyDistributedTracingTests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW461>
+    {
+        public RabbitMqLegacyDistributedTracingTests(ConsoleDynamicMethodFixtureFW461 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
 
 }
