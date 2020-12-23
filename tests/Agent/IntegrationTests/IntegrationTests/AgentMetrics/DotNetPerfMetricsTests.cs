@@ -13,9 +13,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 {
 
     [NetFrameworkTest]
-    public class DotNetPerfMetricsTestsFW : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureFW>
+    public class DotNetPerfMetricsTestsFW : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public DotNetPerfMetricsTestsFW(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output)
+        public DotNetPerfMetricsTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

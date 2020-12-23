@@ -14,9 +14,9 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetFrameworkTest]
-    public class NetStandardLibraryInstrumentationFW : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureFW>
+    public class NetStandardLibraryInstrumentationFW : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public NetStandardLibraryInstrumentationFW(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output) : base(fixture, output)
+        public NetStandardLibraryInstrumentationFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }

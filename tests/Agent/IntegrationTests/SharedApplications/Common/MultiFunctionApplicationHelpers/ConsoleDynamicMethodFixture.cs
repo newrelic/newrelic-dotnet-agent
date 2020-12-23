@@ -9,6 +9,12 @@ using System.Linq;
 
 namespace MultiFunctionApplicationHelpers
 {
+    public class ConsoleDynamicMethodFixtureFWLatest : ConsoleDynamicMethodFixtureFWSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureFWLatest() : base("net471")
+        {
+        }
+    }
 
     public class ConsoleDynamicMethodFixtureFW471 : ConsoleDynamicMethodFixtureFWSpecificVersion
     {

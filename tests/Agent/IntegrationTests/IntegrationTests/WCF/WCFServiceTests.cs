@@ -24,7 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
             WCFInvocationMethod.TAPAsync
         };
 
-        public WCFServiceTestBase(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output, WCFBindingType bindingToTest, TracingTestOption tracingTestOption, HostingModel hostingModelOption, ASPCompatibilityMode aspCompatModeOption, IWCFLogHelpers logHelpersImpl)
+        public WCFServiceTestBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, WCFBindingType bindingToTest, TracingTestOption tracingTestOption, HostingModel hostingModelOption, ASPCompatibilityMode aspCompatModeOption, IWCFLogHelpers logHelpersImpl)
             : base(fixture, output, bindingToTest, new[] { WCFInvocationMethod.Sync }, _instrumentedSvcInvocMethods, tracingTestOption, hostingModelOption, aspCompatModeOption, logHelpersImpl)
         {
         }
