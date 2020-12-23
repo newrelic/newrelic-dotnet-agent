@@ -132,12 +132,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         [LibraryMethod]
         public void Shutdown()
         {
-            Logger.Info("Closing RabbitMQ Channel...");
             Channel.Close();
-            Logger.Info("channel closed");
-            Logger.Info("Closing RabbitMQ Connection...");
             Connection.Close();
-            Logger.Info("Connection closed");
+            Logger.Info("RabbitMQ channel and connection closed.");
         }
 
         [LibraryMethod]
@@ -145,13 +142,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         {
             var rabbitAssembly = Assembly.GetAssembly(typeof(ConnectionFactory));
             var assemblyPath = rabbitAssembly.Location;
-            // Get the file version.
-            FileVersionInfo rabbitFileVersionInfo = FileVersionInfo.GetVersionInfo(assemblyPath);
+            var rabbitClientVersion = FileVersionInfo.GetVersionInfo(assemblyPath).FileVersion;
 
-            Logger.Info("RabbitMQ Client assembly path = " + assemblyPath);
-            // Print the file name and version number.
-            Logger.Info("File: " + rabbitFileVersionInfo.FileDescription + '\n' +
-                              "Version number: " + rabbitFileVersionInfo.FileVersion);
+            Logger.Info($"RabbitMQ client assembly path={assemblyPath}, version={rabbitClientVersion}");
         }
 
         private void DeclareQueue(string queueName)
@@ -201,27 +194,5 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
                 }
             }
         }
-
-        //public string GenerateQueue()
-        //{
-        //    var name = $"integrationTestQueue-{Guid.NewGuid()}";
-        //    _queues.Add(name);
-        //    return name;
-        //}
-
-        //private string GenerateExchange()
-        //{
-        //    var name = $"integrationTestExchange-{Guid.NewGuid()}";
-        //    _exchanges.Add(name);
-        //    return name;
-        //}
-
-        //public override void Dispose()
-        //{
-        //    base.Dispose();
-        //    IntegrationTestHelpers.RabbitMqUtils.DeleteQueuesAndExchanges(_queues, _exchanges);
-        //}
-
-
     }
 }
