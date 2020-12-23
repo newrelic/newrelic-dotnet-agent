@@ -35,7 +35,6 @@ namespace MultiFunctionApplicationHelpers
         private static readonly string ApplicationDirectoryName = @"ConsoleMultiFunctionApplicationFW";
         private static readonly string ExecutableName = $"{ApplicationDirectoryName}.exe";
 
-        // TODO: is this needed?
         public string IntegrationTestAppPath => RemoteApplication.SourceApplicationsDirectoryPath;
 
         /// <summary>

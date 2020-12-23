@@ -6,6 +6,8 @@ using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -136,6 +138,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
             Logger.Info("Closing RabbitMQ Connection...");
             Connection.Close();
             Logger.Info("Connection closed");
+        }
+
+        [LibraryMethod]
+        public void PrintVersion()
+        {
+            var rabbitAssembly = Assembly.GetAssembly(typeof(ConnectionFactory));
+            var assemblyPath = rabbitAssembly.Location;
+            // Get the file version.
+            FileVersionInfo rabbitFileVersionInfo = FileVersionInfo.GetVersionInfo(assemblyPath);
+
+            Logger.Info("RabbitMQ Client assembly path = " + assemblyPath);
+            // Print the file name and version number.
+            Logger.Info("File: " + rabbitFileVersionInfo.FileDescription + '\n' +
+                              "Version number: " + rabbitFileVersionInfo.FileVersion);
         }
 
         private void DeclareQueue(string queueName)
