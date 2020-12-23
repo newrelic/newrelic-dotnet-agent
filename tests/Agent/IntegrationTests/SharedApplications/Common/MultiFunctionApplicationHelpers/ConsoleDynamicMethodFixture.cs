@@ -62,7 +62,7 @@ namespace MultiFunctionApplicationHelpers
     /// </summary>
     public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
-        public ConsoleDynamicMethodFixtureCoreLatest() : base("netcoreapp3.0")
+        public ConsoleDynamicMethodFixtureCoreLatest() : base("netcoreapp3.1")
         {
         }
     }
