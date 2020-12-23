@@ -12,7 +12,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
-    [NetFrameworkTest]
     public abstract class RabbitMqDistributedTracingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
@@ -59,6 +58,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         }
     }
 
+    [NetFrameworkTest]
     public class RabbitMqDistributedTracingTests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public RabbitMqDistributedTracingTests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -67,9 +67,19 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         }
     }
 
+    [NetFrameworkTest]
     public class RabbitMqLegacyDistributedTracingTests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW461>
     {
         public RabbitMqLegacyDistributedTracingTests(ConsoleDynamicMethodFixtureFW461 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqNetCoreDistributedTracingTests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public RabbitMqNetCoreDistributedTracingTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
