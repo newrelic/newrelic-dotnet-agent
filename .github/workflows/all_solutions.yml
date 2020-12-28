@@ -53,6 +53,8 @@ jobs:
 
       - name: Build x64
         run: |
+          Write-Host "List NuGet Sources"
+          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
           Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
           MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
@@ -152,6 +154,8 @@ jobs:
             
       - name: Build FullAgent.sln
         run: |
+          Write-Host "List NuGet Sources"
+          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
         shell: powershell
@@ -320,6 +324,8 @@ jobs:
 
       - name: Build IntegrationTests.sln
         run: |
+          Write-Host "List NuGet Sources"
+          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
         shell: powershell
@@ -354,6 +360,8 @@ jobs:
 
       - name: Build UnboundedIntegrationTests.sln
         run: |
+          Write-Host "List NuGet Sources"
+          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
         shell: powershell
@@ -388,6 +396,8 @@ jobs:
 
       - name: Build PlatformTests.sln
         run: |
+          Write-Host "List NuGet Sources"
+          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}
         shell: powershell
