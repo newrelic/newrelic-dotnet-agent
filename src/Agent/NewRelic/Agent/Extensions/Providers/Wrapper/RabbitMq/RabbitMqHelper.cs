@@ -3,10 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Reflection;
 using NewRelic.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.RabbitMq
@@ -18,6 +20,27 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         public const string VendorName = "RabbitMQ";
         public const string AssemblyName = "RabbitMQ.Client";
         public const string TypeName = "RabbitMQ.Client.Framing.Impl.Model";
+
+        private static Func<object, object> _getHeadersFunc;
+        public static Dictionary<string, object> GetHeaders(object Properties)
+        {
+            var func = _getHeadersFunc ?? (_getHeadersFunc = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(Properties.GetType(), "Headers"));
+            return func(Properties) as Dictionary<string, object>;
+        }
+
+        private static Action<Dictionary<string, object>> _setHeadersAction;
+        public static void SetHeaders(object Properties, Dictionary<string, object> headers)
+        {
+            if (_setHeadersAction == null)
+            {
+                var propertyInfo = Properties.GetType().GetProperty("Headers", BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+                var setterMethodInfo = propertyInfo.GetSetMethod(true);
+
+                _setHeadersAction = (Action<Dictionary<string, object>>)Delegate.CreateDelegate(typeof(Action<Dictionary<string, object>>), Properties, setterMethodInfo);
+            }
+
+            _setHeadersAction(headers);
+        }
 
         public static MessageBrokerDestinationType GetBrokerDestinationType(string queueNameOrRoutingKey)
         {
@@ -78,6 +101,39 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 }
 
                 headers[key] = value;
+            });
+
+            transaction.InsertDistributedTraceHeaders(basicProperties, setHeaders);
+
+            return segment;
+        }
+
+        public static ISegment CreateSegmentForPublishWrappers6Plus(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, IConfiguration configuration, int basicPropertiesIndex)
+        {
+            var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<object>(basicPropertiesIndex);
+
+            var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(1);
+            var destType = GetBrokerDestinationType(routingKey);
+            var destName = ResolveDestinationName(destType, routingKey);
+
+            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
+
+            //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
+            if (basicProperties.GetType().ToString() != BasicPropertiesType)
+            {
+                return segment;
+            }
+
+            var setHeaders = new Action<object, string, string>((carrier, key, value) =>
+            {
+                var localHeaders = GetHeaders(carrier);
+                if (localHeaders == null)
+                {
+                    localHeaders = new Dictionary<string, object>();
+                    SetHeaders(carrier, localHeaders);
+                }
+
+                localHeaders[key] = value;
             });
 
             transaction.InsertDistributedTraceHeaders(basicProperties, setHeaders);

@@ -170,9 +170,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         private string BasicGetMessage(string queueName)
         {
             var basicGetResult = Channel.BasicGet(queueName, true);
-
+#if NETCOREAPP3_1
+            var receiveMessage = Encoding.UTF8.GetString(basicGetResult.Body.ToArray());
+#else
             var receiveMessage = Encoding.UTF8.GetString(basicGetResult.Body);
-
+#endif
             return receiveMessage;
         }
 
@@ -189,7 +191,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 
                 void handler(object ch, BasicDeliverEventArgs basicDeliverEventArgs)
                 {
+#if NETCOREAPP3_1
+                    receivedMessage = Encoding.UTF8.GetString(basicDeliverEventArgs.Body.ToArray());
+#else
                     receivedMessage = Encoding.UTF8.GetString(basicDeliverEventArgs.Body);
+#endif
                     manualResetEvent.Set();
                 }
             }
