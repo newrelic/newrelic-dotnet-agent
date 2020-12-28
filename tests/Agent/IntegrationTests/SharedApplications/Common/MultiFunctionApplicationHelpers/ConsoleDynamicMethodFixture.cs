@@ -9,18 +9,43 @@ using System.Linq;
 
 namespace MultiFunctionApplicationHelpers
 {
+    public class ConsoleDynamicMethodFixtureFWLatest : ConsoleDynamicMethodFixtureFWSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureFWLatest() : base("net471")
+        {
+        }
+    }
 
-    public class ConsoleDynamicMethodFixtureFW : ConsoleDynamicMethodFixture
+    public class ConsoleDynamicMethodFixtureFW471 : ConsoleDynamicMethodFixtureFWSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureFW471() : base("net471")
+        {
+        }
+    }
+
+    public class ConsoleDynamicMethodFixtureFW461 : ConsoleDynamicMethodFixtureFWSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureFW461() : base("net461")
+        {
+        }
+    }
+
+    public abstract class ConsoleDynamicMethodFixtureFWSpecificVersion : ConsoleDynamicMethodFixture
     {
         private static readonly string ApplicationDirectoryName = @"ConsoleMultiFunctionApplicationFW";
         private static readonly string ExecutableName = $"{ApplicationDirectoryName}.exe";
 
         public string IntegrationTestAppPath => RemoteApplication.SourceApplicationsDirectoryPath;
 
-        public ConsoleDynamicMethodFixtureFW() : base(ApplicationDirectoryName, ExecutableName, "net471", false, DefaultTimeout)
+        /// <summary>
+        /// Use this .ctor to specify a specific .NET framework version to target.
+        /// </summary>
+        /// <param name="targetFramework">The framework target to use when running the application. This parameter must match one of the targetFramework values defined in ConsoleMultiFunctionApplicationFW.csproj </param>
+        public ConsoleDynamicMethodFixtureFWSpecificVersion(string targetFramework) : base(ApplicationDirectoryName, ExecutableName, targetFramework, false, DefaultTimeout)
         {
         }
     }
+
 
     public class ConsoleDynamicMethodFixtureCore22 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
@@ -37,7 +62,7 @@ namespace MultiFunctionApplicationHelpers
     /// </summary>
     public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
-        public ConsoleDynamicMethodFixtureCoreLatest() : base("netcoreapp3.0")
+        public ConsoleDynamicMethodFixtureCoreLatest() : base("netcoreapp3.1")
         {
         }
     }

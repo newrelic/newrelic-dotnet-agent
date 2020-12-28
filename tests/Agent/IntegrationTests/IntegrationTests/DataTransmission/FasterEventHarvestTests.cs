@@ -12,9 +12,9 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.DataTransmission
 {
     [NetFrameworkTest]
-    public class FasterEventHarvestNetFrameworkTests : FasterEventHarvestTests<ConsoleDynamicMethodFixtureFW>
+    public class FasterEventHarvestNetFrameworkTests : FasterEventHarvestTests<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public FasterEventHarvestNetFrameworkTests(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output) : base(fixture, output)
+        public FasterEventHarvestNetFrameworkTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }

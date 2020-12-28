@@ -22,7 +22,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
         protected override int _expectedTransactionCount_Service => _countClientInvocationMethodsToTest * COUNT_SVC_METHODS;    //2 methods being called (getdata, throwException)
         protected bool _thereWereCATFailures => LogHelpers.TrxTripIDs_Client.Except(LogHelpers.TrxIDs_Client).Any();
 
-        public WCFClientTestBase(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output, WCFBindingType bindingToTest, TracingTestOption tracingTestOption, HostingModel hostingTestOption, ASPCompatibilityMode aspCompatModeOption, IWCFLogHelpers logHelpersImpl)
+        public WCFClientTestBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, WCFBindingType bindingToTest, TracingTestOption tracingTestOption, HostingModel hostingTestOption, ASPCompatibilityMode aspCompatModeOption, IWCFLogHelpers logHelpersImpl)
             : base(fixture, output, bindingToTest, _instrumentedClientInvocMethods, new[] { WCFInvocationMethod.Sync }, tracingTestOption, hostingTestOption, aspCompatModeOption, logHelpersImpl)
         {
         }

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+#if NET471
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System;
 using System.Collections;
@@ -21,7 +22,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries
         [LibraryMethod]
         public void Run()
         {
-            // This application has been conifgured in the app.config to use the MyConfigBuilder ConfigurationBuilder implementation.
+            // This application has been configured in the app.config to use the MyConfigBuilder ConfigurationBuilder implementation.
             // ConfigurationBuilder was introduced in .NET Framework 4.7.1: https://docs.microsoft.com/en-us/dotnet/api/system.configuration.configurationbuilder
 
             // It is common for ConfigurationBuilders to make HTTP calls to retrieve configuration values from an external source.
@@ -112,3 +113,5 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries
         }
     }
 }
+
+#endif

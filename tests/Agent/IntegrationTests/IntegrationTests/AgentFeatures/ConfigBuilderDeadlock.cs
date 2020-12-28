@@ -10,11 +10,11 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
-    public class ConfigBuilderDeadlock : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW>
+    public class ConfigBuilderDeadlock : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
     {
-        protected readonly ConsoleDynamicMethodFixtureFW _fixture;
+        protected readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
 
-        public ConfigBuilderDeadlock(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output) : base(fixture)
+        public ConfigBuilderDeadlock(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
