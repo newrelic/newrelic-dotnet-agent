@@ -43,6 +43,11 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1
 
+      - name: Print NuGet config file
+        run: |
+          Get-Content "C:\Users\runneradmin\AppData\Roaming\NuGet\NuGet.Config"
+        shell: powershell
+
       - name: Clean out _profilerBuild directory
         run: |
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
