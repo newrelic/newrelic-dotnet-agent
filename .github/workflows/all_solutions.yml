@@ -58,6 +58,8 @@ jobs:
 
       - name: Build x64
         run: |
+          Write-Host "List NuGet Sources"
+          dotnet nuget list source
           Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
           MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
