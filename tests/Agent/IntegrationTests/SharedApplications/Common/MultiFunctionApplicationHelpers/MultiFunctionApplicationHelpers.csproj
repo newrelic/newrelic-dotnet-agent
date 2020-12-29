@@ -27,7 +27,7 @@
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
-    <PackageReference Include="RabbitMQ.Client" Version="5.1.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
   </ItemGroup>
 
   <ItemGroup>

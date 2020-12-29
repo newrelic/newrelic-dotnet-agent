@@ -36,6 +36,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 
             DeleteQueue(queueName);
 
+            // This sleep ensures that this transaction method is the one sampled for transaction trace data
+            Thread.Sleep(1000);
+
             Logger.Info(string.Format("method=SendReceive,sent message={0},received message={1}, queueName={2}", message, receiveMessage, queueName));
         }
 
@@ -171,7 +174,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         {
             var basicGetResult = Channel.BasicGet(queueName, true);
 
+            // See this project's .csproj file for target framework => RabbitMQ.Client mappings
+            // 'netcoreapp3.1' is tied to RabbitMQ.Client version 6.x+, making this necessary
+#if NETCOREAPP3_1
+            var receiveMessage = Encoding.UTF8.GetString(basicGetResult.Body.ToArray());
+#else
             var receiveMessage = Encoding.UTF8.GetString(basicGetResult.Body);
+#endif
 
             return receiveMessage;
         }
@@ -189,7 +198,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 
                 void handler(object ch, BasicDeliverEventArgs basicDeliverEventArgs)
                 {
+                    // See this project's .csproj file for target framework => RabbitMQ.Client mappings
+                    // 'netcoreapp3.1' is tied to RabbitMQ.Client version 6.x+, making this necessary
+#if NETCOREAPP3_1
+                    receivedMessage = Encoding.UTF8.GetString(basicDeliverEventArgs.Body.ToArray());
+#else
                     receivedMessage = Encoding.UTF8.GetString(basicDeliverEventArgs.Body);
+#endif
+
                     manualResetEvent.Set();
                 }
             }
