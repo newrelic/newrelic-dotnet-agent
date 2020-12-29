@@ -450,7 +450,7 @@ namespace NewRelic.Reflection
 
         #region Helpers
 
-        public Type GetType(string assemblyName, string typeName)
+        private Type GetType(string assemblyName, string typeName)
         {
             var assembly = Assembly.Load(assemblyName);
             if (assembly == null)

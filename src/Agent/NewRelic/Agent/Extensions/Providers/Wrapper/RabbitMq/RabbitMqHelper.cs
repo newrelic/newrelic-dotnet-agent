@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions;
