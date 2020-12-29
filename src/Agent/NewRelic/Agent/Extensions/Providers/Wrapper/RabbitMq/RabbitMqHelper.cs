@@ -119,14 +119,14 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
             var setHeaders = new Action<object, string, string>((carrier, key, value) =>
             {
-                var localHeaders = GetHeaders(carrier);
-                if (localHeaders == null)
+                var headers = GetHeaders(carrier);
+                if (headers == null)
                 {
-                    localHeaders = new Dictionary<string, object>();
-                    SetHeaders(carrier, localHeaders);
+                    headers = new Dictionary<string, object>();
+                    SetHeaders(carrier, headers);
                 }
 
-                localHeaders[key] = value;
+                headers[key] = value;
             });
 
             transaction.InsertDistributedTraceHeaders(basicProperties, setHeaders);

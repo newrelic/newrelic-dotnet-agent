@@ -6,8 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
-* **New Feature Template** <br/>
-New Feature Description
+* *.NET Core support for RabbitMQ** <br/>
+Adds support for .NET Core applications using RabbitMQ.Client.
+
+* *Now supports RabbitMQ 6.2.1** <br/>
+Adds support for RabbitMQ version 6.2.1.
 
 ### Fixes
 * **New Fixes Template** <br/>
