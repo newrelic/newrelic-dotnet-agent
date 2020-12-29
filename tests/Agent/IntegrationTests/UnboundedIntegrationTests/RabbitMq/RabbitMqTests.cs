@@ -20,6 +20,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 
         private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
         private readonly string _purgeQueue = $"integrationPurgeTestQueue-{Guid.NewGuid()}";
+        private readonly string _testExchangeName = $"integrationTestExchange-{Guid.NewGuid()}";
         // The topic name has to contain a '.' character.  See https://www.rabbitmq.com/tutorials/tutorial-five-dotnet.html
         private readonly string _sendReceiveTopic = "SendReceiveTopic.Topic";
 
@@ -34,7 +35,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
             _fixture.AddCommand($"RabbitMQ SendReceive {_sendReceiveQueue} TestMessage");
             _fixture.AddCommand($"RabbitMQ SendReceiveTempQueue TempQueueTestMessage");
             _fixture.AddCommand($"RabbitMQ QueuePurge {_purgeQueue}");
-            _fixture.AddCommand($"RabbitMQ SendReceiveTopic TestExchange {_sendReceiveTopic} TopicTestMessage");
+            _fixture.AddCommand($"RabbitMQ SendReceiveTopic {_testExchangeName} {_sendReceiveTopic} TopicTestMessage");
             // This is needed to avoid a hang on shutdown in the test app
             _fixture.AddCommand("RabbitMQ Shutdown");
 
@@ -96,11 +97,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
             Assertions.MetricsExist(expectedMetrics, metrics);
 
             NrAssert.Multiple(
-                () => Assert.NotNull(sendReceiveTransactionEvent),
-                () => Assert.NotNull(sendReceiveTempQueueTransactionEvent),
-                () => Assert.NotNull(queuePurgeTransactionEvent),
-                () => Assert.NotNull(sendReceiveTopicTransactionEvent),
-                () => Assert.NotNull(transactionSample),
+                () => Assert.True(sendReceiveTransactionEvent != null, "sendReceiveTransactionEvent should not be null"),
+                () => Assert.True(sendReceiveTempQueueTransactionEvent != null, "sendReceiveTempQueueTransactionEvent should not be null"),
+                () => Assert.True(queuePurgeTransactionEvent != null, "queuePurgeTransactionEvent should not be null"),
+                () => Assert.True(sendReceiveTopicTransactionEvent != null, "sendReceiveTopicTransactionEvent should not be null"),
+                () => Assert.True(transactionSample != null, "transactionSample should not be null"),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
             );
 
