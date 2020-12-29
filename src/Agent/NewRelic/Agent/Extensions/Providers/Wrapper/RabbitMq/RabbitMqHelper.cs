@@ -66,7 +66,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             return false;
         }
 
-        public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, IConfiguration configuration, int basicPropertiesIndex)
+        public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
         {
             // ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
             // If we implement newer versions of the API or new methods we'll need to re-evaluate.
@@ -102,7 +102,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             return segment;
         }
 
-        public static ISegment CreateSegmentForPublishWrappers6Plus(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, IConfiguration configuration, int basicPropertiesIndex)
+        public static ISegment CreateSegmentForPublishWrappers6Plus(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
         {
             var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<object>(basicPropertiesIndex);
 

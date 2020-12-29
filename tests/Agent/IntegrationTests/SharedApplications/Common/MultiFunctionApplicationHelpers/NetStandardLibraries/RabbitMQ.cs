@@ -175,6 +175,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 #else
             var receiveMessage = Encoding.UTF8.GetString(basicGetResult.Body);
 #endif
+
             return receiveMessage;
         }
 
@@ -196,6 +197,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 #else
                     receivedMessage = Encoding.UTF8.GetString(basicDeliverEventArgs.Body);
 #endif
+
                     manualResetEvent.Set();
                 }
             }
