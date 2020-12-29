@@ -6,11 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
-* *.NET Core support for RabbitMQ** <br/>
-Adds support for .NET Core applications using RabbitMQ.Client.
-
-* *Now supports RabbitMQ 6.2.1** <br/>
-Adds support for RabbitMQ version 6.2.1.
+* *Updated support for RabbitMQ** <br/>
+* Adds support for .NET Core applications using RabbitMQ.Client.
+* Adds support for RabbitMQ.Client version 6.2.1.
+* Not supported: Distributed Tracing is not supported with the RabbitMQ AMQP 1.0 plugin.
 
 ### Fixes
 * **New Fixes Template** <br/>
