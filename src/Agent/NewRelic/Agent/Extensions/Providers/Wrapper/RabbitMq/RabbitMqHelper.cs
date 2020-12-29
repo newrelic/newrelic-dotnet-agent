@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
@@ -31,15 +30,10 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         private static Action<Dictionary<string, object>> _setHeadersAction;
         public static void SetHeaders(object Properties, Dictionary<string, object> headers)
         {
-            if (_setHeadersAction == null)
-            {
-                var propertyInfo = Properties.GetType().GetProperty("Headers", BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-                var setterMethodInfo = propertyInfo.GetSetMethod(true);
+            var action = _setHeadersAction ??
+                (_setHeadersAction = VisibilityBypasser.Instance.GeneratePropertySetter<Dictionary<string, object>>(Properties, "Headers"));
 
-                _setHeadersAction = (Action<Dictionary<string, object>>)Delegate.CreateDelegate(typeof(Action<Dictionary<string, object>>), Properties, setterMethodInfo);
-            }
-
-            _setHeadersAction(headers);
+            action(headers);
         }
 
         public static MessageBrokerDestinationType GetBrokerDestinationType(string queueNameOrRoutingKey)

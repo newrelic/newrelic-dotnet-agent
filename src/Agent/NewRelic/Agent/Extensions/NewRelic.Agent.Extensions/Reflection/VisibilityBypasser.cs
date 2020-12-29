@@ -346,6 +346,17 @@ namespace NewRelic.Reflection
             return GenerateMethodCallerInternal(resultType, propertyGetter);
         }
 
+        public Action<TValue> GeneratePropertySetter<TValue>(object owner, string propertyName)
+        {
+            if (owner == null)
+                throw new ArgumentNullException(nameof(owner));
+            if (propertyName == null)
+                throw new ArgumentNullException(nameof(propertyName));
+
+            var setterMethodInfo = GetPropertySetter(owner.GetType(), propertyName);
+            return (Action<TValue>)setterMethodInfo.CreateDelegate(typeof(Action<TValue>), owner);
+        }
+
         #endregion
 
         #region Constructor Access
@@ -439,7 +450,7 @@ namespace NewRelic.Reflection
 
         #region Helpers
 
-        private Type GetType(string assemblyName, string typeName)
+        public Type GetType(string assemblyName, string typeName)
         {
             var assembly = Assembly.Load(assemblyName);
             if (assembly == null)
@@ -485,6 +496,16 @@ namespace NewRelic.Reflection
             var methodInfo = propertyInfo.GetGetMethod(true);
             if (methodInfo == null)
                 throw new Exception(string.Format("Property {0} on type {1} does not have a getter", propertyInfo.Name, type.AssemblyQualifiedName));
+
+            return methodInfo;
+        }
+
+        private static MethodInfo GetPropertySetter(Type type, string propertyName)
+        {
+            var propertyInfo = GetPropertyInfo(type, propertyName);
+            var methodInfo = propertyInfo.GetSetMethod(true);
+            if (methodInfo == null)
+                throw new Exception(string.Format("Property {0} on type {1} does not have a setter", propertyInfo.Name, type.AssemblyQualifiedName));
 
             return methodInfo;
         }
