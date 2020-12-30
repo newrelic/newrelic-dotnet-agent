@@ -1554,7 +1554,10 @@ namespace NewRelic.Agent.Core.Configuration
                     LogDeprecatedPropertyUse("analyticsEvents.maximumSamplesStored", "transactionEvents.maximumSamplesStored");
                     maxValue = _localConfiguration.analyticsEvents.maximumSamplesStored;
                 }
-                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), maxValue);
+
+                return (int)EnvironmentOverrides(
+                    ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), maxValue),
+                    "MAX_TRANSACTION_SAMPLES_STORED");
             }
         }
 

@@ -205,6 +205,36 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(10, _defaultConfig.TransactionEventsMaximumSamplesStored);
         }
 
+        [TestCase("10", 20, 30, ExpectedResult = 10)]
+        [TestCase("10", null, 30, ExpectedResult = 10)]
+        [TestCase("10", 20, null, ExpectedResult = 10)]
+        [TestCase("10", null, null, ExpectedResult = 10)]
+        [TestCase(null, 20, 30, ExpectedResult = 30)]
+        [TestCase(null, null, 30, ExpectedResult = 30)]
+        [TestCase(null, 20, null, ExpectedResult = 20)]
+        [TestCase(null, null, null, ExpectedResult = 10000)]
+        public int TransactionEventsMaxSamplesStoredOverriddenByEnvironment(string environmentSetting, int? localSetting, int? serverSetting)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("MAX_TRANSACTION_SAMPLES_STORED")).Returns(environmentSetting);
+
+            if (localSetting != null)
+            {
+                _localConfig.transactionEvents.maximumSamplesStored = (int)localSetting;
+
+            }
+
+            if (serverSetting != null)
+            {
+                _serverConfig.EventHarvestConfig = new EventHarvestConfig
+                {
+                    ReportPeriodMs = 5000,
+                    HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.TransactionEventHarvestLimitKey, (int)serverSetting } }
+                };
+            }
+
+            return _defaultConfig.TransactionEventsMaximumSamplesStored;
+        }
+
         [Test]
         public void TransactionEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
         {
