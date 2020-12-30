@@ -138,15 +138,13 @@ jobs:
 
       - name: Unit Tests
         run: |
-          # Write-Host ${{ env.scripts_path }}\DotNet-Agent-CI-UnitTests.ps1
-          # ${{ env.scripts_path }}\DotNet-Agent-CI-UnitTests.ps1
           Write-Host "Creating TestResults directory to temporarily get around nunit limitation"
           mkdir ${{ github.workspace }}\TestResults
 
           $testDllPatterns = @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll')
 
           Write-Host "Finding files for Framework NUnit tests"
-          $frameworkTestPaths = @('Tests\Agent\UnitTests', 'Tests\NewRelic.Core.Tests')
+          $frameworkTestPaths = @('Tests\Agent\UnitTests')
           $frameworkTestFileNames = (Get-ChildItem -Recurse -Path $frameworkTestPaths -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release') } | Select Name -Unique)
           $frameworkFiles = (Get-ChildItem -Recurse -Path $frameworkTestPaths -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release')  })
 
