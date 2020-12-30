@@ -9,7 +9,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
     public class RabbitMqReceiveTests : IClassFixture<RemoteServiceFixtures.RabbitMqReceiverFixture>
     {

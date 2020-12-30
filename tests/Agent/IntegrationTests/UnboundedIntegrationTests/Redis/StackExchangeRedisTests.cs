@@ -9,15 +9,14 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
-using Assert = Xunit.Assert;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
 {
-    public class StackExchangeRedisStrongNameTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
+    public class StackExchangeRedisTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        public StackExchangeRedisStrongNameTests(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
+        public StackExchangeRedisTests(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -37,7 +36,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.GetStackExchangeRedisStrongName();
+                    _fixture.GetStackExchangeRedis();
                 }
             );
             _fixture.Initialize();
@@ -70,8 +69,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/StackExchangeRedisStrongName");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/StackExchangeRedisStrongName");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/StackExchangeRedis");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/StackExchangeRedis");
 
             NrAssert.Multiple
             (

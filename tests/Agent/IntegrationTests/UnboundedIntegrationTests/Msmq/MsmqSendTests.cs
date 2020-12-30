@@ -8,20 +8,13 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
 {
-    /// <summary>
-    /// Integration Test for MSMQ Consume message.
-    /// </summary>
-    /// <remarks>
-    /// Although this test also uses the MSMQ Send endpoint, it is important to keep the Send and Consume tests as separate fixtures
-    /// in order to separately test the existence of a Consume segment in the transaction trace. Only a single TT is being saved per test.
-    /// </remarks>
-    public class MsmqConsumeTests : IClassFixture<RemoteServiceFixtures.MSMQBasicMVCApplicationFixture>
+    public class MsmqSendTests : IClassFixture<RemoteServiceFixtures.MSMQBasicMVCApplicationFixture>
     {
         private readonly RemoteServiceFixtures.MSMQBasicMVCApplicationFixture _fixture;
 
-        public MsmqConsumeTests(RemoteServiceFixtures.MSMQBasicMVCApplicationFixture fixture, ITestOutputHelper output)
+        public MsmqSendTests(RemoteServiceFixtures.MSMQBasicMVCApplicationFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -34,8 +27,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.GetMessageQueue_Msmq_Send(true);
-                    _fixture.GetMessageQueue_Msmq_Receive();
+                    _fixture.GetMessageQueue_Msmq_Send(false);
                 }
             );
             _fixture.Initialize();
@@ -46,17 +38,17 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Consume/Named/private$\nrtestqueue", callCount = 1},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Consume/Named/private$\nrtestqueue", callCount = 1, metricScope = "WebTransaction/MVC/MSMQController/Msmq_Receive"}
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Produce/Named/private$\nrtestqueue", callCount = 1},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Produce/Named/private$\nrtestqueue", callCount = 1, metricScope = "WebTransaction/MVC/MSMQController/Msmq_Send"},
             };
             var expectedTransactionTraceSegments = new List<string>
             {
-                @"MessageBroker/Msmq/Queue/Consume/Named/private$\nrtestqueue"
+                @"MessageBroker/Msmq/Queue/Produce/Named/private$\nrtestqueue"
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/MSMQController/Msmq_Receive");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/MSMQController/Msmq_Receive");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/MSMQController/Msmq_Send");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/MSMQController/Msmq_Send");
 
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
