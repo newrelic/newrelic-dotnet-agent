@@ -1478,7 +1478,10 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(), _localConfiguration.customEvents.maximumSamplesStored);
+                return (int)EnvironmentOverrides(
+                    ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(),
+                        _localConfiguration.customEvents.maximumSamplesStored),
+                    "MAX_EVENT_SAMPLES_STORED");
             }
         }
 

@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Adds support for RabbitMQ.Client version 6.2.1.
   * Not supported: Distributed Tracing is not supported with the RabbitMQ AMQP 1.0 plugin.
 
-* **Adds configuration Environment Variables** <br/>
-  * Adds MAX_TRANSACTION_SAMPLES_STORED. See Agent Configuration [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration).
+* **Adds [configuration](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) Environment Variables** <br/>
+  * Adds MAX_TRANSACTION_SAMPLES_STORED.
+  * Adds MAX_EVENT_SAMPLES_STORED. 
 
 ### Fixes
 * **New Fixes Template** <br/>
