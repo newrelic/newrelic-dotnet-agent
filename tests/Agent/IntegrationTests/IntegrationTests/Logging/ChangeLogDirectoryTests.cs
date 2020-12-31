@@ -14,6 +14,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
+        private const string CustomLogFileNameFromConfigBase = "customLogFileName";
+        private const string CustomLogFileNameFromConfig = CustomLogFileNameFromConfigBase + ".log";
+        private const string CustomAuditLogFileNameFromConfig = CustomLogFileNameFromConfigBase + "_audit.log";
+
         public ChangeLogDirectoryTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
@@ -33,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "info");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "directory", testLoggingDirectory);
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "fileName", "dotNetAgent.log");
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "fileName", CustomLogFileNameFromConfig);
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "auditLog", "true");
                 },
                 exerciseApplication: () =>
@@ -47,8 +51,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         [Fact]
         public void Test()
         {
-            File.Exists(Path.Combine(_fixture.DestinationNewRelicLogFileDirectoryPath, "dotNetAgent.log"));
-            File.Exists(Path.Combine(_fixture.DestinationNewRelicLogFileDirectoryPath, "dotNetAgent_audit.log"));
+            Assert.True(File.Exists(Path.Combine(_fixture.DestinationNewRelicLogFileDirectoryPath, CustomLogFileNameFromConfig)));
+            Assert.True(File.Exists(Path.Combine(_fixture.DestinationNewRelicLogFileDirectoryPath, CustomAuditLogFileNameFromConfig)));
         }
     }
 }
