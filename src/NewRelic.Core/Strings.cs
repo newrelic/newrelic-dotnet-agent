@@ -18,14 +18,25 @@ namespace NewRelic.Core
         /// <returns>The sanitized file name.</returns>
         public static string SafeFileName(string name)
         {
-            foreach (var c in Path.GetInvalidPathChars())
+            var invalidPathChars = Path.GetInvalidPathChars();
+
+            if (name.IndexOfAny(invalidPathChars) != -1)
             {
-                name = name.Replace(c, '_');
+                foreach (var c in invalidPathChars)
+                {
+                    name = name.Replace(c, '_');
+                }
             }
-            foreach (var c in Path.GetInvalidFileNameChars())
+
+            var invalidFileNameChars = Path.GetInvalidFileNameChars();
+            if (name.IndexOfAny(invalidFileNameChars) != -1)
             {
-                name = name.Replace(c, '_');
+                foreach (var c in invalidFileNameChars)
+                {
+                    name = name.Replace(c, '_');
+                }
             }
+
             return name;
         }
 
