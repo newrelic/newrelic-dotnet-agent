@@ -484,7 +484,13 @@ namespace NewRelic.Agent.Core.Config
 
         private string GetLogFileName()
         {
-            string name = fileName;
+            string name = System.Environment.GetEnvironmentVariable("NEW_RELIC_LOG");
+            if (name != null)
+            {
+                return Strings.SafeFileName(name);
+            }
+
+            name = fileName;
             if (name != null)
             {
                 return Strings.SafeFileName(name);

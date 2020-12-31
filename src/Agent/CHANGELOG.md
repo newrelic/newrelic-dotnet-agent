@@ -12,8 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Not supported: Distributed Tracing is not supported with the RabbitMQ AMQP 1.0 plugin.
 
 * **Adds [configuration](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) Environment Variables** <br/>
-  * Adds MAX_TRANSACTION_SAMPLES_STORED.
-  * Adds MAX_EVENT_SAMPLES_STORED. 
+  * Adds MAX_TRANSACTION_SAMPLES_STORE - the maximum number of samples stored for Transaction Events.
+  * Adds MAX_EVENT_SAMPLES_STORED - the maximum number of samples stored for Custom Events. 
+  * Adds NEW_RELIC_LOG - the unqualifed name for the Agent's log file.
 
 ### Fixes
 * **New Fixes Template** <br/>

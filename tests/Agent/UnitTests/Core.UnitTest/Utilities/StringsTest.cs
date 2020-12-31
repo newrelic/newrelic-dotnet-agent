@@ -86,6 +86,15 @@ namespace NewRelic.Agent.Core.Utils
             Assert.AreEqual(content, result);
         }
 
+        [TestCase("commonName", ExpectedResult = "commonName")]
+        [TestCase("commonName.log", ExpectedResult = "commonName.log")]
+        [TestCase("name with spaces", ExpectedResult = "name with spaces")]
+        [TestCase("name\"with\\|invalidchars_", ExpectedResult = "name_with__invalidchars_")]
+        public string SafeFileName_Tests(string inputName)
+        {
+            return Strings.SafeFileName(inputName);
+        }
+
         private static IEnumerable<object[]> ConvertBytesToStringTestData()
         {
             var encodings = new Encoding[] { Encoding.Unicode, Encoding.UTF8, Encoding.ASCII };
@@ -118,6 +127,5 @@ namespace NewRelic.Agent.Core.Utils
                 yield return new object[] { encoding, "AB YZ 19 \uD800\udc05" }; // just to make sure
             }
         }
-
     }
 }
