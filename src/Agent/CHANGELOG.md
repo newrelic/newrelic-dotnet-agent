@@ -13,12 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **Adds [configuration](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) Environment Variables** <br/>
   * Adds MAX_TRANSACTION_SAMPLES_STORE - the maximum number of samples stored for Transaction Events.
-  * Adds MAX_EVENT_SAMPLES_STORED - the maximum number of samples stored for Custom Events. 
+  * Adds MAX_EVENT_SAMPLES_STORED - the maximum number of samples stored for Custom Events.
   * Adds NEW_RELIC_LOG - the unqualifed name for the Agent's log file.
 
 ### Fixes
-* **New Fixes Template** <br/>
-New Fixes Description
+* Fixes Issue [#394](https://github.com/newrelic/newrelic-dotnet-agent/issues/394): agent fails to enable infinite tracing in net5.0 docker images
 
 ## [8.36] - 2020-12-08
 
@@ -40,7 +39,7 @@ We have validated that this version of the agent is compatible with .NET 5 GA. S
 
 ### Fixes
 * Fixes Issue [#337](https://github.com/newrelic/newrelic-dotnet-agent/issues/337) by removing obsolete code which was causing memory growth associated with a large number of transaction names.
-* PR [#348](https://github.com/newrelic/newrelic-dotnet-agent/pull/348): guards against potential exceptions being thrown from the agent API when the agent is not attached.  
+* PR [#348](https://github.com/newrelic/newrelic-dotnet-agent/pull/348): guards against potential exceptions being thrown from the agent API when the agent is not attached.
 
 ## [8.34] - 2020-10-26
 
@@ -86,7 +85,7 @@ Certain errors that are expected within the application may be identified so tha
 
 * **Ignored Errors Enhancements** <br/>
 Certain errors may be identified in configuration so that they will be ignored.  These errors will not be counted towards the application's error rate, Apdex score, and will not be reported by the agent. Please review the following [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#error_collector) for details on how to configure Ignored Errors.
-    * New configuration element [`<ignoreMessages>`](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#error-ignoreErrors)supports filtering based on the error message. 
+    * New configuration element [`<ignoreMessages>`](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#error-ignoreErrors)supports filtering based on the error message.
     * Please note that the [`<ignoreErrors>`](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#error-ignoreErrors) configuration element has been deprecated and replaced by [`<ignoreClasses>`](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#error-ignoreClasses).  The .NET Agent continues to support this configuration element, but its support may be removed in the future.
 
 ### Fixes
@@ -126,7 +125,7 @@ When Distributed Tracing and/or Infinite Tracing are enabled, the Agent will now
         * `host.displayName`
     * **Security Recommendation** <br>
     Review your [Transaction Attributes](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#transaction_events) configuration.  Any attribute include or exclude settings specific to Transaction Events, should be applied to your [Span Attributes](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#span_events) configuration or your [Global Attributes](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#agent-attributes) configuration.
-    
+
 ### Fixes
 Fixes issue where updating custom instrumentation while application is running could cause application to crash.
 
@@ -151,7 +150,7 @@ Fixes issue where updating custom instrumentation while application is running c
 
 ### Fixes
 * Fixes issue which prevented Synthetics from working when distributed tracing is enabled.
-* Fixes issue where our RPM package for installing the agent on RPM-based Linux distributions included a 32-bit shared library, which created unnecessary dependencies on 
+* Fixes issue where our RPM package for installing the agent on RPM-based Linux distributions included a 32-bit shared library, which created unnecessary dependencies on
   32-bit system libraries.
 * Fixes issue where the TransportDuration metric for distributed traces was always reporting 0.
 
@@ -167,7 +166,7 @@ Fixes issue where updating custom instrumentation while application is running c
   Infinite Tracing is currently available on a sign-up basis. If you would like to participate, please contact your sales representative.
 
   <p style="color:red;">Agent version 8.30 introduces significant performance enhancements to Infinite Tracing.  To use Infinite Tracing, please upgrade to version 8.30 or later.</p>
-  
+
 * **Error attributes now added to each span that exits with an error or exception**
 
   Error attributes `error.class` and `error.message` are now included on the span event in which an error or exception was noticed, and, in the case of unhandled exceptions, on any ancestor spans that also exit with an error. The public API method `NoticeError` now attaches these error attributes to the currently executing span.
@@ -192,11 +191,11 @@ Fixes issue where updating custom instrumentation while application is running c
   Thread profiling on Linux will be supported on .NET Core 3.0 or later applications when running .NET agent version 8.23 or later. Triggering a thread profile is done from the `Thread profiler` page in APM. This page does not yet have the functionality enabled, but it will be enabled in the next few business days.
 
 * **Accessing Span-Specific information using the .NET Agent API**
-  
+
   New property, `CurrentSpan` has been added to `IAgent` and `ITransaction`.  It returns an object implementing `ISpan` which provides access to span-specific functions within the API.
 
 * **Adding Custom Span Attributes using the .NET Agent API**
-  
+
   New method, `AddCustomAttribute(string, object)` has been added to `ISpan`.
 
   * This new method accepts and supports all data-types.
@@ -205,7 +204,7 @@ Fixes issue where updating custom instrumentation while application is running c
 
 
 ### Fixes
-* Fixes issue where adding multiple custom attributes on a Transaction using [`ITransaction.AddCustomAttribute`](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/itransaction#addcustomattribute) causes the agent to ignore additional attempts to add custom attributes to any transaction. 
+* Fixes issue where adding multiple custom attributes on a Transaction using [`ITransaction.AddCustomAttribute`](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/itransaction#addcustomattribute) causes the agent to ignore additional attempts to add custom attributes to any transaction.
 * Fixes issue that prevented Custom Events from being sent to New Relic until the agent shuts down.
 * Fixes issue that can cause asynchronous Redis calls in an ASP.NET MVC application to report an inflated duration.
 
