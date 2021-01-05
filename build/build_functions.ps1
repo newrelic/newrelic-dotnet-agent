@@ -159,12 +159,13 @@ function Copy-AgentRoot {
         Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\linux-release\libNewRelicProfiler.so" -Destination "$Destination" -Force
     }
     else {
+        Copy-Item -Path "$grpcDir\runtimes\win-x86\native\*.dll" -Destination "$Destination" -Force
+        Copy-Item -Path "$grpcDir\runtimes\win-x64\native\*.dll" -Destination "$Destination" -Force
+
         if ($Architecture -like "x64" ) {
-            Copy-Item -Path "$grpcDir\runtimes\win-x64\native\*.dll" -Destination "$Destination" -Force
             Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\x64-Release\NewRelic.Profiler.dll" -Destination "$Destination" -Force
         }
         else {
-            Copy-Item -Path "$grpcDir\runtimes\win-x86\native\*.dll" -Destination "$Destination" -Force
             Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\x86-Release\NewRelic.Profiler.dll" -Destination "$Destination" -Force
         }
     }
