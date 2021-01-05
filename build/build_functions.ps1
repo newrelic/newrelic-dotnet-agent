@@ -17,7 +17,7 @@ function Get-HomeRootPath {
     if (-Not $Path) {
         $Path = Resolve-Path "$(Split-Path -Parent $PSCommandPath)\..\src\Agent"
     }
-  
+
     if ( -Not (Test-Path $Path )) {
         New-Item -Path $Path -ItemType Directory -Force
     }
@@ -36,7 +36,7 @@ function New-HomeStructure {
         return
     }
 
-    $homeFolderPath = New-item -Path "$Path" -Name "$Name" -Type Directory -Force 
+    $homeFolderPath = New-item -Path "$Path" -Name "$Name" -Type Directory -Force
     New-item -Path "$homeFolderPath" -Name "extensions" -Type Directory -Force
 }
 
@@ -63,8 +63,8 @@ function Copy-ExtensionsInstrumentation {
         $xmlPath = $item.Value.FullName
         $xmlTargetName = $item.Key.BaseName
 
-        Copy-Item -Path "$dllPath" -Destination "$Destination\extensions" -Force 
-        Copy-Item -Path "$xmlPath" -Destination "$Destination\extensions\$xmlTargetName.Instrumentation.xml" -Force 
+        Copy-Item -Path "$dllPath" -Destination "$Destination\extensions" -Force
+        Copy-Item -Path "$xmlPath" -Destination "$Destination\extensions\$xmlTargetName.Instrumentation.xml" -Force
     }
 }
 
@@ -88,7 +88,7 @@ function Copy-ExtensionsStorage {
 
     foreach ($item in $Extensions) {
         $dllPath = $item.FullName
-        Copy-Item -Path "$dllPath" -Destination "$Destination\extensions" -Force 
+        Copy-Item -Path "$dllPath" -Destination "$Destination\extensions" -Force
     }
 }
 
@@ -101,7 +101,7 @@ function Copy-ExtensionsOther {
     )
 
     $ErrorActionPreference = "Stop"
-    
+
     if (-Not (Resolve-Path "$RootDirectory")) {
         Write-Host "Could not resolve root directory."
         return
@@ -112,17 +112,17 @@ function Copy-ExtensionsOther {
         return
     }
 
-    Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml" -Destination "$Destination\extensions" -Force 
-    Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\extension.xsd" -Destination "$Destination\extensions" -Force 
+    Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml" -Destination "$Destination\extensions" -Force
+    Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\extension.xsd" -Destination "$Destination\extensions" -Force
 
     if ($Type -like "Framework"){
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Core\net45-ILRepacked\NewRelic.Core.dll" -Destination "$Destination\extensions" -Force 
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Parsing\bin\$Configuration\net45\NewRelic.Parsing.dll" -Destination "$Destination\extensions" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Core\net45-ILRepacked\NewRelic.Core.dll" -Destination "$Destination\extensions" -Force
+        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Parsing\bin\$Configuration\net45\NewRelic.Parsing.dll" -Destination "$Destination\extensions" -Force
     }
 
     if ($Type -like "Core"){
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Core\netstandard2.0-ILRepacked\NewRelic.Core.dll" -Destination "$Destination\extensions" -Force 
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Parsing\bin\$Configuration\netstandard2.0\NewRelic.Parsing.dll" -Destination "$Destination\extensions" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Core\netstandard2.0-ILRepacked\NewRelic.Core.dll" -Destination "$Destination\extensions" -Force
+        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Parsing\bin\$Configuration\netstandard2.0\NewRelic.Parsing.dll" -Destination "$Destination\extensions" -Force
     }
 }
 
@@ -138,34 +138,34 @@ function Copy-AgentRoot {
 
     $ErrorActionPreference = "Stop"
 
-    Copy-Item -Path "$RootDirectory\licenses\LICENSE.txt" -Destination "$Destination" -Force 
-    Copy-Item -Path "$RootDirectory\licenses\THIRD_PARTY_NOTICES.txt" -Destination "$Destination" -Force 
-    Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\Config\Configuration.xsd" -Destination "$Destination\newrelic.xsd" -Force 
-    
+    Copy-Item -Path "$RootDirectory\licenses\LICENSE.txt" -Destination "$Destination" -Force
+    Copy-Item -Path "$RootDirectory\licenses\THIRD_PARTY_NOTICES.txt" -Destination "$Destination" -Force
+    Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\Config\Configuration.xsd" -Destination "$Destination\newrelic.xsd" -Force
+
     if ($Type -like "Framework") {
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\$Configuration\net45\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\net45-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\$Configuration\net45\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\net45-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force
     }
 
     if ($Type -like "Core") {
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\$Configuration\netstandard2.0\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\netstandard2.0-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force 
-        Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\netcore20-agent-readme.md" -Destination "$Destination\README.md" -Force 
+        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\$Configuration\netstandard2.0\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\netstandard2.0-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force
+        Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\netcore20-agent-readme.md" -Destination "$Destination\README.md" -Force
     }
 
     $grpcDir = Get-GrpcPackagePath $RootDirectory
     if ($Linux) {
-        Copy-Item -Path "$grpcDir\runtimes\linux\native\libgrpc_csharp_ext.x64.so" -Destination "$Destination" -Force 
-        Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\linux-release\libNewRelicProfiler.so" -Destination "$Destination" -Force 
+        Copy-Item -Path "$grpcDir\runtimes\linux\native\libgrpc_csharp_ext.x64.so" -Destination "$Destination" -Force
+        Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\linux-release\libNewRelicProfiler.so" -Destination "$Destination" -Force
     }
     else {
-        Copy-Item -Path "$grpcDir\runtimes\win\native\*.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$grpcDir\runtimes\win-x64\native\*.dll" -Destination "$Destination" -Force
 
         if ($Architecture -like "x64" ) {
-            Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\x64-Release\NewRelic.Profiler.dll" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\x64-Release\NewRelic.Profiler.dll" -Destination "$Destination" -Force
         }
         else {
-            Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\x86-Release\NewRelic.Profiler.dll" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\x86-Release\NewRelic.Profiler.dll" -Destination "$Destination" -Force
         }
     }
 
@@ -182,11 +182,11 @@ function Copy-AgentApi {
     $ErrorActionPreference = "Stop"
 
     if ($Type -like "Framework") {
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Api.Agent\net45\NewRelic.Api.Agent.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Api.Agent\net45\NewRelic.Api.Agent.dll" -Destination "$Destination" -Force
     }
 
     if ($Type -like "Core") {
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll" -Destination "$Destination" -Force
     }
 }
 
@@ -198,7 +198,7 @@ function Copy-NewRelicConfig {
 
     $ErrorActionPreference = "Stop"
 
-    Copy-Item -Path "$RootDirectory\src\Agent\Configuration\newrelic.config" -Destination "$Destination" -Force 
+    Copy-Item -Path "$RootDirectory\src\Agent\Configuration\newrelic.config" -Destination "$Destination" -Force
 }
 
 function Set-SystemEnvironment {
