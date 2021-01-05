@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
+* **New Features Template** <br/>
+New Features Description
+
+### Fixes
+* **New Fixes Template** <br/>
+New Fixes Description
+
+## [8.37] - 2021-01-04
+### New Features
 * **Updated support for RabbitMQ** <br/>
   * Adds support for .NET Core applications using RabbitMQ.Client.
   * Adds support for RabbitMQ.Client version 6.2.1.
@@ -15,10 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Adds MAX_TRANSACTION_SAMPLES_STORE - the maximum number of samples stored for Transaction Events.
   * Adds MAX_EVENT_SAMPLES_STORED - the maximum number of samples stored for Custom Events. 
   * Adds NEW_RELIC_LOG - the unqualifed name for the Agent's log file.
-
-### Fixes
-* **New Fixes Template** <br/>
-New Fixes Description
 
 ## [8.36] - 2020-12-08
 
