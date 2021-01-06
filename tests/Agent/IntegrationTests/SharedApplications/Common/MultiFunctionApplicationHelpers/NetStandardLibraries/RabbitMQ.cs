@@ -176,7 +176,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 
             // See this project's .csproj file for target framework => RabbitMQ.Client mappings
             // 'netcoreapp3.1' is tied to RabbitMQ.Client version 6.x+, making this necessary
-#if NETCOREAPP3_1
+#if (NETCOREAPP3_1 || NET48)
             var receiveMessage = Encoding.UTF8.GetString(basicGetResult.Body.ToArray());
 #else
             var receiveMessage = Encoding.UTF8.GetString(basicGetResult.Body);
@@ -200,7 +200,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
                 {
                     // See this project's .csproj file for target framework => RabbitMQ.Client mappings
                     // 'netcoreapp3.1' is tied to RabbitMQ.Client version 6.x+, making this necessary
-#if NETCOREAPP3_1
+#if (NETCOREAPP3_1 || NET48)
                     receivedMessage = Encoding.UTF8.GetString(basicDeliverEventArgs.Body.ToArray());
 #else
                     receivedMessage = Encoding.UTF8.GetString(basicDeliverEventArgs.Body);

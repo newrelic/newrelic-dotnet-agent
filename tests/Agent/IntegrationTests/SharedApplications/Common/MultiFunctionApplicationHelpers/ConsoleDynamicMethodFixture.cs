@@ -11,7 +11,7 @@ namespace MultiFunctionApplicationHelpers
 {
     public class ConsoleDynamicMethodFixtureFWLatest : ConsoleDynamicMethodFixtureFWSpecificVersion
     {
-        public ConsoleDynamicMethodFixtureFWLatest() : base("net471")
+        public ConsoleDynamicMethodFixtureFWLatest() : base("net48")
         {
         }
     }
@@ -50,6 +50,12 @@ namespace MultiFunctionApplicationHelpers
     public class ConsoleDynamicMethodFixtureCore22 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
         public ConsoleDynamicMethodFixtureCore22() : base("netcoreapp2.2")
+        {
+        }
+    }
+    public class ConsoleDynamicMethodFixtureCore21 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureCore21() : base("netcoreapp2.1")
         {
         }
     }
