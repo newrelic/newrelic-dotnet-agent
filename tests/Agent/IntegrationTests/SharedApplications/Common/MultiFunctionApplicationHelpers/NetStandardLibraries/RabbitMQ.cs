@@ -1,6 +1,11 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+// See this project's .csproj file for target framework => RabbitMQ.Client version mappings
+#if (NETCOREAPP3_1 || NET48)
+#define RABBIT6PLUS
+#endif
+
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
@@ -174,9 +179,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         {
             var basicGetResult = Channel.BasicGet(queueName, true);
 
-            // See this project's .csproj file for target framework => RabbitMQ.Client mappings
-            // 'netcoreapp3.1' is tied to RabbitMQ.Client version 6.x+, making this necessary
-#if (NETCOREAPP3_1 || NET48)
+#if RABBIT6PLUS
             var receiveMessage = Encoding.UTF8.GetString(basicGetResult.Body.ToArray());
 #else
             var receiveMessage = Encoding.UTF8.GetString(basicGetResult.Body);
@@ -198,9 +201,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 
                 void handler(object ch, BasicDeliverEventArgs basicDeliverEventArgs)
                 {
-                    // See this project's .csproj file for target framework => RabbitMQ.Client mappings
-                    // 'netcoreapp3.1' is tied to RabbitMQ.Client version 6.x+, making this necessary
-#if (NETCOREAPP3_1 || NET48)
+#if RABBIT6PLUS
                     receivedMessage = Encoding.UTF8.GetString(basicDeliverEventArgs.Body.ToArray());
 #else
                     receivedMessage = Encoding.UTF8.GetString(basicDeliverEventArgs.Body);
