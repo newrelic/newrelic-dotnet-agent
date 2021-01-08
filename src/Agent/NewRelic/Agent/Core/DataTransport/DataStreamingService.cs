@@ -110,6 +110,7 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         private const string UnimplementedStatus = "UNIMPLEMENTED";
         private const string UnavailableStatus = "UNAVAILABLE";
+        private const string FailedPreconditionStatus = "FAILED_PRECONDITION";
         private const string OkStatus = "OK";
         private readonly IGrpcWrapper<TRequestBatch, TResponse> _grpcWrapper;
         private readonly IDelayer _delayer;

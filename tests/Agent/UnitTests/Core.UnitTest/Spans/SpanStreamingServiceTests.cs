@@ -259,34 +259,34 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
-			var signalIsDone = new ManualResetEventSlim();
-			var countSends = 0;
+            var signalIsDone = new ManualResetEventSlim();
+            var countSends = 0;
 
-			_grpcWrapper.WithIsConnectedImpl = () => isChannelConnected;
+            _grpcWrapper.WithIsConnectedImpl = () => isChannelConnected;
             _grpcWrapper.WithTrySendDataImpl = (requestStream, request, timeoutMs, CancellationToken) =>
             {
-				countSends++;
-				if(countSends > 1)
+                countSends++;
+                if(countSends > 1)
                 {
-					signalIsDone.Set();
+                    signalIsDone.Set();
                 }
 
-				return true;
+                return true;
             };
 
-			if(!isServiceEnabled || !isChannelConnected)
+            if(!isServiceEnabled || !isChannelConnected)
             {
-				signalIsDone.Set();
-			}
+                signalIsDone.Set();
+            }
 
             var collection = new PartitionedBlockingCollection<TRequest>(10, 3);
-			collection.TryAdd(GetRequestModel());
-			collection.TryAdd(GetRequestModel());
-			collection.TryAdd(GetRequestModel());
+            collection.TryAdd(GetRequestModel());
+            collection.TryAdd(GetRequestModel());
+            collection.TryAdd(GetRequestModel());
 
-			_streamingSvc.StartConsumingCollection(collection);
+            _streamingSvc.StartConsumingCollection(collection);
 
-			Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(5)));
+            Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(5)));
             Assert.AreEqual(expectedIsServiceAvailable, _streamingSvc.IsServiceAvailable, $"If IsServiceEnabled={isServiceEnabled} and IsGrpcChannelConnected={isChannelConnected}, IsServiceAvailable should be {expectedIsServiceAvailable}");
         }
 
