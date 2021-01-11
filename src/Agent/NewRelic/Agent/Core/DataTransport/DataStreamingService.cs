@@ -39,8 +39,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private async Task<int> WaitForResponse()
         {
-            var success = false;
-
+            bool success;
             try
             {
                 success = await _responseStream.MoveNext(_streamCancellationToken);
@@ -486,7 +485,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var attemptId = 0;
 
-            LogMessage(LogLevel.Finest, $"Creating gRPC channel to endpoint {EndpointHost}:{EndpointPort}. (attempt {attemptId})");
+            LogMessage(LogLevel.Info, $"Creating gRPC channel to endpoint {EndpointHost}:{EndpointPort}.");
 
             while (!cancellationToken.IsCancellationRequested && IsServiceEnabled)
             {
@@ -501,7 +500,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                     if (createdChannel)
                     {
-                        LogMessage(LogLevel.Finest, $"gRPC channel to endpoint {EndpointHost}:{EndpointPort} connected.");
+                        LogMessage(LogLevel.Info, $"gRPC channel to endpoint {EndpointHost}:{EndpointPort} connected. (attempt {attemptId})");
                         return true;
                     }
 
