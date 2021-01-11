@@ -852,7 +852,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 if (grpcEx.Status == OkStatus)
                 {
-                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - New stream requested");
+                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - A stream was closed due to connection rebalance. New stream requested and data will be resent immidiately.");
                     return TrySendStatus.ErrorWithImmediateRetry;
                 }
             }
