@@ -14,11 +14,7 @@ Param(
     [Switch]
     $Stop,
 
-    [int]$StartDelaySeconds = 600,
-
-    [Parameter(Mandatory=$true)]
-    [ValidateSet("linux", "windows")]
-    [string]$Platform
+    [int]$StartDelaySeconds = 600
 )
 
 Function StartUnboundedServices([string] $scriptPath) {
@@ -39,7 +35,7 @@ Function StopUnboundedServices([string] $scriptPath) {
 $scriptPath = Resolve-Path "$(Split-Path -Parent $PSCommandPath)"
 
 if ($Start) {
-    StartUnboundedServices("$scriptPath/$Platform")
+    StartUnboundedServices("$scriptPath")
 } elseif ($Stop) {
-    StopUnboundedServices("$scriptPath/$Platform")
+    StopUnboundedServices("$scriptPath")
 }
