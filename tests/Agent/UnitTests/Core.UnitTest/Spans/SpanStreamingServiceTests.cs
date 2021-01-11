@@ -21,7 +21,6 @@ using NewRelic.Collections;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Time;
 using NewRelic.SystemInterfaces;
-using NewRelic.Agent.Core.SharedInterfaces;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
@@ -1471,8 +1470,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             );
         }
 
-        [Test]
-        public void GrpcUnavailableDuringCreateStreamRestartsService()
+        [TestCase(StatusCode.Unavailable)]
+        [TestCase(StatusCode.FailedPrecondition)]
+        public void GrpcUnavailableOrFailedPreconditionDuringCreateStreamRestartsService(StatusCode grpcStatusCode)
         {
             var actualDelays = new List<int>();
 
@@ -1519,7 +1519,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 if (countCreateStreamsCalls == 1)
                 {
-                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unavailable, "Test gRPC Exception");
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(grpcStatusCode, "Test gRPC Exception");
                     return null;
                 }
 
