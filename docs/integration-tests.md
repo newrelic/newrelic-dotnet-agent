@@ -46,14 +46,14 @@ Requires Visual Studio 2019 Version 16.8 or greater.
 
 ### Set up test secrets
 * You must have a valid New Relic license key to run the tests. 
-* The license key and other settings are accessed by the tests in a `secrets.json` file. [Here](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/linux/example-secrets.json) is an example.
-* The [example](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/linux/example-secrets.json) includes placeholders for values unique to a user's environment.
-* The [example](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/linux/example-secrets.json) includes values needed for all Integration Tests and Unbounded Integration Tests.
+* The license key and other settings are accessed by the tests in a `secrets.json` file. [Here](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/example-secrets.json) is an example.
+* The [example](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/example-secrets.json) includes placeholders for values unique to a user's environment.
+* The [example](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/example-secrets.json) includes values needed for all Integration Tests and Unbounded Integration Tests.
   * Not all values in the `secrets.json` are required if a user is running a subset of tests, and can be omitted for irrelevant tests.
 
 * Some tests require special New Relic license keys for High Security Mode (HSM) or Configurable Security Policies (CSP). Follow the steps below to set these license keys:
 
-  1. Create a `secrets.json` file using the template below or copy the [example](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/linux/example-secrets.json).  **Do *not* place the `secrets.json` file within your local repo folder.**
+  1. Create a `secrets.json` file using the template below or copy the [example](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/example-secrets.json).  **Do *not* place the `secrets.json` file within your local repo folder.**
   2. Replace the license key placeholders in the `secrets.json` template with actual license keys. 
       * The `REPLACE_WITH_HIGH_SECURITY_LICENSE_KEY` and `REPLACE_WITH_SECURITY_POLICIES_CONFIGURABLE_LICENSE_KEY` are placeholders for license keys from a [HSM](https://docs.newrelic.com/docs/agents/manage-apm-agents/configuration/high-security-mode)-enabled account and a [CSP](https://docs.newrelic.com/docs/agents/manage-apm-agents/configuration/enable-configurable-security-policies)-enabled account, respectively. 
       * To find your license keys, visit [this page](https://docs.newrelic.com/docs/accounts/install-new-relic/account-setup/license-key).
