@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core.Samplers
         }
 
         [Test]
-        public void SamplerDisposesEventListenerWhenStopped()
+        public void SamplerDisposesEventListenerOnException()
         {
             var samplerWasStopped = false;
             var listenerWasDisposed = false;

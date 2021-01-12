@@ -133,7 +133,7 @@ namespace ParsingTests
         }
 
         [Test]
-        public void SqlParserTest_TestCompoundStatement()
+        public void SqlParserTest_TestCompoundSetStatement()
         {
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "set @FOO=17; set @BAR=18;");
             Assert.IsNotNull(parsedDatabaseStatement);
@@ -466,11 +466,29 @@ namespace ParsingTests
             // after the FROM contains a parentheses.  Here's an example that works, from Marina and now part of the test
             // DotNetTestApp/test.sqlserver.aspx
             const string test = "SELECT * FROM (SELECT * FROM [dbo].[Account] Where UserId like 'John') as test";
+            const string expectedModel = "(subquery)";
+            const string expectedOperation = "select";
 
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
             Assert.IsNotNull(parsedDatabaseStatement);
-            Assert.AreEqual("(subquery)", parsedDatabaseStatement.Model, string.Format($"Expected model (subquery) but was {parsedDatabaseStatement.Model}", "(subquery)", parsedDatabaseStatement.Model));
-            Assert.AreEqual("select", parsedDatabaseStatement.Operation, string.Format($"Expected operation select but was {parsedDatabaseStatement.Operation}", "select", parsedDatabaseStatement.Operation));
+            Assert.AreEqual(expectedModel, parsedDatabaseStatement.Model, $"Expected model {expectedModel} but was {parsedDatabaseStatement.Model}");
+            Assert.AreEqual(expectedOperation, parsedDatabaseStatement.Operation, $"Expected operation {expectedOperation} but was {parsedDatabaseStatement.Operation}");
+        }
+
+        [Test]
+        [TestCase("SELECT * FROM people", "select")]
+        [TestCase("INSERT INTO people(firstname, lastname) values ('alice', 'smith');", "insert")]
+        [TestCase("UPDATE dude SET man = 'yeah' WHERE id = 123", "update")]
+        [TestCase("DELETE FROM actors WHERE title = 'The Dude'", "delete")]
+        [TestCase("EXEC dbo.spSomeProcOnOurSystem", "ExecuteProcedure")]
+        public void SqlParserTest_IgnoreSetStatements(string commandText, string operation)
+        {
+            // We want to prioritize the 'real' command over the leading SET statements
+            var test = "SET CONTEXT_INFO = @0; SET NOCOUNT ON; " + commandText;
+
+            var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
+            Assert.IsNotNull(parsedDatabaseStatement);
+            Assert.AreEqual(operation, parsedDatabaseStatement.Operation, $"Expected operation {operation} but was {parsedDatabaseStatement.Operation}");
         }
 
         /// <summary>

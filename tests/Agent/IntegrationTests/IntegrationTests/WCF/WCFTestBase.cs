@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf;
+using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using System;
 using System.Collections.Generic;
@@ -17,7 +16,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.WCF
 {
-    public abstract class WCFTestBase : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW>
+    public abstract class WCFTestBase : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
     {
         public enum TracingTestOption
         {
@@ -43,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         public static readonly WCFBindingType[] WCFBindingTypes_All = Enum.GetValues(typeof(WCFBindingType)).Cast<WCFBindingType>().ToArray();
         public static readonly WCFInvocationMethod[] WCFInvocationMethods_All = Enum.GetValues(typeof(WCFInvocationMethod)).Cast<WCFInvocationMethod>().ToArray();
 
-        protected readonly ConsoleDynamicMethodFixtureFW _fixture;
+        protected readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
 
         protected readonly WCFBindingType _bindingToTest;
         protected string ExpectedTransportType => _bindingToTest == WCFBindingType.NetTcp
@@ -63,6 +62,8 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         protected readonly string _relativePath;
 
         protected const string IIS_SERVICENAME = "WcfService.svc";
+        protected const string SharedWcfLibraryNamespace = "NewRelic.Agent.IntegrationTests.Shared.Wcf";
+
 
         protected string IISWebAppPublishPath => Path.Combine(_fixture.IntegrationTestAppPath, "WcfAppIisHosted", "Deploy");
 
@@ -101,7 +102,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
             {WCFInvocationMethod.TAPAsync, "Supportability/WCFClient/InvocationStyle/TAP" },
         };
 
-        public WCFTestBase(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output,
+        public WCFTestBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output,
             WCFBindingType bindingToTest,
             IEnumerable<WCFInvocationMethod> clientInvocationsToTest,
             IEnumerable<WCFInvocationMethod> serviceInvocationsToTest,

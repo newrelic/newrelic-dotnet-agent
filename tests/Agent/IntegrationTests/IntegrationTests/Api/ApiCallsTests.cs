@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -12,9 +12,9 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Api
 {
     [NetFrameworkTest]
-    public class ApiCallsTestsFW : ApiCallsTests<ConsoleDynamicMethodFixtureFW>
+    public class ApiCallsTestsFW : ApiCallsTests<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public ApiCallsTestsFW(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output)
+        public ApiCallsTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

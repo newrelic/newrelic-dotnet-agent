@@ -36,8 +36,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             // ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
             // If we implement newer versions of the API or new methods we'll need to re-evaluate.
             // basicProperties is never null (framework supplies it), though the Headers property could be
-            var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<dynamic>(5);
-            var headers = (Dictionary<string, object>)basicProperties.Headers;
+            var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<object>(5);
+            var headers = RabbitMqHelper.GetHeaders(basicProperties);
 
             agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.AMQP);
 

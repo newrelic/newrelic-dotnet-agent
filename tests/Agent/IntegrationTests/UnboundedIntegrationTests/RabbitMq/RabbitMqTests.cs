@@ -2,42 +2,52 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System.Collections.Generic;
-using System.Linq;
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
-    [NetFrameworkTest]
-    public class RabbitMqTests : NewRelicIntegrationTest<RemoteServiceFixtures.RabbitMqBasicMvcFixture>
+    public abstract class RabbitMqTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly RemoteServiceFixtures.RabbitMqBasicMvcFixture _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
 
-        private string _sendReceiveQueue;
-        private string _purgeQueue;
+        private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
+        private readonly string _purgeQueue = $"integrationPurgeTestQueue-{Guid.NewGuid()}";
+        private readonly string _testExchangeName = $"integrationTestExchange-{Guid.NewGuid()}";
+        // The topic name has to contain a '.' character.  See https://www.rabbitmq.com/tutorials/tutorial-five-dotnet.html
+        private readonly string _sendReceiveTopic = "SendReceiveTopic.Topic";
 
-        public RabbitMqTests(RemoteServiceFixtures.RabbitMqBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
+        private readonly string _metricScopeBase = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RabbitMQ";
+
+        protected RabbitMqTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
+
+
+            _fixture.AddCommand($"RabbitMQ SendReceive {_sendReceiveQueue} TestMessage");
+            _fixture.AddCommand($"RabbitMQ SendReceiveTempQueue TempQueueTestMessage");
+            _fixture.AddCommand($"RabbitMQ QueuePurge {_purgeQueue}");
+            _fixture.AddCommand($"RabbitMQ SendReceiveTopic {_testExchangeName} {_sendReceiveTopic} TopicTestMessage");
+            // This is needed to avoid a hang on shutdown in the test app
+            _fixture.AddCommand("RabbitMQ Shutdown");
+
             _fixture.Actions
             (
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                     configModifier.ForceTransactionTraces();
-                },
-                exerciseApplication: () =>
-                {
-                    _sendReceiveQueue = _fixture.GetMessageQueue_RabbitMQ_SendReceive("Test Message");
-                    _fixture.GetMessageQueue_RabbitMQ_SendReceiveTempQueue("Test Message");
-                    _purgeQueue = _fixture.GetMessageQueue_RabbitMQ_Purge();
-                    _fixture.GetMessageQueue_RabbitMQ_SendReceiveTopic("SendReceiveTopic.Topic", "Test Message");
                 }
             );
+
             _fixture.Initialize();
         }
 
@@ -49,43 +59,80 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Produce/Named/{_sendReceiveQueue}", callCount = 1},
-                new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Produce/Named/{_sendReceiveQueue}", callCount = 1, metricScope = "WebTransaction/MVC/RabbitMQController/RabbitMQ_SendReceive"},
+                new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Produce/Named/{_sendReceiveQueue}", callCount = 1, metricScope = $"{_metricScopeBase}/SendReceive"},
 
                 new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Consume/Named/{_sendReceiveQueue}", callCount = 1},
-                new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Consume/Named/{_sendReceiveQueue}", callCount = 1, metricScope = "WebTransaction/MVC/RabbitMQController/RabbitMQ_SendReceive"},
+                new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Consume/Named/{_sendReceiveQueue}", callCount = 1, metricScope = $"{_metricScopeBase}/SendReceive"},
 
                 new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Produce/Named/{_purgeQueue}", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Produce/Named/{_purgeQueue}", callCount = 1, metricScope = "WebTransaction/MVC/RabbitMQController/RabbitMQ_QueuePurge" },
+                new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Produce/Named/{_purgeQueue}", callCount = 1, metricScope = $"{_metricScopeBase}/QueuePurge" },
 
                 new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Purge/Named/{_purgeQueue}", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Purge/Named/{_purgeQueue}", callCount = 1, metricScope = "WebTransaction/MVC/RabbitMQController/RabbitMQ_QueuePurge" },
+                new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Purge/Named/{_purgeQueue}", callCount = 1, metricScope = $"{_metricScopeBase}/QueuePurge" },
 
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Queue/Produce/Temp", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Queue/Produce/Temp", callCount = 1, metricScope = "WebTransaction/MVC/RabbitMQController/RabbitMQ_SendReceiveTempQueue"},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Queue/Produce/Temp", callCount = 1, metricScope = $"{_metricScopeBase}/SendReceiveTempQueue"},
 
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Topic/Produce/Named/SendReceiveTopic.Topic", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Topic/Produce/Named/SendReceiveTopic.Topic", callCount = 1, metricScope = "WebTransaction/MVC/RabbitMQController/RabbitMQ_SendReceiveTopic" },
+                new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Topic/Produce/Named/{_sendReceiveTopic}", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Topic/Produce/Named/{_sendReceiveTopic}", callCount = 1, metricScope = $"{_metricScopeBase}/SendReceiveTopic" },
 
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Queue/Consume/Temp", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Queue/Consume/Temp", callCount = 1, metricScope = "WebTransaction/MVC/RabbitMQController/RabbitMQ_SendReceiveTempQueue"},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Queue/Consume/Temp", callCount = 1, metricScope = "WebTransaction/MVC/RabbitMQController/RabbitMQ_SendReceiveTopic" },
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Queue/Consume/Temp", callCount = 1, metricScope = $"{_metricScopeBase}/SendReceiveTempQueue"},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker/RabbitMQ/Queue/Consume/Temp", callCount = 1, metricScope = $"{_metricScopeBase}/SendReceiveTopic" },
             };
 
-            var sendReceiveTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/RabbitMQController/RabbitMQ_SendReceive");
-            var sendReceiveTempQueueTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/RabbitMQController/RabbitMQ_SendReceiveTempQueue");
-            var queuePurgeTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/RabbitMQController/RabbitMQ_QueuePurge");
-            var sendReceiveTopicTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/RabbitMQController/RabbitMQ_SendReceiveTopic");
+            var sendReceiveTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"{_metricScopeBase}/SendReceive");
+            var sendReceiveTempQueueTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"{_metricScopeBase}/SendReceiveTempQueue");
+            var queuePurgeTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"{_metricScopeBase}/QueuePurge");
+            var sendReceiveTopicTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent($"{_metricScopeBase}/SendReceiveTopic");
+
+            var expectedTransactionTraceSegments = new List<string>
+            {
+                $"MessageBroker/RabbitMQ/Queue/Consume/Named/{_sendReceiveQueue}"
+            };
+
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample($"{_metricScopeBase}/SendReceive");
+
 
             Assertions.MetricsExist(expectedMetrics, metrics);
 
             NrAssert.Multiple(
-                () => Assert.NotNull(sendReceiveTransactionEvent),
-                () => Assert.NotNull(sendReceiveTempQueueTransactionEvent),
-                () => Assert.NotNull(queuePurgeTransactionEvent),
-                () => Assert.NotNull(sendReceiveTopicTransactionEvent)
+                () => Assert.True(sendReceiveTransactionEvent != null, "sendReceiveTransactionEvent should not be null"),
+                () => Assert.True(sendReceiveTempQueueTransactionEvent != null, "sendReceiveTempQueueTransactionEvent should not be null"),
+                () => Assert.True(queuePurgeTransactionEvent != null, "queuePurgeTransactionEvent should not be null"),
+                () => Assert.True(sendReceiveTopicTransactionEvent != null, "sendReceiveTopicTransactionEvent should not be null"),
+                () => Assert.True(transactionSample != null, "transactionSample should not be null"),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
             );
 
-            Assertions.MetricsExist(expectedMetrics, metrics);
         }
     }
+
+    [NetFrameworkTest]
+    public class RabbitMqTests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public RabbitMqTests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RabbitMqLegacyTests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureFW461>
+    {
+        public RabbitMqLegacyTests(ConsoleDynamicMethodFixtureFW461 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqNetCoreTests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public RabbitMqNetCoreTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
 }

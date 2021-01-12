@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
 
     public class WCFLogHelpers_IISHosted : IWCFLogHelpers
     {
-        private readonly ConsoleDynamicMethodFixtureFW _fixture;
+        private readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
 
         private AgentLogFile _agentLog_Client;
         protected AgentLogFile AgentLog_Client
@@ -192,7 +192,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         public ConnectResponseData ConnectResponse_Service => _connectResponse_Service ?? (_connectResponse_Service = AgentLog_Service.GetConnectResponseData());
 
 
-        public WCFLogHelpers_IISHosted(ConsoleDynamicMethodFixtureFW fixture)
+        public WCFLogHelpers_IISHosted(ConsoleDynamicMethodFixtureFWLatest fixture)
         {
             _fixture = fixture;
         }
@@ -201,12 +201,12 @@ namespace NewRelic.Agent.IntegrationTests.WCF
 
     public class WCFLogHelpers_SelfHosted : IWCFLogHelpers
     {
-        public WCFLogHelpers_SelfHosted(ConsoleDynamicMethodFixtureFW fixture)
+        public WCFLogHelpers_SelfHosted(ConsoleDynamicMethodFixtureFWLatest fixture)
         {
             _fixture = fixture;
         }
 
-        private readonly ConsoleDynamicMethodFixtureFW _fixture;
+        private readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
 
         public IEnumerable<T> QueryLog<T>(Func<AgentLogFile, IEnumerable<T>> logFunction)
         {

@@ -33,19 +33,26 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoDB2_6Application", "Un
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongoDB2_6CoreApplication", "UnboundedApplications\MongoDB2_6CoreApplication\MongoDB2_6CoreApplication.csproj", "{D9266E7E-2F62-4D5D-A47C-DFE4C36647E5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMqLegacyReceiverHost", "UnboundedApplications\RabbitMqLegacyReceiverHost\RabbitMqLegacyReceiverHost.csproj", "{831F2A70-5DB5-42DD-AA44-9FCB445FA820}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitMqLegacyBasicMvcApplication", "UnboundedApplications\RabbitMqLegacyBasicMvcApplication\RabbitMqLegacyBasicMvcApplication.csproj", "{1E54839F-28DA-439D-8E83-EF97CD53A90D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMqReceiverHost", "UnboundedApplications\RabbitMqReceiverHost\RabbitMqReceiverHost.csproj", "{2F07BA40-3D4E-46BC-BAE6-D9768E3E006F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitMqBasicMvcApplication", "UnboundedApplications\RabbitMqBasicMvcApplication\RabbitMqBasicMvcApplication.csproj", "{DDEF44D7-7758-408F-9406-AF98531462F3}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Testing.Assertions", "..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{2A932B62-8787-4963-8D53-F83BF6ACBB5C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicMvcCoreApplication", "UnboundedApplications\BasicMvcCoreApplication\BasicMvcCoreApplication.csproj", "{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBusReceiverHost", "UnboundedApplications\NServiceBusReceiverHost\NServiceBusReceiverHost.csproj", "{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SharedApplications", "SharedApplications", "{859E490D-4C1A-4D9D-8271-5FE2E0726ADE}"
+	ProjectSection(SolutionItems) = preProject
+		SharedApplications\WcfAppIisHosted\WcfAppIisHosted.csproj = SharedApplications\WcfAppIisHosted\WcfAppIisHosted.csproj
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleMultiFunctionApplicationFW", "SharedApplications\ConsoleMultiFunctionApplicationFW\ConsoleMultiFunctionApplicationFW.csproj", "{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleMultiFunctionApplicationCore", "SharedApplications\ConsoleMultiFunctionApplicationCore\ConsoleMultiFunctionApplicationCore.csproj", "{5350D3F3-CE09-4992-9756-ACCC92A9129C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{129FF113-1F3A-4DAA-8D6F-287DF67A68FA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MultiFunctionApplicationHelpers", "SharedApplications\Common\MultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj", "{3E8423E9-1FBF-451F-8117-88CE3DADEF7F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetStandardTestLibrary", "SharedApplications\Common\NetStandardTestLibrary\NetStandardTestLibrary.csproj", "{B64766CA-8731-493F-8417-61A70F783EB7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -97,22 +104,6 @@ Global
 		{D9266E7E-2F62-4D5D-A47C-DFE4C36647E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D9266E7E-2F62-4D5D-A47C-DFE4C36647E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D9266E7E-2F62-4D5D-A47C-DFE4C36647E5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{831F2A70-5DB5-42DD-AA44-9FCB445FA820}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{831F2A70-5DB5-42DD-AA44-9FCB445FA820}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{831F2A70-5DB5-42DD-AA44-9FCB445FA820}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{831F2A70-5DB5-42DD-AA44-9FCB445FA820}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1E54839F-28DA-439D-8E83-EF97CD53A90D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1E54839F-28DA-439D-8E83-EF97CD53A90D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1E54839F-28DA-439D-8E83-EF97CD53A90D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1E54839F-28DA-439D-8E83-EF97CD53A90D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2F07BA40-3D4E-46BC-BAE6-D9768E3E006F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2F07BA40-3D4E-46BC-BAE6-D9768E3E006F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2F07BA40-3D4E-46BC-BAE6-D9768E3E006F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2F07BA40-3D4E-46BC-BAE6-D9768E3E006F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DDEF44D7-7758-408F-9406-AF98531462F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DDEF44D7-7758-408F-9406-AF98531462F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DDEF44D7-7758-408F-9406-AF98531462F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DDEF44D7-7758-408F-9406-AF98531462F3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2A932B62-8787-4963-8D53-F83BF6ACBB5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2A932B62-8787-4963-8D53-F83BF6ACBB5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A932B62-8787-4963-8D53-F83BF6ACBB5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -125,6 +116,22 @@ Global
 		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5350D3F3-CE09-4992-9756-ACCC92A9129C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5350D3F3-CE09-4992-9756-ACCC92A9129C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5350D3F3-CE09-4992-9756-ACCC92A9129C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5350D3F3-CE09-4992-9756-ACCC92A9129C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E8423E9-1FBF-451F-8117-88CE3DADEF7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E8423E9-1FBF-451F-8117-88CE3DADEF7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E8423E9-1FBF-451F-8117-88CE3DADEF7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E8423E9-1FBF-451F-8117-88CE3DADEF7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B64766CA-8731-493F-8417-61A70F783EB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B64766CA-8731-493F-8417-61A70F783EB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B64766CA-8731-493F-8417-61A70F783EB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B64766CA-8731-493F-8417-61A70F783EB7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -136,15 +143,16 @@ Global
 		{A8308E64-6659-4EFB-A9C4-0C48D4C99A61} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{647EC539-DF8B-4DF0-BFD5-D4E13B38E140} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{D9266E7E-2F62-4D5D-A47C-DFE4C36647E5} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
-		{831F2A70-5DB5-42DD-AA44-9FCB445FA820} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
-		{1E54839F-28DA-439D-8E83-EF97CD53A90D} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
-		{2F07BA40-3D4E-46BC-BAE6-D9768E3E006F} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
-		{DDEF44D7-7758-408F-9406-AF98531462F3} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
+		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0} = {859E490D-4C1A-4D9D-8271-5FE2E0726ADE}
+		{5350D3F3-CE09-4992-9756-ACCC92A9129C} = {859E490D-4C1A-4D9D-8271-5FE2E0726ADE}
+		{129FF113-1F3A-4DAA-8D6F-287DF67A68FA} = {859E490D-4C1A-4D9D-8271-5FE2E0726ADE}
+		{3E8423E9-1FBF-451F-8117-88CE3DADEF7F} = {129FF113-1F3A-4DAA-8D6F-287DF67A68FA}
+		{B64766CA-8731-493F-8417-61A70F783EB7} = {129FF113-1F3A-4DAA-8D6F-287DF67A68FA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {656848E2-BFD2-4092-9328-C6CDF39B1274}
 		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Data.6.0.1304.0\lib\NET45
+		SolutionGuid = {656848E2-BFD2-4092-9328-C6CDF39B1274}
 	EndGlobalSection
 EndGlobal

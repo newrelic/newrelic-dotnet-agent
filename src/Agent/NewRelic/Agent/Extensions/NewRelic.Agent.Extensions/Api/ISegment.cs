@@ -19,6 +19,11 @@ namespace NewRelic.Agent.Api
         bool DurationShouldBeDeductedFromParent { get; set; }
 
         /// <summary>
+        /// If sets to true, the duration of its children won't be added to it's exclusive time when async.
+        /// </summary>
+        bool AlwaysDeductChildDuration { set; }
+
+        /// <summary>
         /// Returns true if this is a leaf segment.
         /// </summary>
         bool IsLeaf { get; }

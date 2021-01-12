@@ -113,6 +113,7 @@ FunctionalTests/InstallUtil.InstallLog
 TestResults/*
 *.pubxml.user
 tests/Agent/IntegrationTests/Applications/*/Deploy/
+tests/Agent/IntegrationTests/SharedApplications/*/Deploy/
 tests/Agent/IntegrationTests/UnboundedApplications/*/Deploy/
 tests/Agent/IntegrationTests/.vs/config/applicationhost.config
 .DS_Store

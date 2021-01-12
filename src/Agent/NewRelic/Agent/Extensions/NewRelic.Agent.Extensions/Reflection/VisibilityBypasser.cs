@@ -20,11 +20,17 @@ namespace NewRelic.Reflection
         public Action<object, TField> GenerateFieldWriteAccessor<TField>(string assemblyName, string typeName, string fieldName)
         {
             if (assemblyName == null)
+            {
                 throw new ArgumentNullException(nameof(assemblyName));
+            }
             if (typeName == null)
+            {
                 throw new ArgumentNullException(nameof(typeName));
+            }
             if (fieldName == null)
+            {
                 throw new ArgumentNullException(nameof(fieldName));
+            }
 
             var ownerType = GetType(assemblyName, typeName);
             return GenerateFieldWriteAccessor<TField>(ownerType, fieldName);
@@ -33,9 +39,14 @@ namespace NewRelic.Reflection
         public Action<object, TField> GenerateFieldWriteAccessor<TField>(Type ownerType, string fieldName)
         {
             if (ownerType == null)
+            {
                 throw new ArgumentNullException(nameof(ownerType));
+            }
+
             if (fieldName == null)
+            {
                 throw new ArgumentNullException(nameof(fieldName));
+            }
 
             var dynamicMethod = GenerateFieldWriteAccessorInternal<TField>(ownerType, fieldName);
             return (Action<object, TField>)dynamicMethod.CreateDelegate(typeof(Action<object, TField>));
@@ -51,7 +62,9 @@ namespace NewRelic.Reflection
         {
             var ownerType = fieldInfo.DeclaringType;
             if (ownerType == null)
+            {
                 throw new NullReferenceException(nameof(ownerType));
+            }
 
             var dynamicMethod = CreateDynamicMethod(ownerType, null, new[] { typeof(object), typeof(TField) });
 
@@ -71,11 +84,19 @@ namespace NewRelic.Reflection
         public Func<object, TResult> GenerateFieldReadAccessor<TResult>(string assemblyName, string typeName, string fieldName)
         {
             if (assemblyName == null)
+            {
                 throw new ArgumentNullException(nameof(assemblyName));
+            }
+
             if (typeName == null)
+            {
                 throw new ArgumentNullException(nameof(typeName));
+            }
+
             if (fieldName == null)
+            {
                 throw new ArgumentNullException(nameof(fieldName));
+            }
 
             var ownerType = GetType(assemblyName, typeName);
             return GenerateFieldReadAccessor<TResult>(ownerType, fieldName);
@@ -84,9 +105,14 @@ namespace NewRelic.Reflection
         public Func<object, TResult> GenerateFieldReadAccessor<TResult>(Type ownerType, string fieldName)
         {
             if (ownerType == null)
+            {
                 throw new ArgumentNullException(nameof(ownerType));
+            }
+
             if (fieldName == null)
+            {
                 throw new ArgumentNullException(nameof(fieldName));
+            }
 
             var dynamicMethod = GenerateFieldReadAccessorInternal<TResult>(ownerType, fieldName);
             return (Func<object, TResult>)dynamicMethod.CreateDelegate(typeof(Func<object, TResult>));
@@ -95,7 +121,9 @@ namespace NewRelic.Reflection
         public Func<TOwner, TResult> GenerateFieldReadAccessor<TOwner, TResult>(string fieldName)
         {
             if (fieldName == null)
+            {
                 throw new ArgumentNullException(nameof(fieldName));
+            }
 
             var dynamicMethod = GenerateFieldReadAccessorInternal<TResult>(typeof(TOwner), fieldName);
             return (Func<TOwner, TResult>)dynamicMethod.CreateDelegate(typeof(Func<TOwner, TResult>));
@@ -111,11 +139,15 @@ namespace NewRelic.Reflection
         {
             var resultType = typeof(TResult);
             if (!resultType.IsAssignableFrom(fieldInfo.FieldType))
+            {
                 throw new Exception(string.Format("The return type for field {0} does not inherit or implement {1}", fieldInfo.Name, resultType.AssemblyQualifiedName));
+            }
 
             var ownerType = fieldInfo.DeclaringType;
             if (ownerType == null)
+            {
                 throw new NullReferenceException(nameof(ownerType));
+            }
 
             var dynamicMethod = CreateDynamicMethod(ownerType, resultType, new[] { typeof(object) });
 
@@ -135,7 +167,9 @@ namespace NewRelic.Reflection
         public Func<TOwner, TResult> GenerateParameterlessMethodCaller<TOwner, TResult>(string methodName)
         {
             if (methodName == null)
+            {
                 throw new ArgumentNullException(nameof(methodName));
+            }
 
             var ownerType = typeof(TOwner);
             var resultType = typeof(TResult);
@@ -147,11 +181,19 @@ namespace NewRelic.Reflection
         public Func<object, TResult> GenerateParameterlessMethodCaller<TResult>(string assemblyName, string typeName, string methodName)
         {
             if (assemblyName == null)
+            {
                 throw new ArgumentNullException(nameof(assemblyName));
+            }
+
             if (typeName == null)
+            {
                 throw new ArgumentNullException(nameof(typeName));
+            }
+
             if (methodName == null)
+            {
                 throw new ArgumentNullException(nameof(methodName));
+            }
 
             var ownerType = GetType(assemblyName, typeName);
             var resultType = typeof(TResult);
@@ -163,7 +205,9 @@ namespace NewRelic.Reflection
         public Func<TOwner, TParameter, TResult> GenerateOneParameterMethodCaller<TOwner, TParameter, TResult>(string methodName)
         {
             if (methodName == null)
+            {
                 throw new ArgumentNullException(nameof(methodName));
+            }
 
             var ownerType = typeof(TOwner);
             var resultType = typeof(TResult);
@@ -176,11 +220,19 @@ namespace NewRelic.Reflection
         public Func<object, TParameter, TResult> GenerateOneParameterMethodCaller<TParameter, TResult>(string assemblyName, string typeName, string methodName)
         {
             if (assemblyName == null)
+            {
                 throw new ArgumentNullException(nameof(assemblyName));
+            }
+
             if (typeName == null)
+            {
                 throw new ArgumentNullException(nameof(typeName));
+            }
+
             if (methodName == null)
+            {
                 throw new ArgumentNullException(nameof(methodName));
+            }
 
             var ownerType = GetType(assemblyName, typeName);
             var resultType = typeof(TResult);
@@ -192,10 +244,25 @@ namespace NewRelic.Reflection
 
         public Func<object, object, TResult> GenerateOneParameterMethodCaller<TResult>(string assemblyName, string typeName, string methodName, string parameterTypeName)
         {
-            if (assemblyName == null) throw new ArgumentNullException(nameof(assemblyName));
-            if (typeName == null) throw new ArgumentNullException(nameof(typeName));
-            if (methodName == null) throw new ArgumentNullException(nameof(methodName));
-            if (parameterTypeName == null) throw new ArgumentNullException(nameof(parameterTypeName));
+            if (assemblyName == null)
+            {
+                throw new ArgumentNullException(nameof(assemblyName));
+            }
+
+            if (typeName == null)
+            {
+                throw new ArgumentNullException(nameof(typeName));
+            }
+
+            if (methodName == null)
+            {
+                throw new ArgumentNullException(nameof(methodName));
+            }
+
+            if (parameterTypeName == null)
+            {
+                throw new ArgumentNullException(nameof(parameterTypeName));
+            }
 
             var ownerType = GetType(assemblyName, typeName);
             var resultType = typeof(TResult);
@@ -220,7 +287,9 @@ namespace NewRelic.Reflection
         private static Func<object, object> GenerateMethodCallerInternal(Type resultType, MethodInfo methodInfo)
         {
             if (!resultType.IsAssignableFrom(methodInfo.ReturnType))
+            {
                 throw new Exception(string.Format("The return type {0} for method {1} does not inherit or implement {2}", methodInfo.ReturnType.AssemblyQualifiedName, methodInfo.Name, resultType.AssemblyQualifiedName));
+            }
 
             var dynamicMethod = GenerateMethodCallerInternal(methodInfo);
             return (Func<object, object>)dynamicMethod.CreateDelegate(typeof(Func<object, object>));
@@ -229,15 +298,21 @@ namespace NewRelic.Reflection
         private static Func<object, object, object> GenerateMethodCallerInternal(Type resultType, Type parameterType, MethodInfo methodInfo)
         {
             if (!resultType.IsAssignableFrom(methodInfo.ReturnType))
+            {
                 throw new Exception(string.Format("The return type {0} for method {1} does not inherit or implement {2}", methodInfo.ReturnType.AssemblyQualifiedName, methodInfo.Name, resultType.AssemblyQualifiedName));
+            }
 
             var parameters = methodInfo.GetParameters();
             if (parameters.Length != 1)
+            {
                 throw new Exception(string.Format("The number of parameters expected by method {0} ({1}) does not match the number provided (1)", methodInfo.Name, parameters.Length));
+            }
 
             var actualParameterType = parameters[0].ParameterType;
             if (!parameterType.IsAssignableFrom(actualParameterType))
+            {
                 throw new Exception(string.Format("The parameter type {0} for parameter 1 of method {1} does not inherit or implement {2}", parameterType.AssemblyQualifiedName, methodInfo.Name, actualParameterType.AssemblyQualifiedName));
+            }
 
             var dynamicMethod = GenerateMethodCallerInternal(methodInfo);
             return (Func<object, object, object>)dynamicMethod.CreateDelegate(typeof(Func<object, object, object>));
@@ -247,7 +322,10 @@ namespace NewRelic.Reflection
         {
             var ownerType = methodInfo.DeclaringType;
             if (ownerType == null)
+            {
                 throw new NullReferenceException(nameof(ownerType));
+            }
+
             var resultType = methodInfo.ReturnType;
             var returnType = typeof(object);
             var parameters = methodInfo.GetParameters();
@@ -298,9 +376,14 @@ namespace NewRelic.Reflection
         public Func<object, TResult> GeneratePropertyAccessor<TResult>(Type ownerType, string propertyName)
         {
             if (ownerType == null)
+            {
                 throw new ArgumentNullException(nameof(ownerType));
+            }
+
             if (propertyName == null)
+            {
                 throw new ArgumentNullException(nameof(propertyName));
+            }
 
             var resultType = typeof(TResult);
 
@@ -311,7 +394,9 @@ namespace NewRelic.Reflection
         public Func<TOwner, TResult> GeneratePropertyAccessor<TOwner, TResult>(string propertyName)
         {
             if (propertyName == null)
+            {
                 throw new ArgumentNullException(nameof(propertyName));
+            }
 
             var ownerType = typeof(TOwner);
             var resultType = typeof(TResult);
@@ -323,11 +408,19 @@ namespace NewRelic.Reflection
         public Func<object, TResult> GeneratePropertyAccessor<TResult>(string assemblyName, string typeName, string propertyName)
         {
             if (propertyName == null)
+            {
                 throw new ArgumentNullException(nameof(propertyName));
+            }
+
             if (assemblyName == null)
+            {
                 throw new ArgumentNullException(nameof(assemblyName));
+            }
+
             if (typeName == null)
+            {
                 throw new ArgumentNullException(nameof(typeName));
+            }
 
             var ownerType = GetType(assemblyName, typeName);
             var resultType = typeof(TResult);
@@ -340,10 +433,28 @@ namespace NewRelic.Reflection
         {
             var propertyInfo = GetPropertyInfo(ownerType, propertyName);
             if (propertyInfo == null)
+            {
                 throw new KeyNotFoundException(string.Format("Could not find property {0} on type {1}", propertyName, ownerType.AssemblyQualifiedName));
+            }
 
             var propertyGetter = GetPropertyGetter(ownerType, propertyName);
             return GenerateMethodCallerInternal(resultType, propertyGetter);
+        }
+
+        public Action<TValue> GeneratePropertySetter<TValue>(object owner, string propertyName)
+        {
+            if (owner == null)
+            {
+                throw new ArgumentNullException(nameof(owner));
+            }
+
+            if (propertyName == null)
+            {
+                throw new ArgumentNullException(nameof(propertyName));
+            }
+
+            var setterMethodInfo = GetPropertySetter(owner.GetType(), propertyName);
+            return (Action<TValue>)setterMethodInfo.CreateDelegate(typeof(Action<TValue>), owner);
         }
 
         #endregion
@@ -353,9 +464,14 @@ namespace NewRelic.Reflection
         public Func<object> GenerateTypeFactory(string assemblyName, string typeName)
         {
             if (assemblyName == null)
+            {
                 throw new ArgumentNullException(nameof(assemblyName));
+            }
+
             if (typeName == null)
+            {
                 throw new ArgumentNullException(nameof(typeName));
+            }
 
             var type = GetType(assemblyName, typeName);
             return GenerateTypeFactory<Func<object>>(type, new Type[] { });
@@ -364,9 +480,14 @@ namespace NewRelic.Reflection
         public Func<TParam, object> GenerateTypeFactory<TParam>(string assemblyName, string typeName)
         {
             if (assemblyName == null)
+            {
                 throw new ArgumentNullException(nameof(assemblyName));
+            }
+
             if (typeName == null)
+            {
                 throw new ArgumentNullException(nameof(typeName));
+            }
 
             var type = GetType(assemblyName, typeName);
             return GenerateTypeFactory<Func<TParam, object>>(type, new[] { typeof(TParam) });
@@ -375,9 +496,14 @@ namespace NewRelic.Reflection
         public Func<TParam1, TParam2, object> GenerateTypeFactory<TParam1, TParam2>(string assemblyName, string typeName)
         {
             if (assemblyName == null)
+            {
                 throw new ArgumentNullException(nameof(assemblyName));
+            }
+
             if (typeName == null)
+            {
                 throw new ArgumentNullException(nameof(typeName));
+            }
 
             var type = GetType(assemblyName, typeName);
             return GenerateTypeFactory<Func<TParam1, TParam2, object>>(type, new[] { typeof(TParam1), typeof(TParam2) });
@@ -430,7 +556,9 @@ namespace NewRelic.Reflection
 
             var result = dynamicMethod.CreateDelegate(typeof(T)) as T;
             if (result == null)
+            {
                 throw new Exception(string.Format("Failed to create a delegate for the constructor of type {0} that matches the desired delegate type {1}", type.AssemblyQualifiedName, typeof(T).AssemblyQualifiedName));
+            }
 
             return result;
         }
@@ -443,11 +571,15 @@ namespace NewRelic.Reflection
         {
             var assembly = Assembly.Load(assemblyName);
             if (assembly == null)
+            {
                 throw new NullReferenceException(nameof(assembly));
+            }
 
             var type = assembly.GetType(typeName, true);
             if (type == null)
+            {
                 throw new NullReferenceException(nameof(type));
+            }
 
             return type;
         }
@@ -456,7 +588,9 @@ namespace NewRelic.Reflection
         {
             var fieldInfo = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
             if (fieldInfo == null)
+            {
                 throw new KeyNotFoundException(string.Format("Unable to find field {0} in type {1}", fieldName, type.AssemblyQualifiedName));
+            }
 
             return fieldInfo;
         }
@@ -465,7 +599,9 @@ namespace NewRelic.Reflection
         {
             var methodInfo = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
             if (methodInfo == null)
+            {
                 throw new KeyNotFoundException(string.Format("Unable to find method {0} in type {1}", methodName, type.AssemblyQualifiedName));
+            }
 
             return methodInfo;
         }
@@ -474,7 +610,9 @@ namespace NewRelic.Reflection
         {
             var propertyInfo = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
             if (propertyInfo == null)
+            {
                 throw new KeyNotFoundException(string.Format("Unable to find property {0} in type {1}", propertyName, type.AssemblyQualifiedName));
+            }
 
             return propertyInfo;
         }
@@ -484,7 +622,21 @@ namespace NewRelic.Reflection
             var propertyInfo = GetPropertyInfo(type, propertyName);
             var methodInfo = propertyInfo.GetGetMethod(true);
             if (methodInfo == null)
+            {
                 throw new Exception(string.Format("Property {0} on type {1} does not have a getter", propertyInfo.Name, type.AssemblyQualifiedName));
+            }
+
+            return methodInfo;
+        }
+
+        private static MethodInfo GetPropertySetter(Type type, string propertyName)
+        {
+            var propertyInfo = GetPropertyInfo(type, propertyName);
+            var methodInfo = propertyInfo.GetSetMethod(true);
+            if (methodInfo == null)
+            {
+                throw new Exception(string.Format("Property {0} on type {1} does not have a setter", propertyInfo.Name, type.AssemblyQualifiedName));
+            }
 
             return methodInfo;
         }

@@ -14,7 +14,6 @@ using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -1479,7 +1478,10 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(), _localConfiguration.customEvents.maximumSamplesStored);
+                return (int)EnvironmentOverrides(
+                    ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(),
+                        _localConfiguration.customEvents.maximumSamplesStored),
+                    "MAX_EVENT_SAMPLES_STORED");
             }
         }
 
@@ -1554,7 +1556,10 @@ namespace NewRelic.Agent.Core.Configuration
                     LogDeprecatedPropertyUse("analyticsEvents.maximumSamplesStored", "transactionEvents.maximumSamplesStored");
                     maxValue = _localConfiguration.analyticsEvents.maximumSamplesStored;
                 }
-                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), maxValue);
+
+                return (int)EnvironmentOverrides(
+                    ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), maxValue),
+                    "MAX_TRANSACTION_SAMPLES_STORED");
             }
         }
 

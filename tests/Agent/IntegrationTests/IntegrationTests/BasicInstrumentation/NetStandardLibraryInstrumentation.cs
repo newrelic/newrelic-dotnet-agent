@@ -2,21 +2,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using MultiFunctionApplicationHelpers;
+using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Testing.Assertions;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
-using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetFrameworkTest]
-    public class NetStandardLibraryInstrumentationFW : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureFW>
+    public class NetStandardLibraryInstrumentationFW : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public NetStandardLibraryInstrumentationFW(RemoteServiceFixtures.ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output) : base(fixture, output)
+        public NetStandardLibraryInstrumentationFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }
@@ -24,7 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
     [NetCoreTest]
     public class NetStandardLibraryInstrumentationNetCore : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public NetStandardLibraryInstrumentationNetCore(RemoteServiceFixtures.ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public NetStandardLibraryInstrumentationNetCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }

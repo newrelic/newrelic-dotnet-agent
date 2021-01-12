@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
-
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public class WebConfigModifier
