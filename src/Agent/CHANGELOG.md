@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 New Features Description
 
 ### Fixes
-* Fixes Issue [#394](https://github.com/newrelic/newrelic-dotnet-agent/issues/394): agent fails to enable infinite tracing in net5.0 docker images
+* **New Fixes Template** <br/>
+New Fixes Description
 
 ## [8.37] - 2021-01-04
 ### New Features
