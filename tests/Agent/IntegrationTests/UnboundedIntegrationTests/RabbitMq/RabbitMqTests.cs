@@ -108,28 +108,49 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         }
     }
 
+    // Test class naming pattern: RabbitMq{FW,NetCore}{RabbitClientVersion}Tests
+    // e.g. RabbitMqFW621Tests = .NET Framework, RabbitMQ.Client 6.2.1
+
     [NetFrameworkTest]
-    public class RabbitMqTests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class RabbitMqFW621Tests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public RabbitMqTests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public RabbitMqFW621Tests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class RabbitMqLegacyTests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureFW461>
+    public class RabbitMqFW510Tests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public RabbitMqLegacyTests(ConsoleDynamicMethodFixtureFW461 fixture, ITestOutputHelper output)
+        public RabbitMqFW510Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RabbitMqFW352Tests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureFW461>
+    {
+        public RabbitMqFW352Tests(ConsoleDynamicMethodFixtureFW461 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class RabbitMqNetCoreTests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class RabbitMqNetCore621Tests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public RabbitMqNetCoreTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public RabbitMqNetCore621Tests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqNetCore510Tests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCore21>
+    {
+        public RabbitMqNetCore510Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
