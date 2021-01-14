@@ -13,6 +13,7 @@ using System.Linq;
 using NewRelic.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -486,7 +487,9 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var attemptId = 0;
 
-            LogMessage(LogLevel.Info, $"Creating gRPC channel to endpoint {EndpointHost}:{EndpointPort}.");
+            var endpointIpAddr = Dns.GetHostAddresses(EndpointHost)[0].ToString() ?? "unknown";
+
+            LogMessage(LogLevel.Info, $"Creating gRPC channel to endpoint {EndpointHost}:{EndpointPort} (IP Address: {endpointIpAddr}).");
 
             while (!cancellationToken.IsCancellationRequested && IsServiceEnabled)
             {

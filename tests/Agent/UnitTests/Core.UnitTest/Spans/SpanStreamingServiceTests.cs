@@ -1324,8 +1324,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             );
         }
 
-        [Test]
-        public void GrpcUnavailableDuringTrySendDataRestartsService()
+        [TestCase(StatusCode.Unavailable)]
+        [TestCase(StatusCode.FailedPrecondition)]
+        public void GrpcUnavailableOrFailedPreconditionDuringTrySendDataRestartsService(StatusCode statusCode)
         {
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
@@ -1372,7 +1373,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 if (localInvocationId == 1)
                 {
-                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unavailable, "Test gRPC Exception");
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(statusCode, "Test gRPC Exception");
                     return false;
                 }
 
