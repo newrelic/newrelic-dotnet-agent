@@ -6,8 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
-* **New Features Template** <br/>
-New Features Description
+* **Improvements to New Relic Edge (Infinite Tracing)** <br/>
+  * The agent will now handle having its infinite tracing traffic moved from one backend host to another without losing data or requiring an agent restart.
+  * Improved logging of infinite tracing connections.
 
 ### Fixes
 * **New Fixes Template** <br/>
