@@ -218,7 +218,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             Guid? wrapperExecutionID = null;
             void WriteLogMessage(string message)
             {
-                if (agent.Logger.IsEnabledFor(Agent.Extensions.Logging.Level.Finest))
+                if (!agent.Logger.IsEnabledFor(Agent.Extensions.Logging.Level.Finest))
                 {
                     return;
                 }
