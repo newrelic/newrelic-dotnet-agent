@@ -487,7 +487,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var attemptId = 0;
 
-            var endpointIpAddr = Dns.GetHostAddresses(EndpointHost)[0].ToString() ?? "unknown";
+            var endpointIpAddr = GetIpAddressFromHostname(EndpointHost);
 
             LogMessage(LogLevel.Info, $"Creating gRPC channel to endpoint {EndpointHost}:{EndpointPort} (IP Address: {endpointIpAddr}).");
 
@@ -561,6 +561,21 @@ namespace NewRelic.Agent.Core.DataTransport
             }
 
             return false;
+        }
+
+        private string GetIpAddressFromHostname(string endpointHost)
+        {
+            var ipAddressString = "unknown";
+            try
+            {
+                ipAddressString = Dns.GetHostAddresses(EndpointHost)[0].ToString();
+            }
+            catch (Exception)
+            {
+                // just swallow any exceptions and return the "unknown" string
+            }
+            return ipAddressString;
+
         }
 
         public void Dispose()
