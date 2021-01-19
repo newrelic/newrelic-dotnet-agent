@@ -41,6 +41,19 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
+        public string TraceObserverUrl
+        {
+            get
+            {
+                if (TestSettingOverrides.TryGetValue(_configurationCategory, out var item) && !string.IsNullOrEmpty(item.TraceObserverUrl))
+                {
+                    return item.TraceObserverUrl;
+                };
+
+                return DefaultSetting.TraceObserverUrl;
+            }
+        }
+
         private IntegrationTestConfiguration(string configurationCategory)
         {
             _configurationCategory = configurationCategory;
@@ -77,6 +90,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         public string AwsAccessKeyId { get; set; }
         public string AwsSecretAccessKey { get; set; }
         public string AwsAccountNumber { get; set; }
+        public string TraceObserverUrl { get; set; }
         public IDictionary<string, string> CustomSettings { get; set; }
     }
 

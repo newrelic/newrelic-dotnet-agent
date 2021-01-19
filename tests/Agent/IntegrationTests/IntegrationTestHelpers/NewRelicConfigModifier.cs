@@ -104,6 +104,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
+        public NewRelicConfigModifier EnableDistributedTrace()
+        {
+            SetOrDeleteDistributedTraceEnabled(true);
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableInfinteTracing(string traceObserverUrl)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
+               new[] { "configuration", "infiniteTracing", "trace_observer" }, "host", traceObserverUrl);
+            return this;
+        }
+
         public void AutoInstrumentBrowserMonitoring(bool shouldAutoInstrument)
         {
             var stringValue = shouldAutoInstrument.ToString().ToLower(); //We don't seem to handle the uppercase parse
