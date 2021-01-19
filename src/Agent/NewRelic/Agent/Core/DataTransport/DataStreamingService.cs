@@ -13,6 +13,7 @@ using System.Linq;
 using NewRelic.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -109,6 +110,7 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         private const string UnimplementedStatus = "UNIMPLEMENTED";
         private const string UnavailableStatus = "UNAVAILABLE";
+        private const string FailedPreconditionStatus = "FAILED_PRECONDITION";
         private const string OkStatus = "OK";
         private readonly IGrpcWrapper<TRequestBatch, TResponse> _grpcWrapper;
         private readonly IDelayer _delayer;
@@ -485,7 +487,9 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var attemptId = 0;
 
-            LogMessage(LogLevel.Info, $"Creating gRPC channel to endpoint {EndpointHost}:{EndpointPort}.");
+            var endpointIpAddr = GetIpAddressFromHostname(EndpointHost);
+
+            LogMessage(LogLevel.Info, $"Creating gRPC channel to endpoint {EndpointHost}:{EndpointPort} (IP Address: {endpointIpAddr}).");
 
             while (!cancellationToken.IsCancellationRequested && IsServiceEnabled)
             {
@@ -528,6 +532,13 @@ namespace NewRelic.Agent.Core.DataTransport
                             return false;
                         }
 
+                        if (grpcWrapperEx.Status == FailedPreconditionStatus)
+                        {
+                            LogMessage(LogLevel.Error, $"The gRPC endpoint defined at {EndpointHost}:{EndpointPort} returned {FailedPreconditionStatus}, indicating the traffic is being redirected to a new host.  Restarting service.");
+                            Shutdown(true);
+                            return false;
+                        }
+
                         if (grpcWrapperEx.Status == OkStatus)
                         {
                             //Getting the OK status back indicates that the channel was created successfully, but the test stream
@@ -550,6 +561,21 @@ namespace NewRelic.Agent.Core.DataTransport
             }
 
             return false;
+        }
+
+        private string GetIpAddressFromHostname(string endpointHost)
+        {
+            var ipAddressString = "unknown";
+            try
+            {
+                ipAddressString = Dns.GetHostAddresses(EndpointHost)[0].ToString();
+            }
+            catch (Exception)
+            {
+                // just swallow any exceptions and return the "unknown" string
+            }
+            return ipAddressString;
+
         }
 
         public void Dispose()
@@ -623,6 +649,13 @@ namespace NewRelic.Agent.Core.DataTransport
                         if (grpcWrapperEx.Status == UnavailableStatus)
                         {
                             LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} is no longer available so we will restart this service.");
+                            Shutdown(true);
+                            return false;
+                        }
+
+                        if (grpcWrapperEx.Status == FailedPreconditionStatus)
+                        {
+                            LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} has been moved to a different host so we will restart this service.");
                             Shutdown(true);
                             return false;
                         }
@@ -846,6 +879,13 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (grpcEx.Status == UnavailableStatus)
                 {
                     LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart");
+                    Shutdown(true);
+                    return TrySendStatus.Error;
+                }
+
+                if (grpcEx.Status == FailedPreconditionStatus)
+                {
+                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Channel has been moved, requesting restart");
                     Shutdown(true);
                     return TrySendStatus.Error;
                 }
