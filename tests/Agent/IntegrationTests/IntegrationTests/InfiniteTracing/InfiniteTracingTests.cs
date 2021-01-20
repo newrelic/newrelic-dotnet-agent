@@ -9,11 +9,12 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
 {
-    public class InfiniteTracingTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureCoreLatest>
+    public abstract class InfiniteTracingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly ConsoleDynamicMethodFixture _fixture;
+        private readonly TFixture _fixture;
 
-        public InfiniteTracingTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output):base(fixture)
+        public InfiniteTracingTestsBase(TFixture fixture, ITestOutputHelper output):base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
@@ -56,6 +57,61 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
 
             var metrics = _fixture.AgentLog.GetMetrics();
             Assertions.MetricsExist(actualMetrics, metrics);
+        }
+    }
+
+    [NetFrameworkTest]
+    public class InfiniteTracingFWLatestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public InfiniteTracingFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+
+    [NetFrameworkTest]
+    public class InfiniteTracingFW471Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public InfiniteTracingFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class InfiniteTracingFW461Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW461>
+    {
+        public InfiniteTracingFW461Tests(ConsoleDynamicMethodFixtureFW461 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class InfiniteTracingNetCoreLatestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public InfiniteTracingNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class InfiniteTracingNetCore31Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public InfiniteTracingNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class InfiniteTracingNetCore21Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCore21>
+    {
+        public InfiniteTracingNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
         }
     }
 }
