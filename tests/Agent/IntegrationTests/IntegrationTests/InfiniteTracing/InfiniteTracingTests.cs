@@ -44,15 +44,15 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         [Fact]
         public void Test()
         {
-            var sendCount = _fixture.AgentLog.GetInfiniteTracingAttemptToSendCount();
-            var sentCount = _fixture.AgentLog.GetInfiniteTracingAttemptToSendSuccessCount();
-            var receivedCount = _fixture.AgentLog.GetInfiniteTracingGrpcServerReceivedCount();
+            var expectedSeenCount = 2;
+            var expectedSentCount = 2;
+            var expectedReceivedCount = 2;
 
             var actualMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", callCount = sendCount },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", callCount = sentCount },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Received", callCount = receivedCount }
+                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", callCount = expectedSeenCount },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", callCount = expectedSentCount },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Received", callCount = expectedReceivedCount }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics();

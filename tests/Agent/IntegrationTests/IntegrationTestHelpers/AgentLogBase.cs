@@ -51,11 +51,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string TransactionEndedByGCFinalizerLogLineRegEx = DebugLogLinePrefixRegex + @"Transaction was garbage collected without ever ending(.*)";
         public const string TransactionHasAlreadyCapturedResponseTimeLogLineRegEx = FinestLogLinePrefixRegex + @"Transaction has already captured the response time(.*)";
 
-        public const string CountGroupName = "CountGroupName";
-        public string AttemptToSend = FinestLogLinePrefixRegex + $@"SpanStreamingService: consumer (.*) - Attempting to send (?'{CountGroupName}'.*) item\(s\)\.";
-        public string AttemptToSendSuccess = FinestLogLinePrefixRegex + $@"SpanStreamingService: consumer (.*) - Attempting to send (?'{CountGroupName}'.*) item\(s\) - Success";
-        public string GrpcServerResponseReceived = FinestLogLinePrefixRegex + $@"SpanStreamingService: consumer (.*) - Received gRPC Server response: (?'{CountGroupName}'.*)";
-
         public abstract IEnumerable<string> GetFileLines();
 
         public string GetAccountId(TimeSpan? timeoutOrZero = null)
@@ -395,49 +390,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             var match = WaitForLogLine(InstrumentationRefreshFileWatcherStarted, TimeSpan.FromSeconds(timeOut));
             return match.Success;
-        }
-
-        #endregion
-
-        #region InfiniteTracing
-
-        public int GetInfiniteTracingAttemptToSendCount()
-        {
-            var count = 0;
-            var matches = TryGetLogLines(AttemptToSend);
-
-            foreach (var match in matches)
-            {
-                count += int.Parse(match.Groups[CountGroupName].Value);
-            }
-
-            return count;
-        }
-
-        public int GetInfiniteTracingAttemptToSendSuccessCount()
-        {
-            var count = 0;
-            var matches = TryGetLogLines(AttemptToSendSuccess);
-
-            foreach(var match in matches)
-            {
-                count += int.Parse(match.Groups[CountGroupName].Value);
-            }
-
-            return count;
-        }
-
-        public int GetInfiniteTracingGrpcServerReceivedCount()
-        {
-            var count = 0;
-            var matches = TryGetLogLines(GrpcServerResponseReceived);
-
-            foreach (var match in matches)
-            {
-                count += int.Parse(match.Groups[CountGroupName].Value);
-            }
-
-            return count;
         }
 
         #endregion
