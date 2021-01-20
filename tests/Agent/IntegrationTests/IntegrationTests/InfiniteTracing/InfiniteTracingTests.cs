@@ -47,7 +47,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
             var sentCount = _fixture.AgentLog.GetInfiniteTracingAttemptToSendSuccessCount();
             var receivedCount = _fixture.AgentLog.GetInfiniteTracingGrpcServerReceivedCount();
 
-            var senderExpectedMetrics = new List<Assertions.ExpectedMetric>
+            var actualMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", callCount = sendCount },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", callCount = sentCount },
@@ -55,7 +55,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
             };
 
             var metrics = _fixture.AgentLog.GetMetrics();
-            Assertions.MetricsExist(senderExpectedMetrics, metrics);
+            Assertions.MetricsExist(actualMetrics, metrics);
         }
     }
 }

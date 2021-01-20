@@ -24,17 +24,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
             rand.Next();
         }
 
-        /// <summary>
-        /// This is an instrumented method that doesn't actually do anything.  Its purpose
-        /// is to ensure that the agent starts up.  Without an instrumented method, the agent won't
-        /// start.
-        /// </summary>
         [LibraryMethod]
-        [Transaction]
         public static void StartAgent()
         {
-            Logger.Info("Instrumented Method to start the Agent");
-
+            NewRelic.Api.Agent.NewRelic.StartAgent();
             //Get everything started up and time for initial Sample().
             Thread.Sleep(TimeSpan.FromSeconds(10));
         }
