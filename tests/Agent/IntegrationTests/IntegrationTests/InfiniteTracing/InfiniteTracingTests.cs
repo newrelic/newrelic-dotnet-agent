@@ -44,6 +44,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         [Fact]
         public void Test()
         {
+            //1 span count for the Make8TSpan method, another span count for the root span.
             var expectedSeenCount = 2;
             var expectedSentCount = 2;
             var expectedReceivedCount = 2;
