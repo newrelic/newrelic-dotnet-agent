@@ -182,6 +182,11 @@ namespace NewRelic.Agent.Core.DataTransport
                 headers.Add(new Metadata.Entry("flaky", EndpointTestFlaky.ToString()));
             }
 
+            if (EndpointTestFlakyCode.HasValue)
+            {
+                headers.Add(new Metadata.Entry("flaky_code", EndpointTestFlakyCode.ToString()));
+            }
+
             if (Log.IsFinestEnabled)
             {
                 var parametersString = string.Join(",", headers.Select(x => $"{x.Key}={x.Value}"));
@@ -199,6 +204,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public int EndpointPort { get; private set; }
         public bool EndpointSsl { get; private set; }
         public float? EndpointTestFlaky { get; private set; }
+        public int? EndpointTestFlakyCode { get; private set; }
         public int? EndpointTestDelayMs { get; private set; }
         public abstract int BatchSizeConfigValue { get; }
 
@@ -206,6 +212,7 @@ namespace NewRelic.Agent.Core.DataTransport
         protected abstract string EndpointPortConfigValue { get; }
         protected abstract string EndpointSslConfigValue { get; }
         protected abstract float? EndpointTestFlakyConfigValue { get; }
+        protected abstract int? EndpointTestFlakyCodeConfigValue { get; }
         protected abstract int? EndpointTestDelayMsConfigValue { get; }
 
 
@@ -270,6 +277,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 EndpointPort = -1;
                 EndpointSsl = true;
                 EndpointTestFlaky = null;
+                EndpointTestFlakyCode = null;
                 EndpointTestDelayMs = null;
 
                 return false;
@@ -279,17 +287,19 @@ namespace NewRelic.Agent.Core.DataTransport
             var isValidPort = int.TryParse(configPortStr, out var configPort) && configPort > 0 && configPort <= 65535;
             var isValidSsl = bool.TryParse(configSslStr, out var configSsl);
             var isValidFlaky = EndpointTestFlakyConfigValue == null || (EndpointTestFlakyConfigValue >= 0 && EndpointTestFlakyConfigValue <= 100);
+            var isValidFlakyCode = EndpointTestFlakyCodeConfigValue == null || (EndpointTestFlakyCodeConfigValue >= 0 && EndpointTestFlakyCodeConfigValue <= 16); // See https://github.com/grpc/grpc/blob/master/doc/statuscodes.md
             var isValidDelay = EndpointTestDelayMsConfigValue == null || (EndpointTestDelayMsConfigValue >= 0);
             var isValidTimeoutConnect = TimeoutConnectMs > 0;
             var isValidTimeoutSend = TimeoutSendDataMs > 0;
             var isValidBatchSize = BatchSizeConfigValue > 0;
 
-            if (isValidHost && isValidPort && isValidSsl && isValidFlaky && isValidDelay && isValidTimeoutConnect && isValidTimeoutSend && isValidBatchSize)
+            if (isValidHost && isValidPort && isValidSsl && isValidFlaky && isValidFlakyCode && isValidDelay && isValidTimeoutConnect && isValidTimeoutSend && isValidBatchSize)
             {
                 EndpointHost = configHost;
                 EndpointPort = configPort;
                 EndpointSsl = configSsl;
                 EndpointTestFlaky = EndpointTestFlakyConfigValue;
+                EndpointTestFlakyCode = EndpointTestFlakyCodeConfigValue;
                 EndpointTestDelayMs = EndpointTestDelayMsConfigValue;
 
                 return true;
@@ -319,6 +329,11 @@ namespace NewRelic.Agent.Core.DataTransport
             if (!isValidFlaky)
             {
                 LogMessage(LogLevel.Info, $"Invalid Configuration For Test.  Flaky % '{EndpointTestFlakyConfigValue}' is not valid.  Infinite Tracing will NOT be started.");
+            }
+
+            if (!isValidFlakyCode)
+            {
+                LogMessage(LogLevel.Info, $"Invalid Configuration For Test.  Flaky response code '{EndpointTestFlakyCodeConfigValue}' is not valid.  Infinite Tracing will NOT be started.");
             }
 
             if (!isValidDelay)
@@ -374,7 +389,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     LogMessage(LogLevel.Finest, x.ConsumerID, "Response Stream Manager - Removing Stream");
                     _responseStreamsDic.TryRemove(x.ConsumerID, out _);
-                    if (x.ResponseRpcException.StatusCode == StatusCode.FailedPrecondition)
+                    if ((x.ResponseRpcException != null) && (x.ResponseRpcException.StatusCode == StatusCode.FailedPrecondition))
                     {
                         LogMessage(LogLevel.Debug, $"The gRPC endpoint defined at {EndpointHost}:{EndpointPort} returned {FailedPreconditionStatus}, indicating the traffic is being redirected to a new host.  Restarting service.");
                         Shutdown(true);
@@ -487,6 +502,7 @@ namespace NewRelic.Agent.Core.DataTransport
             LogMessage(LogLevel.Finest, $"Configuration Setting - SSL - {EndpointSsl}");
             LogMessage(LogLevel.Info, $"Configuration Setting - Consumers - {_configuration.InfiniteTracingTraceCountConsumers}");
             LogMessage(LogLevel.Finest, $"Configuration Setting - Test Flaky - {EndpointTestFlaky?.ToString() ?? "NULL"}");
+            LogMessage(LogLevel.Finest, $"Configuration Setting - Test Flaky Code - {EndpointTestFlakyCode?.ToString() ?? "NULL"}");
             LogMessage(LogLevel.Finest, $"Configuration Setting - Test Delay (ms) - {EndpointTestDelayMs?.ToString() ?? "NULL"}");
         }
 

@@ -21,6 +21,7 @@ namespace NewRelic.Agent.Core.DataTransport
         protected override string EndpointPortConfigValue => _configuration?.InfiniteTracingTraceObserverPort;
         protected override string EndpointSslConfigValue => _configuration?.InfiniteTracingTraceObserverSsl;
         protected override float? EndpointTestFlakyConfigValue => _configuration?.InfiniteTracingTraceObserverTestFlaky;
+        protected override int? EndpointTestFlakyCodeConfigValue => _configuration?.InfiniteTracingTraceObserverTestFlakyCode;
         protected override int? EndpointTestDelayMsConfigValue => _configuration?.InfiniteTracingTraceObserverTestDelayMs;
         public override int BatchSizeConfigValue => (_configuration?.InfiniteTracingBatchSizeSpans).GetValueOrDefault(0);
 
