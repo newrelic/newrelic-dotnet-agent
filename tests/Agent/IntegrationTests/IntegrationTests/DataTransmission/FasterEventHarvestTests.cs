@@ -20,9 +20,9 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
     }
 
     [NetCoreTest]
-    public class FasterEventHarvestNetCoreTests : FasterEventHarvestTests<ConsoleDynamicMethodFixtureCoreLatest>
+    public class FasterEventHarvestNetCoreTests : FasterEventHarvestTests<ConsoleDynamicMethodFixtureCore31>
     {
-        public FasterEventHarvestNetCoreTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public FasterEventHarvestNetCoreTests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }

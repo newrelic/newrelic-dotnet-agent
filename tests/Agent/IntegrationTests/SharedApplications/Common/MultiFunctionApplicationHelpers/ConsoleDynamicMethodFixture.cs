@@ -60,6 +60,13 @@ namespace MultiFunctionApplicationHelpers
         }
     }
 
+    public class ConsoleDynamicMethodFixtureCore31 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureCore31() : base("netcoreapp3.1")
+        {
+        }
+    }
+
     /// <summary>
     /// Use this fixture if you don't care about which .net core version the test application should use.
     /// If you need to test against a feature that belongs to a specific .net core version, then consider
@@ -68,7 +75,7 @@ namespace MultiFunctionApplicationHelpers
     /// </summary>
     public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
-        public ConsoleDynamicMethodFixtureCoreLatest() : base("netcoreapp3.1")
+        public ConsoleDynamicMethodFixtureCoreLatest() : base("net5.0")
         {
         }
     }
