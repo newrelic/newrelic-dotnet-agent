@@ -42,32 +42,29 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private async Task<int> WaitForResponse()
         {
-            bool success;
+            var success = false;
             try
             {
                 success = await _responseStream.MoveNext(_streamCancellationToken);
             }
-            catch (Exception ex)
+            catch (RpcException rpcEx)
             {
-                success = false;
+                var logLevel = LogLevel.Debug;
 
-                var logLevel = LogLevel.Finest;
-
-                var aggEx = ex as AggregateException;
-                if (aggEx != null && aggEx.InnerException != null)
-                {
-                    var rpcEx = aggEx.InnerException as RpcException;
-
-                    ResponseRpcException = rpcEx;
-
-                    logLevel = (rpcEx != null && (rpcEx.StatusCode == StatusCode.Cancelled) || (rpcEx.StatusCode == StatusCode.FailedPrecondition))
-                        ? LogLevel.Finest
-                        : LogLevel.Debug;
-                }
+                ResponseRpcException = rpcEx;
 
                 if (Log.IsEnabledFor(logLevel))
                 {
-                    Log.LogMessage(logLevel, $"Exception encountered while handling gRPC server responses: {ex}");
+                    Log.LogMessage(logLevel, $"GRPC RpcException encountered while handling gRPC server responses: {rpcEx.Status}");
+                }
+            }
+            catch (Exception ex)
+            {
+                var logLevel = LogLevel.Finest;
+
+                if (Log.IsEnabledFor(logLevel))
+                {
+                    Log.LogMessage(logLevel, $"Unknown exception encountered while handling gRPC server responses: {ex}");
                 }
             }
 
