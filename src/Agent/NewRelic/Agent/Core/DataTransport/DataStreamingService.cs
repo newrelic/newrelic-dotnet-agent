@@ -25,6 +25,8 @@ namespace NewRelic.Agent.Core.DataTransport
         private bool _isInvalid = false;
         public bool IsInvalid => _streamCancellationToken.IsCancellationRequested || _isInvalid || (_task?.IsFaulted).GetValueOrDefault(false);
 
+        public RpcException ResponseRpcException = null;
+
 
         private readonly IAsyncStreamReader<TResponse> _responseStream;
         private readonly CancellationToken _streamCancellationToken;
@@ -56,7 +58,9 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     var rpcEx = aggEx.InnerException as RpcException;
 
-                    logLevel = (rpcEx != null && rpcEx.StatusCode == StatusCode.Cancelled)
+                    ResponseRpcException = rpcEx;
+
+                    logLevel = (rpcEx != null && (rpcEx.StatusCode == StatusCode.Cancelled) || (rpcEx.StatusCode == StatusCode.FailedPrecondition))
                         ? LogLevel.Finest
                         : LogLevel.Debug;
                 }
@@ -370,6 +374,11 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     LogMessage(LogLevel.Finest, x.ConsumerID, "Response Stream Manager - Removing Stream");
                     _responseStreamsDic.TryRemove(x.ConsumerID, out _);
+                    if (x.ResponseRpcException.StatusCode == StatusCode.FailedPrecondition)
+                    {
+                        LogMessage(LogLevel.Debug, $"The gRPC endpoint defined at {EndpointHost}:{EndpointPort} returned {FailedPreconditionStatus}, indicating the traffic is being redirected to a new host.  Restarting service.");
+                        Shutdown(true);
+                    }
                 }
 
                 var tasksToWaitFor = _responseStreamsDic.Values
@@ -592,7 +601,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public void Shutdown(bool withRestart)
         {
-            LogMessage(LogLevel.Debug, "Shutdown Request Received");
+            LogMessage(LogLevel.Debug, $"Shutdown Request Received, restart = {withRestart}");
 
             _shouldRestart = withRestart;
             _cancellationTokenSource.Cancel();
