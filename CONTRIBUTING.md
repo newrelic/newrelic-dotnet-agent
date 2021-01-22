@@ -1,16 +1,16 @@
 # Contributing
 
 Contributions are always welcome. Before contributing please read the
-[code of conduct](https://opensource.newrelic.com/code-of-conduct/) and [search the issue tracker](../../issues); your issue may have already been discussed or fixed in `master`. To contribute,
+[code of conduct](https://opensource.newrelic.com/code-of-conduct/) and [search the issue tracker](https://github.com/newrelic/newrelic-dotnet-agent/issues); your issue may have already been discussed or fixed in `master`. To contribute,
 [fork](https://help.github.com/articles/fork-a-repo/) this repository, commit your changes, and [send a Pull Request](https://help.github.com/articles/using-pull-requests/).
 
 Note that our [code of conduct](https://opensource.newrelic.com/code-of-conduct/) applies to all platforms and venues related to this project; please follow it in all your interactions with the project and its participants.
 
 ## Feature Requests
 
-Feature requests should be submitted in the [Issue tracker](../../issues), with a description of the expected behavior & use case, where they’ll remain closed until sufficient interest, [e.g. :+1: reactions](https://help.github.com/articles/about-discussions-in-issues-and-pull-requests/), has been [shown by the community](../../issues?q=label%3A%22votes+needed%22+sort%3Areactions-%2B1-desc).
+Feature requests should be submitted in the [Issue tracker](https://github.com/newrelic/newrelic-dotnet-agent/issues), with a description of the expected behavior & use case, where they’ll remain closed until sufficient interest, [e.g. :+1: reactions](https://help.github.com/articles/about-discussions-in-issues-and-pull-requests/), has been [shown by the community](https://github.com/newrelic/newrelic-dotnet-agent/issues?q=label%3A%22votes+needed%22+sort%3Areactions-%2B1-desc).
 Before submitting an Issue, please search for similar ones in the
-[closed issues](../../issues?q=is%3Aissue+is%3Aclosed+label%3Aenhancement).
+[closed issues](https://github.com/newrelic/newrelic-dotnet-agent/issues?q=is%3Aissue+is%3Aclosed+label%3Aenhancement).
 
 ## Pull Requests
 
@@ -63,13 +63,13 @@ Our repository includes an [.editorconfig](https://github.com/newrelic/newrelic-
 
 ### Testing Guidelines
 
-See our [development](/docs/development.md) and [integration testing](/docs/integration-tests.md) documentation to run tests, including required setup steps.
+See our [development](docs/development.md) and [integration testing](docs/integration-tests.md) documentation to run tests, including required setup steps.
 
 For most contributions it is strongly recommended to add additional tests which exercise your changes. This helps us efficiently incorporate your changes into our mainline codebase and provides a safeguard that your change won't be broken by future development. Because of this, we require that all changes come with tests. You are welcome to submit pull requests with untested changes, but they won't be merged until you or the development team have an opportunity to write tests for them.
 
 There are some rare cases where code changes do not result in changed functionality (e.g. a performance optimization) and new tests are not required. In general, including tests with your pull request dramatically increases the chances it will be accepted.
 
-Integration tests are used to test the functionality of [agent instrumentation](/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper).  PRs that add or modify instrumentation should include new or updated integration tests.
+Integration tests are used to test the functionality of [agent instrumentation](src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper).  PRs that add or modify instrumentation should include new or updated integration tests.
 
 ## Contributor License Agreement
 
