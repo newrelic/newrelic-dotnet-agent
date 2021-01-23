@@ -263,7 +263,26 @@ namespace NewRelic.Agent.Api
         ///   &lt;body&gt;
         ///   ...
         /// </code></example>
-        public static string GetBrowserTimingHeader(string? nonce)
+        public static string GetBrowserTimingHeader()
+        {
+            return _agentApiImplementation?.GetBrowserTimingHeader() ?? string.Empty;
+        }
+
+        /// <summary> Returns the HTML snippet to be inserted into the header of HTML pages to enable Real
+        /// User Monitoring. The HTML will instruct the browser to fetch a small JavaScript file and
+        /// start the page timer. Supports web applications only. </summary>
+        ///
+        /// <returns> An HTML string to be embedded in a page header. </returns>
+        ///
+        /// <example> <code>
+        /// &lt;html&gt;
+        ///   &lt;head&gt;
+        ///     &lt;&#37;= NewRelic.Api.Agent.NewRelic.GetBrowserTimingHeader("random-nonce")&#37;&gt;
+        ///   &lt;/head&gt;
+        ///   &lt;body&gt;
+        ///   ...
+        /// </code></example>
+        public static string GetBrowserTimingHeader(string nonce)
         {
             return _agentApiImplementation?.GetBrowserTimingHeader(nonce) ?? string.Empty;
         }
