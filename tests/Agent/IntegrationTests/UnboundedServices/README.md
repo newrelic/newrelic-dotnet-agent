@@ -44,4 +44,4 @@ See the docker-compose.yml file for the names of the services provided.
 
 ## Configuring user secrets
 
-The integration tests, including the unbounded ones, use `dotnet user-secrets` to manage confuration data, including the connection strings needed to access these external services.  An [example-secrets.json](./example-secrets.json) file has been provided which contains connection strings for all of the containerized unbounded services.  See the [integration test documentation](/docs/integration-tests.md) for how to install the user secrets.
+The integration tests, including the unbounded ones, use `dotnet user-secrets` to manage confuration data, including the connection strings needed to access these external services.  An [example-secrets.json](example-secrets.json) file has been provided which contains connection strings for all of the containerized unbounded services.  See the [integration test documentation](../../../../docs/integration-tests.md) for how to install the user secrets.

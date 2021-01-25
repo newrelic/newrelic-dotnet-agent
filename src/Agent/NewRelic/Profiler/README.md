@@ -2,7 +2,7 @@
 
 ## Building the Profiler
 
-Refer to our [development documentation](/docs/development.md#profilersln).
+Refer to our [development documentation](../../../../docs/development.md#profilersln).
 
 ## What the Project Does
 
@@ -48,7 +48,7 @@ We fetch the bytecode for methods by calling `ICorProfilerInfo4.GetILFunctionBod
 
 ### What we inject
 
-The exact ByteCode we inject can be found about [here](/src/Agent/NewRelic/Profiler/MethodRewriter/FunctionManipulator.h).  Below I have written some pseudo-code that is more or less what we inject, though not exactly:
+The exact ByteCode we inject can be found about [here](MethodRewriter/FunctionManipulator.h).  Below I have written some pseudo-code that is more or less what we inject, though not exactly:
 ```cs
 	try
 	{
@@ -104,7 +104,7 @@ After the profiler attaches it uses custom environment variables to determine th
 
 ### What's a good starting point to check out in the code?
 
-The main entry point for the profiler is the `Initialize` method in [ICorProfilerCallbackBase.h](/src/Agent/NewRelic/Profiler/Profiler/ICorProfilerCallbackBase.h).  If you want to see what we do when we modify methods check out [InstrumentFunctionManipulator.h](/src/Agent/NewRelic/Profiler/MethodRewriter/InstrumentFunctionManipulator.h).
+The main entry point for the profiler is the `Initialize` method in [ICorProfilerCallbackBase.h](Profiler/ICorProfilerCallbackBase.h).  If you want to see what we do when we modify methods check out [InstrumentFunctionManipulator.h](MethodRewriter/InstrumentFunctionManipulator.h).
 
 ### Why did the profiler detach without providing meaningful feedback?
 

@@ -1,4 +1,4 @@
-Thank you for submitting a pull request.  Please review our [contributing guidelines](/CONTRIBUTING.md) and [code of conduct](/CODE_OF_CONDUCT.md).
+Thank you for submitting a pull request.  Please review our [contributing guidelines](/CONTRIBUTING.md) and [code of conduct](https://opensource.newrelic.com/code-of-conduct/).
 
 ### Description
 

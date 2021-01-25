@@ -105,7 +105,7 @@ Fixes an issue where `newrelic.config` was being overwritten when upgrading the 
 ## [8.30] - 2020-07-15
 ### New Features
 * **The .NET Agent is now open source!** <br/>
-The New Relic .NET agent is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in this repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](/CODE_OF_CONDUCT.md) for details on contributing!
+The New Relic .NET agent is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in this repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](https://opensource.newrelic.com/code-of-conduct/) for details on contributing!
 
 ### Fixes
 * **Memory Usage Reporting for Linux** <br/>
