@@ -1600,7 +1600,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 if (localInvocationId < 2 || localInvocationId == 3)
                 {
-                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Internal, "Test gRPC Exception");
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unknown, "Test gRPC Exception");
                     return false;
                 }
 
@@ -1726,7 +1726,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 if (countCreateStreamsCalls < 4 || countCreateStreamsCalls == 5)
                 {
-                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Internal, "Test gRPC Exception");
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unknown, "Test gRPC Exception");
                     return null;
                 }
 

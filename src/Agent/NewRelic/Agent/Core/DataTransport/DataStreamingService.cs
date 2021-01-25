@@ -112,6 +112,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private const string UnimplementedStatus = "UNIMPLEMENTED";
         private const string UnavailableStatus = "UNAVAILABLE";
         private const string FailedPreconditionStatus = "FAILED_PRECONDITION";
+        private const string InternalStatus = "INTERNAL";
         private const string OkStatus = "OK";
         private readonly IGrpcWrapper<TRequestBatch, TResponse> _grpcWrapper;
         private readonly IDelayer _delayer;
@@ -887,40 +888,38 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (GrpcWrapperException grpcEx) when (!string.IsNullOrWhiteSpace(grpcEx.Status))
             {
-                LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - gRPC Exception: {grpcEx.Status}", grpcEx);
-
                 RecordResponseError();
                 RecordGrpcError(grpcEx.Status);
 
-                if (grpcEx.Status == UnimplementedStatus)
+                switch (grpcEx.Status)
                 {
-                    Shutdown(false);
-                    return TrySendStatus.Error;
-                }
-
-                if (grpcEx.Status == UnavailableStatus)
-                {
-                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart");
-                    Shutdown(true);
-                    return TrySendStatus.Error;
-                }
-
-                if (grpcEx.Status == FailedPreconditionStatus)
-                {
-                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Channel has been moved, requesting restart");
-                    Shutdown(true);
-                    return TrySendStatus.Error;
-                }
-
-                if (grpcEx.Status == OkStatus)
-                {
-                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - A stream was closed due to connection rebalance. New stream requested and data will be resent immediately.");
-                    return TrySendStatus.ErrorWithImmediateRetry;
+                    case UnimplementedStatus:
+                        LogMessage(LogLevel.Info, consumerId, $"Attempting to send {items.Count} item(s) - Trace observer is no longer available, shutting down infinite tracing service.");
+                        Shutdown(false);
+                        return TrySendStatus.Error;
+                    case UnavailableStatus:
+                        LogMessage(LogLevel.Debug, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart");
+                        Shutdown(true);
+                        return TrySendStatus.Error;
+                    case FailedPreconditionStatus:
+                        LogMessage(LogLevel.Debug, consumerId, $"Attempting to send {items.Count} item(s) - Channel has been moved, requesting restart");
+                        Shutdown(true);
+                        return TrySendStatus.Error;
+                    case InternalStatus:
+                        LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - A stream was reset due to inactivity. New stream requested and data will be resent immediately.");
+                        return TrySendStatus.ErrorWithImmediateRetry;
+                    case OkStatus:
+                        LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - A stream was closed due to connection rebalance. New stream requested and data will be resent immediately.");
+                        return TrySendStatus.ErrorWithImmediateRetry;
+                    default:
+                        var rpcEx = grpcEx.InnerException as RpcException;
+                        LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - gRPC Exception: {rpcEx?.Status.ToString() ?? grpcEx.Status}");
+                        break;
                 }
             }
             catch (Exception ex)
             {
-                LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s)", ex);
+                LogMessage(LogLevel.Finest, consumerId, $"Unknown execption attempting to send {items.Count} item(s)", ex);
                 RecordResponseError();
             }
 
