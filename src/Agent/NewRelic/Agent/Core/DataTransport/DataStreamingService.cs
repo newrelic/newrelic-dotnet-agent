@@ -919,7 +919,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                LogMessage(LogLevel.Debug, consumerId, $"Unknown execption attempting to send {items.Count} item(s)", ex);
+                LogMessage(LogLevel.Debug, consumerId, $"Unknown exception attempting to send {items.Count} item(s)", ex);
                 RecordResponseError();
             }
 
