@@ -671,14 +671,14 @@ namespace NewRelic.Agent.Core.DataTransport
 
                         if (grpcWrapperEx.Status == UnavailableStatus)
                         {
-                            LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} is no longer available so we will restart this service.");
+                            LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} is temporarily unavailable, so we will restart this service.");
                             Shutdown(true);
                             return false;
                         }
 
                         if (grpcWrapperEx.Status == FailedPreconditionStatus)
                         {
-                            LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} has been moved to a different host so we will restart this service.");
+                            LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} has been moved to a different host, so we will restart this service.");
                             Shutdown(true);
                             return false;
                         }
@@ -894,11 +894,11 @@ namespace NewRelic.Agent.Core.DataTransport
                 switch (grpcEx.Status)
                 {
                     case UnimplementedStatus:
-                        LogMessage(LogLevel.Info, consumerId, $"Attempting to send {items.Count} item(s) - Trace observer is no longer available, shutting down infinite tracing service.");
+                        LogMessage(LogLevel.Error, consumerId, $"Attempting to send {items.Count} item(s) - Trace observer is no longer available, shutting down infinite tracing service.");
                         Shutdown(false);
                         return TrySendStatus.Error;
                     case UnavailableStatus:
-                        LogMessage(LogLevel.Debug, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart");
+                        LogMessage(LogLevel.Info, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart");
                         Shutdown(true);
                         return TrySendStatus.Error;
                     case FailedPreconditionStatus:
@@ -919,7 +919,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                LogMessage(LogLevel.Finest, consumerId, $"Unknown execption attempting to send {items.Count} item(s)", ex);
+                LogMessage(LogLevel.Debug, consumerId, $"Unknown execption attempting to send {items.Count} item(s)", ex);
                 RecordResponseError();
             }
 
