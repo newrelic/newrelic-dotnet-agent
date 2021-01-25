@@ -1552,8 +1552,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             );
         }
 
-        [Test]
-        public void GrpcOkDuringTrySendDataCreatesNewStreamImmediately()
+        [TestCase(StatusCode.OK)]
+        [TestCase(StatusCode.Internal)]
+        public void GrpcOkOrInternalDuringTrySendDataCreatesNewStreamImmediately(StatusCode statusCode)
         {
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
@@ -1606,7 +1607,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 if (localInvocationId == 2)
                 {
-                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.OK, "Test gRPC Exception");
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(statusCode, "Test gRPC Exception");
                     return false;
                 }
 
