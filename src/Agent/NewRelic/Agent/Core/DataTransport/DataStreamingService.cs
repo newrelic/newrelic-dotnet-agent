@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (RpcException rpcEx)
             {
-                var logLevel = LogLevel.Debug;
+                var logLevel = LogLevel.Finest;
 
                 ResponseRpcException = rpcEx;
 
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                var logLevel = LogLevel.Finest;
+                var logLevel = LogLevel.Debug;
 
                 if (Log.IsEnabledFor(logLevel))
                 {
