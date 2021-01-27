@@ -80,37 +80,20 @@ jobs:
           Copy-Item .\working_dir\newrelic-agent-*-scriptable-installer.zip .\working_dir\NewRelic.Agent.Installer.zip -Force -Recurse
         shell: powershell
 
-      - name: Deploy latest_release to Download Site
+      - name: Deploy 6.x_release to Download Site
         run: |
           $Env:AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
           $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           $Env:AWS_DEFAULT_REGION="us-west-2"
-          New-Item -ItemType directory -Path .\latest_release -Force
-          Copy-Item .\working_dir\* .\latest_release\ -Force -Recurse
-          cd .\latest_release
+          New-Item -ItemType directory -Path .\6.x_release -Force
+          Copy-Item .\working_dir\* .\6.x_release\ -Force -Recurse
+          cd .\6.x_release
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
-            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
+            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/6.x_release/ --include "*" --exclude ".DS_Store" --delete
           }
           else {
             Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
-            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include `"*`" --exclude `".DS_Store`" --delete"
-          }
-        shell: pwsh
-
-      - name: Deploy previous_release to Download Site
-        run: |
-          $Env:AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
-          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          $Env:AWS_DEFAULT_REGION="us-west-2"
-          New-Item -ItemType directory -Path .\previous_releases\${{ github.event.inputs.agent_version }} -Force
-          Copy-Item .\working_dir\* ".\previous_releases\${{ github.event.inputs.agent_version }}\" -Force -Recurse
-          cd .\previous_releases\${{ github.event.inputs.agent_version }}
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
-            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include "*" --exclude ".DS_Store" --delete
-          }
-          else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
-            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
+            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/6.x_release/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
 
