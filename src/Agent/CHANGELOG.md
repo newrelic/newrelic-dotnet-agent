@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 
+## [6.27]
+### New Features
+
+* **CI/Deployment moved to GitHub Actions** <br/>
+This release is functionally identical to verion 6.26.  We have migrated our CI and deployment process for the 6.x agent to GitHub Actions, and this release validates that this process is working correctly.  There is no need to upgrade from 6.26 to 6.27.
+
+Reminder: the 6.x agent line is maintained for customers who need to monitor .NET Framework 3.5 applications; it only gets security patches and critical updates.  Please use the latest 8.x or later version of the agent for .NET Framework 4.5+ and .NET Core applications.
+
 ## [6.26]
 ### New Features
 
@@ -47,8 +55,9 @@ Adds support for communicating with New Relic's EU Data Center.  Please review o
 
 * [Security Bulletin NR18-04](https://docs.newrelic.com/docs/accounts-partnerships/welcome-new-relic/security-bulletins/security-bulletin-nr18-04): Fixes issue where error messages were not fully being filtered out of error traces and error events when High Security Mode was enabled.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.26.0...net35/main
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.27.0...net35/main
 
+[6.27]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.26.0...v6.27.0
 [6.26]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.25.0...v6.26.0
 [6.25]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.24.0...v6.25.0
 [6.24]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.23.0...v6.24.0
