@@ -67,13 +67,6 @@ jobs:
           path: ${{ github.workspace }}\agent_version.txt
           if-no-files-found: error
       
-      # - name: Archive NewRelic.NuGetHelper
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: NewRelic.NuGetHelper
-      #     path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\bin
-      #     if-no-files-found: error
-          
       - name: Archive NewRelic.Agent.Extensions
         uses: actions/upload-artifact@v2
         with:
@@ -495,23 +488,11 @@ jobs:
           name: build-folder-artifacts
           path: src/_build
 
-      # - name: Download NewRelic.NuGetHelper
-      #   uses: actions/download-artifact@v2
-      #   with:
-      #     name: NewRelic.NuGetHelper
-      #     path: build/NewRelic.NuGetHelper/bin
-      
       - name: Download NewRelic.Agent.Extensions
         uses: actions/download-artifact@v2
         with:
           name: NewRelic.Agent.Extensions
           path: src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions/bin/Release
-
-      - name: Download NewRelic.OpenTracing.AmazonLambda.Tracer
-        uses: actions/download-artifact@v2
-        with:
-          name: NewRelic.OpenTracing.AmazonLambda.Tracer
-          path: src/AwsLambda/AwsLambdaOpenTracer/bin/Release/netstandard2.0-ILRepacked
 
       - name: Run ArtifactBuilder
         run: |
