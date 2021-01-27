@@ -494,7 +494,7 @@ namespace BasicMvcApplication.Controllers
             //var msSqlDatabase = new DatabaseProviderFactory().Create("MSSQLConnection");
             var msSqlDatabase = new SqlDatabase(MsSqlConfiguration.MsSqlConnectionString);
 
-            using (var reader = msSqlDatabase.ExecuteReader(CommandType.Text, "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'Matthew'"))
+            using (var reader = msSqlDatabase.ExecuteReader(CommandType.Text, "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'"))
             {
                 while (reader.Read())
                 {
