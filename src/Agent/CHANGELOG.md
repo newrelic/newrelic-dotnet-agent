@@ -6,13 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
-* **Improvements to New Relic Edge (Infinite Tracing)** <br/>
-  * The agent will now handle having its infinite tracing traffic moved from one backend host to another without losing data or requiring an agent restart.
-  * Improved logging of infinite tracing connections.
+* **New Features Template** <br/>
 
 ### Fixes
 * **New Fixes Template** <br/>
 New Fixes Description
+
+## [8.38] - 2021-01-26
+### New Features
+* **Improvements to New Relic Edge (Infinite Tracing)** <br/>
+  * The agent will now handle having its infinite tracing traffic moved from one backend host to another without losing data or requiring an agent restart.
+  * Improved logging of infinite tracing connections.
 
 ## [8.37] - 2021-01-04
 ### New Features
@@ -246,8 +250,9 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.37.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.38.0...HEAD
 
+[8.38]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.37.0...v8.38.0
 [8.37]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.36.0...v8.37.0
 [8.36]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.35.0...v8.36.0
 [8.35]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.34.0...v8.35.0
