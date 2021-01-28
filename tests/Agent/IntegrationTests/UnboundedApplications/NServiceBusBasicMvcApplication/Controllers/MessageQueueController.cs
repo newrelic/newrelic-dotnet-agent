@@ -16,7 +16,7 @@ namespace NServiceBusBasicMvcApplication.Controllers
             var message = new SampleNServiceBusMessage(new Random().Next(), "Foo bar");
 
             // Send the message. In this case we've hardcoded the recipient, but we could also use the web config to specify implicit recipients
-            MvcApplication.Bus.Send("NServiceBusReceiver", message);
+            MvcApplication.Bus.Send("NServiceBusReceiverHost", message);
 
             return string.Format("Message with ID={0} sent via NServiceBus", message.Id);
         }
