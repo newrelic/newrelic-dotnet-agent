@@ -9,6 +9,9 @@ namespace NServiceBusBasicMvcApplication.Controllers
 {
     public class MessageQueueController : Controller
     {
+
+        private const string DestinationReceiverHost = "NServiceBusReceiverHost";
+
         [HttpGet]
         public string NServiceBus_Send()
         {
@@ -16,7 +19,7 @@ namespace NServiceBusBasicMvcApplication.Controllers
             var message = new SampleNServiceBusMessage(new Random().Next(), "Foo bar");
 
             // Send the message. In this case we've hardcoded the recipient, but we could also use the web config to specify implicit recipients
-            MvcApplication.Bus.Send("NServiceBusReceiverHost", message);
+            MvcApplication.Bus.Send(DestinationReceiverHost, message);
 
             return string.Format("Message with ID={0} sent via NServiceBus", message.Id);
         }
@@ -28,7 +31,7 @@ namespace NServiceBusBasicMvcApplication.Controllers
             var message = new SampleNServiceBusMessage2(new Random().Next(), "Valid");
 
             // Send the message. In this case we've hardcoded the recipient, but we could also use the web config to specify implicit recipients
-            MvcApplication.Bus.Send("NServiceBusReceiverHost", message);
+            MvcApplication.Bus.Send(DestinationReceiverHost, message);
 
             return string.Format("Message with ID={0} sent via NServiceBus", message.Id);
         }
@@ -40,7 +43,7 @@ namespace NServiceBusBasicMvcApplication.Controllers
             var message = new SampleNServiceBusMessage2(new Random().Next(), "Invalid", false);
 
             // Send the message. In this case we've hardcoded the recipient, but we could also use the web config to specify implicit recipients
-            MvcApplication.Bus.Send("NServiceBusReceiverHost", message);
+            MvcApplication.Bus.Send(DestinationReceiverHost, message);
 
             return string.Format("Message with ID={0} sent via NServiceBus", message.Id);
         }
