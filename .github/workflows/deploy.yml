@@ -48,13 +48,6 @@ jobs:
           path: ${{ github.workspace }}/build/BuildArtifacts
           if-no-files-found: error
 
-      - name: Upload Deploy Tooling Locally
-        uses: actions/upload-artifact@v2
-        with:
-          name: deploy-tooling
-          path: ${{ github.workspace }}/deploy/
-          if-no-files-found: error
-
   deploy-downloadsite:
     needs: get-external-artifacts
     if: ${{ github.event.inputs.downloadsite == 'true' }}
