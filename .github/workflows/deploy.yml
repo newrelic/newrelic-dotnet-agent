@@ -111,20 +111,6 @@ jobs:
           nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
         shell: pwsh
 
-      - name: Deploy Agent to Nuget
-        run: |
-          $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgent\NewRelic.Agent.*.nupkg -Name
-          $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgent\$packageName
-          $version = $packageName.TrimStart('NewRelic.Agent').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
-          }
-          else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
-          }
-        shell: powershell
-
       - name: Deploy Agent API to Nuget
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgentApi\NewRelic.Agent.Api.*.nupkg -Name
