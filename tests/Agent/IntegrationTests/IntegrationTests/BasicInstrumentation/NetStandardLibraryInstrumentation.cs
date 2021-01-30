@@ -22,9 +22,9 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
     }
 
     [NetCoreTest]
-    public class NetStandardLibraryInstrumentationNetCore : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureCoreLatest>
+    public class NetStandardLibraryInstrumentationNetCore : NetStandardLibraryInstrumentation<ConsoleDynamicMethodFixtureCore31>
     {
-        public NetStandardLibraryInstrumentationNetCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public NetStandardLibraryInstrumentationNetCore(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }

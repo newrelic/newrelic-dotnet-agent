@@ -21,9 +21,9 @@ namespace NewRelic.Agent.IntegrationTests.Api
     }
 
     [NetCoreTest]
-    public class ApiCallsTestsCore : ApiCallsTests<ConsoleDynamicMethodFixtureCoreLatest>
+    public class ApiCallsTestsCore : ApiCallsTests<ConsoleDynamicMethodFixtureCore31>
     {
-        public ApiCallsTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public ApiCallsTestsCore(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

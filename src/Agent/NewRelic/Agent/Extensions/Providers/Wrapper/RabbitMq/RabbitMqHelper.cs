@@ -79,7 +79,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
 
             //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
-            if (basicProperties.GetType().ToString() != BasicPropertiesType)
+            if (basicProperties.GetType().FullName != BasicPropertiesType)
             {
                 return segment;
             }
@@ -112,8 +112,9 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
 
             //If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
-            if (basicProperties.GetType().ToString() != BasicPropertiesType)
+            if (basicProperties.GetType().FullName != BasicPropertiesType)
             {
+                
                 return segment;
             }
 

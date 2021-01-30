@@ -71,6 +71,7 @@ namespace NewRelic.Agent.Configuration
         string InfiniteTracingTraceObserverPort { get; }
         string InfiniteTracingTraceObserverSsl { get; }
         float? InfiniteTracingTraceObserverTestFlaky { get; }
+        int? InfiniteTracingTraceObserverTestFlakyCode { get; }
         int? InfiniteTracingTraceObserverTestDelayMs { get; }
         int InfiniteTracingQueueSizeSpans { get; }
         int InfiniteTracingPartitionCountSpans { get; }

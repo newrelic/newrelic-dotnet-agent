@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 * **New Features Template** <br/>
-New Features Description
 
 ### Fixes
 * **New Fixes Template** <br/>
 New Fixes Description
+
+## [8.38] - 2021-01-26
+### New Features
+* **Improvements to New Relic Edge (Infinite Tracing)** <br/>
+  * The agent will now handle having its infinite tracing traffic moved from one backend host to another without losing data or requiring an agent restart.
+  * Improved logging of infinite tracing connections.
 
 ## [8.37] - 2021-01-04
 ### New Features
@@ -104,7 +109,7 @@ Fixes an issue where `newrelic.config` was being overwritten when upgrading the 
 ## [8.30] - 2020-07-15
 ### New Features
 * **The .NET Agent is now open source!** <br/>
-The New Relic .NET agent is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in this repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](/CODE_OF_CONDUCT.md) for details on contributing!
+The New Relic .NET agent is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in this repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](https://opensource.newrelic.com/code-of-conduct/) for details on contributing!
 
 ### Fixes
 * **Memory Usage Reporting for Linux** <br/>
@@ -245,8 +250,9 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.37.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.38.0...HEAD
 
+[8.38]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.37.0...v8.38.0
 [8.37]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.36.0...v8.37.0
 [8.36]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.35.0...v8.36.0
 [8.35]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.34.0...v8.35.0

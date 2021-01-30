@@ -1051,6 +1051,15 @@ namespace NewRelic.Agent.Core.Configuration
                 _infiniteTracingObserverTestFlaky = TryGetAppSettingAsFloat("InfiniteTracingSpanEventsTestFlaky");
             }
 
+            if (int.TryParse(_environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY_CODE"), out var flakyCodeVal))
+            {
+                _infiniteTracingObserverTestFlakyCode = flakyCodeVal;
+            }
+            else
+            {
+                _infiniteTracingObserverTestFlakyCode = TryGetAppSettingAsInt("InfiniteTracingSpanEventsTestFlakyCode");
+            }
+
             if (int.TryParse(_environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_DELAY"), out var delayVal))
             {
                 _infiniteTracingObserverTestDelayMs = delayVal;
@@ -1074,6 +1083,20 @@ namespace NewRelic.Agent.Core.Configuration
                 }
 
                 return _infiniteTracingObserverTestFlaky;
+            }
+        }
+
+        private int? _infiniteTracingObserverTestFlakyCode;
+        public int? InfiniteTracingTraceObserverTestFlakyCode
+        {
+            get
+            {
+                if (!_infiniteTracingObtainedSettingsForTest)
+                {
+                    GetInfiniteTracingFlakyAndDelayTestSettings();
+                }
+
+                return _infiniteTracingObserverTestFlakyCode;
             }
         }
 
