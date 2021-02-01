@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using System.Linq;
 using Xunit;
@@ -13,9 +13,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 {
 
     [NetFrameworkTest]
-    public class DotNetPerfMetricsTestsFW : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureFW>
+    public class DotNetPerfMetricsTestsFW : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public DotNetPerfMetricsTestsFW(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output)
+        public DotNetPerfMetricsTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
@@ -75,9 +75,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
     }
 
     [NetCoreTest]
-    public class DotNetPerfMetricsTestsCoreLatest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCoreLatest>
+    public class DotNetPerfMetricsTestsCoreLatest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCore31>
     {
-        public DotNetPerfMetricsTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public DotNetPerfMetricsTestsCoreLatest(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

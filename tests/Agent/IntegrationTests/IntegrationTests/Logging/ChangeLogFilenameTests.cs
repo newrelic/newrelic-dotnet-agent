@@ -10,14 +10,32 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Logging
 {
     [NetFrameworkTest]
-    public class ChangeLogFilenameTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public abstract class ChangeLogFilenameTestsBase : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public ChangeLogFilenameTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
+        public enum ConfigSettingTestCase
+        {
+            ConfigFile,
+            EnvVar,
+            Both
+        }
+
+        protected ConfigSettingTestCase _testCase;
+
+        private const string CustomLogFileNameFromConfigBase = "customLogFileName";
+        private const string CustomLogFileNameFromConfig = CustomLogFileNameFromConfigBase + ".log";
+        private const string CustomAuditLogFileNameFromConfig = CustomLogFileNameFromConfigBase + "_audit.log";
+
+        private const string CustomLogFileNameFromEnvVarBase = "customLogFileNameFromEnvVar";
+        private const string CustomLogFileNameFromEnvVar = CustomLogFileNameFromEnvVarBase + ".log";
+        private const string CustomAuditLogFileNameFromEnvVar = CustomLogFileNameFromEnvVarBase + "_audit.log";
+
+        public ChangeLogFilenameTestsBase(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output, ConfigSettingTestCase testCase) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
+            _testCase = testCase;
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -27,7 +45,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     configModifier.ForceTransactionTraces();
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "info");
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "fileName", "dotNetAgent.log");
+                    if (_testCase == ConfigSettingTestCase.ConfigFile || _testCase == ConfigSettingTestCase.Both)
+                    {
+                        CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "fileName", CustomLogFileNameFromConfig);
+                    }
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "auditLog", "true");
                 },
                 exerciseApplication: () =>
@@ -35,14 +56,43 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     _fixture.Get();
                 }
             );
+            if (_testCase == ConfigSettingTestCase.EnvVar || _testCase == ConfigSettingTestCase.Both)
+            {
+                _fixture.SetAdditionalEnvironmentVariable("NEW_RELIC_LOG", CustomLogFileNameFromEnvVar);
+            }
             _fixture.Initialize();
         }
 
         [Fact]
         public void Test()
         {
-            File.Exists(Path.Combine(_fixture.DestinationNewRelicLogFileDirectoryPath, "dotNetAgent.log"));
-            File.Exists(Path.Combine(_fixture.DestinationNewRelicLogFileDirectoryPath, "dotNetAgent_audit.log"));
+            var expectedLogFileName = (_testCase == ConfigSettingTestCase.EnvVar || _testCase == ConfigSettingTestCase.Both) ? CustomLogFileNameFromEnvVar : CustomLogFileNameFromConfig;
+            var expectedAuditLogFileName = (_testCase == ConfigSettingTestCase.EnvVar || _testCase == ConfigSettingTestCase.Both) ? CustomAuditLogFileNameFromEnvVar : CustomAuditLogFileNameFromConfig;
+
+            Assert.True(File.Exists(Path.Combine(_fixture.DestinationNewRelicLogFileDirectoryPath, expectedLogFileName)));
+            Assert.True(File.Exists(Path.Combine(_fixture.DestinationNewRelicLogFileDirectoryPath, expectedAuditLogFileName)));
         }
     }
+
+    public class ChangeLogFilenameInConfigTests : ChangeLogFilenameTestsBase
+    {
+        public ChangeLogFilenameInConfigTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output, ConfigSettingTestCase.ConfigFile)
+        {
+        }
+    }
+
+    public class ChangeLogFilenameWithEnvVarTests : ChangeLogFilenameTestsBase
+    {
+        public ChangeLogFilenameWithEnvVarTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output, ConfigSettingTestCase.EnvVar)
+        {
+        }
+    }
+
+    public class ChangeLogFilenameInBothTests : ChangeLogFilenameTestsBase
+    {
+        public ChangeLogFilenameInBothTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output, ConfigSettingTestCase.Both)
+        {
+        }
+    }
+
 }

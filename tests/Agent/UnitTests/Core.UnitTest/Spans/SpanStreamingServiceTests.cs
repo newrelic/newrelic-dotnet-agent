@@ -21,7 +21,6 @@ using NewRelic.Collections;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Time;
 using NewRelic.SystemInterfaces;
-using NewRelic.Agent.Core.SharedInterfaces;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
@@ -259,34 +258,34 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
-			var signalIsDone = new ManualResetEventSlim();
-			var countSends = 0;
+            var signalIsDone = new ManualResetEventSlim();
+            var countSends = 0;
 
-			_grpcWrapper.WithIsConnectedImpl = () => isChannelConnected;
+            _grpcWrapper.WithIsConnectedImpl = () => isChannelConnected;
             _grpcWrapper.WithTrySendDataImpl = (requestStream, request, timeoutMs, CancellationToken) =>
             {
-				countSends++;
-				if(countSends > 1)
+                countSends++;
+                if(countSends > 1)
                 {
-					signalIsDone.Set();
+                    signalIsDone.Set();
                 }
 
-				return true;
+                return true;
             };
 
-			if(!isServiceEnabled || !isChannelConnected)
+            if(!isServiceEnabled || !isChannelConnected)
             {
-				signalIsDone.Set();
-			}
+                signalIsDone.Set();
+            }
 
             var collection = new PartitionedBlockingCollection<TRequest>(10, 3);
-			collection.TryAdd(GetRequestModel());
-			collection.TryAdd(GetRequestModel());
-			collection.TryAdd(GetRequestModel());
+            collection.TryAdd(GetRequestModel());
+            collection.TryAdd(GetRequestModel());
+            collection.TryAdd(GetRequestModel());
 
-			_streamingSvc.StartConsumingCollection(collection);
+            _streamingSvc.StartConsumingCollection(collection);
 
-			Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(5)));
+            Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(5)));
             Assert.AreEqual(expectedIsServiceAvailable, _streamingSvc.IsServiceAvailable, $"If IsServiceEnabled={isServiceEnabled} and IsGrpcChannelConnected={isChannelConnected}, IsServiceAvailable should be {expectedIsServiceAvailable}");
         }
 
@@ -1325,8 +1324,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             );
         }
 
-        [Test]
-        public void GrpcUnavailableDuringTrySendDataRestartsService()
+        [TestCase(StatusCode.Unavailable)]
+        [TestCase(StatusCode.FailedPrecondition)]
+        public void GrpcUnavailableOrFailedPreconditionDuringTrySendDataRestartsService(StatusCode statusCode)
         {
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
@@ -1373,7 +1373,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 if (localInvocationId == 1)
                 {
-                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unavailable, "Test gRPC Exception");
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(statusCode, "Test gRPC Exception");
                     return false;
                 }
 
@@ -1471,8 +1471,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             );
         }
 
-        [Test]
-        public void GrpcUnavailableDuringCreateStreamRestartsService()
+        [TestCase(StatusCode.Unavailable)]
+        [TestCase(StatusCode.FailedPrecondition)]
+        public void GrpcUnavailableOrFailedPreconditionDuringCreateStreamRestartsService(StatusCode grpcStatusCode)
         {
             var actualDelays = new List<int>();
 
@@ -1519,7 +1520,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 if (countCreateStreamsCalls == 1)
                 {
-                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unavailable, "Test gRPC Exception");
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(grpcStatusCode, "Test gRPC Exception");
                     return null;
                 }
 
@@ -1551,8 +1552,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             );
         }
 
-        [Test]
-        public void GrpcOkDuringTrySendDataCreatesNewStreamImmediately()
+        [TestCase(StatusCode.OK)]
+        [TestCase(StatusCode.Internal)]
+        public void GrpcOkOrInternalDuringTrySendDataCreatesNewStreamImmediately(StatusCode statusCode)
         {
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
@@ -1599,13 +1601,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 if (localInvocationId < 2 || localInvocationId == 3)
                 {
-                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Internal, "Test gRPC Exception");
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unknown, "Test gRPC Exception");
                     return false;
                 }
 
                 if (localInvocationId == 2)
                 {
-                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.OK, "Test gRPC Exception");
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(statusCode, "Test gRPC Exception");
                     return false;
                 }
 
@@ -1725,7 +1727,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 if (countCreateStreamsCalls < 4 || countCreateStreamsCalls == 5)
                 {
-                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Internal, "Test gRPC Exception");
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unknown, "Test gRPC Exception");
                     return null;
                 }
 

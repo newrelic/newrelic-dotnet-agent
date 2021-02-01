@@ -6,7 +6,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using NewRelic.Agent.IntegrationTests.ApplicationHelpers;
+using NewRelic.Agent.IntegrationTests.Shared.Util;
 
 namespace AspNetCoreMvcCoreFrameworkApplication
 {

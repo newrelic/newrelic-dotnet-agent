@@ -1,0 +1,30 @@
+Dir {
+  ArchiveDir ".";
+  CacheDir ".";
+};
+
+Default::Packages {
+  Extensions ".deb";
+  Compress ". gzip bzip2";
+};
+
+Default::Sources::Compress "gzip bzip2";
+Default::Contents::Compress "gzip bzip2";
+
+BinDirectory "dists/@TARGETREPO@/non-free/binary-amd64" {
+  Packages "dists/@TARGETREPO@/non-free/binary-amd64/Packages";
+  Contents "dists/@TARGETREPO@/Contents-amd64";
+  SrcPackages "dists/@TARGETREPO@/non-free/source/Sources";
+};
+
+BinDirectory "dists/@TARGETREPO@/non-free/binary-i386" {
+  Packages "dists/@TARGETREPO@/non-free/binary-i386/Packages";
+  Contents "dists/@TARGETREPO@/Contents-i386";
+  SrcPackages "dists/@TARGETREPO@/non-free/source/Sources";
+};
+
+Tree "dists/@TARGETREPO@" {
+  Sections "non-free";
+  Architectures "i386 amd64";
+};
+

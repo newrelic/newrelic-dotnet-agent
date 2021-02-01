@@ -1,0 +1,293 @@
+name: Deploy the .NET Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent_version:
+        description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        required: true
+      run_id:
+        description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
+        required: true
+      deploy:
+        description: 'If "true", deploy the artifacts. If "false", do everything except deploy.'
+        required: true
+        default: 'false'
+      downloadsite:
+        description: 'If "true", will run the deploy-downloadsite job. If "false", will not.'
+        required: true
+        default: 'true'
+      nuget:
+        description: 'If "true", will run the deploy-nuget job. If "false", will not.'
+        required: true
+        default: 'true'
+      linux:
+        description: 'If "true", will run the deploy-linux job. If "false", will not.'
+        required: true
+        default: 'true'
+
+env:
+  DOTNET_NOLOGO: true
+
+jobs:
+
+  get-external-artifacts:
+    name: Get and Publish Deploy Artifacts Locally
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Deploy Artifacts
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: all_solutions.yml
+          run_id: ${{ github.event.inputs.run_id }}
+          name: deploy-artifacts
+          path: ${{ github.workspace }}
+          repo: ${{ github.repository }}
+      
+      - name: Upload Deploy Artifacts Locally
+        uses: actions/upload-artifact@v2
+        with:
+          name: deploy-artifacts
+          path: ${{ github.workspace }}/build/BuildArtifacts
+          if-no-files-found: error
+
+      - name: Upload Deploy Tooling Locally
+        uses: actions/upload-artifact@v2
+        with:
+          name: deploy-tooling
+          path: ${{ github.workspace }}/deploy/
+          if-no-files-found: error
+
+  deploy-downloadsite:
+    needs: get-external-artifacts
+    if: ${{ github.event.inputs.downloadsite == 'true' }}
+    name: Deploy MSI and Scriptable to Download Site
+    runs-on: windows-2019
+
+    steps:
+      - name: Download Deploy Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: deploy-artifacts
+          path: ${{ github.workspace }}\staging_dir
+
+      - name: Move Artifacts to working_dir
+        run: |
+          Copy-Item -Path .\staging_dir\DownloadSite -Destination .\working_dir -Recurse
+        shell: powershell
+
+      - name: Create Version-less Installers
+        run: |
+          Copy-Item .\working_dir\newrelic-agent-win-x64-*.msi .\working_dir\NewRelicDotNetAgent_x64.msi -Force -Recurse
+          Copy-Item .\working_dir\newrelic-agent-win-x86-*.msi .\working_dir\NewRelicDotNetAgent_x86.msi -Force -Recurse
+          Copy-Item .\working_dir\newrelic-agent-*-scriptable-installer.zip .\working_dir\NewRelic.Agent.Installer.zip -Force -Recurse
+        shell: powershell
+
+      - name: Deploy latest_release to Download Site
+        run: |
+          $Env:AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          $Env:AWS_DEFAULT_REGION="us-west-2"
+          New-Item -ItemType directory -Path .\latest_release -Force
+          Copy-Item .\working_dir\* .\latest_release\ -Force -Recurse
+          cd .\latest_release
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include `"*`" --exclude `".DS_Store`" --delete"
+          }
+        shell: pwsh
+
+      - name: Deploy previous_release to Download Site
+        run: |
+          $Env:AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          $Env:AWS_DEFAULT_REGION="us-west-2"
+          New-Item -ItemType directory -Path .\previous_releases\${{ github.event.inputs.agent_version }} -Force
+          Copy-Item .\working_dir\* ".\previous_releases\${{ github.event.inputs.agent_version }}\" -Force -Recurse
+          cd .\previous_releases\${{ github.event.inputs.agent_version }}
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include "*" --exclude ".DS_Store" --delete
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
+          }
+        shell: pwsh
+
+  deploy-nuget:
+    needs: get-external-artifacts
+    if: ${{ github.event.inputs.nuget == 'true' }}
+    name: Deploy Agent to NuGet
+    runs-on: windows-2019
+
+    env:
+      nuget_source: https://www.nuget.org
+
+    steps:
+      - name: Download Deploy Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: deploy-artifacts
+          path: ${{ github.workspace }}\working_dir
+
+      - name: Setup NuGet API Key
+        run: |
+          nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
+        shell: pwsh
+
+      - name: Deploy Agent to Nuget
+        run: |
+          $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgent\NewRelic.Agent.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgent\$packageName
+          $version = $packageName.TrimStart('NewRelic.Agent').TrimStart('.').TrimEnd('.nupkg')
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+          }
+        shell: powershell
+
+      - name: Deploy Agent API to Nuget
+        run: |
+          $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgentApi\NewRelic.Agent.Api.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgentApi\$packageName
+          $version = $packageName.TrimStart('NewRelic.Agent.Api').TrimStart('.').TrimEnd('.nupkg')
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+          }
+        shell: powershell
+
+      - name: Deploy Azure Cloud Services to Nuget
+        run: |
+          $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureCloudServices\NewRelicWindowsAzure.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureCloudServices\$packageName
+          $version = $packageName.TrimStart('NewRelicWindowsAzure').TrimStart('.').TrimEnd('.nupkg')
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+          }
+        shell: powershell
+
+      - name: Deploy Azure WebSites-x64 to Nuget
+        run: |
+          $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\NewRelic.Azure.WebSites.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\$packageName
+          $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+          }
+        shell: powershell
+
+      - name: Deploy Azure WebSites-x86 to Nuget
+        run: |
+          $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\NewRelic.Azure.WebSites.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\$packageName
+          $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+          }
+        shell: powershell
+
+  deploy-linux:
+    needs: get-external-artifacts
+    if: ${{ github.event.inputs.linux == 'true' }}
+    name: Deploy Linux to APT and YUM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dos2unix
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y dos2unix
+        shell: bash
+        
+      - name: Download Deploy Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: deploy-artifacts
+          path: ${{ github.workspace }}/
+
+      - name: Download Deploy Tooling
+        uses: actions/download-artifact@v2
+        with:
+          name: deploy-tooling
+          path: ${{ github.workspace }}/deploy
+
+      - name: Get GPG Key
+        id: write_gpgkey
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: 'gpg.tar.bz2'
+          encodedString: ${{ secrets.GPG_KEY }}
+
+      - name: Move Artifacts and GPG Key to Staging Location
+        run: |
+          cp LinuxRpm/*.rpm ${{ github.workspace }}/deploy/linux/packages
+          cp LinuxDeb/*.deb ${{ github.workspace }}/deploy/linux/packages
+          cp -f ${{ steps.write_gpgkey.outputs.filePath }} ${{ github.workspace }}/deploy/linux/deploy_scripts/gpg.tar.bz2
+        shell: bash
+
+      - name: Prepare docker.env
+        run: |
+          # Confirm that the version is in the proper format.
+          IFS='.' read -ra agent_version_array <<< "${{ github.event.inputs.agent_version }}"
+          agent_version_count=${#agent_version_array[@]}
+          if [ $agent_version_count -lt 3 ] || [ $agent_version_count -gt 4 ] ; then
+            echo "::error Supplied agent version from Workflow (${{ github.event.inputs.agent_version }}) is malformed.  It needs to be like 8.29.0 or 8.29.0.0"
+            exit 1
+          elif [ $agent_version_count -eq 4 ] ; then
+            AGENT_VERSION=${{ github.event.inputs.agent_version }}
+          else
+            AGENT_VERSION=${{ github.event.inputs.agent_version }}.0
+          fi
+
+          # Build the docker.env
+          cd ${{ github.workspace }}/deploy/linux/
+          touch docker.env
+          echo "AGENT_VERSION=$AGENT_VERSION" >> docker.env
+          echo "ACTION=release" >> docker.env
+          echo "S3_BUCKET=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}" >> docker.env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}" >> docker.env
+          echo "GPG_KEYS=/deployscripts/gpg.tar.bz2" >> docker.env
+          echo "PROD_MAIN_S3=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
+          echo "PROD_TEST_S3=${{ secrets.PROD_TEST_S3 }}" >> docker.env
+          echo "TEST_TEST_S3=${{ secrets.TEST_TEST_S3 }}" >> docker.env
+          echo "TEST_PRIV_S3=${{ secrets.TEST_PRIV_S3 }}" >> docker.env
+        shell: bash
+
+      - name: Build and Run Container
+        run: |
+          cd ${{ github.workspace }}/deploy/linux/
+          find . -name "*.bash" |xargs chmod a+x
+          find . -type f |xargs dos2unix
+          docker-compose build
+          if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
+            docker-compose run deploy_packages
+          else
+            echo "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            echo "docker-compose run deploy_packages"
+          fi
+        shell: bash
+
+        

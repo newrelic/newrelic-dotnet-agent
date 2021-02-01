@@ -504,6 +504,25 @@ namespace NewRelic.Agent.Core.Api
         /// </code></example>
         public string GetBrowserTimingHeader(string? nonce)
         {
+            return GetBrowserTimingHeader(null);
+        }
+
+        /// <summary> Returns the HTML snippet to be inserted into the header of HTML pages to enable Real
+        /// User Monitoring. The HTML will instruct the browser to fetch a small JavaScript file and
+        /// start the page timer. Supports web applications only. </summary>
+        ///
+        /// <returns> An HTML string to be embedded in a page header. </returns>
+        ///
+        /// <example> <code>
+        /// &lt;html&gt;
+        ///   &lt;head&gt;
+        ///     &lt;&#37;= NewRelic.Api.Agent.NewRelic.GetBrowserTimingHeader("random-nonce")&#37;&gt;
+        ///   &lt;/head&gt;
+        ///   &lt;body&gt;
+        ///   ...
+        /// </code></example>
+        public string GetBrowserTimingHeader(string? nonce)
+        {
             using (new IgnoreWork())
             {
                 var transaction = TryGetCurrentInternalTransaction();

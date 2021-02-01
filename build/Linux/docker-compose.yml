@@ -1,41 +1,42 @@
-build_deb: 
-    build: ./build/deb 
-    command: bash -c "dos2unix /deb/build.sh && /deb/build.sh"
-    volumes: 
-        - ../../src/_build/CoreArtifacts:/release
-        - ../../src/Agent:/data
-        - ../../src/Agent/Miscellaneous:/docs
-        - ./build/deb:/deb
-        - ./build/common:/common
-    working_dir: /data
+version: "3.8"
+services:
+    build_deb: 
+        build: ./build/deb 
+        command: bash -c "dos2unix /deb/build.sh && chmod 755 -R /deb && chmod 777 /deb/build.sh && /deb/build.sh"
+        volumes: 
+            - ../../src/_build/CoreArtifacts:/release
+            - ../../src/Agent:/data
+            - ../../src/Agent/Miscellaneous:/docs
+            - ./build/deb:/deb
+            - ./build/common:/common
+        working_dir: /data
 
-build_rpm: 
-    build: ./build/rpm
-    command: bash -c "dos2unix /rpm/build.sh && /rpm/build.sh"
-    volumes: 
-        - ../../src/_build/CoreArtifacts:/release
-        - ../../src/Agent:/data
-        - ../../src/Agent/Miscellaneous:/docs
-        - ./build/rpm:/rpm
-        - ./build/common:/common
-        - ./keys:/keys
-    working_dir: /data
+    build_rpm: 
+        build: ./build/rpm
+        command: bash -c "dos2unix /rpm/build.sh && chmod 777 /rpm/build.sh && /rpm/build.sh"
+        volumes: 
+            - ../../src/_build/CoreArtifacts:/release
+            - ../../src/Agent:/data
+            - ../../src/Agent/Miscellaneous:/docs
+            - ./build/rpm:/rpm
+            - ./build/common:/common
+            - ./keys:/keys
+        working_dir: /data
 
-test_debian: 
-    build: ./test/distros/debian
-    command: bash -c "dos2unix /test/test.sh &>/dev/null && /test/test.sh"
-    volumes:
-        - ../../src/_build/CoreArtifacts:/release
-        - ./test/scripts:/test
-        - ./test/applications:/apps
-    working_dir: /data
+    test_debian: 
+        build: ./test/distros/debian
+        command: bash -c "dos2unix /test/test.sh &>/dev/null && chmod 777 /test/test.sh && /test/test.sh"
+        volumes:
+            - ../../src/_build/CoreArtifacts:/release
+            - ./test/scripts:/test
+            - ./test/applications:/apps
+        working_dir: /data
 
-test_centos: 
-    build: ./test/distros/centos
-    command: bash -c "dos2unix /test/test.sh &>/dev/null && /test/test.sh"
-    volumes:
-        - ../../src/_build/CoreArtifacts:/release
-        - ./test/scripts:/test
-        - ./test/applications:/apps
-    working_dir: /data
-
+    test_centos: 
+        build: ./test/distros/centos
+        command: bash -c "dos2unix /test/test.sh &>/dev/null && chmod 777 /test/test.sh && /test/test.sh"
+        volumes:
+            - ../../src/_build/CoreArtifacts:/release
+            - ./test/scripts:/test
+            - ./test/applications:/apps
+        working_dir: /data

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using System;
 using Xunit;
@@ -46,11 +46,11 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
     /// This makes troubleshooting a bit more difficult since you have to dig through the output for the test and find the failures.
     /// </summary>
     [NetFrameworkTest]
-    public class W3CValidation : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW>
+    public class W3CValidation : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
     {
-        protected readonly ConsoleDynamicMethodFixtureFW _fixture;
+        protected readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
 
-        public W3CValidation(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output) : base(fixture)
+        public W3CValidation(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

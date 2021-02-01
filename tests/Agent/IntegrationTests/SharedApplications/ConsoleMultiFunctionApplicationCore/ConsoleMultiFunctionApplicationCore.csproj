@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;netcoreapp3.1;net5.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NewRelic.Agent.Api" Version="8.36.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\MultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj" />
+    <ProjectReference Include="..\Common\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
+  </ItemGroup>
+
+</Project>

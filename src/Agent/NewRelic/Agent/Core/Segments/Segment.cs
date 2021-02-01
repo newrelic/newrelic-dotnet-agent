@@ -81,6 +81,9 @@ namespace NewRelic.Agent.Core.Segments
 
         public bool IsValid => true;
         public bool DurationShouldBeDeductedFromParent { get; set; } = false;
+
+        public bool AlwaysDeductChildDuration { private get; set; } = false;
+
         public bool IsLeaf { get; set; }
         public bool IsExternal => Data.SpanCategory == SpanCategory.Http;
 
@@ -257,7 +260,7 @@ namespace NewRelic.Agent.Core.Segments
 
             var childExecutedSynchronously = ThreadId == _transactionSegmentState.CurrentManagedThreadId;
 
-            if (!childSegment._parentNotified && (childExecutedSynchronously || childSegment.DurationShouldBeDeductedFromParent))
+            if (!childSegment._parentNotified && (childExecutedSynchronously || AlwaysDeductChildDuration || childSegment.DurationShouldBeDeductedFromParent))
             {
                 childSegment._parentNotified = true;
                 Interlocked.Add(ref _childDurationTicks, childSegment.DurationOrZero.Ticks);

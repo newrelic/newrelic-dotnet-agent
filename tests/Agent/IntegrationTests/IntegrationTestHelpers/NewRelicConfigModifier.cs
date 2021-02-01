@@ -4,8 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Messaging;
-using Couchbase.N1QL;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -103,6 +101,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public NewRelicConfigModifier AddExpectedStatusCodes(string statusCodes)
         {
             CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "errorCollector"}, "expectedStatusCodes", statusCodes );
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableDistributedTrace()
+        {
+            SetOrDeleteDistributedTraceEnabled(true);
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableInfinteTracing(string traceObserverUrl)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
+               new[] { "configuration", "infiniteTracing", "trace_observer" }, "host", traceObserverUrl);
             return this;
         }
 

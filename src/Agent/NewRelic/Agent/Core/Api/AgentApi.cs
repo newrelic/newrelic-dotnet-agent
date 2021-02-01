@@ -468,7 +468,7 @@ namespace NewRelic.Agent.Core
         {
             const ApiMethod apiMetric = ApiMethod.GetBrowserTimingHeader;
             const string apiName = nameof(GetBrowserTimingHeader);
-            return TryInvoke(() => InternalApi.GetBrowserTimingHeader(null), apiName, apiMetric) ?? string.Empty;
+            return TryInvoke(() => InternalApi.GetBrowserTimingHeader(), apiName, apiMetric) ?? string.Empty;
         }
 
         /// <summary>

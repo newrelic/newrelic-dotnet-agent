@@ -55,7 +55,7 @@ The Profiler.sln builds the native profiler component of the .NET agent. The pro
 
 As mentioned above, this solution does not need to be built if you will only be working with the agent's managed C# code. Pre-built versions of the profiler for both Windows (x86 and x64) and Linux (x64) are checked into the repository (src/Agent/_profilerBuild) and are used for creating the home directories built by the FullAgent.sln. These pre-built versions are for development purposes only, and should be updated if you do work on the profiler.
 
-You can use a Powershell [script](/src/Agent/NewRelic/Profiler/build/build.ps1) to build the profiler.
+You can use a Powershell [script](../src/Agent/NewRelic/Profiler/build/build.ps1) to build the profiler.
 
 The script uses the following syntax:
 ```
@@ -81,7 +81,7 @@ build.ps1
 ## Testing
 
 * Unit tests use the NUnit framework and are contained in the solutions. Run them using the Visual Studio Test Explorer.
-* There is a suite of [integration tests](./integration-tests.md). Refer to the separate documentation for setting up an environment to run the integration tests. Some integration tests require you to set up additional infrastructure (e.g., databases) and are therefore not easily run.
+* There is a suite of [integration tests](integration-tests.md). Refer to the separate documentation for setting up an environment to run the integration tests. Some integration tests require you to set up additional infrastructure (e.g., databases) and are therefore not easily run.
 
 ## Packaging
 

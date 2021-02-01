@@ -2,33 +2,32 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using MultiFunctionApplicationHelpers;
+using NewRelic.Agent.IntegrationTestHelpers;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures;
-using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
-    [NetFrameworkTest]
-    public class RabbitMqDistributedTracingTests : NewRelicIntegrationTest<RemoteServiceFixtures.RabbitMqBasicMvcFixture>
+    public abstract class RabbitMqDistributedTracingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
     {
-        // regex for payload
-        private const string PayloadRegex = "{\"v\":\\[\\d,\\d\\],\"d\":{\"ty\":\"App\",\"ac\":\"\\d{1,9}\",\"ap\":\"\\d{1,9}\",\"tr\":\"\\w{16,32}\",\"pr\":\\d.\\d{5,6},\"sa\":true,\"ti\":\\d{10,16},\"tk\":\"\\w{0,16}\",\"tx\":\"\\w{16,16}\",\"id\":\"\\w{16,16}\"}}";
+        private readonly string _sendReceiveQueue = $"integrationTestQueue-{Guid.NewGuid()}";
+        private ConsoleDynamicMethodFixture _fixture;
 
-        private bool _headerExists;
-        private string _headerValue;
-        private RabbitMqBasicMvcFixture _fixture;
-
-        public RabbitMqDistributedTracingTests(RemoteServiceFixtures.RabbitMqBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public RabbitMqDistributedTracingTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             fixture.TestLogger = output;
+
+            _fixture.AddCommand($"RabbitMQ SendReceive {_sendReceiveQueue} TestMessage");
+            _fixture.AddCommand($"RabbitMQ SendReceiveWithEventingConsumer {_sendReceiveQueue} EventingConsumerTestMessage");
+            // This is needed to avoid a hang on shutdown in the test app
+            _fixture.AddCommand("RabbitMQ Shutdown");
+
             fixture.Actions
             (
                 setupConfiguration: () =>
@@ -38,12 +37,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 
                     configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.SetOrDeleteSpanEventsEnabled(true);
-                },
-                exerciseApplication: () =>
-                {
-                    _headerExists = fixture.GetMessageQueue_RabbitMQ_SendReceive_HeaderExists("Test Message");
-                    _headerValue = fixture.GetMessageQueue_RabbitMQ_SendReceive_HeaderValue("Test Message");
-                    fixture.GetMessageQueue_RabbitMQ_SendReceiveWithEventingConsumer("Test Message");
                 }
             );
             fixture.Initialize();
@@ -52,39 +45,65 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         [Fact]
         public void Test()
         {
-            var bytes = Convert.FromBase64String(_headerValue);
-            var decodedString = Encoding.UTF8.GetString(bytes);
-
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "Supportability/DistributedTrace/CreatePayload/Success", callCount = 4 },
-                new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Create/Success", callCount = 4 },
-                new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 }
+                new Assertions.ExpectedMetric { metricName = "Supportability/DistributedTrace/CreatePayload/Success", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Create/Success", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Accept/Success", callCount = 1 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics();
-            var acctId = _fixture.AgentLog.GetAccountId();
-            var appId = _fixture.AgentLog.GetApplicationId();
 
-            // confirms payload exists, all the fields we can validate are correct, and the structure of the json
-            NrAssert.Multiple(
-                () => Assert.True(_headerExists),
-                () => Assert.Contains("\"v\"", decodedString),
-                () => Assert.Contains("\"d\"", decodedString),
-                () => Assert.Contains("\"ty\":\"App\"", decodedString),
-                () => Assert.Contains($"\"ac\":\"{acctId}\"", decodedString),
-                () => Assert.Contains($"\"ap\":\"{appId}\"", decodedString),
-                () => Assert.Contains("\"pr\"", decodedString),
-                () => Assert.Contains("\"sa\":true", decodedString),
-                () => Assert.Contains("\"ti\"", decodedString),
-                () => Assert.Contains("\"tk\"", decodedString),
-                () => Assert.Contains("\"tx\"", decodedString),
-                () => Assert.Contains("\"id\"", decodedString),
-                () => Assert.Matches(PayloadRegex, decodedString),
-
-                () => Assertions.MetricsExist(expectedMetrics, metrics)
-            );
-
+            Assertions.MetricsExist(expectedMetrics, metrics);
         }
     }
+
+    // Test class naming pattern: RabbitMqDistributedTracing{FW,NetCore}{RabbitClientVersion}Tests
+    // e.g. RabbitMqDistributedTracingFW621Tests = .NET Framework, RabbitMQ.Client 6.2.1
+
+    [NetFrameworkTest]
+    public class RabbitMqDistributedTracingFW621Tests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public RabbitMqDistributedTracingFW621Tests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RabbitMqDistributedTracingFW510Tests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public RabbitMqDistributedTracingFW510Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RabbitMqDistributedTracingFW352Tests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW461>
+    {
+        public RabbitMqDistributedTracingFW352Tests(ConsoleDynamicMethodFixtureFW461 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqDistributedTracingNetCore621Tests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public RabbitMqDistributedTracingNetCore621Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqDistributedTracingNetCore510Tests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureCore21>
+    {
+        public RabbitMqDistributedTracingNetCore510Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
 }

@@ -88,7 +88,6 @@ Agent/NewRelic.Agent.IL/_NewRelic.Agent.IL.tlb
 newrelichome_*
 src/Agent/New Relic Home*
 
-
 # Ignore New Relic Home generated registry files
 src/Agent/New Relic Home x86.reg
 src/Agent/New Relic Home x64.reg
@@ -114,6 +113,7 @@ FunctionalTests/InstallUtil.InstallLog
 TestResults/*
 *.pubxml.user
 tests/Agent/IntegrationTests/Applications/*/Deploy/
+tests/Agent/IntegrationTests/SharedApplications/*/Deploy/
 tests/Agent/IntegrationTests/UnboundedApplications/*/Deploy/
 tests/Agent/IntegrationTests/.vs/config/applicationhost.config
 .DS_Store
@@ -139,3 +139,6 @@ src/Agent/_profilerBuild/**/*.pdb
 
 # Ignore any locally built profiler Debug-mode binaries
 src/Agent/_profilerBuild/*Debug
+
+# Ignore any signing keys used in Linux packaging
+build/Linux/keys

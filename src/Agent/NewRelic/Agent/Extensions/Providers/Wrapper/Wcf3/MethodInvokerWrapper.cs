@@ -209,12 +209,16 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             if (!isTAP || _methodNamesStart.Contains(instrumentedMethodName))
             {
                 segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, transactionName);
+                if (isTAP)
+                {
+                    segment.AlwaysDeductChildDuration = true;
+                }
             }
 
             Guid? wrapperExecutionID = null;
             void WriteLogMessage(string message)
             {
-                if (agent.Logger.IsEnabledFor(Agent.Extensions.Logging.Level.Finest))
+                if (!agent.Logger.IsEnabledFor(Agent.Extensions.Logging.Level.Finest))
                 {
                     return;
                 }

@@ -6,19 +6,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
-* **New Feature Template** <br/>
-New Feature Description
-Fixes Issue [#XX](https://github.com/newrelic/newrelic-dotnet-agent/issues/XX)
+* Add `GetBrowserTimingHeader(string nonce)` overload.
+  * This allows sites with a `Content-Security-Policy` that disables `'unsafe-inline'` to emit the inline script with a nonce.
 
 ### Fixes
-Fixes Issue [#XX](https://github.com/newrelic/newrelic-dotnet-agent/issues/XX)
+* **New Fixes Template** <br/>
+New Fixes Description
+
+## [8.38] - 2021-01-26
+### New Features
+* **Improvements to New Relic Edge (Infinite Tracing)** <br/>
+  * The agent will now handle having its infinite tracing traffic moved from one backend host to another without losing data or requiring an agent restart.
+  * Improved logging of infinite tracing connections.
+
+## [8.37] - 2021-01-04
+### New Features
+* **Updated support for RabbitMQ** <br/>
+  * Adds support for .NET Core applications using RabbitMQ.Client.
+  * Adds support for RabbitMQ.Client version 6.2.1.
+  * Not supported: Distributed Tracing is not supported with the RabbitMQ AMQP 1.0 plugin.
+
+* **Adds [configuration](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) Environment Variables** <br/>
+  * Adds MAX_TRANSACTION_SAMPLES_STORE - the maximum number of samples stored for Transaction Events.
+  * Adds MAX_EVENT_SAMPLES_STORED - the maximum number of samples stored for Custom Events. 
+  * Adds NEW_RELIC_LOG - the unqualifed name for the Agent's log file.
+
+## [8.36] - 2020-12-08
+
+### Fixes
+* Fixes Issue [#224](https://github.com/newrelic/newrelic-dotnet-agent/issues/224): leading "SET" commands will be ignored when parsing compound SQL statements. ([#370](https://github.com/newrelic/newrelic-dotnet-agent/pull/370))
+* Fixes Issue [#226](https://github.com/newrelic/newrelic-dotnet-agent/issues/226): the profiler ignores drive letter in `HOME_EXPANDED` when detecting running in Azure Web Apps. ([#373](https://github.com/newrelic/newrelic-dotnet-agent/pull/373))
+* Fixes Issue [#93](https://github.com/newrelic/newrelic-dotnet-agent/issues/93): when the parent methods are blocked by their asynchronous child methods, the agent deducts the child methods' duration from the parent methods' exclusive duration.([#374](https://github.com/newrelic/newrelic-dotnet-agent/pull/374))
+* Fixes Issue [#9](https://github.com/newrelic/newrelic-dotnet-agent/issues/9) where the agent failed to read settings from `appsettings.{environment}.json` files. ([#372](https://github.com/newrelic/newrelic-dotnet-agent/pull/372))
+* Fixes Issue [#116](https://github.com/newrelic/newrelic-dotnet-agent/issues/116) where the agent failed to read settings from `appsettings.json` in certain hosting scenarios. ([#375](https://github.com/newrelic/newrelic-dotnet-agent/pull/375))
+* Fixes Issue [#234](https://github.com/newrelic/newrelic-dotnet-agent/issues/234) by reducing the likelihood of a Fatal CLR Error. ([#376](https://github.com/newrelic/newrelic-dotnet-agent/pull/376))
+* Fixes Issue [#377](https://github.com/newrelic/newrelic-dotnet-agent/issues/377) when using the `AddCustomAttribute` API with `Microsoft.Extensions.Primitives.StringValues` type causes unsupported type exception. ([378](https://github.com/newrelic/newrelic-dotnet-agent/pull/378))
+
+
+## [8.35] - 2020-11-09
+
+### New Features
+* **.NET 5 GA Support** <br/>
+We have validated that this version of the agent is compatible with .NET 5 GA. See the [compatibility and requirements for .NET Core](https://docs.newrelic.com/docs/agents/net-agent/getting-started/net-agent-compatibility-requirements-net-core) page for more details.
+
+### Fixes
+* Fixes Issue [#337](https://github.com/newrelic/newrelic-dotnet-agent/issues/337) by removing obsolete code which was causing memory growth associated with a large number of transaction names.
+* PR [#348](https://github.com/newrelic/newrelic-dotnet-agent/pull/348): guards against potential exceptions being thrown from the agent API when the agent is not attached.  
 
 ## [8.34] - 2020-10-26
+
+### New Features
+* **.NET 5 RC2 Support** <br/>
+We have validated that this version of the agent is compatible with .NET 5 Release Candidate 2.
 
 ### Fixes
 * Fixes issue [#301](https://github.com/newrelic/newrelic-dotnet-agent/issues/301) where the agent incorrectly parses server-side configuration causing agent to shutdown.([#310](https://github.com/newrelic/newrelic-dotnet-agent/pull/310))
 * Modifies WCF Instrumentation to address [#314](https://github.com/newrelic/newrelic-dotnet-agent/issues/314) by minimizing the reliance upon handled exceptions during the  attempt to capture CAT and DT payloads.
-
 
 ## [8.33] - 2020-10-12
 
@@ -67,7 +110,7 @@ Fixes an issue where `newrelic.config` was being overwritten when upgrading the 
 ## [8.30] - 2020-07-15
 ### New Features
 * **The .NET Agent is now open source!** <br/>
-The New Relic .NET agent is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in this repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](/CODE_OF_CONDUCT.md) for details on contributing!
+The New Relic .NET agent is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in this repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](https://opensource.newrelic.com/code-of-conduct/) for details on contributing!
 
 ### Fixes
 * **Memory Usage Reporting for Linux** <br/>
@@ -208,8 +251,13 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.33.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.38.0...HEAD
 
+[8.38]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.37.0...v8.38.0
+[8.37]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.36.0...v8.37.0
+[8.36]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.35.0...v8.36.0
+[8.35]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.34.0...v8.35.0
+[8.34]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.33.0...v8.34.0
 [8.33]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.32.0...v8.33.0
 [8.32]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.31.0...v8.32.0
 [8.31]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.30.0...v8.31.0

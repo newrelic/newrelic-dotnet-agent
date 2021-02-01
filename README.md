@@ -26,6 +26,7 @@ Get started by reviewing our instructions for how to [build and test](docs/devel
 Should you need assistance with New Relic products, you are in good hands with several support diagnostic tools and support channels.
 
 This [troubleshooting framework](https://discuss.newrelic.com/t/troubleshooting-frameworks/108787) steps you through common troubleshooting questions. 
+Additional troubleshooting scenarios can be found on the New Relic [Docs](https://docs.newrelic.com/docs/agents/net-agent/troubleshooting) site.
 
 New Relic offers NRDiag, [a client-side diagnostic utility](https://docs.newrelic.com/docs/using-new-relic/cross-product-functions/troubleshooting/new-relic-diagnostics) that automatically detects common problems with New Relic agents. If NRDiag detects a problem, it suggests troubleshooting steps. NRDiag can also automatically attach troubleshooting data to a New Relic Support ticket.
 
@@ -34,7 +35,7 @@ If the issue has been confirmed as a bug or is a Feature request, please file a 
 **Support Channels**
 
 * [New Relic Documentation](https://docs.newrelic.com/docs/agents/net-agent): Comprehensive guidance for using our agent
-* [New Relic Community](https://discuss.newrelic.com/c/support-products-agents/net-agent): The best place to engage in troubleshooting questions
+* [New Relic Community](https://discuss.newrelic.com/tags/c/full-stack-observability/agents/.netagent): The best place to engage in troubleshooting questions
 * [New Relic Developer](https://developer.newrelic.com/): Resources for building a custom observability applications
 * [New Relic University](https://learn.newrelic.com/): A range of online training for New Relic users of every level
 * [New Relic Technical Support](https://support.newrelic.com/) 24/7/365 ticketed support. Read more about our [Technical Support Offerings](https://docs.newrelic.com/docs/licenses/license-information/general-usage-licenses/support-plan). 
@@ -47,7 +48,7 @@ We define “Personal Data” as any information relating to an identified or id
 Please review [New Relic’s General Data Privacy Notice](https://newrelic.com/termsandconditions/privacy) for more information.
 
 ## Roadmap
-See our [roadmap](/ROADMAP.md), to learn more about our product vision, understand our plans, and provide us valuable feedback.
+See our [roadmap](ROADMAP.md), to learn more about our product vision, understand our plans, and provide us valuable feedback.
 
 ## Contributing
 We encourage your contributions to improve New Relic's .NET monitoring products! Keep in mind that when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
@@ -59,7 +60,7 @@ As noted in our [security policy](https://github.com/newrelic/newrelic-dotnet-ag
 
 If you believe you have found a security vulnerability in this project or any of New Relic's products or websites, we welcome and greatly appreciate you reporting it to New Relic through [HackerOne](https://hackerone.com/newrelic).
 
-If you would like to contribute to this project, please review [these guidelines](/CONTRIBUTING.md).
+If you would like to contribute to this project, please review [these guidelines](CONTRIBUTING.md).
 
 To [all contributors](https://github.com/newrelic/newrelic-dotnet-agent/graphs/contributors), we thank you!  Without your contribution, this project would not be what it is today.  We also host a community project page dedicated to
 the [New Relic .NET agent](https://opensource.newrelic.com/projects/newrelic/newrelic-dotnet-agent).

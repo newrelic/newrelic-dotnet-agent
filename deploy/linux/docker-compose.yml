@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+    deploy_packages: 
+        build: ./container
+    # This was necessary to be able to debug using strace
+    #    security_opt:
+    #        - seccomp:unconfined
+        command: bash -c "chmod 777 /data/deploy.bash && chmod 777 /deployscripts/deploy-packages.bash && /data/deploy.bash"
+        volumes: 
+            - .:/data
+            - ./packages:/packages
+            - ./deploy_scripts:/deployscripts
+        working_dir: /data
+        env_file:
+            - docker.env
+        

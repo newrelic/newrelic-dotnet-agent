@@ -13,7 +13,7 @@ Note: while not a hard requirement, the containers will perform better if you us
 
 **Notes**:
 
-* There are two subfolders called `linux` and `windows`. The `linux` subfolder has Dockerfiles that set up Linux containerized services and can be used with Docker Desktop's WSL2 backend. Developers should use these containers in their system as opposed to the ones in the `windows` subfoler which are only intended for our CI.
+* This folder has Dockerfiles that set up Linux containerized services and can be used with Docker Desktop's WSL2 backend. Developers should use these containers in their system to run unbounded integration tests.
 
 * All commands below should be run from a shell (we've tested Powershell and "git-bash") in the same location as this README.
 * Before Docker containers can be used the first time, they need to be built by executing `docker-compose build`.
@@ -44,4 +44,4 @@ See the docker-compose.yml file for the names of the services provided.
 
 ## Configuring user secrets
 
-The integration tests, including the unbounded ones, use `dotnet user-secrets` to manage confuration data, including the connection strings needed to access these external services.  An [example-secrets.json](./example-secrets.json) file has been provided which contains connection strings for all of the containerized unbounded services.  See the [integration test documentation](/docs/integration-tests.md) for how to install the user secrets.
+The integration tests, including the unbounded ones, use `dotnet user-secrets` to manage confuration data, including the connection strings needed to access these external services.  An [example-secrets.json](example-secrets.json) file has been provided which contains connection strings for all of the containerized unbounded services.  See the [integration test documentation](../../../../docs/integration-tests.md) for how to install the user secrets.

@@ -36,6 +36,7 @@ namespace NewRelic.Providers.Wrapper.Owin
                 transaction.DetachFromPrimary();
 
                 segment = SetupSegment(transaction, context);
+                segment.AlwaysDeductChildDuration = true;
 
                 ProcessHeaders(context);
 
