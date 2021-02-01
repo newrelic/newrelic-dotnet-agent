@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **Improvements to New Relic Edge (Infinite Tracing)** <br/>
   * The agent will now handle having its infinite tracing traffic moved from one backend host to another without losing data or requiring an agent restart.
   * Improved logging of infinite tracing connections.
+* Add `GetBrowserTimingHeader(string nonce)` overload.
+  * This allows sites with a `Content-Security-Policy` that disables `'unsafe-inline'` to emit the inline script with a nonce.
 
 ### Fixes
 * **New Fixes Template** <br/>
