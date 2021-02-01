@@ -504,23 +504,7 @@ namespace NewRelic.Agent.Core.Api
         /// </code></example>
         public string GetBrowserTimingHeader()
         {
-            using (new IgnoreWork())
-            {
-                var transaction = TryGetCurrentInternalTransaction();
-                if (transaction == null)
-                    return string.Empty;
-
-                var shouldInject = _browserMonitoringPrereqChecker.ShouldManuallyInject(transaction);
-                if (!shouldInject)
-                    return string.Empty;
-
-                transaction.IgnoreAllBrowserMonitoringForThisTx();
-
-                // The transaction's name must be frozen if we're going to generate a RUM script
-                transaction.CandidateTransactionName.Freeze(TransactionNameFreezeReason.ManualBrowserScriptInjection);
-
-                return _browserMonitoringScriptMaker.GetScript(transaction, null) ?? string.Empty;
-            }
+            return GetBrowserTimingHeader(null);
         }
 
         /// <summary> Returns the HTML snippet to be inserted into the header of HTML pages to enable Real
@@ -537,7 +521,7 @@ namespace NewRelic.Agent.Core.Api
         ///   &lt;body&gt;
         ///   ...
         /// </code></example>
-        public string GetBrowserTimingHeader(string nonce)
+        public string GetBrowserTimingHeader(string? nonce)
         {
             using (new IgnoreWork())
             {
