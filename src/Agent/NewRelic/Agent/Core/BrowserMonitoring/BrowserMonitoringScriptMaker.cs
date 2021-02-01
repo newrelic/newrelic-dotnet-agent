@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             if (Log.IsFinestEnabled)
                 transaction.LogFinest("RUM: TryGetBrowserTimingHeader success.");
 
-            var scriptNonce = nonce is null ? "" : $@" nonce=""{HttpUtility.HtmlAttributeEncode(nonce)}""";
+            var scriptNonce = String.IsNullOrEmpty(nonce) ? String.Empty : $@" nonce=""{HttpUtility.HtmlAttributeEncode(nonce)}""";
 
             // The JavaScript variable NREUMQ stands for New Relic End User Metric "Q". This was the name before marketing renamed "EUM" to "RUM".
             // We can't change the name of the variable since: (a) we have to be consistent across agents, and (b) it has to be in sync with the rum.js file which is downloaded from NR servers.
