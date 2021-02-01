@@ -25,6 +25,8 @@ namespace NewRelic.Agent.Core.DataTransport
         private bool _isInvalid = false;
         public bool IsInvalid => _streamCancellationToken.IsCancellationRequested || _isInvalid || (_task?.IsFaulted).GetValueOrDefault(false);
 
+        public RpcException ResponseRpcException = null;
+
 
         private readonly IAsyncStreamReader<TResponse> _responseStream;
         private readonly CancellationToken _streamCancellationToken;
@@ -40,30 +42,29 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private async Task<int> WaitForResponse()
         {
-            bool success;
+            var success = false;
             try
             {
                 success = await _responseStream.MoveNext(_streamCancellationToken);
             }
-            catch (Exception ex)
+            catch (RpcException rpcEx)
             {
-                success = false;
-
                 var logLevel = LogLevel.Finest;
 
-                var aggEx = ex as AggregateException;
-                if (aggEx != null && aggEx.InnerException != null)
-                {
-                    var rpcEx = aggEx.InnerException as RpcException;
-
-                    logLevel = (rpcEx != null && rpcEx.StatusCode == StatusCode.Cancelled)
-                        ? LogLevel.Finest
-                        : LogLevel.Debug;
-                }
+                ResponseRpcException = rpcEx;
 
                 if (Log.IsEnabledFor(logLevel))
                 {
-                    Log.LogMessage(logLevel, $"Exception encountered while handling gRPC server responses: {ex}");
+                    Log.LogMessage(logLevel, $"GRPC RpcException encountered while handling gRPC server responses: {rpcEx.Status}");
+                }
+            }
+            catch (Exception ex)
+            {
+                var logLevel = LogLevel.Debug;
+
+                if (Log.IsEnabledFor(logLevel))
+                {
+                    Log.LogMessage(logLevel, $"Unknown exception encountered while handling gRPC server responses: {ex}");
                 }
             }
 
@@ -111,6 +112,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private const string UnimplementedStatus = "UNIMPLEMENTED";
         private const string UnavailableStatus = "UNAVAILABLE";
         private const string FailedPreconditionStatus = "FAILED_PRECONDITION";
+        private const string InternalStatus = "INTERNAL";
         private const string OkStatus = "OK";
         private readonly IGrpcWrapper<TRequestBatch, TResponse> _grpcWrapper;
         private readonly IDelayer _delayer;
@@ -178,6 +180,11 @@ namespace NewRelic.Agent.Core.DataTransport
                 headers.Add(new Metadata.Entry("flaky", EndpointTestFlaky.ToString()));
             }
 
+            if (EndpointTestFlakyCode.HasValue)
+            {
+                headers.Add(new Metadata.Entry("flaky_code", EndpointTestFlakyCode.ToString()));
+            }
+
             if (Log.IsFinestEnabled)
             {
                 var parametersString = string.Join(",", headers.Select(x => $"{x.Key}={x.Value}"));
@@ -195,6 +202,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public int EndpointPort { get; private set; }
         public bool EndpointSsl { get; private set; }
         public float? EndpointTestFlaky { get; private set; }
+        public int? EndpointTestFlakyCode { get; private set; }
         public int? EndpointTestDelayMs { get; private set; }
         public abstract int BatchSizeConfigValue { get; }
 
@@ -202,6 +210,7 @@ namespace NewRelic.Agent.Core.DataTransport
         protected abstract string EndpointPortConfigValue { get; }
         protected abstract string EndpointSslConfigValue { get; }
         protected abstract float? EndpointTestFlakyConfigValue { get; }
+        protected abstract int? EndpointTestFlakyCodeConfigValue { get; }
         protected abstract int? EndpointTestDelayMsConfigValue { get; }
 
 
@@ -266,6 +275,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 EndpointPort = -1;
                 EndpointSsl = true;
                 EndpointTestFlaky = null;
+                EndpointTestFlakyCode = null;
                 EndpointTestDelayMs = null;
 
                 return false;
@@ -275,17 +285,19 @@ namespace NewRelic.Agent.Core.DataTransport
             var isValidPort = int.TryParse(configPortStr, out var configPort) && configPort > 0 && configPort <= 65535;
             var isValidSsl = bool.TryParse(configSslStr, out var configSsl);
             var isValidFlaky = EndpointTestFlakyConfigValue == null || (EndpointTestFlakyConfigValue >= 0 && EndpointTestFlakyConfigValue <= 100);
+            var isValidFlakyCode = EndpointTestFlakyCodeConfigValue == null || (EndpointTestFlakyCodeConfigValue >= 0 && EndpointTestFlakyCodeConfigValue <= 16); // See https://github.com/grpc/grpc/blob/master/doc/statuscodes.md
             var isValidDelay = EndpointTestDelayMsConfigValue == null || (EndpointTestDelayMsConfigValue >= 0);
             var isValidTimeoutConnect = TimeoutConnectMs > 0;
             var isValidTimeoutSend = TimeoutSendDataMs > 0;
             var isValidBatchSize = BatchSizeConfigValue > 0;
 
-            if (isValidHost && isValidPort && isValidSsl && isValidFlaky && isValidDelay && isValidTimeoutConnect && isValidTimeoutSend && isValidBatchSize)
+            if (isValidHost && isValidPort && isValidSsl && isValidFlaky && isValidFlakyCode && isValidDelay && isValidTimeoutConnect && isValidTimeoutSend && isValidBatchSize)
             {
                 EndpointHost = configHost;
                 EndpointPort = configPort;
                 EndpointSsl = configSsl;
                 EndpointTestFlaky = EndpointTestFlakyConfigValue;
+                EndpointTestFlakyCode = EndpointTestFlakyCodeConfigValue;
                 EndpointTestDelayMs = EndpointTestDelayMsConfigValue;
 
                 return true;
@@ -315,6 +327,11 @@ namespace NewRelic.Agent.Core.DataTransport
             if (!isValidFlaky)
             {
                 LogMessage(LogLevel.Info, $"Invalid Configuration For Test.  Flaky % '{EndpointTestFlakyConfigValue}' is not valid.  Infinite Tracing will NOT be started.");
+            }
+
+            if (!isValidFlakyCode)
+            {
+                LogMessage(LogLevel.Info, $"Invalid Configuration For Test.  Flaky response code '{EndpointTestFlakyCodeConfigValue}' is not valid.  Infinite Tracing will NOT be started.");
             }
 
             if (!isValidDelay)
@@ -370,6 +387,11 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     LogMessage(LogLevel.Finest, x.ConsumerID, "Response Stream Manager - Removing Stream");
                     _responseStreamsDic.TryRemove(x.ConsumerID, out _);
+                    if ((x.ResponseRpcException != null) && (x.ResponseRpcException.StatusCode == StatusCode.FailedPrecondition))
+                    {
+                        LogMessage(LogLevel.Debug, $"The gRPC endpoint defined at {EndpointHost}:{EndpointPort} returned {FailedPreconditionStatus}, indicating the traffic is being redirected to a new host.  Restarting service.");
+                        Shutdown(true);
+                    }
                 }
 
                 var tasksToWaitFor = _responseStreamsDic.Values
@@ -478,6 +500,7 @@ namespace NewRelic.Agent.Core.DataTransport
             LogMessage(LogLevel.Finest, $"Configuration Setting - SSL - {EndpointSsl}");
             LogMessage(LogLevel.Info, $"Configuration Setting - Consumers - {_configuration.InfiniteTracingTraceCountConsumers}");
             LogMessage(LogLevel.Finest, $"Configuration Setting - Test Flaky - {EndpointTestFlaky?.ToString() ?? "NULL"}");
+            LogMessage(LogLevel.Finest, $"Configuration Setting - Test Flaky Code - {EndpointTestFlakyCode?.ToString() ?? "NULL"}");
             LogMessage(LogLevel.Finest, $"Configuration Setting - Test Delay (ms) - {EndpointTestDelayMs?.ToString() ?? "NULL"}");
         }
 
@@ -592,7 +615,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public void Shutdown(bool withRestart)
         {
-            LogMessage(LogLevel.Debug, "Shutdown Request Received");
+            LogMessage(LogLevel.Debug, $"Shutdown Request Received, restart = {withRestart}");
 
             _shouldRestart = withRestart;
             _cancellationTokenSource.Cancel();
@@ -648,14 +671,14 @@ namespace NewRelic.Agent.Core.DataTransport
 
                         if (grpcWrapperEx.Status == UnavailableStatus)
                         {
-                            LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} is no longer available so we will restart this service.");
+                            LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} is temporarily unavailable, so we will restart this service.");
                             Shutdown(true);
                             return false;
                         }
 
                         if (grpcWrapperEx.Status == FailedPreconditionStatus)
                         {
-                            LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} has been moved to a different host so we will restart this service.");
+                            LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} has been moved to a different host, so we will restart this service.");
                             Shutdown(true);
                             return false;
                         }
@@ -865,40 +888,38 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (GrpcWrapperException grpcEx) when (!string.IsNullOrWhiteSpace(grpcEx.Status))
             {
-                LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - gRPC Exception: {grpcEx.Status}", grpcEx);
-
                 RecordResponseError();
                 RecordGrpcError(grpcEx.Status);
 
-                if (grpcEx.Status == UnimplementedStatus)
+                switch (grpcEx.Status)
                 {
-                    Shutdown(false);
-                    return TrySendStatus.Error;
-                }
-
-                if (grpcEx.Status == UnavailableStatus)
-                {
-                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart");
-                    Shutdown(true);
-                    return TrySendStatus.Error;
-                }
-
-                if (grpcEx.Status == FailedPreconditionStatus)
-                {
-                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Channel has been moved, requesting restart");
-                    Shutdown(true);
-                    return TrySendStatus.Error;
-                }
-
-                if (grpcEx.Status == OkStatus)
-                {
-                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - A stream was closed due to connection rebalance. New stream requested and data will be resent immediately.");
-                    return TrySendStatus.ErrorWithImmediateRetry;
+                    case UnimplementedStatus:
+                        LogMessage(LogLevel.Error, consumerId, $"Attempting to send {items.Count} item(s) - Trace observer is no longer available, shutting down infinite tracing service.");
+                        Shutdown(false);
+                        return TrySendStatus.Error;
+                    case UnavailableStatus:
+                        LogMessage(LogLevel.Info, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart");
+                        Shutdown(true);
+                        return TrySendStatus.Error;
+                    case FailedPreconditionStatus:
+                        LogMessage(LogLevel.Debug, consumerId, $"Attempting to send {items.Count} item(s) - Channel has been moved, requesting restart");
+                        Shutdown(true);
+                        return TrySendStatus.Error;
+                    case InternalStatus:
+                        LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - A stream was reset due to inactivity. New stream requested and data will be resent immediately.");
+                        return TrySendStatus.ErrorWithImmediateRetry;
+                    case OkStatus:
+                        LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - A stream was closed due to connection rebalance. New stream requested and data will be resent immediately.");
+                        return TrySendStatus.ErrorWithImmediateRetry;
+                    default:
+                        var rpcEx = grpcEx.InnerException as RpcException;
+                        LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - gRPC Exception: {rpcEx?.Status.ToString() ?? grpcEx.Status}");
+                        break;
                 }
             }
             catch (Exception ex)
             {
-                LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s)", ex);
+                LogMessage(LogLevel.Debug, consumerId, $"Unknown exception attempting to send {items.Count} item(s)", ex);
                 RecordResponseError();
             }
 
