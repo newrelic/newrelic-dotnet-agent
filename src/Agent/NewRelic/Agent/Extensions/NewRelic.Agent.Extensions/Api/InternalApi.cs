@@ -263,9 +263,9 @@ namespace NewRelic.Agent.Api
         ///   &lt;body&gt;
         ///   ...
         /// </code></example>
-        public static string GetBrowserTimingHeader(string? nonce)
+        public static string GetBrowserTimingHeader()
         {
-            return _agentApiImplementation?.GetBrowserTimingHeader(nonce) ?? string.Empty;
+            return _agentApiImplementation?.GetBrowserTimingHeader() ?? string.Empty;
         }
 
         /// <summary> Returns the HTML snippet to be inserted into the header of HTML pages to enable Real

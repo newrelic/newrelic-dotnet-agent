@@ -502,9 +502,9 @@ namespace NewRelic.Agent.Core.Api
         ///   &lt;body&gt;
         ///   ...
         /// </code></example>
-        public string GetBrowserTimingHeader(string? nonce)
+        public string GetBrowserTimingHeader()
         {
-            return GetBrowserTimingHeader(null);
+            return GetBrowserTimingHeader(string.Empty);
         }
 
         /// <summary> Returns the HTML snippet to be inserted into the header of HTML pages to enable Real
@@ -521,7 +521,7 @@ namespace NewRelic.Agent.Core.Api
         ///   &lt;body&gt;
         ///   ...
         /// </code></example>
-        public string GetBrowserTimingHeader(string? nonce)
+        public string GetBrowserTimingHeader(string nonce)
         {
             using (new IgnoreWork())
             {
