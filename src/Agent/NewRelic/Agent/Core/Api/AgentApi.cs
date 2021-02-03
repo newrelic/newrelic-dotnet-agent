@@ -468,7 +468,31 @@ namespace NewRelic.Agent.Core
         {
             const ApiMethod apiMetric = ApiMethod.GetBrowserTimingHeader;
             const string apiName = nameof(GetBrowserTimingHeader);
-            return TryInvoke(InternalApi.GetBrowserTimingHeader, apiName, apiMetric) ?? string.Empty;
+            return TryInvoke(() => InternalApi.GetBrowserTimingHeader(), apiName, apiMetric) ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Returns the html snippet to be inserted into the header of html pages to enable Real User Monitoring.
+        /// The html will instruct the browser to fetch a small JavaScript file and start the page timer.
+        /// Supports web applications only.
+        /// </summary>
+        /// <param name="nonce">An optional per-request, cryptographic nonce used by a <c>Content-Security-Policy</c> <c>script-src</c> policy.</param>
+        /// <example>
+        /// <code>
+        /// &lt;html>
+        ///   &lt;head>
+        ///     &lt;&#37;= NewRelic.Api.Agent.NewRelic.GetBrowserTimingHeader("random-nonce")&#37;>
+        ///   &lt;/head>
+        ///   &lt;body>
+        ///   ...
+        /// </code>
+        /// </example>
+        /// <returns>An html string to be embedded in a page header.</returns>
+        public static string GetBrowserTimingHeader(string nonce)
+        {
+            const ApiMethod apiMetric = ApiMethod.GetBrowserTimingHeader;
+            const string apiName = nameof(GetBrowserTimingHeader);
+            return TryInvoke(() => InternalApi.GetBrowserTimingHeader(nonce), apiName, apiMetric) ?? string.Empty;
         }
 
         /// <summary>
