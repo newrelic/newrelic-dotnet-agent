@@ -26,7 +26,8 @@ namespace NewRelic.Core
     {
         LessThan30,
         netcoreapp30,
-        GreaterThan30
+        net5,
+        Other,
     }
 
     public static class DotnetVersion
@@ -87,12 +88,17 @@ namespace NewRelic.Core
                 return DotnetCoreVersion.netcoreapp30;
             }
 
+            if (envVer.Major == 5)
+            {
+                return DotnetCoreVersion.net5;
+            }
+
             if (envVer.Major == 4)
             {
                 return DotnetCoreVersion.LessThan30;
             }
 
-            return DotnetCoreVersion.GreaterThan30;
+            return DotnetCoreVersion.Other;
         }
 #endif
     }
