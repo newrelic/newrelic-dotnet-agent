@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
+
+### Fixes
+
+## [8.39] - 2021-02-10
+### New Features
 * Add `GetBrowserTimingHeader(string nonce)` overload.
   * This allows sites with a `Content-Security-Policy` that disables `'unsafe-inline'` to emit the inline script with a nonce.
 
