@@ -21,15 +21,14 @@ namespace NewRelic.OpenTracing.AmazonLambda
             return File.Exists(path);
         }
 
-        public async void WriteAllText(string path, string contents)
+        public void WriteAllText(string path, string contents)
         {
             try
             {
                 using FileStream stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-                var writer = new StreamWriter(stream);
-                await writer.WriteAsync(contents);
-                await writer.FlushAsync();
-                writer.Close();
+                using StreamWriter writer = new StreamWriter(stream);
+                writer.Write(contents);
+                writer.Flush();
             }
             catch (Exception e)
             {
