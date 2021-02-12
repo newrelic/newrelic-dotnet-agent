@@ -199,13 +199,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             instrumentationPoint->AssemblyName = GetAttributeOrEmptyString(matchNode, _X("assemblyName"));
             instrumentationPoint->ClassName = GetAttributeOrEmptyString(matchNode, _X("className"));
             instrumentationPoint->MethodName = GetAttributeOrEmptyString(matcherNode, _X("methodName"));
-            instrumentationPoint->Parameters = TryGetAttribute(matcherNode, _X("parameters"));
-
-            // void as the parameters means parameterless method call (not all overloads)
-            if (instrumentationPoint->Parameters != nullptr && Strings::AreEqualCaseInsensitive(*(instrumentationPoint->Parameters), _X("void")))
-            {
-                instrumentationPoint->Parameters = std::unique_ptr<xstring_t>(new xstring_t());
-            }
+            instrumentationPoint->Parameters = NormalizeParameters(TryGetAttribute(matcherNode, _X("parameters")));
 
             // sdaubin : I'm sure we could allow some mscorlib methods to be instrumented because we're able to 
             // append methods onto an mscorlib exception class.  But we'd need to do something like we do for those
@@ -392,6 +386,31 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 return nullptr;
 
             return std::unique_ptr<xstring_t>(new xstring_t(attribute->value())); 
+        }
+
+        static std::unique_ptr<xstring_t> NormalizeParameters(std::unique_ptr<xstring_t> rawParams)
+        {
+            if (rawParams == nullptr)
+            {
+                LogTrace(L"NormalizeParameters: returning nullptr");
+                return nullptr;
+            }
+
+            // void as the parameters means parameterless method call (not all overloads)
+            if (Strings::AreEqualCaseInsensitive(*(rawParams), _X("void")))
+            {
+                LogTrace(L"NormalizeParameters: returning empty string");
+                return std::unique_ptr<xstring_t>(new xstring_t());
+            }
+
+            LogTrace(L"Params before: ", (*(rawParams)));
+
+            // remove whitespace chars from param list
+            rawParams->erase(std::remove_if(rawParams->begin(), rawParams->end(), ::isspace), rawParams->end());
+
+            LogTrace(L"Params out: ", (*(rawParams)));
+
+            return rawParams;
         }
 
     private:
