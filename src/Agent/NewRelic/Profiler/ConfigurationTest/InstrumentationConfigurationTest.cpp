@@ -577,7 +577,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             BYTEVECTOR(signatureBytes,
                 0x00, // default calling convention
-                0x00, // 1 parameter
+                0x00, // 0 parameters
                 0x01, // void return
                 );
             function->_signature = std::make_shared<ByteVector>(signatureBytes);
@@ -604,7 +604,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             BYTEVECTOR(signatureBytes,
                 0x00, // default calling convention
-                0x00, // 1 parameter
+                0x00, // 0 parameters
                 0x01, // void return
                 );
             function->_signature = std::make_shared<ByteVector>(signatureBytes);
@@ -631,7 +631,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             BYTEVECTOR(signatureBytes,
                 0x00, // default calling convention
-                0x00, // 1 parameter
+                0x00, // 0 parameters
                 0x01, // void return
                 );
             function->_signature = std::make_shared<ByteVector>(signatureBytes);
@@ -639,7 +639,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(instrumentationPoint == nullptr);
         }
 
-        TEST_METHOD(when_matcher_has_string_parameter_string_then_unparameterized_overload_does_not_matche)
+        TEST_METHOD(when_matcher_has_string_parameter_string_then_unparameterized_overload_does_not_match)
         {
             InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
             xmlSet->emplace(L"filename", L"\
@@ -658,12 +658,41 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
             BYTEVECTOR(signatureBytes,
                 0x00, // default calling convention
-                0x00, // 1 parameter
+                0x00, // 0 parameters
                 0x01, // void return
                 );
             function->_signature = std::make_shared<ByteVector>(signatureBytes);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(function);
             Assert::IsTrue(instrumentationPoint == nullptr);
+        }
+
+        TEST_METHOD(when_matcher_has_multiple_parameter_string_then_parameterized_overload_matches)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"MyAssembly\" className=\"MyNamespace.MyClass\">\
+                                <exactMethodMatcher methodName=\"MyMethod\" parameters=\"System.String, System.Int32\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet);
+            auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x02, // 2 parameters
+                0x01, // void return
+                0x0E, // 1st parameter type System.String
+                0x08, // 2nd parameter type System.Int32
+                );
+            function->_signature = std::make_shared<ByteVector>(signatureBytes);
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(function);
+            Assert::IsFalse(instrumentationPoint == nullptr);
         }
 
     };
