@@ -1,7 +1,9 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.IO;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.OpenTracing.AmazonLambda
 {
@@ -21,7 +23,17 @@ namespace NewRelic.OpenTracing.AmazonLambda
 
         public void WriteAllText(string path, string contents)
         {
-            File.WriteAllText(path, contents);
+            try
+            {
+                using FileStream stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+                using StreamWriter writer = new StreamWriter(stream);
+                writer.Write(contents);
+                writer.Flush();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+            }
         }
     }
 }
