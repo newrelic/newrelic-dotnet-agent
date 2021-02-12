@@ -392,23 +392,17 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         {
             if (rawParams == nullptr)
             {
-                LogTrace(L"NormalizeParameters: returning nullptr");
                 return nullptr;
             }
 
             // void as the parameters means parameterless method call (not all overloads)
             if (Strings::AreEqualCaseInsensitive(*(rawParams), _X("void")))
             {
-                LogTrace(L"NormalizeParameters: returning empty string");
                 return std::unique_ptr<xstring_t>(new xstring_t());
             }
 
-            LogTrace(L"Params before: ", (*(rawParams)));
-
             // remove whitespace chars from param list
             rawParams->erase(std::remove_if(rawParams->begin(), rawParams->end(), ::isspace), rawParams->end());
-
-            LogTrace(L"Params out: ", (*(rawParams)));
 
             return rawParams;
         }
