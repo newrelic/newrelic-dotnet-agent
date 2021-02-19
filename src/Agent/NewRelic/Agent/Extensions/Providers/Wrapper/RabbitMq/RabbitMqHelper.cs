@@ -26,11 +26,10 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             return func(Properties) as Dictionary<string, object>;
         }
 
-        private static Action<Dictionary<string, object>> _setHeadersAction;
         public static void SetHeaders(object Properties, Dictionary<string, object> headers)
         {
-            var action = _setHeadersAction ??
-                (_setHeadersAction = VisibilityBypasser.Instance.GeneratePropertySetter<Dictionary<string, object>>(Properties, "Headers"));
+            // Unlike the GetHeaders function, we can't cache this action.  It is only valid for the specific Properties object instance provided.
+            var action = VisibilityBypasser.Instance.GeneratePropertySetter<Dictionary<string, object>>(Properties, "Headers");
 
             action(headers);
         }
