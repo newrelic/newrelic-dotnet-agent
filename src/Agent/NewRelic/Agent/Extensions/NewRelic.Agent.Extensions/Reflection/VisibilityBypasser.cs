@@ -441,6 +441,7 @@ namespace NewRelic.Reflection
             return GenerateMethodCallerInternal(resultType, propertyGetter);
         }
 
+        // Do not cache the delegate returned by this method; it is only valid for the specific "owner" object instance
         public Action<TValue> GeneratePropertySetter<TValue>(object owner, string propertyName)
         {
             if (owner == null)
