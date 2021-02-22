@@ -31,8 +31,8 @@ namespace NewRelic.Reflection.UnitTests
             private int Int32ReturningMethod() { return 5; }
             private PrivateInner PrivateInnerReturningMethod() { return new PrivateInner(); }
             private readonly int _int32Field = 3;
-            private PrivateInner PrivateInnerProperty { get { return new PrivateInner(); } }
-            private int Int32Property { get { return 11; } }
+            private Dictionary<string, object> DictionaryProperty { get; set; } = new Dictionary<string, object>() { { "originalKey", "originalValue" } };
+            private int Int32Property { get; set; } =  11;
             public override string ToString() { return ConstructorCalled; }
         }
 
@@ -47,8 +47,8 @@ namespace NewRelic.Reflection.UnitTests
         private PublicOuter PublicOuterReturningMethod() { return new PublicOuter(); }
         public readonly Base DerivedField = new Derived();
         private readonly int _int32Field = 7;
-        private PublicOuter PublicOuterProperty { get { return new PublicOuter(); } }
-        private int Int32Property { get { return 13; } }
+        private Dictionary<string, object> DictionaryProperty { get; set; } = new Dictionary<string, object> { { "originalKey", "originalValue" } };
+        private int Int32Property { get; set; } = 13;
         private string StringTakingAndReturningMethod(string @string) { return @string; }
         private string _writableStringField = "stringFieldValue";
         public string GetWritableStringField { get { return _writableStringField; } }
@@ -286,7 +286,7 @@ namespace NewRelic.Reflection.UnitTests
         }
     }
 
-    public class PropertyAccessTests
+    public class PropertyAccessorTests
     {
         [Test]
         public void private_value_property_on_public_object()
@@ -304,13 +304,14 @@ namespace NewRelic.Reflection.UnitTests
         [Test]
         public void private_reference_property_on_public_object()
         {
-            var propertyName = "PublicOuterProperty";
+            var propertyName = "DictionaryProperty";
             var publicOuter = PublicOuter.Create();
 
-            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, PublicOuter>(propertyName);
+            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, Dictionary<string, object>>(propertyName);
             var actualValue = methodCaller(publicOuter);
 
             Assert.NotNull(actualValue);
+            Assert.That((string)actualValue["originalKey"] == "originalValue");
         }
 
         [Test]
@@ -318,7 +319,7 @@ namespace NewRelic.Reflection.UnitTests
         {
             var assemblyName = Assembly.GetExecutingAssembly().FullName;
             var typeName = "NewRelic.Reflection.UnitTests.PublicOuter+PrivateInner";
-            var propertyName = "PrivateInnerProperty";
+            var propertyName = "DictionaryProperty";
             var privateInner = PublicOuter.CreatePrivateInner();
 
             var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(assemblyName, typeName, propertyName);
@@ -345,7 +346,7 @@ namespace NewRelic.Reflection.UnitTests
         [Test]
         public void incorrect_result_type()
         {
-            var propertyName = "PublicOuterProperty";
+            var propertyName = "DictionaryProperty";
 
             Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, int>(propertyName));
         }
@@ -381,6 +382,104 @@ namespace NewRelic.Reflection.UnitTests
 
             Assert.AreEqual(expectedValue, actualValue);
         }
+    }
+
+    public class PropertySetterTests
+    {
+        [Test]
+        public void set_private_value_property_on_public_object()
+        {
+            var propertyName = "Int32Property";
+            var publicOuter = PublicOuter.Create();
+
+            var getter = VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, int>(propertyName);
+            var originalValue = getter(publicOuter);
+
+            var setter = VisibilityBypasser.Instance.GeneratePropertySetter<int>(publicOuter, propertyName);
+
+            setter(originalValue + 1);
+
+            var newValue = getter(publicOuter);
+
+            Assert.AreEqual(newValue, originalValue + 1);
+        }
+
+        [Test]
+        public void set_private_reference_property_on_public_object()
+        {
+            var propertyName = "DictionaryProperty";
+            var publicOuter = PublicOuter.Create();
+
+            var getter = VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, Dictionary<string, object>>(propertyName);
+            var originalValue = getter(publicOuter);
+
+            var setter = VisibilityBypasser.Instance.GeneratePropertySetter<Dictionary<string,object>>(publicOuter, propertyName);
+
+            setter(new Dictionary<string, object>() { { "newKey", "newValue" } });
+
+            var newValue = getter(publicOuter);
+
+            Assert.AreNotSame(originalValue, newValue);
+            Assert.That((string)newValue["newKey"] == "newValue");
+        }
+
+        [Test]
+        public void set_private_reference_property_on_private_object()
+        {
+            var assemblyName = Assembly.GetExecutingAssembly().FullName;
+            var typeName = "NewRelic.Reflection.UnitTests.PublicOuter+PrivateInner";
+            var propertyName = "DictionaryProperty";
+            var privateInner = PublicOuter.CreatePrivateInner();
+
+            var getter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(assemblyName, typeName, propertyName);
+            var originalValue = getter(privateInner);
+
+            var setter = VisibilityBypasser.Instance.GeneratePropertySetter<Dictionary<string, object>>(privateInner, propertyName);
+
+            setter(new Dictionary<string, object>() { { "newKey", "newValue" } });
+
+            var newValue = (Dictionary<string,object>)getter(privateInner);
+
+            Assert.AreNotSame(originalValue, newValue);
+            Assert.That((string)newValue["newKey"] == "newValue");
+        }
+
+        [Test]
+        public void set_private_value_property_on_private_object()
+        {
+            var assemblyName = Assembly.GetExecutingAssembly().FullName;
+            var typeName = "NewRelic.Reflection.UnitTests.PublicOuter+PrivateInner";
+            var propertyName = "Int32Property";
+            var privateInner = PublicOuter.CreatePrivateInner();
+
+            var getter = VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(assemblyName, typeName, propertyName);
+            var originalValue = getter(privateInner);
+
+            var setter = VisibilityBypasser.Instance.GeneratePropertySetter<int>(privateInner, propertyName);
+            setter(originalValue + 1);
+
+            var newValue = getter(privateInner);
+
+            Assert.AreEqual(newValue, originalValue + 1);
+        }
+
+        [Test]
+        public void setter_with_incorrect_target_type()
+        {
+            var propertyName = "DictionaryProperty";
+            var publicOuter = PublicOuter.Create();
+
+            Assert.Throws<ArgumentException>(() => VisibilityBypasser.Instance.GeneratePropertySetter<int>(publicOuter, propertyName));
+        }
+
+        [Test]
+        public void setter_with_incorrect_property_name()
+        {
+            var publicOuter = PublicOuter.Create();
+
+            Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GeneratePropertySetter<int>(publicOuter, "does_not_exist"));
+        }
+
     }
 
     public class ConstructorAccessTests
