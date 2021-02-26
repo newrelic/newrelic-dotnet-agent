@@ -1,0 +1,72 @@
+name: Deploy the .NET New Relic Lambda Tracer
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
+        required: true
+      deploy:
+        description: 'If "true", deploy the artifacts. If "false", do everything except deploy.'
+        required: true
+        default: 'false'
+
+env:
+  DOTNET_NOLOGO: true
+
+jobs:
+
+  get-external-artifacts:
+    name: Get and Publish Deploy Artifacts Locally
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Deploy Artifacts
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: awslambda_release.yml
+          run_id: ${{ github.event.inputs.run_id }}
+          name: deploy-artifacts
+          path: ${{ github.workspace }}
+          repo: ${{ github.repository }}
+      
+      - name: Upload Deploy Artifacts Locally
+        uses: actions/upload-artifact@v2
+        with:
+          name: deploy-artifacts
+          path: ${{ github.workspace }}/build/BuildArtifacts
+          if-no-files-found: error
+  
+  deploy-nuget:
+    needs: get-external-artifacts
+    if: ${{ github.event.inputs.nuget == 'true' }}
+    name: Deploy to NuGet
+    runs-on: windows-2019
+
+    env:
+      nuget_source: https://www.nuget.org
+
+    steps:
+      - name: Download Deploy Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: deploy-artifacts
+          path: ${{ github.workspace }}\working_dir
+
+      - name: Setup NuGet API Key
+        run: |
+          nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
+        shell: pwsh
+
+      - name: Deploy .NET New Relic Lambda Tracer to Nuget
+        run: |
+          $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAwsLambdaOpenTracer\NewRelic.OpenTracing.AmazonLambda.Tracer.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAwsLambdaOpenTracer\$packageName
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.nuget_source }}
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+          }
+        shell: powershell
