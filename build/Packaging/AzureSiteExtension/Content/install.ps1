@@ -30,7 +30,7 @@ function CheckIfAppIs35
 		Foreach($appPool in $appPools)
 		{
 			if ($appPool.Attributes["managedRuntimeVersion"].Value -eq "v2.0" )
-			{		
+			{
 				return $TRUE
 			}
 		}
@@ -149,6 +149,14 @@ function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath)
 
 	###Restore saved newrelic.config and custom instrumemtation files###
 	RestoreCustomerRelatedFiles $newRelicInstallPath
+
+	###Remove Linux Grpc library since it won't be used.
+	$linuxGrpcLib = "$newRelicInstallPath\libgrpc_csharp_ext.x64.so"
+	if(Test-Path $linuxGrpcLib)
+	{
+		WriteToInstallLog "Remove Linux Grpc library since it won't be used"
+		Remove-Item $linuxGrpcLib
+	}
 }
 
 function RemoveXmlElements($file, $xPaths)
@@ -184,6 +192,36 @@ function CopyAgentInfo($agentInfoDestination)
 	catch
 	{
 		WriteToInstallLog "Failed to configure $agentInfoFilePath  to $agentInfoDestination"
+	}
+}
+
+function RemoveNewRelicInstallArtifacts($fromDirectory)
+{
+	WriteToInstallLog "Removing New Relic install artifacts"
+
+	try
+	{
+		if (Test-Path -Path "$fromDirectory\NewRelicPackage")
+		{
+			Remove-Item -Recurse NewRelicPackage -ErrorAction Stop
+		}
+	}
+	catch
+	{
+		WriteToInstallLog "Unable to remove 'NewRelicPackage' directory"
+		exit 1
+	}
+
+	try
+	{
+		if (Test-Path -Path "$fromDirectory\NewRelicCorePackage")
+		{
+			Remove-Item -Recurse NewRelicCorePackage -ErrorAction Stop
+		}
+	}
+	catch {
+		WriteToInstallLog "Unable to remove 'NewRelicCorePackage' directory"
+		exit 1
 	}
 }
 
@@ -243,30 +281,7 @@ try
 		WriteToInstallLog "The environment variable NEWRELIC_LICENSEKEY or NEW_RELIC_LICENSE_KEY must be set. Please make sure to add one."
 	}
 
-	try
-	{
-		if (Test-Path -Path "NewRelicPackage")
-		{
-			Remove-Item -Recurse NewRelicPackage -ErrorAction Stop
-		}
-	}
-	catch
-	{
-		WriteToInstallLog "Unable to remove 'NewRelicPackage' directory"
-		exit 1
-	}
-
-	try
-	{
-		if (Test-Path -Path "NewRelicCorePackage")
-		{
-			Remove-Item -Recurse NewRelicCorePackage -ErrorAction Stop
-		}
-	}
-	catch {
-		WriteToInstallLog "Unable to remove 'NewRelicCorePackage' directory"
-		exit 1
-	}
+	RemoveNewRelicInstallArtifacts "."
 
 	if ([System.Version]$agentVersion -ge [System.Version]"8.17.438")
 	{
@@ -326,6 +341,8 @@ try
 
 		cd ..\..
 	}
+
+	RemoveNewRelicInstallArtifacts "."
 
 	WriteToInstallLog "End executing install.ps1."
 	WriteToInstallLog "-----------------------------"
