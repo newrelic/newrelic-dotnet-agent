@@ -157,6 +157,14 @@ function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath)
 		WriteToInstallLog "Remove Linux Grpc library since it won't be used"
 		Remove-Item $linuxGrpcLib
 	}
+
+	###Remove Linux profiler since it won't be used.
+	$linuxProfiler = "$newRelicInstallPath\libNewRelicProfiler.so"
+	if(Test-Path $linuxProfiler)
+	{
+		WriteToInstallLog "Remove Linux profiler since it won't be used"
+		Remove-Item $linuxProfiler
+	}
 }
 
 function RemoveXmlElements($file, $xPaths)
