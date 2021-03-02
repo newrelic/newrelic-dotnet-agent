@@ -23,8 +23,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
             _fixture = fixture;
             fixture.TestLogger = output;
 
+            // RabbitMQ SendRecieve uses the BasicGet method to receive, which does not process incoming tracing payloads
             _fixture.AddCommand($"RabbitMQ SendReceive {_sendReceiveQueue} TestMessage");
-            _fixture.AddCommand($"RabbitMQ SendReceiveWithEventingConsumer {_sendReceiveQueue} EventingConsumerTestMessage");
+            // RabbitMQ SendRecieveWithEventingConsumer uses the HandleBasicDeliverWrapper on the receiving side, which does process incoming tracing headers
+            // We execute the method twice to make sure this issue stays fixed: https://github.com/newrelic/newrelic-dotnet-agent/issues/464
+            _fixture.AddCommand($"RabbitMQ SendReceiveWithEventingConsumer {_sendReceiveQueue} EventingConsumerTestMessageOne");
+            _fixture.AddCommand($"RabbitMQ SendReceiveWithEventingConsumer {_sendReceiveQueue} EventingConsumerTestMessageTwo");
             // This is needed to avoid a hang on shutdown in the test app
             _fixture.AddCommand("RabbitMQ Shutdown");
 
@@ -47,9 +51,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "Supportability/DistributedTrace/CreatePayload/Success", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Create/Success", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Accept/Success", callCount = 1 }
+                new Assertions.ExpectedMetric { metricName = "Supportability/DistributedTrace/CreatePayload/Success", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Create/Success", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = "Supportability/TraceContext/Accept/Success", callCount = 2 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics();
