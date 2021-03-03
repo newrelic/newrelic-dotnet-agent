@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 ### Fixes
+* Fixes issue [#399](https://github.com/newrelic/newrelic-dotnet-agent/issues/399): The New Relic Azure Site Extension leaves smaller footprint after install.
 * Fixes issue [#169](https://github.com/newrelic/newrelic-dotnet-agent/issues/169): Profiler should be able to match method parameters from XML that contain a space.
 * Fixes issue [#464](https://github.com/newrelic/newrelic-dotnet-agent/issues/464): Distributed tracing over RabbitMQ does not work with `RabbitMQ.Client` versions 6.x+
 
