@@ -218,7 +218,7 @@ Fixes issue where updating custom instrumentation while application is running c
   New method, `AddCustomAttribute(string, object)` has been added to `ISpan`.
 
   * This new method accepts and supports all data-types.
-  * Further information may be found within [.NET Agent API documentation](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/iSpan).
+  * Further information may be found within [.NET Agent API documentation](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/ispan).
   * Adding custom attributes to spans requires distributed tracing and span events to be enabled. See [.NET agent configuration](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#distributed_tracing)
 
 
