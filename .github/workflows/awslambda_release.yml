@@ -28,6 +28,8 @@ jobs:
 
     env:
       tracer_project_path: ${{ github.workspace }}\src\AwsLambda\AwsLambdaOpenTracer\Tracer.csproj
+      tracer_tests_project_path: ${{ github.workspace }}\tests\AwsLambda\UnitTests\AwsLambdaOpenTracerTests\AwsLambdaOpenTracerTests.csproj
+      wrapper_tests_project_path: ${{ github.workspace }}\\tests\AwsLambda\UnitTests\AwsLambdaWrapperTests\AwsLambdaWrapperTests.csproj
 
     steps:
       - name: Checkout
@@ -41,12 +43,17 @@ jobs:
       - name: Setup VSTest Path
         uses: darenm/Setup-VSTest@v1
       
-      - name: Build FullAgent.sln
+      - name: Build Lambda Tracer
         run: |
           Write-Host "List NuGet Sources"
           dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.tracer_project_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.tracer_project_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.tracer_tests_project_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.tracer_tests_project_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.wrapper_tests_project_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.wrapper_tests_project_path }}
+
         shell: powershell
 
       - name: Archive NewRelic.OpenTracing.AmazonLambda.Tracer
