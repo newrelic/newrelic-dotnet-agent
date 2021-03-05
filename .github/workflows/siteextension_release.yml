@@ -26,6 +26,9 @@ jobs:
     name: Run ArtifactBuilder
     runs-on: windows-2019
 
+    env:
+      artifacts_script_path: ${{ github.workspace }}\build
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -34,10 +37,9 @@ jobs:
 
       - name: Run ArtifactBuilder
         run: |
-          $rootDirectory = Resolve-Path "$(Split-Path -Parent $PSCommandPath)\.."
           $configuration = "Release"
-          $artifactBuilderCsproj = "$rootDirectory\build\ArtifactBuilder\ArtifactBuilder.csproj"
-          & "$rootDirectory\build\generateBuildProperties.ps1" -outputPath "$rootDirectory\build\BuildArtifacts\_buildProperties"
+          $artifactBuilderCsproj = "${{ env.artifacts_script_path }}\ArtifactBuilder\ArtifactBuilder.csproj"
+          & "${{ env.artifacts_script_path }}\generateBuildProperties.ps1" -outputPath "${{ env.artifacts_script_path }}\BuildArtifacts\_buildProperties"
           dotnet run --project "$artifactBuilderCsproj" AzureSiteExtension $configuration
         shell: powershell
 
