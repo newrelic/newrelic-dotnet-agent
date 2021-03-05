@@ -28,12 +28,24 @@ jobs:
 
     env:
       artifacts_script_path: ${{ github.workspace }}\build
+      nuget_helper_project_path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Build NewRelic.NuGetHelper
+        run: |
+          Write-Host "Build NewRelic.NuGetHelper"
+          dotnet nuget list source
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.nuget_helper_project_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.nuget_helper_project_path }}
+        shell: powershell
 
       - name: Run ArtifactBuilder
         run: |
