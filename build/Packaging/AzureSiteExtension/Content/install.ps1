@@ -227,7 +227,8 @@ function RemoveNewRelicInstallArtifacts($fromDirectory)
 			Remove-Item -Recurse NewRelicCorePackage -ErrorAction Stop
 		}
 	}
-	catch {
+	catch
+    {
 		WriteToInstallLog "Unable to remove 'NewRelicCorePackage' directory"
 		exit 1
 	}
