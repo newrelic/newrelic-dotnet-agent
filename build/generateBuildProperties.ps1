@@ -11,7 +11,7 @@ Param(
 New-Item -ItemType Directory -Force -Path $outputPath
 
 function getVersionFromTag([string] $tagPrefix, [switch] $excludeCommitCount) {
-    $GitLatestTagVersion = git describe --match "$tagPrefix[0-9]*" --abbrev=0 HEAD
+    $GitLatestTagVersion = git describe --tags --match "$tagPrefix[0-9]*" --abbrev=0 HEAD
     $GitGitLatestTagVersionSanitized = $GitLatestTagVersion.Replace($tagPrefix,'')
     $GitCommitCount = git rev-list "$GitLatestTagVersion..$GitBranchName" --count HEAD
     $GitVersion = "$GitGitLatestTagVersionSanitized.$GitCommitCount"
