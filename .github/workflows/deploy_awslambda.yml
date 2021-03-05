@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: deploy-artifacts
-          path: ${{ github.workspace }}/build/BuildArtifacts
+          path: ${{ github.workspace }}
           if-no-files-found: error
   
   deploy-nuget:
