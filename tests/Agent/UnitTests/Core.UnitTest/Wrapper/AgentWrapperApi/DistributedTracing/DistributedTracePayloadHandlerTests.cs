@@ -22,7 +22,9 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
@@ -759,6 +761,53 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
             Assert.That(headers.Where(header => header.Key == NewRelicPayloadHeaderName).Count() == 0, "There should not be a newrelic header");
             Assert.That(headers.Where(header => header.Key == TraceParentHeaderName).Count() > 0, "There must be at least a traceparent header");
             Assert.That(headers.Where(header => header.Key == TracestateHeaderName).Count() > 0, "There must be at least a tracestate header");
+            Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextCreateSuccess(), Occurs.Once());
+        }
+
+        //This test makes sure string presentation for Priority is culture independent.
+        [TestCase(1.123000f, "1.123")]
+        public void W3C_InsertDistributedTraceHeaders_PriorityInRightFormat_CultureIndependent(float testPriority, string expectedPriorityString)
+        {
+            //Set up "eu-ES" culture for this test thread. In this culture, calling ToString() on a float of 1.123f will result a string of "1,123" instead of "1.123". 
+            var ci = new CultureInfo("eu-ES");
+            Thread.CurrentThread.CurrentCulture = ci;
+            Thread.CurrentThread.CurrentUICulture = ci;
+
+            // Arrange
+            Mock.Arrange(() => _configuration.ExcludeNewrelicHeader).Returns(true);
+            Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
+
+            var transaction = BuildMockTransaction(sampled: true);
+            Mock.Arrange(() => transaction.Priority).Returns(testPriority);
+
+            Mock.Arrange(() => transaction.Guid).Returns(GuidGenerator.GenerateNewRelicGuid());
+
+            var segment = Mock.Create<ISegment>();
+            Mock.Arrange(() => segment.SpanId).Returns(GuidGenerator.GenerateNewRelicGuid());
+            Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+
+            var headers = new List<KeyValuePair<string, string>>();
+            var setHeaders = new Action<List<KeyValuePair<string, string>>, string, string>((carrier, key, value) =>
+            {
+                carrier.Add(new KeyValuePair<string, string>(key, value));
+            });
+
+            var tracingState = Mock.Create<ITracingState>();
+            var vendorStateEntries = new List<string> { "k1=v1", "k2=v2" };
+
+            Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
+            Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
+
+            Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<List<KeyValuePair<string, string>>>(), Arg.IsAny<Action<List<KeyValuePair<string, string>>, string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, headers, setHeaders));
+
+            // Act
+            transaction.InsertDistributedTraceHeaders(headers, setHeaders);
+
+            var tracestateHeaderValue = headers.Where(header => header.Key == TracestateHeaderName).Select(header => header.Value).ToList();
+            var priorityIndex = 7;
+            var priorityString = tracestateHeaderValue[0].Split('-')[priorityIndex];
+            Assert.AreEqual(expectedPriorityString, priorityString);
+
             Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextCreateSuccess(), Occurs.Once());
         }
 
