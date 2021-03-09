@@ -158,7 +158,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             var spanId = _configurationService.Configuration.SpanEventsEnabled ? transaction.CurrentSegment.SpanId : string.Empty;
             var transactionId = _configurationService.Configuration.TransactionEventsEnabled ? transaction.Guid : string.Empty;
             var sampled = transaction.Sampled.Value ? "1" : "0";
-            var priority = string.Format(PriorityFormat, transaction.Priority);
+            var priority = string.Format(System.Globalization.CultureInfo.InvariantCulture, PriorityFormat, transaction.Priority);
             var timestampInMillis = timestamp.ToUnixTimeMilliseconds();
 
             var newRelicTracestate = $"{accountKey}@nr={version}-{parentType}-{parentAccountId}-{appId}-{spanId}-{transactionId}-{sampled}-{priority}-{timestampInMillis}";
