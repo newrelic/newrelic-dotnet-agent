@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 ### Fixes
-* Fix for lambdas using extension path that occasionally time out due to IOException: file is in use error. 
+
+
+## [1.2.1] - 2021-03-09
+
+### Fixes
+* Fixes for lambdas using extension path that occasionally time out due to IOException: file is in use error. 
 
 ## [1.1.0] - 2020-09-15
 
@@ -24,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **The New Relic AWS Lambda Agent for .NET is now Open Source** <br/>
 * The New Relic AWS Lambda Agent for .NET is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in the repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](https://opensource.newrelic.com/code-of-conduct/) for details on contributing!
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AwsLambdaOpenTracer_v1.1.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AwsLambdaOpenTracer_v1.2.1...HEAD
+[1.2.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AwsLambdaOpenTracer_v1.2.0...AwsLambdaOpenTracer_v1.2.1
+[1.2.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AwsLambdaOpenTracer_v1.1.0...AwsLambdaOpenTracer_v1.2.0
 [1.1.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AwsLambdaOpenTracer_v1.0.0...AwsLambdaOpenTracer_v1.1.0
 [1.0.0]: https://github.com/newrelic/newrelic-dotnet-agent/commit/5c27f338a32edb6390a6ebfd4d8c5177bc008b27
