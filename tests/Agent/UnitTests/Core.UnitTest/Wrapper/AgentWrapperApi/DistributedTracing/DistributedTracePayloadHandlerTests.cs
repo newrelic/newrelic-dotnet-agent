@@ -764,7 +764,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
             Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextCreateSuccess(), Occurs.Once());
         }
 
-        //This test makes sure string presentation for Priority is culture independent.
+        //This test makes sure string presentation for Priority in a tracestate is culture independent.
         [TestCase(1.123000f, "1.123")]
         public void W3C_InsertDistributedTraceHeaders_CultureIndependent_PriorityInRightFormat(float testPriority, string expectedPriorityString)
         {
