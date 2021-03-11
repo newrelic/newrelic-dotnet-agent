@@ -184,7 +184,7 @@ namespace NewRelic.Core.DistributedTracing
                 }
             }
 
-            if (float.TryParse(priorityString, out priority))
+            if (float.TryParse(priorityString, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out priority))
             {
                 return true;
             }

@@ -125,8 +125,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
         //Valid tracestate - Priority has only integer part
         [TestCase("33@nr=0-0-33-5043-27ddd2d8890283b4-5569065a5b1313bd-1-123-1518469636025,aa=1111,bb=222", "33", "aa=1111,bb=222", 1, 123f, IngestErrorType.None)]
 
-        //Invalid tracestate - Priority is in unaccepted format (Example: 1e-2) so will be null, but Invalid status is due to it parsing into 10 fields (not 9) which is not valid for the version (0)
+        //Invalid tracestate - Priority is in unaccepted format (Example: 1e-2, 1,234) so will be null, but Invalid status is due to it parsing into 10 fields (not 9) which is not valid for the version (0)
         [TestCase("33@nr=0-0-33-5043-27ddd2d8890283b4-5569065a5b1313bd-1-1e-2-1518469636025,aa=1111,bb=222", "33", "aa=1111,bb=222", null, null, IngestErrorType.TraceStateInvalidNrEntry)]
+        [TestCase("33@nr=0-0-33-5043-27ddd2d8890283b4-5569065a5b1313bd-1-1,234-1518469636025,aa=1111,bb=222", "33", "aa=1111,bb=222", null, null, IngestErrorType.TraceStateInvalidNrEntry)]
 
         //Invalid tracestate - Value has non ASCII characters
         [TestCase("33@nr=¢µÈÈÂÂÂÂÂ,aa=1111,bb=222", "33", "aa=1111,bb=222", null, null, IngestErrorType.TraceStateInvalidNrEntry)]
