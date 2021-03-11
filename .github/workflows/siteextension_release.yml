@@ -1,0 +1,64 @@
+name: .NET New Relic Azure Site Extension Release Build
+
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+env:
+  scripts_path: ${{ github.workspace }}\build\scripts
+  tools_path: ${{ github.workspace }}\build\Tools
+  DOTNET_NOLOGO: true
+
+jobs:
+
+  cancel-previous-workflow-runs:
+    if:  github.event_name == 'workflow_dispatch' || ( github.event_name == 'release' && startsWith(github.ref, 'refs/tags/AzureSiteExtension_v') )
+    name: Cancel Previous Runs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: rokroskar/workflow-run-cleanup-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  run-artifactbuilder:
+    if: ${{ github.event.release }}
+    name: Run ArtifactBuilder
+    runs-on: windows-2019
+
+    env:
+      artifacts_script_path: ${{ github.workspace }}\build
+      nuget_helper_project_path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Build NewRelic.NuGetHelper
+        run: |
+          Write-Host "Build NewRelic.NuGetHelper"
+          dotnet nuget list source
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.nuget_helper_project_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.nuget_helper_project_path }}
+        shell: powershell
+
+      - name: Run ArtifactBuilder
+        run: |
+          $configuration = "Release"
+          $artifactBuilderCsproj = "${{ env.artifacts_script_path }}\ArtifactBuilder\ArtifactBuilder.csproj"
+          & "${{ env.artifacts_script_path }}\generateBuildProperties.ps1" -outputPath "${{ env.artifacts_script_path }}\BuildArtifacts\_buildProperties"
+          dotnet run --project "$artifactBuilderCsproj" AzureSiteExtension $configuration
+        shell: powershell
+
+      - name: Archive Deploy Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: deploy-artifacts
+          path: |
+            ${{ github.workspace }}\build\BuildArtifacts
+          if-no-files-found: error

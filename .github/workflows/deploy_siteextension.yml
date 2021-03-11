@@ -1,10 +1,10 @@
-name: Deploy the .NET New Relic Lambda Tracer
+name: Deploy the New Relic Azure Site Extension
 
 on:
   workflow_dispatch:
     inputs:
       run_id:
-        description: 'Run ID of the Release Workflow (awslambda_release.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
+        description: 'Run ID of the Release Workflow (siteextension_release.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
       deploy:
         description: 'If "true", deploy the artifacts. If "false", do everything except deploy.'
@@ -24,7 +24,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: awslambda_release.yml
+          workflow: siteextension_release.yml
           run_id: ${{ github.event.inputs.run_id }}
           name: deploy-artifacts
           path: ${{ github.workspace }}
@@ -57,10 +57,10 @@ jobs:
           nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
         shell: pwsh
 
-      - name: Deploy .NET New Relic Lambda Tracer to Nuget
+      - name: Deploy New Relic Azure Site Extension to Nuget
         run: |
-          $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAwsLambdaOpenTracer\NewRelic.OpenTracing.AmazonLambda.Tracer.*.nupkg -Name
-          $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAwsLambdaOpenTracer\$packageName
+          $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\AzureSiteExtension\NewRelic.Azure.WebSites.Extension.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}\working_dir\AzureSiteExtension\$packageName
           if ("${{ github.event.inputs.deploy }}" -eq "true") {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }

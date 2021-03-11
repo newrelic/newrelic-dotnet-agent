@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 ### Fixes
+* Fixes issue [#399](https://github.com/newrelic/newrelic-dotnet-agent/issues/399): The New Relic Azure Site Extension leaves smaller footprint after install.
 * Fixes issue [#169](https://github.com/newrelic/newrelic-dotnet-agent/issues/169): Profiler should be able to match method parameters from XML that contain a space.
 * Fixes issue [#464](https://github.com/newrelic/newrelic-dotnet-agent/issues/464): Distributed tracing over RabbitMQ does not work with `RabbitMQ.Client` versions 6.x+
 * Fixes issue [#267](https://github.com/newrelic/newrelic-dotnet-agent/issues/267): On Linux, the profiler fails to parse config files that start with a UTF-8 byte-order-mark (BOM).
@@ -218,7 +219,7 @@ Fixes issue where updating custom instrumentation while application is running c
   New method, `AddCustomAttribute(string, object)` has been added to `ISpan`.
 
   * This new method accepts and supports all data-types.
-  * Further information may be found within [.NET Agent API documentation](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/iSpan).
+  * Further information may be found within [.NET Agent API documentation](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/ispan).
   * Adding custom attributes to spans requires distributed tracing and span events to be enabled. See [.NET agent configuration](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#distributed_tracing)
 
 
