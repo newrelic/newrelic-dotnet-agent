@@ -81,14 +81,20 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 SetApplicationPools(appliedNewRelicConfigurationNode);
 
             } catch (const rapidxml::parse_error& exception) {
-                LogError(L"Exception thrown while attempting to parse main newrelic.config file. ", exception.what(), L" at ", exception.where<wchar_t>());
+                // We log two separate error messages here because sometimes the logging macros hang when
+                // logging the "where" contents
+                LogError(L"Exception thrown while attempting to parse main newrelic.config file: ", exception.what());
+                LogError(L"Exception thrown at ", exception.where<wchar_t>());
                 throw ConfigurationException();
             }
 
             try {
                 SetEnabledViaApplicationConfiguration(applicationConfiguration);
             } catch (const rapidxml::parse_error& exception) {
-                LogError(L"Exception thrown while attempting to parse app-specific config file. ", exception.what(), L" at ", exception.where<wchar_t>());
+                // We log two separate error messages here because sometimes the logging macros hang when
+                // logging the "where" contents
+                LogError(L"Exception thrown while attempting to parse app-specific config file: ", exception.what(), L" at ", exception.where<wchar_t>());
+                LogError(L"Exception thrown at ", exception.where<wchar_t>());
                 throw ConfigurationException();
             }
         }
