@@ -766,9 +766,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
         //This test makes sure string presentation for Priority is culture independent.
         [TestCase(1.123000f, "1.123")]
-        public void W3C_InsertDistributedTraceHeaders_PriorityInRightFormat_CultureIndependent(float testPriority, string expectedPriorityString)
+        public void W3C_InsertDistributedTraceHeaders_CultureIndependent_PriorityInRightFormat(float testPriority, string expectedPriorityString)
         {
-            //Set up "eu-ES" culture for this test thread. In this culture, calling ToString() on a float of 1.123f will result a string of "1,123" instead of "1.123". 
+            //Set up "eu-ES" culture for this test thread. In this culture, calling ToString() on a float of 1.123f will result this string "1,123" instead of "1.123". 
             var ci = new CultureInfo("eu-ES");
             Thread.CurrentThread.CurrentCulture = ci;
             Thread.CurrentThread.CurrentUICulture = ci;
