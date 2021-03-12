@@ -88,7 +88,7 @@ namespace AspNetCoreMvcBasicRequestsApplication.Controllers
         [HttpGet]
         public async Task<string> HttpClientFactory()
         {
-            await _httpClientFactory.CreateClient().GetStringAsync("https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/feed");
+            await _httpClientFactory.CreateClient().GetStringAsync("https://docs.newrelic.com/");
 
             return "Worked";
         }
