@@ -69,7 +69,7 @@ namespace NewRelic.Core.DistributedTracing
             Error = error;
         }
 
-        public override string ToString() => $"{AccountId}@nr={Version}-{(int)ParentType}-{AccountId}-{AppId}-{SpanId}-{TransactionId}-{Sampled}-{Priority}-{Timestamp}";
+        public override string ToString() => $"{AccountId}@nr={Version}-{(int)ParentType}-{AccountId}-{AppId}-{SpanId}-{TransactionId}-{Sampled}-" + Priority?.ToString(System.Globalization.CultureInfo.InvariantCulture) + $"-{Timestamp}";
 
         public static W3CTracestate GetW3CTracestateFromHeaders(IEnumerable<string> tracestateCollection, string trustedAccountKey)
         {
@@ -184,7 +184,7 @@ namespace NewRelic.Core.DistributedTracing
                 }
             }
 
-            if (float.TryParse(priorityString, out priority))
+            if (float.TryParse(priorityString, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out priority))
             {
                 return true;
             }
