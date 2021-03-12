@@ -797,22 +797,34 @@ namespace Profiler {
 // Ideally we need to be able to handle file paths with multibyte characters in them. Currently, we do not.
 #pragma warning(push)
 #pragma warning(disable : 4244)
-            // attempt to open the file
-            xifstream fileStream(std::string(filePath.begin(), filePath.end()), std::ios::in);
+
+            // Open file to read as a binary byte stream.  This lets us reliably detect and
+            // remove a UTF-8 BOM at the beginning of the file.
+            // See https://github.com/newrelic/newrelic-dotnet-agent/issues/267 for context
+            ifstream inFile(std::string(filePath.begin(), filePath.end()), std::ios::binary);
 #pragma warning(pop)
 
-            if (!fileStream) {
+            if (!inFile) {
                 LogError(L"Unable to open file. File path: ", filePath);
                 throw ProfilerException();
             }
 
-            // read the file in and pipe it to a wide character stream
-            xostringstream result;
-            result << fileStream.rdbuf();
-            fileStream.close();
+            ostringstream charResult;
+            charResult << inFile.rdbuf();
+            inFile.close();
 
-            // return the results
-            return result.str();
+            // Detect and remove UTF-8 BOM
+            auto resultCharStr = charResult.str();
+            auto char1 = static_cast<unsigned char>(resultCharStr[0]);
+            auto char2 = static_cast<unsigned char>(resultCharStr[1]);
+            auto char3 = static_cast<unsigned char>(resultCharStr[2]);
+
+            if (char1 == 0xEF && char2 == 0xBB && char3 == 0xBF) {
+                LogDebug(L"ReadFile (", filePath, L") detected UTF-8 BOM, skipping.");
+                resultCharStr.erase(0, 3);
+            }
+
+            return ToWideString(resultCharStr.c_str());
         }
 
         static std::unique_ptr<xstring_t> TryGetNewRelicHomeFromRegistry()
