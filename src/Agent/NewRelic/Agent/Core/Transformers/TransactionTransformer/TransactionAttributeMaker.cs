@@ -85,23 +85,30 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 _attribDefs.DatabaseCallCount.TrySetValue(attribValues, databaseData.Value0);
             }
 
-            if (_configurationService.Configuration.ErrorCollectorEnabled && immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
+            if (_configurationService.Configuration.ErrorCollectorEnabled)
             {
-                var errorData = immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData;
-
-                _attribDefs.GetTypeAttribute(TypeAttributeValue.TransactionError).TrySetDefault(attribValues);
-
-                _attribDefs.TimestampForError.TrySetValue(attribValues, errorData.NoticedAt);
-                _attribDefs.ErrorClass.TrySetValue(attribValues, errorData.ErrorTypeName);
-                _attribDefs.ErrorType.TrySetValue(attribValues, errorData.ErrorTypeName);
-                _attribDefs.ErrorMessage.TrySetValue(attribValues, errorData.ErrorMessage);
-                _attribDefs.ErrorDotMessage.TrySetValue(attribValues, errorData.ErrorMessage);
-                _attribDefs.IsError.TrySetValue(attribValues, true);
-                _attribDefs.ErrorEventSpanId.TrySetValue(attribValues, immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorDataSpanId);
-
-                if (errorData.IsExpected)
+                if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
                 {
-                    _attribDefs.IsErrorExpected.TrySetValue(attribValues, true);
+                    var errorData = immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData;
+
+                    _attribDefs.GetTypeAttribute(TypeAttributeValue.TransactionError).TrySetDefault(attribValues);
+
+                    _attribDefs.TimestampForError.TrySetValue(attribValues, errorData.NoticedAt);
+                    _attribDefs.ErrorClass.TrySetValue(attribValues, errorData.ErrorTypeName);
+                    _attribDefs.ErrorType.TrySetValue(attribValues, errorData.ErrorTypeName);
+                    _attribDefs.ErrorMessage.TrySetValue(attribValues, errorData.ErrorMessage);
+                    _attribDefs.ErrorDotMessage.TrySetValue(attribValues, errorData.ErrorMessage);
+                    _attribDefs.IsError.TrySetValue(attribValues, true);
+                    _attribDefs.ErrorEventSpanId.TrySetValue(attribValues, immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorDataSpanId);
+
+                    if (errorData.IsExpected)
+                    {
+                        _attribDefs.IsErrorExpected.TrySetValue(attribValues, true);
+                    }
+                }
+                else
+                {
+                    _attribDefs.IsError.TrySetValue(attribValues, false);
                 }
             }
 

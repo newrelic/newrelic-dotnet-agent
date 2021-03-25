@@ -794,6 +794,36 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             );
         }
 
+        [Test]
+        public void GetAttributes_FalseErrorAttributeIncluded_WithNoError()
+        {
+            // ARRANGE
+            var timer = Mock.Create<ITimer>();
+            var expectedStartTime = DateTime.Now;
+            var expectedDuration = TimeSpan.FromMilliseconds(500);
+            Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
+            var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+            var apdexT = TimeSpan.FromSeconds(2);
+            UpdateConfiguration();
+
+            var priority = 0.5f;
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+
+            var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+            txStats.MergeUnscopedStats(MetricNames.ExternalAll, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2)));
+
+            var totalTime = TimeSpan.FromSeconds(1);
+
+            // ACT
+            var transactionAttributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
+
+            // ASSERT
+            NrAssert.Multiple(
+                () => Assert.AreEqual(false, GetAttributeValue(transactionAttributes, "error"))
+            );
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void GetAttributes_ExpecedErrorAttribute_SentToCorrectDestinations(bool isErrorExpected)
