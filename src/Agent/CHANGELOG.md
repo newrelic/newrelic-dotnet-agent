@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 ### Fixes
-* Fixes issue [#500](https://github.com/newrelic/newrelic-dotnet-agent/issues/500): Agent should always create the "error" intrinsics attribute. ([#501](https://github.com/newrelic/newrelic-dotnet-agent/pull/501))
+* Fixes issue [#500](https://github.com/newrelic/newrelic-dotnet-agent/issues/500): For transactions without errors, Agent should still create the `error` intrinsics attribute with its value set to `false`. ([#501](https://github.com/newrelic/newrelic-dotnet-agent/pull/501))
 
 ## [8.39.1] - 2021-03-17
 ### Fixes
