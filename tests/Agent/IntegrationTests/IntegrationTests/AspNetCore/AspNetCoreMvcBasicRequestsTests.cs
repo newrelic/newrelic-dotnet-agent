@@ -73,6 +73,11 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
             Assert.NotNull(transactionSample);
             Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample);
 
+            var getTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/Home/Index");
+
+            // Ensure false error attribute was included even with no errors
+            Assert.True(getTransactionEvent.IntrinsicAttributes.ContainsKey("error"));
+            Assert.Equal(false, getTransactionEvent.IntrinsicAttributes["error"]);
 
             var expectedErrorEventAttributes = new Dictionary<string, string>
             {

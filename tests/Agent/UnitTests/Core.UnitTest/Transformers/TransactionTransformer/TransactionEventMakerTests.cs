@@ -172,8 +172,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                //Test Change:  Moved from 19->18, missing attribute is transactionName which belongs to error events.
-                () => Assert.AreEqual(18, intrinsicAttributes.Count, "intrinsicAttributes.Count"),
+                () => Assert.AreEqual(19, intrinsicAttributes.Count, "intrinsicAttributes.Count"),
                 () => Assert.Contains("guid", intrinsicAttributes.Keys.ToArray(), "IntrinsicAttributes.Keys.Contains('guid')"),
                 () => Assert.AreEqual(immutableTransaction.TracingState.Type.ToString(), intrinsicAttributes["parent.type"], "parent.type"),
                 () => Assert.AreEqual(immutableTransaction.TracingState.AppId, intrinsicAttributes["parent.app"], "parent.app"),
