@@ -15,20 +15,14 @@ namespace NewRelic.Providers.Wrapper.Wcf3
         private const string AssemblyName = "System.ServiceModel";
         private const string TypeName = "System.ServiceModel.Description.DispatcherBuilder";
         private const string MethodName = "InitializeServiceHost";
+        private const string WrapperName = "DispatchBuilderWrapper";
 
         public bool IsTransactionRequired => false;
         private static readonly object _bindingLock = new object();
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny
-            (
-                assemblyName: AssemblyName,
-                typeName: TypeName,
-                methodName: MethodName
-            );
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

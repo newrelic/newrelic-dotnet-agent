@@ -6,63 +6,48 @@ SPDX-License-Identifier: Apache-2.0
 <extension xmlns="urn:newrelic-extension">
 	<instrumentation>
 
-		<!-- WCF 4 -->
-		<tracerFactory>
+		<tracerFactory name="WcfIgnoreOuterTransactionWrapper">
+			<!-- WCF 4 -->
 			<match assemblyName="System.ServiceModel.Activation" className="System.ServiceModel.Activation.HostedHttpRequestAsyncResult">
 				<exactMethodMatcher methodName=".ctor" parameters="System.Web.HttpApplication,System.String,System.Boolean,System.Boolean,System.AsyncCallback,System.Object" />
 			</match>
-		</tracerFactory>
-
-		<!-- WCF 3 -->
-		<tracerFactory>
+			<!-- WCF 3 -->
 			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Activation.HostedHttpRequestAsyncResult">
 				<exactMethodMatcher methodName=".ctor" parameters="System.Web.HttpApplication,System.Boolean,System.AsyncCallback,System.Object" />
 			</match>
 		</tracerFactory>
 
-		<tracerFactory>
+		<tracerFactory name="ServiceChannelProxyWrapper">
 			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Channels.ServiceChannelProxy">
 				<exactMethodMatcher methodName="Invoke" />
 			</match>
 		</tracerFactory>
 
-		<tracerFactory>
+		<tracerFactory name="ChannelFactoryWrapper">
 			<match assemblyName="System.ServiceModel" className="System.ServiceModel.ChannelFactory">
 				<exactMethodMatcher methodName="InitializeEndpoint" />
 			</match>
 		</tracerFactory>
 
-		<tracerFactory>
+		<tracerFactory name="MethodInvokerWrapper">
 			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Dispatcher.SyncMethodInvoker">
 				<exactMethodMatcher methodName="Invoke" />
 			</match>
-		</tracerFactory>
-
-		<tracerFactory>
 			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Dispatcher.AsyncMethodInvoker">
 				<exactMethodMatcher methodName="InvokeBegin" />
 			</match>
-		</tracerFactory>
-
-		<tracerFactory>
 			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Dispatcher.AsyncMethodInvoker">
 				<exactMethodMatcher methodName="InvokeEnd" />
 			</match>
-		</tracerFactory>
-
-		<tracerFactory>
 			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Dispatcher.TaskMethodInvoker">
 				<exactMethodMatcher methodName="InvokeAsync" />
 			</match>
-		</tracerFactory>
-
-		<tracerFactory>
 			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Dispatcher.TaskMethodInvoker">
 				<exactMethodMatcher methodName="InvokeEnd" />
 			</match>
 		</tracerFactory>
 
-		<tracerFactory>
+		<tracerFactory name="DispatchBuilderWrapper">
 			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Description.DispatcherBuilder">
 				<exactMethodMatcher methodName="InitializeServiceHost" parameters="System.ServiceModel.Description.ServiceDescription,System.ServiceModel.ServiceHostBase" />
 			</match>

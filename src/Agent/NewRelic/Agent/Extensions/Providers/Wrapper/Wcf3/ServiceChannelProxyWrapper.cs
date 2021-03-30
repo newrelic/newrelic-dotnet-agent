@@ -26,6 +26,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
         private const string MethodDataType = "System.ServiceModel.Channels.ServiceChannelProxy+MethodData";
         private const string AsyncResultType = "System.Runtime.AsyncResult";
         private const string InvokeMethod = "Invoke";
+        private const string WrapperName = "ServiceChannelProxyWrapper";
 
         public bool IsTransactionRequired => true;
 
@@ -60,18 +61,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny
-            (
-                assemblyName: ServiceModelAssembly,
-                typeName: ServiceChannelProxyType,
-                methodSignatures: new[]
-                {
-                    new MethodSignature(InvokeMethod)
-                }
-            );
-
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
