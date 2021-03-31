@@ -9,20 +9,13 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 {
     public class WcfIgnoreOuterTransactionWrapper : IWrapper
     {
+        private const string WrapperName = "WcfIgnoreOuterTransactionWrapper";
+
         public bool IsTransactionRequired => false;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var method = methodInfo.Method;
-            // WCF 4
-            if (method.MatchesAny(assemblyName: "System.ServiceModel.Activation", typeName: "System.ServiceModel.Activation.HostedHttpRequestAsyncResult",
-                methodName: ".ctor", parameterSignature: "System.Web.HttpApplication,System.String,System.Boolean,System.Boolean,System.AsyncCallback,System.Object"))
-                return new CanWrapResponse(true);
-
-            // WCF 3
-            var canWrap = method.MatchesAny(assemblyName: "System.ServiceModel", typeName: "System.ServiceModel.Activation.HostedHttpRequestAsyncResult",
-                methodName: ".ctor", parameterSignature: "System.Web.HttpApplication,System.Boolean,System.AsyncCallback,System.Object");
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

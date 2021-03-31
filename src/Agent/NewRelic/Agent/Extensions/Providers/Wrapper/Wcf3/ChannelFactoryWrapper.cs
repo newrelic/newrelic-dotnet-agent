@@ -21,16 +21,11 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
         public bool IsTransactionRequired => false;
 
+        private const string WrapperName = "ChannelFactoryWrapper";
+
         public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
         {
-            var method = instrumentedMethodInfo.Method;
-            var canWrap = method.MatchesAny
-            (
-                assemblyName: "System.ServiceModel",
-                typeName: "System.ServiceModel.ChannelFactory",
-                methodName: "InitializeEndpoint"
-            );
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(instrumentedMethodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

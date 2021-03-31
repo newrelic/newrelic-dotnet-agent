@@ -64,7 +64,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
         private const string InvokeBeginMethodName = "InvokeBegin";
         private const string InvokeEndMethodName = "InvokeEnd";
         private const string InvokeAsyncMethodName = "InvokeAsync";
-
+        private const string WrapperName = "MethodInvokerWrapper";
         /// <summary>
         /// Translates the method name to the type of invocation
         /// </summary>
@@ -85,14 +85,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny
-            (
-                assemblyNames: new[] { AssemblyName },
-                typeNames: new[] { SyncTypeName, AsyncTypeName, TAPTypeName },
-                methodNames: new[] { SyncMethodName, InvokeBeginMethodName, InvokeEndMethodName, InvokeAsyncMethodName }
-            );
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         private static IEnumerable<string> ExtractHeaderValue(OperationContext context, string key)
