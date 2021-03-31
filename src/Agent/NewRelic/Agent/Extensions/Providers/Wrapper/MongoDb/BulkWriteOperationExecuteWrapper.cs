@@ -10,13 +10,12 @@ namespace NewRelic.Providers.Wrapper.MongoDb
 {
     public class BulkWriteOperationExecuteWrapper : IWrapper
     {
+        private const string WrapperName = "BulkWriteOperationExecuteWrapper";
         public bool IsTransactionRequired => true;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny(assemblyName: "MongoDB.Driver", typeName: "MongoDB.Driver.BulkWriteOperation", methodNames: new[] { "ExecuteHelper", "Insert" });
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

@@ -11,20 +11,12 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 {
     public class MongoQueryProviderImplWrapper : IWrapper
     {
+        private const string WrapperName = "MongoQueryProviderImplWrapper";
         public bool IsTransactionRequired => true;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var method = methodInfo.Method;
-
-            var canWrap = method.MatchesAny(assemblyName: "MongoDB.Driver", typeName: "MongoDB.Driver.Linq.MongoQueryProviderImpl`1",
-                methodNames: new[]
-                {
-                    "ExecuteModel",
-                    "ExecuteModelAsync"
-                });
-
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

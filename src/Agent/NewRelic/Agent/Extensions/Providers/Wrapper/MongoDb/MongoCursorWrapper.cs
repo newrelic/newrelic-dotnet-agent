@@ -10,13 +10,12 @@ namespace NewRelic.Providers.Wrapper.MongoDb
 {
     public class MongoCursorWrapper : IWrapper
     {
+        private const string WrapperName = "MongoCursorWrapper";
         public bool IsTransactionRequired => true;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny(assemblyName: "MongoDB.Driver", typeName: "MongoDB.Driver.MongoCursor`1", methodName: "GetEnumerator");
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
