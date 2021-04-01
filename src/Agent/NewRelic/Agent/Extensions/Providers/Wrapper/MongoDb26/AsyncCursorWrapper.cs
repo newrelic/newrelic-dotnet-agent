@@ -12,20 +12,12 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 {
     public class AsyncCursorWrapper : IWrapper
     {
+        private const string WrapperName = "AsyncCursorWrapper";
         public bool IsTransactionRequired => true;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var method = methodInfo.Method;
-
-            var canWrap = method.MatchesAny(assemblyName: "MongoDB.Driver.Core", typeName: "MongoDB.Driver.Core.Operations.AsyncCursor`1",
-                methodSignatures: new[]
-                {
-                    new MethodSignature("GetNextBatch", "System.Threading.CancellationToken"),
-                    new MethodSignature("GetNextBatchAsync", "System.Threading.CancellationToken"),
-                });
-
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

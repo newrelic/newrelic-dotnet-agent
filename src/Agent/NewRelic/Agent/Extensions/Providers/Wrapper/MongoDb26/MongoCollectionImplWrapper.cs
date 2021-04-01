@@ -11,39 +11,12 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 {
     public class MongoCollectionImplWrapper : IWrapper
     {
+        private const string WrapperName = "MongoCollectionImplWrapper";
         public bool IsTransactionRequired => true;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var method = methodInfo.Method;
-
-            var canWrap = method.MatchesAny(assemblyName: "MongoDB.Driver", typeName: "MongoDB.Driver.MongoCollectionImpl`1",
-                methodNames: new[]
-                {
-                    "Aggregate",
-                    "BulkWrite",
-                    "Count",
-                    "Distinct",
-                    "FindSync",
-                    "FindOneAndDelete",
-                    "FindOneAndReplace",
-                    "FindOneAndUpdate",
-                    "MapReduce",
-                    "Watch",
-
-                    "AggregateAsync",
-                    "BulkWriteAsync",
-                    "CountAsync",
-                    "DistinctAsync",
-                    "FindAsync",
-                    "FindOneAndDeleteAsync",
-                    "FindOneAndReplaceAsync",
-                    "FindOneAndUpdateAsync",
-                    "MapReduceAsync",
-                    "WatchAsync"
-                });
-
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
