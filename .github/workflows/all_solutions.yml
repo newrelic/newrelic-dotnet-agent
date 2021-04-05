@@ -342,7 +342,7 @@ jobs:
           $Env:AWS_ACCESS_KEY_ID="${{ secrets.TEAM_AWS_ACCESS_KEY_ID }}"
           $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.TEAM_AWS_SECRET_ACCESS_KEY }}"
           $Env:AWS_DEFAULT_REGION="us-west-2"
-          Compress-Archive -Path "$${{ env.multiverse_artifacts_path }}" -DestinationPath C:\MultiverseTesting.zip
+          Compress-Archive -Path "${{ env.multiverse_artifacts_path }}" -DestinationPath C:\MultiverseTesting.zip
           aws s3 cp C:\MultiverseTesting.zip ${{ secrets.MULTIVERSE_BUCKET_NAME }} --acl public-read
         shell: pwsh
 
