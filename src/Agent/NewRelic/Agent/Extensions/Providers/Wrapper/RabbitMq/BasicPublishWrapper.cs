@@ -9,20 +9,15 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 {
     public class BasicPublishWrapper : IWrapper
     {
+        private const string WrapperName = "BasicPublishWrapper";
+
         private const int BasicPropertiesIndex = 3;
 
         public bool IsTransactionRequired => true;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny(assemblyName: RabbitMqHelper.AssemblyName, typeName: RabbitMqHelper.TypeName,
-                methodSignatures: new[]
-                {
-                    new MethodSignature("_Private_BasicPublish","System.String,System.String,System.Boolean,RabbitMQ.Client.IBasicProperties,System.Byte[]"), // 3.6.0+ (5.1.0+)
-                    new MethodSignature("_Private_BasicPublish","System.String,System.String,System.Boolean,RabbitMQ.Client.IBasicProperties,System.ReadOnlyMemory`1[System.Byte]"), // 6.2.1
-				});
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

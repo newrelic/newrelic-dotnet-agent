@@ -4,17 +4,38 @@ Copyright 2020 New Relic Corporation. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
 <extension xmlns="urn:newrelic-extension">
-  <instrumentation>
-    <tracerFactory>
-      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
-        <exactMethodMatcher methodName="_Private_BasicPublish" />
-        <exactMethodMatcher methodName="_Private_BasicGet" />
-        <exactMethodMatcher methodName="_Private_QueuePurge" />
-      </match>
 
-      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Events.EventingBasicConsumer">
-        <exactMethodMatcher methodName="HandleBasicDeliver" />
-      </match>
-    </tracerFactory>
-  </instrumentation>
+	<instrumentation>
+		<tracerFactory name="BasicGetWrapper">
+			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
+				<exactMethodMatcher methodName="_Private_BasicGet" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory name="BasicPublishWrapper">
+			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
+				<exactMethodMatcher methodName="_Private_BasicPublish" parameters="System.String,System.String,System.Boolean,RabbitMQ.Client.IBasicProperties,System.Byte[]"/>
+				<exactMethodMatcher methodName="_Private_BasicPublish" parameters="System.String,System.String,System.Boolean,RabbitMQ.Client.IBasicProperties,System.ReadOnlyMemory`1[System.Byte]"/>
+			</match>
+		</tracerFactory>
+
+		<tracerFactory name="BasicPublishWrapperLegacy">
+			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
+				<exactMethodMatcher methodName="_Private_BasicPublish" parameters="System.String,System.String,System.Boolean,System.Boolean,RabbitMQ.Client.IBasicProperties,System.Byte[]"/>
+			</match>
+		</tracerFactory>
+
+		<tracerFactory name="HandleBasicDeliverWrapper">
+			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Events.EventingBasicConsumer">
+				<exactMethodMatcher methodName="HandleBasicDeliver" />
+			</match>
+		</tracerFactory>
+		
+		<tracerFactory name="QueuePurgeWrapper">
+			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
+				<exactMethodMatcher methodName="_Private_QueuePurge" />
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
 </extension>
