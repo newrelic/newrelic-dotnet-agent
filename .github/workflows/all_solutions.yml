@@ -311,6 +311,7 @@ jobs:
 
     env:
       multiverse_solution_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\MultiverseTesting.sln
+      multiverse_artifacts_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Release\netcoreapp3.1
 
     steps:
       - name: Checkout
@@ -333,7 +334,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: multiverse-testing
-          path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Debug\netcoreapp3.1
+          path: ${{ env.multiverse_artifacts_path }}
           if-no-files-found: error
       
       - name: Push artifacts to S3
@@ -341,8 +342,7 @@ jobs:
           $Env:AWS_ACCESS_KEY_ID="${{ secrets.TEAM_AWS_ACCESS_KEY_ID }}"
           $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.TEAM_AWS_SECRET_ACCESS_KEY }}"
           $Env:AWS_DEFAULT_REGION="us-west-2"
-          Compress-Archive -Path "${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Debug\netcoreapp3.1" -DestinationPath C:\MultiverseTesting.zip
-          aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
+          Compress-Archive -Path "$${{ env.multiverse_artifacts_path }}" -DestinationPath C:\MultiverseTesting.zip
           aws s3 cp C:\MultiverseTesting.zip ${{ secrets.MULTIVERSE_BUCKET_NAME }} --acl public-read
         shell: pwsh
 
