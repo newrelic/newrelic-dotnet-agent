@@ -120,6 +120,14 @@ namespace NewRelic.Agent.Core.Utils
         }
 
         [Test]
+        public static void TestTruncateWithZeroMax()
+        {
+            StackFrame[] stackTraces = GetStackTrace().GetFrames();
+            ICollection<StackFrame> frames = StackTraces.ScrubAndTruncate(stackTraces, 0);
+            Assert.AreEqual(0, frames.Count);
+        }
+
+        [Test]
         public static void TestToString()
         {
             StackFrame frame = new StackFrame("dude", 6, 6);
