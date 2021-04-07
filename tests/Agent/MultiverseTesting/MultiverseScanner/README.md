@@ -1,4 +1,6 @@
-﻿
+﻿## Introduction
+
+This library is used by the ConsoleScanner to analysis and compare instrumentation XML files against assemblies.  
 
 ## Some thoughts
 

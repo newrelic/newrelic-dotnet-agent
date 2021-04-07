@@ -2,7 +2,10 @@
   "profiles": {
     "ConsoleScanner": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\Users\\LyniceSpangler\\source\\repos\\dotnet-multiverse-scanner\\ConsoleScanner\\config.yml\""
+      "commandLineArgs": "\".\\config.yml\"",
+      "environmentVariables": {
+        "myvar": "sometvaluething"
+      }
     }
   }
 }

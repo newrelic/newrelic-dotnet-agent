@@ -31,13 +31,13 @@
   #   local-assemblies:
 
   - name: mongodb
-    xml-file: C:\git\newrelic-dotnet-agent\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\MongoDb\Instrumentation.xml
+    xml-file: ${{ MVS_XML_PATH }}\MongoDb\Instrumentation.xml
     nuget-assemblies:
        - { assembly-name: MongoDB.Driver, versions: [2.0.2, 2.1.1, 2.2.4, 2.3.0, 2.4.4, 2.5.1] }
     local-assemblies:
 
   - name: mongodb26
-    xml-file: C:\git\newrelic-dotnet-agent\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\MongoDb26\Instrumentation.xml
+    xml-file: ${{ MVS_XML_PATH }}\MongoDb26\Instrumentation.xml
     nuget-assemblies:
        - { assembly-name: MongoDB.Driver, versions: [2.6.0, 2.7.3, 2.8.1, 2.9.3, 2.10.4, 2.11.6] }
        - { assembly-name: MongoDB.Driver.Core, versions: [2.6.0, 2.7.3, 2.8.1, 2.9.3, 2.10.4, 2.11.6] }
@@ -72,7 +72,7 @@
   #   local-assemblies:
   
   - name: rabbitmq
-    xml-file: C:\git\newrelic-dotnet-agent\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\RabbitMq\Instrumentation.xml
+    xml-file: ${{ MVS_XML_PATH }}\RabbitMq\Instrumentation.xml
     nuget-assemblies:
        - { assembly-name: RabbitMQ.Client, versions: [3.5.2, 3.6.9, 5.1.2, 5.2.0, 6.2.1] }
     local-assemblies:
