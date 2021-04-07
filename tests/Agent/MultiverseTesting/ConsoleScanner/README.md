@@ -6,6 +6,19 @@ Var: `MVS_XML_PATH`
 
 The path should be as follows:  `<PATH_TO_REPO>\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper`.  The config.yml does not expect and trailing backslash.
 
+## config.yml
+
+More data to come soon!
+
+### Environment variables
+
+To use environment variables, do the following:  `$${{ MY_ENV_VAR }}`.
+This will replace the var with the data from the system, but will throw an exception if nothing is found.
+
+### Built it Vars
+
+- `MVS_XML_PATH` is the path to the XML file location.  This is expected to be in the repo and not to an installation of the agent.
+
 ## How to run
 
 Command:
