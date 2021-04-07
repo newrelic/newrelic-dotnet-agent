@@ -10,3 +10,6 @@ While exist instrumentation changes very infrequently, the same is not true for 
 
 We use Mono.Cecil to inspect the assemblies, without having to acquire their dependecies, to build a list of method signatures.  At the same time we read our instrumentation XML files and build a set of instrumentation points -- method signatures -- to check.  We compare the two to see if we find the expected instrumentation point exists.  If it does, we can reasonably assume that we will be able instrument that method, if not we know for sure that we cannot instrument that method.
 
+### Caveat
+
+Just becuase we are able to find a matching signature does not guarentee that everything will work.  We only check if the signature matches, but there could be changes to types in the signature's parameters that we rely on as well.  An example from recent memorywould of this a type only seen as a parameter changed a property from public to private.  We relied on the data from that property for our instrumentation and this broken things is a way that the tool would not be able to detect.

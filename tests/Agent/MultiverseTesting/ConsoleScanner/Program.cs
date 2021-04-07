@@ -12,8 +12,6 @@ using NewRelic.Agent.MultiverseScanner;
 using NewRelic.Agent.MultiverseScanner.ExtensionSerialization;
 using NewRelic.Agent.MultiverseScanner.Models;
 using NewRelic.Agent.MultiverseScanner.Reporting;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace NewRelic.Agent.ConsoleScanner
 {
@@ -40,7 +38,7 @@ namespace NewRelic.Agent.ConsoleScanner
             }
 
             // deserialize configuration from .yml
-            var configuration = ReadConfigFile(configFilePath);
+            var configuration = ScannerConfiguration.GetScannerConfiguration(configFilePath);
 
             ProcessAssemblies(configuration);
 
@@ -101,15 +99,6 @@ namespace NewRelic.Agent.ConsoleScanner
 
             var instrumentationModel = InstrumentationModel.CreateInstrumentationModel(extension);
             return instrumentationModel;
-        }
-
-        public static ScannerConfiguration ReadConfigFile(string filePath)
-        {
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(HyphenatedNamingConvention.Instance)
-                .Build();
-
-            return deserializer.Deserialize<ScannerConfiguration>(File.ReadAllText(filePath));
         }
 
         // TODO: not the best name, considering all it does
