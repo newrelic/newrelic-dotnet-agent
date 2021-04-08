@@ -77,11 +77,11 @@ namespace NewRelic.Agent.Core.Utils
             {
                 if (line != null && line.IndexOf("at NewRelic.Agent", 0, Math.Min(20, line.Length)) < 0)
                 {
-                    list.Add('\t' + line);
-                    if (list.Count == maxDepth)
+                    if (list.Count >= maxDepth)
                     {
                         return list;
                     }
+                    list.Add('\t' + line);
                 }
             }
 
@@ -104,11 +104,11 @@ namespace NewRelic.Agent.Core.Utils
             {
                 if (frame.GetMethod().DeclaringType != null && !frame.GetMethod().DeclaringType.FullName.StartsWith("NewRelic"))
                 {
-                    list.Add(frame);
-                    if (list.Count == maxDepth)
+                    if (list.Count >= maxDepth)
                     {
                         return list;
                     }
+                    list.Add(frame);
                 }
             }
             return list;
