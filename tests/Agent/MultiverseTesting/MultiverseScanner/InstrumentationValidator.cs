@@ -17,9 +17,14 @@ namespace NewRelic.Agent.MultiverseScanner
             _assemblyAnalysis = assemblyAnalysis;
         }
 
-        public InstrumentationReport CheckInstrumentation(InstrumentationModel instrumentationModel, string instrumentationSetName)
+        public InstrumentationReport CheckInstrumentation(InstrumentationModel instrumentationModel, string instrumentationSetName, string targetFramework)
         {
-            var instrumentationReport = new InstrumentationReport() { InstrumentationSetName = instrumentationSetName };
+            var instrumentationReport = new InstrumentationReport()
+            {
+                InstrumentationSetName = instrumentationSetName,
+                TargetFramework = targetFramework
+            };
+
 
             // Check each AssemblyModel against all instrumentation
             // InstrumentationReport will show aggregated results from all assemblies
@@ -28,7 +33,6 @@ namespace NewRelic.Agent.MultiverseScanner
                 var assemblyReport = new AssemblyReport();
 
                 assemblyReport.AssemblyName = assemblyModel.AssemblyName;
-                assemblyReport.AssemblyVersion = assemblyModel.AssemblyVersion;
 
                 CheckMatch(assemblyModel, instrumentationModel, assemblyReport);
 
@@ -75,6 +79,10 @@ namespace NewRelic.Agent.MultiverseScanner
                 return;
             }
 
+            foreach (var exactMethodMatcher in match.ExactMethodMatchers)
+            {
+                instrumentationReport.AddMethodValidation(match, exactMethodMatcher, false);
+            }
             // class did not match so marking all methods as false - can be changed by later validation attempts
             //MarkAllMethodsAsNotValid(match, instrumentationReport);
         }

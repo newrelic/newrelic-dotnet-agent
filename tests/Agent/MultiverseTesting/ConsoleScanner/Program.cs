@@ -83,7 +83,7 @@ namespace NewRelic.Agent.ConsoleScanner
                 Console.WriteLine("Scan complete");
 
                 // run the validation
-                var report = instrumentationValidator.CheckInstrumentation(instrumentationModel, instrumentationSet.Name);
+                var report = instrumentationValidator.CheckInstrumentation(instrumentationModel, instrumentationSet.Name, instrumentationSet.TargetFramework);
                 _instrumentationReports.Add(report);
             }
         }
@@ -102,7 +102,7 @@ namespace NewRelic.Agent.ConsoleScanner
         }
 
         // TODO: not the best name, considering all it does
-        public static List<string> GetNugetPackages(string packageName, string[] versions, List<string> instrumentationAssemblies)
+        public static List<string> GetNugetPackages(string packageName, string targetFramework, string[] versions, List<string> instrumentationAssemblies)
         {
             var addressPrefix = $"{_nugetSource}/{packageName.ToLower()}";
             List<string> dllFileLocations = new List<string>();
@@ -131,22 +131,25 @@ namespace NewRelic.Agent.ConsoleScanner
                         File.WriteAllBytes(nugetDownloadedPackageFileName, result);
 
                         Console.WriteLine($"Downloaded package {packageName} {version}");
-
-                        // extract dlls from package
-                        
-                        if (Directory.Exists(nugetExtractDirectoryName))
-                        {
-                            Directory.Delete(nugetExtractDirectoryName, true);
-                        }
-                        Directory.CreateDirectory(nugetExtractDirectoryName);
-                        ZipFile.ExtractToDirectory(nugetDownloadedPackageFileName, nugetExtractDirectoryName);
                     }
+
+                    // extract dlls from package
+
+                    if (Directory.Exists(nugetExtractDirectoryName))
+                    {
+                        Directory.Delete(nugetExtractDirectoryName, true);
+                    }
+                    Directory.CreateDirectory(nugetExtractDirectoryName);
+                    ZipFile.ExtractToDirectory(nugetDownloadedPackageFileName, nugetExtractDirectoryName);
 
                     // TODO: this will get every version (net45, netstandard1.5) of the dll in the package, which may not be necessary; 
                     foreach (var instrumentationAssembly in instrumentationAssemblies)
                     {
                         dllFileLocations.AddRange(Directory.GetFiles(nugetExtractDirectoryName, instrumentationAssembly + ".dll", SearchOption.AllDirectories));
                     }
+
+                    dllFileLocations.RemoveAll(dll => !dll.Contains(targetFramework));
+
                 }
             }
             catch (Exception ex)
@@ -165,7 +168,7 @@ namespace NewRelic.Agent.ConsoleScanner
             {
                 foreach (var nugetPackage in instrumentationSet.NugetPackages)
                 {
-                    fileList.AddRange(GetNugetPackages(nugetPackage.PackageName, nugetPackage.Versions, instrumentationAssemblies));
+                    fileList.AddRange(GetNugetPackages(nugetPackage.PackageName, instrumentationSet.TargetFramework, nugetPackage.Versions, instrumentationAssemblies));
                 }
             }
             return fileList;
@@ -182,10 +185,11 @@ namespace NewRelic.Agent.ConsoleScanner
             foreach(var report in _instrumentationReports)
             {
                 Console.WriteLine($"Instrumentation Set: {report.InstrumentationSetName}");
-                foreach(var assemblyReport in report.AssemblyReports)
+                Console.WriteLine($"Target Framework: {report.TargetFramework}");
+                foreach (var assemblyReport in report.AssemblyReports)
                 {
                     Console.Write("\t");
-                    Console.WriteLine($"Assembly Name: {assemblyReport.AssemblyName}; Assembly Version: {assemblyReport.AssemblyVersion}");
+                    Console.WriteLine($"Assembly Name: {assemblyReport.AssemblyName}");
 
                     var methodValidations = assemblyReport.GetMethodValidationsForPrint();
                     foreach (var line in methodValidations)

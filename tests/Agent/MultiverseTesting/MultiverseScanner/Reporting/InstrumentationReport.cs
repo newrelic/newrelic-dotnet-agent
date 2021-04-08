@@ -12,6 +12,8 @@ namespace NewRelic.Agent.MultiverseScanner.Reporting
     public class InstrumentationReport
     {
         public string InstrumentationSetName;
+        public string PakageVersion;
+        public string TargetFramework;
         public List<AssemblyReport> AssemblyReports = new List<AssemblyReport>();
     }
 
