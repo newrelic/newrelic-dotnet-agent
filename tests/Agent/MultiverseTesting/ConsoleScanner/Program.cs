@@ -102,9 +102,9 @@ namespace NewRelic.Agent.ConsoleScanner
         }
 
         // TODO: not the best name, considering all it does
-        public static List<string> GetNugetPackages(string name, string[] versions, List<string> instrumentationAssemblies)
+        public static List<string> GetNugetPackages(string packageName, string[] versions, List<string> instrumentationAssemblies)
         {
-            var addressPrefix = $"{_nugetSource}/{name.ToLower()}";
+            var addressPrefix = $"{_nugetSource}/{packageName.ToLower()}";
             List<string> dllFileLocations = new List<string>();
             try
             {
@@ -116,12 +116,12 @@ namespace NewRelic.Agent.ConsoleScanner
                 foreach (var version in versions)
                 {
                     // set up
-                    var nugetDownloadedPackagePrefix = $"{name.ToLower()}.{version.ToLower()}";
+                    var nugetDownloadedPackagePrefix = $"{packageName.ToLower()}.{version.ToLower()}";
                     var nugetExtractDirectoryName = $"{_nugetDataDirectory}\\{nugetDownloadedPackagePrefix}";
                     var nugetDownloadedPackageFileName = $"{_nugetDataDirectory}\\{nugetDownloadedPackagePrefix}.zip";
 
                     // example address: https://api.nuget.org/v3-flatcontainer/mongodb.driver.core/2.6.0/mongodb.driver.core.2.6.0.nupkg
-                    var address = $"{addressPrefix}/{version.ToLower()}/{name.ToLower()}.{version.ToLower()}.nupkg";
+                    var address = $"{addressPrefix}/{version.ToLower()}/{packageName.ToLower()}.{version.ToLower()}.nupkg";
 
                     // skip downloading on re-run 
                     if (!File.Exists(nugetDownloadedPackageFileName))
@@ -130,7 +130,7 @@ namespace NewRelic.Agent.ConsoleScanner
                         var result = webClient.DownloadData(address);
                         File.WriteAllBytes(nugetDownloadedPackageFileName, result);
 
-                        Console.WriteLine($"Downloaded package {name} {version}");
+                        Console.WriteLine($"Downloaded package {packageName} {version}");
 
                         // extract dlls from package
                         
@@ -161,11 +161,11 @@ namespace NewRelic.Agent.ConsoleScanner
         public static List<string> GetNugetAssemblies(InstrumentationSet instrumentationSet, List<string> instrumentationAssemblies)
         {
             List<string> fileList = new List<string>();
-            if (instrumentationSet.NugetAssemblies != null)
+            if (instrumentationSet.NugetPackages != null)
             {
-                foreach (var nugetAssembly in instrumentationSet.NugetAssemblies)
+                foreach (var nugetPackage in instrumentationSet.NugetPackages)
                 {
-                    fileList.AddRange(GetNugetPackages(nugetAssembly.AssemblyName, nugetAssembly.Versions, instrumentationAssemblies));
+                    fileList.AddRange(GetNugetPackages(nugetPackage.PackageName, nugetPackage.Versions, instrumentationAssemblies));
                 }
             }
             return fileList;

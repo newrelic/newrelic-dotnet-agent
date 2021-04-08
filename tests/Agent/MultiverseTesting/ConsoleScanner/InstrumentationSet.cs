@@ -12,7 +12,7 @@ namespace NewRelic.Agent.ConsoleScanner
 
         public string XmlFile { get; set; }
 
-        public List<NugetSet> NugetAssemblies { get; set; }
+        public List<NugetSet> NugetPackages { get; set; }
 
         public List<string> LocalAssemblies { get; set; }
     }
