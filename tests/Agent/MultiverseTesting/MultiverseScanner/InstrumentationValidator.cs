@@ -17,28 +17,26 @@ namespace NewRelic.Agent.MultiverseScanner
             _assemblyAnalysis = assemblyAnalysis;
         }
 
-        public InstrumentationReport CheckInstrumentation(InstrumentationModel instrumentationModel, string instrumentationSetName, string targetFramework)
+        public InstrumentationReport CheckInstrumentation(InstrumentationModel instrumentationModel, string instrumentationSetName, string targetFramework, string packageVersion, string packageName)
         {
             var instrumentationReport = new InstrumentationReport()
             {
                 InstrumentationSetName = instrumentationSetName,
-                TargetFramework = targetFramework
+                TargetFramework = targetFramework,
+                PackageVersion = packageVersion,
+                PackageName = packageName
             };
 
 
             // Check each AssemblyModel against all instrumentation
-            // InstrumentationReport will show aggregated results from all assemblies
-            foreach (var assemblyModel in _assemblyAnalysis.AssemblyModels.Values)
-            {
-                var assemblyReport = new AssemblyReport();
+            var assemblyReport = new AssemblyReport();
 
-                assemblyReport.AssemblyName = assemblyModel.AssemblyName;
+            assemblyReport.AssemblyName = _assemblyAnalysis.AssemblyModel.AssemblyName;
 
-                CheckMatch(assemblyModel, instrumentationModel, assemblyReport);
+            CheckMatch(_assemblyAnalysis.AssemblyModel, instrumentationModel, assemblyReport);
 
-                instrumentationReport.AssemblyReports.Add(assemblyReport);
-            }
-
+            instrumentationReport.AssemblyReports.Add(assemblyReport);
+ 
             return instrumentationReport;
         }
 

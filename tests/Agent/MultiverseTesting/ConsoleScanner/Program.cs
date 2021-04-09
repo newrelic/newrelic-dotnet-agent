@@ -49,42 +49,32 @@ namespace NewRelic.Agent.ConsoleScanner
         {
             foreach (var instrumentationSet in configuration.InstrumentationSets)
             {
-                // TODO: deal with duplicate assembly names
-
                 // load the instrumentation.xml and create InstrumentationModel
                 var instrumentationModel = ReadInstrumentationFile(instrumentationSet);
 
-                List<string> dllFileLocations = new List<string>();
-
                 // nuget assemblies
-                var nugetDllFileLocations = GetNugetAssemblies(instrumentationSet, instrumentationModel.UniqueAssemblies);
-                if (nugetDllFileLocations != null)
+                var downloadedNugetInfoList = GetNugetAssemblies(instrumentationSet, instrumentationModel.UniqueAssemblies);
+
+                foreach(var downloadedNugetInfo in downloadedNugetInfoList)
                 {
-                    dllFileLocations.AddRange(nugetDllFileLocations);
+                    foreach (var intrumentedDllFileLocation in downloadedNugetInfo.InstrumentedDllFileLocations)
+                    {
+                        // Builds a model from the files
+                        Console.WriteLine($"Starting scan of '{intrumentedDllFileLocation}'");
+                        var assemblyAnalyzer = new AssemblyAnalyzer();
+                        var assemblyAnalysis = assemblyAnalyzer.RunAssemblyAnalysis(intrumentedDllFileLocation);
+
+                        var instrumentationValidator = new InstrumentationValidator(assemblyAnalysis);
+
+                        // just some debugging writes
+                        Console.WriteLine($"Found {assemblyAnalysis.ClassesCount} classes");
+                        Console.WriteLine("Scan complete");
+
+                        // run the validation
+                        var report = instrumentationValidator.CheckInstrumentation(instrumentationModel, instrumentationSet.Name, instrumentationSet.TargetFramework, downloadedNugetInfo.PackageVersion, downloadedNugetInfo.PackageName);
+                        _instrumentationReports.Add(report);
+                    }
                 }
-
-                // local assemblies
-                var localDllFileLocations = GetLocalAssemblies(instrumentationSet);
-                if (localDllFileLocations != null)
-                {
-                    dllFileLocations.AddRange(localDllFileLocations);
-                }
-                var dllFileNames = dllFileLocations.ToArray();
-
-                // Builds a model from the files
-                Console.WriteLine($"Starting scan of '{string.Join(',', dllFileNames)}'");
-                var assemblyAnalyzer = new AssemblyAnalyzer();
-                var assemblyAnalysis = assemblyAnalyzer.RunAssemblyAnalysis(dllFileNames);
-
-                var instrumentationValidator = new InstrumentationValidator(assemblyAnalysis);
-
-                // just some debugging writes
-                Console.WriteLine($"Found {assemblyAnalysis.ClassesCount} classes");
-                Console.WriteLine("Scan complete");
-
-                // run the validation
-                var report = instrumentationValidator.CheckInstrumentation(instrumentationModel, instrumentationSet.Name, instrumentationSet.TargetFramework);
-                _instrumentationReports.Add(report);
             }
         }
 
@@ -101,11 +91,12 @@ namespace NewRelic.Agent.ConsoleScanner
             return instrumentationModel;
         }
 
-        // TODO: not the best name, considering all it does
-        public static List<string> GetNugetPackages(string packageName, string targetFramework, string[] versions, List<string> instrumentationAssemblies)
+        public static List<DownloadedNugetInfo> GetNugetPackages(string packageName, string targetFramework, string[] versions, List<string> instrumentationAssemblies)
         {
             var addressPrefix = $"{_nugetSource}/{packageName.ToLower()}";
-            List<string> dllFileLocations = new List<string>();
+
+            var downloadedNugetInfos = new List<DownloadedNugetInfo>();
+
             try
             {
                 var webClient = new WebClient();
@@ -115,6 +106,8 @@ namespace NewRelic.Agent.ConsoleScanner
 
                 foreach (var version in versions)
                 {
+                    var dllFileLocations = new List<string>();
+
                     // set up
                     var nugetDownloadedPackagePrefix = $"{packageName.ToLower()}.{version.ToLower()}";
                     var nugetExtractDirectoryName = $"{_nugetDataDirectory}\\{nugetDownloadedPackagePrefix}";
@@ -150,6 +143,7 @@ namespace NewRelic.Agent.ConsoleScanner
 
                     dllFileLocations.RemoveAll(dll => !dll.Contains(targetFramework));
 
+                    downloadedNugetInfos.Add(new DownloadedNugetInfo(dllFileLocations, version, packageName));
                 }
             }
             catch (Exception ex)
@@ -158,25 +152,20 @@ namespace NewRelic.Agent.ConsoleScanner
                 Console.WriteLine($"GetNugetPackages exception : {ex}");
             }
 
-            return dllFileLocations;
+            return downloadedNugetInfos;
         }
 
-        public static List<string> GetNugetAssemblies(InstrumentationSet instrumentationSet, List<string> instrumentationAssemblies)
+        public static List<DownloadedNugetInfo> GetNugetAssemblies(InstrumentationSet instrumentationSet, List<string> instrumentationAssemblies)
         {
-            List<string> fileList = new List<string>();
+            var downloadedNugetInfoList = new List<DownloadedNugetInfo>();
             if (instrumentationSet.NugetPackages != null)
             {
                 foreach (var nugetPackage in instrumentationSet.NugetPackages)
                 {
-                    fileList.AddRange(GetNugetPackages(nugetPackage.PackageName, instrumentationSet.TargetFramework, nugetPackage.Versions, instrumentationAssemblies));
+                    downloadedNugetInfoList.AddRange(GetNugetPackages(nugetPackage.PackageName, instrumentationSet.TargetFramework, nugetPackage.Versions, instrumentationAssemblies));
                 }
             }
-            return fileList;
-        }
-
-        public static List<string> GetLocalAssemblies(InstrumentationSet instrumentationSet)
-        {
-            return instrumentationSet.LocalAssemblies;
+            return downloadedNugetInfoList;
         }
 
         public static void PrintReport()
@@ -186,6 +175,9 @@ namespace NewRelic.Agent.ConsoleScanner
             {
                 Console.WriteLine($"Instrumentation Set: {report.InstrumentationSetName}");
                 Console.WriteLine($"Target Framework: {report.TargetFramework}");
+                Console.WriteLine($"Nuget Package Version: {report.PackageVersion}");
+                Console.WriteLine($"Nuget Package Name: {report.PackageName}");
+
                 foreach (var assemblyReport in report.AssemblyReports)
                 {
                     Console.Write("\t");

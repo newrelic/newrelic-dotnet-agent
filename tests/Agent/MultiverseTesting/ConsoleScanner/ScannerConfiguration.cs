@@ -43,7 +43,6 @@ namespace NewRelic.Agent.ConsoleScanner
                 foreach (var nugetSet in instrumentationSet.NugetPackages)
                 {
                     nugetSet.PackageName = GetSubstitutedValue(nugetSet.PackageName);
-                    // not processing versions at this time since its not likely to be replace with an env var
                 }
             }
 
