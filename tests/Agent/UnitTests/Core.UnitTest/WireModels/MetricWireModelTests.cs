@@ -23,8 +23,62 @@ namespace NewRelic.Agent.Core.WireModels
         public void SetUp()
         {
             Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
-
         }
+
+        #region CountMetric NegativeValueCorrection
+
+        [Test]
+        public void ValidateCountMetric_IdentityTest()
+        {
+            var input = new Random().Next();
+            var actual = MetricWireModel.ValidateCountMetric("Don't taze me bro", input);
+            Assert.AreEqual(input, actual);
+        }
+
+        [Test]
+        public void ValidateCountMetric_ClampsNegativeValuesToZero()
+        {
+            var actual = MetricWireModel.ValidateCountMetric("pure evil", -666);
+            Assert.AreEqual(0, actual);
+        }
+
+        [Test]
+        public void BuildCountMetric_IdentityTest()
+        {
+            var inputValue = new Random().Next();
+            var inputName = "Input name";
+            var inputScope = "Input scope";
+
+            var actual = MetricWireModel.BuildCountMetric(_metricNameService, inputName, inputScope, inputValue);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual(inputName, actual.MetricName.Name),
+                () => Assert.AreEqual(inputScope, actual.MetricName.Scope),
+                () => Assert.AreEqual(inputValue, actual.Data.Value0),
+                () => Assert.AreEqual(0, actual.Data.Value1),
+                () => Assert.AreEqual(0, actual.Data.Value2),
+                () => Assert.AreEqual(0, actual.Data.Value3),
+                () => Assert.AreEqual(0, actual.Data.Value4),
+                () => Assert.AreEqual(0, actual.Data.Value5)
+            );
+        }
+
+        [Test]
+        public void BuildCountMetric_ClampsNegativeValuesToZero()
+        {
+            var actual = MetricWireModel.BuildCountMetric(_metricNameService, "SOS", null, -505);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual(0, actual.Data.Value0),
+                () => Assert.AreEqual(0, actual.Data.Value1),
+                () => Assert.AreEqual(0, actual.Data.Value2),
+                () => Assert.AreEqual(0, actual.Data.Value3),
+                () => Assert.AreEqual(0, actual.Data.Value4),
+                () => Assert.AreEqual(0, actual.Data.Value5)
+            );
+        }
+
+        #endregion
 
         #region AddMetricsToEngine
 

@@ -11,6 +11,7 @@ using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
+using NewRelic.Core.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -78,6 +79,30 @@ namespace NewRelic.Agent.Core.WireModels
 
             var metricName = new MetricNameWireModel(newName, scope);
             return new MetricWireModel(metricName, metricData);
+        }
+
+        /// <summary>
+        /// Helper method to validate, log exceptional situations, and return a corrected count value Min(0)
+        /// </summary>
+        /// <returns>The input count corrected to a minimum of 0</returns>
+        public static long ValidateCountMetric(string name, long count)
+        {
+            if (count < 0)
+            {
+                Log.Finest($"Encountered negative count: {count} for metric/scope: {name}");
+                return 0;
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Helper method specific to Count metrics that will correct for negative values.
+        /// </summary>
+        public static MetricWireModel BuildCountMetric(IMetricNameService metricNameService, string proposedName, string scope, long count = 1)
+        {
+            count = ValidateCountMetric(metricNameService.RenameMetric(proposedName) ?? proposedName, count);
+            var data = MetricDataWireModel.BuildCountData(count);
+            return BuildMetric(metricNameService, proposedName, scope, data);
         }
 
         public override string ToString()
@@ -226,8 +251,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             public MetricWireModel TryBuildGCCountMetric(GCSampleType sampleType, int value)
             {
-                var data = MetricDataWireModel.BuildCountData(value);
-                return BuildMetric(_metricNameService, MetricNames.GetGCMetricName(sampleType), null, data);
+                return BuildCountMetric(_metricNameService, MetricNames.GetGCMetricName(sampleType), null, value);
             }
 
             public MetricWireModel TryBuildGCPercentMetric(GCSampleType sampleType, float value)
@@ -457,8 +481,7 @@ namespace NewRelic.Agent.Core.WireModels
             public MetricWireModel TryBuildSupportabilityCountMetric(string metricName, long count)
             {
                 var proposedName = MetricNames.GetSupportabilityName(metricName);
-                var data = MetricDataWireModel.BuildCountData(count);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, count);
             }
 
             public MetricWireModel TryBuildSupportabilitySummaryMetric(string metricName, float totalValue, int countSamples, float minValue, float maxValue)
@@ -492,8 +515,7 @@ namespace NewRelic.Agent.Core.WireModels
             public MetricWireModel TryBuildCATSupportabilityCountMetric(CATSupportabilityCondition conditionType, int count)
             {
                 var proposedName = MetricNames.GetSupportabilityCATConditionMetricName(conditionType);
-                var data = MetricDataWireModel.BuildCountData(count);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, count);
             }
 
             public MetricWireModel TryBuildAgentVersionMetric(string agentVersion)
@@ -549,16 +571,14 @@ namespace NewRelic.Agent.Core.WireModels
             public MetricWireModel TryBuildTransactionEventsRecollectedMetric(int eventsRecollected)
             {
                 const string proposedName = MetricNames.SupportabilityTransactionEventsRecollected;
-                var data = MetricDataWireModel.BuildCountData(eventsRecollected);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, eventsRecollected);
             }
 
             public MetricWireModel TryBuildTransactionEventsSentMetric(int eventCount)
             {
                 // Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
                 const string proposedName = MetricNames.SupportabilityTransactionEventsSent;
-                var data = MetricDataWireModel.BuildCountData(eventCount);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, eventCount);
             }
 
             public MetricWireModel TryBuildTransactionEventsSeenMetric()
@@ -590,15 +610,13 @@ namespace NewRelic.Agent.Core.WireModels
             public MetricWireModel TryBuildCustomEventsRecollectedMetric(int eventsRecollected)
             {
                 const string proposedName = MetricNames.SupportabilityCustomEventsRecollected;
-                var data = MetricDataWireModel.BuildCountData(eventsRecollected);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, eventsRecollected);
             }
 
             public MetricWireModel TryBuildCustomEventsSentMetric(int eventCount)
             {
                 const string proposedName = MetricNames.SupportabilityCustomEventsSent;
-                var data = MetricDataWireModel.BuildCountData(eventCount);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, eventCount);
             }
 
             public MetricWireModel TryBuildCustomEventsSeenMetric()
@@ -622,15 +640,13 @@ namespace NewRelic.Agent.Core.WireModels
             public MetricWireModel TryBuildErrorTracesRecollectedMetric(int errorTracesRecollected)
             {
                 const string proposedName = MetricNames.SupportabilityErrorTracesRecollected;
-                var data = MetricDataWireModel.BuildCountData(errorTracesRecollected);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, errorTracesRecollected);
             }
 
             public MetricWireModel TryBuildErrorTracesSentMetric(int errorTraceCount)
             {
                 const string proposedName = MetricNames.SupportabilityErrorTracesSent;
-                var data = MetricDataWireModel.BuildCountData(errorTraceCount);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, errorTraceCount);
             }
 
             #endregion ErrorTraces
@@ -640,8 +656,7 @@ namespace NewRelic.Agent.Core.WireModels
             public MetricWireModel TryBuildErrorEventsSentMetric(int eventCount)
             {
                 const string proposedName = MetricNames.SupportabilityErrorEventsSent;
-                var data = MetricDataWireModel.BuildCountData(eventCount);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, eventCount);
             }
 
             public MetricWireModel TryBuildErrorEventsSeenMetric()
@@ -657,6 +672,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             public static void TryBuildSqlTracesCollectedMetric(int sqlTraceCount, TransactionMetricStatsCollection txStats)
             {
+                sqlTraceCount = (int) ValidateCountMetric(MetricNames.SupportabilitySqlTracesCollected.ToString(), sqlTraceCount);
                 var data = MetricDataWireModel.BuildCountData(sqlTraceCount);
                 txStats.MergeUnscopedStats(MetricNames.SupportabilitySqlTracesCollected, data);
             }
@@ -664,15 +680,13 @@ namespace NewRelic.Agent.Core.WireModels
             public MetricWireModel TryBuildSqlTracesRecollectedMetric(int sqlTracesRecollected)
             {
                 const string proposedName = MetricNames.SupportabilitySqlTracesRecollected;
-                var data = MetricDataWireModel.BuildCountData(sqlTracesRecollected);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, sqlTracesRecollected);
             }
 
             public MetricWireModel TryBuildSqlTracesSentMetric(int sqlTraceCount)
             {
                 const string proposedName = MetricNames.SupportabilitySqlTracesSent;
-                var data = MetricDataWireModel.BuildCountData(sqlTraceCount);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, sqlTraceCount);
             }
 
             #endregion SqlTraces
@@ -712,8 +726,7 @@ namespace NewRelic.Agent.Core.WireModels
             public MetricWireModel TryBuildAgentApiMetric(string methodName, int count)
             {
                 var proposedName = MetricNames.GetSupportabilityAgentApi(methodName);
-                var data = MetricDataWireModel.BuildCountData(count);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, count);
             }
 
             public MetricWireModel TryBuildCustomTimingMetric(string suffix, TimeSpan time)
@@ -728,8 +741,7 @@ namespace NewRelic.Agent.Core.WireModels
                 // NOTE: Unlike Custom timing metrics, Custom count metrics are NOT restricted to only the "Custom" namespace.
                 // This is probably a historical blunder -- it's not a good thing that we allow users to use whatever text they want for the first segment.
                 // However, that is what the API currently allows and it would be difficult to take that feature away.
-                var data = MetricDataWireModel.BuildCountData(count);
-                return BuildMetric(_metricNameService, metricName, null, data);
+                return BuildCountMetric(_metricNameService, metricName, null, count);
             }
 
             public MetricWireModel TryBuildLinuxOsMetric(bool isLinux)
@@ -790,7 +802,7 @@ namespace NewRelic.Agent.Core.WireModels
 
 
             private MetricWireModel TryBuildSupportabilityDistributedTraceMetric(string proposedName, int count = 1) =>
-                BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
+                BuildCountMetric(_metricNameService, proposedName, null, count);
 
             // New Relic Payload (Legacy DT) sup. metrics: https://source.datanerd.us/agents/agent-specs/blob/master/distributed_tracing/New-Relic-Payload.md
 
@@ -891,7 +903,7 @@ namespace NewRelic.Agent.Core.WireModels
             }
 
             private MetricWireModel TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimitMetric(string proposedName, int count) =>
-                BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
+                BuildCountMetric(_metricNameService, proposedName, null, count);
 
             public MetricWireModel TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(string endpoint, int count = 1) =>
                 TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimitMetric(MetricNames.GetSupportabilityPayloadsDroppedDueToMaxPayloadLimit(endpoint), count);
@@ -933,29 +945,25 @@ namespace NewRelic.Agent.Core.WireModels
             public MetricWireModel TryBuildSpanEventsSeenMetric(int eventCount)
             {
                 const string proposedName = MetricNames.SupportabilitySpanEventsSeen;
-                var data = MetricDataWireModel.BuildCountData(eventCount);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, eventCount);
             }
 
             public MetricWireModel TryBuildSpanEventsSentMetric(int eventCount)
             {
                 const string proposedName = MetricNames.SupportabilitySpanEventsSent;
-                var data = MetricDataWireModel.BuildCountData(eventCount);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, eventCount);
             }
 
             public MetricWireModel TryBuildCacheCountMetric(string name, int count)
             {
                 var proposedName = MetricNames.SupportabilityCachePrefix + name;
-                var data = MetricDataWireModel.BuildCountData(count);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, count);
             }
 
             public MetricWireModel TryBuildCacheSizeMetric(string name, int size)
             {
                 var proposedName = MetricNames.SupportabilityCachePrefix + name;
-                var data = MetricDataWireModel.BuildAverageData(size);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return BuildCountMetric(_metricNameService, proposedName, null, size);
             }
 
             #endregion Span builders

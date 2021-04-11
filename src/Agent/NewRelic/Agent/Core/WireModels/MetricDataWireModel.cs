@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.JsonConverters;
+using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions;
 using Newtonsoft.Json;
 using System;
@@ -114,7 +115,8 @@ namespace NewRelic.Agent.Core.WireModels
         {
             if (callCount < 0)
             {
-                throw new ArgumentException(CannotBeNegative, nameof(callCount));
+                Log.Finest($"Encountered a negative call count: {callCount} for unknown metric");
+                callCount = 0;
             }
 
             return new MetricDataWireModel(callCount, 0, 0, 0, 0, 0);
