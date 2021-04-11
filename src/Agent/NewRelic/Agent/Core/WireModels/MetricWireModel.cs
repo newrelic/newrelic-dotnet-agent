@@ -963,7 +963,8 @@ namespace NewRelic.Agent.Core.WireModels
             public MetricWireModel TryBuildCacheSizeMetric(string name, int size)
             {
                 var proposedName = MetricNames.SupportabilityCachePrefix + name;
-                return BuildCountMetric(_metricNameService, proposedName, null, size);
+                var data = MetricDataWireModel.BuildAverageData(size);
+                return BuildMetric(_metricNameService, proposedName, null, data);
             }
 
             #endregion Span builders
