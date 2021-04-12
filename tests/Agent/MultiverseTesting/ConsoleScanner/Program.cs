@@ -49,42 +49,34 @@ namespace NewRelic.Agent.ConsoleScanner
         {
             foreach (var instrumentationSet in configuration.InstrumentationSets)
             {
-                // TODO: deal with duplicate assembly names
-
                 // load the instrumentation.xml and create InstrumentationModel
                 var instrumentationModel = ReadInstrumentationFile(instrumentationSet);
 
-                List<string> dllFileLocations = new List<string>();
-
                 // nuget assemblies
-                var nugetDllFileLocations = GetNugetAssemblies(instrumentationSet, instrumentationModel.UniqueAssemblies);
-                if (nugetDllFileLocations != null)
+                var downloadedNugetInfoList = GetNugetAssemblies(instrumentationSet, instrumentationModel.UniqueAssemblies);
+
+                foreach(var downloadedNugetInfo in downloadedNugetInfoList)
                 {
-                    dllFileLocations.AddRange(nugetDllFileLocations);
+                    foreach (var intrumentedDllFileLocation in downloadedNugetInfo.InstrumentedDllFileLocations)
+                    {
+                        // Builds a model from the files
+                        Console.WriteLine($"Starting scan of '{intrumentedDllFileLocation}'");
+                        var assemblyAnalyzer = new AssemblyAnalyzer();
+                        var assemblyAnalysis = assemblyAnalyzer.RunAssemblyAnalysis(intrumentedDllFileLocation);
+
+                        var instrumentationValidator = new InstrumentationValidator(assemblyAnalysis);
+
+                        // just some debugging writes
+                        Console.WriteLine($"Found {assemblyAnalysis.ClassesCount} classes");
+                        Console.WriteLine("Scan complete");
+
+                        var targetFramework = Path.GetFileName(Path.GetDirectoryName(intrumentedDllFileLocation));
+
+                        // run the validation
+                        var report = instrumentationValidator.CheckInstrumentation(instrumentationModel, instrumentationSet.Name, targetFramework, downloadedNugetInfo.PackageVersion, downloadedNugetInfo.PackageName);
+                        _instrumentationReports.Add(report);
+                    }
                 }
-
-                // local assemblies
-                var localDllFileLocations = GetLocalAssemblies(instrumentationSet);
-                if (localDllFileLocations != null)
-                {
-                    dllFileLocations.AddRange(localDllFileLocations);
-                }
-                var dllFileNames = dllFileLocations.ToArray();
-
-                // Builds a model from the files
-                Console.WriteLine($"Starting scan of '{string.Join(',', dllFileNames)}'");
-                var assemblyAnalyzer = new AssemblyAnalyzer();
-                var assemblyAnalysis = assemblyAnalyzer.RunAssemblyAnalysis(dllFileNames);
-
-                var instrumentationValidator = new InstrumentationValidator(assemblyAnalysis);
-
-                // just some debugging writes
-                Console.WriteLine($"Found {assemblyAnalysis.ClassesCount} classes");
-                Console.WriteLine("Scan complete");
-
-                // run the validation
-                var report = instrumentationValidator.CheckInstrumentation(instrumentationModel, instrumentationSet.Name);
-                _instrumentationReports.Add(report);
             }
         }
 
@@ -101,11 +93,12 @@ namespace NewRelic.Agent.ConsoleScanner
             return instrumentationModel;
         }
 
-        // TODO: not the best name, considering all it does
-        public static List<string> GetNugetPackages(string name, string[] versions, List<string> instrumentationAssemblies)
+        public static List<DownloadedNugetInfo> GetNugetPackages(string packageName, string[] versions, List<string> instrumentationAssemblies)
         {
-            var addressPrefix = $"{_nugetSource}/{name.ToLower()}";
-            List<string> dllFileLocations = new List<string>();
+            var addressPrefix = $"{_nugetSource}/{packageName.ToLower()}";
+
+            var downloadedNugetInfos = new List<DownloadedNugetInfo>();
+
             try
             {
                 var webClient = new WebClient();
@@ -115,13 +108,15 @@ namespace NewRelic.Agent.ConsoleScanner
 
                 foreach (var version in versions)
                 {
+                    var dllFileLocations = new List<string>();
+
                     // set up
-                    var nugetDownloadedPackagePrefix = $"{name.ToLower()}.{version.ToLower()}";
+                    var nugetDownloadedPackagePrefix = $"{packageName.ToLower()}.{version.ToLower()}";
                     var nugetExtractDirectoryName = $"{_nugetDataDirectory}\\{nugetDownloadedPackagePrefix}";
                     var nugetDownloadedPackageFileName = $"{_nugetDataDirectory}\\{nugetDownloadedPackagePrefix}.zip";
 
                     // example address: https://api.nuget.org/v3-flatcontainer/mongodb.driver.core/2.6.0/mongodb.driver.core.2.6.0.nupkg
-                    var address = $"{addressPrefix}/{version.ToLower()}/{name.ToLower()}.{version.ToLower()}.nupkg";
+                    var address = $"{addressPrefix}/{version.ToLower()}/{packageName.ToLower()}.{version.ToLower()}.nupkg";
 
                     // skip downloading on re-run 
                     if (!File.Exists(nugetDownloadedPackageFileName))
@@ -130,23 +125,25 @@ namespace NewRelic.Agent.ConsoleScanner
                         var result = webClient.DownloadData(address);
                         File.WriteAllBytes(nugetDownloadedPackageFileName, result);
 
-                        Console.WriteLine($"Downloaded package {name} {version}");
-
-                        // extract dlls from package
-                        
-                        if (Directory.Exists(nugetExtractDirectoryName))
-                        {
-                            Directory.Delete(nugetExtractDirectoryName, true);
-                        }
-                        Directory.CreateDirectory(nugetExtractDirectoryName);
-                        ZipFile.ExtractToDirectory(nugetDownloadedPackageFileName, nugetExtractDirectoryName);
+                        Console.WriteLine($"Downloaded package {packageName} {version}");
                     }
+
+                    // extract dlls from package
+
+                    if (Directory.Exists(nugetExtractDirectoryName))
+                    {
+                        Directory.Delete(nugetExtractDirectoryName, true);
+                    }
+                    Directory.CreateDirectory(nugetExtractDirectoryName);
+                    ZipFile.ExtractToDirectory(nugetDownloadedPackageFileName, nugetExtractDirectoryName);
 
                     // TODO: this will get every version (net45, netstandard1.5) of the dll in the package, which may not be necessary; 
                     foreach (var instrumentationAssembly in instrumentationAssemblies)
                     {
                         dllFileLocations.AddRange(Directory.GetFiles(nugetExtractDirectoryName, instrumentationAssembly + ".dll", SearchOption.AllDirectories));
                     }
+
+                    downloadedNugetInfos.Add(new DownloadedNugetInfo(dllFileLocations, version, packageName));
                 }
             }
             catch (Exception ex)
@@ -155,25 +152,20 @@ namespace NewRelic.Agent.ConsoleScanner
                 Console.WriteLine($"GetNugetPackages exception : {ex}");
             }
 
-            return dllFileLocations;
+            return downloadedNugetInfos;
         }
 
-        public static List<string> GetNugetAssemblies(InstrumentationSet instrumentationSet, List<string> instrumentationAssemblies)
+        public static List<DownloadedNugetInfo> GetNugetAssemblies(InstrumentationSet instrumentationSet, List<string> instrumentationAssemblies)
         {
-            List<string> fileList = new List<string>();
-            if (instrumentationSet.NugetAssemblies != null)
+            var downloadedNugetInfoList = new List<DownloadedNugetInfo>();
+            if (instrumentationSet.NugetPackages != null)
             {
-                foreach (var nugetAssembly in instrumentationSet.NugetAssemblies)
+                foreach (var nugetPackage in instrumentationSet.NugetPackages)
                 {
-                    fileList.AddRange(GetNugetPackages(nugetAssembly.AssemblyName, nugetAssembly.Versions, instrumentationAssemblies));
+                    downloadedNugetInfoList.AddRange(GetNugetPackages(nugetPackage.PackageName, nugetPackage.Versions, instrumentationAssemblies));
                 }
             }
-            return fileList;
-        }
-
-        public static List<string> GetLocalAssemblies(InstrumentationSet instrumentationSet)
-        {
-            return instrumentationSet.LocalAssemblies;
+            return downloadedNugetInfoList;
         }
 
         public static void PrintReport()
@@ -181,11 +173,15 @@ namespace NewRelic.Agent.ConsoleScanner
             Console.WriteLine("============ REPORT ============");
             foreach(var report in _instrumentationReports)
             {
-                Console.WriteLine($"Instrumentation Set: {report.InstrumentationSetName}");
-                foreach(var assemblyReport in report.AssemblyReports)
+                Console.WriteLine($"Instrumentation set: {report.InstrumentationSetName}");
+                Console.WriteLine($"Nuget package: {report.PackageName} ver {report.PackageVersion}");
+                Console.WriteLine($"Target framework: {report.TargetFramework}");
+                Console.WriteLine($"");
+
+                foreach (var assemblyReport in report.AssemblyReports)
                 {
                     Console.Write("\t");
-                    Console.WriteLine($"Assembly Name: {assemblyReport.AssemblyName}; Assembly Version: {assemblyReport.AssemblyVersion}");
+                    Console.WriteLine($"Assembly Name: {assemblyReport.AssemblyName}");
 
                     var methodValidations = assemblyReport.GetMethodValidationsForPrint();
                     foreach (var line in methodValidations)
@@ -193,6 +189,8 @@ namespace NewRelic.Agent.ConsoleScanner
                         Console.WriteLine($"\t{line}");
                     }
                 }
+
+                Console.WriteLine($"");
             }
         }
     }

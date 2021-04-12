@@ -38,12 +38,11 @@ namespace NewRelic.Agent.ConsoleScanner
             instrumentationSet.Name = GetSubstitutedValue(instrumentationSet.Name);
             instrumentationSet.XmlFile = GetSubstitutedValue(instrumentationSet.XmlFile);
 
-            if (instrumentationSet.NugetAssemblies != null)
+            if (instrumentationSet.NugetPackages != null)
             {
-                foreach (var nugetSet in instrumentationSet.NugetAssemblies)
+                foreach (var nugetSet in instrumentationSet.NugetPackages)
                 {
-                    nugetSet.AssemblyName = GetSubstitutedValue(nugetSet.AssemblyName);
-                    // not processing versions at this time since its not likely to be replace with an env var
+                    nugetSet.PackageName = GetSubstitutedValue(nugetSet.PackageName);
                 }
             }
 

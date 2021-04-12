@@ -9,18 +9,16 @@ namespace NewRelic.Agent.MultiverseScanner.Models
 {
     public class AssemblyAnalysis
     {
-        public Dictionary<string, AssemblyModel> AssemblyModels { get; }
+        public AssemblyModel AssemblyModel { get; }
 
-        public AssemblyAnalysis()
+        public AssemblyAnalysis(AssemblyModel assemblyModel)
         {
-            AssemblyModels = new Dictionary<string, AssemblyModel>();
+            AssemblyModel = assemblyModel;
         }
-
-
-        // TODO: is this needed for anything except logging to output?
+        
         public int ClassesCount 
         { 
-            get { return AssemblyModels.Select((x) => x.Value.ClassModels.Count).ToList().Sum(); } 
+            get { return AssemblyModel.ClassModels.Count; } 
         }
     }
 }

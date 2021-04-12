@@ -17,24 +17,26 @@ namespace NewRelic.Agent.MultiverseScanner
             _assemblyAnalysis = assemblyAnalysis;
         }
 
-        public InstrumentationReport CheckInstrumentation(InstrumentationModel instrumentationModel, string instrumentationSetName)
+        public InstrumentationReport CheckInstrumentation(InstrumentationModel instrumentationModel, string instrumentationSetName, string targetFramework, string packageVersion, string packageName)
         {
-            var instrumentationReport = new InstrumentationReport() { InstrumentationSetName = instrumentationSetName };
+            var instrumentationReport = new InstrumentationReport()
+            {
+                InstrumentationSetName = instrumentationSetName,
+                TargetFramework = targetFramework,
+                PackageVersion = packageVersion,
+                PackageName = packageName
+            };
+
 
             // Check each AssemblyModel against all instrumentation
-            // InstrumentationReport will show aggregated results from all assemblies
-            foreach (var assemblyModel in _assemblyAnalysis.AssemblyModels.Values)
-            {
-                var assemblyReport = new AssemblyReport();
+            var assemblyReport = new AssemblyReport();
 
-                assemblyReport.AssemblyName = assemblyModel.AssemblyName;
-                assemblyReport.AssemblyVersion = assemblyModel.AssemblyVersion;
+            assemblyReport.AssemblyName = _assemblyAnalysis.AssemblyModel.AssemblyName;
 
-                CheckMatch(assemblyModel, instrumentationModel, assemblyReport);
+            CheckMatch(_assemblyAnalysis.AssemblyModel, instrumentationModel, assemblyReport);
 
-                instrumentationReport.AssemblyReports.Add(assemblyReport);
-            }
-
+            instrumentationReport.AssemblyReports.Add(assemblyReport);
+ 
             return instrumentationReport;
         }
 
@@ -75,6 +77,10 @@ namespace NewRelic.Agent.MultiverseScanner
                 return;
             }
 
+            foreach (var exactMethodMatcher in match.ExactMethodMatchers)
+            {
+                instrumentationReport.AddMethodValidation(match, exactMethodMatcher, false);
+            }
             // class did not match so marking all methods as false - can be changed by later validation attempts
             //MarkAllMethodsAsNotValid(match, instrumentationReport);
         }

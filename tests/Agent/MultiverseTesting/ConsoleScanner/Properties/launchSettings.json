@@ -3,9 +3,9 @@
     "ConsoleScanner": {
       "commandName": "Project",
       "commandLineArgs": "\".\\config.yml\"",
-      "environmentVariables": {
-        "myvar": "sometvaluething"
-      }
+        "environmentVariables": {
+            "MVS_XML_PATH": "PATH_TO_THE_AGENT_WRAPPER_FOLDER"
+        }
     }
   }
 }
