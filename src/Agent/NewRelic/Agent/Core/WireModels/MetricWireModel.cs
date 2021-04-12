@@ -82,7 +82,7 @@ namespace NewRelic.Agent.Core.WireModels
         }
 
         /// <summary>
-        /// Helper method to validate, log exceptional situations, and return a corrected count value Min(0)
+        /// Helper method to validate, log exceptional situations, and return a corrected count value as Max(0, inputValue)
         /// </summary>
         /// <returns>The input count corrected to a minimum of 0</returns>
         public static long ValidateCountMetric(string name, long count)
