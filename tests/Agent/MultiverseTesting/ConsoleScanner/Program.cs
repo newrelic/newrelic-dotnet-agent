@@ -70,8 +70,10 @@ namespace NewRelic.Agent.ConsoleScanner
                         Console.WriteLine($"Found {assemblyAnalysis.ClassesCount} classes");
                         Console.WriteLine("Scan complete");
 
+                        var targetFramework = Path.GetFileName(Path.GetDirectoryName(intrumentedDllFileLocation));
+
                         // run the validation
-                        var report = instrumentationValidator.CheckInstrumentation(instrumentationModel, instrumentationSet.Name, instrumentationSet.TargetFramework, downloadedNugetInfo.PackageVersion, downloadedNugetInfo.PackageName);
+                        var report = instrumentationValidator.CheckInstrumentation(instrumentationModel, instrumentationSet.Name, targetFramework, downloadedNugetInfo.PackageVersion, downloadedNugetInfo.PackageName);
                         _instrumentationReports.Add(report);
                     }
                 }
@@ -91,7 +93,7 @@ namespace NewRelic.Agent.ConsoleScanner
             return instrumentationModel;
         }
 
-        public static List<DownloadedNugetInfo> GetNugetPackages(string packageName, string targetFramework, string[] versions, List<string> instrumentationAssemblies)
+        public static List<DownloadedNugetInfo> GetNugetPackages(string packageName, string[] versions, List<string> instrumentationAssemblies)
         {
             var addressPrefix = $"{_nugetSource}/{packageName.ToLower()}";
 
@@ -141,8 +143,6 @@ namespace NewRelic.Agent.ConsoleScanner
                         dllFileLocations.AddRange(Directory.GetFiles(nugetExtractDirectoryName, instrumentationAssembly + ".dll", SearchOption.AllDirectories));
                     }
 
-                    dllFileLocations.RemoveAll(dll => !dll.Contains(targetFramework));
-
                     downloadedNugetInfos.Add(new DownloadedNugetInfo(dllFileLocations, version, packageName));
                 }
             }
@@ -162,7 +162,7 @@ namespace NewRelic.Agent.ConsoleScanner
             {
                 foreach (var nugetPackage in instrumentationSet.NugetPackages)
                 {
-                    downloadedNugetInfoList.AddRange(GetNugetPackages(nugetPackage.PackageName, instrumentationSet.TargetFramework, nugetPackage.Versions, instrumentationAssemblies));
+                    downloadedNugetInfoList.AddRange(GetNugetPackages(nugetPackage.PackageName, nugetPackage.Versions, instrumentationAssemblies));
                 }
             }
             return downloadedNugetInfoList;
@@ -173,10 +173,10 @@ namespace NewRelic.Agent.ConsoleScanner
             Console.WriteLine("============ REPORT ============");
             foreach(var report in _instrumentationReports)
             {
-                Console.WriteLine($"Instrumentation Set: {report.InstrumentationSetName}");
-                Console.WriteLine($"Target Framework: {report.TargetFramework}");
-                Console.WriteLine($"Nuget Package Version: {report.PackageVersion}");
-                Console.WriteLine($"Nuget Package Name: {report.PackageName}");
+                Console.WriteLine($"Instrumentation set: {report.InstrumentationSetName}");
+                Console.WriteLine($"Nuget package: {report.PackageName} ver {report.PackageVersion}");
+                Console.WriteLine($"Target framework: {report.TargetFramework}");
+                Console.WriteLine($"");
 
                 foreach (var assemblyReport in report.AssemblyReports)
                 {
@@ -189,6 +189,8 @@ namespace NewRelic.Agent.ConsoleScanner
                         Console.WriteLine($"\t{line}");
                     }
                 }
+
+                Console.WriteLine($"");
             }
         }
     }

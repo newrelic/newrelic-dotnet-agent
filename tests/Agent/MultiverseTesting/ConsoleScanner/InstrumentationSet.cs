@@ -10,8 +10,6 @@ namespace NewRelic.Agent.ConsoleScanner
     {
         public string Name { get; set; }
 
-        public string TargetFramework { get; set; }
-
         public string XmlFile { get; set; }
 
         public List<NugetSet> NugetPackages { get; set; }

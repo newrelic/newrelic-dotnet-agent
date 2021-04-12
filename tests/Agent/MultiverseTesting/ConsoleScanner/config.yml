@@ -33,14 +33,14 @@
   - name: mongodb
     xml-file: ${{ MVS_XML_PATH }}\MongoDb\Instrumentation.xml
     nuget-packages:
-       - { package-name: MongoDB.Driver, versions: [2.5.1] }
+       - { package-name: MongoDB.Driver, versions: [2.0.2, 2.1.1, 2.2.4, 2.3.0, 2.4.4, 2.5.1] }
     local-assemblies:
 
   - name: mongodb26
     xml-file: ${{ MVS_XML_PATH }}\MongoDb26\Instrumentation.xml
     nuget-packages:
-       - { package-name: MongoDB.Driver, versions: [2.11.6] }
-       - { package-name: MongoDB.Driver.Core, versions: [2.11.6] }
+       - { package-name: MongoDB.Driver, versions: [2.6.0, 2.7.3, 2.8.1, 2.9.3, 2.10.4, 2.11.6] }
+       - { package-name: MongoDB.Driver.Core, versions: [2.6.0, 2.7.3, 2.8.1, 2.9.3, 2.10.4, 2.11.6] }
     local-assemblies:
 
   # assembly in inst.xml is System.Messaging.dll, can get newer ones from nuget (?), but typically located in the GAC
@@ -74,7 +74,7 @@
   - name: rabbitmq
     xml-file: ${{ MVS_XML_PATH }}\RabbitMq\Instrumentation.xml
     nuget-packages:
-       - { package-name: RabbitMQ.Client, versions: [6.2.1] }
+       - { package-name: RabbitMQ.Client, versions: [3.5.2, 3.6.9, 5.1.2, 5.2.0, 6.2.1] }
     local-assemblies:
 
   # - name: restSharp
