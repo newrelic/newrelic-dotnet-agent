@@ -4,7 +4,7 @@
       "commandName": "Project",
       "commandLineArgs": "\".\\config.yml\"",
         "environmentVariables": {
-            "MVS_XML_PATH": "PATH_TO_THE_AGENT_WRAPPER_FOLDER"
+            "MVS_XML_PATH": "C:\\dev\\github\\newrelic-dotnet-agent\\src\\Agent\\NewRelic\\Agent\\Extensions\\Providers\\Wrapper"
         }
     }
   }

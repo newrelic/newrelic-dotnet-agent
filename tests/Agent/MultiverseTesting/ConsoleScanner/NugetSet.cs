@@ -9,6 +9,7 @@ namespace NewRelic.Agent.ConsoleScanner
     public class NugetSet
     {
         public string PackageName { get; set; }
-        public string[] Versions { get; set; }
+
+        public List<string> Versions { get; set; }
     }
 }
