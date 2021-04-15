@@ -5,8 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
-using System.Net;
+using System.Linq;
 using System.Xml.Serialization;
 using NewRelic.Agent.MultiverseScanner;
 using NewRelic.Agent.MultiverseScanner.ExtensionSerialization;
@@ -19,8 +18,7 @@ namespace NewRelic.Agent.ConsoleScanner
     {
         private static List<InstrumentationReport> _instrumentationReports = new List<InstrumentationReport>();
         private static XmlSerializer _xmlSerializer = new XmlSerializer(typeof(Extension));
-        private const string _nugetDataDirectory = "NugetData";
-        private const string _nugetSource = "https://api.nuget.org/v3-flatcontainer";
+        private static readonly string _nugetDataDirectory = $@"{Environment.CurrentDirectory}\NugetData";
 
         public static void Main(string[] args)
         {
@@ -93,49 +91,33 @@ namespace NewRelic.Agent.ConsoleScanner
             return instrumentationModel;
         }
 
-        public static List<DownloadedNugetInfo> GetNugetPackages(string packageName, string[] versions, List<string> instrumentationAssemblies)
+        public static List<DownloadedNugetInfo> GetNugetAssemblies(InstrumentationSet instrumentationSet, List<string> instrumentationAssemblies)
         {
-            var addressPrefix = $"{_nugetSource}/{packageName.ToLower()}";
+            var downloadedNugetInfoList = new List<DownloadedNugetInfo>();
+            if (instrumentationSet.NugetPackages != null)
+            {
+                foreach (var nugetPackage in instrumentationSet.NugetPackages)
+                {
+                    downloadedNugetInfoList.AddRange(GetNugetPackages(nugetPackage.PackageName, nugetPackage.Versions, instrumentationAssemblies));
+                }
+            }
 
+            return downloadedNugetInfoList;
+        }
+
+        public static List<DownloadedNugetInfo> GetNugetPackages(string packageName, List<string> versions, List<string> instrumentationAssemblies)
+        {
             var downloadedNugetInfos = new List<DownloadedNugetInfo>();
 
             try
             {
-                var webClient = new WebClient();
-
-
                 Directory.CreateDirectory(_nugetDataDirectory);
-
-                foreach (var version in versions)
+                var client = new NugetClient(_nugetDataDirectory);
+                versions.Add(client.GetLatestVersion(packageName)); // add current version to versions list
+                foreach (var version in versions.Distinct()) // using Distinct to prevent duplicates
                 {
                     var dllFileLocations = new List<string>();
-
-                    // set up
-                    var nugetDownloadedPackagePrefix = $"{packageName.ToLower()}.{version.ToLower()}";
-                    var nugetExtractDirectoryName = $"{_nugetDataDirectory}\\{nugetDownloadedPackagePrefix}";
-                    var nugetDownloadedPackageFileName = $"{_nugetDataDirectory}\\{nugetDownloadedPackagePrefix}.zip";
-
-                    // example address: https://api.nuget.org/v3-flatcontainer/mongodb.driver.core/2.6.0/mongodb.driver.core.2.6.0.nupkg
-                    var address = $"{addressPrefix}/{version.ToLower()}/{packageName.ToLower()}.{version.ToLower()}.nupkg";
-
-                    // skip downloading on re-run 
-                    if (!File.Exists(nugetDownloadedPackageFileName))
-                    {
-                        // download nuget package
-                        var result = webClient.DownloadData(address);
-                        File.WriteAllBytes(nugetDownloadedPackageFileName, result);
-
-                        Console.WriteLine($"Downloaded package {packageName} {version}");
-                    }
-
-                    // extract dlls from package
-
-                    if (Directory.Exists(nugetExtractDirectoryName))
-                    {
-                        Directory.Delete(nugetExtractDirectoryName, true);
-                    }
-                    Directory.CreateDirectory(nugetExtractDirectoryName);
-                    ZipFile.ExtractToDirectory(nugetDownloadedPackageFileName, nugetExtractDirectoryName);
+                    var nugetExtractDirectoryName = client.DownloadPackage(packageName, version);
 
                     // TODO: this will get every version (net45, netstandard1.5) of the dll in the package, which may not be necessary; 
                     foreach (var instrumentationAssembly in instrumentationAssemblies)
@@ -148,24 +130,11 @@ namespace NewRelic.Agent.ConsoleScanner
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"GetNugetPackages exception : Package - {addressPrefix}");
+                Console.WriteLine($"GetNugetPackages exception : Package - {packageName}");
                 Console.WriteLine($"GetNugetPackages exception : {ex}");
             }
 
             return downloadedNugetInfos;
-        }
-
-        public static List<DownloadedNugetInfo> GetNugetAssemblies(InstrumentationSet instrumentationSet, List<string> instrumentationAssemblies)
-        {
-            var downloadedNugetInfoList = new List<DownloadedNugetInfo>();
-            if (instrumentationSet.NugetPackages != null)
-            {
-                foreach (var nugetPackage in instrumentationSet.NugetPackages)
-                {
-                    downloadedNugetInfoList.AddRange(GetNugetPackages(nugetPackage.PackageName, nugetPackage.Versions, instrumentationAssemblies));
-                }
-            }
-            return downloadedNugetInfoList;
         }
 
         public static void PrintReport()
