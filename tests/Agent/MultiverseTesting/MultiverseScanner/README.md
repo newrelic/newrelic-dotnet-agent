@@ -4,7 +4,7 @@ This library is used by the ConsoleScanner to analysis and compare instrumentati
 
 ## Some thoughts
 
-[DONEish]we need to create a model that contains mopre than one assembly to work with instrumentation that has more than one, examples:
+[DONEish] We need to create a model that contains more than one assembly to work with instrumentation that has more than one, examples:
 NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml
 NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml
 NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml
