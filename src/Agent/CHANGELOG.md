@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 ### Fixes
+
+## [8.39.2] - 2021-04-14
+### Fixes
 * Fixes issue [#500](https://github.com/newrelic/newrelic-dotnet-agent/issues/500): For transactions without errors, Agent should still create the `error` intrinsics attribute with its value set to `false`. ([#501](https://github.com/newrelic/newrelic-dotnet-agent/pull/501))
 * Fixes issue [#522](https://github.com/newrelic/newrelic-dotnet-agent/issues/522): When the `maxStackTraceLines` config value is set to 0, the agent should not send any stack trace data in the `error_data` payload. ([#523](https://github.com/newrelic/newrelic-dotnet-agent/pull/523))
 
@@ -263,7 +266,8 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.39.1...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.39.2...HEAD
+[8.39.2]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.39.1...v8.39.2
 [8.39.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.39.0...v8.39.1
 [8.39]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.38.0...v8.39.0
 [8.38]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.37.0...v8.38.0
