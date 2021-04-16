@@ -24,9 +24,9 @@ namespace NewRelic.Agent.ConsoleScanner
 
         public static void Main(string[] args)
         {
-            if (args.Length != 1 || string.IsNullOrWhiteSpace(args[0]))
+            if (args.Length != 2 || string.IsNullOrWhiteSpace(args[0]) || string.IsNullOrWhiteSpace(args[1]))
             {
-                Console.WriteLine("ERROR Missing argument: Must supply path to configuration file.");
+                Console.WriteLine("ERROR Missing argument: Must supply path to configuration and report files.");
                 return;
             }
 
@@ -37,12 +37,25 @@ namespace NewRelic.Agent.ConsoleScanner
                 return;
             }
 
+            var reportFilePath = Path.GetFullPath(args[1]);
+            if (File.Exists(reportFilePath))
+            {
+                Console.WriteLine($"Warning: Found existing report at '{reportFilePath}'.  It will be overwritten!");
+            }
+
+            var pathToReport = Directory.GetParent(reportFilePath).FullName;
+            if (!Directory.Exists(pathToReport))
+            {
+                Console.WriteLine($"ERROR Directory not found: Provide path was incorrect or missing.");
+                return;
+            }
+
             // deserialize configuration from .yml
             var configuration = ScannerConfiguration.GetScannerConfiguration(configFilePath);
 
             ProcessAssemblies(configuration);
             var reports = SerializeReports();
-            WriteReportToDisk(reports);
+            WriteReportToDisk(reports, reportFilePath);
             PrintReportToConsole();
          }
 
@@ -176,9 +189,9 @@ namespace NewRelic.Agent.ConsoleScanner
             return serializer.Serialize(_instrumentationReports);
         }
 
-        public static void WriteReportToDisk(string reports)
+        public static void WriteReportToDisk(string reports, string reportFilePath)
         {
-            File.WriteAllText("reports.yml", reports);
+            File.WriteAllText(reportFilePath, reports);
         }
     }
 }
