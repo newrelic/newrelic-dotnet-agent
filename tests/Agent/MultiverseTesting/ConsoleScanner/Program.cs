@@ -11,6 +11,8 @@ using NewRelic.Agent.MultiverseScanner;
 using NewRelic.Agent.MultiverseScanner.ExtensionSerialization;
 using NewRelic.Agent.MultiverseScanner.Models;
 using NewRelic.Agent.MultiverseScanner.Reporting;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace NewRelic.Agent.ConsoleScanner
 {
@@ -39,8 +41,9 @@ namespace NewRelic.Agent.ConsoleScanner
             var configuration = ScannerConfiguration.GetScannerConfiguration(configFilePath);
 
             ProcessAssemblies(configuration);
-
-            PrintReport();
+            var reports = SerializeReports();
+            WriteReportToDisk(reports);
+            PrintReportToConsole();
          }
 
         public static void ProcessAssemblies(ScannerConfiguration configuration)
@@ -99,6 +102,7 @@ namespace NewRelic.Agent.ConsoleScanner
                 foreach (var nugetPackage in instrumentationSet.NugetPackages)
                 {
                     downloadedNugetInfoList.AddRange(GetNugetPackages(nugetPackage.PackageName, nugetPackage.Versions, instrumentationAssemblies));
+
                 }
             }
 
@@ -122,7 +126,7 @@ namespace NewRelic.Agent.ConsoleScanner
                     // TODO: this will get every version (net45, netstandard1.5) of the dll in the package, which may not be necessary; 
                     foreach (var instrumentationAssembly in instrumentationAssemblies)
                     {
-                        dllFileLocations.AddRange(Directory.GetFiles(nugetExtractDirectoryName, instrumentationAssembly + ".dll", SearchOption.AllDirectories));
+                        dllFileLocations.AddRange(Directory.GetFiles(nugetExtractDirectoryName, "*.dll", SearchOption.AllDirectories));
                     }
 
                     downloadedNugetInfos.Add(new DownloadedNugetInfo(dllFileLocations, version, packageName));
@@ -137,7 +141,7 @@ namespace NewRelic.Agent.ConsoleScanner
             return downloadedNugetInfos;
         }
 
-        public static void PrintReport()
+        public static void PrintReportToConsole()
         {
             Console.WriteLine("============ REPORT ============");
             foreach(var report in _instrumentationReports)
@@ -161,6 +165,20 @@ namespace NewRelic.Agent.ConsoleScanner
 
                 Console.WriteLine($"");
             }
+        }
+
+        public static string SerializeReports()
+        {
+            var serializer = new SerializerBuilder()
+                .WithNamingConvention(UnderscoredNamingConvention.Instance)
+                .Build();
+
+            return serializer.Serialize(_instrumentationReports);
+        }
+
+        public static void WriteReportToDisk(string reports)
+        {
+            File.WriteAllText("reports.yml", reports);
         }
     }
 }

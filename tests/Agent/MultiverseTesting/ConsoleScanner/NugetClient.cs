@@ -67,6 +67,11 @@ namespace NewRelic.Agent.ConsoleScanner
                     var files = packageReader.GetFiles();
                     foreach (var file in files)
                     {
+                        if (File.Exists($@"{_destinationPath}\{packageName.ToLower()}.{packageVersion}\{file}"))
+                        {
+                            continue;
+                        }
+
                        _ =  packageReader.ExtractFile(file, $@"{_destinationPath}\{packageName.ToLower()}.{packageVersion}\{file}", _logger);
                     }
                 }
