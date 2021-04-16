@@ -1,6 +1,6 @@
 ﻿## Introduction
 
-This library is used by the ConsoleScanner to analysis and compare instrumentation XML files against assemblies.  
+This library is used by the ConsoleScanner to analyze and compare instrumentation XML files against assemblies.  
 
 ## Some thoughts
 
@@ -21,10 +21,10 @@ InstrumentationReport
 			List ExactMMreport 
 
 	
-if we had a wiki
-- one section for each framwork
-- each section had one page per agent version
-- Each <schedule> the tool would either [create new agent-version page OR update existing one] with results, adding new framework versions as needed.
+If we had a wiki
+- one section for each framework
+- each section has one page per agent version
+- Each <schedule> in the tool would either [create new agent-version page OR update existing one] with results, adding new framework versions as needed.
 https://github.com/jaffinito/newrelic-dotnet-agent/wiki/tables-are-cool-I-guess
  
 clone github wiki
