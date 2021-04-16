@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using Mono.Cecil;
 using NewRelic.Agent.MultiverseScanner.Models;
 
@@ -14,17 +15,25 @@ namespace NewRelic.Agent.MultiverseScanner
         public AssemblyAnalysis RunAssemblyAnalysis(string filePath)
         {
             var assemblyModel = GetAssemblyModel(filePath);
-
             var assemblyAnalysis = new AssemblyAnalysis(assemblyModel);
-
             return assemblyAnalysis;
         }
 
         public AssemblyModel GetAssemblyModel(string filePath)
         {
-            var moduleDefinition = ModuleDefinition.ReadModule(filePath);
-            var assemblyModel = new AssemblyModel(moduleDefinition);
-            return assemblyModel;
+            try
+            {
+                var moduleDefinition = ModuleDefinition.ReadModule(filePath);
+                var assemblyModel = AssemblyModel.GetAssemblyModel(moduleDefinition);
+                return assemblyModel;
+            }
+            catch(System.BadImageFormatException badImageFormatException)
+            {
+                Console.WriteLine($"Warning: Mono.Cecil could not read the assembly!");
+                Console.WriteLine(badImageFormatException.Message);
+                Console.WriteLine();
+                return AssemblyModel.EmptyAssemblyModel;
+            }
         }
     }
 }

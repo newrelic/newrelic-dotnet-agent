@@ -16,8 +16,9 @@ namespace NewRelic.Agent.ConsoleScanner
         }
 
         public List<string> InstrumentedDllFileLocations { get; }
-        public string PackageVersion { get; }
-        public string PackageName { get; }
 
+        public string PackageVersion { get; }
+
+        public string PackageName { get; }
     }
 }

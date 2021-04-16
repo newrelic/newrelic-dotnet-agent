@@ -15,11 +15,15 @@ More data to come soon!
 To use environment variables, do the following:  `$${{ MY_ENV_VAR }}`.
 This will replace the var with the data from the system, but will throw an exception if nothing is found.
 
-### Built it Vars
+### Built in Vars
 
 - `MVS_XML_PATH` is the path to the XML file location.  This is expected to be in the repo and not to an installation of the agent.
+
+### Reporting
+
+The output file is a yaml file and contains the all the validation results.  A slightly more human readable version will be output to the console.
 
 ## How to run
 
 Command:
-`.\ConsoleScanner.exe "<PATH_TO_CONFIG>\config.yml"`
+`.\ConsoleScanner.exe "<PATH_TO_CONFIG>\config.yml" "<PATH_TO_OUTPUT_DIR>\reports.yml"`

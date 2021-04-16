@@ -11,16 +11,36 @@ namespace NewRelic.Agent.MultiverseScanner.Models
 {
     public class AssemblyModel
     {
-        ModuleDefinition _moduleDefinition;
-        public string AssemblyName => _moduleDefinition.Assembly.Name.Name;
+        public static AssemblyModel EmptyAssemblyModel = new AssemblyModel();
+
+        public string AssemblyName { get; private set; }
+
         public Dictionary<string, ClassModel> ClassModels { get; }
 
-        public AssemblyModel(ModuleDefinition moduleDefinition)
+        public static AssemblyModel GetAssemblyModel(ModuleDefinition moduleDefinition)
         {
-            _moduleDefinition = moduleDefinition;
-            ClassModels = new Dictionary<string, ClassModel>();
+            if (moduleDefinition == null)
+            {
+                return new AssemblyModel();
+            }
 
-            foreach (var typeDefinition in _moduleDefinition.Types)
+            return new AssemblyModel().Build(moduleDefinition);
+        }
+          
+        private AssemblyModel()
+        {
+            ClassModels = new Dictionary<string, ClassModel>();
+        }
+
+        private AssemblyModel Build(ModuleDefinition moduleDefinition)
+        {
+            if (moduleDefinition == null)
+            {
+                return this;
+            }
+
+            AssemblyName = moduleDefinition.Assembly.Name.Name;
+            foreach (var typeDefinition in moduleDefinition.Types)
             {
                 if (!typeDefinition.IsClass || typeDefinition.FullName.StartsWith("<"))
                 {
@@ -31,6 +51,8 @@ namespace NewRelic.Agent.MultiverseScanner.Models
                 BuildMethodModels(classModel, typeDefinition);
                 ClassModels.Add(classModel.Name, classModel);
             }
+
+            return this;
         }
 
         private string GetAccessLevel(TypeDefinition typeDefinition)

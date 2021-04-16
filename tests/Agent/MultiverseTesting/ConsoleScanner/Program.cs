@@ -11,6 +11,8 @@ using NewRelic.Agent.MultiverseScanner;
 using NewRelic.Agent.MultiverseScanner.ExtensionSerialization;
 using NewRelic.Agent.MultiverseScanner.Models;
 using NewRelic.Agent.MultiverseScanner.Reporting;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace NewRelic.Agent.ConsoleScanner
 {
@@ -22,9 +24,9 @@ namespace NewRelic.Agent.ConsoleScanner
 
         public static void Main(string[] args)
         {
-            if (args.Length != 1 || string.IsNullOrWhiteSpace(args[0]))
+            if (args.Length != 2 || string.IsNullOrWhiteSpace(args[0]) || string.IsNullOrWhiteSpace(args[1]))
             {
-                Console.WriteLine("ERROR Missing argument: Must supply path to configuration file.");
+                Console.WriteLine("ERROR Missing argument: Must supply path to configuration and report files.");
                 return;
             }
 
@@ -35,12 +37,26 @@ namespace NewRelic.Agent.ConsoleScanner
                 return;
             }
 
+            var reportFilePath = Path.GetFullPath(args[1]);
+            if (File.Exists(reportFilePath))
+            {
+                Console.WriteLine($"Warning: Found existing report at '{reportFilePath}'.  It will be overwritten!");
+            }
+
+            var pathToReport = Directory.GetParent(reportFilePath).FullName;
+            if (!Directory.Exists(pathToReport))
+            {
+                Console.WriteLine($"ERROR Directory not found: Provide path was incorrect or missing.");
+                return;
+            }
+
             // deserialize configuration from .yml
             var configuration = ScannerConfiguration.GetScannerConfiguration(configFilePath);
 
             ProcessAssemblies(configuration);
-
-            PrintReport();
+            var reports = SerializeReports();
+            WriteReportToDisk(reports, reportFilePath);
+            PrintReportToConsole();
          }
 
         public static void ProcessAssemblies(ScannerConfiguration configuration)
@@ -99,6 +115,7 @@ namespace NewRelic.Agent.ConsoleScanner
                 foreach (var nugetPackage in instrumentationSet.NugetPackages)
                 {
                     downloadedNugetInfoList.AddRange(GetNugetPackages(nugetPackage.PackageName, nugetPackage.Versions, instrumentationAssemblies));
+
                 }
             }
 
@@ -122,7 +139,7 @@ namespace NewRelic.Agent.ConsoleScanner
                     // TODO: this will get every version (net45, netstandard1.5) of the dll in the package, which may not be necessary; 
                     foreach (var instrumentationAssembly in instrumentationAssemblies)
                     {
-                        dllFileLocations.AddRange(Directory.GetFiles(nugetExtractDirectoryName, instrumentationAssembly + ".dll", SearchOption.AllDirectories));
+                        dllFileLocations.AddRange(Directory.GetFiles(nugetExtractDirectoryName, "*.dll", SearchOption.AllDirectories));
                     }
 
                     downloadedNugetInfos.Add(new DownloadedNugetInfo(dllFileLocations, version, packageName));
@@ -137,7 +154,7 @@ namespace NewRelic.Agent.ConsoleScanner
             return downloadedNugetInfos;
         }
 
-        public static void PrintReport()
+        public static void PrintReportToConsole()
         {
             Console.WriteLine("============ REPORT ============");
             foreach(var report in _instrumentationReports)
@@ -161,6 +178,20 @@ namespace NewRelic.Agent.ConsoleScanner
 
                 Console.WriteLine($"");
             }
+        }
+
+        public static string SerializeReports()
+        {
+            var serializer = new SerializerBuilder()
+                .WithNamingConvention(UnderscoredNamingConvention.Instance)
+                .Build();
+
+            return serializer.Serialize(_instrumentationReports);
+        }
+
+        public static void WriteReportToDisk(string reports, string reportFilePath)
+        {
+            File.WriteAllText(reportFilePath, reports);
         }
     }
 }
