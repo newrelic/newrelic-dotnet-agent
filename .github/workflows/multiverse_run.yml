@@ -66,7 +66,9 @@ jobs:
           dotnet-version: '3.1.100'
 
       - name: Run ConsoleScanner
-        run: ConsoleScanner.exe ".\config.yml" ".\reports-${{ steps.date.outputs.date }}.yml"
+        run: |
+          dir
+          .\ConsoleScanner.exe ".\config.yml" ".\reports-${{ steps.date.outputs.date }}.yml"
         shell: powershell
 
       - name: Upload Reports
