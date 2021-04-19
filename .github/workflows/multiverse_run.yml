@@ -1,0 +1,77 @@
+name: Run the MultiverseScanner
+
+on:
+  schedule:
+    # At 19:00 on day-of-month 1 and 15.  Must be in single quotes!
+    - cron:  '0 19 1,15 * *'
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+
+jobs:
+
+  get-s3-artifacts:
+    name: Get and Publish S3 Artifacts Locally
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dependencies
+        run: apt install -y unzip
+        shell: bash
+
+      - name: Download S3 Artifacts
+        run:  curl https://multiverse-testing.s3-us-west-2.amazonaws.com/MultiverseTesting.zip -O
+        shell: bash
+      
+      - name: Extract files
+        run: unzip MultiverseTesting.zip
+        shell: bash
+      
+      - name: Upload Locally
+        uses: actions/upload-artifact@v2
+        with:
+          name: mvs
+          path: ${{ github.workspace }}/netcoreapp3.1
+          if-no-files-found: error
+    
+  run-mvs:
+    needs: get-s3-artifacts
+    name: Run the MultiverseScanner
+    runs-on: windows-2019
+
+    steps:
+
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Setup .NET Core 3.1.100
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.100'
+
+      - name: Download S3 Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: mvs
+          path: ${{ github.workspace }}
+
+      - name: Run ConsoleScanner
+        run: ConsoleScanner.exe ".\config.yml" ".\reports-${{ steps.date.outputs.date }}.yml"
+        shell: powershell
+
+      - name: Upload Reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: mvs-reports
+          path: ${{ github.workspace }}\reports-${{ steps.date.outputs.date }}.yml
+          if-no-files-found: error
+
+      - name: Push artifacts to S3
+        run: |
+          $Env:AWS_ACCESS_KEY_ID="${{ secrets.TEAM_AWS_ACCESS_KEY_ID }}"
+          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.TEAM_AWS_SECRET_ACCESS_KEY }}"
+          $Env:AWS_DEFAULT_REGION="us-west-2"
+          aws s3 cp ${{ github.workspace }}\reports-${{ steps.date.outputs.date }}.yml ${{ secrets.MULTIVERSE_BUCKET_NAME }}/reports/ --acl public-read
+        shell: pwsh
+
