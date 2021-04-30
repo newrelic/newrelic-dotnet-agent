@@ -5,10 +5,12 @@ AGENT_HOMEDIR='newrelichome_x64_coreclr_linux'
 
 if [ -z "$AGENT_VERSION" ]; then
     # Get version from agent core dll
-    AGENT_VERSION=$(exiftool ./${AGENT_HOMEDIR}/NewRelic.Agent.Core.dll |grep "Product Version Number" |cut -d':' -f2 |tr -d ' ')
-    if [ -z "$AGENT_VERSION" ]; then
-        echo "AGENT_VERSION is not set"
-        exit -1
+    version_from_dll=$(exiftool ./${AGENT_HOMEDIR}/NewRelic.Agent.Core.dll |grep "Product Version Number" |cut -d':' -f2 |tr -d ' ')
+    if [[ "$version_from_dll" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+        AGENT_VERSION="$version_from_dll"
+    else
+        echo "AGENT_VERSION is not set, exiting."
+        exit 1
     fi
 fi
 
