@@ -1,12 +1,12 @@
 #!/bin/bash
 
 PACKAGE_NAME='newrelic-netcore20-agent'
+AGENT_HOMEDIR='newrelichome_x64_coreclr_linux'
+
 if [ -z "$AGENT_VERSION" ]; then
-    # try to parse the version from the last built Windows core stuff
-    windows_core_zipfile=$(ls -1 /release/${PACKAGE_NAME}-win_*_x64.zip | tail -n 1)
-    if [[ "$windows_core_zipfile" =~ win_(.+?)_x64\.zip ]]; then
-        AGENT_VERSION=${BASH_REMATCH[1]}
-    else
+    # Get version from agent core dll
+    AGENT_VERSION=$(exiftool ./${AGENT_HOMEDIR}/NewRelic.Agent.Core.dll |grep "Product Version Number" |cut -d':' -f2 |tr -d ' ')
+    if [ -z "$AGENT_VERSION" ]; then
         echo "AGENT_VERSION is not set"
         exit -1
     fi
@@ -23,7 +23,7 @@ INSTALL_LOCATION=${INSTALL_ROOT}/usr/local/${PACKAGE_NAME}
 
 mkdir -p ${INSTALL_LOCATION}
 
-cp -R newrelichome_x64_coreclr_linux/* ${INSTALL_LOCATION}
+cp -R ${AGENT_HOMEDIR}/* ${INSTALL_LOCATION}
 
 pushd ${INSTALL_LOCATION}
 
