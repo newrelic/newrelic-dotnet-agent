@@ -84,8 +84,6 @@ foreach ($sln in $solutions.Keys) {
     }
 }
 
-# temp for debugging
-exit 0
 $agentVersion = (Get-Item "$rootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
 
 ###################
