@@ -78,8 +78,9 @@ namespace NewRelic.Agent.Core.Transformers
             if(sampleValue < 0)
             {
                 Log.Finest($"The GC Sampler encountered a negative value: {sampleValue}, for sample: {Enum.GetName(typeof(GCSampleType), sampleType)}");
+                sampleValue = 0;
             }
-            return _metricBuilder.TryBuildGCCountMetric(sampleType, Math.Max(0, (int)sampleValue));
+            return _metricBuilder.TryBuildGCCountMetric(sampleType, (int)sampleValue);
         }
 
         private MetricWireModel CreateMetric_ByteData(GCSampleType sampleType, float sampleValue)
