@@ -75,7 +75,7 @@ namespace NewRelic.Agent.Core.Transformers
 
         private MetricWireModel CreateMetric_Count(GCSampleType sampleType, float sampleValue)
         {
-            if(sampleValue < 0)
+            if (sampleValue < 0)
             {
                 Log.Finest($"The GC Sampler encountered a negative value: {sampleValue}, for sample: {Enum.GetName(typeof(GCSampleType), sampleType)}");
                 sampleValue = 0;

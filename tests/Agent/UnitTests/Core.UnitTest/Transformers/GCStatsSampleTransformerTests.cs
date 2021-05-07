@@ -139,39 +139,28 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformerClampsNegativeCountValuesToZero()
         {
-            var metricNameService = new MetricNameService();
-            var metricBuilder = Mock.Create<IMetricBuilder>();
-
-            var sampleTypes_CountMetrics = new List<GCSampleType>();
-
-            //This dictionary defines which GCSampleTypes SHOULD be found in which metric type list.
-            var expectationsDict = new Dictionary<GCSampleType, List<GCSampleType>>()
+            var countTypes = new List<GCSampleType>()
             {
-                { GCSampleType.InducedCount, sampleTypes_CountMetrics },
-                { GCSampleType.Gen0CollectionCount, sampleTypes_CountMetrics },
-                { GCSampleType.Gen1CollectionCount, sampleTypes_CountMetrics },
-                { GCSampleType.Gen2CollectionCount, sampleTypes_CountMetrics },
+                GCSampleType.InducedCount,
+                GCSampleType.Gen0CollectionCount,
+                GCSampleType.Gen1CollectionCount,
+                GCSampleType.Gen2CollectionCount
             };
 
-        
-            Mock.Arrange(() => metricBuilder.TryBuildGCCountMetric(Arg.IsAny<GCSampleType>(), Arg.IsAny<int>()))
-                .DoInstead<GCSampleType, int>((type, _) => { sampleTypes_CountMetrics.Add(type); });
+            foreach(var countMetric in countTypes)
+            {
+                _sampleData[countMetric] = -1;
+            }
 
-            var transformer = new GcSampleTransformer(metricBuilder, _metricAggregator);
+            //Collect metrics that are generated from sample data
+            var generatedMetrics = new Dictionary<string, MetricWireModel>();
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<MetricWireModel>()))
+                .DoInstead<MetricWireModel>((metric) => { generatedMetrics.Add(metric.MetricName.Name, metric); });
 
             //Act
-            transformer.Transform(_sampleData);
+            _transformer.Transform(_sampleData);
 
-            //Assert
-            //Ensure that all of the sample types have a corresponding expected metric shape
-            //A failure here indicates that new GCSampleTypes have been added, but the type of metric that it generates has not been identified.
-            Assert.AreEqual(_sampleTypesCount, expectationsDict.Count, "Not all GCSampleTypes have a metric shape associated with them.  expectationsDic is missing entries");
-
-            //Validate that each SampleType generated the expected MetricType
-            foreach (var q in expectationsDict)
-            {
-                Assert.Contains(q.Key, q.Value, $"GC Sample Type {q.Key} was not of the expected metric type.");
-            }
+            Assert.IsFalse(generatedMetrics.Any(x => x.Value.Data.Value0 < 0));
         }
     }
 }
