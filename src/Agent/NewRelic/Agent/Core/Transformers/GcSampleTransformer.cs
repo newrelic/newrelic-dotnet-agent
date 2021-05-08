@@ -4,6 +4,7 @@
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -74,6 +75,11 @@ namespace NewRelic.Agent.Core.Transformers
 
         private MetricWireModel CreateMetric_Count(GCSampleType sampleType, float sampleValue)
         {
+            if (sampleValue < 0)
+            {
+                Log.Finest($"The GC Sampler encountered a negative value: {sampleValue}, for sample: {Enum.GetName(typeof(GCSampleType), sampleType)}");
+                sampleValue = 0;
+            }
             return _metricBuilder.TryBuildGCCountMetric(sampleType, (int)sampleValue);
         }
 

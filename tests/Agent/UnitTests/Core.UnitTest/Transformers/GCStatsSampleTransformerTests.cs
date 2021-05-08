@@ -132,5 +132,35 @@ namespace NewRelic.Agent.Core.Transformers
                 Assert.Contains(q.Key, q.Value, $"GC Sample Type {q.Key} was not of the expected metric type.");
             }
         }
+
+        /// <summary>
+        /// Ensures that the transformer clamps negative values for count samples.
+        /// </summary>
+        [Test]
+        public void TransformerClampsNegativeCountValuesToZero()
+        {
+            var countTypes = new List<GCSampleType>()
+            {
+                GCSampleType.InducedCount,
+                GCSampleType.Gen0CollectionCount,
+                GCSampleType.Gen1CollectionCount,
+                GCSampleType.Gen2CollectionCount
+            };
+
+            foreach(var countMetric in countTypes)
+            {
+                _sampleData[countMetric] = -1;
+            }
+
+            //Collect metrics that are generated from sample data
+            var generatedMetrics = new Dictionary<string, MetricWireModel>();
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<MetricWireModel>()))
+                .DoInstead<MetricWireModel>((metric) => { generatedMetrics.Add(metric.MetricName.Name, metric); });
+
+            //Act
+            _transformer.Transform(_sampleData);
+
+            Assert.IsFalse(generatedMetrics.Any(x => x.Value.Data.Value0 < 0));
+        }
     }
 }
