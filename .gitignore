@@ -136,9 +136,11 @@ src/Agent/_profilerBuild/**/*.iobj
 src/Agent/_profilerBuild/**/*.ipdb
 src/Agent/_profilerBuild/**/*.lib
 src/Agent/_profilerBuild/**/*.pdb
+src/Agent/NewRelic/Profiler/out/build/x64-Debug/VSInheritEnvironments.txt
 
 # Ignore any locally built profiler Debug-mode binaries
 src/Agent/_profilerBuild/*Debug
 
 # Ignore any signing keys used in Linux packaging
 build/Linux/keys
+
