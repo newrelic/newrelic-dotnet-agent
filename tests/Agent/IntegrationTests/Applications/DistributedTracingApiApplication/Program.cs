@@ -76,14 +76,20 @@ namespace NewRelic.Agent.IntegrationTests.Applications.DistributedTracingApiAppl
         private static IDistributedTracePayload CallCreateDTPayload()
         {
             var currentTransaction = _agent.CurrentTransaction;
+            // As long as this deprecated API is still shipping, we still need to test it
+#pragma warning disable CS0618 // Type or member is obsolete
             return currentTransaction.CreateDistributedTracePayload();
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         [Transaction]
         private static void CallAcceptDTPayload(IDistributedTracePayload payload)
         {
             var currentTransaction = _agent.CurrentTransaction;
+            // As long as this deprecated API is still shipping, we still need to test it
+#pragma warning disable CS0618 // Type or member is obsolete
             currentTransaction.AcceptDistributedTracePayload(payload.HttpSafe());
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         [Transaction]
