@@ -20,9 +20,9 @@ namespace NewRelic.Agent.IntegrationTests.Applications.DistributedTracingApiAppl
 
         private static IAgent _agent = null;
 
-        private static List<KeyValuePair<string, string>> _carrier = new List<KeyValuePair<string, string>>();
+        private static readonly List<KeyValuePair<string, string>> _carrier = new List<KeyValuePair<string, string>>();
 
-        private static Action<List<KeyValuePair<string, string>>, string, string> _setHeaders = new Action<List<KeyValuePair<string, string>>, string, string>((carrier, key, value) =>
+        private static readonly Action<List<KeyValuePair<string, string>>, string, string> _setHeaders = new Action<List<KeyValuePair<string, string>>, string, string>((carrier, key, value) =>
         {
             carrier.Add(new KeyValuePair<string, string>(key, value));
         });
