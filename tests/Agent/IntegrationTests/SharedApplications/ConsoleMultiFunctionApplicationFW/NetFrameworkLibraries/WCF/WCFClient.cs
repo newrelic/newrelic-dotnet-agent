@@ -199,6 +199,12 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
             Logger.Info($"Result: {result ?? "<NULL>"}");
         }
 
+        [LibraryMethod]
+        public void TellWCFServerToMakeExternalCalls()
+        {
+            _ =_wcfClient.TAP_TAPMakeExternalCalls().Result;
+        }
+
         /// <summary>
         /// Calls the WCF Service ThrowException function with both client and server invocation methods (sync,begin/end,tap async)
         /// </summary>

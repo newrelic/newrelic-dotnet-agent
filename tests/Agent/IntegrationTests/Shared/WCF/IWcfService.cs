@@ -31,6 +31,10 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
 
         [OperationContract]
         [WebInvoke(BodyStyle = WebMessageBodyStyle.Bare, RequestFormat = WebMessageFormat.Xml, ResponseFormat = WebMessageFormat.Xml)]
+        Task<string> TAPMakeExternalCalls();
+
+        [OperationContract]
+        [WebInvoke(BodyStyle = WebMessageBodyStyle.Bare, RequestFormat = WebMessageFormat.Xml, ResponseFormat = WebMessageFormat.Xml)]
         string SyncIgnoreTransaction(string input);
 
 

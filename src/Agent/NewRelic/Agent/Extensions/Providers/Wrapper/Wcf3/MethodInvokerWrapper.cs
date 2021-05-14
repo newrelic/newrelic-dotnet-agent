@@ -174,6 +174,11 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             // CAT or DT request information.
             if (shouldTryProcessInboundCatOrDT)
             {
+                if (instrumentedMethodCall.IsAsync)
+                {
+                    transaction.AttachToAsync();
+                }
+
                 transaction.SetWebTransactionName(WebTransactionType.WCF, transactionName, TransactionNamePriority.FrameworkHigh);
                 transaction.SetRequestParameters(parameters);
 
