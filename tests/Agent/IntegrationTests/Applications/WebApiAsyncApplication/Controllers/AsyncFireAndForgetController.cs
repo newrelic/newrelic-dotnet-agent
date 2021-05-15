@@ -42,7 +42,9 @@ namespace WebApiAsyncApplication.Controllers
 
         [HttpGet]
         [Route("AsyncFireAndForget/Async_FireAndForget")]
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<string> Async_FireAndForget()
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var transactionName = UpdateTransactionName("AF");
 
@@ -66,7 +68,9 @@ namespace WebApiAsyncApplication.Controllers
 
         [HttpGet]
         [Route("AsyncFireAndForget/Async_Sync")]
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<string> Async_Sync()
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var transactionName = UpdateTransactionName("AS");
 
@@ -153,7 +157,9 @@ namespace WebApiAsyncApplication.Controllers
 
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         private static async Task AsyncMethod(int delayMs, string transactionName)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             transactionName = UpdateTransactionName(transactionName, "AM");
 
