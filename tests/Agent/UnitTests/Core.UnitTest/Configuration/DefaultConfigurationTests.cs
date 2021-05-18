@@ -2644,7 +2644,19 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 _localConfig.allowAllHeaders.enabled = enabled.Value;
             }
 
-            Assert.AreEqual(expectedResult, _defaultConfig.AllowAllHeaders);
+            Assert.AreEqual(expectedResult, _defaultConfig.CaptureAllRequestHeaders);
+            Assert.AreEqual(_localConfig.allowAllHeaders.enabled ? true : false, _defaultConfig.CaptureAttributesIncludes.Contains("request.headers.*"));
+        }
+
+        [TestCase(true, false)]
+        [TestCase(false, false)]
+        public void AllowAllHeaders_HighSecurityMode_Enabled_Tests(bool enabled, bool expectedResult)
+        {
+            _localConfig.allowAllHeaders.enabled = enabled;
+            _localConfig.highSecurity.enabled = true;
+        
+            Assert.AreEqual(expectedResult, _defaultConfig.CaptureAllRequestHeaders);
+            Assert.AreEqual(0, _defaultConfig.CaptureAttributesIncludes.Count());
         }
 
         [TestCase(true, true)]
