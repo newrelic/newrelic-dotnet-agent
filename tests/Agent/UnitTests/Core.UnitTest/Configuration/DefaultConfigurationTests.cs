@@ -2634,6 +2634,19 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         #region Capture Attributes
 
+        [TestCase(null, false)]
+        [TestCase(true, true)]
+        [TestCase(false, false)]
+        public void AllowAllHeadersConfigTests(bool? enabled, bool expectedResult)
+        {
+            if (enabled.HasValue)
+            {
+                _localConfig.allowAllHeaders.enabled = enabled.Value;
+            }
+
+            Assert.AreEqual(expectedResult, _defaultConfig.AllowAllHeaders);
+        }
+
         [TestCase(true, true)]
         [TestCase(false, false)]
         public void CaptureAttributes(bool captureAttributes, bool expectedResult)

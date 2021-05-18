@@ -407,6 +407,23 @@
           </xs:complexType>
         </xs:element>
 
+        <xs:element name="allowAllHeaders" minOccurs="0" maxOccurs="1">
+            <xs:complexType>
+                <xs:annotation>
+                    <xs:documentation>
+                        Allow all request headers to be captured as attributes.
+                    </xs:documentation>
+                </xs:annotation>
+                <xs:attribute name="enabled" type="xs:boolean" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Turns on capturing. Enabled by default.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:complexType>
+        </xs:element>
+
         <xs:element name="attributes" minOccurs="0" maxOccurs="1">
           <xs:annotation>
             <xs:documentation>

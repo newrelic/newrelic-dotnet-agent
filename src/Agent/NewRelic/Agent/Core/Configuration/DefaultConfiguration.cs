@@ -360,6 +360,8 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public virtual bool AllowAllHeaders => _localConfiguration.allowAllHeaders.enabled;
+
         #region Attributes
 
         public virtual bool CaptureAttributes => _localConfiguration.attributes.enabled;
