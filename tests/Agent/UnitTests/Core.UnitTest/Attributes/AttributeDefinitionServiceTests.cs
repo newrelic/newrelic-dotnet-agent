@@ -187,6 +187,44 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             );
         }
 
+        [TestCase(null, null, false)]
+        [TestCase(true, null, true)]
+        [TestCase(false, null, false)]
+        [TestCase(true, "request.headers.foo", false)]
+        [TestCase(null, "request.headers.foo", false)]
+        [TestCase(true, "request.headers.*", false)]
+        public void RequestHeaderAttributeTests
+        (
+            bool? allowAllHeaders,
+            string attributesExclude,
+            bool expectCaptureRequestHeaders
+        )
+        {
+            //Arrange
+            if (allowAllHeaders.HasValue)
+            {
+                _localConfig.allowAllHeaders.enabled = allowAllHeaders.Value;
+            }
+
+            if (!string.IsNullOrWhiteSpace(attributesExclude))
+            {
+                _localConfig.attributes.exclude.Add(attributesExclude);
+            }
+
+            UpdateConfig();
+
+
+            var attrib = _attribDefs.GetRequestHeadersAttribute("foo");
+
+            NrAssert.Multiple
+            (
+                () => Assert.AreEqual(expectCaptureRequestHeaders, attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent)),
+                () => Assert.AreEqual(expectCaptureRequestHeaders, attrib.IsAvailableForAny(AttributeDestinations.SpanEvent)),
+                () => Assert.AreEqual(expectCaptureRequestHeaders, attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent)),
+                () => Assert.AreEqual(expectCaptureRequestHeaders, attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace)),
+                () => Assert.AreEqual(expectCaptureRequestHeaders, attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace))
+           );
+        }
 
         const string _lazyTest_AttribNameDtm = "dtmAttrib";
         private DateTime _lazyTest_AttribValDtm = DateTime.UtcNow;
