@@ -268,7 +268,7 @@ namespace NewRelic.Agent.Core.Transactions
             return;
         }
 
-        public ITransaction SetRequestHeaders(IEnumerable<KeyValuePair<string, string>> parameters)
+        public ITransaction SetRequestHeaders<T>(T headers, IEnumerable<string> keysToCapture, Func<T, string, string> getter)
         {
             return this;
         }
