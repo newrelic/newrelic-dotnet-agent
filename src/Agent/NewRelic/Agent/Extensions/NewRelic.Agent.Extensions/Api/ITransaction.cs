@@ -265,5 +265,7 @@ namespace NewRelic.Agent.Api
         void InsertDistributedTraceHeaders<T>(T carrier, Action<T, string, string> setter);
 
         void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType);
+
+        ITransaction SetRequestHeaders(IEnumerable<KeyValuePair<string, string>> parameters);
     }
 }
