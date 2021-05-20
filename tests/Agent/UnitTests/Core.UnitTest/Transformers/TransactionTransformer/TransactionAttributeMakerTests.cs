@@ -86,6 +86,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             _localConfig.attributes.include = new List<string>() { "request.parameters.*" };
 
+            _localConfig.allowAllHeaders.enabled = true;
+
             UpdateConfiguration();
 
             _configAutoResponder = new ConfigurationAutoResponder(_configuration);
@@ -337,6 +339,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 new KeyValuePair<string,string>("requestParameterKey", "requestParameterValue"),
 
             });
+
+            var headerCollection = new Dictionary<string, string>()
+            {
+                { "key1", "value1" },
+                { "key2", "value2" },
+                { "key3", ""}
+            };
+
+            string GetHeaderValue(Dictionary<string, string> headers, string key)
+            {
+                return headers[key];
+            }
+
+            transaction.SetRequestHeaders(headerCollection, new[] { "key1", "key2", "key3" }, GetHeaderValue);
             
             transaction.SetHttpResponseStatusCode(400, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
@@ -364,7 +380,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(37, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual(40, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
                 () => Assert.AreEqual("Transaction", GetAttributeValue(attributes, "type", AttributeDestinations.TransactionEvent)),
                 () => Assert.AreEqual("TransactionError", GetAttributeValue(attributes, "type", AttributeDestinations.ErrorEvent)),
                 () => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), GetAttributeValue(attributes, "timestamp", AttributeDestinations.TransactionEvent)),
@@ -401,7 +417,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "errorMessage")),
                 () => Assert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "error.message")),
                 () => Assert.AreEqual(true, GetAttributeValue(transactionAttributes, "error")),
-                () => Assert.True(DoAttributesContain(transactionAttributes, "host.displayName"))
+                () => Assert.True(DoAttributesContain(transactionAttributes, "host.displayName")),
+                () => Assert.AreEqual("value1", GetAttributeValue(transactionAttributes, "request.headers.key1")),
+                () => Assert.AreEqual("value2", GetAttributeValue(transactionAttributes, "request.headers.key2")),
+                () => Assert.AreEqual("", GetAttributeValue(transactionAttributes, "request.headers.key3"))
             );
         }
 

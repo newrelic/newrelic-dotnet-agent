@@ -1180,19 +1180,30 @@ namespace NewRelic.Agent.Core.Transactions
             }
         }
 
-        public ITransaction SetRequestHeaders(IEnumerable<KeyValuePair<string, string>> parameters)
+        public ITransaction SetRequestHeaders<T>(T headers, IEnumerable<string> keysToCapture, Func<T, string, string> getter)
         {
-            if (parameters == null)
+            if (headers == null)
             {
-                throw new ArgumentNullException(nameof(parameters));
+                throw new ArgumentNullException(nameof(headers));
             }
 
-            foreach (var parameter in parameters)
+            if (keysToCapture == null)
             {
-                if (parameter.Key != null && parameter.Value != null)
+                throw new ArgumentNullException(nameof(keysToCapture));
+            }
+
+            if (getter == null)
+            {
+                throw new ArgumentNullException(nameof(getter));
+            }
+
+            foreach (var key in keysToCapture)
+            {
+                var value = getter(headers, key);
+                if (value != null)
                 {
-                    var paramAttribute = _attribDefs.GetRequestHeadersAttribute(parameter.Key);
-                    TransactionMetadata.UserAndRequestAttributes.TrySetValue(paramAttribute, parameter.Value);
+                    var paramAttribute = _attribDefs.GetRequestHeadersAttribute(key);
+                    TransactionMetadata.UserAndRequestAttributes.TrySetValue(paramAttribute, value);
                 }
             }
 
