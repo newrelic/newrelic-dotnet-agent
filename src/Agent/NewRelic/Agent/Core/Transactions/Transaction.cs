@@ -1200,7 +1200,7 @@ namespace NewRelic.Agent.Core.Transactions
             foreach (var key in keysToCapture)
             {
                 var value = getter(headers, key);
-                if (!string.IsNullOrEmpty(value))
+                if (value != null)
                 {
                     var paramAttribute = _attribDefs.GetRequestHeadersAttribute(key);
                     TransactionMetadata.UserAndRequestAttributes.TrySetValue(paramAttribute, value);
