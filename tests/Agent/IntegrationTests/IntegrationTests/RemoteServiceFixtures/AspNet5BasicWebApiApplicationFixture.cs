@@ -15,7 +15,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"AspNet5BasicWebApiApplication";
         private const string ExecutableName = @"AspNet5BasicWebApiApplication.exe";
-        private const string TargetFramework = "net5.0";
+        private const string TargetFramework = "net6.0";
 
         public AspNet5BasicWebApiApplicationFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded, true, true, true))
         {
