@@ -28,8 +28,8 @@ namespace NewRelic.Core
         netcoreapp30,
         netcoreapp31,
         net5,
-        Other,
-        net6
+        net6,
+        Other
     }
 
     public static class DotnetVersion
