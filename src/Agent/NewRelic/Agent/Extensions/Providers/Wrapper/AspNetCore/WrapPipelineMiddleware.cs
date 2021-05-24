@@ -22,6 +22,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
         private readonly RequestDelegate _next;
         private readonly IAgent _agent;
         private volatile bool _inspectingHttpContextForErrorsIsEnabled = true;
+        private readonly string[] _defaultCaptureHeaders = { "Referer", "Accept", "Content-Length", "Host", "User-Agent" };
 
         public WrapPipelineMiddleware(RequestDelegate next, IAgent agent)
         {
@@ -50,6 +51,15 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
                 segment = SetupSegment(transaction, context);
                 segment.AlwaysDeductChildDuration = true;
 
+                if (_agent.Configuration.CaptureAllRequestHeaders)
+                {
+                    transaction.SetRequestHeaders(context.Request.Headers, context.Request.Headers.Keys, GetHeaderValue);
+                }
+                else
+                {
+                    transaction.SetRequestHeaders(context.Request.Headers, _defaultCaptureHeaders, GetHeaderValue);
+                }
+
                 ProcessHeaders(context);
 
                 context.Response.OnStarting(SetOutboundTracingDataAsync);
@@ -75,6 +85,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
                 TryWriteResponseHeaders(context, transaction);
                 return Task.CompletedTask;
             }
+        }
+
+        private string GetHeaderValue(IHeaderDictionary headers, string key)
+        {
+            return headers[key];
         }
 
         private void EndTransaction(ISegment segment, ITransaction transaction, HttpContext context, Exception appException)
