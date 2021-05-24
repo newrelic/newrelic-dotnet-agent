@@ -75,7 +75,7 @@ namespace MultiFunctionApplicationHelpers
     /// </summary>
     public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
-        public ConsoleDynamicMethodFixtureCoreLatest() : base("net5.0")
+        public ConsoleDynamicMethodFixtureCoreLatest() : base("net6.0")
         {
         }
     }
