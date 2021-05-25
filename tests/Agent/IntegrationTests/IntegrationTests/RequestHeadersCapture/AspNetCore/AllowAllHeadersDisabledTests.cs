@@ -14,11 +14,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
 {
     [NetCoreTest]
-    public class AllowAllHeadersDisabled : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+    public class AllowAllHeadersDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
 
-        public AllowAllHeadersDisabled(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+        public AllowAllHeadersDisabledTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
@@ -56,7 +56,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
                 { "request.headers.User-Agent", "FakeUserAgent" }
             };
 
-            var unexpectedAttributes = new List<string> { "foo" };
+            var unexpectedAttributes = new List<string> { "request.headers.foo" };
 
             var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
             var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);

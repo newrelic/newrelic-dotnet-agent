@@ -51,7 +51,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
                 segment = SetupSegment(transaction, context);
                 segment.AlwaysDeductChildDuration = true;
 
-                if (_agent.Configuration.CaptureAllRequestHeaders)
+                if (_agent.Configuration.AllowAllRequestHeaders)
                 {
                     transaction.SetRequestHeaders(context.Request.Headers, context.Request.Headers.Keys, GetHeaderValue);
                 }

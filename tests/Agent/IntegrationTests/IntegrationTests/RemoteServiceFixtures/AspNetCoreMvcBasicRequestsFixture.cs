@@ -46,17 +46,20 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             request.UserAgent = "FakeUserAgent";
             request.Accept = "text/html";
 
+            //add custom header
+            foreach (var pairs in customHeadersToAdd)
+            {
+                request.Headers.Add(pairs.Key, pairs.Value);
+            }
+
+            //send some data in the request body
             var bodyData = Encoding.Default.GetBytes("Hello");
             request.ContentLength = bodyData.Length;
             var newStream = request.GetRequestStream();
             newStream.Write(bodyData, 0, bodyData.Length);
             newStream.Close();
 
-            //add custom header
-            foreach(var pairs in customHeadersToAdd)
-            {
-                request.Headers.Add(pairs.Key, pairs.Value);
-            }
+
 
             var response = (HttpWebResponse)request.GetResponse();
             Assert.True(response.StatusCode == HttpStatusCode.OK);
