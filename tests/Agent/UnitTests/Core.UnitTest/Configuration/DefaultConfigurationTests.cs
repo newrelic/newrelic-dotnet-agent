@@ -2645,7 +2645,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             }
 
             Assert.AreEqual(expectedResult, _defaultConfig.AllowAllRequestHeaders);
-            Assert.AreEqual(_localConfig.allowAllHeaders.enabled ? true : false, _defaultConfig.CaptureAttributesIncludes.Contains("request.headers.*"));
         }
 
         [TestCase(true, false)]

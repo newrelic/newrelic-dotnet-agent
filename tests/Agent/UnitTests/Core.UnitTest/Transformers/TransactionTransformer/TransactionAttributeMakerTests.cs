@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _serverConfig = new ServerConfiguration();
             _localConfig = new configuration();
 
-            _localConfig.attributes.include = new List<string>() { "request.parameters.*" };
+            _localConfig.attributes.include = new List<string>() { "request.parameters.*", "request.headers.*" };
 
             _localConfig.allowAllHeaders.enabled = true;
 
