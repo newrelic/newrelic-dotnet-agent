@@ -360,7 +360,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public bool CaptureAllRequestHeaders => HighSecurityModeOverrides(false, _localConfiguration.allowAllHeaders.enabled);
+        public bool AllowAllRequestHeaders => HighSecurityModeOverrides(false, _localConfiguration.allowAllHeaders.enabled);
 
         #region Attributes
 
@@ -416,11 +416,6 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                if (CaptureAllRequestHeaders)
-                {
-                    _localConfiguration.attributes.include.Add("request.headers.*");
-                }
-
                 if (CanUseAttributesIncludes)
                 {
                     return Memoizer.Memoize(ref _captureAttributesIncludes, () => new HashSet<string>(_localConfiguration.attributes.include));

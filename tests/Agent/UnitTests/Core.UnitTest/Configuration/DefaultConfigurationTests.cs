@@ -2644,7 +2644,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 _localConfig.allowAllHeaders.enabled = enabled.Value;
             }
 
-            Assert.AreEqual(expectedResult, _defaultConfig.CaptureAllRequestHeaders);
+            Assert.AreEqual(expectedResult, _defaultConfig.AllowAllRequestHeaders);
             Assert.AreEqual(_localConfig.allowAllHeaders.enabled ? true : false, _defaultConfig.CaptureAttributesIncludes.Contains("request.headers.*"));
         }
 
@@ -2655,7 +2655,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.allowAllHeaders.enabled = enabled;
             _localConfig.highSecurity.enabled = true;
         
-            Assert.AreEqual(expectedResult, _defaultConfig.CaptureAllRequestHeaders);
+            Assert.AreEqual(expectedResult, _defaultConfig.AllowAllRequestHeaders);
             Assert.AreEqual(0, _defaultConfig.CaptureAttributesIncludes.Count());
         }
 
