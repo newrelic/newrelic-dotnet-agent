@@ -46,6 +46,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             request.UserAgent = "FakeUserAgent";
             request.Accept = "text/html";
 
+            request.Headers.Add("Proxy-Authorization", "Basic abc");
+            request.Headers.Add("Authorization", "Basic xyz");
+            request.Headers.Add("Cookie", "name1=value1; name2=value2; name3=value3");
+            request.Headers.Add("X-Forwarded-For", "xyz");
+
             //add custom header
             foreach (var pairs in customHeadersToAdd)
             {

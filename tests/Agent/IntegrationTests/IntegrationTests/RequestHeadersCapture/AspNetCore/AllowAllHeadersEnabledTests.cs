@@ -56,6 +56,14 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
                 { "request.headers.foo", "bar" }
             };
 
+            var unexpectedAttributes = new List<string>
+            {
+                 "request.headers.Cookie",
+                 "request.headers.Authorization",
+                 "request.headers.Proxy-Authorization",
+                 "request.headers.X-Forwarded-For"
+            };
+
             var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
             var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
             var spanEvent = _fixture.AgentLog.TryGetSpanEvent(expectedTransactionName);
@@ -65,6 +73,10 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
             Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
             Assertions.SpanEventHasAttributes(expectedAttributes, SpanEventAttributeType.Agent, spanEvent);
             Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
+
+            Assertions.SpanEventDoesNotHaveAttributes(unexpectedAttributes, SpanEventAttributeType.Agent, spanEvent);
+            Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
+            Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
         }
     }
 }
