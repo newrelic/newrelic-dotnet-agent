@@ -28,7 +28,8 @@ namespace NewRelic.Core
         netcoreapp30,
         netcoreapp31,
         net5,
-        Other,
+        net6,
+        Other
     }
 
     public static class DotnetVersion
@@ -92,6 +93,11 @@ namespace NewRelic.Core
             if (envVer.Major == 3 && envVer.Minor == 1)
             {
                 return DotnetCoreVersion.netcoreapp31;
+            }
+
+            if (envVer.Major == 6)
+            {
+                return DotnetCoreVersion.net6;
             }
 
             if (envVer.Major == 5)
