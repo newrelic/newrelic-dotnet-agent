@@ -49,21 +49,21 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
             var expectedTransactionName = "WebTransaction/MVC/Home/Index";
             var expectedAttributes = new Dictionary<string, object>
             {
-                { "request.headers.Referer", "http://example.com" },
-                { "request.headers.Accept", "text/html" },
-                { "request.headers.Content-Length", "5" },
-                { "request.headers.Host", "fakehost" },
-                { "request.headers.User-Agent", "FakeUserAgent" }
+                { "request.headers.referer", "http://example.com" },
+                { "request.headers.accept", "text/html" },
+                { "request.headers.content-length", "5" },
+                { "request.headers.host", "fakehost" },
+                { "request.headers.user-agent", "FakeUserAgent" }
             };
 
             var unexpectedAttributes = new List<string>
             {
                 "request.headers.foo",
 
-                "request.headers.Cookie",
-                "request.headers.Authorization",
-                "request.headers.Proxy-Authorization",
-                "request.headers.X-Forwarded-For"
+                "request.headers.cookie",
+                "request.headers.authorization",
+                "request.headers.proxy-authorization",
+                "request.headers.x-forwarded-for"
             };
 
             var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
