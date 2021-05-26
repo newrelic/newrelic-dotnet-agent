@@ -1202,7 +1202,7 @@ namespace NewRelic.Agent.Core.Transactions
                 var value = getter(headers, key);
                 if (value != null)
                 {
-                    var paramAttribute = _attribDefs.GetRequestHeadersAttribute(key);
+                    var paramAttribute = _attribDefs.GetRequestHeadersAttribute(key.ToLowerInvariant());
                     TransactionMetadata.UserAndRequestAttributes.TrySetValue(paramAttribute, value);
                 }
             }
