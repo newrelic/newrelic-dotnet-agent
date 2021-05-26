@@ -353,7 +353,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 return headers[key];
             }
 
-            transaction.SetRequestHeaders(headerCollection, new[] { "key1", "key2", "key3" }, GetHeaderValue);
+            transaction.SetRequestHeaders(headerCollection, new[] { "key1", "key2", "key3", "Key4" }, GetHeaderValue);
             
             transaction.SetHttpResponseStatusCode(400, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
