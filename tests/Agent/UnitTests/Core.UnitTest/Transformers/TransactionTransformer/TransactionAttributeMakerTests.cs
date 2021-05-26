@@ -344,7 +344,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             {
                 { "key1", "value1" },
                 { "key2", "value2" },
-                { "key3", ""}
+                { "key3", ""},
+                { "Key4", "value4"}
             };
 
             string GetHeaderValue(Dictionary<string, string> headers, string key)
@@ -380,7 +381,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(40, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual(41, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
                 () => Assert.AreEqual("Transaction", GetAttributeValue(attributes, "type", AttributeDestinations.TransactionEvent)),
                 () => Assert.AreEqual("TransactionError", GetAttributeValue(attributes, "type", AttributeDestinations.ErrorEvent)),
                 () => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), GetAttributeValue(attributes, "timestamp", AttributeDestinations.TransactionEvent)),
@@ -420,7 +421,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.True(DoAttributesContain(transactionAttributes, "host.displayName")),
                 () => Assert.AreEqual("value1", GetAttributeValue(transactionAttributes, "request.headers.key1")),
                 () => Assert.AreEqual("value2", GetAttributeValue(transactionAttributes, "request.headers.key2")),
-                () => Assert.AreEqual("", GetAttributeValue(transactionAttributes, "request.headers.key3"))
+                () => Assert.AreEqual("", GetAttributeValue(transactionAttributes, "request.headers.key3")),
+                () => Assert.AreEqual("value4", GetAttributeValue(transactionAttributes, "request.headers.key4"))
             );
         }
 
