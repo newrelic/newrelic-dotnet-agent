@@ -64,8 +64,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             newStream.Write(bodyData, 0, bodyData.Length);
             newStream.Close();
 
-
-
             var response = (HttpWebResponse)request.GetResponse();
             Assert.True(response.StatusCode == HttpStatusCode.OK);
         }

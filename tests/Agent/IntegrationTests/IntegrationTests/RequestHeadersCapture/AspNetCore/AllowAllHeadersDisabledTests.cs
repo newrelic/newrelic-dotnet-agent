@@ -59,7 +59,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
             var unexpectedAttributes = new List<string>
             {
                 "request.headers.foo",
-
                 "request.headers.cookie",
                 "request.headers.authorization",
                 "request.headers.proxy-authorization",
