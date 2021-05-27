@@ -223,6 +223,23 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
         }
 
+        public NewRelicConfigModifier SetAllowAllHeaders(bool? enabled)
+        {
+            const string config = "configuration";
+            const string allowAllHeaders = "allowAllHeaders";
+            if (null == enabled)
+            {
+                CommonUtils.DeleteXmlNodeFromNewRelicConfig(_configFilePath, new[] { config }, allowAllHeaders);
+            }
+            else
+            {
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { config, allowAllHeaders },
+                    "enabled", enabled.Value ? "true" : "false");
+            }
+
+            return this;
+        }
+
         public void SetOrDeleteSpanEventsEnabled(bool? enabled)
         {
             const string config = "configuration";

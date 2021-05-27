@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -32,6 +34,38 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             var response = (HttpWebResponse)request.GetResponse();
             Assert.True(response.StatusCode == HttpStatusCode.NoContent);
+        }
+
+        public void MakePostRequestWithCustomRequestHeader(Dictionary<string, string> customHeadersToAdd)
+        {
+            var address = $"http://localhost:{Port}/";
+            var request = (HttpWebRequest)WebRequest.Create(address);
+            request.Method = "POST";
+            request.Referer = "http://example.com";
+            request.Host = "FakeHost";
+            request.UserAgent = "FakeUserAgent";
+            request.Accept = "text/html";
+
+            request.Headers.Add("Proxy-Authorization", "Basic abc");
+            request.Headers.Add("Authorization", "Basic xyz");
+            request.Headers.Add("Cookie", "name1=value1; name2=value2; name3=value3");
+            request.Headers.Add("X-Forwarded-For", "xyz");
+
+            //add custom header
+            foreach (var pairs in customHeadersToAdd)
+            {
+                request.Headers.Add(pairs.Key, pairs.Value);
+            }
+
+            //send some data in the request body
+            var bodyData = Encoding.Default.GetBytes("Hello");
+            request.ContentLength = bodyData.Length;
+            var newStream = request.GetRequestStream();
+            newStream.Write(bodyData, 0, bodyData.Length);
+            newStream.Close();
+
+            var response = (HttpWebResponse)request.GetResponse();
+            Assert.True(response.StatusCode == HttpStatusCode.OK);
         }
 
         public void ThrowException()
