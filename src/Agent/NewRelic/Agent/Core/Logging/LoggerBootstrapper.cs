@@ -64,7 +64,6 @@ namespace NewRelic.Agent.Core
         private static string AuditLogName = "Audit";
 
         // Watch out!  If you change the time format that the agent puts into its log files, other log parsers may fail.
-        // See, specifically, the orion IIS QA package, file lib/qa-tools-utils/dotnet_agent_log_parser.rb
         private static ILayout AuditLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %level: %message\r\n");
         private static ILayout FileLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %6level: [pid: %property{pid}, tid: %thread] %message\r\n");
 
@@ -85,7 +84,7 @@ namespace NewRelic.Agent.Core
             GlobalContext.Properties["pid"] = new ProcessStatic().GetCurrentProcess().Id;
 
             SetupStartupLogAppender(logger);
-            SetupConsoleLogAppender(logger);
+            SetupConsoleLogAppender(logger, Level.Warn);
             SetupTemporaryEventLogAppender(logger);
         }
 
@@ -115,7 +114,16 @@ namespace NewRelic.Agent.Core
             SetupAuditLogger(logger, config);
             SetupDebugLogAppender(logger);
             logger.RemoveAppender(TemporaryEventLogAppenderName);
-            if (!config.Console) logger.RemoveAppender(ConsoleLogAppenderName);
+
+            // The console logging was initially set up with a fixed log level of "WARN"
+            // Remove the existing console log appender, and if console logging is
+            // enabled by config, add it back with the configured logging level
+            logger.RemoveAppender(ConsoleLogAppenderName);
+            if (config.Console)
+            {
+                var consoleLogLevel = logger.Hierarchy.LevelMap[config.LogLevel];
+                SetupConsoleLogAppender(logger, consoleLogLevel);
+            }
 
             logger.Repository.Configured = true;
 
@@ -318,12 +326,12 @@ namespace NewRelic.Agent.Core
         /// </summary>
         /// <param name="logger">The logger you want to attach the console log appender to.</param>
         /// <param name="config">The configuration for the appender.</param>
-        private static void SetupConsoleLogAppender(log4netLogger logger)
+        private static void SetupConsoleLogAppender(log4netLogger logger, Level level)
         {
             var appender = new ConsoleAppender();
             appender.Name = ConsoleLogAppenderName;
             appender.Layout = FileLogLayout;
-            appender.Threshold = Level.Warn;
+            appender.Threshold = level;
             appender.AddFilter(GetNoAuditFilter());
             appender.ActivateOptions();
             logger.AddAppender(appender);
