@@ -1197,6 +1197,11 @@ namespace NewRelic.Agent.Core.Transactions
                 throw new ArgumentNullException(nameof(getter));
             }
 
+            if (_configuration.HighSecurityModeEnabled)
+            {
+                return this;
+            }
+
             foreach (var key in keysToCapture)
             {
                 var value = getter(headers, key);

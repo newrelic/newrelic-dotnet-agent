@@ -426,6 +426,61 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             );
         }
 
+        [Test]
+        public void GetAttributes_SetRequestHeaders_HighSecurityModeEnabled()
+        {
+            // ARRANGE
+            _localConfig.highSecurity.enabled = true;
+            UpdateConfiguration();
+
+            var timer = Mock.Create<ITimer>();
+            var expectedStartTime = DateTime.Now;
+            var expectedDuration = TimeSpan.FromMilliseconds(500);
+            Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
+            var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+            var apdexT = TimeSpan.FromSeconds(2);
+
+            var priority = 0.5f;
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+
+            var headerCollection = new Dictionary<string, string>()
+            {
+                { "key1", "value1" },
+                { "key2", "value2" },
+                { "key3", ""},
+                { "Key4", "value4"}
+            };
+
+            string GetHeaderValue(Dictionary<string, string> headers, string key)
+            {
+                return headers[key];
+            }
+
+            transaction.SetRequestHeaders(headerCollection, new[] { "key1", "key2", "key3", "Key4" }, GetHeaderValue);
+
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+
+            var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+            txStats.MergeUnscopedStats(MetricNames.ExternalAll, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2)));
+
+            var totalTime = TimeSpan.FromSeconds(1);
+
+            // ACT
+            var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
+
+            // ACQUIRE
+            var transactionAttributes = attributes;
+
+            // ASSERT
+            NrAssert.Multiple(
+                () => Assert.AreEqual(15, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
+
+                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key1")),
+                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key2")),
+                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key3")),
+                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key4"))
+            );
+        }
 
         [Test]
         public void GetAttributes_ReturnsCatAttsWithoutCrossAppId()
