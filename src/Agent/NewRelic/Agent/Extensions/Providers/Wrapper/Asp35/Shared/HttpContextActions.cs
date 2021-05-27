@@ -61,6 +61,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
         public static void TransactionShutdown(IAgent agent, HttpContext httpContext)
         {
+            StoreRequestHeaders(agent, httpContext);
             StoreRequestParameters(agent, httpContext);
             SetStatusCode(agent, httpContext);
             TryWriteResponseHeaders(agent, httpContext);
@@ -112,6 +113,15 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
             {
                 return null;
             }
+        }
+
+        static readonly string[] DefaultCaptureHeaders = { "Referer", "Accept", "Content-Length", "Host", "User-Agent" };
+
+        private static void StoreRequestHeaders(IAgent agent, HttpContext httpContext)
+        {
+            var keysToCapture = agent.Configuration.AllowAllRequestHeaders ? httpContext.Request.Headers?.AllKeys : DefaultCaptureHeaders;
+
+            agent.CurrentTransaction.SetRequestHeaders(httpContext.Request.Headers, keysToCapture, (headers, key) => headers[key]);
         }
 
         private static void StoreRequestParameters(IAgent agent, HttpContext httpContext)
