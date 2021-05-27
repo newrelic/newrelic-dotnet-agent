@@ -210,34 +210,26 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return result;
         }
 
-        public HttpResponseHeaders GetWithHeaders(IEnumerable<KeyValuePair<string, string>> headers, string action = null, string queryString = null)
+        public HttpResponseHeaders RequestWithHeaders(HttpMethod method, string content, IEnumerable<KeyValuePair<string, string>> headers, string action = null, string queryString = null)
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/{action}{queryString}";
 
             using (var httpClient = new HttpClient())
             {
-                var httpRequestMessage = new HttpRequestMessage { RequestUri = new Uri(address), Method = HttpMethod.Get };
+                var httpRequestMessage = new HttpRequestMessage { RequestUri = new Uri(address), Method = method };
                 foreach (var header in headers)
                     httpRequestMessage.Headers.Add(header.Key, header.Value);
+
+                if (content != null)
+                    httpRequestMessage.Content = new StringContent(content);
 
                 return Task.Run(() => httpClient.SendAsync(httpRequestMessage)).Result.Headers;
             }
         }
 
-        public HttpResponseHeaders PostWithHeaders(string content, IEnumerable<KeyValuePair<string, string>> headers, string action = null, string queryString = null)
+        public HttpResponseHeaders GetWithHeaders(IEnumerable<KeyValuePair<string, string>> headers, string action = null, string queryString = null)
         {
-            var address = $"http://{DestinationServerName}:{Port}/Default/{action}{queryString}";
-
-            using (var httpClient = new HttpClient())
-            {
-                var httpRequestMessage = new HttpRequestMessage { RequestUri = new Uri(address), Method = HttpMethod.Post };
-                foreach (var header in headers)
-                    httpRequestMessage.Headers.Add(header.Key, header.Value);
-
-                httpRequestMessage.Content = new StringContent(content);
-
-                return Task.Run(() => httpClient.SendAsync(httpRequestMessage)).Result.Headers;
-            }
+            return RequestWithHeaders(HttpMethod.Get, null, headers, action, queryString);
         }
 
         public HttpResponseHeaders PostWithTestHeaders(IEnumerable<KeyValuePair<string, string>> additionalHeaders = null)
@@ -250,7 +242,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 { "User-Agent", "FakeUserAgent" }
             };
 
-            return PostWithHeaders("Hello", headers.Concat(additionalHeaders ?? Enumerable.Empty<KeyValuePair<string, string>>()));
+            return RequestWithHeaders(HttpMethod.Post, "Hello", headers.Concat(additionalHeaders ?? Enumerable.Empty<KeyValuePair<string, string>>()));
         }
 
         public HttpResponseHeaders GetWithCatHeader(bool includeCrossProcessIdHeader = true, CrossApplicationRequestData requestData = null)
