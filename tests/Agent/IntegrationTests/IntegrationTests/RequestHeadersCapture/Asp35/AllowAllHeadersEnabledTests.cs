@@ -14,11 +14,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
 {
     [NetFrameworkTest]
-    public class AllowAllHeadersDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class AllowAllHeadersEnabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public AllowAllHeadersDisabledTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public AllowAllHeadersEnabledTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
@@ -30,13 +30,19 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
-                    configModifier.SetAllowAllHeaders(false)
+                    configModifier.SetAllowAllHeaders(true)
                         .ForceTransactionTraces()
                         .EnableSpanEvents(true);
                 },
                 exerciseApplication: () =>
                 {
-                    var customRequestHeaders = new Dictionary<string, string> { { "foo", "bar" } };
+                    var customRequestHeaders = new Dictionary<string, string>
+                    {
+                        { "FOO", "bar" },
+                        { "Cookie", "itsasecret" },
+                        { "dashes-are-valid", "true" },
+                        { "dashesarevalid", "false" }
+                    };
 
                     _fixture.PostWithTestHeaders(customRequestHeaders);
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
@@ -55,12 +61,15 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
                 { "request.headers.accept", "text/html" },
                 { "request.headers.content-length", "5" },
                 { "request.headers.host", "fakehost" },
-                { "request.headers.user-agent", "FakeUserAgent" }
+                { "request.headers.user-agent", "FakeUserAgent" },
+                { "request.headers.foo", "bar" },
+                { "request.headers.dashes-are-valid", "true" },
+                { "request.headers.dashesarevalid", "false" },
+
             };
 
             var unexpectedAttributes = new List<string>
             {
-                "request.headers.foo",
                 "request.headers.cookie",
                 "request.headers.authorization",
                 "request.headers.proxy-authorization",

@@ -210,7 +210,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return result;
         }
 
-
         public HttpResponseHeaders GetWithHeaders(IEnumerable<KeyValuePair<string, string>> headers, string action = null, string queryString = null)
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/{action}{queryString}";
@@ -225,6 +224,34 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             }
         }
 
+        public HttpResponseHeaders PostWithHeaders(string content, IEnumerable<KeyValuePair<string, string>> headers, string action = null, string queryString = null)
+        {
+            var address = $"http://{DestinationServerName}:{Port}/Default/{action}{queryString}";
+
+            using (var httpClient = new HttpClient())
+            {
+                var httpRequestMessage = new HttpRequestMessage { RequestUri = new Uri(address), Method = HttpMethod.Post };
+                foreach (var header in headers)
+                    httpRequestMessage.Headers.Add(header.Key, header.Value);
+
+                httpRequestMessage.Content = new StringContent(content);
+
+                return Task.Run(() => httpClient.SendAsync(httpRequestMessage)).Result.Headers;
+            }
+        }
+
+        public HttpResponseHeaders PostWithTestHeaders(IEnumerable<KeyValuePair<string, string>> additionalHeaders = null)
+        {
+            var headers = new Dictionary<string, string>
+            {
+                { "Referer", "http://example.com/" },
+                { "Accept", "text/html" },
+                { "Host", "fakehost" },
+                { "User-Agent", "FakeUserAgent" }
+            };
+
+            return PostWithHeaders("Hello", headers.Concat(additionalHeaders ?? Enumerable.Empty<KeyValuePair<string, string>>()));
+        }
 
         public HttpResponseHeaders GetWithCatHeader(bool includeCrossProcessIdHeader = true, CrossApplicationRequestData requestData = null)
         {
