@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -64,8 +63,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
                 { "request.headers.user-agent", "FakeUserAgent" },
                 { "request.headers.foo", "bar" },
                 { "request.headers.dashes-are-valid", "true" },
-                { "request.headers.dashesarevalid", "false" },
-
+                { "request.headers.dashesarevalid", "false" }
             };
 
             var unexpectedAttributes = new List<string>
@@ -89,7 +87,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
             Assertions.SpanEventDoesNotHaveAttributes(unexpectedAttributes, SpanEventAttributeType.Agent, spanEvent);
             Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
             Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
-
         }
     }
 }
