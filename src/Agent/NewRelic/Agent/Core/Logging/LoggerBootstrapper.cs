@@ -325,7 +325,7 @@ namespace NewRelic.Agent.Core
         /// Setup the console log appender and attach it to a logger.
         /// </summary>
         /// <param name="logger">The logger you want to attach the console log appender to.</param>
-        /// <param name="config">The configuration for the appender.</param>
+        /// <param name="level">The logging threshold for the console appender.</param>
         private static void SetupConsoleLogAppender(log4netLogger logger, Level level)
         {
             var appender = new ConsoleAppender();
