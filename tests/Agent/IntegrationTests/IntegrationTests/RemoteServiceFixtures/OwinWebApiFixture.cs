@@ -80,9 +80,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Post()
         {
-            const string body = "stuff";
             var address = string.Format("http://{0}:{1}/api/Values/", DestinationServerName, Port);
+            PostImpl(address);
+        }
 
+        public void PostAsync()
+        {
+            var address = string.Format("http://{0}:{1}/AsyncAwait/SimplePostAsync", DestinationServerName, Port);
+            PostImpl(address);
+        }
+
+        private void PostImpl(string address)
+        {
+            const string body = "stuff";
             var httpWebRequest = WebRequest.CreateHttp(address);
             httpWebRequest.Method = "POST";
             httpWebRequest.ContentType = "application/json";
@@ -90,7 +100,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             httpWebRequest.Referer = "http://example.com";
             httpWebRequest.UserAgent = "FakeUserAgent";
             httpWebRequest.Host = "fakehost";
-            httpWebRequest.Headers.Add("foo","bar");
+            httpWebRequest.Headers.Add("foo", "bar");
 
             var serializedBody = JsonConvert.SerializeObject(body);
             var encoding = new ASCIIEncoding();

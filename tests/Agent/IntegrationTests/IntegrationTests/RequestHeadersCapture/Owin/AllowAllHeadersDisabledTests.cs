@@ -14,13 +14,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
 {
     [NetFrameworkTest]
-    public abstract class OwinWebApiAllowAllHeadersEnabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class AllowAllHeadersDisabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : RemoteServiceFixtures.OwinWebApiFixture
     {
         private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
 
         // The base test class runs tests for Owin 2; the derived classes test Owin 3 and 4
-        protected OwinWebApiAllowAllHeadersEnabledTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected AllowAllHeadersDisabledTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -92,25 +92,25 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
         }
     }
 
-    public class OwinWebApiAllowAllHeadersEnabledTest : OwinWebApiAllowAllHeadersEnabledTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
+    public class OwinWebApiAllowAllHeadersDisabledTest : AllowAllHeadersDisabledTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
     {
-        public OwinWebApiAllowAllHeadersEnabledTest(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
+        public OwinWebApiAllowAllHeadersDisabledTest(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class Owin3WebApiAllowAllHeadersEnabledTest : OwinWebApiAllowAllHeadersEnabledTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
+    public class Owin3WebApiAllowAllHeadersDisabledTest : AllowAllHeadersDisabledTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
     {
-        public Owin3WebApiAllowAllHeadersEnabledTest(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
+        public Owin3WebApiAllowAllHeadersDisabledTest(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class Owin4WebApiAllowAllHeadersEnabledTest : OwinWebApiAllowAllHeadersEnabledTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
+    public class Owin4WebApiAllowAllHeadersDisabledTest : AllowAllHeadersDisabledTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
     {
-        public Owin4WebApiAllowAllHeadersEnabledTest(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)
+        public Owin4WebApiAllowAllHeadersDisabledTest(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

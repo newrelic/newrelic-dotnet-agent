@@ -14,13 +14,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
 {
     [NetFrameworkTest]
-    public abstract class OwinWebApiAllowAllHeadersDisabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class AsyncAllowAllHeadersEnabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : RemoteServiceFixtures.OwinWebApiFixture
     {
         private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
 
         // The base test class runs tests for Owin 2; the derived classes test Owin 3 and 4
-        protected OwinWebApiAllowAllHeadersDisabledTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected AsyncAllowAllHeadersEnabledTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.Post();
+                    _fixture.PostAsync();
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
@@ -48,10 +48,10 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
         [Fact]
         public void Test()
         {
-            var expectedTransactionName = "WebTransaction/WebAPI/Values/Post";
+            var expectedTransactionName = "WebTransaction/WebAPI/AsyncAwait/SimplePostAsync";
             var expectedAttributes = new Dictionary<string, object>
             {
-                { "request.uri", "/api/Values/" },
+                { "request.uri", "/AsyncAwait/SimplePostAsync" },
 
                 // Captured headers
                 { "request.headers.connection", "Keep-Alive" },
@@ -92,25 +92,25 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
         }
     }
 
-    public class OwinWebApiAllowAllHeadersDisabledTest : OwinWebApiAllowAllHeadersDisabledTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
+    public class OwinWebApiAsyncAllowAllHeadersEnabledTest : AsyncAllowAllHeadersEnabledTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
     {
-        public OwinWebApiAllowAllHeadersDisabledTest(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
+        public OwinWebApiAsyncAllowAllHeadersEnabledTest(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class Owin3WebApiAllowAllHeadersDisabledTest : OwinWebApiAllowAllHeadersDisabledTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
+    public class Owin3WebApiAsyncAllowAllHeadersEnabledTest : AsyncAllowAllHeadersEnabledTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
     {
-        public Owin3WebApiAllowAllHeadersDisabledTest(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
+        public Owin3WebApiAsyncAllowAllHeadersEnabledTest(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class Owin4WebApiAllowAllHeadersDisabledTest : OwinWebApiAllowAllHeadersDisabledTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
+    public class Owin4WebApiAsyncAllowAllHeadersEnabledTest : AsyncAllowAllHeadersEnabledTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
     {
-        public Owin4WebApiAllowAllHeadersDisabledTest(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)
+        public Owin4WebApiAsyncAllowAllHeadersEnabledTest(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
