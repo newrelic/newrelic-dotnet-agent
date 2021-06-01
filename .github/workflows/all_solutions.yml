@@ -74,6 +74,13 @@ jobs:
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
           if-no-files-found: error
 
+      - name: Archive coreclr repo
+        uses: actions/upload-artifact@v2
+        with:
+          name: coreclrRepo
+          path: ${{ github.workspace }}\..\coreclr\**\*
+          if-no-files-found: error
+
   build-linux-profiler:
     needs: cancel-previous-workflow-runs
     name: Build Linux Profiler
