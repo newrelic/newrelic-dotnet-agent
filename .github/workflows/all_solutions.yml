@@ -75,6 +75,7 @@ jobs:
           if-no-files-found: error
 
       - name: Archive coreclr repo
+        if: ${{ always() }}
         uses: actions/upload-artifact@v2
         with:
           name: coreclrRepo
