@@ -80,7 +80,10 @@ namespace NewRelic.Agent.Core
             var consoleAppender = logger.Appenders.OfType<ConsoleAppender>().First();
 
             Assert.IsFalse(Log.IsFinestEnabled);
-            Assert.That(consoleAppender.Threshold == Level.Debug);
+            Assert.That(logger.Level == Level.Debug);
+            // If the appender's threshold is null, it basically
+            // inherits the parent logger's level.
+            Assert.That(consoleAppender.Threshold == null);
         }
 
         [Test]

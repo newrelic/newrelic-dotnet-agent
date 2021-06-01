@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Core
             GlobalContext.Properties["pid"] = new ProcessStatic().GetCurrentProcess().Id;
 
             SetupStartupLogAppender(logger);
-            SetupConsoleLogAppender(logger, Level.Warn);
+            SetupConsoleLogAppender(logger);
             SetupTemporaryEventLogAppender(logger);
         }
 
@@ -115,14 +115,16 @@ namespace NewRelic.Agent.Core
             SetupDebugLogAppender(logger);
             logger.RemoveAppender(TemporaryEventLogAppenderName);
 
-            // The console logging was initially set up with a fixed log level of "WARN"
-            // Remove the existing console log appender, and if console logging is
-            // enabled by config, add it back with the configured logging level
+            // It's necessary to remove the initially-configured
+            // console appender, and then add it back if console
+            // logging is enabled by configuration.  If the logic is
+            // reversed (only remove the initial console appnder if
+            // console logging is NOT enabled by config), the console
+            // log output ends up containing the audit log messages.
             logger.RemoveAppender(ConsoleLogAppenderName);
             if (config.Console)
             {
-                var consoleLogLevel = logger.Hierarchy.LevelMap[config.LogLevel];
-                SetupConsoleLogAppender(logger, consoleLogLevel);
+                SetupConsoleLogAppender(logger);
             }
 
             logger.Repository.Configured = true;
@@ -325,13 +327,11 @@ namespace NewRelic.Agent.Core
         /// Setup the console log appender and attach it to a logger.
         /// </summary>
         /// <param name="logger">The logger you want to attach the console log appender to.</param>
-        /// <param name="level">The logging threshold for the console appender.</param>
-        private static void SetupConsoleLogAppender(log4netLogger logger, Level level)
+        private static void SetupConsoleLogAppender(log4netLogger logger)
         {
             var appender = new ConsoleAppender();
             appender.Name = ConsoleLogAppenderName;
             appender.Layout = FileLogLayout;
-            appender.Threshold = level;
             appender.AddFilter(GetNoAuditFilter());
             appender.ActivateOptions();
             logger.AddAppender(appender);
