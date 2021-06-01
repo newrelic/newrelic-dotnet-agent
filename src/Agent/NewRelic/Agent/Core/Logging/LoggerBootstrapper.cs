@@ -75,6 +75,7 @@ namespace NewRelic.Agent.Core
 
         public static void Initialize()
         {
+            CreateAuditLogLevel();
             var hierarchy = log4net.LogManager.GetRepository(Assembly.GetCallingAssembly()) as log4net.Repository.Hierarchy.Hierarchy;
             var logger = hierarchy.Root;
 
@@ -103,8 +104,6 @@ namespace NewRelic.Agent.Core
         /// <remarks>This should only be called once, as soon as you have a valid config.</remarks>
         public static void ConfigureLogger(ILogConfig config)
         {
-            CreateAuditLogLevel();
-
             var hierarchy = log4net.LogManager.GetRepository(Assembly.GetCallingAssembly()) as log4net.Repository.Hierarchy.Hierarchy;
             var logger = hierarchy.Root;
 
@@ -115,16 +114,9 @@ namespace NewRelic.Agent.Core
             SetupDebugLogAppender(logger);
             logger.RemoveAppender(TemporaryEventLogAppenderName);
 
-            // It's necessary to remove the initially-configured
-            // console appender, and then add it back if console
-            // logging is enabled by configuration.  If the logic is
-            // reversed (only remove the initial console appnder if
-            // console logging is NOT enabled by config), the console
-            // log output ends up containing the audit log messages.
-            logger.RemoveAppender(ConsoleLogAppenderName);
-            if (config.Console)
+            if (!config.Console)
             {
-                SetupConsoleLogAppender(logger);
+                logger.RemoveAppender(ConsoleLogAppenderName);
             }
 
             logger.Repository.Configured = true;
