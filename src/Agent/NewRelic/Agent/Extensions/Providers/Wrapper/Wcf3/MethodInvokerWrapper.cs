@@ -319,29 +319,20 @@ namespace NewRelic.Providers.Wrapper.Wcf3
         private void CaptureHttpRequestHeaders(IAgent agent, ITransaction transaction)
         {
             var context = OperationContext.Current;
-            System.Net.WebHeaderCollection httpHeaders = null;
-
-            if (context.IncomingMessageProperties != null && context.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageAsObject))
+            if (context.IncomingMessageProperties != null
+                && context.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageAsObject)
+                && httpRequestMessageAsObject is HttpRequestMessageProperty httpRequestMessage
+                && httpRequestMessage.Headers != null)
             {
-                if (httpRequestMessageAsObject is HttpRequestMessageProperty httpRequestMessage && httpRequestMessage.Headers != null)
-                {
-                    httpHeaders = httpRequestMessage.Headers;
-                }
-            }
+                    if (agent.Configuration.AllowAllRequestHeaders)
+                    {
+                        transaction.SetRequestHeaders(httpRequestMessage.Headers, httpRequestMessage.Headers.AllKeys, GetHeaderValueFromWebHeaderCollection);
+                    }
+                    else
+                    {
 
-            if (httpHeaders != null)
-            {
-
-                if (agent.Configuration.AllowAllRequestHeaders)
-                {
-
-                    transaction.SetRequestHeaders(httpHeaders, httpHeaders.AllKeys, GetHeaderValueFromWebHeaderCollection);
-                }
-                else
-                {
-
-                    transaction.SetRequestHeaders(httpHeaders, Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders, GetHeaderValueFromWebHeaderCollection);
-                }
+                        transaction.SetRequestHeaders(httpRequestMessage.Headers, Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders, GetHeaderValueFromWebHeaderCollection);
+                    }
             }
         }
 
