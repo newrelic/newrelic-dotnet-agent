@@ -56,7 +56,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
                 }
                 else
                 {
-                    transaction.SetRequestHeaders(context.Request.Headers, Constants.DefaultCaptureHeaders, GetHeaderValue);
+                    transaction.SetRequestHeaders(context.Request.Headers, Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders, GetHeaderValue);
                 }
 
                 ProcessHeaders(context);
