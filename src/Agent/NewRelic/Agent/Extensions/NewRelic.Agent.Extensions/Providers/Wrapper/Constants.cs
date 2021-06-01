@@ -22,6 +22,11 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         public const string TraceStateHeaderKey = "tracestate";
     }
 
+    public static class Statics
+    {
+        public static readonly string[] DefaultCaptureHeaders = { "Referer", "Accept", "Content-Length", "Host", "User-Agent" };
+    }
+
     public enum WebTransactionType
     {
         Action,
