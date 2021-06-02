@@ -74,14 +74,6 @@ jobs:
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
           if-no-files-found: error
 
-      - name: Archive coreclr repo
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: coreclrRepo
-          path: D:\a\newrelic-dotnet-agent\coreclr\**\*
-          if-no-files-found: error
-
   build-linux-profiler:
     needs: cancel-previous-workflow-runs
     name: Build Linux Profiler
