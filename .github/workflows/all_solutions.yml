@@ -79,7 +79,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: coreclrRepo
-          path: ${{ github.workspace }}\..\coreclr\**\*
+          path: D:\a\newrelic-dotnet-agent\coreclr\**\*
           if-no-files-found: error
 
   build-linux-profiler:
