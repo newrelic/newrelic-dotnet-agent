@@ -1,16 +1,10 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
-using NewRelic.Agent.IntegrationTests.WCF;
-using Xunit;
 using Xunit.Abstractions;
 using static NewRelic.Agent.IntegrationTests.WCF.WCFTestBase;
 
