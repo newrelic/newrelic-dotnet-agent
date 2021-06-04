@@ -56,15 +56,12 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
         [Fact]
         public virtual void TestHeadersCaptured()
         {
-            if (_hostingModel != HostingModel.Self)
-            {
-                var transactionSample = _logHelpers.TrxSamples_Service.FirstOrDefault(ts => ts.Uri?.Contains($"Test_{_binding}") ?? false);
+            var transactionSample = _logHelpers.TrxSamples_Service.FirstOrDefault(ts => ts.Uri?.Contains($"Test_{_binding}") ?? false);
 
-                Assert.NotNull(transactionSample);
-                Assertions.TransactionTraceDoesNotHaveAttributes(UnallowedHeaders, TransactionTraceAttributeType.Agent, transactionSample);
-                Assertions.TransactionTraceHasAttributes(ExpectedHeaders, TransactionTraceAttributeType.Agent, transactionSample);
-                Assertions.TransactionTraceDoesNotHaveAttributes(UnexpectedHeaders, TransactionTraceAttributeType.Agent, transactionSample);
-            }
+            Assert.NotNull(transactionSample);
+            Assertions.TransactionTraceDoesNotHaveAttributes(UnallowedHeaders, TransactionTraceAttributeType.Agent, transactionSample);
+            Assertions.TransactionTraceHasAttributes(ExpectedHeaders, TransactionTraceAttributeType.Agent, transactionSample);
+            Assertions.TransactionTraceDoesNotHaveAttributes(UnexpectedHeaders, TransactionTraceAttributeType.Agent, transactionSample);
 
             var transactionEvent = _logHelpers.TrxEvents_Service.FirstOrDefault(te => te.AgentAttributes?["request.uri"]?.ToString()?.Contains($"Test_{_binding}") ?? false);
 

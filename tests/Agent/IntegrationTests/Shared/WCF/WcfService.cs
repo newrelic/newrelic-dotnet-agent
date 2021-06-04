@@ -5,6 +5,7 @@
 using System;
 using System.Net;
 using System.ServiceModel;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
@@ -21,6 +22,10 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
         public string SyncGetData(int value)
         {
             if (_printOutput) Console.WriteLine("SyncGetData");
+
+            if (value == 2000)
+                Thread.Sleep(2000);
+
             return DoWork(value.ToString(), false, false).Result;
         }
 

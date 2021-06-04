@@ -201,21 +201,10 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
         }
 
         [LibraryMethod]
-        [Transaction]
         public void GetDataWithHeaders()
         {
             using (var scope = new OperationContextScope((_wcfClient as WcfClient).InnerChannel))
             {
-                //WebOperationContext.Current.OutgoingRequest.Headers.Add("Referer", "http://example.com/");
-                //WebOperationContext.Current.OutgoingRequest.Headers.Add("Accept", "text/html");
-                //WebOperationContext.Current.OutgoingRequest.Headers.Add("Host", "fakehost");
-                //WebOperationContext.Current.OutgoingRequest.Headers.Add("User-Agent", "FakeUserAgent");
-
-                //WebOperationContext.Current.OutgoingRequest.Headers.Add("fOo", "bar");
-                //WebOperationContext.Current.OutgoingRequest.Headers.Add("dashes-are-valid", "true");
-                //WebOperationContext.Current.OutgoingRequest.Headers.Add("dashesarevalid", "definitely");
-                //WebOperationContext.Current.OutgoingRequest.Headers.Add("Cookie", "itsasecret");
-
                 OperationContext.Current.OutgoingMessageProperties[HttpRequestMessageProperty.Name] = new HttpRequestMessageProperty()
                 {
                     Headers =
@@ -228,11 +217,11 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
                         { "dashes-are-valid", "true" },
                         { "dashesarevalid", "definitely" },
                         { "Cookie", "itsasecret" }
-
                     }
                 };
 
-                var result = _wcfClient.Sync_SyncGetData(32);
+                // 2000 creates a delay to trigger transaction traces
+                var result = _wcfClient.Sync_SyncGetData(2000);
 
                 Logger.Info($"Result: {result ?? "<NULL>"}");
             }
@@ -430,6 +419,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
         {
             var binding = new WSHttpBinding();
             var endpoint = new EndpointAddress(endpointAddress);
+
             return new WcfClient(binding, endpoint);
         }
 
