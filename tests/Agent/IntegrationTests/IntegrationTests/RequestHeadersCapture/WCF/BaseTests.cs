@@ -61,7 +61,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
                     break;
                 case HostingModel.IIS:
                 case HostingModel.IISNoAsp:
-                    _fixture.AddCommand($"WCFServiceIISHosted StartService {Path.Combine(_fixture.IntegrationTestAppPath, "WcfAppIisHosted", "Deploy")} {_binding} {_fixture.RemoteApplication.Port} Test_{_binding} {_hostingModel == HostingModel.IISNoAsp}");
+                    _fixture.AddCommand($"WCFServiceIISHosted StartService {Path.Combine(_fixture.IntegrationTestAppPath, "WcfAppIisHosted", "Deploy")} {_binding} {_fixture.RemoteApplication.Port} Test_{_binding} {_hostingModel != HostingModel.IISNoAsp}");
                     _fixture.AddCommand($"WCFClient InitializeClient_IISHosted {_binding} {_fixture.RemoteApplication.Port} Test_{_binding}");
                     break;
             }
