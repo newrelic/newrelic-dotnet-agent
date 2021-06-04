@@ -46,8 +46,8 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
         {
             switch (_binding)
             {
-                case WCFBindingType.BasicHttp: return "166";
-                case WCFBindingType.WebHttp: return "73";
+                case WCFBindingType.BasicHttp: return "168";
+                case WCFBindingType.WebHttp: return "75";
                 case WCFBindingType.WSHttp: return _hostingModel == HostingModel.Self ? "6105" : "6119";
                 default: return null;
             }
