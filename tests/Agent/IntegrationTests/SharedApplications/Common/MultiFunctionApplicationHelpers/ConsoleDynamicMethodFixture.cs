@@ -35,8 +35,6 @@ namespace MultiFunctionApplicationHelpers
         private static readonly string ApplicationDirectoryName = @"ConsoleMultiFunctionApplicationFW";
         private static readonly string ExecutableName = $"{ApplicationDirectoryName}.exe";
 
-        public string IntegrationTestAppPath => RemoteApplication.SourceApplicationsDirectoryPath;
-
         /// <summary>
         /// Use this .ctor to specify a specific .NET framework version to target.
         /// </summary>
@@ -103,6 +101,8 @@ namespace MultiFunctionApplicationHelpers
         private List<string> _commands = new List<string>();
 
         protected RemoteConsoleApplication _remoteConsoleApplication => RemoteApplication as RemoteConsoleApplication;
+
+        public string IntegrationTestAppPath => RemoteApplication.SourceApplicationsDirectoryPath;
 
         public ConsoleDynamicMethodFixture SetTimeout(TimeSpan span)
         {

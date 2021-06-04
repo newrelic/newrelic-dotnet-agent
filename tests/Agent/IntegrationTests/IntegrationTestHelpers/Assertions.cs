@@ -667,6 +667,33 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
+        public static void SpanEventHasAttributes(IEnumerable<KeyValuePair<string, string>> expectedAttributes, SpanEventAttributeType attributeType, SpanEvent spanEvent)
+        {
+            var succeeded = true;
+            var builder = new StringBuilder();
+            var actualAttributes = spanEvent.GetByType(attributeType);
+            foreach (var expectedAttribute in expectedAttributes)
+            {
+                if (!actualAttributes.ContainsKey(expectedAttribute.Key))
+                {
+                    builder.AppendFormat("Attribute named {0} was not found in the span event.", expectedAttribute);
+                    builder.AppendLine();
+                    succeeded = false;
+                }
+
+                var actualValue = actualAttributes[expectedAttribute.Key] as string;
+                if (actualValue != expectedAttribute.Value)
+                {
+                    builder.AppendFormat("Attribute named {0} in the span event had an unexpected value.  Expected: {1}, Actual: {2}", expectedAttribute.Key, expectedAttribute.Value, actualValue);
+                    builder.AppendLine();
+                    succeeded = false;
+                    continue;
+                }
+            }
+
+            Assert.True(succeeded, builder.ToString());
+        }
+
         public static void SpanEventHasAttributes(IEnumerable<KeyValuePair<string, object>> expectedAttributes, SpanEventAttributeType attributeType, SpanEvent spanEvent)
         {
             var succeeded = true;
@@ -681,7 +708,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     succeeded = false;
                 }
 
-                if (!ValidateAttributeValues(expectedAttribute, actualAttributes[expectedAttribute.Key], builder, "span event"))
+                if (succeeded && !ValidateAttributeValues(expectedAttribute, actualAttributes[expectedAttribute.Key], builder, "span event"))
                 {
                     succeeded = false;
                 }
