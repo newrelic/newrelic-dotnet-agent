@@ -19,6 +19,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
             {
                 case WCFBindingType.BasicHttp:
                 case WCFBindingType.WSHttp:
+                case WCFBindingType.WSHttpUnsecure:
                 case WCFBindingType.WebHttp:
                 case WCFBindingType.Custom:
                 case WCFBindingType.CustomClass:

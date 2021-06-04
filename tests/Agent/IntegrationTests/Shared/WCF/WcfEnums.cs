@@ -8,6 +8,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
     {
         BasicHttp,
         WSHttp,
+        WSHttpUnsecure,
         WebHttp,
         NetTcp,
         Custom,

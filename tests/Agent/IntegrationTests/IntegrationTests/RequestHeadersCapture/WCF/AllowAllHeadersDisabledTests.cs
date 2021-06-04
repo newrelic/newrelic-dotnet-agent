@@ -48,6 +48,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
             {
                 case WCFBindingType.BasicHttp: return "168";
                 case WCFBindingType.WebHttp: return "75";
+                case WCFBindingType.WSHttpUnsecure: return "573";
                 case WCFBindingType.WSHttp: return _hostingModel == HostingModel.Self ? "6105" : "6119";
                 default: return null;
             }
@@ -112,7 +113,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
     public class IIS_WS_AllowAllHeadersDisabledTests : AllowAllHeadersDisabledTests
     {
         public IIS_WS_AllowAllHeadersDisabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, HostingModel.IIS, WCFBindingType.WSHttp) { }
+            : base(fixture, output, HostingModel.IIS, WCFBindingType.WSHttpUnsecure) { }
     }
 
     #endregion IIS

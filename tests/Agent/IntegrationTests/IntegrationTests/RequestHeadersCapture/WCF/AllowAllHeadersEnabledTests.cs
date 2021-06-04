@@ -55,7 +55,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
     public class IIS_WS_AllowAllHeadersEnabledTests : AllowAllHeadersEnabledTests
     {
         public IIS_WS_AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, HostingModel.IIS, WCFBindingType.WSHttp) { }
+            : base(fixture, output, HostingModel.IIS, WCFBindingType.WSHttpUnsecure) { }
     }
 
     #endregion IIS

@@ -23,9 +23,6 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
         {
             if (_printOutput) Console.WriteLine("SyncGetData");
 
-            if (value == 2000)
-                Thread.Sleep(2000);
-
             return DoWork(value.ToString(), false, false).Result;
         }
 

@@ -36,6 +36,9 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
                 case WCFBindingType.WSHttp:
                     _wcfClient = CreateClientWithWSHttpBinding(endpointAddress);
                     break;
+                case WCFBindingType.WSHttpUnsecure:
+                    _wcfClient = CreateClientWithWSHttpBinding(endpointAddress, SecurityMode.None);
+                    break;
                 case WCFBindingType.WebHttp:
                     _wcfClient = CreateClientWithWebHttpBinding(endpointAddress);
                     break;
@@ -415,9 +418,13 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
             return new WcfClient(binding, endpoint);
         }
 
-        private WcfClient CreateClientWithWSHttpBinding(Uri endpointAddress)
+        private WcfClient CreateClientWithWSHttpBinding(Uri endpointAddress, SecurityMode? securityMode = null)
         {
             var binding = new WSHttpBinding();
+
+            if (securityMode.HasValue)
+                binding.Security.Mode = securityMode.Value;
+
             var endpoint = new EndpointAddress(endpointAddress);
 
             return new WcfClient(binding, endpoint);
