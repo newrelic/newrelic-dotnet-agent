@@ -41,6 +41,8 @@ namespace NewRelic.Agent.Core.Transactions
     {
         private static readonly int MaxSegmentLength = 255;
 
+        private static readonly HashSet<string> HeadersNeedQueryParametersRemoval = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Referer", "Location", "Refresh" };
+
         private Agent _agent;
         private Agent Agent => _agent ?? (_agent = Agent.Instance);
 
@@ -1205,6 +1207,12 @@ namespace NewRelic.Agent.Core.Transactions
             foreach (var key in keysToCapture)
             {
                 var value = getter(headers, key);
+
+                if (HeadersNeedQueryParametersRemoval.Contains(key))
+                {
+                    value = RemoveQueryParameters(value);
+                }
+
                 if (value != null)
                 {
                     var paramAttribute = _attribDefs.GetRequestHeadersAttribute(key.ToLowerInvariant());
@@ -1213,6 +1221,22 @@ namespace NewRelic.Agent.Core.Transactions
             }
 
             return this;
+        }
+
+        private string RemoveQueryParameters(string url)
+        {
+            if(string.IsNullOrEmpty(url) || url.Length < 2)
+            {
+                return url;
+            }
+
+            var index = url.IndexOf('?');
+            if (index > -1)
+            {
+                return url.Substring(0, index);
+            }
+
+            return url;
         }
     }
 }
