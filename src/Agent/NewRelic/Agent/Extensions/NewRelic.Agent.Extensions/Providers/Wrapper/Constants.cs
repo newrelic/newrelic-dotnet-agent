@@ -20,6 +20,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         public const string TraceParentHeaderKey = "traceparent";
 
         public const string TraceStateHeaderKey = "tracestate";
+
     }
 
     public static class Statics

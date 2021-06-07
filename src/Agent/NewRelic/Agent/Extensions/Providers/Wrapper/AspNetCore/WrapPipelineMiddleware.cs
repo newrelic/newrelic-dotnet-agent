@@ -22,7 +22,6 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
         private readonly RequestDelegate _next;
         private readonly IAgent _agent;
         private volatile bool _inspectingHttpContextForErrorsIsEnabled = true;
-        private readonly string[] _defaultCaptureHeaders = { "Referer", "Accept", "Content-Length", "Host", "User-Agent" };
 
         public WrapPipelineMiddleware(RequestDelegate next, IAgent agent)
         {
@@ -57,7 +56,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
                 }
                 else
                 {
-                    transaction.SetRequestHeaders(context.Request.Headers, _defaultCaptureHeaders, GetHeaderValue);
+                    transaction.SetRequestHeaders(context.Request.Headers, Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders, GetHeaderValue);
                 }
 
                 ProcessHeaders(context);

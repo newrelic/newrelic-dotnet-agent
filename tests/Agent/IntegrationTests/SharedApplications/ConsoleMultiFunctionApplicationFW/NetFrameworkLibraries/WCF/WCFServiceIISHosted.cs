@@ -20,6 +20,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
         {
             { WCFBindingType.BasicHttp, "basicHttpBinding" },
             { WCFBindingType.WSHttp, "wsHttpBinding" },
+            { WCFBindingType.WSHttpUnsecure, "wsHttpBinding" },
             { WCFBindingType.WebHttp, "webHttpBinding" },
             { WCFBindingType.NetTcp, "netTcpBinding" },
             { WCFBindingType.Custom, "CustomHttpBinding" }
@@ -85,6 +86,13 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
             CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel", "services", "service", "endpoint" },
                 "binding", _bindingTypeNames[bindingType]);
+
+            if (bindingType == WCFBindingType.WSHttpUnsecure)
+            {
+                CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
+                    new[] { "configuration", "system.serviceModel", "services", "service", "endpoint" },
+                    "bindingConfiguration", bindingType.ToString());
+            }
 
             if (bindingType == WCFBindingType.WebHttp)
             {
