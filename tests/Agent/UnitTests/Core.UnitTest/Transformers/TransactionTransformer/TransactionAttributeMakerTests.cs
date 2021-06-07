@@ -426,9 +426,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.AreEqual("value2", GetAttributeValue(transactionAttributes, "request.headers.key2")),
                 () => Assert.AreEqual("", GetAttributeValue(transactionAttributes, "request.headers.key3")),
                 () => Assert.AreEqual("value4", GetAttributeValue(transactionAttributes, "request.headers.key4")),
-                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.referer")),
-                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.location")),
-                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.refresh"))
+                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.referer")), //test to make sure query string is removed.
+                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.location")), //test to make sure query string is removed.
+                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.refresh")) //test to make sure query string is removed.
             );
         }
 
