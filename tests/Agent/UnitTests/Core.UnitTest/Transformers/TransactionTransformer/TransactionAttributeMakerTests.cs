@@ -345,7 +345,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 { "key1", "value1" },
                 { "key2", "value2" },
                 { "key3", ""},
-                { "Key4", "value4"}
+                { "Key4", "value4"},
+                { "Referer", "/index.html?a=b&x=y" },
+                { "Location", "/index.html?a=b&x=y"},
+                { "Refresh", "/index.html?a=b&x=y"}
             };
 
             string GetHeaderValue(Dictionary<string, string> headers, string key)
@@ -353,7 +356,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 return headers[key];
             }
 
-            transaction.SetRequestHeaders(headerCollection, new[] { "key1", "key2", "key3", "Key4" }, GetHeaderValue);
+            transaction.SetRequestHeaders(headerCollection, new[] { "key1", "key2", "key3", "Key4", "Referer", "Location", "Refresh" }, GetHeaderValue);
             
             transaction.SetHttpResponseStatusCode(400, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
@@ -381,7 +384,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(41, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual(44, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
                 () => Assert.AreEqual("Transaction", GetAttributeValue(attributes, "type", AttributeDestinations.TransactionEvent)),
                 () => Assert.AreEqual("TransactionError", GetAttributeValue(attributes, "type", AttributeDestinations.ErrorEvent)),
                 () => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), GetAttributeValue(attributes, "timestamp", AttributeDestinations.TransactionEvent)),
@@ -422,7 +425,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.AreEqual("value1", GetAttributeValue(transactionAttributes, "request.headers.key1")),
                 () => Assert.AreEqual("value2", GetAttributeValue(transactionAttributes, "request.headers.key2")),
                 () => Assert.AreEqual("", GetAttributeValue(transactionAttributes, "request.headers.key3")),
-                () => Assert.AreEqual("value4", GetAttributeValue(transactionAttributes, "request.headers.key4"))
+                () => Assert.AreEqual("value4", GetAttributeValue(transactionAttributes, "request.headers.key4")),
+                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.referer")), //test to make sure query string is removed.
+                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.location")), //test to make sure query string is removed.
+                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.refresh")) //test to make sure query string is removed.
             );
         }
 
