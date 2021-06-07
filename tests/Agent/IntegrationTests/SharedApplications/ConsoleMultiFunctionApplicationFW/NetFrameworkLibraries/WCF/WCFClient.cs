@@ -223,7 +223,6 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
                     }
                 };
 
-                // 2000 creates a delay to trigger transaction traces
                 var result = _wcfClient.Sync_SyncGetData(2000);
 
                 Logger.Info($"Result: {result ?? "<NULL>"}");
