@@ -115,11 +115,9 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
             }
         }
 
-        static readonly string[] DefaultCaptureHeaders = { "Referer", "Accept", "Content-Length", "Host", "User-Agent" };
-
         private static void StoreRequestHeaders(IAgent agent, HttpContext httpContext)
         {
-            var keysToCapture = agent.Configuration.AllowAllRequestHeaders ? httpContext.Request.Headers?.AllKeys : DefaultCaptureHeaders;
+            var keysToCapture = agent.Configuration.AllowAllRequestHeaders ? httpContext.Request.Headers?.AllKeys : Statics.DefaultCaptureHeaders;
 
             agent.CurrentTransaction.SetRequestHeaders(httpContext.Request.Headers, keysToCapture, (headers, key) => headers[key]);
         }
