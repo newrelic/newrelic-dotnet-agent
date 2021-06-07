@@ -29,7 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
-                    configModifier.EnableDistributedTrace();
+                    configModifier.EnableDistributedTrace().ForceTransactionTraces();
                 },
                 exerciseApplication: () =>
                 {

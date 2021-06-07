@@ -31,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
                     var configModifier = new NewRelicConfigModifier(configPath);
 
                     configModifier.SetAllowAllHeaders(false)
-                    .EnableDistributedTrace();
+                    .EnableDistributedTrace().ForceTransactionTraces();
                 },
                 exerciseApplication: () =>
                 {
