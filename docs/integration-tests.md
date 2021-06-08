@@ -10,7 +10,7 @@ Requires Visual Studio 2019 Version 16.8 or greater.
 * Required Windows features
   * Windows features can be enabled as follows:
     ```
-    Enable-WindowsOptionalFeature -Online -FeatureName <featuren name>
+    Enable-WindowsOptionalFeature -Online -FeatureName <feature name>
     ```
   * IIS-ApplicationDevelopment
   * IIS-ASPNET45
@@ -40,6 +40,39 @@ Requires Visual Studio 2019 Version 16.8 or greater.
   * MSRDC-Infrastructure
   * WCF-Services45
   * WCF-TCP-PortSharing45
+  
+  * Full Powershell Script for convenience:
+    ```
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-ApplicationDevelopment
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-ASPNET45
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-CommonHttpFeatures
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-DefaultDocument
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-DirectoryBrowsing
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-HealthAndDiagnostics
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-HostableWebCore
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-HttpCompressionStatic
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-HttpErrors
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-HttpLogging
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-ISAPIExtensions
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-ISAPIFilter
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-ManagementConsole
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-NetFxExtensibility45
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-Performance
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-RequestFiltering
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-Security
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-StaticContent
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-WebServer
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-WebServerManagementTools
+    Enable-WindowsOptionalFeature -Online -FeatureName  IIS-WebServerRole
+    Enable-WindowsOptionalFeature -Online -FeatureName  MSMQ-Container
+    Enable-WindowsOptionalFeature -Online -FeatureName  MSMQ-Multicast
+    Enable-WindowsOptionalFeature -Online -FeatureName  MSMQ-Server
+    Enable-WindowsOptionalFeature -Online -FeatureName  MSMQ-Triggers
+    Enable-WindowsOptionalFeature -Online -FeatureName  MSRDC-Infrastructure
+    Enable-WindowsOptionalFeature -Online -FeatureName  WCF-Services45
+    Enable-WindowsOptionalFeature -Online -FeatureName  WCF-TCP-PortSharing45
+    ```
+  
 * IBM DB2 Data Server Client
   * We use IBM Data Server Driver from the IBM Data Server Client installer in our unbounded integration tests for DB2. Unfortunately, simply referencing the appropriate dll in our tests is insufficient. A full install of Data Server Client is required on any machine running our unbounded integration test suite.
   * The data server client installer can be downloaded from [here](https://www.ibm.com/support/pages/ibm-data-server-client-packages-version-111-mod-4-fix-pack-4).
