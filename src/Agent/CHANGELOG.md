@@ -6,8 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
-* **Adds Agent support for capturing HTTP Request Headers** 
-  * Support included for ASP.NET 4.x, ASP.NET Core, Owin, and WCF wrappers. ([#558](https://github.com/newrelic/newrelic-dotnet-agent/issues/558), [#559](https://github.com/newrelic/newrelic-dotnet-agent/issues/559), [#560](https://github.com/newrelic/newrelic-dotnet-agent/issues/560), [#593](https://github.com/newrelic/newrelic-dotnet-agent/pull/593))
+* Adds Agent support for capturing HTTP Request Headers.
+  * Support included for ASP.NET 4.x, ASP.NET Core, Owin, and WCF instrumentation. ([#558](https://github.com/newrelic/newrelic-dotnet-agent/issues/558), [#559](https://github.com/newrelic/newrelic-dotnet-agent/issues/559), [#560](https://github.com/newrelic/newrelic-dotnet-agent/issues/560), [#561](https://github.com/newrelic/newrelic-dotnet-agent/issues/561))
 
 ### Fixes
 * Fixes issue [#264](https://github.com/newrelic/newrelic-dotnet-agent/issues/264): Negative GC count metrics will now be clamped to 0, and a log message will be written to note the correction. This should resolve an issue where the GCSampler was encountering negative values and crashing. ([#550](https://github.com/newrelic/newrelic-dotnet-agent/pull/550))
