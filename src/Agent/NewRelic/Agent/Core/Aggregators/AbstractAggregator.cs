@@ -13,7 +13,7 @@ namespace NewRelic.Agent.Core.Aggregators
     public abstract class AbstractAggregator<T> : ConfigurationBasedService
     {
         protected readonly IDataTransportService DataTransportService;
-        private readonly IScheduler _scheduler;
+        protected readonly IScheduler _scheduler;
         private readonly IProcessStatic _processStatic;
         protected readonly TimeSpan DefaultHarvestCycle = TimeSpan.FromMinutes(1);
 

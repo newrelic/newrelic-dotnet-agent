@@ -102,6 +102,8 @@ namespace NewRelic.Agent.Core.DataTransport
         int TimeoutSendDataMs { get; }
         void Shutdown(bool withRestart);
         void StartConsumingCollection(PartitionedBlockingCollection<TRequest> collection);
+        void Wait(int millisecondsTimeout = -1);
+
         bool ReadAndValidateConfiguration();
     }
 
@@ -705,6 +707,38 @@ namespace NewRelic.Agent.Core.DataTransport
             return false;
         }
 
+        public void Wait(int millisecondsTimeout)
+        {
+            LogMessage(LogLevel.Debug, $"DataStreamingService: Wait up to {millisecondsTimeout} milliseconds for streaming workers to finish streaming data.");
+
+            //Remove anything that should not be there
+            foreach (var x in _responseStreamsDic.Values.Where(x => x.IsInvalid).ToList())
+            {
+                LogMessage(LogLevel.Finest, x.ConsumerID, "Response Stream Manager - Removing Stream");
+                _responseStreamsDic.TryRemove(x.ConsumerID, out _);
+                if ((x.ResponseRpcException != null) && (x.ResponseRpcException.StatusCode == StatusCode.FailedPrecondition))
+                {
+                    LogMessage(LogLevel.Debug, $"The gRPC endpoint defined at {EndpointHost}:{EndpointPort} returned {FailedPreconditionStatus}, indicating the traffic is being redirected to a new host.  Restarting service.");
+                    Shutdown(true);
+                }
+            }
+
+            var tasksToWaitFor = _responseStreamsDic.Values
+                .Where(x => !x.IsInvalid)
+                .Select(x => x.GetAwaiter())
+                .ToArray();
+
+            if (tasksToWaitFor.Length == 0)
+            {
+                return;
+            }
+
+            //Wait for all tasks to complete or expire after interval window
+            Task.WaitAll(tasksToWaitFor, millisecondsTimeout);
+
+            _responseStreamsDic.Clear();
+        }
+
         /// <summary>
         /// Designed to be called by the aggregator.
         /// </summary>
@@ -752,6 +786,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     var delayInMs = shouldRetryImmediately ? 0 : _delayBetweenRpcCallsMs;
+                    LogMessage(LogLevel.Finest, "Delay " + delayInMs);
                     _delayer.Delay(delayInMs, cancellationToken);
                 }
             }
@@ -845,6 +880,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     IsStreaming = true;
                 }
 
+                LogMessage(LogLevel.Debug, consumerId, "streamCancellationTokenSource.Cancel() is called because serviceCancellationToken.IsCancellationRequested is true and _grpcWrapper.IsConnected is also true. ");
                 streamCancellationTokenSource.Cancel();
             }
 

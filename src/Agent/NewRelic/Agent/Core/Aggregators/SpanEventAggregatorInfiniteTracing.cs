@@ -46,6 +46,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {   
             _spanStreamingService = spanStreamingService;
             _subscriptions.Add<AgentConnectedEvent>(AgentConnected);
+            _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
             _agentHealthReporter = agentHealthReporter;
             _configSvc = configSvc;
             _schedulerSvc = scheduler;
@@ -110,6 +111,16 @@ namespace NewRelic.Agent.Core.Aggregators
 
             _schedulerSvc.ExecuteEvery(ReportSupportabilityMetrics, TimeSpan.FromMinutes(1));
             _spanStreamingService.StartConsumingCollection(_spanEvents);
+        }
+
+        private void OnPreCleanShutdown(PreCleanShutdownEvent obj)
+        {
+            if (_configuration.CollectorSendDataOnExit)
+            {
+                _spanStreamingService.Wait(2000); ;
+            }
+
+            return;
         }
 
         public void ReportSupportabilityMetrics()
