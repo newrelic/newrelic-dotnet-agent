@@ -880,7 +880,6 @@ namespace NewRelic.Agent.Core.DataTransport
                     IsStreaming = true;
                 }
 
-                LogMessage(LogLevel.Debug, consumerId, "streamCancellationTokenSource.Cancel() is called because serviceCancellationToken.IsCancellationRequested is true and _grpcWrapper.IsConnected is also true. ");
                 streamCancellationTokenSource.Cancel();
             }
 
