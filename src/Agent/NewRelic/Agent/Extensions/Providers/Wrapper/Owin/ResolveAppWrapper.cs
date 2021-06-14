@@ -34,7 +34,7 @@ namespace NewRelic.Providers.Wrapper.Owin
 
                 method.Invoke(app, new object[]
                 {
-                typeof(OwinStartupMiddleware), new object[] { agent }
+                    typeof(OwinStartupMiddleware), new object[] { agent }
                 });
 
             }

@@ -18,7 +18,7 @@ env:
 jobs:
 
   cancel-previous-workflow-runs:
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || ( github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v') )
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || ( github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v') )
     name: Cancel Previous Runs
     runs-on: ubuntu-latest
     steps:
@@ -455,7 +455,7 @@ jobs:
           CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
           HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
           ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
-          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
+          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:

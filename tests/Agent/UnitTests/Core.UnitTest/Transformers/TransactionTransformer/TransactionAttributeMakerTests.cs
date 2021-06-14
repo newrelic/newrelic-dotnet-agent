@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _serverConfig = new ServerConfiguration();
             _localConfig = new configuration();
 
-            _localConfig.attributes.include = new List<string>() { "request.parameters.*" };
+            _localConfig.attributes.include = new List<string>() { "request.parameters.*", "request.headers.*" };
 
             _localConfig.allowAllHeaders.enabled = true;
 
@@ -344,7 +344,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             {
                 { "key1", "value1" },
                 { "key2", "value2" },
-                { "key3", ""}
+                { "key3", ""},
+                { "Key4", "value4"},
+                { "Referer", "/index.html?a=b&x=y" },
+                { "Location", "/index.html?a=b&x=y"},
+                { "Refresh", "/index.html?a=b&x=y"}
             };
 
             string GetHeaderValue(Dictionary<string, string> headers, string key)
@@ -352,7 +356,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 return headers[key];
             }
 
-            transaction.SetRequestHeaders(headerCollection, new[] { "key1", "key2", "key3" }, GetHeaderValue);
+            transaction.SetRequestHeaders(headerCollection, new[] { "key1", "key2", "key3", "Key4", "Referer", "Location", "Refresh" }, GetHeaderValue);
             
             transaction.SetHttpResponseStatusCode(400, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
@@ -380,7 +384,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(40, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual(44, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
                 () => Assert.AreEqual("Transaction", GetAttributeValue(attributes, "type", AttributeDestinations.TransactionEvent)),
                 () => Assert.AreEqual("TransactionError", GetAttributeValue(attributes, "type", AttributeDestinations.ErrorEvent)),
                 () => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), GetAttributeValue(attributes, "timestamp", AttributeDestinations.TransactionEvent)),
@@ -420,10 +424,69 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.True(DoAttributesContain(transactionAttributes, "host.displayName")),
                 () => Assert.AreEqual("value1", GetAttributeValue(transactionAttributes, "request.headers.key1")),
                 () => Assert.AreEqual("value2", GetAttributeValue(transactionAttributes, "request.headers.key2")),
-                () => Assert.AreEqual("", GetAttributeValue(transactionAttributes, "request.headers.key3"))
+                () => Assert.AreEqual("", GetAttributeValue(transactionAttributes, "request.headers.key3")),
+                () => Assert.AreEqual("value4", GetAttributeValue(transactionAttributes, "request.headers.key4")),
+                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.referer")), //test to make sure query string is removed.
+                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.location")), //test to make sure query string is removed.
+                () => Assert.AreEqual("/index.html", GetAttributeValue(transactionAttributes, "request.headers.refresh")) //test to make sure query string is removed.
             );
         }
 
+        [Test]
+        public void GetAttributes_SetRequestHeaders_HighSecurityModeEnabled()
+        {
+            // ARRANGE
+            _localConfig.highSecurity.enabled = true;
+            UpdateConfiguration();
+
+            var timer = Mock.Create<ITimer>();
+            var expectedStartTime = DateTime.Now;
+            var expectedDuration = TimeSpan.FromMilliseconds(500);
+            Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
+            var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+            var apdexT = TimeSpan.FromSeconds(2);
+
+            var priority = 0.5f;
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+
+            var headerCollection = new Dictionary<string, string>()
+            {
+                { "key1", "value1" },
+                { "key2", "value2" },
+                { "key3", ""},
+                { "Key4", "value4"}
+            };
+
+            string GetHeaderValue(Dictionary<string, string> headers, string key)
+            {
+                return headers[key];
+            }
+
+            transaction.SetRequestHeaders(headerCollection, new[] { "key1", "key2", "key3", "Key4" }, GetHeaderValue);
+
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+
+            var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+            txStats.MergeUnscopedStats(MetricNames.ExternalAll, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2)));
+
+            var totalTime = TimeSpan.FromSeconds(1);
+
+            // ACT
+            var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
+
+            // ACQUIRE
+            var transactionAttributes = attributes;
+
+            // ASSERT
+            NrAssert.Multiple(
+                () => Assert.AreEqual(15, GetCount(transactionAttributes)),  // Assert that only these attributes are generated
+
+                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key1")),
+                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key2")),
+                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key3")),
+                () => Assert.False(DoAttributesContain(transactionAttributes, "request.headers.key4"))
+            );
+        }
 
         [Test]
         public void GetAttributes_ReturnsCatAttsWithoutCrossAppId()

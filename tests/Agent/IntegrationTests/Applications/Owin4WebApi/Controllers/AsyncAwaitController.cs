@@ -109,6 +109,13 @@ namespace Owin4WebApi.Controllers
             System.Threading.Thread.Sleep(5000);
         }
 
+        [HttpPost]
+        [Route("AsyncAwait/SimplePostAsync")]
+        public async Task<string> SimplePostAsync([FromBody] string value)
+        {
+            return await Task.FromResult(value);
+        }
+
         public override async Task<HttpResponseMessage> ExecuteAsync(HttpControllerContext controllerContext, CancellationToken cancellationToken)
         {
             if (controllerContext == null)

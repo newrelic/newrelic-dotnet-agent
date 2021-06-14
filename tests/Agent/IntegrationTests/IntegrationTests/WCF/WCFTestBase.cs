@@ -28,7 +28,8 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         public enum HostingModel
         {
             Self,
-            IIS
+            IIS,
+            IISNoAsp
         }
 
         public enum ASPCompatibilityMode
@@ -133,6 +134,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
                     _fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
                     _fixture.RemoteApplication.NewRelicConfig.SetRequestTimeout(TimeSpan.FromSeconds(10));
                     _fixture.RemoteApplication.NewRelicConfig.ForceTransactionTraces();
+                    _fixture.RemoteApplication.NewRelicConfig.EnableSpanEvents(true);
                     _fixture.RemoteApplication.NewRelicConfig.SetOrDeleteDistributedTraceEnabled(_tracingTestOption == TracingTestOption.DT ? true : null as bool?);
                     _fixture.RemoteApplication.NewRelicConfig.SetCATEnabled(_tracingTestOption == TracingTestOption.CAT);
 

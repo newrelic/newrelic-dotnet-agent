@@ -50,6 +50,15 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
                 segment = SetupSegment(transaction, context);
                 segment.AlwaysDeductChildDuration = true;
 
+                if (_agent.Configuration.AllowAllRequestHeaders)
+                {
+                    transaction.SetRequestHeaders(context.Request.Headers, context.Request.Headers.Keys, GetHeaderValue);
+                }
+                else
+                {
+                    transaction.SetRequestHeaders(context.Request.Headers, Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders, GetHeaderValue);
+                }
+
                 ProcessHeaders(context);
 
                 context.Response.OnStarting(SetOutboundTracingDataAsync);
@@ -75,6 +84,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
                 TryWriteResponseHeaders(context, transaction);
                 return Task.CompletedTask;
             }
+        }
+
+        private string GetHeaderValue(IHeaderDictionary headers, string key)
+        {
+            return headers[key];
         }
 
         private void EndTransaction(ISegment segment, ITransaction transaction, HttpContext context, Exception appException)

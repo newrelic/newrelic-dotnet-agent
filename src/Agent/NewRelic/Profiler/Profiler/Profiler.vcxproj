@@ -92,6 +92,7 @@
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
     <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -99,6 +100,7 @@
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
     <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -106,6 +108,7 @@
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
     <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -113,6 +116,7 @@
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
     <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
