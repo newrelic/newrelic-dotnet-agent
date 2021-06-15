@@ -16,6 +16,8 @@ namespace BasicMvcApplication.Controllers
         // GET: Default
         public ActionResult Index()
         {
+            Task.Delay(2000).Wait();
+
             return View();
         }
 

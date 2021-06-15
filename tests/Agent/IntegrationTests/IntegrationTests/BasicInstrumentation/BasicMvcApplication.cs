@@ -34,6 +34,8 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 exerciseApplication: () =>
                 {
                     _fixture.Get();
+                    _fixture.Get404("Default/MissingAction");
+                    _fixture.Get404("MissingController");
                 }
             );
             _fixture.Initialize();
@@ -44,13 +46,15 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 3 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/StatusCode/404", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 3 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/DefaultController/Index", callCount = 1 },
+
                 new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
@@ -68,6 +72,9 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Default/Ignored" },
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Normalized/*" },
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
+
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DefaultController/MissingAction" },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/{controller}/{action}/{id}" },
 
 				// The .NET agent does not have the information needed to generate this metric
 				new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
@@ -121,7 +128,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 .Where(sample => sample.Path == @"WebTransaction/MVC/DefaultController/Index")
                 .FirstOrDefault();
             var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
-                .FirstOrDefault();
+                .FirstOrDefault(te => te.IntrinsicAttributes["name"].Equals(@"WebTransaction/MVC/DefaultController/Index"));
 
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
