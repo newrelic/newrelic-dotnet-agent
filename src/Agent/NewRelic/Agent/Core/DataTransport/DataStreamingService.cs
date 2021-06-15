@@ -156,6 +156,8 @@ namespace NewRelic.Agent.Core.DataTransport
         /// </summary>
         private readonly InterlockedCounter _consumerId = new InterlockedCounter();
 
+        private readonly InterlockedCounter _workCounter = new InterlockedCounter();
+
         protected Metadata MetadataHeaders { get; private set; }
         private Metadata CreateMetadataHeaders()
         {
@@ -707,36 +709,27 @@ namespace NewRelic.Agent.Core.DataTransport
             return false;
         }
 
-        public void Wait(int millisecondsTimeout)
+        public  void Wait(int millisecondsTimeout)
         {
             LogMessage(LogLevel.Debug, $"DataStreamingService: Wait up to {millisecondsTimeout} milliseconds for streaming workers to finish streaming data.");
 
-            //Remove anything that should not be there
-            foreach (var x in _responseStreamsDic.Values.Where(x => x.IsInvalid).ToList())
+            var task = Task.Run(async () =>
             {
-                LogMessage(LogLevel.Finest, x.ConsumerID, "Response Stream Manager - Removing Stream");
-                _responseStreamsDic.TryRemove(x.ConsumerID, out _);
-                if ((x.ResponseRpcException != null) && (x.ResponseRpcException.StatusCode == StatusCode.FailedPrecondition))
+                //Wait until both there no spans to be sent and no consumers is pending. Performance ?????
+                while (_collection.Count > 0 || _workCounter.Value > 0)
                 {
-                    LogMessage(LogLevel.Debug, $"The gRPC endpoint defined at {EndpointHost}:{EndpointPort} returned {FailedPreconditionStatus}, indicating the traffic is being redirected to a new host.  Restarting service.");
-                    Shutdown(true);
+                    await Task.Delay(100);
                 }
-            }
+            });
 
-            var tasksToWaitFor = _responseStreamsDic.Values
-                .Where(x => !x.IsInvalid)
-                .Select(x => x.GetAwaiter())
-                .ToArray();
-
-            if (tasksToWaitFor.Length == 0)
+            if (task.Wait(TimeSpan.FromMilliseconds(millisecondsTimeout)))
             {
-                return;
+                LogMessage(LogLevel.Debug, $"DataStreamingService: Finished streaming span data on exit. {_collection.Count} span events need to be sent, {_workCounter.Value} streaming workers are pending.");
             }
-
-            //Wait for all tasks to complete or expire after interval window
-            Task.WaitAll(tasksToWaitFor, millisecondsTimeout);
-
-            _responseStreamsDic.Clear();
+            else
+            {
+                LogMessage(LogLevel.Debug, $"DataStreamingService: Could not finish streaming span data on exit. {_collection.Count} span events need to be sent, {_workCounter.Value} streaming workers are pending.");
+            }
         }
 
         /// <summary>
@@ -866,7 +859,12 @@ namespace NewRelic.Agent.Core.DataTransport
                         continue;
                     }
 
+                    _workCounter.Increment();
+
                     var trySendStatus = TrySend(consumerId, requestStream, items, serviceCancellationToken);
+
+                    _workCounter.Decrement();
+
                     if (trySendStatus != TrySendStatus.Success)
                     {
                         ProcessFailedItems(items, collection);
@@ -910,6 +908,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Success");
                     RecordSuccessfulSend(items.Count);
+
                     return TrySendStatus.Success;
                 }
 

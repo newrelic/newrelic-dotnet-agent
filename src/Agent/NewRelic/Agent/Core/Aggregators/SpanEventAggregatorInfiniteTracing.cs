@@ -117,7 +117,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             if (_configuration.CollectorSendDataOnExit)
             {
-                _spanStreamingService.Wait(2000); ;
+                _spanStreamingService.Wait(_configuration.InfiniteTracingExitTimeoutMs);
             }
 
             return;
