@@ -30,5 +30,17 @@ SPDX-License-Identifier: Apache-2.0
 			</match>
 		</tracerFactory>
 
+    <tracerFactory name="HandleUnknownActionWrapper">
+      <match assemblyName="System.Web.Mvc" className="System.Web.Mvc.Controller">
+        <exactMethodMatcher methodName="HandleUnknownAction" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="GetControllerInstanceWrapper">
+      <match assemblyName="System.Web.Mvc" className="System.Web.Mvc.DefaultControllerFactory">
+        <exactMethodMatcher methodName="GetControllerInstance" />
+      </match>
+    </tracerFactory>
+    
 	</instrumentation>
 </extension>

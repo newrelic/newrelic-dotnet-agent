@@ -37,7 +37,7 @@ namespace NewRelic.Providers.Wrapper.Mvc3
                     throw new NullReferenceException("httpContext");
 
                 var transactionName = string.Format("{0}/{1}", controllerName, actionName);
-                transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
+                transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkLow);
 
                 var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 
