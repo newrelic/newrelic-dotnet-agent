@@ -73,6 +73,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 				new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DefaultController/Index", callCount = 1 },
             };
+
             var expectedTransactionTraceSegments = new List<string>
             {
                 @"AuthenticateRequest",
@@ -110,9 +111,12 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 { "http.statusCode", 200 },
                 { "request.uri", "/Default" }
             };
+
             var connect = _fixture.AgentLog.GetConnectData().Environment.GetPluginList();
             Assert.DoesNotContain(connect, x => x.Contains("NewRelic.Providers.Wrapper.AspNetCore"));
+
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()
                 .Where(sample => sample.Path == @"WebTransaction/MVC/DefaultController/Index")
                 .FirstOrDefault();
@@ -124,6 +128,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 () => Assert.NotNull(transactionEvent),
                 () => Assert.NotNull(_fixture.ResponseBody)
                 );
+
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
