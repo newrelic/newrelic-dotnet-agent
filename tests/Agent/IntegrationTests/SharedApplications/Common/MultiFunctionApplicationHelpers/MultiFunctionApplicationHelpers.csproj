@@ -47,6 +47,8 @@
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+
+    <!--  TODO: .NET 5 tests???  -->
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     
   </ItemGroup>

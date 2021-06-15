@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System.Net.Sockets;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -31,7 +32,7 @@ namespace AspNetCoreMvcBasicRequestsApplication
                         builder.WithOrigins("http://example.com", "http://newrelic.com");
                     });
             });
-            services.AddMvc();
+            services.AddMvc(options => options.EnableEndpointRouting = false);
             services.AddHttpClient();
             services.AddHttpClient<NewRelicDownloadSiteClient>();
         }
