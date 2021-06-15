@@ -2,11 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -25,12 +22,6 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
             _fixture.TestLogger = output;
             _fixture.Actions
             (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ForceTransactionTraces();
-                },
                 exerciseApplication: () =>
                 {
                     _fixture.Get404("Default/MissingAction");
@@ -43,42 +34,32 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         [Fact]
         public void Test()
         {
-            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            var good404 = @"WebTransaction/StatusCode/404";
+
+            var bad404 = new[]
             {
-                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/StatusCode/404", callCount = 2 }
+                @"WebTransaction/MVC/DefaultController/MissingAction",
+                @"WebTransaction/ASP/{controller}/{action}/{id}"
             };
 
-            var unexpectedMetrics = new List<Assertions.ExpectedMetric>
-            {
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DefaultController/MissingAction" },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/{controller}/{action}/{id}" }
-            };
+            var metrics = _fixture.AgentLog.GetMetrics();
 
-            var connect = _fixture.AgentLog.GetConnectData().Environment.GetPluginList();
-            Assert.DoesNotContain(connect, x => x.Contains("NewRelic.Providers.Wrapper.AspNetCore"));
-
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+            NrAssert.Multiple
+            (
+                () => Assertions.MetricExist(new Assertions.ExpectedMetric { metricName = good404, callCount = 2 }, metrics),
+                () => Assertions.MetricsDoNotExist(bad404.Select(m => new Assertions.ExpectedMetric { metricName = m }), metrics)
+            );
 
             var badTransactionSamples = _fixture.AgentLog.GetTransactionSamples()
-                .Where(sample => sample.Path != @"WebTransaction/StatusCode/404");
+                .Where(sample => sample.Path != good404);
 
             var badTransactionEvents = _fixture.AgentLog.GetTransactionEvents()
-                .Where(te => !te.IntrinsicAttributes["name"].Equals(@"WebTransaction/StatusCode/404"));
+                .Where(te => !te.IntrinsicAttributes["name"].Equals(good404));
 
             NrAssert.Multiple
             (
                 () => Assert.Empty(badTransactionSamples),
                 () => Assert.Empty(badTransactionEvents)
-            );
-
-            NrAssert.Multiple
-            (
-                () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
-                () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
-                () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
             );
         }
     }
