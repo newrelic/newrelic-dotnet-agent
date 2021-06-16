@@ -709,7 +709,7 @@ namespace NewRelic.Agent.Core.DataTransport
             return false;
         }
 
-        public  void Wait(int millisecondsTimeout)
+        public void Wait(int millisecondsTimeout)
         {
             LogMessage(LogLevel.Debug, $"DataStreamingService: Wait up to {millisecondsTimeout} milliseconds for streaming workers to finish streaming data.");
 

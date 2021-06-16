@@ -99,6 +99,21 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Assert.AreEqual(expectedQueueCapacity, actualQueue.Capacity, "Queue Capacity");
         }
 
+        [Test]
+        public void DataStreamingService_Calls_Wait_On_Exit()
+        {
+            var streamingSvc = GetMockStreamingService(true, true);
+
+            Mock.Arrange(() => _currentConfiguration.CollectorSendDataOnExit).Returns(true);
+
+            var aggregator = CreateAggregator(streamingSvc);
+            FireAgentConnectedEvent();
+
+            EventBus<PreCleanShutdownEvent>.Publish(new PreCleanShutdownEvent());
+
+            Mock.Assert(() => streamingSvc.Wait(Arg.IsAny<int>()), Occurs.Once());
+        }
+
         /// <summary>
         /// If the queue size is changed
         /// 1.  The data streaming service should restart with a new queue that has the new size
