@@ -41,6 +41,8 @@ namespace NewRelic.Agent.Core.Transactions
     {
         private static readonly int MaxSegmentLength = 255;
 
+        private static readonly HashSet<string> HeadersNeedQueryParametersRemoval = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Referer", "Location", "Refresh" };
+
         private Agent _agent;
         private Agent Agent => _agent ?? (_agent = Agent.Instance);
 
@@ -1178,6 +1180,63 @@ namespace NewRelic.Agent.Core.Transactions
                     setter(carrier, header.Key, header.Value);
                 }
             }
+        }
+
+        public ITransaction SetRequestHeaders<T>(T headers, IEnumerable<string> keysToCapture, Func<T, string, string> getter)
+        {
+            if (headers == null)
+            {
+                throw new ArgumentNullException(nameof(headers));
+            }
+
+            if (keysToCapture == null)
+            {
+                throw new ArgumentNullException(nameof(keysToCapture));
+            }
+
+            if (getter == null)
+            {
+                throw new ArgumentNullException(nameof(getter));
+            }
+
+            if (_configuration.HighSecurityModeEnabled)
+            {
+                return this;
+            }
+
+            foreach (var key in keysToCapture)
+            {
+                var value = getter(headers, key);
+
+                if (HeadersNeedQueryParametersRemoval.Contains(key))
+                {
+                    value = RemoveQueryParameters(value);
+                }
+
+                if (value != null)
+                {
+                    var paramAttribute = _attribDefs.GetRequestHeadersAttribute(key.ToLowerInvariant());
+                    TransactionMetadata.UserAndRequestAttributes.TrySetValue(paramAttribute, value);
+                }
+            }
+
+            return this;
+        }
+
+        private string RemoveQueryParameters(string url)
+        {
+            if(string.IsNullOrEmpty(url) || url.Length < 2)
+            {
+                return url;
+            }
+
+            var index = url.IndexOf('?');
+            if (index > -1)
+            {
+                return url.Substring(0, index);
+            }
+
+            return url;
         }
     }
 }

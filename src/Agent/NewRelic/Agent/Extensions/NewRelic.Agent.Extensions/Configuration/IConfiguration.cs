@@ -26,6 +26,7 @@ namespace NewRelic.Agent.Configuration
         bool BrowserMonitoringUseSsl { get; }
         string SecurityPoliciesToken { get; }
         bool SecurityPoliciesTokenExists { get; }
+        bool AllowAllRequestHeaders { get; }
         bool CaptureAttributes { get; }
         bool CanUseAttributesIncludes { get; }
         string CanUseAttributesIncludesSource { get; }

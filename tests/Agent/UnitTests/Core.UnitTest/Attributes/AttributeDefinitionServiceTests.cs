@@ -187,6 +187,49 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             );
         }
 
+        //        input                  include                                                   exclude  
+        [TestCase(new[] { "foo", "bar"},   null,                                                   null,                                   new[] { false, false })] // Don't expect to capture foo and bar.
+        [TestCase(new[] { "foo", "bar"},   new[] { "request.headers.*" },                          null,                                   new[] { true, true })]
+        [TestCase(new[] { "foo", "bar"},   new[] { "request.headers.foo" },                        null,                                   new[] { true, false })]  // Expect to capture foo, but don't expect to capture bar.
+        [TestCase(new[] { "foo", "bar"},   new[] { "request.headers.*", "request.headers.foo" },   null,                                   new[] { true, true })]
+        [TestCase(new[] { "foo", "bar"},   new[] { "request.headers.*" },                          new[] { "request.headers.foo" },        new[] { false, true })]
+        [TestCase(new[] { "foo", "bar"},   null,                                                   new[] { "request.headers.foo" },        new[] { false, false })]
+        public void RequestHeaderAttributeTests
+        (
+            string[] inputHeaders,
+            string[] attributesInclude,
+            string[] attributesExclude,
+            bool[] expectCaptureRequestHeaders
+        )
+        {
+            //Arrange
+
+            if (attributesInclude != null)
+            {
+                _localConfig.attributes.include = new List<string>(attributesInclude);
+            }
+
+            if (attributesExclude != null)
+            {
+                _localConfig.attributes.exclude = new List<string>(attributesExclude);
+            }
+
+            UpdateConfig();
+
+            for (var i = 0; i < inputHeaders.Length; i++)
+            {
+                var attrib = _attribDefs.GetRequestHeadersAttribute(inputHeaders[i]);
+
+                NrAssert.Multiple
+                (
+                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.TransactionEvent)),
+                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.SpanEvent)),
+                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.ErrorEvent)),
+                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.ErrorTrace)),
+                    () => Assert.AreEqual(expectCaptureRequestHeaders[i], attrib.IsAvailableForAny(AttributeDestinations.TransactionTrace))
+                );
+            }
+        }
 
         const string _lazyTest_AttribNameDtm = "dtmAttrib";
         private DateTime _lazyTest_AttribValDtm = DateTime.UtcNow;

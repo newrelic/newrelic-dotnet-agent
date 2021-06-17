@@ -35,7 +35,9 @@ namespace ConsoleAsyncApplication
             return "Worked";
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<string> Async_FireAndForget(EventWaitHandle waitHandle)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var transactionName = UpdateTransactionName("AF");
 
@@ -58,7 +60,9 @@ namespace ConsoleAsyncApplication
             return "Worked";
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<string> Async_Sync()
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var transactionName = UpdateTransactionName("AS");
 
@@ -143,7 +147,9 @@ namespace ConsoleAsyncApplication
 
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         private static async Task AsyncMethod(int delayMs, string transactionName, EventWaitHandle handle = null)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             transactionName = UpdateTransactionName(transactionName, "AM");
 

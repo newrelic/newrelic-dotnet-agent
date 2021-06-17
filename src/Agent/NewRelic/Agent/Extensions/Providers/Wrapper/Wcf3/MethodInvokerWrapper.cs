@@ -5,7 +5,6 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.Logging;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions;
 using System;
@@ -124,7 +123,10 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                             : null;
         }
 
-
+        private string GetHeaderValueFromWebHeaderCollection(System.Collections.Specialized.NameValueCollection headers, string key)
+        {
+            return headers[key];
+        }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
@@ -162,6 +164,8 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                     doNotTrackAsUnitOfWork: false);
 
                 transaction.GetExperimentalApi().SetWrapperToken(_wrapperToken);
+
+                CaptureHttpRequestHeaders(agent, transaction);
             }
 
             var requestPath = uri?.AbsolutePath;
@@ -315,6 +319,26 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                         }
                     }
                 });
+        }
+
+        private void CaptureHttpRequestHeaders(IAgent agent, ITransaction transaction)
+        {
+            var context = OperationContext.Current;
+            if (context.IncomingMessageProperties != null
+                && context.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageAsObject)
+                && httpRequestMessageAsObject is HttpRequestMessageProperty httpRequestMessage
+                && httpRequestMessage.Headers != null)
+            {
+                    if (agent.Configuration.AllowAllRequestHeaders)
+                    {
+                        transaction.SetRequestHeaders(httpRequestMessage.Headers, httpRequestMessage.Headers.AllKeys, GetHeaderValueFromWebHeaderCollection);
+                    }
+                    else
+                    {
+
+                        transaction.SetRequestHeaders(httpRequestMessage.Headers, Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders, GetHeaderValueFromWebHeaderCollection);
+                    }
+            }
         }
 
         /// <summary>

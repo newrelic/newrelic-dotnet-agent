@@ -9,6 +9,7 @@ using NewRelic.Api.Agent;
 using System;
 using System.Reflection;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Threading;
@@ -34,6 +35,9 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
                     break;
                 case WCFBindingType.WSHttp:
                     _wcfClient = CreateClientWithWSHttpBinding(endpointAddress);
+                    break;
+                case WCFBindingType.WSHttpUnsecure:
+                    _wcfClient = CreateClientWithWSHttpBinding(endpointAddress, SecurityMode.None);
                     break;
                 case WCFBindingType.WebHttp:
                     _wcfClient = CreateClientWithWebHttpBinding(endpointAddress);
@@ -203,6 +207,32 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
         public void TellWCFServerToMakeExternalCalls()
         {
             _ =_wcfClient.TAP_TAPMakeExternalCalls().Result;
+        }
+
+        [LibraryMethod]
+        public void GetDataWithHeaders()
+        {
+            using (var scope = new OperationContextScope((_wcfClient as WcfClient).InnerChannel))
+            {
+                OperationContext.Current.OutgoingMessageProperties[HttpRequestMessageProperty.Name] = new HttpRequestMessageProperty()
+                {
+                    Headers =
+                    {
+                        { "Referer", "http://example.com/" },
+                        { "Accept", "text/html" },
+                        { "Host", "fakehost" },
+                        { "User-Agent", "FakeUserAgent" },
+                        { "fOo", "bar" },
+                        { "dashes-are-valid", "true" },
+                        { "dashesarevalid", "definitely" },
+                        { "Cookie", "itsasecret" }
+                    }
+                };
+
+                var result = _wcfClient.Sync_SyncGetData(2000);
+
+                Logger.Info($"Result: {result ?? "<NULL>"}");
+            }
         }
 
         /// <summary>
@@ -393,10 +423,15 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
             return new WcfClient(binding, endpoint);
         }
 
-        private WcfClient CreateClientWithWSHttpBinding(Uri endpointAddress)
+        private WcfClient CreateClientWithWSHttpBinding(Uri endpointAddress, SecurityMode? securityMode = null)
         {
             var binding = new WSHttpBinding();
+
+            if (securityMode.HasValue)
+                binding.Security.Mode = securityMode.Value;
+
             var endpoint = new EndpointAddress(endpointAddress);
+
             return new WcfClient(binding, endpoint);
         }
 

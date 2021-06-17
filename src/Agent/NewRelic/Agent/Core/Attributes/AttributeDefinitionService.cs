@@ -116,6 +116,8 @@ namespace NewRelic.Agent.Core.Attributes
 
         AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName);
 
+        AttributeDefinition<string, string> GetRequestHeadersAttribute(string paramName);
+
         AttributeDefinition<TypeAttributeValue, string> GetTypeAttribute(TypeAttributeValue destination);
     }
 
@@ -158,8 +160,8 @@ namespace NewRelic.Agent.Core.Attributes
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _spanCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _errorCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
         private readonly ConcurrentDictionary<string, AttributeDefinition<object, object>> _customEventCustomAttributes = new ConcurrentDictionary<string, AttributeDefinition<object, object>>();
-
         private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestParameterAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
+        private readonly ConcurrentDictionary<string, AttributeDefinition<string, string>> _requestHeadersAttributes = new ConcurrentDictionary<string, AttributeDefinition<string, string>>();
 
         private readonly ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>> _typeAttributes = new ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>>();
 
@@ -206,6 +208,20 @@ namespace NewRelic.Agent.Core.Attributes
                 .Build(_attribFilter);
         }
 
+        private AttributeDefinition<string, string> CreateRequestHeadersAttribute(string paramName)
+        {
+            var attribName = $"request.headers.{paramName}";
+
+            return AttributeDefinitionBuilder
+                .CreateString(attribName, AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.TransactionEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.TransactionEvent))
+                .AppliesTo(AttributeDestinations.TransactionTrace, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.TransactionTrace))
+                .AppliesTo(AttributeDestinations.ErrorTrace, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.ErrorTrace))
+                .AppliesTo(AttributeDestinations.ErrorEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.ErrorEvent))
+                .AppliesTo(AttributeDestinations.SpanEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.SpanEvent))
+                .Build(_attribFilter);
+        }
+
         public AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name)
         {
             return _trxCustomAttributes.GetOrAdd(name, CreateCustomAttributeForTransaction);
@@ -229,6 +245,11 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName)
         {
             return _requestParameterAttributes.GetOrAdd(paramName, CreateRequestParameterAttribute);
+        }
+
+        public AttributeDefinition<string, string> GetRequestHeadersAttribute(string paramName)
+        {
+            return _requestHeadersAttributes.GetOrAdd(paramName, CreateRequestHeadersAttribute);
         }
 
         public AttributeDefinition<TypeAttributeValue, string> CreateTypeAttribute(TypeAttributeValue tm)
