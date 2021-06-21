@@ -109,9 +109,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             DownloadStringAndAssertEqual(address, "Worked");
         }
 
-        public void Get404()
+        public void Get404(string Path = "DoesNotExist")
         {
-            var address = $"http://{DestinationServerName}:{Port}/DoesNotExist";
+            var address = $"http://{DestinationServerName}:{Port}/{Path}";
             var webClient = new WebClient();
 
             try
