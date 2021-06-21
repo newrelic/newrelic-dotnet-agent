@@ -102,6 +102,8 @@ namespace NewRelic.Agent.Core.DataTransport
         int TimeoutSendDataMs { get; }
         void Shutdown(bool withRestart);
         void StartConsumingCollection(PartitionedBlockingCollection<TRequest> collection);
+        void Wait(int millisecondsTimeout = -1);
+
         bool ReadAndValidateConfiguration();
     }
 
@@ -153,6 +155,8 @@ namespace NewRelic.Agent.Core.DataTransport
         /// consumer threads running
         /// </summary>
         private readonly InterlockedCounter _consumerId = new InterlockedCounter();
+
+        private readonly InterlockedCounter _workCounter = new InterlockedCounter();
 
         protected Metadata MetadataHeaders { get; private set; }
         private Metadata CreateMetadataHeaders()
@@ -705,6 +709,29 @@ namespace NewRelic.Agent.Core.DataTransport
             return false;
         }
 
+        public void Wait(int millisecondsTimeout)
+        {
+            LogMessage(LogLevel.Debug, $"DataStreamingService: Wait up to {millisecondsTimeout} milliseconds for streaming workers to finish streaming data.");
+
+            var task = Task.Run(async () =>
+            {
+                //Wait until both there no spans to be sent and no consumers is pending. Performance ?????
+                while (_collection.Count > 0 || _workCounter.Value > 0)
+                {
+                    await Task.Delay(100);
+                }
+            });
+
+            if (task.Wait(TimeSpan.FromMilliseconds(millisecondsTimeout)))
+            {
+                LogMessage(LogLevel.Debug, $"DataStreamingService: Finished streaming span data on exit. {_collection.Count} span events need to be sent, {_workCounter.Value} streaming workers are pending.");
+            }
+            else
+            {
+                LogMessage(LogLevel.Debug, $"DataStreamingService: Could not finish streaming span data on exit. {_collection.Count} span events need to be sent, {_workCounter.Value} streaming workers are pending.");
+            }
+        }
+
         /// <summary>
         /// Designed to be called by the aggregator.
         /// </summary>
@@ -752,6 +779,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     var delayInMs = shouldRetryImmediately ? 0 : _delayBetweenRpcCallsMs;
+                    LogMessage(LogLevel.Finest, "Delay " + delayInMs);
                     _delayer.Delay(delayInMs, cancellationToken);
                 }
             }
@@ -831,7 +859,12 @@ namespace NewRelic.Agent.Core.DataTransport
                         continue;
                     }
 
+                    _workCounter.Increment();
+
                     var trySendStatus = TrySend(consumerId, requestStream, items, serviceCancellationToken);
+
+                    _workCounter.Decrement();
+
                     if (trySendStatus != TrySendStatus.Success)
                     {
                         ProcessFailedItems(items, collection);
@@ -875,6 +908,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Success");
                     RecordSuccessfulSend(items.Count);
+
                     return TrySendStatus.Success;
                 }
 
