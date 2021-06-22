@@ -35,7 +35,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
             ISegment segment = null;
 
             // Don't create a transaction in this case to avoid MGIs associated with CORS pre-flight requests
-            if (context.Request.Method == "OPTIONS")
+            if ("OPTIONS".Equals(context.Request?.Method, StringComparison.OrdinalIgnoreCase))
             {
                 _agent.Logger.Log(Agent.Extensions.Logging.Level.Finest, "Skipping instrumenting incoming OPTIONS request.");
 
