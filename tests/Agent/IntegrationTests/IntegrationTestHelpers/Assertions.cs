@@ -498,6 +498,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
+        public static void MetricDoNotExist(ExpectedMetric unexpectedMetric, IEnumerable<Metric> actualMetrics) => MetricsDoNotExist(new[] { unexpectedMetric }, actualMetrics);
+
         public static void MetricsDoNotExist(IEnumerable<ExpectedMetric> unexpectedMetrics, IEnumerable<Metric> actualMetrics)
         {
             actualMetrics = actualMetrics.ToList();
