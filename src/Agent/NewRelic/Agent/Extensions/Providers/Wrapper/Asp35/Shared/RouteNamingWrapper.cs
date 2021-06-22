@@ -38,7 +38,9 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
                     return;
 
                 var url = route.Url;
-                if (url == null)
+
+                // Avoid overriding lower priority uri name unless we actually have something
+                if (String.IsNullOrEmpty(url))
                     return;
 
                 transaction.SetWebTransactionName(WebTransactionType.ASP, url, TransactionNamePriority.Route);
