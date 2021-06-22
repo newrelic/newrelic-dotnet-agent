@@ -711,12 +711,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public void Wait(int millisecondsTimeout)
         {
-            LogMessage(LogLevel.Debug, $"DataStreamingService: Wait up to {millisecondsTimeout} milliseconds for streaming workers to finish streaming data.");
+            LogMessage(LogLevel.Debug, $"DataStreamingService: Waiting up to {millisecondsTimeout} milliseconds for workers to finish streaming data...");
 
             var task = Task.Run(async () =>
             {
-                //Wait until both there no spans to be sent and no consumers is pending. Performance ?????
-                while (_collection.Count > 0 || _workCounter.Value > 0)
+                // Wait until there are both no spans to be sent and no workers pending. Performance ?????
+                while (_collection?.Count > 0 || _workCounter?.Value > 0)
                 {
                     await Task.Delay(100);
                 }
@@ -724,11 +724,11 @@ namespace NewRelic.Agent.Core.DataTransport
 
             if (task.Wait(TimeSpan.FromMilliseconds(millisecondsTimeout)))
             {
-                LogMessage(LogLevel.Debug, $"DataStreamingService: Finished streaming span data on exit. {_collection.Count} span events need to be sent, {_workCounter.Value} streaming workers are pending.");
+                LogMessage(LogLevel.Debug, $"DataStreamingService: Finished streaming span data on exit.");
             }
             else
             {
-                LogMessage(LogLevel.Debug, $"DataStreamingService: Could not finish streaming span data on exit. {_collection.Count} span events need to be sent, {_workCounter.Value} streaming workers are pending.");
+                LogMessage(LogLevel.Debug, $"DataStreamingService: Could not finish streaming span data on exit: {_collection?.Count} span events need to be sent, {_workCounter?.Value} streaming workers are pending.");
             }
         }
 
