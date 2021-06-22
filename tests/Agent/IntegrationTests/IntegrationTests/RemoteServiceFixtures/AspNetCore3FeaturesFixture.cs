@@ -12,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"AspNetCore3Features";
         private const string ExecutableName = @"AspNetCore3Features.exe";
-        public AspNetCore3FeaturesFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, targetFramework: "netcoreapp3.1", ApplicationType.Bounded, true, true, true))
+        public AspNetCore3FeaturesFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, targetFramework: "net6.0", ApplicationType.Bounded, true, true, true))
         {
         }
 

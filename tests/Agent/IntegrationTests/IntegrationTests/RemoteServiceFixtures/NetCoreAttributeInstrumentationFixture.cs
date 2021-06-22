@@ -11,7 +11,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"NetCoreAttributeInstrumentationApplication";
         private const string ExecutableName = @"NetCoreAttributeInstrumentationApplication.exe";
-        public NetCoreAttributeInstrumentationFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, ApplicationType.Bounded, true, true, true))
+        public NetCoreAttributeInstrumentationFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName,  "net6.0", ApplicationType.Bounded, true, true, true))
         {
         }
     }
