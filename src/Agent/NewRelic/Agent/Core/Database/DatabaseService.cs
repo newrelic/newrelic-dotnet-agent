@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.Database
 
         public DatabaseService(ICacheStatsReporter cacheStatsReporter)
         {
-            _sqlObfuscator = SqlObfuscator.GetSqlObfuscator(_configuration.TransactionTracerEnabled, _configuration.TransactionTracerRecordSql);
+            _sqlObfuscator = SqlObfuscator.GetSqlObfuscator(_configuration.TransactionTracerRecordSql);
             _cache = new CacheByDatastoreVendor<string, string>("SqlObfuscationCache", cacheStatsReporter);
         }
 
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Database
             // It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
             // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-            _sqlObfuscator = SqlObfuscator.GetSqlObfuscator(_configuration.TransactionTracerEnabled, _configuration.TransactionTracerRecordSql);
+            _sqlObfuscator = SqlObfuscator.GetSqlObfuscator(_configuration.TransactionTracerRecordSql);
             _cache.SetCapacity(_configuration.DatabaseStatementCacheCapcity);
         }
     }
