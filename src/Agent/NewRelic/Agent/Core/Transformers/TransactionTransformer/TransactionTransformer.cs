@@ -393,10 +393,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private void TryGenerateExplainPlans(IEnumerable<Segment> segments)
         {
-            if (!_configurationService.Configuration.SqlExplainPlansEnabled)
+            if (!_configurationService.Configuration.SqlExplainPlansEnabled
+                || (!_configurationService.Configuration.TransactionTracerEnabled && !_configurationService.Configuration.SlowSqlEnabled))
             {
                 return;
             }
+
             try
             {
                 using (new IgnoreWork())
