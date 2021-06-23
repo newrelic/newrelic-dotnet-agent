@@ -393,6 +393,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private void TryGenerateExplainPlans(IEnumerable<Segment> segments)
         {
+            // First, check if explainPlans are disabled and return if they are
+            // If explainPlans are enabled, check if both TransactionTracer and SlowSql are disabled.  If they are, we don't need a plan, so return.
             if (!_configurationService.Configuration.SqlExplainPlansEnabled
                 || (!_configurationService.Configuration.TransactionTracerEnabled && !_configurationService.Configuration.SlowSqlEnabled))
             {
