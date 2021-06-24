@@ -412,7 +412,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Metrics
 
-        public static void MetricExist(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics) => MetricsExist(new[] { expectedMetric }, actualMetrics);
+        public static void MetricExists(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics) => MetricsExist(new[] { expectedMetric }, actualMetrics);
 
         public static void MetricsExist(IEnumerable<ExpectedMetric> expectedMetrics, IEnumerable<Metric> actualMetrics)
         {
@@ -497,8 +497,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             Assert.True(succeeded, builder.ToString());
         }
-
-        public static void MetricDoNotExist(ExpectedMetric unexpectedMetric, IEnumerable<Metric> actualMetrics) => MetricsDoNotExist(new[] { unexpectedMetric }, actualMetrics);
 
         public static void MetricsDoNotExist(IEnumerable<ExpectedMetric> unexpectedMetrics, IEnumerable<Metric> actualMetrics)
         {

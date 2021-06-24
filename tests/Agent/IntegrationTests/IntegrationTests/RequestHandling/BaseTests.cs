@@ -49,7 +49,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHandling
 
             NrAssert.Multiple
             (
-                () => Assertions.MetricExist(new Assertions.ExpectedMetric { metricName = expectedTransaction, callCount = 2 }, metrics),
+                () => Assertions.MetricExists(new Assertions.ExpectedMetric { metricName = expectedTransaction, callCount = 2 }, metrics),
                 () => Assertions.MetricsDoNotExist(unexpectedTransactions.Select(t => new Assertions.ExpectedMetric { metricName = t }), metrics)
             );
 
