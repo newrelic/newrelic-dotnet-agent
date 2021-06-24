@@ -393,10 +393,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private void TryGenerateExplainPlans(IEnumerable<Segment> segments)
         {
-            if (!_configurationService.Configuration.SqlExplainPlansEnabled)
+            // First, check if explainPlans are disabled and return if they are
+            // If explainPlans are enabled, check if both TransactionTracer and SlowSql are disabled.  If they are, we don't need a plan, so return.
+            if (!_configurationService.Configuration.SqlExplainPlansEnabled
+                || (!_configurationService.Configuration.TransactionTracerEnabled && !_configurationService.Configuration.SlowSqlEnabled))
             {
                 return;
             }
+
             try
             {
                 using (new IgnoreWork())
@@ -404,7 +408,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                     short count = 0;
                     var sqlExplainPlansMax = _configurationService.Configuration.SqlExplainPlansMax;
                     var threshold = _configurationService.Configuration.SqlExplainPlanThreshold;
-                    var obfuscator = SqlObfuscator.GetSqlObfuscator(_configurationService.Configuration.TransactionTracerEnabled, _configurationService.Configuration.TransactionTracerRecordSql);
+                    var obfuscator = SqlObfuscator.GetSqlObfuscator(_configurationService.Configuration.TransactionTracerRecordSql);
                     foreach (var segment in segments.Where(s => s.Data is DatastoreSegmentData))
                     {
                         if (segment.Duration > threshold)

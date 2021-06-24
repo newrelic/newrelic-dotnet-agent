@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 * Fixes issue [#485](https://github.com/newrelic/newrelic-dotnet-agent/issues/485): `SendDataOnExit` configuration setting will prevent Infinite Traces data sending interuption on application exit. ([#550](https://github.com/newrelic/newrelic-dotnet-agent/pull/609))
 * Fixes issue [#155](https://github.com/newrelic/newrelic-dotnet-agent/issues/155): MVC invalid Action for valid Controller can cause MGI. ([#608](https://github.com/newrelic/newrelic-dotnet-agent/pull/608))
+* Explain plans will be created if [transactionTracer.explainEnabled](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/#tracer-explainEnabled) is true and one or both [transactionTracer.enabled](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/#tracer-enabled) or [slowSql.enabled](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/#slow_sql) are true.  If transactionTracer.explainEnabled is false or both transactionTracer.enabled and slowSql.enabled are false, no Explain Plans will be created.
 
 ## [8.40.0] - 2021-06-08
 ### New Features

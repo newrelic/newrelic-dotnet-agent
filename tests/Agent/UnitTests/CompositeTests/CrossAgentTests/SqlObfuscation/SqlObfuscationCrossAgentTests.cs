@@ -19,7 +19,7 @@ namespace CompositeTests.CrossAgentTests.SqlObfuscation
     {
         private static CompositeTestAgent _compositeTestAgent;
         private IAgent _agent;
-        private SqlObfuscator _obfuscator = SqlObfuscator.GetSqlObfuscator(true, "obfuscated");
+        private SqlObfuscator _obfuscator = SqlObfuscator.GetSqlObfuscator("obfuscated");
         private readonly List<string> validVendors = Enum.GetNames(typeof(DatastoreVendor)).Select(s => s.ToLower()).ToList();
 
         public static List<TestCaseData> SqlObfuscationTestDatas => GetSqlObfuscationTestDatas();
