@@ -10,12 +10,12 @@ namespace NewRelic.Agent.Core.Database
     [TestFixture]
     public class SqlObfuscatorTest
     {
-        SqlObfuscator obfuscator = SqlObfuscator.GetSqlObfuscator(true, "obfuscated");
+        SqlObfuscator obfuscator = SqlObfuscator.GetSqlObfuscator("obfuscated");
 
         [Test]
         public static void verify_using_raw_obfuscator_that_GetObfuscatedSql_returns_sql_passed_in()
         {
-            SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator(true, "raw");
+            SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator("raw");
             string sql = "Select * from users where ssn = 433871122";
             Assert.AreEqual(sql, ob.GetObfuscatedSql(sql));
         }
@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public static void verify_using_raw_obfuscator_and_quoted_string_in_sql_that_GetObfuscatedSql_returns_sql_passed_in()
         {
-            SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator(true, "raw");
+            SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator("raw");
             string sql = "Select * from users where name = 'dude'";
             Assert.AreEqual(sql, ob.GetObfuscatedSql(sql));
         }
@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public static void verify_using_NoSql_objfuscator_that_GetObfuscatedSql_returns_null()
         {
-            SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator(true, "off");
+            SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator("off");
             string sql = "Select * from users where ssn = 433871122";
             Assert.IsNull(ob.GetObfuscatedSql(sql));
         }
@@ -39,7 +39,7 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public static void verify_using_NoSql_objfuscator_and_quoted_string_in_sql_that_GetObfuscatedSql_returns_null()
         {
-            SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator(true, "off");
+            SqlObfuscator ob = SqlObfuscator.GetSqlObfuscator("off");
             string sql = "Select * from users where name = 'dude'";
             Assert.IsNull(ob.GetObfuscatedSql(sql));
         }

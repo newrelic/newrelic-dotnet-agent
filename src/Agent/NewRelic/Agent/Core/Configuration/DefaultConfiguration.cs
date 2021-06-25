@@ -949,6 +949,15 @@ namespace NewRelic.Agent.Core.Configuration
                 TryGetAppSettingAsIntWithDefault("InfiniteTracingTimeoutSend", 10000)
                 , "NEW_RELIC_INFINITE_TRACING_TIMEOUT_SEND")).Value);
 
+        private int? _infiniteTracingExitTimeoutMs = null;
+        public int InfiniteTracingExitTimeoutMs => GetInfiniteTracingExitTimeoutMs();
+        private int GetInfiniteTracingExitTimeoutMs()
+        {
+            const int infiniteTracingExitTimeoutMsDefault = 5000;
+            return _infiniteTracingExitTimeoutMs
+                ?? (_infiniteTracingExitTimeoutMs = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("InfiniteTracingExitTimeout", infiniteTracingExitTimeoutMsDefault), "NEW_RELIC_INFINITE_TRACING_EXIT_TIMEOUT")).GetValueOrDefault();
+        }
+
         private int? _infiniteTracingCountWorkers = null;
         public int InfiniteTracingTraceCountConsumers => GetInfiniteTracingCountWorkers();
 

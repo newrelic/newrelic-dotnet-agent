@@ -25,13 +25,8 @@ namespace NewRelic.Agent.Core.Database
             return ObfuscatingSqlObfuscatorInstanceUsingExplicit;
         }
 
-        public static SqlObfuscator GetSqlObfuscator(bool transactionTracerEnabled, string recordSqlValue)
+        public static SqlObfuscator GetSqlObfuscator(string recordSqlValue)
         {
-            if (!transactionTracerEnabled)
-            {
-                return new NoSqlObfuscator();
-            }
-
             if (string.IsNullOrEmpty(recordSqlValue))
             {
                 return GetObfuscatingSqlObfuscator();

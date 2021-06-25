@@ -109,9 +109,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             DownloadStringAndAssertEqual(address, "Worked");
         }
 
-        public void Get404()
+        public void Get404(string Path = "DoesNotExist")
         {
-            var address = $"http://{DestinationServerName}:{Port}/DoesNotExist";
+            var address = $"http://{DestinationServerName}:{Port}/{Path}";
             var webClient = new WebClient();
 
             try
@@ -173,6 +173,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             GetWithHeaders(Enumerable.Empty<KeyValuePair<string, string>>(), "HandleThisRequestInGlobalAsax", $"?statusCode={statusCode}");
         }
 
+        public void Request(HttpMethod method, string action = "Index")
+        {
+            RequestWithHeaders(method, null, Enumerable.Empty<KeyValuePair<string, string>>(), action);
+        }
 
         public string Get()
         {
