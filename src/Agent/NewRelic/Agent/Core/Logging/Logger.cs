@@ -3,12 +3,21 @@
 
 using NewRelic.Agent.Extensions.Logging;
 using System;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.Logging
 {
     public class Logger : ILogger, global::NewRelic.Core.Logging.ILogger
     {
         private readonly log4net.ILog _logger = log4net.LogManager.GetLogger(typeof(Logger));
+
+        private void EnsureThreadIdPropertyExistsInContext()
+        {
+            if(log4net.ThreadContext.Properties["threadid"] == null)
+            {
+                log4net.ThreadContext.Properties["threadid"] = Thread.CurrentThread.ManagedThreadId;
+            }
+        }
 
         public bool IsEnabledFor(Level level)
         {
@@ -33,6 +42,8 @@ namespace NewRelic.Agent.Core.Logging
         {
             if (!IsEnabledFor(level)) return;
             var messageString = message.ToString();
+
+            EnsureThreadIdPropertyExistsInContext();
 
             switch (level)
             {
@@ -68,6 +79,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void Error(string message)
         {
+            EnsureThreadIdPropertyExistsInContext();
             _logger.Error(message);
         }
 
@@ -76,6 +88,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void Error(Exception exception)
         {
+            EnsureThreadIdPropertyExistsInContext();
             _logger.Error(exception.ToString());
         }
 
@@ -86,6 +99,7 @@ namespace NewRelic.Agent.Core.Logging
         {
             if (IsErrorEnabled)
             {
+                EnsureThreadIdPropertyExistsInContext();
                 _logger.Error(string.Format(format, args));
             }
         }
@@ -104,6 +118,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void Warn(string message)
         {
+            EnsureThreadIdPropertyExistsInContext();
             _logger.Warn(message);
         }
 
@@ -112,6 +127,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void Warn(Exception exception)
         {
+            EnsureThreadIdPropertyExistsInContext();
             _logger.Warn(exception.ToString());
         }
 
@@ -122,6 +138,7 @@ namespace NewRelic.Agent.Core.Logging
         {
             if (IsWarnEnabled)
             {
+                EnsureThreadIdPropertyExistsInContext();
                 _logger.Warn(string.Format(format, args));
             }
         }
@@ -140,6 +157,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void Info(string message)
         {
+            EnsureThreadIdPropertyExistsInContext();
             _logger.Info(message);
         }
 
@@ -148,6 +166,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void Info(Exception exception)
         {
+            EnsureThreadIdPropertyExistsInContext();
             _logger.Info(exception.ToString());
         }
 
@@ -158,6 +177,7 @@ namespace NewRelic.Agent.Core.Logging
         {
             if (IsInfoEnabled)
             {
+                EnsureThreadIdPropertyExistsInContext();
                 _logger.Info(string.Format(format, args));
             }
         }
@@ -176,6 +196,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void Debug(string message)
         {
+            EnsureThreadIdPropertyExistsInContext();
             _logger.Debug(message);
         }
 
@@ -184,6 +205,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void Debug(Exception exception)
         {
+            EnsureThreadIdPropertyExistsInContext();
             _logger.Debug(exception.ToString());
         }
 
@@ -194,6 +216,7 @@ namespace NewRelic.Agent.Core.Logging
         {
             if (_logger.IsDebugEnabled)
             {
+                EnsureThreadIdPropertyExistsInContext();
                 _logger.Debug(string.Format(format, args));
             }
         }
@@ -212,6 +235,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void Finest(string message)
         {
+            EnsureThreadIdPropertyExistsInContext();
             _logger.Logger.Log(typeof(Logger), log4net.Core.Level.Finest, message, null);
         }
 
@@ -220,6 +244,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void Finest(Exception exception)
         {
+            EnsureThreadIdPropertyExistsInContext();
             _logger.Logger.Log(typeof(Logger), log4net.Core.Level.Finest, exception.ToString(), null);
         }
 
@@ -230,6 +255,7 @@ namespace NewRelic.Agent.Core.Logging
         {
             if (IsFinestEnabled)
             {
+                EnsureThreadIdPropertyExistsInContext();
                 var formattedMessage = string.Format(format, args);
                 _logger.Logger.Log(typeof(Logger), log4net.Core.Level.Finest, formattedMessage, null);
             }
