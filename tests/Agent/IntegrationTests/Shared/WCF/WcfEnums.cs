@@ -15,6 +15,13 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
         CustomClass
     }
 
+    public enum HostingModel
+    {
+        Self,
+        IIS,
+        IISNoAsp
+    }
+
     public enum WCFInvocationMethod
     {
         Sync,
