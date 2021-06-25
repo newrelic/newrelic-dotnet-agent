@@ -4,6 +4,7 @@
 #if NETFRAMEWORK
 using System;
 using System.Net;
+using System.Net.Http;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,6 +61,18 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
         {
             if (_printOutput) Console.WriteLine("TAPGetData");
             return await DoWork(value.ToString(), false, false);
+        }
+
+        public async Task<string> TAPMakeExternalCalls()
+        {
+            using (var httpClient = new HttpClient())
+            {
+                _ = await httpClient.GetAsync("https://google.com");
+                _ = await httpClient.GetAsync("https://bing.com");
+                _ = await httpClient.GetAsync("https://yahoo.com");
+            }
+
+            return "OK";
         }
 
         #endregion

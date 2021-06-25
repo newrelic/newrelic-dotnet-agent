@@ -16,7 +16,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.WCF
 {
-    public abstract class WCFTestBase : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
+    public abstract class WCFLegacyTestBase : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
     {
         public enum TracingTestOption
         {
@@ -103,7 +103,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
             {WCFInvocationMethod.TAPAsync, "Supportability/WCFClient/InvocationStyle/TAP" },
         };
 
-        public WCFTestBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output,
+        public WCFLegacyTestBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output,
             WCFBindingType bindingToTest,
             IEnumerable<WCFInvocationMethod> clientInvocationsToTest,
             IEnumerable<WCFInvocationMethod> serviceInvocationsToTest,

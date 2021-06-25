@@ -15,7 +15,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.WCF.Service
 {
-    public abstract class WCFServiceTestBase : WCFTestBase
+    public abstract class WCFServiceTestBase : WCFLegacyTestBase
     {
         private static WCFInvocationMethod[] _instrumentedSvcInvocMethods = new[]
         {
