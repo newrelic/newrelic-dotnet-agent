@@ -34,7 +34,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(configuration.ShouldInstrumentNetCore(processPath, appPoolId, _X("\"dotnet\" run")));
             Assert::IsFalse(configuration.ShouldInstrumentNetCore(processPath, appPoolId, _X("app1.exe | dotnet run")));
             Assert::IsFalse(configuration.ShouldInstrumentNetCore(processPath, appPoolId, _X("dotnet Kudu.Services.Web.dll")));
-
+            Assert::IsFalse(configuration.ShouldInstrumentNetCore(processPath, appPoolId, _X("/opt/Kudu/Kudu.Services.Web")));
 
             Assert::IsTrue(configuration.ShouldInstrumentNetCore(processPath, appPoolId, _X("dotnetXexe restore")));
             Assert::IsTrue(configuration.ShouldInstrumentNetCore(processPath, appPoolId, _X("\"c:\\program files\\dotnet.exe\"run")));
