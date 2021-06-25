@@ -186,9 +186,12 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
         public Task<string> TAP_TAPGetData(int value)
         {
             return Channel.TAP_TAPGetData(value);
-
         }
 
+        public Task<string> TAP_TAPMakeExternalCalls()
+        {
+            return Channel.TAP_TAPMakeExternalCalls();
+        }
 
         public string Sync_TAPThrowException()
         {

@@ -104,6 +104,13 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
             if (eventName == null)
                 throw new NullReferenceException("Could not find a valid eventName for index " + eventIndex);
 
+            // Avoid instrumenting OPTIONS pre-flight requests
+            if ("OPTIONS".Equals(httpApplication.Context?.Request?.HttpMethod, StringComparison.OrdinalIgnoreCase))
+            {
+                agent.Logger.Log(Agent.Extensions.Logging.Level.Finest, "Skipping instrumenting incoming OPTIONS request.");
+                return Delegates.NoOp;
+            }
+
             var beforeExecutionStep = GetBeforeExecutionStep(instrumentedMethodCall.MethodCall, agent, eventName, httpApplication);
             var afterExecutionStep = GetAfterExecutionStep(instrumentedMethodCall.MethodCall, agent, eventName, httpApplication);
 

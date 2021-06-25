@@ -204,6 +204,12 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
         }
 
         [LibraryMethod]
+        public void TellWCFServerToMakeExternalCalls()
+        {
+            _ =_wcfClient.TAP_TAPMakeExternalCalls().Result;
+        }
+
+        [LibraryMethod]
         public void GetDataWithHeaders()
         {
             using (var scope = new OperationContextScope((_wcfClient as WcfClient).InnerChannel))

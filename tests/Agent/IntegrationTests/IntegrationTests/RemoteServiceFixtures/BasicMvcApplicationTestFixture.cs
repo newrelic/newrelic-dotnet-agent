@@ -173,6 +173,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             GetWithHeaders(Enumerable.Empty<KeyValuePair<string, string>>(), "HandleThisRequestInGlobalAsax", $"?statusCode={statusCode}");
         }
 
+        public void Request(HttpMethod method, string action = "Index")
+        {
+            RequestWithHeaders(method, null, Enumerable.Empty<KeyValuePair<string, string>>(), action);
+        }
 
         public string Get()
         {

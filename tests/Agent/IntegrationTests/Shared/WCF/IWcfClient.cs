@@ -64,7 +64,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
         [OperationContract(Name = "TAPGetData", Action = "http://tempuri.org/IWcfService/TAPGetData", ReplyAction = "http://tempuri.org/IWcfService/TAPGetDataResponse")]
         Task<string> TAP_TAPGetData(int value);
 
-
+        [OperationContract(Name = "TAPMakeExternalCalls", Action = "http://tempuri.org/IWcfService/TAPMakeExternalCalls", ReplyAction = "http://tempuri.org/IWcfService/TAPMakeExternalCallsResponse")]
+        Task<string> TAP_TAPMakeExternalCalls();
 
         //Sync Client, TAP Server
         [OperationContract(Name = "TAPThrowException", Action = "http://tempuri.org/IWcfService/TAPThrowException", ReplyAction = "http://tempuri.org/IWcfService/TAPThrowExceptionResponse")]

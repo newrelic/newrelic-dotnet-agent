@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System.Net;
+using System.Net.Http;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
@@ -24,6 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/IoBoundConfigureAwaitFalseAsync";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
+
         public void GetCpuBoundTasksAsync()
         {
             var address = $"http://localhost:{Port}/AsyncAwait/CpuBoundTasksAsync";
@@ -47,7 +50,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var address = $"http://localhost:{Port}/ManualAsync/NewThreadStartBlocked";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
-
 
         public void GetAsync_AwaitedAsync()
         {
@@ -85,13 +87,30 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
-
         public void ExecuteResponseTimeTestOperation(int delayDurationSeconds)
         {
             var address = $"http://localhost:{Port}/ResponseTime/CallsOtherMethod/{delayDurationSeconds}";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
+        public string Request(HttpMethod method)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var requestMessage = new HttpRequestMessage(method, $"http://localhost:{Port}/AsyncFireAndForget/Sync_Sync");
+                var result = httpClient.SendAsync(requestMessage).Result;
 
+                return result.Content.ReadAsStringAsync().Result;
+            }
+        }
+
+        public void Get404(string Path = "DoesNotExist")
+        {
+            try
+            {
+                new WebClient().DownloadString($"http://localhost:{Port}/{Path}");
+            }
+            catch (WebException) { }
+        }
     }
 }
