@@ -101,7 +101,25 @@ namespace NewRelic.Agent.Core
 
             // Resolve IConfigurationService (so that it starts listening to config changes) before loading newrelic.config
             _container.Resolve<IConfigurationService>();
-            var config = ConfigurationLoader.Initialize();
+
+            configuration config = null;
+
+            try
+            {
+                config = ConfigurationLoader.Initialize();
+            }
+            catch
+            {
+                // If the ConfigurationLoader fails, try to at least default configure the Logger to record the exception before we bail...
+
+                try
+                {
+                    LoggerBootstrapper.ConfigureLogger(new configurationLog());
+                }
+                catch { }
+
+                throw;
+            }
 
             LoggerBootstrapper.ConfigureLogger(config.LogConfig);
 
