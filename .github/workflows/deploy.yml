@@ -25,6 +25,10 @@ on:
         description: 'If "true", will run the deploy-linux job. If "false", will not.'
         required: true
         default: 'true'
+      linux-deploy-to-production:
+        description: 'If "true", will deploy Linux packages to the real apt/yum.newrelic.com. If "false", will deploy to a test repository.'
+        required: true
+        default: 'false'
 
 env:
   DOTNET_NOLOGO: true

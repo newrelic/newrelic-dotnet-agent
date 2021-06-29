@@ -1,8 +1,13 @@
 #!/bin/bash
-set -e # for initial debugging purposes, halt the build script on any error.  This should be removed before release, probably
+set -e # Exit script on any error
 
 if [ -z "$AGENT_VERSION" ]; then
     echo "AGENT_VERSION is not set"
+    exit -1
+fi
+
+if [ -z "$S3_BUCKET" ]; then
+    echo "S3_BUCKET is not set"
     exit -1
 fi
 
