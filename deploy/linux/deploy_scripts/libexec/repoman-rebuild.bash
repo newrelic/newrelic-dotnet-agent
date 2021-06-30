@@ -60,16 +60,12 @@ shift $((OPTIND - 1))
 rebuild_apt() (
   printf \\n
 
-  echo "got here 1"
-
   REPO_DIR=$(repopath "$1")
   REPO=$(basename "$REPO_DIR")
 
   echo "REPO_DIR=$REPO_DIR"
   pushd "$REPO_DIR/../.." >/dev/null
   
-  pwd
-
   config_files_root='/data/deploy_scripts/conf'
   release_conf_file="${config_files_root}/release.conf"
   generate_conf_file="${config_files_root}/generate.conf"
