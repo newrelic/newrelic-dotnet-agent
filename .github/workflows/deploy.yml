@@ -270,14 +270,18 @@ jobs:
           touch docker.env
           echo "AGENT_VERSION=$AGENT_VERSION" >> docker.env
           echo "ACTION=release" >> docker.env
-          echo "S3_BUCKET=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}" >> docker.env
-          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}" >> docker.env
+          if [ "${{ github.event.inputs.linux-deploy-to-production }}" == "true" ] ; then
+            # We're actually deploying to production (apt.newrelic.com and yum.newrelic.com)           
+            echo "S3_BUCKET=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}" >> docker.env
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.LINUX_AWS_SECRET_ACCESS_KEY }}" >> docker.env
+          else
+            # Deploy to the test bucket that mirrors apt/yum.newrelic.com
+            echo "S3_BUCKET=${{ secrets.TEST_S3_BUCKET }}" >> docker.env
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.TEST_BUCKET_AWS_ACCESS_KEY_ID }}" >> docker.env
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.TEST_BUCKET_AWS_SECRET_ACCESS_KEY }}" >> docker.env
+          fi
           echo "GPG_KEYS=/deployscripts/gpg.tar.bz2" >> docker.env
-          echo "PROD_MAIN_S3=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
-          echo "PROD_TEST_S3=${{ secrets.PROD_TEST_S3 }}" >> docker.env
-          echo "TEST_TEST_S3=${{ secrets.TEST_TEST_S3 }}" >> docker.env
-          echo "TEST_PRIV_S3=${{ secrets.TEST_PRIV_S3 }}" >> docker.env
         shell: bash
 
       - name: Build and Run Container
