@@ -1,4 +1,4 @@
-FROM debian:jessie
+FROM debian:buster-20210511-slim
 
 RUN apt-get update && apt-get install -y \
     apt-utils \
@@ -9,4 +9,5 @@ RUN apt-get update && apt-get install -y \
     dos2unix \
     bsdmainutils \
     rsync \
+    gnupg1 \
     && rm -rf /var/lib/apt/lists/*
