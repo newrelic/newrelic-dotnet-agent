@@ -366,21 +366,12 @@ namespace NewRelic.Parsing
                 return;
             }
 
-            List<IDbDataParameter> dbParams = new List<IDbDataParameter>();
-            foreach (IDbDataParameter dbParam in command.Parameters)
+            var sql = command.CommandText;
+            foreach (object parameter in command.Parameters)
             {
-                dbParams.Add(dbParam);
-            }
-            command.Parameters.Clear();
-
-            dbParams.Sort(new ParameterComparer());
-
-            string sql = command.CommandText;
-            foreach (object parameter in dbParams)
-            {
-                IDbDataParameter dbParam = (IDbDataParameter)parameter;
+                var dbParam = (IDbDataParameter)parameter;
                 //DebugParam(dbParam, sqlObfuscator);
-                DbType type = dbParam.DbType;
+                var type = dbParam.DbType;
                 object value = dbParam.Value;
                 if (quotableTypes.Contains(type.ToString()))  // the TypeCode for Strings is Int32 for some reason
                 {
@@ -392,31 +383,20 @@ namespace NewRelic.Parsing
                 }
 
                 // Parameter names can be supplied with the prefix @ or without
-                // if not supplied, add the @ to the beginning of the param name
+                // if is supplied, remove the @ to the beginning of the param name
+                // This is to deal with regex issues, see below
                 var paramName = dbParam.ParameterName;
-                if (!paramName.StartsWith(SqlParamPrefix))
+                if (paramName.StartsWith(SqlParamPrefix))
                 {
-                    paramName = SqlParamPrefix + paramName;
+                    paramName = paramName.Replace(SqlParamPrefix, ""); ;
                 }
 
-                sql = sql.Replace(paramName, value.ToString());
+                // Regex doesn't consider the @ to be a word so we have to add the @ before the word boundery match "\b"
+                // This is why we strip the @ from the param before using it in the regex.
+                sql = Regex.Replace(sql, $@"@\b{paramName}\b", value.ToString());
             }
 
             command.CommandText = sql;
-        }
-
-        /// <summary>
-        /// Sort parameters so that longer parameter names are sorted to the top.  We want to make sure
-        /// that if one parameter name contains another parameter name, the longer name is replaced first.
-        /// For example, if two params @Name and @Namespace are given, we want to replace the @Namespace 
-        /// values before the @Name values.
-        /// </summary>
-        private class ParameterComparer : IComparer<IDbDataParameter>
-        {
-            public int Compare(IDbDataParameter x, IDbDataParameter y)
-            {
-                return y.ParameterName.Length - x.ParameterName.Length;
-            }
         }
 
         private static readonly List<string> quotableTypes = new List<string>() {
