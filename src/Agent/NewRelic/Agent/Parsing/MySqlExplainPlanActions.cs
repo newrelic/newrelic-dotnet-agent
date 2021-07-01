@@ -51,9 +51,13 @@ namespace NewRelic.Parsing
             using (dbCommand)
             using (dbCommand.Connection)
             {
+                var shouldGeneratePlan = SqlParser.FixParameterizedSql(dbCommand);
+                if (!shouldGeneratePlan)
+                {
+                    return explainPlan;
+                }
 
                 dbCommand.Transaction = null;
-                SqlParser.FixParameterizedSql(dbCommand);
                 dbCommand.CommandText = "EXPLAIN " + dbCommand.CommandText;
 
 

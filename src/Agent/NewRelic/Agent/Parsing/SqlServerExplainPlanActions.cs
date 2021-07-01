@@ -26,9 +26,13 @@ namespace NewRelic.Parsing
             using (dbCommand)
             using (dbCommand.Connection)
             {
-                SetShowPlan(dbCommand.Connection, true);
+                var shouldGeneratePlan = SqlParser.FixParameterizedSql(dbCommand);
+                if (!shouldGeneratePlan)
+                {
+                    return explainPlan;
+                }
 
-                SqlParser.FixParameterizedSql(dbCommand);
+                SetShowPlan(dbCommand.Connection, true);
 
                 using (IDataReader reader = dbCommand.ExecuteReader())
                 {

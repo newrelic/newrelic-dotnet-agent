@@ -12,6 +12,10 @@ using System.Collections.Concurrent;
 using NewRelic.Agent.Extensions.Parsing;
 using System.Linq;
 using System.Data.SqlClient;
+using System.Collections.Generic;
+using Microsoft.SqlServer.Server;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 namespace ParsingTests
 {
@@ -611,7 +615,7 @@ namespace ParsingTests
             Assert.IsTrue(distinctParsers.Count() == 10);
         }
 
-        [Test]
+    [Test]
         [TestCase("SELECT * FROM faketable WHERE [name] = @onlyParam",
             "SELECT * FROM faketable WHERE [name] = 'onlyValue'",
             new string[1] { "@onlyParam=onlyValue" }
@@ -632,7 +636,7 @@ namespace ParsingTests
             "SELECT * FROM faketable",
             new string[0] { }
             )]
-        public void SqlParserTest_FixParameterizedSql_CorrectlyParsesParameters(string originalSql, string expectedSql, string[] sqlParameters)
+        public void SqlParserTest_FixParameterizedSql_CorrectlyParsesParameters_String(string originalSql, string expectedSql, string[] sqlParameters)
         {
             // prepare
             var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
@@ -643,16 +647,145 @@ namespace ParsingTests
                 foreach (var sqlParameter in sqlParameters)
                 {
                     var splitParam = sqlParameter.Split('=');
-                    sqlCommand.Parameters.Add(splitParam[0], System.Data.SqlDbType.VarChar);
+                    sqlCommand.Parameters.Add(splitParam[0], DbType.String); // this is more specific than allowing the class to infer the type.
                     sqlCommand.Parameters[splitParam[0]].Value = splitParam[1];
                 }
             }
 
             // execute
-            SqlParser.FixParameterizedSql(sqlCommand);
+            var shouldGeneratePlan = SqlParser.FixParameterizedSql(sqlCommand);
 
             // assert
             Assert.IsTrue(expectedSql.Equals(sqlCommand.CommandText), $"Expected '{expectedSql}', but got '{sqlCommand.CommandText}'");
+            Assert.IsTrue(shouldGeneratePlan, "FixParameterizedSql should return true if it is parsing a statement.");
+        }
+
+        [TestCase("SELECT * FROM faketable WHERE [name] = @onlyParam",
+            "SELECT * FROM faketable WHERE [name] = 1",
+            "@onlyParam",
+            true
+            )]
+        [TestCase("SELECT * FROM faketable WHERE [name] = @onlyParam",
+            "SELECT * FROM faketable WHERE [name] = 0",
+            "@onlyParam",
+            false
+            )]
+        public void SqlParserTest_FixParameterizedSql_CorrectlyParsesParameters_Boolean(string originalSql, string expectedSql, string sqlParameterName, bool sqlParameterValue)
+        {
+            // prepare
+            var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
+            var sqlCommand = new SqlCommand(originalSql, emptyConnection);
+
+            sqlCommand.Parameters.Add(sqlParameterName, DbType.Boolean); // this is more specific than allowing the class to infer the type.
+            sqlCommand.Parameters[sqlParameterName].Value = sqlParameterValue;
+
+            // execute
+            var shouldGeneratePlan = SqlParser.FixParameterizedSql(sqlCommand);
+
+            // assert
+            Assert.IsTrue(expectedSql.Equals(sqlCommand.CommandText), $"Expected '{expectedSql}', but got '{sqlCommand.CommandText}'");
+            Assert.IsTrue(shouldGeneratePlan, "FixParameterizedSql should return true if it is parsing a statement.");
+        }
+
+        [TestCase("SELECT * FROM faketable WHERE [name] = @onlyParam",
+            "SELECT * FROM faketable WHERE [name] = 'stuff'",
+            "@onlyParam",
+            "stuff"
+            )]
+        public void SqlParserTest_FixParameterizedSql_CorrectlyParsesParameters_Object_As_RealType(string originalSql, string expectedSql, string sqlParameterName, object sqlParameterValue)
+        {
+            // prepare
+            var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
+            var sqlCommand = new SqlCommand(originalSql, emptyConnection);
+
+            sqlCommand.Parameters.Add(sqlParameterName, DbType.Object); // this is more specific than allowing the class to infer the type.
+            sqlCommand.Parameters[sqlParameterName].Value = sqlParameterValue;
+
+            // execute
+            var shouldGeneratePlan = SqlParser.FixParameterizedSql(sqlCommand);
+
+            // assert
+            Assert.IsTrue(expectedSql.Equals(sqlCommand.CommandText), $"Expected '{expectedSql}', but got '{sqlCommand.CommandText}'");
+            Assert.IsTrue(shouldGeneratePlan, "FixParameterizedSql should return true if it is parsing a statement.");
+        }
+
+        [TestCaseSource("BinaryTestDatas")]
+        public void SqlParserTest_FixParameterizedSql_DoesNotParse_Binary(string originalSql, string expectedSql, string sqlParameterName, object sqlParameterValue)
+        {
+            // prepare
+            var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
+            var sqlCommand = new SqlCommand(originalSql, emptyConnection);
+
+            sqlCommand.Parameters.Add(sqlParameterName, DbType.Binary); // this is more specific than allowing the class to infer the type.
+            sqlCommand.Parameters[sqlParameterName].Value = sqlParameterValue;
+
+            // execute
+            var shouldGeneratePlan = SqlParser.FixParameterizedSql(sqlCommand);
+
+            // assert
+            Assert.IsTrue(expectedSql.Equals(sqlCommand.CommandText), $"Expected '{expectedSql}', but got '{sqlCommand.CommandText}'");
+            Assert.IsFalse(shouldGeneratePlan, "FixParameterizedSql should return false if it is not parsing a statement");
+        }
+
+        [TestCaseSource("CustomObjectTestDatas")]
+        public void SqlParserTest_FixParameterizedSql_DoesNotParse_CustomObject(string originalSql, string expectedSql, string sqlParameterName, object sqlParameterValue)
+        {
+            // prepare
+            var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
+            var sqlCommand = new SqlCommand(originalSql, emptyConnection);
+
+            sqlCommand.Parameters.Add(sqlParameterName, SqlDbType.Structured); // translates to DbType.Object but allows more object types
+            sqlCommand.Parameters[sqlParameterName].Value = sqlParameterValue;
+
+            // execute
+            var shouldGeneratePlan = SqlParser.FixParameterizedSql(sqlCommand);
+
+            // assert
+            Assert.IsTrue(expectedSql.Equals(sqlCommand.CommandText), $"Expected '{expectedSql}', but got '{sqlCommand.CommandText}'");
+            Assert.IsFalse(shouldGeneratePlan, "FixParameterizedSql should return false if it is not parsing a statement");
+        }
+
+        public static IEnumerable<TestCaseData> BinaryTestDatas
+        {
+            get
+            {
+                yield return new TestCaseData("SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "@onlyParam",
+                    System.Text.Encoding.UTF8.GetBytes("stuff"));
+                yield return new TestCaseData("SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "@onlyParam",
+                    BitConverter.GetBytes(42));
+                yield return new TestCaseData("SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "@onlyParam",
+                    ObjectToByteArray(new List<bool> { true, false }));
+            }
+        }
+
+        public static IEnumerable<TestCaseData> CustomObjectTestDatas
+        {
+            get
+            {
+                yield return new TestCaseData("SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "@onlyParam",
+                    new SqlDataRecord());
+                yield return new TestCaseData("SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "@onlyParam",
+                    "string");
+                yield return new TestCaseData("SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "SELECT * FROM faketable WHERE [name] = @onlyParam",
+                    "@onlyParam",
+                    DBNull.Value);
+                yield return new TestCaseData("SELECT * FROM faketable WHERE [name] = @onlyParam",
+                   "SELECT * FROM faketable WHERE [name] = @onlyParam",
+                   "@onlyParam",
+                   new List<SqlDataRecord>());
+
+            }
         }
 
         private readonly Random _rng = new Random();
@@ -666,6 +799,16 @@ namespace ParsingTests
                 buffer[i] = _chars[_rng.Next(_chars.Length)];
             }
             return new string(buffer);
+        }
+
+        private static byte[] ObjectToByteArray(object obj)
+        {
+            using (var ms = new MemoryStream())
+            {
+                var bf = new BinaryFormatter();
+                bf.Serialize(ms, obj);
+                return ms.ToArray();
+            }
         }
     }
 }
