@@ -1,8 +1,10 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Reflection;
 using System.Linq;
+using System.Threading;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Core.Logging;
 using NUnit.Framework;
@@ -127,6 +129,245 @@ namespace NewRelic.Agent.Core
             Assert.IsFalse(config.Console);
         }
 
+        [Test]
+        public static void Logging_sets_threadid_property_for_Info()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.Info("Please set my thread id.");
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_Info_Exception()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.Info(new Exception("oh no!"));
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_InfoFormat()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.InfoFormat("My message {0}", "works");
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_Debug()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.Debug("debug mah");
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_Debug_Exception()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.Debug(new Exception("oh no!"));
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_DebugFormat()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.DebugFormat("My message {0}", "works");
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_ErrorFormat()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.ErrorFormat("My message {0}", "works");
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_Error()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.Error("debug mah");
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_Error_Exception()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.Error(new Exception("oh no!"));
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_FinestFormat()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.FinestFormat("My message {0}", "works");
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_Finest()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.Finest("debug mah");
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_Finest_Exception()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.Finest(new Exception("oh no!"));
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_WarnFormat()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.WarnFormat("My message {0}", "works");
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_Warn()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.Warn("warn mah");
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_Warn_Exception()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.Warn(new Exception("oh no!"));
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_LogMessage()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.LogMessage(LogLevel.Info, "Test Message");
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public static void Logging_sets_threadid_property_for_LogException()
+        {
+            log4net.ThreadContext.Properties["threadid"] = null;
+
+            ILogConfig config = GetLogConfig("all");
+            LoggerBootstrapper.Initialize();
+            LoggerBootstrapper.ConfigureLogger(config);
+
+            Log.LogException(LogLevel.Info, new Exception("Test exception"));
+
+            Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
+        }
+
+
 
         static private ILogConfig GetLogConfig(string logLevel)
         {
@@ -175,11 +416,11 @@ namespace NewRelic.Agent.Core
 
         private static log4net.Repository.Hierarchy.Logger GetLogger()
         {
-            var hierarchy = log4net.LogManager.GetRepository(Assembly.GetCallingAssembly()) as log4net.Repository.Hierarchy.Hierarchy;
+            var hierarchy =
+                log4net.LogManager.GetRepository(Assembly.GetCallingAssembly()) as
+                    log4net.Repository.Hierarchy.Hierarchy;
             var logger = hierarchy.Root;
             return logger;
         }
-
-
     }
 }
