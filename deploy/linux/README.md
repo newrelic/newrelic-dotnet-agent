@@ -46,3 +46,8 @@ To deploy the .rpm and .deb packages for a particular release version (e.g. 6.18
 Note that the scripts in ./deploy_scripts came from the PHP agent team and have a lot of logic in them to support their particular build/test/release processes, 
 not all of which we are using.  However, since we are sharing the same public package sources with the PHP agent, anything this script does needs to be cautious 
 to avoid breaking their repos.  In particular, before we attempt to deploy a version of our agent to the main public repos, we should make sure the PHP agent team isn't also trying to deploy at the same time.
+
+Other notes:
+
+* It is safe to deploy packages that are already in the repository.  This has come up historically in the context of "something went wrong with the deploy process and the repo is in a bad state (but the version we just deployed does exist in the repo now), is it safe to just re-run the deploy with the same version of the agent?"  It is.
+* You can rollback a version without having the actual .rpm and .deb files for the version being removed in the `packages` subfolder.
