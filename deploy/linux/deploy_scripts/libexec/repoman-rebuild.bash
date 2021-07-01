@@ -63,8 +63,9 @@ rebuild_apt() (
   REPO_DIR=$(repopath "$1")
   REPO=$(basename "$REPO_DIR")
 
+  echo "REPO_DIR=$REPO_DIR"
   pushd "$REPO_DIR/../.." >/dev/null
-
+  
   config_files_root='/data/deploy_scripts/conf'
   release_conf_file="${config_files_root}/release.conf"
   generate_conf_file="${config_files_root}/generate.conf"
@@ -73,13 +74,18 @@ rebuild_apt() (
     release_conf_file="${config_files_root}/release-testing.conf"
     generate_conf_file="${config_files_root}/generate-testing.conf"
   fi
+  echo "apt-ftparchive generate -c '$release_conf_file' '$generate_conf_file'"
   apt-ftparchive generate -c "$release_conf_file" "$generate_conf_file"
+  echo "apt-ftparchive release -c '$release_conf_file' 'dists/$REPO' > 'dists/$REPO/Release'"
   apt-ftparchive release  -c "$release_conf_file" "dists/$REPO" > "dists/$REPO/Release"
 
+  echo "untarring GPG_KEYS"
   tar -xjvf "$GPG_KEYS"
 
+  echo "rm -f dists/$REPO/Release.gpg"
   rm -f "dists/$REPO/Release.gpg"
 
+  echo "gpg signing"
   gpg -abs --digest-algo SHA256 --keyring gpg-conf/pubring.gpg --secret-keyring gpg-conf/secring.gpg -o "dists/$REPO/Release.gpg" "dists/$REPO/Release"
   chmod 644 dists/"$REPO"/Contents-*.{gz,bz2}
 
@@ -114,10 +120,14 @@ fi
 for SPEC; do
   case $SPEC in
     */debian)
+      echo "rebuild_apt starting"
       rebuild_apt "$SPEC" 2>&1 | sed "${SED_ARGS[@]}" -e "/./ { s|^|[$SPEC] | }"
+      echo "rebuild_apt done"
       ;;
     */redhat)
+      echo "rebuild_yum starting"
       rebuild_yum "$SPEC" 2>&1 | sed "${SED_ARGS[@]}" -e "/./ { s|^|[$SPEC] | }"
+      echo "rebuild_yum done"
       ;;
     *)
       if [[ -n "$SPEC" ]]; then
