@@ -13,10 +13,7 @@ namespace NewRelic.Agent.Core.Logging
 
         private void EnsureThreadIdPropertyExistsInContext()
         {
-            if(log4net.ThreadContext.Properties["threadid"] == null)
-            {
-                log4net.ThreadContext.Properties["threadid"] = Thread.CurrentThread.ManagedThreadId;
-            }
+            log4net.ThreadContext.Properties["threadid"] ??= Thread.CurrentThread.ManagedThreadId;
         }
 
         public bool IsEnabledFor(Level level)
