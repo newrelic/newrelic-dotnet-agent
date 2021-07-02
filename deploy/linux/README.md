@@ -3,7 +3,7 @@
 The assets in this path are used to deploy the Linux packages (.deb and .rpm) for the .NET Core Agent to New Relic's public package sources (apt.newrelic.com and yum.newrelic.com).
 
 ## Requirements
-1. Docker, with the ability to run Linux containers
+1. Docker, with the ability to run Linux containers.  **NOTE**: do NOT run this process using the WSL2 backend, use the legacy Hyper-V backend instead.  The process will run for a very long time and then fail with errors during the APT repo metadata generation process if WSL2 is used, due to the Windows-to-Linux filesystem sharing performance problems with that backend.
 2. AWS S3 access keys with read/write access to the bucket(s) you are updating
 3. A Linux-like command line environment, such as `git-bash` on Windows, or a real Linux system or VM (e.g. WSL2)
 
