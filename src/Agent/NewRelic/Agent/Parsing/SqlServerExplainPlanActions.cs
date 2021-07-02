@@ -14,15 +14,14 @@ namespace NewRelic.Parsing
         public static ExplainPlan GenerateExplainPlan(object resources)
         {
             if (!(resources is IDbCommand))
+            {
                 return null;
-
-            var dbCommand = (IDbCommand)resources;
-            if (dbCommand.Connection.State != ConnectionState.Open)
-                dbCommand.Connection.Open();
+            }
 
             ExplainPlan explainPlan = null;
 
             //KILL THE CONNECTION NO MATTER WHAT HAPPENS DURING EXECUTION TO AVOID CONNECTION LEAKING
+            var dbCommand = (IDbCommand)resources;
             using (dbCommand)
             using (dbCommand.Connection)
             {
@@ -30,6 +29,11 @@ namespace NewRelic.Parsing
                 if (!shouldGeneratePlan)
                 {
                     return explainPlan;
+                }
+
+                if (dbCommand.Connection.State != ConnectionState.Open)
+                {
+                    dbCommand.Connection.Open();
                 }
 
                 SetShowPlan(dbCommand.Connection, true);
@@ -52,6 +56,7 @@ namespace NewRelic.Parsing
                     explainPlan.ExplainPlanDatas = explainPlanDatas;
 
                 }
+
                 SetShowPlan(dbCommand.Connection, false);
             }
 

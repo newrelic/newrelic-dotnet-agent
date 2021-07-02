@@ -379,9 +379,14 @@ namespace NewRelic.Parsing
                 // Object: Object could be almost anything so there is no easy way ToString it that just works without trying to detect all the differnt objects
                 // It is safer, less error prone, and more efficient to short-circuit on these types than to try and parse them out.
                 var type = dbParam.DbType;
-                if (type == DbType.Binary || type == DbType.Object)
+                if (type == DbType.Binary)
                 {
-                    Log.DebugFormat("Not executing explain plan since DbType is either Binary or Object."); // not getting the enum string to save resources
+                    Log.DebugFormat("Not executing explain plan since DbType is Binary.");
+                    return false;
+                }
+                else if (type == DbType.Object)
+                {
+                    Log.DebugFormat("Not executing explain plan since DbType is Object.");
                     return false;
                 }
                 
