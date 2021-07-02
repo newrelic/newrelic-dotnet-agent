@@ -719,6 +719,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         }
 
         [Test]
+        [Ignore("This test is flickering in our CI", Until = "2021-11-08 00:00:00Z")]
         public void ShuttingDownTheDataStreamingService_ShouldShutdownResponseStream()
         {
             var signalIsDone = new ManualResetEventSlim();
@@ -966,7 +967,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
 
         [Test]
-        [Ignore("This test is flickering in our CI", Until = "2020-11-01 00:00:00Z")]
+        [Ignore("This test is flickering in our CI", Until = "2021-11-08 00:00:00Z")]
         public void SupportabilityMetrics_ItemsSent_BatchSizeAndCount()
         {
             const int maxBatchSize = 17;
