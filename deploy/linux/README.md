@@ -28,7 +28,7 @@ To deploy the .rpm and .deb packages for a particular release version (e.g. 6.18
 4. Optionally, add additional non-required environment variables to the environment file:
     - `AWS_DEFAULT_REGION` (defaults to `us-west-2`)
     - `AWS_DEFAULT_OUTPUT` (defaults to `text`)
-    - `ACTION` (value can be `deploy` (add new packages to the repos) or `rollback` (remove existing packages from the repos), defaults to `deploy`)
+    - `ACTION` (value can be `release` (add new packages to the repos) or `rollback` (remove existing packages from the repos), defaults to `release`)
 
 5. Make sure all script files have the correct permissions and line endings for Linux:
 
