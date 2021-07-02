@@ -3,7 +3,7 @@
 The assets in this path are used to deploy the Linux packages (.deb and .rpm) for the .NET Core Agent to New Relic's public package sources (apt.newrelic.com and yum.newrelic.com).
 
 ## Requirements
-1. Docker, with the ability to run Linux containers
+1. Docker, with the ability to run Linux containers.  **NOTE**: do NOT run this process using the WSL2 backend, use the legacy Hyper-V backend instead.  The process will run for a very long time and then fail with errors during the APT repo metadata generation process if WSL2 is used, due to the Windows-to-Linux filesystem sharing performance problems with that backend.
 2. AWS S3 access keys with read/write access to the bucket(s) you are updating
 3. A Linux-like command line environment, such as `git-bash` on Windows, or a real Linux system or VM (e.g. WSL2)
 
@@ -28,7 +28,7 @@ To deploy the .rpm and .deb packages for a particular release version (e.g. 6.18
 4. Optionally, add additional non-required environment variables to the environment file:
     - `AWS_DEFAULT_REGION` (defaults to `us-west-2`)
     - `AWS_DEFAULT_OUTPUT` (defaults to `text`)
-    - `ACTION` (value can be `deploy` (add new packages to the repos) or `rollback` (remove existing packages from the repos), defaults to `deploy`)
+    - `ACTION` (value can be `release` (add new packages to the repos) or `rollback` (remove existing packages from the repos), defaults to `release`)
 
 5. Make sure all script files have the correct permissions and line endings for Linux:
 
@@ -46,3 +46,8 @@ To deploy the .rpm and .deb packages for a particular release version (e.g. 6.18
 Note that the scripts in ./deploy_scripts came from the PHP agent team and have a lot of logic in them to support their particular build/test/release processes, 
 not all of which we are using.  However, since we are sharing the same public package sources with the PHP agent, anything this script does needs to be cautious 
 to avoid breaking their repos.  In particular, before we attempt to deploy a version of our agent to the main public repos, we should make sure the PHP agent team isn't also trying to deploy at the same time.
+
+Other notes:
+
+* It is safe to deploy packages that are already in the repository.  This has come up historically in the context of "something went wrong with the deploy process and the repo is in a bad state (but the version we just deployed does exist in the repo now), is it safe to just re-run the deploy with the same version of the agent?"  It is.
+* You can rollback a version without having the actual .rpm and .deb files for the version being removed in the `packages` subfolder.

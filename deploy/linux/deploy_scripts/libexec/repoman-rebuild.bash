@@ -86,7 +86,9 @@ rebuild_apt() (
   rm -f "dists/$REPO/Release.gpg"
 
   echo "gpg signing"
-  gpg -abs --digest-algo SHA256 --keyring gpg-conf/pubring.gpg --secret-keyring gpg-conf/secring.gpg -o "dists/$REPO/Release.gpg" "dists/$REPO/Release"
+  # We're using gpg1 (from the 'gnupg1' package) because newer versions of gpg (2.x+) do not support a separate secret key ring, and
+  # the keys we use to sign the repo currently come as separate public and secret ring files
+  gpg1 -abs --digest-algo SHA256 --keyring gpg-conf/pubring.gpg --secret-keyring gpg-conf/secring.gpg -o "dists/$REPO/Release.gpg" "dists/$REPO/Release"
   chmod 644 dists/"$REPO"/Contents-*.{gz,bz2}
 
   popd >/dev/null
