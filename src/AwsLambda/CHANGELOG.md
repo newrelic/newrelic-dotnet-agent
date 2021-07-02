@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 ### Fixes
+* Fixes in `LambdaWrapper` when using Tasks and async methods (`.Result` is no longer called and tasks are awaited correctly).
 
 
 ## [1.2.1] - 2021-03-09

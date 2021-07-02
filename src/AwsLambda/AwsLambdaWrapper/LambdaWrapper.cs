@@ -99,6 +99,25 @@ namespace NewRelic.OpenTracing.AmazonLambda
             return output;
         }
 
+        public async Task<TOut> LambdaWrapper<TInput, TOut>(Func<TInput, ILambdaContext, Task<TOut>> handler, TInput input, ILambdaContext context, ISpanContext? distributedTraceContext = null)
+        {
+            var scope = BeforeWrappedMethod(handler.Method.Name, context, distributedTraceContext, input);
+            TOut? output;
+            try
+            {
+                output = await handler(input, context).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                AfterWrappedMethod(scope: scope, handlerException: ex);
+                throw;
+            }
+
+            AfterWrappedMethod(scope: scope, output: output);
+            return output;
+        }
+
+
         public TOut LambdaWrapper<TOut>(Func<ILambdaContext, TOut> handler, ILambdaContext context, ISpanContext distributedTraceContext = null)
         {
             var scope = BeforeWrappedMethod(handler.Method.Name, context, distributedTraceContext);
@@ -121,6 +140,24 @@ namespace NewRelic.OpenTracing.AmazonLambda
             return output;
         }
 
+        public async Task<TOut> LambdaWrapper<TOut>(Func<ILambdaContext, Task<TOut>> handler, ILambdaContext context, ISpanContext? distributedTraceContext = null)
+        {
+            var scope = BeforeWrappedMethod(handler.Method.Name, context, distributedTraceContext);
+            TOut? output;
+            try
+            {
+                output = await handler(context).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                AfterWrappedMethod(scope: scope, handlerException: ex);
+                throw;
+            }
+
+            AfterWrappedMethod(scope: scope, output: output);
+            return output;
+        }
+
         public void LambdaWrapper<TInput>(Action<TInput, ILambdaContext> handler, TInput input, ILambdaContext context, ISpanContext distributedTraceContext = null)
         {
             var scope = BeforeWrappedMethod(handler.Method.Name, context, distributedTraceContext, input);
@@ -128,6 +165,23 @@ namespace NewRelic.OpenTracing.AmazonLambda
             try
             {
                 handler(input, context);
+            }
+            catch (Exception ex)
+            {
+                AfterWrappedMethod(scope: scope, handlerException: ex);
+                throw;
+            }
+
+            AfterWrappedMethod(scope: scope);
+        }
+
+        public async Task LambdaWrapper<TInput>(Func<TInput, ILambdaContext, Task> handler, TInput input, ILambdaContext context, ISpanContext? distributedTraceContext = null)
+        {
+            var scope = BeforeWrappedMethod(handler.Method.Name, context, distributedTraceContext, input);
+
+            try
+            {
+                await handler(input, context).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -155,6 +209,22 @@ namespace NewRelic.OpenTracing.AmazonLambda
             AfterWrappedMethod(scope: scope);
         }
 
+        public async Task LambdaWrapper(Func<ILambdaContext, Task> handler, ILambdaContext context, ISpanContext? distributedTraceContext = null)
+        {
+            var scope = BeforeWrappedMethod(handler.Method.Name, context, distributedTraceContext);
+
+            try
+            {
+                await handler(context).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                AfterWrappedMethod(scope: scope, handlerException: ex);
+                throw;
+            }
+
+            AfterWrappedMethod(scope: scope);
+        }
         #endregion
 
         private IScope BeforeWrappedMethod(string name, ILambdaContext lambdaContext, ISpanContext distributedTraceContext, object input = null)
