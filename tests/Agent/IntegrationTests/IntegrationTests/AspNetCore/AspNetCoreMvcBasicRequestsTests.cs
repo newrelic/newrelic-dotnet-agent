@@ -72,7 +72,6 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
 
             Assert.NotNull(transactionSample);
             Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample);
-            Assertions.TransactionTraceHasAttributes(new Dictionary<string, string>{ {"request.method", "GET" } }, TransactionTraceAttributeType.Agent, transactionSample);
 
             var getTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/Home/Index");
 
