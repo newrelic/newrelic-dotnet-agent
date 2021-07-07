@@ -12,8 +12,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public static class RandomPortGenerator
     {
-        private const int minPortID = 50000;
-        private const int maxPortID = 60000;
+        private const int minPortID = 20000;
+        private const int maxPortID = 50000;
         private const int portPoolSize = maxPortID - minPortID;
         private const int maxAttempts = 200;
 
