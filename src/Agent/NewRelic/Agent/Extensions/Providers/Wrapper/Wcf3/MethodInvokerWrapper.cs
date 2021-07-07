@@ -334,7 +334,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                 {
                     var headersToCapture = agent.Configuration.AllowAllRequestHeaders ? httpRequestMessage.Headers.AllKeys : Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders;
 
-                    transaction.SetRequestHeaders(httpRequestMessage.Headers, httpRequestMessage.Headers.AllKeys, GetHeaderValueFromWebHeaderCollection);
+                    transaction.SetRequestHeaders(httpRequestMessage.Headers, headersToCapture, GetHeaderValueFromWebHeaderCollection);
                 }
             }
         }
