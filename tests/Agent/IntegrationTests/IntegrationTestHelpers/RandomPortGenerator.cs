@@ -53,7 +53,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 // we got the port, so can return (implicitly closes listener using finally block)
                 return true;
             }
-            catch(Exception)
+            catch (Exception)
             {
                 // we were unable to get the port
                 return false;
