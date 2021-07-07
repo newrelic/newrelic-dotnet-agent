@@ -464,7 +464,7 @@ jobs:
       xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
       integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net461/NewRelic.Agent.IntegrationTests.dll
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
-      enhanced_logging: false
+      enhanced_logging: true
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
       
     steps:
@@ -517,7 +517,8 @@ jobs:
         run: |
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "List ports in use"
-            netstat -no  
+            netstat -no
+            netsh interface ipv4 show excludedportrange protocol=tcp
           }
 
           Write-Host "Run tests"
