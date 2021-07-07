@@ -168,6 +168,10 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                 CaptureHttpRequestHeaders(agent, transaction);
             }
 
+            var requestMethod = System.ServiceModel.Web.WebOperationContext.Current?.IncomingRequest?.Method;
+            if (!string.IsNullOrEmpty(requestMethod))
+                transaction.SetRequestMethod(requestMethod);
+
             var requestPath = uri?.AbsolutePath;
             if (!string.IsNullOrEmpty(requestPath))
             {
