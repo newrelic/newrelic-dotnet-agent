@@ -104,9 +104,9 @@ namespace NewRelic.Agent.Core.Transactions
         public bool IsSynthetics => !string.IsNullOrEmpty(_syntheticsResourceId) && !string.IsNullOrEmpty(_syntheticsJobId) &&
                                      !string.IsNullOrEmpty(_syntheticsMonitorId);
 
-        public void SetRequestMethod(string requestMehtod)
+        public void SetRequestMethod(string requestMethod)
         {
-            _requestMethod = requestMehtod;
+            _requestMethod = requestMethod;
         }
 
         public void SetUri(string uri)
