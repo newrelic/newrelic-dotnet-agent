@@ -179,6 +179,8 @@ namespace NewRelic.Agent.Core.Transactions
 
         }
 
+        public void SetRequestMethod(string requestMethod) { }
+
         public void SetUri(string uri)
         {
 

@@ -184,6 +184,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         public void SetUserAndAgentAttributes(IAttributeValueCollection attribValues, ITransactionAttributeMetadata metadata)
         {
+            _attribDefs.RequestMethod.TrySetValue(attribValues, metadata.RequestMethod);
             _attribDefs.RequestUri.TrySetValue(attribValues, metadata.Uri ?? "/Unknown");
 
             // original_url should only be generated if it is distinct from the current URI

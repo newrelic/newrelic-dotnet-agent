@@ -775,6 +775,14 @@ namespace NewRelic.Agent.Core.Transactions
             }
         }
 
+        public void SetRequestMethod(string requestMethod)
+        {
+            if (requestMethod == null)
+                throw new ArgumentNullException(nameof(requestMethod));
+
+            TransactionMetadata.SetRequestMethod(requestMethod);
+        }
+
         public void SetUri(string uri)
         {
             if (uri == null)
