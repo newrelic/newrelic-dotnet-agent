@@ -237,10 +237,10 @@ jobs:
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
         shell: powershell
 
-      - name: Archive _build Artifacts
+      - name: Archive msi _build Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
           path: ${{ github.workspace }}\src\_build
           if-no-files-found: error
 
@@ -689,10 +689,10 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Download _build Artifacts
+      - name: Download msi _build Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download Agent Home Folders
@@ -732,11 +732,11 @@ jobs:
           docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
         shell: bash
       
-      - name: Archive Package Artifacts
+      - name: Archive RPM Package Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: build-folder-artifacts
-          path: ${{ github.workspace }}/src/_build
+          name: rpm-build-artifacts
+          path: ${{ github.workspace }}/src/_build/CoreArtifacts
           if-no-files-found: error
 
   create-package-deb:
@@ -757,10 +757,10 @@ jobs:
           name: homefolders
           path: src/Agent
 
-      - name: Download _build Artifacts
+      - name: Download msi _build Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download agent_version.txt
@@ -769,7 +769,7 @@ jobs:
           name: agent-version
           path: ${{ github.workspace }}
 
-      - name: Build debian package
+      - name: Build Debian Package
         run: |
           sudo apt install dos2unix -y
           dos2unix ${{ github.workspace }}/agent_version.txt
@@ -780,11 +780,11 @@ jobs:
           docker-compose run -e AGENT_VERSION=$agentVersion build_deb
         shell: bash
         
-      - name: Archive Package Artifacts
+      - name: Archive Debian Package Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: build-folder-artifacts
-          path: ${{ github.workspace }}/src/_build
+          name: debian-build-artifacts
+          path: ${{ github.workspace }}/src/_build/CoreArtifacts
           if-no-files-found: error
 
   run-artifactbuilder:
@@ -805,11 +805,23 @@ jobs:
           name: homefolders
           path: src/Agent 
       
-      - name: Download _build Artifacts
+      - name: Download msi _build Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
           path: src/_build
+
+      - name: Download Debian _build Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: debian-build-artifacts
+          path: src/_build/CoreArtifacts
+
+      - name: Download RPM _build Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: rpm-build-artifacts
+          path: src/_build/CoreArtifacts
 
       - name: Download NewRelic.NuGetHelper
         uses: actions/download-artifact@v2
