@@ -237,10 +237,10 @@ jobs:
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
         shell: powershell
 
-      - name: Archive _build Artifacts
+      - name: Archive msi _build Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
           path: ${{ github.workspace }}\src\_build
           if-no-files-found: error
 
@@ -689,10 +689,10 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Download _build Artifacts
+      - name: Download msi _build Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download Agent Home Folders
@@ -732,10 +732,10 @@ jobs:
           docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
         shell: bash
       
-      - name: Archive Package Artifacts
+      - name: Archive rpm Package Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: rpm-build-folder-artifacts
           path: ${{ github.workspace }}/src/_build
           if-no-files-found: error
 
@@ -757,10 +757,10 @@ jobs:
           name: homefolders
           path: src/Agent
 
-      - name: Download _build Artifacts
+      - name: Download msi _build Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download agent_version.txt
@@ -780,10 +780,10 @@ jobs:
           docker-compose run -e AGENT_VERSION=$agentVersion build_deb
         shell: bash
         
-      - name: Archive Package Artifacts
+      - name: Archive deb Package Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: deb-build-folder-artifacts
           path: ${{ github.workspace }}/src/_build
           if-no-files-found: error
 
@@ -805,10 +805,22 @@ jobs:
           name: homefolders
           path: src/Agent 
       
-      - name: Download _build Artifacts
+      - name: Download msi _build Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
+          path: src/_build
+
+      - name: Download deb _build Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: deb-build-folder-artifacts
+          path: src/_build
+
+      - name: Download rpm _build Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: rpm-build-folder-artifacts
           path: src/_build
 
       - name: Download NewRelic.NuGetHelper
