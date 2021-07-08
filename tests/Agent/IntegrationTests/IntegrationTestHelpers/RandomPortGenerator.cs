@@ -46,19 +46,27 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         //but before the test app uses the assigned port.
         private static bool IsPortAvailable(int potentialPort)
         {
-
-            using (var tcpClient = new TcpClient())
+            var tcpListener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
+            try
+            {
+                tcpListener.Start();
+                // we got the port, so can return (implicitly closes listener using finally block)
+                return true;
+            }
+            catch (Exception)
+            {
+                // we were unable to get the port
+                return false;
+            }
+            finally
             {
                 try
                 {
-                    tcpClient.Connect("localhost", potentialPort);
-                    tcpClient.Close();
-                    return false;
+                    tcpListener.Stop();
                 }
                 catch (Exception)
                 {
-                    //There was nothing to connect to so the port is available.
-                    return true;
+                    // Ignore errors stopping the listener
                 }
             }
         }
