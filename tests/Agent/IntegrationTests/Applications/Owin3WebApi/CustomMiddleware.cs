@@ -16,6 +16,7 @@ namespace Owin3WebApi
         }
 
         [Trace]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public override async Task Invoke(IOwinContext context)
         {
             await MiddlewareMethodAsync();
