@@ -19,6 +19,7 @@ namespace AspNetCoreMvcFrameworkAsyncApplication
         }
 
         [Trace]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public async Task Invoke(HttpContext context)
         {
             await MiddlewareMethodAsync();
