@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.Transactions
         public ISegment StartCustomSegment(MethodCall methodCall, string segmentName)
         {
 #if DEBUG
-			Log.Finest("Skipping StartCustomSegment outside of a transaction");
+            Log.Finest("Skipping StartCustomSegment outside of a transaction");
 #endif
             return Segment.NoOpSegment;
         }
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.Transactions
         public ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, ConnectionInfo connectionInfo, string commandText, IDictionary<string, IConvertible> queryParameters = null, bool isLeaf = false)
         {
 #if DEBUG
-			Log.Finest("Skipping StartDatastoreSegment outside of a transaction");
+            Log.Finest("Skipping StartDatastoreSegment outside of a transaction");
 #endif
             return Segment.NoOpSegment;
         }
@@ -52,7 +52,7 @@ namespace NewRelic.Agent.Core.Transactions
         public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method, bool isLeaf = false)
         {
 #if DEBUG
-			Log.Finest("Skipping StartExternalRequestSegment outside of a transaction");
+            Log.Finest("Skipping StartExternalRequestSegment outside of a transaction");
 #endif
             return Segment.NoOpSegment;
         }
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.Transactions
         public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method, Action<IExternalSegmentData> segmentDataDelegate)
         {
 #if DEBUG
-			Log.Finest("Skipping StartExternalRequestSegment outside of a transaction");
+            Log.Finest("Skipping StartExternalRequestSegment outside of a transaction");
 #endif
             segmentDataDelegate?.Invoke(_noOpExternalSegmentData);
 
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Transactions
         public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName)
         {
 #if DEBUG
-			Log.Finest("Skipping StartMessageBrokerSegment outside of a transaction");
+            Log.Finest("Skipping StartMessageBrokerSegment outside of a transaction");
 #endif
             return Segment.NoOpSegment;
         }
@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core.Transactions
         public ISegment StartMethodSegment(MethodCall methodCall, string typeName, string methodName, bool isLeaf = false)
         {
 #if DEBUG
-			Log.Finest("Skipping StartMethodSegment outside of a transaction");
+            Log.Finest("Skipping StartMethodSegment outside of a transaction");
 #endif
             return Segment.NoOpSegment;
         }
@@ -86,7 +86,7 @@ namespace NewRelic.Agent.Core.Transactions
         public ISegment StartTransactionSegment(MethodCall methodCall, string segmentDisplayName)
         {
 #if DEBUG
-			Log.Finest("Skipping StartTransactionSegment outside of a transaction");
+            Log.Finest("Skipping StartTransactionSegment outside of a transaction");
 #endif
             return Segment.NoOpSegment;
         }
@@ -179,7 +179,10 @@ namespace NewRelic.Agent.Core.Transactions
 
         }
 
-        public void SetRequestMethod(string requestMethod) { }
+        public void SetRequestMethod(string requestMethod)
+        {
+
+        }
 
         public void SetUri(string uri)
         {
