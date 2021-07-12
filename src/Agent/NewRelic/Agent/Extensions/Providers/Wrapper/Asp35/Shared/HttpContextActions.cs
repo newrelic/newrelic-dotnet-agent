@@ -35,6 +35,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
         {
             SetFilterHack(httpContext);
             StoreQueueTime(agent, httpContext);
+            StoreRequestMethod(agent, httpContext);
             StoreUrls(agent, httpContext);
             NameTransaction(agent, httpContext);
             ProcessHeaders(agent, httpContext);
@@ -79,6 +80,11 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
             var workerRequestStartTime = GetStartTime(workerRequest);
             var inQueueTimeSpan = now - workerRequestStartTime;
             agent.CurrentTransaction.SetQueueTime(inQueueTimeSpan);
+        }
+
+        private static void StoreRequestMethod(IAgent agent, HttpContext httpContext)
+        {
+            agent.CurrentTransaction.SetRequestMethod(httpContext.Request.HttpMethod);
         }
 
         private static void StoreUrls(IAgent agent, HttpContext httpContext)

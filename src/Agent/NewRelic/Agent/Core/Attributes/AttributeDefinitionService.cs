@@ -83,6 +83,7 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<TimeSpan?, double> QueueDuration { get; }
         AttributeDefinition<TimeSpan?, string> QueueWaitTime { get; }
         AttributeDefinition<string, string> RequestReferrer { get; }
+        AttributeDefinition<string, string> RequestMethod { get; }
         AttributeDefinition<string, string> RequestUri { get; }
         AttributeDefinition<int?, string> ResponseStatus { get; }
         AttributeDefinition<bool, bool> Sampled { get; }
@@ -308,6 +309,16 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.TransactionTrace)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
                 .AppliesTo(AttributeDestinations.JavaScriptAgent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _requestMethod;
+        public AttributeDefinition<string, string> RequestMethod => _requestMethod ?? (_requestMethod =
+            AttributeDefinitionBuilder.CreateString("request.method", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.TransactionEvent)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .AppliesTo(AttributeDestinations.ErrorEvent)
+                .AppliesTo(AttributeDestinations.ErrorTrace)
+                .AppliesTo(AttributeDestinations.TransactionTrace)
                 .Build(_attribFilter));
 
         private AttributeDefinition<string, string> _requestUri;

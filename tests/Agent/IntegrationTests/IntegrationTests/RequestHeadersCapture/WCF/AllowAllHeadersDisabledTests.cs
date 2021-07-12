@@ -28,6 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 
         protected virtual IDictionary<string, string> ExpectedHeaders => new Dictionary<string, string>
         {
+            { "request.method", "POST" },
             { "request.headers.referer", "http://example.com/" },
             { "request.headers.accept", "text/html" },
             { "request.headers.content-length", GetExpectedContentLength() },
