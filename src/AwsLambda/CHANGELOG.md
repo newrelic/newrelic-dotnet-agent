@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 ### Fixes
+* Fixes `LambdaWrapper` when using Tasks and async methods (`.Result` is no longer called and tasks are awaited correctly). ([#625](https://github.com/newrelic/newrelic-dotnet-agent/pull/625))
+	* Thank you [@williamdenton](https://github.com/williamdenton) for submitting this fix!
 
 
 ## [1.2.1] - 2021-03-09

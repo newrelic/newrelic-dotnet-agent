@@ -122,6 +122,31 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             Assert.That(span.Tags.ContainsKey("newrelic"), Is.False);
         }
 
+        [Test]
+        public async Task LambdaWrapper_ForAPIGatewayProxyWithInputAsync()
+        {
+            var request = new APIGatewayProxyRequest
+            {
+                HttpMethod = "POST",
+                Path = "/test/path",
+                Headers = _singleValueHeaders
+            };
+
+            var context = new TestLambdaContext
+            {
+                AwsRequestId = "testId",
+                InvokedFunctionArn = TestArn
+            };
+
+            var wrappedHandler = await new TracingRequestHandler().LambdaWrapper(APIGatewayProxyFunctionHandlerWithInputAsync, request, context);
+            var span = _tracer.FinishedSpans()[0];
+
+            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+            Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+            Assert.That(span.Tags.ContainsKey("newrelic"), Is.False);
+        }
+
         #endregion
 
         #region ApplicationLoadBalancer
@@ -136,6 +161,23 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             };
 
             var wrappedHandler = new TracingRequestHandler().LambdaWrapper(ApplicationLoadBalancerFunctionHandlerWithoutInput, context);
+            var span = _tracer.FinishedSpans()[0];
+
+            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+            Assert.That((string)span.Tags["response.status"], Is.EqualTo("200"));
+        }
+
+        [Test]
+        public async Task LambdaWrapper_ForApplicationLoadBalancerWithoutInputAsync()
+        {
+            var context = new TestLambdaContext
+            {
+                AwsRequestId = "testId",
+                InvokedFunctionArn = TestArn
+            };
+
+            var wrappedHandler = await new TracingRequestHandler().LambdaWrapper(ApplicationLoadBalancerFunctionHandlerWithoutInputAsync, context);
             var span = _tracer.FinishedSpans()[0];
 
             Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
@@ -213,6 +255,23 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         }
 
         [Test]
+        public async Task LambdaWrapper_ForVoidWithoutInputAsync()
+        {
+            var context = new TestLambdaContext
+            {
+                AwsRequestId = "testId",
+                InvokedFunctionArn = TestArn
+            };
+
+            await new TracingRequestHandler().LambdaWrapper(VoidFunctionHandlerWithoutInputAsync, context);
+            var span = _tracer.FinishedSpans()[0];
+
+            Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+            Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+            Assert.That(span.Tags.ContainsKey("response.status"), Is.False);
+        }
+
+        [Test]
         public void LambdaWrapper_ForVoidWithInput()
         {
             var context = new TestLambdaContext
@@ -257,6 +316,36 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
                 Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo("my exception"));
                 Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
                 Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.ThrowException(ILambdaContext context)"));
+                return;
+            }
+            Assert.Fail("Did not catch exception as expected.");
+        }
+
+        [Test]
+        public async Task LambdaWrapper_ErrorHandlingAsync()
+        {
+            var context = new TestLambdaContext
+            {
+                AwsRequestId = "testId",
+                InvokedFunctionArn = TestArn
+            };
+
+            try
+            {
+                await new TracingRequestHandler().LambdaWrapper(ThrowExceptionAsync, context);
+            }
+            catch
+            {
+                var span = _tracer.FinishedSpans()[0];
+                Assert.That((string)span.Tags["aws.requestId"], Is.EqualTo("testId"));
+                Assert.That((string)span.Tags["aws.arn"], Is.EqualTo(TestArn));
+
+                Assert.That(span.LogEntries.Count, Is.EqualTo(1));
+                Assert.That((string)span.LogEntries[0].Fields["event"], Is.EqualTo("error"));
+                Assert.That(span.LogEntries[0].Fields["error.object"], Is.TypeOf(typeof(System.Exception)));
+                Assert.That((string)span.LogEntries[0].Fields["message"], Is.EqualTo("my exception"));
+                Assert.That((string)span.LogEntries[0].Fields["error.kind"], Is.EqualTo("Exception"));
+                Assert.IsTrue(((string)span.LogEntries[0].Fields["stack"]).Contains("NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests.LambdaWrapperTests.ThrowExceptionAsync(ILambdaContext context)"));
                 return;
             }
             Assert.Fail("Did not catch exception as expected.");
@@ -604,12 +693,30 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             };
         }
 
+        private Task<APIGatewayProxyResponse> APIGatewayProxyFunctionHandlerWithInputAsync(APIGatewayProxyRequest input, ILambdaContext context)
+        {
+            return Task.FromResult(new APIGatewayProxyResponse
+            {
+                StatusCode = (int)HttpStatusCode.OK,
+                Headers = _singleValueHeaders
+            });
+        }
+
         private ApplicationLoadBalancerResponse ApplicationLoadBalancerFunctionHandlerWithoutInput(ILambdaContext context)
         {
             return new ApplicationLoadBalancerResponse
             {
                 StatusCode = (int)HttpStatusCode.OK,
             };
+        }
+
+
+        private Task<ApplicationLoadBalancerResponse> ApplicationLoadBalancerFunctionHandlerWithoutInputAsync(ILambdaContext context)
+        {
+            return Task.FromResult(new ApplicationLoadBalancerResponse
+            {
+                StatusCode = (int)HttpStatusCode.OK,
+            });
         }
 
         private ApplicationLoadBalancerResponse ApplicationLoadBalancerFunctionHandlerWithInput(ApplicationLoadBalancerRequest input, ILambdaContext context)
@@ -634,6 +741,11 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
             // Do Nothing
         }
 
+        private async Task VoidFunctionHandlerWithoutInputAsync(ILambdaContext context)
+        {
+            await Task.CompletedTask;
+        }
+
         private void VoidFunctionHandlerWithInput(string input, ILambdaContext context)
         {
             // Do Nothing
@@ -641,6 +753,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
 
         private void ThrowException(ILambdaContext context)
         {
+            throw new System.Exception("my exception");
+        }
+
+        private async Task ThrowExceptionAsync(ILambdaContext context)
+        {
+            await Task.CompletedTask;
             throw new System.Exception("my exception");
         }
 
