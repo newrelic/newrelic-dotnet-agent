@@ -14,6 +14,7 @@ namespace NewRelic.Agent.Configuration
         bool AgentEnabled { get; }
         string AgentLicenseKey { get; }
         IEnumerable<string> ApplicationNames { get; }
+        string ApplicationNamesSource { get; }
         bool AutoStartAgent { get; }
         string BrowserMonitoringApplicationId { get; }
         bool BrowserMonitoringAutoInstrument { get; }

@@ -216,12 +216,17 @@ namespace NewRelic.Agent.Core.Configuration
         private IEnumerable<string> _applicationNames;
         public virtual IEnumerable<string> ApplicationNames { get { return _applicationNames ?? (_applicationNames = GetApplicationNames()); } }
 
+        private string _applicationNamesSource;
+        public virtual string ApplicationNamesSource => _applicationNamesSource;
+
         private IEnumerable<string> GetApplicationNames()
         {
             var runtimeAppNames = _runTimeConfiguration.ApplicationNames.ToList();
             if (runtimeAppNames.Any())
             {
                 Log.Info("Application name from SetApplicationName API.");
+                _applicationNamesSource = "API";
+
                 return runtimeAppNames;
             }
 
@@ -229,6 +234,8 @@ namespace NewRelic.Agent.Core.Configuration
             if (appName != null)
             {
                 Log.Info("Application name from web.config or app.config.");
+                _applicationNamesSource = "Application Config";
+
                 return appName.Split(StringSeparators.Comma);
             }
 
@@ -236,6 +243,8 @@ namespace NewRelic.Agent.Core.Configuration
             if (appName != null)
             {
                 Log.Info("Application name from IISEXPRESS_SITENAME Environment Variable.");
+                _applicationNamesSource = "Environment Variable (IISEXPRESS_SITENAME)";
+
                 return appName.Split(StringSeparators.Comma);
             }
 
@@ -243,6 +252,8 @@ namespace NewRelic.Agent.Core.Configuration
             if (appName != null)
             {
                 Log.Info("Application name from NEW_RELIC_APP_NAME Environment Variable.");
+                _applicationNamesSource = "Environment Variable (NEW_RELIC_APP_NAME)";
+
                 return appName.Split(StringSeparators.Comma);
             }
 
@@ -250,12 +261,16 @@ namespace NewRelic.Agent.Core.Configuration
             if (appName != null)
             {
                 Log.Info("Application name from RoleName Environment Variable.");
+                _applicationNamesSource = "Environment Variable (RoleName)";
+
                 return appName.Split(StringSeparators.Comma);
             }
 
             if (_localConfiguration.application.name.Count > 0)
             {
                 Log.Info("Application name from newrelic.config.");
+                _applicationNamesSource = "NewRelic Config";
+
                 return _localConfiguration.application.name;
             }
 
@@ -263,12 +278,16 @@ namespace NewRelic.Agent.Core.Configuration
             if (!string.IsNullOrWhiteSpace(appName))
             {
                 Log.Info("Application name from Application Pool name.");
+                _applicationNamesSource = "Application Pool";
+
                 return appName.Split(StringSeparators.Comma);
             }
 
             if (_httpRuntimeStatic.AppDomainAppVirtualPath == null)
             {
                 Log.Info("Application name from process name.");
+                _applicationNamesSource = "Process Name";
+
                 return new List<string> { _processStatic.GetCurrentProcess().ProcessName };
             }
 

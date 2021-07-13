@@ -16,6 +16,7 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
+using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core
 {
@@ -29,7 +30,7 @@ namespace NewRelic.Agent.Core
         public ulong? TotalPhysicalMemory { get; }
         public string AppDomainAppPath { get; }
 
-        public Environment(ISystemInfo systemInfo, IProcessStatic processStatic)
+        public Environment(ISystemInfo systemInfo, IProcessStatic processStatic, IConfigurationService configurationService)
         {
             _processStatic = processStatic;
 
@@ -59,6 +60,9 @@ namespace NewRelic.Agent.Core
 
                 AddVariable("GCSettings.IsServerGC", () => System.Runtime.GCSettings.IsServerGC);
                 AddVariable("AppDomain.FriendlyName", () => AppDomain.CurrentDomain.FriendlyName);
+
+                if (configurationService?.Configuration?.ApplicationNames?.Any() ?? false)
+                    AddVariable("Application Name Source", () => configurationService.Configuration.ApplicationNamesSource);
 
 #if NET45
 				// This stuff is only available to web apps.
