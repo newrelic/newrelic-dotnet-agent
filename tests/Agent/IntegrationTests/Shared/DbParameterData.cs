@@ -83,10 +83,11 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         public static DbParameter[] OracleParameters =
         {
             new DbParameter("number", "typeNumber", (byte) 123),
-            new DbParameter("binary_integer", "typeBinaryInteger", new byte[]{ 0, 1 }) { ExpectedValue = new byte[]{ 0, 1 }.ToString() },
+            new DbParameter("binary_integer", "typeBinaryInteger", (decimal) 123.4567),
+            new DbParameter("raw", "typeRaw", new byte[]{ 0, 1 }) { ExpectedValue = new byte[]{ 0, 1 }.ToString() },
             new DbParameter("date", "typeDate", new DateTime(1988, 3, 4)) { ExpectedValue = new DateTime(1988, 3, 4).ToString(CultureInfo.InvariantCulture) },
-            new DbParameter("double", "typeDecimal", (decimal) 123.4567),
-            new DbParameter("double", "typeDouble", (double) 123.4567),
+            new DbParameter("decimal", "typeDecimal", (decimal) 123.4567),
+            new DbParameter("double precision", "typeDouble", (double) 123.4567),
             new DbParameter("number", "typeSmallInt", (short) 123),
             new DbParameter("number", "typeInt", (int) 123),
             new DbParameter("long", "typeLong", (long) 123),
