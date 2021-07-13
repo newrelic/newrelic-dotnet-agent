@@ -14,7 +14,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         private static string _mySqlPort;
         private static string _mySqlDbName;
 
-        // example: "Network Address=1.2.3.4;Port=4444;Initial Catalog=CatalogName;Persist Security Info=no;User Name=root;Password=password"
+        // example: "Server=1.2.3.4;Port=4444;Initial Catalog=CatalogName;Persist Security Info=no;User Name=root;Password=password"
         public static string MySqlConnectionString
         {
             get
@@ -45,7 +45,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                     try
                     {
                         var builder = new DbConnectionStringBuilder { ConnectionString = MySqlConnectionString };
-                        _mySqlServer = builder["Network Address"].ToString();
+                        _mySqlServer = builder["Server"].ToString();
                     }
                     catch (Exception ex)
                     {
