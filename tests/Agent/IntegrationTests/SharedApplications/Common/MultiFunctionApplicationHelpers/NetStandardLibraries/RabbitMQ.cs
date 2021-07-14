@@ -253,7 +253,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
                 }
                 else
                 {
-                    throw new Exception("Did not find expected user header value in recieved message.");
+                    throw new Exception("Did not find expected user header value in received message.");
                 }
             }
         }
