@@ -51,7 +51,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                     transaction.End();
                 });
 
-            IEnumerable<string> GetHeaderValue(Dictionary<string, object> carrier, string key)
+            IEnumerable<string> GetHeaderValue(IDictionary<string, object> carrier, string key)
             {
                 if (headers != null)
                 {
