@@ -235,25 +235,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
                 object objectFromMessageHeaders;
                 if (headers.TryGetValue(userHeader.Key, out objectFromMessageHeaders))
                 {
-                    var userHeaderValueType = userHeader.Value.GetType();
-                    if (userHeaderValueType == typeof(int))
+                    var headerValuesMatch = true;
+                    if (objectFromMessageHeaders.GetType() == typeof(byte[]))
                     {
-                        if ((int)userHeader.Value != (int)objectFromMessageHeaders)
-                        {
-                            throw new Exception("Incorrect integer value for user header.");
-                        }
-                    }
-                    else if (userHeaderValueType == typeof(string))
-                    {
-                        var decodedString = Encoding.UTF8.GetString((byte[]) objectFromMessageHeaders);
-                        if ((string) userHeader.Value != decodedString)
-                        {
-                            throw new Exception("Incorrect string value for user header");
-                        }
+                        //RabbitMQ encodes strings as byte arrays when sending messages
+                        var decodedString = Encoding.UTF8.GetString((byte[])objectFromMessageHeaders);
+                        headerValuesMatch = (string)userHeader.Value == decodedString;
                     }
                     else
                     {
-                        throw new Exception("Unknown user header value type");
+                        headerValuesMatch = userHeader.Value.Equals(objectFromMessageHeaders);
+                    }
+                    if (! headerValuesMatch)
+                    {
+                        throw new Exception("Header value in received message does not match expected value.");
                     }
                 }
                 else
