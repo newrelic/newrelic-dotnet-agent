@@ -221,7 +221,7 @@ namespace NewRelic.Agent.Core.Segments
             RelativeEndTime = endTime;
             _parameters = Data.Finish() ?? new Dictionary<string, object>();
 
-            var stacktrace = new StackTrace(5, true); // first 5 stack frames are agent code
+            var stacktrace = new StackTrace(2, true); // first 2 stack frames are agent code
             ((Dictionary<string, object>)_parameters).Add("backtrace", stacktrace);
         }
 
