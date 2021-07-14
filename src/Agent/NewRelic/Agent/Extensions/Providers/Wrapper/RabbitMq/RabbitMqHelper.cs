@@ -86,9 +86,15 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var setHeaders = new Action<dynamic, string, string>((carrier, key, value) =>
             {
                 var headers = carrier.Headers as IDictionary<string, object>;
+
                 if (headers == null)
                 {
                     headers = new Dictionary<string, object>();
+                    carrier.Headers = headers;
+                }
+                else if (headers is IReadOnlyDictionary<string, object>)
+                {
+                    headers = new Dictionary<string, object>(headers);
                     carrier.Headers = headers;
                 }
 
@@ -120,9 +126,15 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             var setHeaders = new Action<object, string, string>((carrier, key, value) =>
             {
                 var headers = GetHeaders(carrier);
+
                 if (headers == null)
                 {
                     headers = new Dictionary<string, object>();
+                    SetHeaders(carrier, headers);
+                }
+                else if (headers is IReadOnlyDictionary<string, object>)
+                {
+                    headers = new Dictionary<string, object>(headers);
                     SetHeaders(carrier, headers);
                 }
 
