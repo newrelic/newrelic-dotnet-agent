@@ -11,6 +11,9 @@ using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -25,6 +28,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         private static readonly ConnectionFactory ChannelFactory = new ConnectionFactory() { HostName = RabbitMqConfiguration.RabbitMqServerIp };
         private static readonly IConnection Connection = ChannelFactory.CreateConnection();
         private static IModel Channel = Connection.CreateModel();
+
+        // "User" headers to be set when publishing messages and then read when recieving them.
+        // This verifies that our instrumentation does not overwrite or modify user headers.
+        // A SortedDictionary is used to verify that the instrumentation interacts with the message
+        // headers through the IDictionary interface.
+        // See https://github.com/newrelic/newrelic-dotnet-agent/issues/639 for context
+        private static SortedDictionary<string,object> userHeaders = new SortedDictionary<string, object>() { { "aNumber", 123 }, { "aString", "foo" } };
+
 
         [LibraryMethod]
         [Transaction]
@@ -168,16 +179,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         {
 
             var body = Encoding.UTF8.GetBytes(message);
+            var props = Channel.CreateBasicProperties();
+            props.Headers = userHeaders;
 
             Channel.BasicPublish(exchange: "",
                 routingKey: queueName,
-                basicProperties: null,
+                basicProperties: props,
                 body: body);
         }
 
         private string BasicGetMessage(string queueName)
         {
             var basicGetResult = Channel.BasicGet(queueName, true);
+
+            VerifyHeaders(basicGetResult.BasicProperties.Headers);
 
 #if RABBIT6PLUS
             var receiveMessage = Encoding.UTF8.GetString(basicGetResult.Body.ToArray());
@@ -206,10 +221,47 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 #else
                     receivedMessage = Encoding.UTF8.GetString(basicDeliverEventArgs.Body);
 #endif
+                    VerifyHeaders(basicDeliverEventArgs.BasicProperties.Headers);
 
                     manualResetEvent.Set();
                 }
             }
         }
+
+        private void VerifyHeaders(IDictionary<string, object> headers)
+        {
+            foreach (var userHeader in userHeaders)
+            {
+                object objectFromMessageHeaders;
+                if (headers.TryGetValue(userHeader.Key, out objectFromMessageHeaders))
+                {
+                    var userHeaderValueType = userHeader.Value.GetType();
+                    if (userHeaderValueType == typeof(int))
+                    {
+                        if ((int)userHeader.Value != (int)objectFromMessageHeaders)
+                        {
+                            throw new Exception("Incorrect integer value for user header.");
+                        }
+                    }
+                    else if (userHeaderValueType == typeof(string))
+                    {
+                        var decodedString = Encoding.UTF8.GetString((byte[]) objectFromMessageHeaders);
+                        if ((string) userHeader.Value != decodedString)
+                        {
+                            throw new Exception("Incorrect string value for user header");
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("Unknown user header value type");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Did not find expected user header value in recieved message.");
+                }
+            }
+        }
+
     }
 }
