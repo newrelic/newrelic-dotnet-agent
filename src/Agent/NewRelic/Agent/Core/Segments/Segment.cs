@@ -219,12 +219,10 @@ namespace NewRelic.Agent.Core.Segments
         {
             var endTime = _transactionSegmentState.GetRelativeTime();
             RelativeEndTime = endTime;
-            // _parameters = Data.Finish() ?? EmptyImmutableParameters;
-            _parameters = Data.Finish() ?? new KeyValuePair<string, object>[1];
+            _parameters = Data.Finish() ?? new Dictionary<string, object>();
 
             var stacktrace = new StackTrace(5, true); // first 5 stack frames are agent code
-            ((KeyValuePair<string, object>[])_parameters)[0] = new KeyValuePair<string, object>("backtrace", stacktrace );
-            // new KeyValuePair<string, object>[0]
+            ((Dictionary<string, object>)_parameters).Add("backtrace", stacktrace);
         }
 
         public SpanAttributeValueCollection GetAttributeValues()
