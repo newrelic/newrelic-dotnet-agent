@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.DataTransport
@@ -9,7 +10,7 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         public string Serialize(object[] parameters)
         {
-            return JsonConvert.SerializeObject(parameters);
+            return JsonConvert.SerializeObject(parameters, new EventAttributesJsonConverter());
         }
 
         public T Deserialize<T>(string responseBody)

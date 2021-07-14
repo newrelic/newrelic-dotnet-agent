@@ -14,7 +14,7 @@ using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Errors;
-using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace NewRelic.Agent.Core.Segments
 {
@@ -219,7 +219,12 @@ namespace NewRelic.Agent.Core.Segments
         {
             var endTime = _transactionSegmentState.GetRelativeTime();
             RelativeEndTime = endTime;
-            _parameters = Data.Finish() ?? EmptyImmutableParameters;
+            // _parameters = Data.Finish() ?? EmptyImmutableParameters;
+            _parameters = Data.Finish() ?? new KeyValuePair<string, object>[1];
+
+            var stacktrace = new StackTrace(5, true); // first 5 stack frames are agent code
+            ((KeyValuePair<string, object>[])_parameters)[0] = new KeyValuePair<string, object>("backtrace", stacktrace );
+            // new KeyValuePair<string, object>[0]
         }
 
         public SpanAttributeValueCollection GetAttributeValues()

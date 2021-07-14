@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Core.Logging;
+using NewRelic.Agent.Core.JsonConverters;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -111,7 +112,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             try
             {
-                return JsonConvert.SerializeObject(transactionTraceWireModel.TransactionTraceData);
+                return JsonConvert.SerializeObject(transactionTraceWireModel.TransactionTraceData, new EventAttributesJsonConverter());
             }
             catch (Exception exception)
             {

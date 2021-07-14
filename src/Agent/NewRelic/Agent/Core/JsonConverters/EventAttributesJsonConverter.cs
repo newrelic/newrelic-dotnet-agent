@@ -4,12 +4,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using NewRelic.Agent.Core.Configuration;
+using NewRelic.Agent.Core.Utils;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.JsonConverters
 {
     public class EventAttributesJsonConverter : JsonConverter<IEnumerable<KeyValuePair<string, object>>>
     {
+        private readonly ConfigurationSubscriber _configurationSubscription = new ConfigurationSubscriber();
+
         public override IEnumerable<KeyValuePair<string, object>> ReadJson(JsonReader reader, Type objectType, IEnumerable<KeyValuePair<string, object>> existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             throw new NotImplementedException("Deserialization of IDictionary<string,object> is not supported");
@@ -82,6 +87,12 @@ namespace NewRelic.Agent.Core.JsonConverters
                 else if (kvp.Value is byte)
                 {
                     writer.WriteValue((byte)kvp.Value);
+                }
+                else if (kvp.Value is StackTrace)
+                {
+                    var scrubbedStackTrace = StackTraces.ScrubAndTruncate(((StackTrace)kvp.Value).GetFrames(), _configurationSubscription.Configuration.StackTraceMaximumFrames);
+                    var stackFramesAsStringArray = StackTraces.ToStringList(scrubbedStackTrace);
+                    serializer.Serialize(writer, stackFramesAsStringArray);
                 }
                 else
                 {
