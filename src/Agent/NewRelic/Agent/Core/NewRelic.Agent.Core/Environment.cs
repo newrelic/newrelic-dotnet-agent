@@ -61,6 +61,7 @@ namespace NewRelic.Agent.Core
                 AddVariable("GCSettings.IsServerGC", () => System.Runtime.GCSettings.IsServerGC);
                 AddVariable("AppDomain.FriendlyName", () => AppDomain.CurrentDomain.FriendlyName);
 
+                // If we have a name, report its source...
                 if (configurationService?.Configuration?.ApplicationNames?.Any() ?? false)
                     AddVariable("Application Name Source", () => configurationService.Configuration.ApplicationNamesSource);
 
