@@ -15,6 +15,7 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Errors;
 using System.Diagnostics;
+using NewRelic.Agent.Core.Configuration;
 
 namespace NewRelic.Agent.Core.Segments
 {
@@ -31,6 +32,8 @@ namespace NewRelic.Agent.Core.Segments
 
     public class Segment : IInternalSpan, ISegmentDataState
     {
+        private readonly ConfigurationSubscriber _configurationSubscription = new ConfigurationSubscriber();
+
         public IAttributeDefinitions AttribDefs => _transactionSegmentState.AttribDefs;
         public string TypeName => MethodCallData.TypeName;
 
@@ -221,8 +224,16 @@ namespace NewRelic.Agent.Core.Segments
             RelativeEndTime = endTime;
             _parameters = Data.Finish() ?? new Dictionary<string, object>();
 
-            var stacktrace = new StackTrace(2, true); // first 2 stack frames are agent code
-            ((Dictionary<string, object>)_parameters).Add("backtrace", stacktrace);
+            // if transactionTracer is disabled, we not need stack traces.
+            // if stack frames is 0, it is considered that the customer disabled stack traces.
+            // if max stack traces is 0, it is considered that the customer disabled stack traces.
+            if (!_configurationSubscription.Configuration.TransactionTracerEnabled
+                || _configurationSubscription.Configuration.StackTraceMaximumFrames > 0
+                || _configurationSubscription.Configuration.TransactionTracerMaxStackTraces > 0)
+            {
+                var stacktrace = new StackTrace(2, true); // first 2 stack frames are agent code
+                ((Dictionary<string, object>)_parameters).Add("backtrace", stacktrace);
+            }
         }
 
         public SpanAttributeValueCollection GetAttributeValues()
