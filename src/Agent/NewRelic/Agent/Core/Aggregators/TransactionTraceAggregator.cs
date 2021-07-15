@@ -24,6 +24,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
     public class TransactionTraceAggregator : AbstractAggregator<TransactionTraceWireModelComponents>, ITransactionTraceAggregator
     {
+        private static readonly JsonConverter _eventAttributesJsonConverter = new EventAttributesJsonConverter();
+
         private readonly IEnumerable<ITransactionCollector> _transactionCollectors;
 
         public TransactionTraceAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IEnumerable<ITransactionCollector> transactionCollectors)
@@ -112,7 +114,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             try
             {
-                return JsonConvert.SerializeObject(transactionTraceWireModel.TransactionTraceData, new EventAttributesJsonConverter());
+                return JsonConvert.SerializeObject(transactionTraceWireModel.TransactionTraceData, _eventAttributesJsonConverter);
             }
             catch (Exception exception)
             {

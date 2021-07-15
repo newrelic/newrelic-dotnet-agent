@@ -8,9 +8,11 @@ namespace NewRelic.Agent.Core.DataTransport
 {
     public class JsonSerializer : ISerializer
     {
+        private static readonly JsonConverter _eventAttributesJsonConverter = new EventAttributesJsonConverter();
+
         public string Serialize(object[] parameters)
         {
-            return JsonConvert.SerializeObject(parameters, new EventAttributesJsonConverter());
+            return JsonConvert.SerializeObject(parameters, _eventAttributesJsonConverter);
         }
 
         public T Deserialize<T>(string responseBody)
