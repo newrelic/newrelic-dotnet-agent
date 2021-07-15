@@ -61,9 +61,12 @@ namespace NewRelic.Agent.Core
                 AddVariable("GCSettings.IsServerGC", () => System.Runtime.GCSettings.IsServerGC);
                 AddVariable("AppDomain.FriendlyName", () => AppDomain.CurrentDomain.FriendlyName);
 
-                // If we have a name, report its source...
+                // If we have a name, report it and its source...
                 if (configurationService?.Configuration?.ApplicationNames?.Any() ?? false)
-                    AddVariable("Application Name Source", () => configurationService.Configuration.ApplicationNamesSource);
+                {
+                    AddVariable("Application Names", () => String.Join(", ", configurationService.Configuration.ApplicationNames));
+                    AddVariable("Application Names Source", () => configurationService.Configuration.ApplicationNamesSource);
+                }
 
 #if NET45
 				// This stuff is only available to web apps.
@@ -82,7 +85,7 @@ namespace NewRelic.Agent.Core
 				}
 #endif
 
-                AddVariable("Plugin List", GetLoadedAssemblyNames);
+                    AddVariable("Plugin List", GetLoadedAssemblyNames);
 
 #if DEBUG
 				AddVariable("Debug Build", () => true.ToString());
