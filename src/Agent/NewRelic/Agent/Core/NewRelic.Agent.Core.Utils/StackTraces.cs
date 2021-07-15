@@ -99,7 +99,7 @@ namespace NewRelic.Agent.Core.Utils
 
         public static ICollection<StackFrame> ScrubAndTruncate(StackFrame[] frames, int maxDepth)
         {
-            List<StackFrame> list = new List<StackFrame>(frames.Length);
+            List<StackFrame> list = new List<StackFrame>(Math.Min(frames.Length, maxDepth));
             foreach (StackFrame frame in frames)
             {
                 if (frame.GetMethod().DeclaringType != null && !frame.GetMethod().DeclaringType.FullName.StartsWith("NewRelic"))
