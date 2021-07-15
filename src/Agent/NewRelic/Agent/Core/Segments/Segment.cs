@@ -227,9 +227,9 @@ namespace NewRelic.Agent.Core.Segments
             // if transactionTracer is disabled, we not need stack traces.
             // if stack frames is 0, it is considered that the customer disabled stack traces.
             // if max stack traces is 0, it is considered that the customer disabled stack traces.
-            if (!_configurationSubscription.Configuration.TransactionTracerEnabled
-                || _configurationSubscription.Configuration.StackTraceMaximumFrames > 0
-                || _configurationSubscription.Configuration.TransactionTracerMaxStackTraces > 0)
+            if (_configurationSubscription.Configuration.TransactionTracerEnabled
+                && _configurationSubscription.Configuration.StackTraceMaximumFrames > 0
+                && _configurationSubscription.Configuration.TransactionTracerMaxStackTraces > 0)
             {
                 var stacktrace = new StackTrace(2, true); // first 2 stack frames are agent code
                 ((Dictionary<string, object>)_parameters).Add("backtrace", stacktrace);
