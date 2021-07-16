@@ -32,6 +32,8 @@ namespace NewRelic.Agent.Core.Segments
 
     public class Segment : IInternalSpan, ISegmentDataState
     {
+        private static ConfigurationSubscriber _configurationSubscriber = new ConfigurationSubscriber();
+
         public IAttributeDefinitions AttribDefs => _transactionSegmentState.AttribDefs;
         public string TypeName => MethodCallData.TypeName;
 
@@ -221,31 +223,28 @@ namespace NewRelic.Agent.Core.Segments
             var endTime = _transactionSegmentState.GetRelativeTime();
             RelativeEndTime = endTime;
             _parameters = Data.Finish();
-            using (var configurationSubscription = new ConfigurationSubscriber())
-            {
-                // if transactionTracer is disabled, we not need stack traces.
-                // if stack frames is 0, it is considered that the customer disabled stack traces.
-                // if max stack traces is 0, it is considered that the customer disabled stack traces.
-                if (configurationSubscription.Configuration.TransactionTracerEnabled
-                && configurationSubscription.Configuration.StackTraceMaximumFrames > 0
-                && configurationSubscription.Configuration.TransactionTracerMaxStackTraces > 0)
-                {
-                    var stacktrace = new StackTrace(2, true); // first 2 stack frames are agent code
-                    if (_parameters == null)
-                    {
-                        _parameters = new KeyValuePair<string, object>[1] { new KeyValuePair<string, object>("backtrace", stacktrace) };
-                    }
-                    else
-                    {
-                        // Only external segments return a collection and its a Dictionary
-                        ((Dictionary<string, object>)_parameters).Add("backtrace", stacktrace);
-                    }
 
-                }
-                else if (_parameters == null) // External segments return a dictionary, so we have to check for null here.
+            // if transactionTracer is disabled, we not need stack traces.
+            // if stack frames is 0, it is considered that the customer disabled stack traces.
+            // if max stack traces is 0, it is considered that the customer disabled stack traces.
+            if (_configurationSubscriber.Configuration.TransactionTracerEnabled
+            && _configurationSubscriber.Configuration.StackTraceMaximumFrames > 0
+            && _configurationSubscriber.Configuration.TransactionTracerMaxStackTraces > 0)
+            {
+                var stacktrace = new StackTrace(2, true); // first 2 stack frames are agent code
+                if (_parameters == null)
                 {
-                    _parameters = EmptyImmutableParameters;
+                    _parameters = new KeyValuePair<string, object>[1] { new KeyValuePair<string, object>("backtrace", stacktrace) };
                 }
+                else
+                {
+                    // Only external segments return a collection and its a Dictionary
+                    ((Dictionary<string, object>)_parameters).Add("backtrace", stacktrace);
+                }
+            }
+            else if (_parameters == null) // External segments return a dictionary, so we have to check for null here.
+            {
+                _parameters = EmptyImmutableParameters;
             }
         }
 

@@ -13,6 +13,8 @@ namespace NewRelic.Agent.Core.JsonConverters
 {
     public class EventAttributesJsonConverter : JsonConverter<IEnumerable<KeyValuePair<string, object>>>
     {
+        private static ConfigurationSubscriber _configurationSubscriber = new ConfigurationSubscriber();
+
         public override IEnumerable<KeyValuePair<string, object>> ReadJson(JsonReader reader, Type objectType, IEnumerable<KeyValuePair<string, object>> existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             throw new NotImplementedException("Deserialization of IDictionary<string,object> is not supported");
@@ -88,13 +90,10 @@ namespace NewRelic.Agent.Core.JsonConverters
                 }
                 else if (kvp.Value is StackTrace)
                 {
-                    using (var configurationSubscription = new ConfigurationSubscriber())
-                    {
-                        var scrubbedStackTrace = StackTraces.ScrubAndTruncate(((StackTrace)kvp.Value).GetFrames(), configurationSubscription.Configuration.StackTraceMaximumFrames);
-                        var stackFramesAsStringArray = StackTraces.ToStringList(scrubbedStackTrace);
-                        serializer.Serialize(writer, stackFramesAsStringArray);
-                    }
-                }
+                    var scrubbedStackTrace = StackTraces.ScrubAndTruncate(((StackTrace)kvp.Value).GetFrames(), _configurationSubscriber.Configuration.StackTraceMaximumFrames);
+                    var stackFramesAsStringArray = StackTraces.ToStringList(scrubbedStackTrace);
+                    serializer.Serialize(writer, stackFramesAsStringArray);
+            }
                 else
                 {
                     writer.WriteValue(kvp.Value);
