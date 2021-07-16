@@ -5,8 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### New Features
+* Adds support for capturing stack traces for each instrumented method in a Transaction Trace.
+  * This feature is enabled by default.
+  * You can disable the capture of stack traces by setting either maxStackTraceLines or maxStackTrace to 0.  This will disable capturing all stack traces, including those captured for error traces.
+  * The following are the default settings for stack traces. These can be changed using the newrelic.config:
+    * A maximum of 30 stack traces are captured per harvest cycle.
+    * A maximum 80 stack frames are reported per stack trace.
+
 ### Fixes
 * Fixes issue [#639](https://github.com/newrelic/newrelic-dotnet-agent/issues/639): RabbitMQ instrumentation can delete user headers from messages. Thank you @witoldsz for finding and reporting this bug. ([#648](https://github.com/newrelic/newrelic-dotnet-agent/pull/648))
 
