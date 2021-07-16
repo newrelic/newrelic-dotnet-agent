@@ -576,7 +576,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             _streamingSvc.StartConsumingCollection(sourceCollection);
 
-            var expectedAttempts = new[] { item1, item1 };
+            //var expectedAttempts = new[] { item1, item1 };
+            var expectedAttempts = new List<TRequest>() { item1, item1 };
 
             NrAssert.Multiple
             (
