@@ -16,6 +16,7 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Errors;
 using System.Diagnostics;
 using NewRelic.Agent.Core.Configuration;
+using NewRelic.Agent.Core.Utils;
 
 namespace NewRelic.Agent.Core.Segments
 {
@@ -231,15 +232,15 @@ namespace NewRelic.Agent.Core.Segments
             && _configurationSubscriber.Configuration.StackTraceMaximumFrames > 0
             && _configurationSubscriber.Configuration.TransactionTracerMaxStackTraces > 0)
             {
-                var stacktrace = new StackTrace(2, true); // first 2 stack frames are agent code
+                var stackFrames = StackTraces.ScrubAndTruncate(new StackTrace(2, true), _configurationSubscriber.Configuration.StackTraceMaximumFrames);// first 2 stack frames are agent code
                 if (_parameters == null)
                 {
-                    _parameters = new KeyValuePair<string, object>[1] { new KeyValuePair<string, object>("backtrace", stacktrace) };
+                    _parameters = new KeyValuePair<string, object>[1] { new KeyValuePair<string, object>("backtrace", stackFrames) };
                 }
                 else
                 {
                     // Only external segments return a collection and its a Dictionary
-                    ((Dictionary<string, object>)_parameters).Add("backtrace", stacktrace);
+                    ((Dictionary<string, object>)_parameters).Add("backtrace", stackFrames);
                 }
             }
             else if (_parameters == null) // External segments return a dictionary, so we have to check for null here.

@@ -88,10 +88,9 @@ namespace NewRelic.Agent.Core.JsonConverters
                 {
                     writer.WriteValue((byte)kvp.Value);
                 }
-                else if (kvp.Value is StackTrace)
+                else if (kvp.Value is StackFrame[])
                 {
-                    var scrubbedStackTrace = StackTraces.ScrubAndTruncate(((StackTrace)kvp.Value).GetFrames(), _configurationSubscriber.Configuration.StackTraceMaximumFrames);
-                    var stackFramesAsStringArray = StackTraces.ToStringList(scrubbedStackTrace);
+                    var stackFramesAsStringArray = StackTraces.ToStringList((StackFrame[])kvp.Value);
                     serializer.Serialize(writer, stackFramesAsStringArray);
             }
                 else
