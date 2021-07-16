@@ -62,11 +62,17 @@ namespace NewRelic.Agent.Core
                 AddVariable("AppDomain.FriendlyName", () => AppDomain.CurrentDomain.FriendlyName);
 
                 // If we have a name, report it and its source...
-                if (configurationService?.Configuration?.ApplicationNames?.Any() ?? false)
+                if (configurationService.Configuration.ApplicationNames.Any())
                 {
                     AddVariable("Application Names", () => String.Join(", ", configurationService.Configuration.ApplicationNames));
                     AddVariable("Application Names Source", () => configurationService.Configuration.ApplicationNamesSource);
                 }
+
+                AddVariable("NewRelic Config", () => configurationService.Configuration.NewRelicConfigFilePath);
+
+                // If we found an app config, report it...
+                if (!String.IsNullOrEmpty(configurationService.Configuration.AppSettingsConfigFilePath))
+                    AddVariable("Application Config", () => configurationService.Configuration.AppSettingsConfigFilePath);
 
 #if NET45
 				// This stuff is only available to web apps.
@@ -85,14 +91,14 @@ namespace NewRelic.Agent.Core
 				}
 #endif
 
-                    AddVariable("Plugin List", GetLoadedAssemblyNames);
+                AddVariable("Plugin List", GetLoadedAssemblyNames);
 
 #if DEBUG
 				AddVariable("Debug Build", () => true.ToString());
 #endif
 
 #if NET45
-				var compilationSection = WebConfigurationManager.GetSection("system.web/compilation") as CompilationSection;
+                var compilationSection = WebConfigurationManager.GetSection("system.web/compilation") as CompilationSection;
 				if (compilationSection?.DefaultLanguage != null)
 					AddVariable("system.web.compilation.defaultLanguage", () => compilationSection.DefaultLanguage);
 

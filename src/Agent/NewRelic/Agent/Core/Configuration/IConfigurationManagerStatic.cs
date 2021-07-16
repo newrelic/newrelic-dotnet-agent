@@ -13,6 +13,7 @@ namespace NewRelic.Agent.Core.Configuration
 {
     public interface IConfigurationManagerStatic
     {
+        string AppSettingsFilePath { get; }
         string GetAppSetting(string key);
     }
 
@@ -26,6 +27,8 @@ namespace NewRelic.Agent.Core.Configuration
             _getAppSetting = getAppSetting ?? (variable => null);
         }
 
+        public string AppSettingsFilePath => throw new NotImplementedException();
+
         public string GetAppSetting(string variable)
         {
             return _getAppSetting(variable);
@@ -37,6 +40,21 @@ namespace NewRelic.Agent.Core.Configuration
 	public class ConfigurationManagerStatic : IConfigurationManagerStatic
 	{
 		private bool localConfigChecksDisabled;
+
+        public string AppSettingsFilePath
+        {
+            get
+            {
+                try
+                {
+                    if (!localConfigChecksDisabled)
+                        return AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
+                }
+                catch { }
+
+                return null;
+            }
+        }
 
 		public string GetAppSetting(string key)
 		{
@@ -58,6 +76,8 @@ namespace NewRelic.Agent.Core.Configuration
     public class ConfigurationManagerStatic : IConfigurationManagerStatic
     {
         private bool localConfigChecksDisabled;
+
+        public string AppSettingsFilePath => AppSettingsConfigResolveWhenUsed.AppSettingsFilePath;
 
         public string GetAppSetting(string key)
         {

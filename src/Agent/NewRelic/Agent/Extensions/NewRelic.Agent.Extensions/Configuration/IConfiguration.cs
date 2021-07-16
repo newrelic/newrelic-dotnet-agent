@@ -113,6 +113,7 @@ namespace NewRelic.Agent.Configuration
         string Labels { get; }
         IEnumerable<RegexRule> MetricNameRegexRules { get; }
         string NewRelicConfigFilePath { get; }
+        string AppSettingsConfigFilePath { get; }
         string ProxyHost { get; }
         string ProxyUriPath { get; }
         int ProxyPort { get; }
