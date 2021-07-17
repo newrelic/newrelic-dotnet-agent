@@ -1412,7 +1412,7 @@ namespace NewRelic.Agent.Core.Config
         public configurationInstrumentation()
         {
             this.applicationsField = new List<configurationInstrumentationApplication>();
-            this.logField = false;
+            this.logField = true;
         }
         
         [System.Xml.Serialization.XmlArrayItemAttribute("application", IsNullable=false)]
@@ -1429,7 +1429,7 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(false)]
+        [System.ComponentModel.DefaultValueAttribute(true)]
         public bool log
         {
             get
