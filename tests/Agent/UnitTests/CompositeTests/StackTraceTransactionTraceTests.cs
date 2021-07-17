@@ -24,7 +24,7 @@ namespace CompositeTests
         {
             _compositeTestAgent = new CompositeTestAgent();
             _agent = _compositeTestAgent.GetAgent();
-            _compositeTestAgent.LocalConfiguration.transactionTracer.stackTraceThreshold = 0;
+            _compositeTestAgent.LocalConfiguration.transactionTracer.maxStackTrace = 1; // anything over 0 will work
             _compositeTestAgent.PushConfiguration();
         }
 
@@ -35,7 +35,30 @@ namespace CompositeTests
         }
 
         [Test]
-        public void TransactionTrace_MethodSegment_HasStackTrace()
+        public void TransactionTrace_MethodSegment_DefaultConfig_NoStackTrace()
+        {
+            _compositeTestAgent.LocalConfiguration.transactionTracer.maxStackTrace = 0; // the default
+            _compositeTestAgent.PushConfiguration();
+
+            var tx = _agent.CreateTransaction(
+                isWeb: true,
+                category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+                transactionDisplayName: "name",
+                doNotTrackAsUnitOfWork: true);
+            var segment = _agent.StartMethodSegmentOrThrow("mytype", "mymethod");
+            segment.End();
+            tx.End();
+
+            _compositeTestAgent.Harvest();
+
+            var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+            var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
+
+            Assert.IsFalse(parameters.Keys.Contains("backtrace"));
+        }
+
+        [Test]
+        public void TransactionTrace_MethodSegment_StackTracesEnabled_HasStackTrace()
         {
             var tx = _agent.CreateTransaction(
                 isWeb: true,
@@ -56,7 +79,7 @@ namespace CompositeTests
         }
 
         [Test]
-        public void TransactionTrace_MethodSegment_HastStackFrames()
+        public void TransactionTrace_MethodSegment_StackTracesEnabled_HastStackFrames()
         {
             var tx = _agent.CreateTransaction(
                 isWeb: true,
@@ -77,7 +100,7 @@ namespace CompositeTests
         }
 
         [Test]
-        public void TransactionTrace_DatastoreRequestSegment_HasStackTrace()
+        public void TransactionTrace_DatastoreRequestSegment_StackTracesEnabled_HasStackTrace()
         {
             var tx = _agent.CreateTransaction(
                 isWeb: true,
@@ -103,7 +126,7 @@ namespace CompositeTests
         }
 
         [Test]
-        public void TransactionTrace_DatastoreRequestSegment_HastStackFrames()
+        public void TransactionTrace_DatastoreRequestSegment_StackTracesEnabled_HastStackFrames()
         {
             var tx = _agent.CreateTransaction(
                 isWeb: true,
@@ -129,7 +152,7 @@ namespace CompositeTests
         }
 
         [Test]
-        public void TransactionTrace_ExternalRequestSegment_HasStackTrace()
+        public void TransactionTrace_ExternalRequestSegment_StackTracesEnabled_HasStackTrace()
         {
             var tx = _agent.CreateTransaction(
                 isWeb: true,
@@ -150,7 +173,7 @@ namespace CompositeTests
         }
 
         [Test]
-        public void TransactionTrace_ExternalRequestSegment_HastStackFrames()
+        public void TransactionTrace_ExternalRequestSegment_StackTracesEnabled_HastStackFrames()
         {
             var tx = _agent.CreateTransaction(
                 isWeb: true,
@@ -171,7 +194,7 @@ namespace CompositeTests
         }
 
         [Test]
-        public void TransactionTrace_MessageBrokerSegment_HasStackTrace()
+        public void TransactionTrace_MessageBrokerSegment_StackTracesEnabled_HasStackTrace()
         {
             var tx = _agent.CreateTransaction(
                 isWeb: true,
@@ -192,7 +215,7 @@ namespace CompositeTests
         }
 
         [Test]
-        public void TransactionTrace_MessageBrokerSegment_HastStackFrames()
+        public void TransactionTrace_MessageBrokerSegment_StackTracesEnabled_HastStackFrames()
         {
             var tx = _agent.CreateTransaction(
                 isWeb: true,
@@ -213,7 +236,7 @@ namespace CompositeTests
         }
 
         [Test]
-        public void TransactionTrace_CustomSegment_HasStackTrace()
+        public void TransactionTrace_CustomSegment_StackTracesEnabled_HasStackTrace()
         {
             var tx = _agent.CreateTransaction(
                 isWeb: true,
@@ -234,7 +257,7 @@ namespace CompositeTests
         }
 
         [Test]
-        public void TransactionTrace_CustomSegment_HastStackFrames()
+        public void TransactionTrace_CustomSegment_StackTracesEnabled_HastStackFrames()
         {
             var tx = _agent.CreateTransaction(
                 isWeb: true,

@@ -30,8 +30,8 @@ namespace NewRelic.Agent.Core.Utils
         public static void TestScrub()
         {
             StackFrame[] stackTraces = GetStackTrace().GetFrames();
-            ICollection<StackFrame> frames = StackTraces.ScrubAndTruncate(stackTraces, 300);
-            Assert.AreNotEqual(stackTraces.Length, frames.Count);
+            StackFrame[] frames = StackTraces.ScrubAndTruncate(stackTraces, 300);
+            Assert.AreEqual(stackTraces.Length, frames.Length);
         }
 
         [Test]
