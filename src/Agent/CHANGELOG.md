@@ -7,10 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 * Adds support for capturing stack traces for each instrumented method in a Transaction Trace.
-  * This feature is enabled by default.
-  * You can disable the capture of stack traces by setting either maxStackTraceLines or maxStackTrace to 0.  This will disable capturing all stack traces, including those captured for error traces.
+  * This feature is disabled by default.
+  * You can enable the capture of stack traces by setting either maxStackTrace to any value greater than 1.  This value will only be used to determine if stack traces are captured or not despite the name.
   * The following are the default settings for stack traces. These can be changed using the newrelic.config:
-    * A maximum of 30 stack traces are captured per harvest cycle.
     * A maximum 80 stack frames are reported per stack trace.
 
 ### Fixes
