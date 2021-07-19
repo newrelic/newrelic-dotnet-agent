@@ -64,11 +64,11 @@ namespace NewRelic.Agent.Core
                 // If we have a name, report it and its source...
                 if (configurationService.Configuration.ApplicationNames.Any())
                 {
-                    AddVariable("Application Names", () => String.Join(", ", configurationService.Configuration.ApplicationNames));
-                    AddVariable("Application Names Source", () => configurationService.Configuration.ApplicationNamesSource);
+                    AddVariable("Initial Application Names", () => String.Join(", ", configurationService.Configuration.ApplicationNames));
+                    AddVariable("Initial Application Names Source", () => configurationService.Configuration.ApplicationNamesSource);
                 }
 
-                AddVariable("NewRelic Config", () => configurationService.Configuration.NewRelicConfigFilePath);
+                AddVariable("Initial NewRelic Config", () => configurationService.Configuration.NewRelicConfigFilePath);
 
                 // If we found an app config, report it...
                 if (!String.IsNullOrEmpty(configurationService.Configuration.AppSettingsConfigFilePath))
