@@ -14,6 +14,7 @@ using RabbitMQ.Client.Events;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -34,7 +35,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         // A SortedDictionary is used to verify that the instrumentation interacts with the message
         // headers through the IDictionary interface.
         // See https://github.com/newrelic/newrelic-dotnet-agent/issues/639 for context
-        private static SortedDictionary<string,object> userHeaders = new SortedDictionary<string, object>() { { "aNumber", 123 }, { "aString", "foo" } };
+        private static IDictionary<string,object> userHeaders = new ReadOnlyDictionary<string, object>(new SortedDictionary<string, object>() { { "aNumber", 123 }, { "aString", "foo" } });
 
 
         [LibraryMethod]
