@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### New Features
+* Feature [#580](https://github.com/newrelic/newrelic-dotnet-agent/issues/580): Send initial app name and source in environment data. ([#653](https://github.com/newrelic/newrelic-dotnet-agent/pull/653))
 ### Fixes
 * Fixes issue [#639](https://github.com/newrelic/newrelic-dotnet-agent/issues/639): RabbitMQ instrumentation can delete user headers from messages. Thank you @witoldsz for finding and reporting this bug. ([#648](https://github.com/newrelic/newrelic-dotnet-agent/pull/648))
 
