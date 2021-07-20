@@ -88,11 +88,6 @@ namespace NewRelic.Agent.Core.JsonConverters
                 {
                     writer.WriteValue((byte)kvp.Value);
                 }
-                else if (kvp.Value is StackFrame[])
-                {
-                    var stackFramesAsStringArray = StackTraces.ToStringList((StackFrame[])kvp.Value);
-                    serializer.Serialize(writer, stackFramesAsStringArray);
-            }
                 else
                 {
                     writer.WriteValue(kvp.Value);

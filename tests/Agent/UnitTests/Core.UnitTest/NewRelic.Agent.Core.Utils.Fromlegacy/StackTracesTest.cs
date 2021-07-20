@@ -30,8 +30,8 @@ namespace NewRelic.Agent.Core.Utils
         public static void TestScrub()
         {
             StackFrame[] stackTraces = GetStackTrace().GetFrames();
-            StackFrame[] frames = StackTraces.ScrubAndTruncate(stackTraces, 300);
-            Assert.AreEqual(stackTraces.Length, frames.Length);
+            IList<StackFrame> frames = StackTraces.ScrubAndTruncate(stackTraces, 300);
+            Assert.AreNotEqual(stackTraces.Length, frames.Count);
         }
 
         [Test]
@@ -59,7 +59,7 @@ namespace NewRelic.Agent.Core.Utils
         public static void TestScrubBadString()
         {
             ICollection<string> frames = StackTraces.ScrubAndTruncate(
-                                 string.Join(System.Environment.NewLine, new string[] { "", "", null, "" }), 300);
+                 string.Join(System.Environment.NewLine, new string[] { "", "", null, "" }), 300);
             Assert.AreEqual(4, frames.Count);
         }
 
@@ -116,7 +116,7 @@ namespace NewRelic.Agent.Core.Utils
         {
             StackFrame[] stackTraces = GetStackTrace().GetFrames();
             ICollection<StackFrame> frames = StackTraces.ScrubAndTruncate(stackTraces, 3);
-            Assert.AreEqual(3, frames.Count);
+            Assert.AreEqual(2, frames.Count);
         }
 
         [Test]

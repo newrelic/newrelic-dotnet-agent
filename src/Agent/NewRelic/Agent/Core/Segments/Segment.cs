@@ -233,14 +233,15 @@ namespace NewRelic.Agent.Core.Segments
             && _configurationSubscriber.Configuration.TransactionTracerMaxStackTraces > 0)
             {
                 var stackFrames = StackTraces.ScrubAndTruncate(new StackTrace(2, true), _configurationSubscriber.Configuration.StackTraceMaximumFrames);// first 2 stack frames are agent code
+                var stackFramesAsStringArray = StackTraces.ToStringList(stackFrames); // serializer doesn't understand StackFrames, but does understand strings
                 if (_parameters == null)
                 {
-                    _parameters = new KeyValuePair<string, object>[1] { new KeyValuePair<string, object>("backtrace", stackFrames) };
+                    _parameters = new KeyValuePair<string, object>[1] { new KeyValuePair<string, object>("backtrace", stackFramesAsStringArray) };
                 }
                 else
                 {
                     // Only external segments return a collection and its a Dictionary
-                    ((Dictionary<string, object>)_parameters).Add("backtrace", stackFrames);
+                    ((Dictionary<string, object>)_parameters).Add("backtrace", stackFramesAsStringArray);
                 }
             }
             else if (_parameters == null) // External segments return a dictionary, so we have to check for null here.

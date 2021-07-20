@@ -101,19 +101,20 @@ namespace NewRelic.Agent.Core.Utils
             return stackTrace.Split(StringSeparators.StringNewLine, StringSplitOptions.None);
         }
 
-        public static StackFrame[] ScrubAndTruncate(StackTrace stackTrace, int maxDepth)
+        public static IList<StackFrame> ScrubAndTruncate(StackTrace stackTrace, int maxDepth)
         {
             return ScrubAndTruncate(stackTrace.GetFrames(), maxDepth);
         }
 
-        public static StackFrame[] ScrubAndTruncate(StackFrame[] frames, int maxDepth)
+        public static IList<StackFrame> ScrubAndTruncate(StackFrame[] frames, int maxDepth)
         {
-            var stackFrames = new StackFrame[Math.Min(frames.Length, maxDepth)];
-            for (var i = 0; i < stackFrames.Length; i++)
+            var maxFrames = Math.Min(frames.Length, maxDepth);
+            var stackFrames = new List<StackFrame>(maxFrames);
+            for (var i = 0; i < maxFrames; i++)
             {
                 if (frames[i].GetMethod().DeclaringType != null && !frames[i].GetMethod().DeclaringType.FullName.StartsWith("NewRelic"))
                 {
-                    stackFrames[i] = frames[i];
+                    stackFrames.Add(frames[i]);
                 }
             }
 
@@ -127,10 +128,10 @@ namespace NewRelic.Agent.Core.Utils
             return string.Format("{0}.{1}({2}:{3})", typeName, method.Name, frame.GetFileName(), frame.GetFileLineNumber());
         }
 
-        public static ICollection<string> ToStringList(StackFrame[] stackFrames)
+        public static ICollection<string> ToStringList(IList<StackFrame> stackFrames)
         {
-            var stringList = new List<string>(stackFrames.Length);
-            for (var i = 0; i < stackFrames.Length; i++)
+            var stringList = new List<string>(stackFrames.Count);
+            for (var i = 0; i < stackFrames.Count; i++)
             {
                 // the stackFrames can have empty spots
                 if (stackFrames[i] == null)
