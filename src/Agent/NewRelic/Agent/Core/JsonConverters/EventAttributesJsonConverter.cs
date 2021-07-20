@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using NewRelic.Agent.Core.Configuration;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.JsonConverters
