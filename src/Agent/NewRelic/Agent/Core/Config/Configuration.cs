@@ -2919,7 +2919,7 @@ namespace NewRelic.Agent.Core.Config
             this.explainThresholdField = ((float)(500F));
             this.enabledField = true;
             this.maxSegmentsField = 3000;
-            this.maxStackTraceField = 30;
+            this.maxStackTraceField = 0;
             this.maxExplainPlansField = 20;
         }
         
@@ -3034,7 +3034,7 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(30)]
+        [System.ComponentModel.DefaultValueAttribute(0)]
         public int maxStackTrace
         {
             get
