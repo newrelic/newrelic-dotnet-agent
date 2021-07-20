@@ -4,17 +4,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using NewRelic.Agent.Core.Configuration;
-using NewRelic.Agent.Core.Utils;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.JsonConverters
 {
     public class EventAttributesJsonConverter : JsonConverter<IEnumerable<KeyValuePair<string, object>>>
     {
-        private static ConfigurationSubscriber _configurationSubscriber = new ConfigurationSubscriber();
-
         public override IEnumerable<KeyValuePair<string, object>> ReadJson(JsonReader reader, Type objectType, IEnumerable<KeyValuePair<string, object>> existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             throw new NotImplementedException("Deserialization of IDictionary<string,object> is not supported");

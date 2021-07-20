@@ -13,7 +13,6 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Core.Logging;
-using NewRelic.Agent.Core.JsonConverters;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
