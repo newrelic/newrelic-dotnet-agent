@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [8.41.0] - 2021-07-21
 ### New Features
+* Feature [#611](https://github.com/newrelic/newrelic-dotnet-agent/issues/611): Capture HTTP request method on transactions in the AspNetCore, Asp35, Wcf3, and Owin wrappers.
 * Feature [#580](https://github.com/newrelic/newrelic-dotnet-agent/issues/580): Send initial app name and source in environment data. ([#653](https://github.com/newrelic/newrelic-dotnet-agent/pull/653))
 * Adds support for capturing stack traces for each instrumented method in a Transaction Trace.
   * This feature is disabled by default.
