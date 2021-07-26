@@ -18,14 +18,14 @@ namespace NewRelic.Agent.Core
         [Test]
         public static void TestTotalMemory()
         {
-            var config = Mock.Create<IConfiguration>();
+            var configurationService = Mock.Create<IConfigurationService>();
             var systemInfo = Mock.Create<ISystemInfo>();
             var processStatic = Mock.Create<IProcessStatic>();
 
             Mock.Arrange(() => systemInfo.GetTotalPhysicalMemoryBytes()).Returns(16000);
-            using (new ConfigurationAutoResponder(config))
+            using (new ConfigurationAutoResponder(configurationService.Configuration))
             {
-                var env = new Environment(systemInfo, processStatic);
+                var env = new Environment(systemInfo, processStatic, configurationService);
                 Assert.Greater(env.TotalPhysicalMemory, 0);
             }
         }

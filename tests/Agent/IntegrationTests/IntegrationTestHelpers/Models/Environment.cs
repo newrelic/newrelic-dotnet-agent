@@ -11,10 +11,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 {
     public class Environment : List<object[]>
     {
+        public object[] GetProperty(string Name)
+        {
+            return this.FirstOrDefault(env => string.Equals(Name, env[0].ToString(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        public string GetPropertyString(string Name)
+        {
+            var property = GetProperty(Name);
+
+            if (property == null || property.Length <= 1)
+                return null;
+
+            return property[1]?.ToString();
+        }
+
         public List<string> GetPluginList()
         {
-            var pluginListStructure = this
-                .FirstOrDefault(env => string.Equals("Plugin List", env[0].ToString(), StringComparison.InvariantCultureIgnoreCase));
+            var pluginListStructure = GetProperty("Plugin List");
 
             if (pluginListStructure == null)
             {

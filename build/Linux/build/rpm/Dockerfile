@@ -1,12 +1,11 @@
 FROM rpmbuild/centos7
 
 USER root
+ADD Image-ExifTool-12.28.tar.gz /exiftool
 RUN yum --assumeyes install dos2unix rpm-sign expect perl-ExtUtils-MakeMaker
 
 # Install exiftool
-RUN curl -o exiftool.tgz https://exiftool.org/Image-ExifTool-12.25.tar.gz; \
-tar -zxvf exiftool.tgz; \
-cd Image-ExifTool-12.25; \
+RUN cd /exiftool/Image-ExifTool-12.28; \
 perl Makefile.PL; \
 make; \
 make install

@@ -24,6 +24,8 @@ namespace AspNetCoreMvcAsyncApplication
 
         public static void Main(string[] args)
         {
+            Thread.CurrentThread.Name = "NewRelic Main Test Application Thread";
+
             var commandLine = string.Join(" ", args);
 
             _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";

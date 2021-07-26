@@ -165,6 +165,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
                 transactionDisplayName: path,
                 doNotTrackAsUnitOfWork: true);
 
+            transaction.SetRequestMethod(request.Method);
             transaction.SetUri(request.Path);
 
             if (request.QueryString.HasValue)

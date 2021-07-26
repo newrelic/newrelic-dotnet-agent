@@ -165,7 +165,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
                 transaction.GetExperimentalApi().SetWrapperToken(_wrapperToken);
 
-                CaptureHttpRequestHeaders(agent, transaction);
+                CaptureHttpRequestHeadersAndMethod(agent, transaction);
             }
 
             var requestPath = uri?.AbsolutePath;
@@ -321,23 +321,21 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                 });
         }
 
-        private void CaptureHttpRequestHeaders(IAgent agent, ITransaction transaction)
+        private void CaptureHttpRequestHeadersAndMethod(IAgent agent, ITransaction transaction)
         {
             var context = OperationContext.Current;
             if (context.IncomingMessageProperties != null
                 && context.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageAsObject)
-                && httpRequestMessageAsObject is HttpRequestMessageProperty httpRequestMessage
-                && httpRequestMessage.Headers != null)
+                && httpRequestMessageAsObject is HttpRequestMessageProperty httpRequestMessage)
             {
-                    if (agent.Configuration.AllowAllRequestHeaders)
-                    {
-                        transaction.SetRequestHeaders(httpRequestMessage.Headers, httpRequestMessage.Headers.AllKeys, GetHeaderValueFromWebHeaderCollection);
-                    }
-                    else
-                    {
+                transaction.SetRequestMethod(httpRequestMessage.Method);
 
-                        transaction.SetRequestHeaders(httpRequestMessage.Headers, Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders, GetHeaderValueFromWebHeaderCollection);
-                    }
+                if (httpRequestMessage.Headers != null)
+                {
+                    var headersToCapture = agent.Configuration.AllowAllRequestHeaders ? httpRequestMessage.Headers.AllKeys : Agent.Extensions.Providers.Wrapper.Statics.DefaultCaptureHeaders;
+
+                    transaction.SetRequestHeaders(httpRequestMessage.Headers, headersToCapture, GetHeaderValueFromWebHeaderCollection);
+                }
             }
         }
 

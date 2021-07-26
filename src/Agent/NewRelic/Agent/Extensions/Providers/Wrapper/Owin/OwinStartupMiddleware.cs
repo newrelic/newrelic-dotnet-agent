@@ -82,6 +82,7 @@ namespace NewRelic.Providers.Wrapper.Owin
                 transactionDisplayName: path,
                 doNotTrackAsUnitOfWork: true);
 
+            transaction.SetRequestMethod(request.Method);
             transaction.SetUri(string.IsNullOrEmpty(request.Path.Value) ? "/Unknown" : request.Path.Value);
 
             if (request.QueryString.HasValue)

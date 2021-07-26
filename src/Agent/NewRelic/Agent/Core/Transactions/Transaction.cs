@@ -775,6 +775,16 @@ namespace NewRelic.Agent.Core.Transactions
             }
         }
 
+        public void SetRequestMethod(string requestMethod)
+        {
+            if (requestMethod == null)
+            {
+                throw new ArgumentNullException(nameof(requestMethod));
+            }
+
+            TransactionMetadata.SetRequestMethod(requestMethod);
+        }
+
         public void SetUri(string uri)
         {
             if (uri == null)
@@ -1225,7 +1235,7 @@ namespace NewRelic.Agent.Core.Transactions
 
         private string RemoveQueryParameters(string url)
         {
-            if(string.IsNullOrEmpty(url) || url.Length < 2)
+            if (string.IsNullOrEmpty(url) || url.Length < 2)
             {
                 return url;
             }

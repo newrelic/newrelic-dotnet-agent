@@ -19,6 +19,8 @@ namespace NewRelic.Agent.Core.Transactions
 
         IReadOnlyTransactionErrorState ReadOnlyTransactionErrorState { get; }
 
+        string RequestMethod { get; }
+
         string Uri { get; }
         string OriginalUri { get; }
         string ReferrerUri { get; }
