@@ -1816,8 +1816,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             NrAssert.Multiple(
                 () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
                 () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1))
-                );
+                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => Assert.AreEqual("API", _defaultConfig.ApplicationNamesSource)
+            );
         }
 
         [Test]
@@ -1834,8 +1835,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             NrAssert.Multiple(
                 () => Assert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault())
-                );
+                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => Assert.AreEqual("Application Config", _defaultConfig.ApplicationNamesSource)
+            );
         }
 
         [Test]
@@ -1853,8 +1855,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             NrAssert.Multiple(
                 () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
                 () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1))
-                );
+                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => Assert.AreEqual("Application Config", _defaultConfig.ApplicationNamesSource)
+            );
         }
 
         [Test]
@@ -1871,8 +1874,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             NrAssert.Multiple(
                 () => Assert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault())
-                );
+                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => Assert.AreEqual("Environment Variable (IISEXPRESS_SITENAME)", _defaultConfig.ApplicationNamesSource)
+            );
         }
 
         [Test]
@@ -1890,8 +1894,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             NrAssert.Multiple(
                 () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
                 () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1))
-                );
+                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => Assert.AreEqual("Environment Variable (IISEXPRESS_SITENAME)", _defaultConfig.ApplicationNamesSource)
+            );
         }
 
         [Test]
@@ -1912,8 +1917,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             NrAssert.Multiple(
                 () => Assert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault())
-                );
+                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => Assert.AreEqual("Environment Variable (RoleName)", _defaultConfig.ApplicationNamesSource)
+            );
         }
 
         [Test]
@@ -1935,8 +1941,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             NrAssert.Multiple(
                 () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
                 () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1))
-                );
+                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => Assert.AreEqual("Environment Variable (RoleName)", _defaultConfig.ApplicationNamesSource)
+            );
         }
 
         [Test]
@@ -1957,8 +1964,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             NrAssert.Multiple(
                 () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
                 () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1))
-                );
+                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => Assert.AreEqual("NewRelic Config", _defaultConfig.ApplicationNamesSource)
+            );
         }
 
         [Test]
@@ -1978,8 +1986,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             NrAssert.Multiple(
                 () => Assert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault())
-                );
+                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => Assert.AreEqual("Application Pool", _defaultConfig.ApplicationNamesSource)
+            );
         }
 
         [Test]
@@ -2000,17 +2009,18 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             NrAssert.Multiple(
                 () => Assert.AreEqual(2, _defaultConfig.ApplicationNames.Count()),
                 () => Assert.AreEqual("MyAppName1", _defaultConfig.ApplicationNames.FirstOrDefault()),
-                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1))
-                );
+                () => Assert.AreEqual("MyAppName2", _defaultConfig.ApplicationNames.ElementAtOrDefault(1)),
+                () => Assert.AreEqual("Application Pool", _defaultConfig.ApplicationNamesSource)
+            );
         }
 
-        [TestCase("AppPoolId", "w3wp.exe -ap AppPoolId")]
-        [TestCase("AppPoolId", "w3wp.exe -ap \"AppPoolId\"")]
-        [TestCase("W3WP", "w3wp.exe -app \"NotAnAppPool\"")]
-        [TestCase("W3WP", "w3wp.exe -ap")]
-        [TestCase("W3WP", "w3wp.exe -ap ")]
-        [TestCase("AppPoolId", "w3wp.exe -firstArg -ap \"AppPoolId\" -thirdArg")]
-        public void ApplicationNamesPullsSingleNameFromAppPoolIdFromCommandLine(string expected, string commandLine)
+        [TestCase("AppPoolId", "w3wp.exe -ap AppPoolId", "Application Pool")]
+        [TestCase("AppPoolId", "w3wp.exe -ap \"AppPoolId\"", "Application Pool")]
+        [TestCase("W3WP", "w3wp.exe -app \"NotAnAppPool\"", "Process Name")]
+        [TestCase("W3WP", "w3wp.exe -ap", "Process Name")]
+        [TestCase("W3WP", "w3wp.exe -ap ", "Process Name")]
+        [TestCase("AppPoolId", "w3wp.exe -firstArg -ap \"AppPoolId\" -thirdArg", "Application Pool")]
+        public void ApplicationNamesPullsSingleNameFromAppPoolIdFromCommandLine(string expected, string commandLine, string expectedSource)
         {
             _runTimeConfig.ApplicationNames = new List<string>();
 
@@ -2025,7 +2035,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("W3WP");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(expected, _defaultConfig.ApplicationNames.FirstOrDefault())
+                () => Assert.AreEqual(expected, _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => Assert.AreEqual(expectedSource, _defaultConfig.ApplicationNamesSource)
             );
         }
 
@@ -2046,8 +2057,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             NrAssert.Multiple(
                 () => Assert.AreEqual(1, _defaultConfig.ApplicationNames.Count()),
-                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault())
-                );
+                () => Assert.AreEqual("MyAppName", _defaultConfig.ApplicationNames.FirstOrDefault()),
+                () => Assert.AreEqual("Process Name", _defaultConfig.ApplicationNamesSource)
+            );
         }
 
 

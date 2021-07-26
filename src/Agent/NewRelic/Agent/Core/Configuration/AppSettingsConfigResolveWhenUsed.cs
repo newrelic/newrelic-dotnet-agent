@@ -22,6 +22,8 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public static string AppSettingsFilePath => _appSettingsFilePaths;
+
         private static IConfigurationRoot InitializeConfiguration()
         {
             // Get application base directory, where appsettings*.json will be if they exist

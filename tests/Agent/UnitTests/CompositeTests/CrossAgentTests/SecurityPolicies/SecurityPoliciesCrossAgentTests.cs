@@ -42,7 +42,8 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
             _collectorWire = Mock.Create<ICollectorWire>();
             var systemInfo = Mock.Create<ISystemInfo>();
             var processStatic = Mock.Create<IProcessStatic>();
-            var agentEnvironment = new NewRelic.Agent.Core.Environment(systemInfo, processStatic);
+            var configurationService = Mock.Create<IConfigurationService>();
+            var agentEnvironment = new NewRelic.Agent.Core.Environment(systemInfo, processStatic, configurationService);
             var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
             Mock.Arrange(() => collectorWireFactory.GetCollectorWire(null, Arg.IsAny<IAgentHealthReporter>())).IgnoreArguments().Returns(_collectorWire);

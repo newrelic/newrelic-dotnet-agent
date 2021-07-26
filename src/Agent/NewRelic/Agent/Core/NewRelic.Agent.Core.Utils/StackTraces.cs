@@ -18,25 +18,26 @@ namespace NewRelic.Agent.Core.Utils
             {
                 return new List<string>(0);
             }
-            var frames = new List<string>(maxDepth);
 
+            var frames = new List<string>(maxDepth);
             var exceptions = new List<Exception>(5);
             while (exception != null)
             {
                 exceptions.Add(exception);
                 exception = exception.InnerException;
             }
+
             if (exceptions.Count == 1)
             {
                 return ScrubAndTruncate(exceptions[0].StackTrace, maxDepth);
             }
+
             exceptions.Reverse();
-            foreach (Exception ex in exceptions)
+            foreach (var ex in exceptions)
             {
                 frames.Add(string.Format("[{0}: {1}]", ex.GetType().Name, ex.Message));
-                ICollection<string> exFrames = ScrubAndTruncate(ex.StackTrace, maxDepth - frames.Count);
+                var exFrames = ScrubAndTruncate(ex.StackTrace, maxDepth - frames.Count);
                 frames.AddRange(exFrames);
-
                 if (frames.Count > maxDepth)
                 {
                     return frames;
@@ -55,25 +56,26 @@ namespace NewRelic.Agent.Core.Utils
 
         private static string FormatMethodParameters(ParameterInfo[] parameterInfo)
         {
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < parameterInfo.Length; i++)
+            var builder = new StringBuilder();
+            for (var i = 0; i < parameterInfo.Length; i++)
             {
-                ParameterInfo info = parameterInfo[i];
+                var info = parameterInfo[i];
                 if (i > 0)
                 {
                     builder.Append(',');
                 }
+
                 builder.Append(info.ParameterType.FullName).Append(' ').Append(info.Name);
             }
+
             return builder.ToString();
         }
 
         public static IList<string> ScrubAndTruncate(string stackTrace, int maxDepth)
         {
-            string[] stackTraces = ParseStackTrace(stackTrace);
-
+            var stackTraces = ParseStackTrace(stackTrace);
             var list = new List<string>(stackTraces.Length);
-            foreach (string line in stackTraces)
+            foreach (var line in stackTraces)
             {
                 if (line != null && line.IndexOf("at NewRelic.Agent", 0, Math.Min(20, line.Length)) < 0)
                 {
@@ -81,6 +83,7 @@ namespace NewRelic.Agent.Core.Utils
                     {
                         return list;
                     }
+
                     list.Add('\t' + line);
                 }
             }
@@ -94,50 +97,62 @@ namespace NewRelic.Agent.Core.Utils
             {
                 return new string[0];
             }
+
             return stackTrace.Split(StringSeparators.StringNewLine, StringSplitOptions.None);
         }
 
-        public static ICollection<StackFrame> ScrubAndTruncate(StackFrame[] frames, int maxDepth)
+        public static IList<StackFrame> ScrubAndTruncate(StackTrace stackTrace, int maxDepth)
         {
-            List<StackFrame> list = new List<StackFrame>(frames.Length);
-            foreach (StackFrame frame in frames)
+            return ScrubAndTruncate(stackTrace.GetFrames(), maxDepth);
+        }
+
+        public static IList<StackFrame> ScrubAndTruncate(StackFrame[] frames, int maxDepth)
+        {
+            var maxFrames = Math.Min(frames.Length, maxDepth);
+            var stackFrames = new List<StackFrame>(maxFrames);
+            for (var i = 0; i < maxFrames; i++)
             {
-                if (frame.GetMethod().DeclaringType != null && !frame.GetMethod().DeclaringType.FullName.StartsWith("NewRelic"))
+                if (frames[i].GetMethod().DeclaringType != null && !frames[i].GetMethod().DeclaringType.FullName.StartsWith("NewRelic"))
                 {
-                    if (list.Count >= maxDepth)
-                    {
-                        return list;
-                    }
-                    list.Add(frame);
+                    stackFrames.Add(frames[i]);
                 }
             }
-            return list;
+
+            return stackFrames;
         }
 
         public static string ToString(StackFrame frame)
         {
-            MethodBase method = frame.GetMethod();
-            string typeName = method.DeclaringType == null ? "null" : method.DeclaringType.FullName;
+            var method = frame.GetMethod();
+            var typeName = method.DeclaringType == null ? "null" : method.DeclaringType.FullName;
             return string.Format("{0}.{1}({2}:{3})", typeName, method.Name, frame.GetFileName(), frame.GetFileLineNumber());
         }
 
-        public static ICollection<string> ToStringList(ICollection<StackFrame> stackFrames)
+        public static ICollection<string> ToStringList(IList<StackFrame> stackFrames)
         {
-            List<string> stringList = new List<string>(stackFrames.Count);
-            foreach (StackFrame frame in stackFrames)
-                stringList.Add(ToString(frame));
+            var stringList = new List<string>(stackFrames.Count);
+            for (var i = 0; i < stackFrames.Count; i++)
+            {
+                // the stackFrames can have empty spots
+                if (stackFrames[i] == null)
+                {
+                    continue;
+                }
+
+                stringList.Add(ToString(stackFrames[i]));
+            }
+
             return stringList;
         }
 
         public static object ToJson(Exception ex)
         {
-            IDictionary<string, string> exception = new Dictionary<string, string>();
+            var exception = new Dictionary<string, string>();
             exception.Add("message", ex.Message);
             exception.Add("backtrace", ex.StackTrace);
 
-            IDictionary<string, object> dict = new Dictionary<string, object>();
+            var dict = new Dictionary<string, object>();
             dict.Add("exception", exception);
-
             return dict;
         }
 

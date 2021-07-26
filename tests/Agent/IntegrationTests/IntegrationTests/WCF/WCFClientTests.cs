@@ -14,7 +14,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.WCF.Client
 {
-    public abstract class WCFClientTestBase : WCFTestBase
+    public abstract class WCFClientTestBase : WCFLegacyTestBase
     {
         private static readonly WCFInvocationMethod[] _instrumentedClientInvocMethods = Enum.GetValues(typeof(WCFInvocationMethod)).Cast<WCFInvocationMethod>().ToArray();
 

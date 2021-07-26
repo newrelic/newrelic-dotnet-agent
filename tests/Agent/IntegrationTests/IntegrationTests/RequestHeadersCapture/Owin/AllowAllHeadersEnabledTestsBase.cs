@@ -51,6 +51,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
             var expectedTransactionName = "WebTransaction/WebAPI/Values/Post";
             var expectedAttributes = new Dictionary<string, object>
             {
+                { "request.method", "POST" },
                 { "request.uri", "/api/Values/" },
 
                 // Captured headers

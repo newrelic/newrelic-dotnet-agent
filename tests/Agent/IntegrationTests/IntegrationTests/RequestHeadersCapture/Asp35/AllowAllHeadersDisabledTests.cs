@@ -50,6 +50,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
             var expectedTransactionName = "WebTransaction/MVC/DefaultController/Index";
             var expectedAttributes = new Dictionary<string, object>
             {
+                { "request.method", "POST" },
                 { "request.headers.referer", "http://example.com/" },
                 { "request.headers.accept", "text/html" },
                 { "request.headers.content-length", "5" },

@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,6 +31,7 @@ namespace ConsoleOtherTransactionWrapperApplication
         /// for recording the response time at its end.
         /// </summary>
         [Transaction]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void OuterInstrumentedMethod()
         {
             Thread.Sleep(TimeSpan.FromSeconds(_delaySeconds));
@@ -41,6 +43,7 @@ namespace ConsoleOtherTransactionWrapperApplication
         /// the response time of the transaction because it was not the one that created the transaction.
         /// </summary>
         [Transaction]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void InnerInstrumentedMethod()
         {
             Thread.Sleep(TimeSpan.FromSeconds(_delaySeconds));

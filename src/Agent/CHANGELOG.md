@@ -5,9 +5,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### New Features
 ### Fixes
+
+## [8.41.0] - 2021-07-21
+### New Features
+* Feature [#611](https://github.com/newrelic/newrelic-dotnet-agent/issues/611): Capture HTTP request method on transactions in the AspNetCore, Asp35, Wcf3, and Owin wrappers.
+* Feature [#580](https://github.com/newrelic/newrelic-dotnet-agent/issues/580): Send initial app name and source in environment data. ([#653](https://github.com/newrelic/newrelic-dotnet-agent/pull/653))
+* Adds support for capturing stack traces for each instrumented method in a Transaction Trace.
+  * This feature is disabled by default.
+  * You can enable the capture of stack traces by setting either maxStackTrace to any value greater than 1.  This value will only be used to determine if stack traces are captured or not despite the name.
+  * The following are the default settings for stack traces. These can be changed using the newrelic.config:
+    * A maximum 80 stack frames are reported per stack trace.
+
+### Fixes
+* Fixes issue [#639](https://github.com/newrelic/newrelic-dotnet-agent/issues/639): RabbitMQ instrumentation can delete user headers from messages. Thank you @witoldsz for finding and reporting this bug. ([#648](https://github.com/newrelic/newrelic-dotnet-agent/pull/648))
+
+## [8.40.1] - 2021-07-08
+### Fixes
+* Fixes issue [#485](https://github.com/newrelic/newrelic-dotnet-agent/issues/485): `SendDataOnExit` configuration setting will prevent Infinite Traces data sending interuption on application exit. ([#550](https://github.com/newrelic/newrelic-dotnet-agent/pull/609))
+* Fixes issue [#155](https://github.com/newrelic/newrelic-dotnet-agent/issues/155): MVC invalid Action for valid Controller can cause MGI. ([#608](https://github.com/newrelic/newrelic-dotnet-agent/pull/608))
+* Fixes issue [#186](https://github.com/newrelic/newrelic-dotnet-agent/issues/186): Attribute based Routing (ex WebAPI) can cause transaction naming issues. ([#612](https://github.com/newrelic/newrelic-dotnet-agent/pull/612))
+* Fixes issue [#463](https://github.com/newrelic/newrelic-dotnet-agent/issues/463): Handle OPTIONS requests for asp.net applications. ([#612](https://github.com/newrelic/newrelic-dotnet-agent/pull/612))
+* Fixes issue [#551](https://github.com/newrelic/newrelic-dotnet-agent/issues/551): Missing external calls in WCF Service. ([#610](https://github.com/newrelic/newrelic-dotnet-agent/pull/610))
+* Fixes issue [#616](https://github.com/newrelic/newrelic-dotnet-agent/issues/616): Linux Kudu not accessible when .NET agent presents. ([#618](https://github.com/newrelic/newrelic-dotnet-agent/pull/618))
+* Fixes issue [#266](https://github.com/newrelic/newrelic-dotnet-agent/issues/266): Agent fails to initialize and provides no logs when configured with capitalized booleans. ([#617](https://github.com/newrelic/newrelic-dotnet-agent/pull/617))
+* Explain plans will be created if [transactionTracer.explainEnabled](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/#tracer-explainEnabled) is true and one or both [transactionTracer.enabled](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/#tracer-enabled) or [slowSql.enabled](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/#slow_sql) are true.  If transactionTracer.explainEnabled is false or both transactionTracer.enabled and slowSql.enabled are false, no Explain Plans will be created.
+* Fixes issue [#600](https://github.com/newrelic/newrelic-dotnet-agent/issues/600): Thread id will now be used in agent logging, even if a thread name has been set. ([#626](https://github.com/newrelic/newrelic-dotnet-agent/pull/626))
+* Fixes issue [#476](https://github.com/newrelic/newrelic-dotnet-agent/issues/476): When generating and explain plan MS SQL parsing is matching parts of words instead of whole words
+* Fixes issue [#477](https://github.com/newrelic/newrelic-dotnet-agent/issues/476): SQL Explain plans MS SQL parser needs to be able to ToString an object to work with parameterized queries
+  * Improves handling serializable types like DateTimeOffset
+  * The presence DbTypes Binary and Object will prevent an Explain Plan from being executed.  In order to execute an explain plan, the agent must replace any parameters in a query with the real values.  Binary and Object are too complex to properly serialize without introducing errors.
 
 ## [8.40.0] - 2021-06-08
 ### New Features
@@ -276,7 +304,9 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.40.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.41.0...HEAD
+[8.41.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.40.1...v8.41.0
+[8.40.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.40.0...v8.40.1
 [8.40.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.39.2...v8.40.0
 [8.39.2]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.39.1...v8.39.2
 [8.39.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.39.0...v8.39.1

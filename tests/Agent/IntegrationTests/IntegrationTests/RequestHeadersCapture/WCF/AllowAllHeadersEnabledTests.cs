@@ -6,7 +6,6 @@ using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit.Abstractions;
-using static NewRelic.Agent.IntegrationTests.WCF.WCFTestBase;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 {
@@ -15,13 +14,16 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
         public AllowAllHeadersEnabledTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, HostingModel hostingModel, WCFBindingType bindingType)
             : base(fixture, output, hostingModel, bindingType) { }
 
-        protected override NewRelicConfigModifier SetupConfiguration()
+        protected override void SetupConfiguration()
         {
-            return base.SetupConfiguration().SetAllowAllHeaders(true);
+            base.SetupConfiguration();
+
+            _fixture.RemoteApplication.NewRelicConfig.SetAllowAllHeaders(true);
         }
 
         protected override IDictionary<string, string> ExpectedHeaders => new Dictionary<string, string>
         {
+            { "request.method", "POST" },
             { "request.headers.referer", "http://example.com/" },
             { "request.headers.accept", "text/html" },
             { "request.headers.content-length", GetExpectedContentLength() },

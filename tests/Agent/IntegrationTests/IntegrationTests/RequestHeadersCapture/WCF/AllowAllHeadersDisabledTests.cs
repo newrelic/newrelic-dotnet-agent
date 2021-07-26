@@ -7,9 +7,9 @@ using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
+using NewRelic.Agent.IntegrationTests.WCF;
 using Xunit;
 using Xunit.Abstractions;
-using static NewRelic.Agent.IntegrationTests.WCF.WCFTestBase;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 {
@@ -28,6 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 
         protected virtual IDictionary<string, string> ExpectedHeaders => new Dictionary<string, string>
         {
+            { "request.method", "POST" },
             { "request.headers.referer", "http://example.com/" },
             { "request.headers.accept", "text/html" },
             { "request.headers.content-length", GetExpectedContentLength() },
@@ -79,9 +80,11 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
             Assertions.SpanEventDoesNotHaveAttributes(UnexpectedHeaders, SpanEventAttributeType.Agent, spanEvent);
         }
 
-        protected override NewRelicConfigModifier SetupConfiguration()
+        protected override void SetupConfiguration()
         {
-            return base.SetupConfiguration().SetAllowAllHeaders(false);
+            base.SetupConfiguration();
+
+            _fixture.RemoteApplication.NewRelicConfig.SetAllowAllHeaders(false);
         }
 
         protected override void AddFixtureCommands()

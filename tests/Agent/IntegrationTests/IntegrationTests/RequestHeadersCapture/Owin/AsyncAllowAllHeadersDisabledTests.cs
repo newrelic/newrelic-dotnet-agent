@@ -51,6 +51,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
             var expectedTransactionName = "WebTransaction/WebAPI/AsyncAwait/SimplePostAsync";
             var expectedAttributes = new Dictionary<string, object>
             {
+                { "request.method", "POST" },
                 { "request.uri", "/AsyncAwait/SimplePostAsync" },
 
                 // Captured headers

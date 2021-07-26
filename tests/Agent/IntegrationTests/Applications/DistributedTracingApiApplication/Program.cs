@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using CommandLine;
 using NewRelic.Api.Agent;
@@ -73,6 +74,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.DistributedTracingApiAppl
         }
 
         [Transaction]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static IDistributedTracePayload CallCreateDTPayload()
         {
             var currentTransaction = _agent.CurrentTransaction;
@@ -83,6 +85,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.DistributedTracingApiAppl
         }
 
         [Transaction]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void CallAcceptDTPayload(IDistributedTracePayload payload)
         {
             var currentTransaction = _agent.CurrentTransaction;
@@ -93,6 +96,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.DistributedTracingApiAppl
         }
 
         [Transaction]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void CallInsertDTHeaders()
         {
             var currentTransaction = _agent.CurrentTransaction;
@@ -100,6 +104,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.DistributedTracingApiAppl
         }
 
         [Transaction]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void CallAcceptDTHeaders()
         {
             var currentTransaction = _agent.CurrentTransaction;

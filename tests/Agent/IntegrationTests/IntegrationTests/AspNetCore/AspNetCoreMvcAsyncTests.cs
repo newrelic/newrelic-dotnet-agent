@@ -62,6 +62,15 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
         [Fact]
         public void Test()
         {
+            foreach (var line in _fixture.AgentLog.GetFileLines())
+            {
+                // This first check has virtually no chance of failing until we upgrade the test app to .net 6
+                Assert.DoesNotContain("tid: .NET ThreadPool Worker", line);
+
+                // The mvc async test application sets it's main thread to this name
+                Assert.DoesNotContain("tid: NewRelic Main Test Application Thread", line);
+            }
+
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
             Assert.NotNull(metrics);

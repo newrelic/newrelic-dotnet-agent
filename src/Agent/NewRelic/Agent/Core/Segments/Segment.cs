@@ -14,7 +14,9 @@ using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Errors;
-using System.Collections.Concurrent;
+using System.Diagnostics;
+using NewRelic.Agent.Core.Configuration;
+using NewRelic.Agent.Core.Utils;
 
 namespace NewRelic.Agent.Core.Segments
 {
@@ -31,6 +33,8 @@ namespace NewRelic.Agent.Core.Segments
 
     public class Segment : IInternalSpan, ISegmentDataState
     {
+        private static ConfigurationSubscriber _configurationSubscriber = new ConfigurationSubscriber();
+
         public IAttributeDefinitions AttribDefs => _transactionSegmentState.AttribDefs;
         public string TypeName => MethodCallData.TypeName;
 
@@ -219,7 +223,31 @@ namespace NewRelic.Agent.Core.Segments
         {
             var endTime = _transactionSegmentState.GetRelativeTime();
             RelativeEndTime = endTime;
-            _parameters = Data.Finish() ?? EmptyImmutableParameters;
+            _parameters = Data.Finish();
+
+            // if transactionTracer is disabled, we not need stack traces.
+            // if stack frames is 0, it is considered that the customer disabled stack traces.
+            // if max stack traces is 0, it is considered that the customer disabled stack traces.
+            if (_configurationSubscriber.Configuration.TransactionTracerEnabled
+            && _configurationSubscriber.Configuration.StackTraceMaximumFrames > 0
+            && _configurationSubscriber.Configuration.TransactionTracerMaxStackTraces > 0)
+            {
+                var stackFrames = StackTraces.ScrubAndTruncate(new StackTrace(2, true), _configurationSubscriber.Configuration.StackTraceMaximumFrames);// first 2 stack frames are agent code
+                var stackFramesAsStringArray = StackTraces.ToStringList(stackFrames); // serializer doesn't understand StackFrames, but does understand strings
+                if (_parameters == null)
+                {
+                    _parameters = new KeyValuePair<string, object>[1] { new KeyValuePair<string, object>("backtrace", stackFramesAsStringArray) };
+                }
+                else
+                {
+                    // Only external segments return a collection and its a Dictionary
+                    ((Dictionary<string, object>)_parameters).Add("backtrace", stackFramesAsStringArray);
+                }
+            }
+            else if (_parameters == null) // External segments return a dictionary, so we have to check for null here.
+            {
+                _parameters = EmptyImmutableParameters;
+            }
         }
 
         public SpanAttributeValueCollection GetAttributeValues()

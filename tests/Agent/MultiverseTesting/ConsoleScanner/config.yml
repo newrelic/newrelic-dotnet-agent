@@ -151,15 +151,15 @@
   #       - { package-name: microsoft.netnetcore.app, versions: [2.1.25, 2.2.8] }
   #   local-assemblies:
 
-  # # TODO: add assembly for Oracle.DataAccess & Oracle.ManagedDataAccess & IBM.Data.DB2
-  # - name: sql
-  #   xml-file: C:\git\newrelic-dotnet-agent\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Sql\Instrumentation.xml
-  #   nuget-packages:
-  #       - { package-name: microsoft.netframework.referenceassemblies.net45, versions: [1.0.0] }
-  #       #- { package-name: microsoft.netnetcore.app, versions: [2.1.25, 2.2.8] }
-  #       - { package-name: System.Data.SqlClient, versions: [4.4.0, 4.5.3, 4.6.1, 4.7.0, 4.8.2] }
-  #       #- { package-name: Devart.Data.MySql, versions: [8.9.12, 8.19.1812] }
-  #       - { package-name: MySql.Data, versions: [6.9.12, 8.0.18, 8.0.23] }
-  #       - { package-name: MySqlConnector, versions: [0.69.10, 1.0.1, 1.2.1] }
-  #       - { package-name: Npgsql, versions: [4.0.5, 4.1.8, 5.0.3] }
-  #   local-assemblies:
+   # TODO: add assembly for Oracle.DataAccess & Oracle.ManagedDataAccess & IBM.Data.DB2
+  - name: sql
+    xml-file: ${{ MVS_XML_PATH }}\Sql\Instrumentation.xml
+    nuget-packages:
+        #- { package-name: microsoft.netframework.referenceassemblies.net45, versions: [1.0.0] }
+        #- { package-name: microsoft.netnetcore.app, versions: [2.1.25, 2.2.8] }
+        #- { package-name: System.Data.SqlClient, versions: [4.4.0, 4.5.3, 4.6.1, 4.7.0, 4.8.2] }
+        #- { package-name: Devart.Data.MySql, versions: [8.9.12, 8.19.1812] }
+        - { package-name: MySql.Data, versions: [6.9.12, 8.0.25] }
+        #- { package-name: MySqlConnector, versions: [0.69.10, 1.0.1, 1.2.1] }
+        #- { package-name: Npgsql, versions: [4.0.5, 4.1.8, 5.0.3] }
+    local-assemblies:

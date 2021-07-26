@@ -972,7 +972,7 @@
               </xs:annotation>
             </xs:attribute>
 
-            <xs:attribute name="maxStackTrace" type="xs:int" default="30">
+            <xs:attribute name="maxStackTrace" type="xs:int" default="0">
               <xs:annotation>
                 <xs:documentation>
                   The maximum number of stack traces to collect during a harvest cycle.

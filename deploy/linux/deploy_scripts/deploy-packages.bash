@@ -17,7 +17,7 @@
 ###
 ### Description:
 ###
-###   Deploying or rolling back the .NET Core agent Linux packages proceeds 
+###   Deploying or rolling back the .NET Core agent Linux packages proceeds
 ###   in three phases: pull, modify, push.
 ###   The three phases are designed to ensure the deploy process is safe,
 ###   reliable, and atomic. i.e. Changes should not be visible to customers
@@ -33,9 +33,9 @@
 ###   See libexec/s3-pull.bash for details.
 ###
 ###   The second phase, the "modify" phase, performs the real work of
-###   deploying or rolling back the agent. During this phase, each of the 
-###   files comprising an agent release is copied to the appropriate location 
-###   within the download site. Additionally, the Debian and Redhat package 
+###   deploying or rolling back the agent. During this phase, each of the
+###   files comprising an agent release is copied to the appropriate location
+###   within the download site. Additionally, the Debian and Redhat package
 ###   repositories are re-indexed and digitally signed. See libexec/repoman-*.bash for
 ###   details.
 ###
@@ -142,19 +142,24 @@ if [[ ! "$ACTION" =~ release|rollback ]]; then
   exit
 fi
 
-# Set the target (production vs. testing) based on the S3 bucket URI.  If the supplied bucket doesn't match one of the four we know about, bail out.
-if [ "$S3_BUCKET" == "$PROD_MAIN_S3" -o "$S3_BUCKET"  == "$PROD_TEST_S3" ]
-then
-  TARGET='production'
-elif [ "$S3_BUCKET" == "$TEST_PRIV_S3" -o "$S3_BUCKET"  == "$TEST_TEST_S3" ]
-then
-  TARGET='testing'
-else
-  echo "Specified S3 bucket uri '$S3_BUCKET' does not match any known buckets.  Exiting."
-  exit
-fi
+# All of the following commented out code comes from the PHP agent team's more complex process.  The TARGET variable doesn't actually control what S3
+# bucket the packages are being deployed to or rolled back from, it's just used as a local path component by some sub-scripts (e.g. s3-pull/push)
 
-export TARGET
+# # Set the target (production vs. testing) based on the S3 bucket URI.  If the supplied bucket doesn't match one of the four we know about, bail out.
+# if [ "$S3_BUCKET" == "$PROD_MAIN_S3" -o "$S3_BUCKET"  == "$PROD_TEST_S3" ]
+# then
+#   TARGET='production'
+# elif [ "$S3_BUCKET" == "$TEST_PRIV_S3" -o "$S3_BUCKET"  == "$TEST_TEST_S3" ]
+# then
+#   TARGET='testing'
+# else
+#   echo "Specified S3 bucket uri '$S3_BUCKET' does not match any known buckets.  Exiting."
+#   exit
+# fi
+
+# export TARGET
+
+export TARGET='production' # this is just a string used in local paths for repository data pulled down from S3 and then pushed back up
 
 # Make sure we have all the external tools we need
 for CMD in apt-ftparchive gpg createrepo curl rsync; do
@@ -264,7 +269,7 @@ elif [[ "$ACTION" == 'rollback' ]]; then
     --destination="$TARGET" \
     --verbose \
     "${FILES[@]}"
-fi  
+fi
 
 ## END MODIFY PHASE ##
 

@@ -202,7 +202,7 @@ jobs:
           if-no-files-found: error
 
       - name: Convert Code Signing Certificate Into File
-        if: ${{ github.event.release }}
+        if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
         id: write_cert
         run: |
           $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
@@ -212,14 +212,14 @@ jobs:
         shell: powershell
           
       - name: Install Code Signing Certificate
-        if: ${{ github.event.release }}
+        if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
         run: |
           Write-Host "certutil.exe -f -user -p <passphrase> -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot"
           certutil.exe -f -user -p ${{ secrets.CERT_PASSPHRASE }} -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot
         shell: powershell
       
       - name: Create Self-signed code signing cert  
-        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
         run: |
           Write-Host "New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)"
           New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)
@@ -237,10 +237,10 @@ jobs:
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
         shell: powershell
 
-      - name: Archive _build Artifacts
+      - name: Archive msi _build Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
           path: ${{ github.workspace }}\src\_build
           if-no-files-found: error
 
@@ -455,7 +455,8 @@ jobs:
           CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
           HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
           ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
-          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35]
+          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
+          RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHandling]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -557,6 +558,7 @@ jobs:
       matrix:
         namespace: [ Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, Oracle, Postgres, RabbitMq, Redis ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
+    if: false # Disabling the unbounded integration test job until the service host is back online
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
@@ -678,7 +680,7 @@ jobs:
 
   create-package-rpm:
     needs: build-test-fullagent-msi
-    if: ${{ github.event.release }}
+    if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
     name: Create RPM Package
     runs-on: ubuntu-18.04
 
@@ -688,10 +690,10 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Download _build Artifacts
+      - name: Download msi _build Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download Agent Home Folders
@@ -731,16 +733,16 @@ jobs:
           docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
         shell: bash
       
-      - name: Archive Package Artifacts
+      - name: Archive RPM Package Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: build-folder-artifacts
-          path: ${{ github.workspace }}/src/_build
+          name: rpm-build-artifacts
+          path: ${{ github.workspace }}/src/_build/CoreArtifacts
           if-no-files-found: error
 
   create-package-deb:
     needs: build-test-fullagent-msi
-    if: ${{ github.event.release }}
+    if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
     name: Create Debian package
     runs-on: ubuntu-18.04
 
@@ -756,10 +758,10 @@ jobs:
           name: homefolders
           path: src/Agent
 
-      - name: Download _build Artifacts
+      - name: Download msi _build Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download agent_version.txt
@@ -768,7 +770,7 @@ jobs:
           name: agent-version
           path: ${{ github.workspace }}
 
-      - name: Build debian package
+      - name: Build Debian Package
         run: |
           sudo apt install dos2unix -y
           dos2unix ${{ github.workspace }}/agent_version.txt
@@ -779,16 +781,16 @@ jobs:
           docker-compose run -e AGENT_VERSION=$agentVersion build_deb
         shell: bash
         
-      - name: Archive Package Artifacts
+      - name: Archive Debian Package Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: build-folder-artifacts
-          path: ${{ github.workspace }}/src/_build
+          name: debian-build-artifacts
+          path: ${{ github.workspace }}/src/_build/CoreArtifacts
           if-no-files-found: error
 
   run-artifactbuilder:
     needs: [ create-package-rpm, create-package-deb ]
-    if: ${{ github.event.release }}
+    if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
     name: Run ArtifactBuilder
     runs-on: windows-2019
 
@@ -804,11 +806,23 @@ jobs:
           name: homefolders
           path: src/Agent 
       
-      - name: Download _build Artifacts
+      - name: Download msi _build Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-folder-artifacts
+          name: msi-build-folder-artifacts
           path: src/_build
+
+      - name: Download Debian _build Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: debian-build-artifacts
+          path: src/_build/CoreArtifacts
+
+      - name: Download RPM _build Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: rpm-build-artifacts
+          path: src/_build/CoreArtifacts
 
       - name: Download NewRelic.NuGetHelper
         uses: actions/download-artifact@v2

@@ -251,7 +251,7 @@ namespace CompositeTests
             var explainPlan = (ExplainPlanWireModel)sqlTrace.ParameterData["explain_plan"];
             var explainPlanData = explainPlan.ExplainPlanDatas.First().ToList();
             var transactionSegments = transactionTrace.TransactionTraceData.RootSegment.Children;
-            var transactionExplainPlan = (ExplainPlanWireModel)transactionSegments.First().Children.First().Parameters.Values.First();
+            var transactionExplainPlan = (ExplainPlanWireModel)transactionSegments.First().Children.First().Parameters["explain_plan"];
 
             NrAssert.Multiple(
                 () => Assert.IsNotNull(explainPlan),

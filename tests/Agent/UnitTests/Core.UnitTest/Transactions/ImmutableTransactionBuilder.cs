@@ -16,6 +16,8 @@ namespace NewRelic.Agent.Core.Transactions
 {
     public class TestImmutableTransactionMetadata : IImmutableTransactionMetadata
     {
+        public string RequestMethod { get; }
+
         public string Uri { get; }
         public string OriginalUri { get; }
         public string ReferrerUri { get; }

@@ -9,13 +9,14 @@ using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.WCF.Service
 {
-    public abstract class WCFServiceTestBase : WCFTestBase
+    public abstract class WCFServiceTestBase : WCFLegacyTestBase
     {
         private static WCFInvocationMethod[] _instrumentedSvcInvocMethods = new[]
         {
@@ -361,7 +362,14 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
             var unexpectedMethodNames = new List<string>();
 
             var includeASPPipelineEvents = _hostingModelOption == HostingModel.IIS && _aspCompatibilityOption == ASPCompatibilityMode.Enabled;
-            const int COUNT_ASP_PIPELINE_EVENTS = 10;
+
+            // In debug we consistently get 10 extra ASP pipeline events, in Release we consistently get 9.
+            // We do not see spans for 'PreExecuteRequestHandler' in Release, but we do in Debug.
+            #if DEBUG
+                const int COUNT_ASP_PIPELINE_EVENTS = 10;
+            #else
+                const int COUNT_ASP_PIPELINE_EVENTS = 9;
+            #endif
 
             foreach (var svcTrxName in svcTrxNames)
             {
@@ -418,8 +426,17 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
                 }
             }
 
-            NrAssert.Multiple(
+            // Leaving this here commented out to help future code warriors who may want to dump and compare spans between runs
+            //using (var tempFileStream = new FileStream($"C:\\{Guid.NewGuid()}.spandump", FileMode.CreateNew))
+            //using (var sr = new StreamWriter(tempFileStream))
+            //{
+            //    foreach (var spanEvent in LogHelpers.SpanEvents_Service.OrderBy(x => x.IntrinsicAttributes["name"]))
+            //    {
+            //        sr.WriteLine($"Span event name: {spanEvent.IntrinsicAttributes["name"]}");
+            //    }
+            //}
 
+            NrAssert.Multiple(
                 () => Assert.True(countExpectedSpans == LogHelpers.SpanEvents_Service.Length, $"Incorrect Number of Spans, Expected {countExpectedSpans}, Actual {LogHelpers.SpanEvents_Service.Length}"),
                 () => Assert.True(!unexpectedMethodNames.Any(), $"The following methods were not Recognized {string.Join(", ", unexpectedMethodNames.ToArray())}")
             );

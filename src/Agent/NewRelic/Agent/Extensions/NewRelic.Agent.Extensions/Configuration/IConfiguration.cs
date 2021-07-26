@@ -14,6 +14,7 @@ namespace NewRelic.Agent.Configuration
         bool AgentEnabled { get; }
         string AgentLicenseKey { get; }
         IEnumerable<string> ApplicationNames { get; }
+        string ApplicationNamesSource { get; }
         bool AutoStartAgent { get; }
         string BrowserMonitoringApplicationId { get; }
         bool BrowserMonitoringAutoInstrument { get; }
@@ -79,6 +80,7 @@ namespace NewRelic.Agent.Configuration
         int InfiniteTracingBatchSizeSpans { get; }
         int InfiniteTracingTraceTimeoutMsConnect { get; }
         int InfiniteTracingTraceTimeoutMsSendData { get; }
+        int InfiniteTracingExitTimeoutMs { get; }
         string PrimaryApplicationId { get; }
         string TrustedAccountKey { get; }
         string AccountId { get; }
@@ -111,6 +113,7 @@ namespace NewRelic.Agent.Configuration
         string Labels { get; }
         IEnumerable<RegexRule> MetricNameRegexRules { get; }
         string NewRelicConfigFilePath { get; }
+        string AppSettingsConfigFilePath { get; }
         string ProxyHost { get; }
         string ProxyUriPath { get; }
         int ProxyPort { get; }

@@ -18,6 +18,7 @@ namespace NewRelic.Agent.Core.Transactions
     {
         IImmutableTransactionMetadata ConvertToImmutableMetadata();
         string LatestCrossApplicationPathHash { get; }
+        void SetRequestMethod(string requestMethod);
         void SetUri(string uri);
         void SetOriginalUri(string uri);
         void SetReferrerUri(string uri);
@@ -83,6 +84,8 @@ namespace NewRelic.Agent.Core.Transactions
         private volatile int _httpResponseStatusCode = int.MinValue;
         private volatile int _httpResponseSubStatusCode = int.MinValue;
 
+        private volatile string _requestMethod;
+
         private volatile string _uri;
         private volatile string _originalUri;
         private volatile string _referrerUri;
@@ -100,6 +103,11 @@ namespace NewRelic.Agent.Core.Transactions
 
         public bool IsSynthetics => !string.IsNullOrEmpty(_syntheticsResourceId) && !string.IsNullOrEmpty(_syntheticsJobId) &&
                                      !string.IsNullOrEmpty(_syntheticsMonitorId);
+
+        public void SetRequestMethod(string requestMethod)
+        {
+            _requestMethod = requestMethod;
+        }
 
         public void SetUri(string uri)
         {
@@ -213,6 +221,8 @@ namespace NewRelic.Agent.Core.Transactions
         public float CrossApplicationResponseTimeInSeconds => _crossApplicationResponseTimeInSeconds;
 
         public bool HasOutgoingTraceHeaders { get; set; }
+
+        public string RequestMethod => _requestMethod;
 
         public string Uri => _uri;
         public string OriginalUri => _originalUri;
