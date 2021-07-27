@@ -19,9 +19,14 @@ jobs:
       - name: Do Work
         run: |
           AGENT_VERSION="${{ github.event.inputs.agent_version }}"
-          AGENT_VERSION_V="${{ github.event.inputs.agent_version }}"
+          AGENT_VERSION_V="v${{ github.event.inputs.agent_version }}"
+          echo "AGENT_VERSION $AGENT_VERSION"
+          echo "AGENT_VERSION_V $AGENT_VERSION_V"
+          pwd
           cd wiki
+          pwd
           cd mvs
+          pwd
           if [[ ! -d "$AGENT_VERSION_V" ]]; then
             mkdir "AGENT_VERSION_V"
             touch $AGENT_VERSION_V/${AGENT_VERSION_V}-Home.md
