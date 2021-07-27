@@ -29,7 +29,8 @@ jobs:
           pwd
           if [[ ! -d "$AGENT_VERSION_V" ]]; then
             mkdir "AGENT_VERSION_V"
-            touch $AGENT_VERSION_V/${AGENT_VERSION_V}-Home.md
+            ls -la
+            touch ./$AGENT_VERSION_V/${AGENT_VERSION_V}-Home.md
           fi
           cd "AGENT_VERSION_V"
           pwd
