@@ -20,25 +20,19 @@ jobs:
         run: |
           AGENT_VERSION="${{ github.event.inputs.agent_version }}"
           AGENT_VERSION_V="v${{ github.event.inputs.agent_version }}"
-          echo "AGENT_VERSION $AGENT_VERSION"
-          echo "AGENT_VERSION_V $AGENT_VERSION_V"
-          pwd
           cd wiki
-          pwd
           cd mvs
-          pwd
           if [[ ! -d "$AGENT_VERSION_V" ]]; then
             mkdir "$AGENT_VERSION_V"
-            ls -la
             touch ./$AGENT_VERSION_V/${AGENT_VERSION_V}-Home.md
           fi
           cd "$AGENT_VERSION_V"
-          pwd
-          ls -la
+          touch ./${$AGENT_VERSION_V}-ASP.NET.md
+          touch ./${$AGENT_VERSION_V}-MongoDB.md
       - name: Push to wiki
         run: |
           cd wiki
-          # git config --local user.email "action@github.com"
-          # git config --local user.name "GitHub Action"
-          # git add .
-          # git diff-index --quiet HEAD || git commit -m "Add changes" && git push
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git diff-index --quiet HEAD || git commit -m "Add changes" && git push
