@@ -28,11 +28,11 @@ jobs:
           cd mvs
           pwd
           if [[ ! -d "$AGENT_VERSION_V" ]]; then
-            mkdir "AGENT_VERSION_V"
+            mkdir "$AGENT_VERSION_V"
             ls -la
             touch ./$AGENT_VERSION_V/${AGENT_VERSION_V}-Home.md
           fi
-          cd "AGENT_VERSION_V"
+          cd "$AGENT_VERSION_V"
           pwd
           ls -la
       - name: Push to wiki
