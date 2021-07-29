@@ -44,18 +44,8 @@ namespace ReportBuilder
             // deserialize reports from .yml
             var reports = ReportParser.GetInstrumentationReports(reportFilePath);
             var overview = TransformReport(reports);
-            ProcessOverview(outputPath, agentVersion, overview);
-
-
-            /*
-             * assumes we are in the mvs folder
-             * check if version folder exists, rename if does
-             * create new version folder
-             * create framework files and populate, store name
-             * create home file using stored names
-             * Scan mvs folder and recreate mvs home file
-             * 
-             */
+            var wikiMaker = new WikiMaker();
+            wikiMaker.UpdateWiki(outputPath, agentVersion, overview);
         }
 
         private static InstrumentationOverview TransformReport(List<InstrumentationReport> instrumentationReports)
@@ -108,131 +98,6 @@ namespace ReportBuilder
             }
 
             return overview;
-        }
-
-        private static void ProcessOverview(string outputPath, string version, InstrumentationOverview instrumentationOverview)
-        {
-            var dirs = SetupDirectoryStructure(outputPath, version);
-            SetupDirectoryContents(dirs, instrumentationOverview);
-        }
-
-        private static DirectoryInfo SetupDirectoryStructure(string outputPath, string version)
-        {
-            var fullPath = Path.GetFullPath(version, outputPath);
-            if (Directory.Exists(fullPath))
-            {
-                Directory.Move(fullPath, fullPath + "_old");
-            }
-
-            return Directory.CreateDirectory(fullPath);
-        }
-
-        private static void SetupDirectoryContents(DirectoryInfo directoryInfo, InstrumentationOverview instrumentationOverview)
-        {
-            foreach (var report in instrumentationOverview.Reports)
-            {
-                CreateFrameworkFile(directoryInfo, report);
-            }
-
-
-        }
-
-        private static void CreateFrameworkFile(DirectoryInfo directoryInfo, KeyValuePair<string, List<PackageOverview>> report)
-        {
-            var filePath = CreateFile($"{report.Key}.md", directoryInfo.FullName);
-
-            var builder = new StringBuilder();
-            builder.AppendLine(string.Empty);
-
-            foreach (var packageOverview in report.Value)
-            {
-                // Package_Name B
-                builder.AppendLine(string.Empty);
-                builder.AppendLine($"Package: {packageOverview.PackageName}");
-                builder.AppendLine(string.Empty);
-
-                builder.Append("| Method/Version ");
-                foreach (var versionedAssemblyOverview in packageOverview.PackageVersions)
-                {
-                    // | Method/Version | 1.0 | 2.0 | 3.0 | 4.0 |
-                    builder.Append($"| {versionedAssemblyOverview.Key} ");
-                }
-
-                builder.AppendLine("|");
-
-                // |---|---|---|---|---|
-                builder.Append("|---");
-                for (var i = 0; i < packageOverview.PackageVersions.Count; i++)
-                {
-                    builder.Append("|---");
-                }
-
-                builder.AppendLine("|");
-
-                // | assembly.class.method() |   |   |   |   |
-                var lineStore = new Dictionary<string, StringBuilder>();
-                foreach (var versionedAssemblyOverview in packageOverview.PackageVersions)
-                {
-                    var methodSignatures = versionedAssemblyOverview.Value;
-
-                    // if no sigs, update all exist ones with false column
-                    if (methodSignatures.Count == 0)
-                    {
-                        foreach (var line in lineStore)
-                        {
-                            line.Value.Append("| false ");
-                        }
-
-                        continue;
-                    }
-
-                    // sigs exists, add each to line with isValid
-                    foreach (var methodSignature in methodSignatures)
-                    {
-                        if (!lineStore.TryGetValue(methodSignature.Key, out var sigBuilder))
-                        {
-                            lineStore[methodSignature.Key] = new StringBuilder($"| {methodSignature.Key} ");
-                            sigBuilder = lineStore[methodSignature.Key];
-                        }
-
-                        sigBuilder.Append($"| {methodSignature.Value} ");
-                    }
-                }
-
-                // we get list of methods from XML, not assembly, so they stay the same
-                foreach (var line in lineStore)
-                {
-                    line.Value.Append("|");
-                    builder.AppendLine(line.Value.ToString());
-                }
-            }
-
-            var output = builder.ToString();
-            WriteContent(filePath, output);
-        }
-
-        private static void CreateVersionHomeFile()
-        {
-
-        }
-
-        private static string CreateFile(string path, string basePath)
-        {
-            var filePath = Path.GetFullPath(path, basePath);
-            if (!File.Exists(filePath))
-            {
-                File.Create(filePath).Close();
-            }
-
-            return filePath;
-        }
-
-        private static void WriteContent(string filePath, string content)
-        {
-            using (var writer = new StreamWriter(filePath, append: true))
-            {
-                writer.WriteLine(content);
-            }
         }
 	}
 }

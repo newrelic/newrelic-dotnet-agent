@@ -18,6 +18,8 @@ namespace NewRelic.Agent.ConsoleScanner
 {
     public class Program
     {
+        private static bool _writeLogs = true;
+
         private static List<InstrumentationReport> _instrumentationReports = new List<InstrumentationReport>();
         private static XmlSerializer _xmlSerializer = new XmlSerializer(typeof(Extension));
         private static readonly string _nugetDataDirectory = $@"{Environment.CurrentDirectory}\NugetData";
@@ -26,27 +28,27 @@ namespace NewRelic.Agent.ConsoleScanner
         {
             if (args.Length != 2 || string.IsNullOrWhiteSpace(args[0]) || string.IsNullOrWhiteSpace(args[1]))
             {
-                Console.WriteLine("ERROR Missing argument: Must supply path to configuration and report files.");
+                WriteLineToConsole("ERROR Missing argument: Must supply path to configuration and report files.");
                 return;
             }
 
             var configFilePath = args[0];
             if (!File.Exists(configFilePath))
             {
-                Console.WriteLine("ERROR File not found: Provide path was incorrect or file missing.");
+                WriteLineToConsole("ERROR File not found: Provide path was incorrect or file missing.");
                 return;
             }
 
             var reportFilePath = Path.GetFullPath(args[1]);
             if (File.Exists(reportFilePath))
             {
-                Console.WriteLine($"Warning: Found existing report at '{reportFilePath}'.  It will be overwritten!");
+                WriteLineToConsole($"Warning: Found existing report at '{reportFilePath}'.  It will be overwritten!");
             }
 
             var pathToReport = Directory.GetParent(reportFilePath).FullName;
             if (!Directory.Exists(pathToReport))
             {
-                Console.WriteLine($"ERROR Directory not found: Provide path was incorrect or missing.");
+                WriteLineToConsole($"ERROR Directory not found: Provide path was incorrect or missing.");
                 return;
             }
 
@@ -74,15 +76,15 @@ namespace NewRelic.Agent.ConsoleScanner
                     foreach (var intrumentedDllFileLocation in downloadedNugetInfo.InstrumentedDllFileLocations)
                     {
                         // Builds a model from the files
-                        Console.WriteLine($"Starting scan of '{intrumentedDllFileLocation}'");
+                        WriteLineToConsole($"Starting scan of '{intrumentedDllFileLocation}'");
                         var assemblyAnalyzer = new AssemblyAnalyzer();
                         var assemblyAnalysis = assemblyAnalyzer.RunAssemblyAnalysis(intrumentedDllFileLocation);
 
                         var instrumentationValidator = new InstrumentationValidator(assemblyAnalysis);
 
                         // just some debugging writes
-                        Console.WriteLine($"Found {assemblyAnalysis.ClassesCount} classes");
-                        Console.WriteLine("Scan complete");
+                        WriteLineToConsole($"Found {assemblyAnalysis.ClassesCount} classes");
+                        WriteLineToConsole("Scan complete");
 
                         var targetFramework = Path.GetFileName(Path.GetDirectoryName(intrumentedDllFileLocation));
 
@@ -97,7 +99,6 @@ namespace NewRelic.Agent.ConsoleScanner
         public static InstrumentationModel ReadInstrumentationFile(InstrumentationSet instrumentationSet)
         {
             Extension extension = null;
-
             using (var fileStream = File.Open(instrumentationSet.XmlFile, FileMode.Open))
             {
                 extension = (Extension)_xmlSerializer.Deserialize(fileStream);
@@ -115,7 +116,6 @@ namespace NewRelic.Agent.ConsoleScanner
                 foreach (var nugetPackage in instrumentationSet.NugetPackages)
                 {
                     downloadedNugetInfoList.AddRange(GetNugetPackages(nugetPackage.PackageName, nugetPackage.Versions, instrumentationAssemblies));
-
                 }
             }
 
@@ -147,8 +147,8 @@ namespace NewRelic.Agent.ConsoleScanner
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"GetNugetPackages exception : Package - {packageName}");
-                Console.WriteLine($"GetNugetPackages exception : {ex}");
+                WriteLineToConsole($"GetNugetPackages exception : Package - {packageName}");
+                WriteLineToConsole($"GetNugetPackages exception : {ex}");
             }
 
             return downloadedNugetInfos;
@@ -156,27 +156,23 @@ namespace NewRelic.Agent.ConsoleScanner
 
         public static void PrintReportToConsole()
         {
-            Console.WriteLine("============ REPORT ============");
+            WriteLineToConsole("============ REPORT ============");
             foreach(var report in _instrumentationReports)
             {
-                Console.WriteLine($"Instrumentation set: {report.InstrumentationSetName}");
-                Console.WriteLine($"Nuget package: {report.PackageName} ver {report.PackageVersion}");
-                Console.WriteLine($"Target framework: {report.TargetFramework}");
-                Console.WriteLine($"");
-
-                foreach (var assemblyReport in report.AssemblyReports)
+                WriteLineToConsole($"Instrumentation set: {report.InstrumentationSetName}");
+                WriteLineToConsole($"Nuget package: {report.PackageName} ver {report.PackageVersion}");
+                WriteLineToConsole($"Target framework: {report.TargetFramework}");
+                WriteLineToConsole($"");
+                WriteToConsole("\t");
+                WriteLineToConsole($"Assembly Name: {report.AssemblyReport.AssemblyName}");
+                var methodValidations = report.AssemblyReport.GetMethodValidationsForPrint();
+                foreach (var line in methodValidations)
                 {
-                    Console.Write("\t");
-                    Console.WriteLine($"Assembly Name: {assemblyReport.AssemblyName}");
-
-                    var methodValidations = assemblyReport.GetMethodValidationsForPrint();
-                    foreach (var line in methodValidations)
-                    {
-                        Console.WriteLine($"\t{line}");
-                    }
+                    WriteLineToConsole($"\t{line}");
                 }
+                
 
-                Console.WriteLine($"");
+                WriteLineToConsole($"");
             }
         }
 
@@ -192,6 +188,22 @@ namespace NewRelic.Agent.ConsoleScanner
         public static void WriteReportToDisk(string reports, string reportFilePath)
         {
             File.WriteAllText(reportFilePath, reports);
+        }
+
+        private static void WriteToConsole(string entry)
+        {
+            if (_writeLogs)
+            {
+                Console.Write(entry);
+            }
+        }
+
+        private static void WriteLineToConsole(string entry)
+        {
+            if (_writeLogs)
+            {
+                Console.WriteLine(entry);
+            }
         }
     }
 }
