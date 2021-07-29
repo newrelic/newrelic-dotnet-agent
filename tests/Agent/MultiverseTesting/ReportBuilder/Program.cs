@@ -83,16 +83,16 @@ namespace ReportBuilder
                 // add package version if does not exist
                 if (!packageOverview.PackageVersions.ContainsKey(instrumentationReport.PackageVersion))
                 {
-                    packageOverview.PackageVersions.Add(instrumentationReport.PackageVersion, new AssemblyOverview(instrumentationReport.AssemblyReport.AssemblyName));
+                    packageOverview.PackageVersions.Add(instrumentationReport.PackageVersion, new Dictionary<string, bool>());
                 }
 
-                var assemblyOverview = packageOverview.PackageVersions[instrumentationReport.PackageVersion];
+                var methodSignatures = packageOverview.PackageVersions[instrumentationReport.PackageVersion];
                 foreach (var method in instrumentationReport.AssemblyReport.Validations)
                 {
                     foreach (var validation in method.Value)
                     {
                         var fqMethodname = $"{method.Key}.{validation.MethodSignature}";
-                        if (assemblyOverview.MethodSignatures.TryGetValue(fqMethodname, out var isValid) )
+                        if (methodSignatures.TryGetValue(fqMethodname, out var isValid) )
                         {
                             if(isValid == validation.IsValid)
                             {
@@ -102,17 +102,13 @@ namespace ReportBuilder
                             throw new Exception($"ERROR: Method '{fqMethodname}' exists with different validation result. Has {isValid} should be {validation.IsValid}");
                         }
 
-                        assemblyOverview.MethodSignatures.Add(fqMethodname, validation.IsValid);
+                        methodSignatures.Add(fqMethodname, validation.IsValid);
                     }
                 }
             }
 
             return overview;
         }
-
-
-
-
 
         private static void ProcessOverview(string outputPath, string version, InstrumentationOverview instrumentationOverview)
         {
@@ -143,7 +139,7 @@ namespace ReportBuilder
 
         private static void CreateFrameworkFile(DirectoryInfo directoryInfo, KeyValuePair<string, List<PackageOverview>> report)
         {
-            var filePath = CreateFile(report.Key, directoryInfo.FullName);
+            var filePath = CreateFile($"{report.Key}.md", directoryInfo.FullName);
 
             var builder = new StringBuilder();
             builder.AppendLine(string.Empty);
@@ -151,7 +147,8 @@ namespace ReportBuilder
             foreach (var packageOverview in report.Value)
             {
                 // Package_Name B
-                builder.AppendLine($"{packageOverview.PackageName}");
+                builder.AppendLine(string.Empty);
+                builder.AppendLine($"Package: {packageOverview.PackageName}");
                 builder.AppendLine(string.Empty);
 
                 builder.Append("| Method/Version ");
@@ -173,41 +170,45 @@ namespace ReportBuilder
                 builder.AppendLine("|");
 
                 // | assembly.class.method() |   |   |   |   |
+                var lineStore = new Dictionary<string, StringBuilder>();
                 foreach (var versionedAssemblyOverview in packageOverview.PackageVersions)
                 {
-                    var methodSignatures = versionedAssemblyOverview.Value.MethodSignatures;
-                    foreach (var assemblyOverview in methodSignatures)
+                    var methodSignatures = versionedAssemblyOverview.Value;
+
+                    // if no sigs, update all exist ones with false column
+                    if (methodSignatures.Count == 0)
                     {
-                        builder.Append("| ");
-                        // write out method sig
-                        builder.Append(assemblyOverview.Key);
+                        foreach (var line in lineStore)
+                        {
+                            line.Value.Append("| false ");
+                        }
+
+                        continue;
                     }
 
+                    // sigs exists, add each to line with isValid
+                    foreach (var methodSignature in methodSignatures)
+                    {
+                        if (!lineStore.TryGetValue(methodSignature.Key, out var sigBuilder))
+                        {
+                            lineStore[methodSignature.Key] = new StringBuilder($"| {methodSignature.Key} ");
+                            sigBuilder = lineStore[methodSignature.Key];
+                        }
 
-                    /* Ran into an issue
-                     * Need to write out all the isValids for a methods sig at each version (as a row), basically, assembly then version
-                     * Right now the Overview is structures to iterate over version and then assembly (as a column)
-                     */
-                    
+                        sigBuilder.Append($"| {methodSignature.Value} ");
+                    }
+                }
+
+                // we get list of methods from XML, not assembly, so they stay the same
+                foreach (var line in lineStore)
+                {
+                    line.Value.Append("|");
+                    builder.AppendLine(line.Value.ToString());
                 }
             }
 
-
-
-
-
-
-            // versions header
-            // header border
-            // sigs
-
-            // set name
-
-            //using (var file = File.)
-            //{
-
-            //}
-            var lame = builder.ToString();
+            var output = builder.ToString();
+            WriteContent(filePath, output);
         }
 
         private static void CreateVersionHomeFile()
@@ -224,6 +225,14 @@ namespace ReportBuilder
             }
 
             return filePath;
+        }
+
+        private static void WriteContent(string filePath, string content)
+        {
+            using (var writer = new StreamWriter(filePath, append: true))
+            {
+                writer.WriteLine(content);
+            }
         }
 	}
 }

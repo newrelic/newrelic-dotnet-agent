@@ -11,14 +11,14 @@ namespace ReportBuilder
         public string PackageName { get; set; }
 
         /// <summary>
-        /// Version, AssemblyOverview
+        /// Version, new Dictionary<method sig, isValid>()
         /// </summary>
-        public Dictionary<string, AssemblyOverview> PackageVersions { get; set; }
+        public Dictionary<string, Dictionary<string, bool>> PackageVersions { get; set; }
 
         public PackageOverview(string packageName)
         {
             PackageName = packageName;
-            PackageVersions = new Dictionary<string, AssemblyOverview>();
+            PackageVersions = new Dictionary<string, Dictionary<string, bool>>();
         }
     }
 }
