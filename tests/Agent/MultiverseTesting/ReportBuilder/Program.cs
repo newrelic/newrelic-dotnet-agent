@@ -28,7 +28,7 @@ namespace ReportBuilder
                 return;
             }
 
-            var reportFilePath = args[1];
+            var reportFilePath = Path.GetFullPath(args[1]);
             if (!File.Exists(reportFilePath))
             {
                 Console.WriteLine("ERROR File not found: Provide path was incorrect or file missing.");
@@ -48,6 +48,7 @@ namespace ReportBuilder
             //wikiMaker.UpdateWiki(outputPath, agentVersion, overview);
             var htmlMaker = new HtmlMaker();
             htmlMaker.UpdatePages(outputPath, agentVersion, overview);
+            htmlMaker.SaveRawReport(reportFilePath, outputPath, agentVersion);
         }
 
         private static InstrumentationOverview TransformReport(List<InstrumentationReport> instrumentationReports)

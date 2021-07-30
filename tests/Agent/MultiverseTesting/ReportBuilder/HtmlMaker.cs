@@ -19,9 +19,17 @@ namespace ReportBuilder
             AddStyleSheet(outputPath);
         }
 
-        private DirectoryInfo SetupDirectoryStructure(string outputPath, string version)
+        public void SaveRawReport(string reportFilePath, string outputPath, string agentVersion)
         {
-            var fullPath = Path.GetFullPath($"v{version}", outputPath);
+            var fileName = Path.GetFileName(reportFilePath);
+            var versionPath = Path.GetFullPath($"v{agentVersion}", outputPath);
+            var versionReportPath = Path.GetFullPath(fileName, versionPath);
+            File.Copy(reportFilePath, versionReportPath, true);
+        }
+
+        private DirectoryInfo SetupDirectoryStructure(string outputPath, string agentVersion)
+        {
+            var fullPath = Path.GetFullPath($"v{agentVersion}", outputPath);
             if (Directory.Exists(fullPath))
             {
                 Directory.Move(fullPath, fullPath + "_old");
