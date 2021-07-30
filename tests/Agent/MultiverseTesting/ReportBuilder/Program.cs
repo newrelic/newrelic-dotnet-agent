@@ -44,8 +44,10 @@ namespace ReportBuilder
             // deserialize reports from .yml
             var reports = ReportParser.GetInstrumentationReports(reportFilePath);
             var overview = TransformReport(reports);
-            var wikiMaker = new WikiMaker();
-            wikiMaker.UpdateWiki(outputPath, agentVersion, overview);
+            //var wikiMaker = new WikiMaker();
+            //wikiMaker.UpdateWiki(outputPath, agentVersion, overview);
+            var htmlMaker = new HtmlMaker();
+            htmlMaker.UpdatePages(outputPath, agentVersion, overview);
         }
 
         private static InstrumentationOverview TransformReport(List<InstrumentationReport> instrumentationReports)

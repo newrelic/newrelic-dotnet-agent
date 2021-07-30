@@ -1,0 +1,27 @@
+﻿body {
+    font-family: arial, sans-serif;
+}
+
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+tr:nth-child(even) {
+    background-color: #e6e6e6;
+}
+
+td, th {
+    border: 1px solid #e6e6e6;
+    text-align: left;
+    padding: 5px;
+}
+
+#pass {
+    background-color: green;
+}
+
+#fail {
+    background-color: red;
+}

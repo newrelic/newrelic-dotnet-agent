@@ -84,7 +84,7 @@ namespace ReportBuilder
                     {
                         foreach (var line in lineStore)
                         {
-                            line.Value.Append("| false ");
+                            line.Value.Append("| ![False](../blob/main/docs/images/fail.png?raw=true) ");
                         }
 
                         continue;
@@ -93,13 +93,28 @@ namespace ReportBuilder
                     // sigs exists, add each to line with isValid
                     foreach (var methodSignature in methodSignatures)
                     {
+                        // create the signature line if it has not been hit yet
                         if (!lineStore.TryGetValue(methodSignature.Key, out var sigBuilder))
                         {
-                            lineStore[methodSignature.Key] = new StringBuilder($"| {methodSignature.Key} ");
+                            lineStore[methodSignature.Key] = new StringBuilder($"| ");
                             sigBuilder = lineStore[methodSignature.Key];
+
+                            var splitSig = methodSignature.Key.Split('(');
+                            sigBuilder.AppendLine($"{splitSig[0]}");
+                            sigBuilder.Append($"({splitSig[1]} ");
                         }
 
-                        sigBuilder.Append($"| {methodSignature.Value} ");
+                        // add the isValid to the signature line
+                        sigBuilder.Append($"| ![{methodSignature.Value}]");
+                        if (methodSignature.Value)
+                        {
+                            sigBuilder.Append($"(../blob/main/docs/images/pass.png?raw=true) ");
+                        }
+                        else
+                        {
+                            sigBuilder.Append($"(../blob/main/docs/images/fail.png?raw=true) ");
+
+                        }
                     }
                 }
 
@@ -126,6 +141,28 @@ namespace ReportBuilder
                 builder.AppendLine(string.Empty);
             }
             AppendContent(filePath, builder.ToString());
+        }
+
+        private void UpdateMainHome(string outputPath)
+        {
+            // mvs root under wiki
+            var directoryInfo = new DirectoryInfo(outputPath);
+
+            // enumerate the version dirs to get names for homes
+            var builder = new StringBuilder();
+            builder.AppendLine("Welcome to the Multiverse Testing Report");
+            builder.AppendLine(string.Empty);
+            builder.AppendLine("Select an agent version from the list below to see the reports.");
+            builder.AppendLine(string.Empty);
+
+            foreach (var dir in directoryInfo.EnumerateDirectories())
+            {
+                builder.AppendLine($"[[{dir.Name} Home]]");
+                builder.AppendLine(string.Empty);
+            }
+
+            var filePath = Path.GetFullPath("Multiverse-Report-Home.md", outputPath);
+            OverwriteContent(filePath, builder.ToString()); ;
         }
 
         private string CreateFile(string path, string basePath)
@@ -155,28 +192,6 @@ namespace ReportBuilder
             {
                 writer.WriteLine(content);
             }
-        }
-
-        private void UpdateMainHome(string outputPath)
-        {
-            // mvs root under wiki
-            var directoryInfo = new DirectoryInfo(outputPath);
-
-            // enumerate the version dirs to get names for homes
-            var builder = new StringBuilder();
-            builder.AppendLine("Welcome to the Multiverse Testing Report");
-            builder.AppendLine(string.Empty);
-            builder.AppendLine("Select an agent version from the list below to see the reports.");
-            builder.AppendLine(string.Empty);
-
-            foreach (var dir in directoryInfo.EnumerateDirectories())
-            {
-                builder.AppendLine($"[[{dir.Name} Home]]");
-                builder.AppendLine(string.Empty);
-            }
-
-            var filePath = Path.GetFullPath("Multiverse-Report-Home.md", outputPath);
-            OverwriteContent(filePath, builder.ToString()); ;
         }
     }
 }

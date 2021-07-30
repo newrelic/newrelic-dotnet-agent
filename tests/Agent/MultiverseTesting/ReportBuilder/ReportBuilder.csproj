@@ -13,4 +13,10 @@
     <ProjectReference Include="..\MultiverseScanner\MultiverseScanner.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="styles.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
