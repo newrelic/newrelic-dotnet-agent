@@ -4,19 +4,26 @@ Copyright 2020 New Relic Corporation. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
 <extension xmlns="urn:newrelic-extension">
-	<instrumentation>
-		
-		<tracerFactory>
-			<match assemblyName="System" className="System.Net.HttpWebRequest">
-				<exactMethodMatcher methodName="SerializeHeaders" />
-			</match>
-		</tracerFactory>
+  <instrumentation>
 
-		<tracerFactory name="NewRelic.Agent.Core.Tracer.Factories.Net.HttpWebRequestTracerFactory">
-			<match assemblyName="System" className="System.Net.HttpWebRequest">
-				<exactMethodMatcher methodName="GetResponse" />
-			</match>
-		</tracerFactory>
+    <tracerFactory>
+      <match assemblyName="System" className="System.Net.HttpWebRequest">
+        <exactMethodMatcher methodName="SerializeHeaders" />
+      </match>
+    </tracerFactory>
 
-	</instrumentation>
+    <tracerFactory name="NewRelic.Agent.Core.Tracer.Factories.Net.HttpWebRequestTracerFactory">
+      <match assemblyName="System" className="System.Net.HttpWebRequest">
+        <exactMethodMatcher methodName="GetResponse" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="GetResponseBeginEndWrapper">
+      <match assemblyName="System" className="System.Net.HttpWebRequest">
+        <exactMethodMatcher methodName="BeginGetResponse" />
+        <exactMethodMatcher methodName="EndGetResponse" />
+      </match>
+    </tracerFactory>
+
+  </instrumentation>
 </extension>

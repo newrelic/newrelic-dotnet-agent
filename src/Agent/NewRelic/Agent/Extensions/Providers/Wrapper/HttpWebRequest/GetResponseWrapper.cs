@@ -54,7 +54,7 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
             );
         }
 
-        private static void TryProcessResponse(WebResponse response, ITransaction transaction, ISegment segment, IExternalSegmentData externalSegmentData)
+        internal static void TryProcessResponse(WebResponse response, ITransaction transaction, ISegment segment, IExternalSegmentData externalSegmentData)
         {
             if (segment == null)
             {
