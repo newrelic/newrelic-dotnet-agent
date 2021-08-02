@@ -35,7 +35,7 @@ namespace NewRelic.Agent.MultiverseScanner
 
             CheckMatch(_assemblyAnalysis.AssemblyModel, instrumentationModel, assemblyReport);
 
-            instrumentationReport.AssemblyReports.Add(assemblyReport);
+            instrumentationReport.AssemblyReport = assemblyReport;
  
             return instrumentationReport;
         }

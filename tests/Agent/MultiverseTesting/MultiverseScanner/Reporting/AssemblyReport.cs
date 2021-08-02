@@ -3,7 +3,6 @@
 
 
 using NewRelic.Agent.MultiverseScanner.ExtensionSerialization;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,9 +10,10 @@ namespace NewRelic.Agent.MultiverseScanner.Reporting
 {
     public class AssemblyReport
     {
-        public readonly Dictionary<string, List<MethodValidation>> Validations;
-
         public string AssemblyName { get; set; }
+
+        // classname, list<MethodValidation>
+        public Dictionary<string, List<MethodValidation>> Validations;
 
         public AssemblyReport()
         {
