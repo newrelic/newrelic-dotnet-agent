@@ -26,3 +26,11 @@ jobs:
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
+          echo 1.2.3.4 >> agent_version.txt
+          
+      - name: Upload agent_version
+        uses: actions/upload-artifact@v2
+        with:
+          name: agent-version
+          path: ${{ github.workspace }}\agent_version.txt
+          if-no-files-found: error
