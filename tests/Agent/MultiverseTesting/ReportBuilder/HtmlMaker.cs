@@ -32,7 +32,7 @@ namespace ReportBuilder
             var fullPath = Path.GetFullPath($"v{agentVersion}", outputPath);
             if (Directory.Exists(fullPath))
             {
-                Directory.Move(fullPath, fullPath + "_old");
+                Directory.Delete(fullPath, true);
             }
 
             return Directory.CreateDirectory(fullPath);
@@ -146,13 +146,16 @@ namespace ReportBuilder
             builder.AppendLine("[ <a href=\"../index.html\">main page</a> ]");
             builder.AppendLine(string.Empty);
             builder.AppendLine(string.Empty);
-            builder.AppendLine("<ul>");
+            builder.AppendLine("<p><a href=\"reports.yml\">Raw reports.yml file</a></p>");
+            builder.AppendLine(string.Empty);
+            builder.AppendLine(string.Empty);
+            builder.AppendLine("<p><ul>");
             foreach (var file in fileList)
             {
                 builder.AppendLine($"  <li><a href=\"{file}.html\">{file}</a></li>");
             }
 
-            builder.AppendLine("</ul>");
+            builder.AppendLine("</ul></p>");
             AddFooterBoilerplate(builder);
             AppendContent(filePath, builder.ToString());
         }
