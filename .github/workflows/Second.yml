@@ -28,6 +28,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Download agent-version Artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: first.yml
+          run_id: ${{ github.event.workflow_run.id }}
+          name: agent-version
+          path: ${{ github.workspace }}
+          repo: ${{ github.repository }}
+    
       - name: Run a one-line script
         run: |
+          ls -la
           echo ${{ github.event.workflow_run.id }}
