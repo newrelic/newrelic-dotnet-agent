@@ -46,7 +46,7 @@ jobs:
     
       - name: Run a one-line script
         run: |
-          cd ${{ github.workspace }}\docs\mvs
+          cd ${{ github.workspace }}/docs/mvs
           cp index.html index2.html
           ls -la
           echo ${{ github.event.workflow_run.id }}
