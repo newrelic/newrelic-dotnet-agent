@@ -127,7 +127,7 @@ jobs:
 
       - name: Run ConsoleScanner
         run: |
-          $agentVersion = Get-Content .\agent-version.txt | Select-Object -first 1
+          $agentVersion = Get-Content .\agent_version.txt | Select-Object -first 1
           .\ReportBuilder.exe "$agentVersion" ".\reports.yml" ".\docs\mvs"
         shell: powershell
 
