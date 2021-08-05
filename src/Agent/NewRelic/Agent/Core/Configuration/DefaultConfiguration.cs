@@ -42,7 +42,6 @@ namespace NewRelic.Agent.Core.Configuration
         private const int MaxIgnoreErrorConfigEntries = 50;
 
         private static long _currentConfigurationVersion;
-        private const int DefaultSpanEventsMaxSamplesStored = 1000;
         private readonly IEnvironment _environment = new EnvironmentMock();
         private readonly IProcessStatic _processStatic = new ProcessStatic();
         private readonly IHttpRuntimeStatic _httpRuntimeStatic = new HttpRuntimeStatic();
@@ -947,8 +946,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public int? SamplingTarget => _serverConfiguration.SamplingTarget;
 
-        public int SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.EventHarvestConfig?.SpanEventHarvestLimit(), DefaultSpanEventsMaxSamplesStored);
-        public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
+        public int SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.EventHarvestConfig?.SpanEventHarvestLimit(), EnvironmentOverrides(_localConfiguration.spanEvents.maximumSamplesStored, "SPAN_EVENTS_MAX_SAMPLES_STORED").GetValueOrDefault()); public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
 
         public bool PayloadSuccessMetricsEnabled => _localConfiguration.distributedTracing.enableSuccessMetrics;
 
