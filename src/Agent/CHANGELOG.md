@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 ### Fixes
 * Fixes issue [#627](https://github.com/newrelic/newrelic-dotnet-agent/issues/627): Grpc channel shutdown can cause `license_key is required` error message. ([#663](https://github.com/newrelic/newrelic-dotnet-agent/pull/663))
+* Fixes issue [#683](https://github.com/newrelic/newrelic-dotnet-agent/issues/683): Requested stack trace depth is not always honored. ([#684](https://github.com/newrelic/newrelic-dotnet-agent/pull/684))
 
 ## [8.41.0] - 2021-07-21
 ### New Features
