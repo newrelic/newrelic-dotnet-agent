@@ -39,18 +39,6 @@ namespace CompositeTests
         }
 
         [Test]
-        public void CreateDistributedTracePayloadTest()
-        {
-            CallTransactionApiBridgeMethod(transactionBridgeApi => transactionBridgeApi.CreateDistributedTracePayload(), "CreateDistributedTracePayload");
-        }
-
-        [Test]
-        public void AcceptDistributedTracePayloadTest()
-        {
-            CallTransactionApiBridgeMethod(transactionBridgeApi => transactionBridgeApi.AcceptDistributedTracePayload("testString", 0), "AcceptDistributedTracePayload");
-        }
-
-        [Test]
         public void CurrentTransactionTest()
         {
             var agentWrapperApi = _compositeTestAgent.GetAgent();
@@ -69,21 +57,9 @@ namespace CompositeTests
         }
 
         [Test]
-        public void AddCustomParameter()
-        {
-            CallAgentApiMethodRequiringTransaction(() => AgentApi.AddCustomParameter("customParameter", "1234"), "AddCustomParameter");
-        }
-
-        [Test]
         public void GetBrowserTimingHeader()
         {
             CallAgentApiMethodRequiringTransaction(() => AgentApi.GetBrowserTimingHeader(), "GetBrowserTimingHeader");
-        }
-
-        [Test]
-        public void GetBrowserTimingFooter()
-        {
-            CallAgentApiMethodRequiringTransaction(() => AgentApi.GetBrowserTimingFooter(), "GetBrowserTimingFooter");
         }
 
         [Test]
