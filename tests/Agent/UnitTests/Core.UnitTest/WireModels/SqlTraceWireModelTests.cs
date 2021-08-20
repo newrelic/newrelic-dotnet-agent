@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -16,10 +15,8 @@ using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Segments.Tests;
-using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -67,7 +64,7 @@ namespace NewRelic.Agent.Core.WireModels
             var duration = TimeSpan.FromSeconds(1);
             var guid = Guid.NewGuid().ToString();
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
-            var databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
+            var databaseService = new DatabaseService();
             var configurationService = Mock.Create<IConfigurationService>();
             var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 

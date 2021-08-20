@@ -132,7 +132,6 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
             container.Register<IApiSupportabilityMetricCounters, IOutOfBandMetricSource, ApiSupportabilityMetricCounters>();
             container.Register<ICATSupportabilityMetricCounters, IOutOfBandMetricSource, CATSupportabilityMetricCounters>();
-            container.Register<ICacheStatsReporter, IOutOfBandMetricSource, CacheStatsReporter>();
             container.Register<IAgentTimerService, AgentTimerService>();
 #if NET45
 			container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);

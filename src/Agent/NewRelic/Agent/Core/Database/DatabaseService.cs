@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -20,10 +19,10 @@ namespace NewRelic.Agent.Core.Database
         private SqlObfuscator _sqlObfuscator;
         private readonly CacheByDatastoreVendor<string, string> _cache;
 
-        public DatabaseService(ICacheStatsReporter cacheStatsReporter)
+        public DatabaseService()
         {
             _sqlObfuscator = SqlObfuscator.GetSqlObfuscator(_configuration.TransactionTracerRecordSql);
-            _cache = new CacheByDatastoreVendor<string, string>("SqlObfuscationCache", cacheStatsReporter);
+            _cache = new CacheByDatastoreVendor<string, string>("SqlObfuscationCache");
         }
 
         /// <summary>
