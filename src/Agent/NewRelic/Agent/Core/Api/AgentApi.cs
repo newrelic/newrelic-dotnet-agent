@@ -329,6 +329,48 @@ namespace NewRelic.Agent.Core
         }
 
         /// <summary>
+        /// Add a key/value pair to the current transaction.  These are reported in errors and transaction traces.
+        /// Supports web applications only.
+        /// </summary>
+        /// <param name="key">The key name to add to the transaction parameters.
+        /// Only the first 1000 characters are retained.
+        /// </param>
+        /// <param name="value">The numeric value to add to the current transaction.</param>
+        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
+        public static void AddCustomParameter(string key, IConvertible value)
+        {
+            const ApiMethod apiMetric = ApiMethod.AddCustomParameter;
+            const string apiName = nameof(AddCustomParameter);
+            void work()
+            {
+                InternalApi.AddCustomParameter(key, value);
+            }
+            TryInvoke(work, apiName, apiMetric);
+        }
+
+        /// <summary>
+        /// Add a key/value pair to the current transaction.  These are reported in errors and transaction traces.
+        /// Supports web applications only.
+        /// </summary>
+        /// <param name="key">The key.
+        /// Only the first 1000 characters are retained.
+        /// </param>
+        /// <param name="value">The value.
+        /// Only the first 1000 characters are retained.
+        /// </param>
+        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
+        public static void AddCustomParameter(string key, string value)
+        {
+            const ApiMethod apiMetric = ApiMethod.AddCustomParameter;
+            const string apiName = nameof(AddCustomParameter);
+            void work()
+            {
+                InternalApi.AddCustomParameter(key, value);
+            }
+            TryInvoke(work, apiName, apiMetric);
+        }
+
+        /// <summary>
         /// Set the name of the current transaction.
         /// Supports web applications only.
         /// </summary>
@@ -451,6 +493,20 @@ namespace NewRelic.Agent.Core
             const ApiMethod apiMetric = ApiMethod.GetBrowserTimingHeader;
             const string apiName = nameof(GetBrowserTimingHeader);
             return TryInvoke(() => InternalApi.GetBrowserTimingHeader(nonce), apiName, apiMetric) ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Obsolete method that used to return the html snippet to be inserted into the footer of html pages as part of Real User Monitoring.
+        /// Now only returns and empty string.
+        /// Supports web applications only.
+        /// <returns>An empty string.</returns>
+        [Obsolete("This method returns an empty string.")]
+        [ToBeRemovedInFutureRelease()]
+        public static string GetBrowserTimingFooter()
+        {
+            const ApiMethod apiMetric = ApiMethod.GetBrowserTimingFooter;
+            const string apiName = nameof(GetBrowserTimingFooter);
+            return TryInvoke(InternalApi.GetBrowserTimingFooter, apiName, apiMetric) ?? string.Empty;
         }
 
         /// <summary>

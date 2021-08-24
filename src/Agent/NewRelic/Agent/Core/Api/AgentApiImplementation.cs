@@ -317,6 +317,64 @@ namespace NewRelic.Agent.Core.Api
             return false;
         }
 
+        /// <summary> Add a key/value pair to the current transaction.  These are reported in errors and
+        /// transaction traces. Supports web applications only. </summary>
+        ///
+        /// <exception cref="ArgumentNullException"> Thrown when <paramref name="key"/> or
+        /// <paramref name="value"/> is null. </exception>
+        ///
+        /// <param name="key">   The key name for the custom parameter. </param>
+        /// <param name="value"> The value associated with the custom parameter. If the value is a float
+        /// it is recorded as a number, otherwise, <paramref name="value"/> is converted to a string.
+        /// (via <c>value.ToString(CultureInfo.InvariantCulture);</c> </param>
+        [ToBeRemovedInFutureRelease("Use TransactionBridgeApi.AddCustomAttribute(string, object) instead")]
+        public void AddCustomParameter(string key, IConvertible value)
+        {
+            key = key ?? throw new ArgumentNullException(nameof(key));
+            value = value ?? throw new ArgumentNullException(nameof(value));
+
+            using (new IgnoreWork())
+            {
+                // float (32-bit) precision numbers are specially handled and actually stored as floating point numbers. Everything else is stored as a string. This is for historical reasons -- in the past Dirac only stored single-precision numbers, so integers and doubles had to be stored as strings to avoid losing precision. Now Dirac DOES support integers and doubles, but we can't just blindly start passing up integers and doubles where we used to pass strings because it could break customer queries.
+                var normalizedValue = value is float
+                    ? value
+                    : value.ToString(CultureInfo.InvariantCulture);
+
+                AddUserAttributeToCurrentTransaction(key, normalizedValue);
+            }
+        }
+
+        /// <summary> A Add a key/value pair to the current transaction.  These are reported in errors and
+        /// transaction traces. Supports web applications only. </summary>
+        ///
+        /// <exception cref="ArgumentNullException"> Thrown when <paramref name="key"/> or
+        /// <paramref name="value"/> is null. </exception>
+        ///
+        /// <param name="key">   The key name for the custom parameter.  Only the first 1000 characters
+        /// are retained. </param>
+        /// <param name="value"> The value associated with the custom parameter. Only the first 1000
+        /// characters are retained. </param>
+        [ToBeRemovedInFutureRelease("Use TransactionBridgeApi.AddCustomAttribute(string, object) instead")]
+        public void AddCustomParameter(string key, string value)
+        {
+            key = key ?? throw new ArgumentNullException(nameof(key));
+            value = value ?? throw new ArgumentNullException(nameof(value));
+            using (new IgnoreWork())
+            {
+                AddUserAttributeToCurrentTransaction(key, value);
+            }
+        }
+
+        [ToBeRemovedInFutureRelease("Use TransactionBridgeApi.AddCustomAttribute(string, object) instead")]
+        private void AddUserAttributeToCurrentTransaction(string key, object value)
+        {
+            if (_configurationService.Configuration.CaptureCustomParameters)
+            {
+                var transaction = GetCurrentInternalTransaction();
+                transaction.AddCustomAttribute(key, value);
+            }
+        }
+
         /// <summary> Set the name of the current transaction. Supports web applications only. </summary>
         ///
         /// <exception cref="ArgumentNullException"> Thrown when <paramref name="key"/> is null. </exception>
@@ -482,6 +540,17 @@ namespace NewRelic.Agent.Core.Api
 
                 return _browserMonitoringScriptMaker.GetScript(transaction, nonce) ?? string.Empty;
             }
+        }
+
+        /// <summary> (This method is obsolete) gets browser timing footer. </summary>
+        ///
+        /// <returns> An empty string. </returns>
+        [Obsolete]
+        [ToBeRemovedInFutureRelease()]
+        public string GetBrowserTimingFooter()
+        {
+            // This method is deprecated.
+            return string.Empty;
         }
 
         /// <summary> Disables the automatic instrumentation of browser monitoring hooks in individual
