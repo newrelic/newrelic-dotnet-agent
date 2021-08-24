@@ -102,6 +102,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
 
             LogDeprecationWarnings();
+            LogDisabledWarnings();
 
             _newRelicAppSettings = TransformAppSettings();
 
@@ -489,10 +490,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public virtual bool TransactionEventsAttributesEnabled =>
-            CaptureAttributes
-            && _localConfiguration.transactionEvents.attributes.enabled
-            && (!_localConfiguration.analyticsEvents.captureAttributesSpecified || _localConfiguration.analyticsEvents.captureAttributes);
+        public virtual bool TransactionEventsAttributesEnabled => CaptureAttributes && _localConfiguration.transactionEvents.attributes.enabled;
 
         private HashSet<string> _transactionEventsAttributesInclude;
         public HashSet<string> TransactionEventsAttributesInclude
@@ -1594,8 +1592,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 return TransactionEventsMaximumSamplesStored > 0 && ServerCanDisable(
                     _serverConfiguration.AnalyticsEventCollectionEnabled,
-                    _localConfiguration.transactionEvents.enabled
-                    && (!_localConfiguration.analyticsEvents.enabledSpecified || _localConfiguration.analyticsEvents.enabled));
+                    _localConfiguration.transactionEvents.enabled);
             }
         }
 
@@ -1604,12 +1601,6 @@ namespace NewRelic.Agent.Core.Configuration
             get
             {
                 var maxValue = _localConfiguration.transactionEvents.maximumSamplesStored;
-                if (_localConfiguration.analyticsEvents.maximumSamplesStoredSpecified)
-                {
-                    LogDeprecatedPropertyUse("analyticsEvents.maximumSamplesStored", "transactionEvents.maximumSamplesStored");
-                    maxValue = _localConfiguration.analyticsEvents.maximumSamplesStored;
-                }
-
                 return (int)EnvironmentOverrides(
                     ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), maxValue),
                     "MAX_TRANSACTION_SAMPLES_STORED");
@@ -1628,17 +1619,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                var enabled = TransactionEventsTransactionsEnabledDefault;
-                if (_localConfiguration.transactionEvents.transactions.enabledSpecified)
-                {
-                    enabled = _localConfiguration.transactionEvents.transactions.enabled;
-                }
-                if (_localConfiguration.analyticsEvents.transactions.enabledSpecified)
-                {
-                    LogDeprecatedPropertyUse("analyticsEvents.transactions.enabled", "transactionEvents.transactions.enabled");
-                    enabled = _localConfiguration.analyticsEvents.transactions.enabled;
-                }
-                return enabled;
+                return _localConfiguration.transactionEvents.transactions.enabledSpecified ? _localConfiguration.transactionEvents.transactions.enabled : TransactionEventsTransactionsEnabledDefault;
             }
         }
 
@@ -2239,14 +2220,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
-        #region deprecated parameter group settings
+        #region deprecated/disabled parameter group settings
 
         private void LogDeprecationWarnings()
         {
-            if (_localConfiguration.analyticsEvents.captureAttributesSpecified)
-            {
-                LogDeprecatedPropertyUse("analyticsEvents.captureAttributes", "transaction_events.attributes.enabled");
-            }
             if (_localConfiguration.transactionTracer.captureAttributesSpecified)
             {
                 LogDeprecatedPropertyUse("transactionTracer.captureAttributes", "transactionTracer.attributes.enabled");
@@ -2259,15 +2236,45 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 LogDeprecatedPropertyUse("browserMonitoring.captureAttributes", "browserMonitoring.attributes.enabled");
             }
+        }
+        private void LogDisabledWarnings()
+        {
+            // analyticsEvents.*
+            if (_localConfiguration.analyticsEvents.transactions.enabledSpecified)
+            {
+                LogDisabledPropertyUse("analyticsEvents.transactions.enabled", "transactionEvents.transactions.enabled");
+            }
             if (_localConfiguration.analyticsEvents.enabledSpecified)
             {
-                LogDeprecatedPropertyUse("analyticsEvents.enabled", "transactionEvents.enabled");
+                LogDisabledPropertyUse("analyticsEvents.enabled", "transactionEvents.enabled");
+            }
+            if (_localConfiguration.analyticsEvents.captureAttributesSpecified)
+            {
+                LogDisabledPropertyUse("analyticsEvents.captureAttributes", "transaction_events.attributes.enabled");
+            }
+            if (_localConfiguration.analyticsEvents.maximumSamplesStoredSpecified)
+            {
+                LogDisabledPropertyUse("analyticsEvents.maximumSamplesStored", "transaction_events.maximumSamplesStored");
+            }
+            if (_localConfiguration.analyticsEvents.maximumSamplesPerMinuteSpecified)
+            {
+                LogDisabledPropertyUse("analyticsEvents.maximumSamplesStored");
             }
         }
 
         private void LogDeprecatedPropertyUse(string deprecatedPropertyName, string newPropertyName)
         {
-            Log.WarnFormat("Deprecated configuration property '{0}'.  Use '{1}'.  See http://docs.newrelic.com for details.", deprecatedPropertyName, newPropertyName);
+            Log.WarnFormat("Deprecated configuration property '{0}'.  Use '{1}'.  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", deprecatedPropertyName, newPropertyName);
+        }
+
+        private void LogDisabledPropertyUse(string disabledPropertyName, string newPropertyName = "")
+        {
+            var replacementText = "No replacement is available";
+            if (newPropertyName != "")
+            {
+                replacementText = $"Use {newPropertyName} instead.";
+            }
+            Log.WarnFormat("Configuration property '{0}' is disabled (unused) and will be removed from the config schema in a future release.  {1}  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", disabledPropertyName, replacementText);
         }
 
         private IEnumerable<string> GetDeprecatedExplicitlyDisabledParameters()

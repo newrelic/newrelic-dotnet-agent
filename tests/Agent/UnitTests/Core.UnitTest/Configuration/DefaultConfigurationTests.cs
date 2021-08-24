@@ -62,30 +62,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsFalse(_defaultConfig.AgentEnabled);
         }
 
-        [TestCase(null, null, true, ExpectedResult = true)]
-        [TestCase(null, null, false, ExpectedResult = false)]
-        [TestCase(null, true, true, ExpectedResult = true)]
-        [TestCase(null, true, false, ExpectedResult = false)]
-        [TestCase(null, false, true, ExpectedResult = false)]
-        [TestCase(null, false, false, ExpectedResult = false)]
-        [TestCase(true, null, true, ExpectedResult = true)]
-        [TestCase(true, null, false, ExpectedResult = false)]
-        [TestCase(true, true, true, ExpectedResult = true)]
-        [TestCase(true, true, false, ExpectedResult = false)]
-        [TestCase(true, false, true, ExpectedResult = false)]
-        [TestCase(true, false, false, ExpectedResult = false)]
-        [TestCase(false, null, true, ExpectedResult = false)]
-        [TestCase(false, null, false, ExpectedResult = false)]
-        [TestCase(false, true, true, ExpectedResult = false)]
-        [TestCase(false, true, false, ExpectedResult = false)]
-        [TestCase(false, false, true, ExpectedResult = false)]
-        [TestCase(false, false, false, ExpectedResult = false)]
-        public bool TransactionEventsCanBeDisbledByServer(bool? server, bool? legacyLocal, bool local)
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase(true, true, ExpectedResult = true)]
+        [TestCase(true, false, ExpectedResult = false)]
+        [TestCase(false, true, ExpectedResult = false)]
+        [TestCase(false, false, ExpectedResult = false)]
+        public bool TransactionEventsCanBeDisbledByServer(bool? server, bool local)
         {
             _localConfig.transactionEvents.enabled = local;
-
-            _localConfig.analyticsEvents.enabled = legacyLocal ?? default(bool);
-            _localConfig.analyticsEvents.enabledSpecified = legacyLocal.HasValue;
 
             _serverConfig.AnalyticsEventCollectionEnabled = server;
 
@@ -1372,21 +1357,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsTrue(_defaultConfig.CaptureTransactionTraceAttributes);
         }
 
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool AnalyticsEventDeprecatedValueOverridesDefault(bool deprecatedEnabled)
-        {
-            _localConfig.analyticsEvents.captureAttributesSpecified = false;
-            _localConfig.transactionEvents.attributes.enabled = deprecatedEnabled;
-
-            return _defaultConfig.TransactionEventsAttributesEnabled;
-        }
-
         [Test]
         public void TransactionEventUsesDefaultWhenNoConfigValues()
         {
-            _localConfig.analyticsEvents.captureAttributesSpecified = false;
-
             Assert.IsTrue(_defaultConfig.TransactionEventsAttributesEnabled);
         }
 
