@@ -588,16 +588,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.CaptureRequestParameters;
         }
 
-        [TestCase(new[] { "local" }, new[] { "server" }, "request.parameters.server")]
-        [TestCase(new[] { "local" }, null, "request.parameters.local")]
-        public void RequestParametersToIgnoreSetFromLocalServerOverrides(string[] local, string[] server, string expected)
-        {
-            _serverConfig.RpmConfig.ParametersToIgnore = server;
-            _localConfig.requestParameters.ignore = new List<string>(local);
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains(expected));
-        }
-
         [TestCase(false, configurationTransactionTracerRecordSql.obfuscated, null, ExpectedResult = "obfuscated")]
         [TestCase(false, configurationTransactionTracerRecordSql.off, null, ExpectedResult = "off")]
         [TestCase(false, configurationTransactionTracerRecordSql.raw, null, ExpectedResult = "raw")]
@@ -1300,14 +1290,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void TransactionEventUsesDefaultWhenNoConfigValues()
         {
             Assert.IsTrue(_defaultConfig.TransactionEventsAttributesEnabled);
-        }
-
-        [Test]
-        public void Property_deprecated_ignore_requestParameters_value_becomes_exclude()
-        {
-            _localConfig.requestParameters.ignore = new List<string>() { "foo" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("request.parameters.foo"));
         }
 
         [TestCase(null, null, ExpectedResult = null)]

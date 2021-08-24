@@ -454,11 +454,7 @@ namespace NewRelic.Agent.Core.Configuration
                 return Memoizer.Memoize(ref _captureAttributesExcludes, () =>
                 {
                     var configExcludes = _localConfiguration.attributes.exclude;
-                    var deprecatedIgnoredExcludes = GetDeprecatedIgnoreParameters();
-                    var allExcludes = configExcludes
-                        .Concat(deprecatedIgnoredExcludes);
-
-                    return new HashSet<string>(allExcludes);
+                    return new HashSet<string>(configExcludes);
                 });
             }
         }
@@ -2267,6 +2263,12 @@ namespace NewRelic.Agent.Core.Configuration
                 LogDisabledPropertyUse("parameterGroups.requestHeaderParameters.ignore", "attributes.exclude");
             }
 
+            //requestParameters.ignore
+            if (_localConfiguration.requestParameters?.ignore?.Count > 0)
+            {
+                LogDisabledPropertyUse("requestParameters.ignore", "attributes.exclude");
+            }
+
         }
 
         private void LogDeprecatedPropertyUse(string deprecatedPropertyName, string newPropertyName)
@@ -2288,27 +2290,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         public int DatabaseStatementCacheCapcity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
             TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
-
-        private IEnumerable<string> GetDeprecatedIgnoreParameters()
-        {
-            var ignoreParameters = new List<string>();
-            ignoreParameters.AddRange(DeprecatedIgnoreRequestParameters().Select(param => "request.parameters." + param));
-
-            return ignoreParameters.Distinct();
-        }
-
-        private IEnumerable<string> DeprecatedIgnoreRequestParameters()
-        {
-            if (_localConfiguration.requestParameters != null
-                && _localConfiguration.requestParameters.ignore != null
-                && _localConfiguration.requestParameters.ignore.Count > 0)
-            {
-                LogDeprecatedPropertyUse("requestParameters.ignore", "attributes.exclude");
-                var requestParams = ServerOverrides(_serverConfiguration.RpmConfig.ParametersToIgnore, _localConfiguration.requestParameters.ignore);
-                return requestParams;
-            }
-            return Enumerable.Empty<string>();
-        }
 
         #endregion
 
