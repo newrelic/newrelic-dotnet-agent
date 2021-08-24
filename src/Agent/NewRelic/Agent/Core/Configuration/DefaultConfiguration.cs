@@ -2258,7 +2258,13 @@ namespace NewRelic.Agent.Core.Configuration
             }
             if (_localConfiguration.analyticsEvents.maximumSamplesPerMinuteSpecified)
             {
-                LogDisabledPropertyUse("analyticsEvents.maximumSamplesStored");
+                LogDisabledPropertyUse("analyticsEvents.maximumSamplesPerMinute");
+            }
+
+            // transactionEvents.maximumSamplesPerMinute
+            if (_localConfiguration.transactionEvents.maximumSamplesPerMinuteSpecified)
+            {
+                LogDisabledPropertyUse("transactionEvents.maximumSamplesPerMinute");
             }
         }
 
