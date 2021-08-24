@@ -1,10 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
-using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Database.UnitTest
 {
@@ -19,7 +17,7 @@ namespace NewRelic.Agent.Core.Database.UnitTest
             [SetUp]
             public void Setup()
             {
-                _databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
+                _databaseService = new DatabaseService();
             }
 
             [TearDown]

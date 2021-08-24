@@ -16,17 +16,15 @@ using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
     public static class TestTransactions
     {
-        private static IDatabaseService _databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
+        private static IDatabaseService _databaseService = new DatabaseService();
         private static IAttributeDefinitionService _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
         public static IConfiguration GetDefaultConfiguration()

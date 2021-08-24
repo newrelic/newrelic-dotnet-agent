@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Caching;
 using NewRelic.Core.Logging;
@@ -15,14 +14,13 @@ namespace NewRelic.Agent.Core.Database
         private int _capacity = 1000;
         private readonly SimpleCache<TKey, TValue>[] _caches;
 
-        public CacheByDatastoreVendor(string name, ICacheStatsReporter cacheStatsReporter)
+        public CacheByDatastoreVendor(string name)
         {
             var vendors = Enum.GetValues(typeof(DatastoreVendor));
             _caches = new SimpleCache<TKey, TValue>[vendors.Length];
             for (var i = 0; i < vendors.Length; i++)
             {
                 _caches[i] = new SimpleCache<TKey, TValue>(Capacity);
-                cacheStatsReporter.RegisterCache(_caches[i], name, ((DatastoreVendor)i).ToString());
             }
         }
 

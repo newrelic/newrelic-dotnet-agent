@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
@@ -31,7 +30,6 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using Telerik.JustMock;
 
@@ -92,7 +90,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             _configAutoResponder = new ConfigurationAutoResponder(_configuration);
 
-            _databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
+            _databaseService = new DatabaseService();
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
             _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
             _errorService = new ErrorService(_configurationService);
