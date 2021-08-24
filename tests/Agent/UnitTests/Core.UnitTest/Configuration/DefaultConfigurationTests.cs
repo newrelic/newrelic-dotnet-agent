@@ -730,18 +730,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(true, false, ExpectedResult = false)]
         [TestCase(false, true, ExpectedResult = true)]
         [TestCase(false, false, ExpectedResult = false)]
-        public bool LegacyCaptureCustomParametersOverriddenByLocalHighSecurity(bool highSecurityEnabled, bool localEnabled)
-        {
-            _localConfig.highSecurity.enabled = highSecurityEnabled;
-            _localConfig.parameterGroups.customParameters.enabled = localEnabled;
-
-            return _defaultConfig.CaptureCustomParameters;
-        }
-
-        [TestCase(true, true, ExpectedResult = false)]
-        [TestCase(true, false, ExpectedResult = false)]
-        [TestCase(false, true, ExpectedResult = true)]
-        [TestCase(false, false, ExpectedResult = false)]
         public bool CaptureCustomParametersOverriddenByLocalHighSecurity(bool highSecurityEnabled, bool localEnabled)
         {
             _localConfig.highSecurity.enabled = highSecurityEnabled;
@@ -808,23 +796,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsTrue(_defaultConfig.CaptureCustomParameters);
         }
 
-        [TestCase(false, true, true, false, false, ExpectedResult = true)]
-        [TestCase(false, true, false, false, false, ExpectedResult = false)]
-        [TestCase(false, false, true, true, true, ExpectedResult = true)]
-        [TestCase(false, false, true, true, false, ExpectedResult = false)]
-        [TestCase(false, true, true, true, false, ExpectedResult = false)]
-        [TestCase(true, false, true, true, true, ExpectedResult = false)]
-        [TestCase(true, true, true, false, true, ExpectedResult = false)]
-        [TestCase(true, true, true, true, true, ExpectedResult = false)]
-        public bool CaptureCustomParametersHsmDeprecatedAndNew(bool highSecurity, bool deprecatedCustomParametersSpecified, bool deprecatedCustomParametersEnabled, bool customParametersSpecified, bool customParametersEnabled)
+        [TestCase(false, false, false, ExpectedResult = true)]
+        [TestCase(false, true, false, ExpectedResult = false)]
+        [TestCase(false, true, true, ExpectedResult = true)]
+        [TestCase(true, false, true, ExpectedResult = false)]
+        [TestCase(true, true, true, ExpectedResult = false)]
+        public bool CaptureCustomParametersHsmAndLocal(bool highSecurity, bool customParametersSpecified, bool customParametersEnabled)
         {
             _localConfig.highSecurity.enabled = highSecurity;
-
-            if (deprecatedCustomParametersSpecified)
-            {
-                _localConfig.parameterGroups.customParameters.enabledSpecified = deprecatedCustomParametersSpecified;
-                _localConfig.parameterGroups.customParameters.enabled = deprecatedCustomParametersEnabled;
-            }
 
             if (customParametersSpecified)
             {
@@ -836,55 +815,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void CustomParametersToIgnoreSetFromLocal()
-        {
-            _localConfig.parameterGroups.customParameters.ignore = new List<string>() { "local" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("local"));
-        }
-
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool CaptureIdentityParametersSetFromLocal(bool isEnabled)
-        {
-            _localConfig.parameterGroups.identityParameters.enabled = isEnabled;
-            return _defaultConfig.CaptureErrorCollectorAttributesIncludes.Contains("identity.*");
-        }
-
-        [Test]
         public void CaptureIdentityParametersSetFromLocalDefaultsToFalse()
         {
             Assert.IsTrue(_defaultConfig.CaptureAttributesDefaultExcludes.Contains("identity.*"));
         }
 
         [Test]
-        public void IdentityParametersToIgnoreSetFromLocal()
-        {
-            _localConfig.parameterGroups.identityParameters.ignore = new List<string>() { "local" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("identity.local"));
-        }
-
-        [TestCase(true, ExpectedResult = false)]
-        [TestCase(false, ExpectedResult = true)]
-        public bool CaptureResponseHeaderParametersSetFromLocal(bool isEnabled)
-        {
-            _localConfig.parameterGroups.responseHeaderParameters.enabled = isEnabled;
-            return _defaultConfig.CaptureAttributesExcludes.Contains("response.headers.*");
-        }
-
-        [Test]
         public void CaptureResponseHeaderParametersSetFromLocalDefaultsToTrue()
         {
             Assert.IsFalse(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.*"));
-        }
-
-        [Test]
-        public void ResponseHeaderParametersToIgnoreSetFromLocal()
-        {
-            _localConfig.parameterGroups.responseHeaderParameters.ignore = new List<string>() { "local" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.local"));
         }
 
         [TestCase(new[] { "local" }, new[] { "server" }, ExpectedResult = "server")]
@@ -1361,38 +1300,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void TransactionEventUsesDefaultWhenNoConfigValues()
         {
             Assert.IsTrue(_defaultConfig.TransactionEventsAttributesEnabled);
-        }
-
-        [Test]
-        public void DeprecatedIgnoreIdentityParametersValueBecomesExclude()
-        {
-            _localConfig.parameterGroups.identityParameters.ignore = new List<string>() { "foo" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("identity.foo"));
-        }
-
-        [Test]
-        public void DeprecatedIgnoreCustomParametersValueBecomesExclude()
-        {
-            _localConfig.parameterGroups.customParameters.ignore = new List<string>() { "foo" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("foo"));
-        }
-
-        [Test]
-        public void DeprecatedIgnoreResponseHeaderParametersValueBecomesExclude()
-        {
-            _localConfig.parameterGroups.responseHeaderParameters.ignore = new List<string>() { "foo" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.foo"));
-        }
-
-        [Test]
-        public void DeprecatedIgnoreRequestHeaderParametersValueBecomesExclude()
-        {
-            _localConfig.parameterGroups.requestHeaderParameters.ignore = new List<string>() { "foo" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("request.headers.foo"));
         }
 
         [Test]

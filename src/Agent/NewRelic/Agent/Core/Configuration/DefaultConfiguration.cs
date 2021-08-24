@@ -454,10 +454,8 @@ namespace NewRelic.Agent.Core.Configuration
                 return Memoizer.Memoize(ref _captureAttributesExcludes, () =>
                 {
                     var configExcludes = _localConfiguration.attributes.exclude;
-                    var deprecatedDisabledExcludes = GetDeprecatedExplicitlyDisabledParameters();
                     var deprecatedIgnoredExcludes = GetDeprecatedIgnoreParameters();
                     var allExcludes = configExcludes
-                        .Concat(deprecatedDisabledExcludes)
                         .Concat(deprecatedIgnoredExcludes);
 
                     return new HashSet<string>(allExcludes);
@@ -561,11 +559,6 @@ namespace NewRelic.Agent.Core.Configuration
                             includes.Add("request.parameters.*");
                         }
 
-                        if (DeprecatedCaptureIdentityParameters)
-                        {
-                            includes.Add("identity.*");
-                        }
-
                         return includes;
                     });
                 }
@@ -634,11 +627,6 @@ namespace NewRelic.Agent.Core.Configuration
                         if (CaptureRequestParameters)
                         {
                             includes.Add("request.parameters.*");
-                        }
-
-                        if (DeprecatedCaptureIdentityParameters)
-                        {
-                            includes.Add("identity.*");
                         }
 
                         return includes;
@@ -776,33 +764,9 @@ namespace NewRelic.Agent.Core.Configuration
             return new BoolConfigurationItem(localConfigValue, LocalConfigSource);
         }
 
-        /// This method combines logic for the deprecated parameterGroups.customParameters and the 
-        /// newer customParameters added for implementation of Language Agent Security Policies (LASP). 
-        /// parameterGroups.customParameters will be removed with a future major version release, but customParameters 
-        /// must remain in order maintain the requirements of LASP and High Security Mode (HSM).  
         private bool GetLocalShouldCaptureCustomParameters()
         {
-            var deprecatedSpecified = _localConfiguration.parameterGroups.customParameters.enabledSpecified;
-
-            if ((_localConfiguration.customParameters.enabledSpecified == false)
-                && (deprecatedSpecified == false))
-            {
-                return CaptureCustomParametersAttributesDefault;
-            }
-
-            var localConfigValue = true;
-            if (_localConfiguration.customParameters.enabledSpecified)
-            {
-                localConfigValue = _localConfiguration.customParameters.enabled;
-            }
-
-            if (_localConfiguration.parameterGroups.customParameters.enabledSpecified)
-            {
-                LogDeprecatedPropertyUse("parameterGroups.customParameters", "customParameters");
-                localConfigValue = localConfigValue && _localConfiguration.parameterGroups.customParameters.enabled;
-            }
-
-            return localConfigValue;
+            return _localConfiguration.customParameters.enabledSpecified ? _localConfiguration.customParameters.enabled : CaptureCustomParametersAttributesDefault;
         }
 
         public virtual bool CaptureRequestParameters
@@ -2266,6 +2230,43 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 LogDisabledPropertyUse("transactionEvents.maximumSamplesPerMinute");
             }
+
+            // parameterGroups.*
+            // parameterGroups.responseHeaderParameters.* has no replacement equivalent, the others
+            // are replaced with attributes.include/exclude
+            if (_localConfiguration.parameterGroups.identityParameters.enabledSpecified)
+            {
+                LogDisabledPropertyUse("parameterGroups.identityParameters.enabled", "attributes.include");
+            }
+            if (_localConfiguration.parameterGroups.identityParameters?.ignore?.Count > 0)
+            {
+                LogDisabledPropertyUse("parameterGroups.identityParameters.ignore", "attributes.exclude");
+            }
+            if (_localConfiguration.parameterGroups.responseHeaderParameters.enabledSpecified)
+            {
+                LogDisabledPropertyUse("parameterGroups.responseHeaderParameters.enabled");
+            }
+            if (_localConfiguration.parameterGroups.responseHeaderParameters?.ignore?.Count > 0)
+            {
+                LogDisabledPropertyUse("parameterGroups.responseHeaderParameters.ignore");
+            }
+            if (_localConfiguration.parameterGroups.customParameters.enabledSpecified)
+            {
+                LogDisabledPropertyUse("parameterGroups.customParameters.enabled", "attributes.include");
+            }
+            if (_localConfiguration.parameterGroups.customParameters?.ignore?.Count > 0)
+            {
+                LogDisabledPropertyUse("parameterGroups.customParameters.ignore", "attributes.exclude");
+            }
+            if (_localConfiguration.parameterGroups.requestHeaderParameters.enabledSpecified)
+            {
+                LogDisabledPropertyUse("parameterGroups.requestHeaderParameters.enabled", "attributes.include");
+            }
+            if (_localConfiguration.parameterGroups.requestHeaderParameters?.ignore?.Count > 0)
+            {
+                LogDisabledPropertyUse("parameterGroups.requestHeaderParameters.ignore", "attributes.exclude");
+            }
+
         }
 
         private void LogDeprecatedPropertyUse(string deprecatedPropertyName, string newPropertyName)
@@ -2283,52 +2284,6 @@ namespace NewRelic.Agent.Core.Configuration
             Log.WarnFormat("Configuration property '{0}' is disabled (unused) and will be removed from the config schema in a future release.  {1}  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", disabledPropertyName, replacementText);
         }
 
-        private IEnumerable<string> GetDeprecatedExplicitlyDisabledParameters()
-        {
-            var disabledProperties = new List<string>();
-
-            if (_localConfiguration.parameterGroups != null)
-            {
-                if (_localConfiguration.parameterGroups.responseHeaderParameters != null &&
-                    _localConfiguration.parameterGroups.responseHeaderParameters.enabledSpecified &&
-                    !_localConfiguration.parameterGroups.responseHeaderParameters.enabled)
-                {
-                    LogDeprecatedPropertyUse("parameterGroups.responseHeaderParameters.enabled", "attributes.exclude");
-                    disabledProperties.Add("response.headers.*");
-                }
-
-                // Log the deprecated parameter, disabling custom parameters is handled separately in AttributeService
-                if (_localConfiguration.parameterGroups.customParameters != null &&
-                    _localConfiguration.parameterGroups.customParameters.enabledSpecified &&
-                    !_localConfiguration.parameterGroups.customParameters.enabled)
-                {
-                    LogDeprecatedPropertyUse("parameterGroups.customParameters.enabled", "attributes.exclude");
-                }
-
-                if (_localConfiguration.parameterGroups.requestHeaderParameters != null &&
-                    _localConfiguration.parameterGroups.requestHeaderParameters.enabledSpecified &&
-                    !_localConfiguration.parameterGroups.requestHeaderParameters.enabled)
-                {
-                    LogDeprecatedPropertyUse("parameterGroups.requestHeaderParameters.enabled", "attributes.exclude");
-                    disabledProperties.Add("request.headers.*");
-                }
-            }
-            return disabledProperties;
-        }
-
-        private bool DeprecatedCaptureIdentityParameters
-        {
-            get
-            {
-                var localAttributeValue = false;
-                if (_localConfiguration.parameterGroups.identityParameters.enabledSpecified)
-                {
-                    localAttributeValue = _localConfiguration.parameterGroups.identityParameters.enabled;
-                }
-                return localAttributeValue;
-            }
-        }
-
         int? _databaseStatementCacheCapcity = null;
 
         public int DatabaseStatementCacheCapcity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
@@ -2337,65 +2292,9 @@ namespace NewRelic.Agent.Core.Configuration
         private IEnumerable<string> GetDeprecatedIgnoreParameters()
         {
             var ignoreParameters = new List<string>();
-            ignoreParameters.AddRange(DeprecatedIgnoreCustomParameters());
-            ignoreParameters.AddRange(DeprecatedIgnoreIdentityParameters().Select(param => "identity." + param));
-            ignoreParameters.AddRange(DeprecatedIgnoreResponseHeaderParameters().Select(param => "response.headers." + param));
-            ignoreParameters.AddRange(DeprecatedIgnoreRequestHeaderParameters().Select(param => "request.headers." + param));
             ignoreParameters.AddRange(DeprecatedIgnoreRequestParameters().Select(param => "request.parameters." + param));
 
             return ignoreParameters.Distinct();
-        }
-
-        private IEnumerable<string> DeprecatedIgnoreCustomParameters()
-        {
-            if (_localConfiguration.parameterGroups != null
-                && _localConfiguration.parameterGroups.customParameters != null
-                && _localConfiguration.parameterGroups.customParameters.ignore != null
-                && _localConfiguration.parameterGroups.customParameters.ignore.Count > 0)
-            {
-                LogDeprecatedPropertyUse("parameterGroups.customParameters.ignore", "attributes.exclude");
-                return _localConfiguration.parameterGroups.customParameters.ignore;
-            }
-            return Enumerable.Empty<string>();
-        }
-
-        private IEnumerable<string> DeprecatedIgnoreIdentityParameters()
-        {
-            if (_localConfiguration.parameterGroups != null
-                && _localConfiguration.parameterGroups.identityParameters != null
-                && _localConfiguration.parameterGroups.identityParameters.ignore != null
-                && _localConfiguration.parameterGroups.identityParameters.ignore.Count > 0)
-            {
-                LogDeprecatedPropertyUse("parameterGroups.identityParameters.ignore", "attributes.exclude");
-                return _localConfiguration.parameterGroups.identityParameters.ignore;
-            }
-            return Enumerable.Empty<string>();
-        }
-
-        private IEnumerable<string> DeprecatedIgnoreResponseHeaderParameters()
-        {
-            if (_localConfiguration.parameterGroups != null
-                && _localConfiguration.parameterGroups.responseHeaderParameters != null
-                && _localConfiguration.parameterGroups.responseHeaderParameters.ignore != null
-                && _localConfiguration.parameterGroups.responseHeaderParameters.ignore.Count > 0)
-            {
-                LogDeprecatedPropertyUse("parameterGroups.responseHeaderParameters.ignore", "attributes.exclude");
-                return _localConfiguration.parameterGroups.responseHeaderParameters.ignore;
-            }
-            return Enumerable.Empty<string>();
-        }
-
-        private IEnumerable<string> DeprecatedIgnoreRequestHeaderParameters()
-        {
-            if (_localConfiguration.parameterGroups != null
-                && _localConfiguration.parameterGroups.requestHeaderParameters != null
-                && _localConfiguration.parameterGroups.requestHeaderParameters.ignore != null
-                && _localConfiguration.parameterGroups.requestHeaderParameters.ignore.Count > 0)
-            {
-                LogDeprecatedPropertyUse("parameterGroups.requestHeaderParameters.ignore", "attributes.exclude");
-                return _localConfiguration.parameterGroups.requestHeaderParameters.ignore;
-            }
-            return Enumerable.Empty<string>();
         }
 
         private IEnumerable<string> DeprecatedIgnoreRequestParameters()
