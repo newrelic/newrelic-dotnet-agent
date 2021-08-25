@@ -61,7 +61,7 @@ namespace AspNetCoreMvcBasicRequestsApplication.Controllers
         {
             // Do at least one request with a base address to ensure that we handle combining URLs correctly
             await new HttpClient { BaseAddress = new Uri("http://www.google.com") }.GetStringAsync("/search");
-            await new HttpClient().GetStringAsync("http://www.yahoo.com");
+            await new HttpClient().GetAsync("http://www.yahoo.com");
 
             return "Worked";
         }
