@@ -385,15 +385,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public bool TransactionTracerCaptureAttributesSetFromLocal(bool local)
-        {
-            _localConfig.transactionTracer.captureAttributes = local;
-
-            return _defaultConfig.CaptureTransactionTraceAttributes;
-        }
-
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
         public bool Property_DataTransmissionPutForDataSend_set_from_local(bool local)
         {
             _localConfig.dataTransmission.putForDataSend = local;
@@ -1255,32 +1246,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsTrue(_defaultConfig.CaptureErrorCollectorAttributes);
         }
 
-        [TestCase(true, false, ExpectedResult = true)]
-        [TestCase(true, true, ExpectedResult = true)]
-        [TestCase(false, false, ExpectedResult = false)]
-        [TestCase(false, true, ExpectedResult = false)]
-        public bool TransactionTracerOverridesDeprecatedValue(bool propertyEnabled, bool deprecatedEnabled)
-        {
-            _localConfig.transactionTracer.captureAttributes = deprecatedEnabled;
-            _localConfig.transactionTracer.attributes.enabled = propertyEnabled;
-
-            return _defaultConfig.CaptureTransactionTraceAttributes;
-        }
-
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool TransactionTracerDeprecatedValueOverridesDefault(bool deprecatedEnabled)
-        {
-            _localConfig.transactionTracer.captureAttributesSpecified = false;
-            _localConfig.transactionTracer.attributes.enabled = deprecatedEnabled;
-
-            return _defaultConfig.CaptureTransactionTraceAttributes;
-        }
-
         [Test]
         public void TransactionTracerUsesDefaultWhenNoConfigValues()
         {
-            _localConfig.transactionTracer.captureAttributesSpecified = false;
             _localConfig.transactionTracer.attributes.enabledSpecified = false;
 
             Assert.IsTrue(_defaultConfig.CaptureTransactionTraceAttributes);

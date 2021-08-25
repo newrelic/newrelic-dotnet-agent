@@ -530,11 +530,6 @@ namespace NewRelic.Agent.Core.Configuration
                 return _localConfiguration.transactionTracer.attributes.enabled;
             }
 
-            if (_localConfiguration.transactionTracer.captureAttributesSpecified)
-            {
-                return _localConfiguration.transactionTracer.captureAttributes;
-            }
-
             return CaptureTransactionTraceAttributesDefault;
         }
 
@@ -2184,10 +2179,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         private void LogDeprecationWarnings()
         {
-            if (_localConfiguration.transactionTracer.captureAttributesSpecified)
-            {
-                LogDeprecatedPropertyUse("transactionTracer.captureAttributes", "transactionTracer.attributes.enabled");
-            }
             if (_localConfiguration.errorCollector.captureAttributesSpecified)
             {
                 LogDeprecatedPropertyUse("errorCollector.captureAttributes", "errorCollector.attributes.enabled");
@@ -2268,6 +2259,13 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 LogDisabledPropertyUse("requestParameters.ignore", "attributes.exclude");
             }
+
+            //transactionTracer.captureAttributes
+            if (_localConfiguration.transactionTracer.captureAttributesSpecified)
+            {
+                LogDisabledPropertyUse("transactionTracer.captureAttributes", "attributes.include");
+            }
+
 
         }
 
