@@ -101,7 +101,6 @@ namespace NewRelic.Agent.Core.Configuration
                 _securityPoliciesConfiguration = securityPoliciesConfiguration;
             }
 
-            LogDeprecationWarnings();
             LogDisabledWarnings();
 
             _newRelicAppSettings = TransformAppSettings();
@@ -657,11 +656,6 @@ namespace NewRelic.Agent.Core.Configuration
             if (_localConfiguration.browserMonitoring.attributes.enabledSpecified)
             {
                 return _localConfiguration.browserMonitoring.attributes.enabled;
-            }
-
-            if (_localConfiguration.browserMonitoring.captureAttributesSpecified)
-            {
-                return _localConfiguration.browserMonitoring.captureAttributes;
             }
 
             return CaptureBrowserMonitoringAttributesDefault;
@@ -2172,13 +2166,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region deprecated/disabled parameter group settings
 
-        private void LogDeprecationWarnings()
-        {
-            if (_localConfiguration.browserMonitoring.captureAttributesSpecified)
-            {
-                LogDeprecatedPropertyUse("browserMonitoring.captureAttributes", "browserMonitoring.attributes.enabled");
-            }
-        }
         private void LogDisabledWarnings()
         {
             // analyticsEvents.*
@@ -2254,20 +2241,28 @@ namespace NewRelic.Agent.Core.Configuration
             //transactionTracer.captureAttributes
             if (_localConfiguration.transactionTracer.captureAttributesSpecified)
             {
-                LogDisabledPropertyUse("transactionTracer.captureAttributes", "attributes.include");
+                LogDisabledPropertyUse("transactionTracer.captureAttributes", "transactionTracer.attributes.enabled");
             }
             //errorCollector.captureAttributes
             if (_localConfiguration.errorCollector.captureAttributesSpecified)
             {
-                LogDisabledPropertyUse("errorCollector.captureAttributes", "attributes.include");
+                LogDisabledPropertyUse("errorCollector.captureAttributes", "errorCollector.attributes.enabled");
+            }
+            //browserMonitoring.captureAttributes
+            if (_localConfiguration.browserMonitoring.captureAttributesSpecified)
+            {
+                LogDisabledPropertyUse("browserMonitoring.captureAttributes", "browserMonitoring.attributes.enabled");
             }
 
         }
 
-        private void LogDeprecatedPropertyUse(string deprecatedPropertyName, string newPropertyName)
-        {
-            Log.WarnFormat("Deprecated configuration property '{0}'.  Use '{1}'.  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", deprecatedPropertyName, newPropertyName);
-        }
+        // This method is now unused as all previously deprecated config properties have been fully disabled.
+        // However, we may wish to deprecate more config properties in the future, so it seems prudent to
+        // leave this code in here, commented out.
+        //private void LogDeprecatedPropertyUse(string deprecatedPropertyName, string newPropertyName)
+        //{
+        //    Log.WarnFormat("Deprecated configuration property '{0}'.  Use '{1}'.  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", deprecatedPropertyName, newPropertyName);
+        //}
 
         private void LogDisabledPropertyUse(string disabledPropertyName, string newPropertyName = "")
         {

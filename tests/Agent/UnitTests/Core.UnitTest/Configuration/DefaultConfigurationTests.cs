@@ -485,14 +485,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsFalse(_defaultConfig.ErrorCollectorCaptureEvents);
         }
 
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool BrowserMonitoringCaptureAttributesSetFromLocal(bool local)
-        {
-            _localConfig.browserMonitoring.captureAttributes = local;
-
-            return _defaultConfig.CaptureBrowserMonitoringAttributes;
-        }
 
         [TestCase(true, null, ExpectedResult = true)]
         [TestCase(false, null, ExpectedResult = false)]
@@ -1184,51 +1176,16 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsTrue(_defaultConfig.ThreadProfilingIgnoreMethods.Contains("System.Threading.WaitHandle:WaitAny"));
         }
 
-        [TestCase(true, false, ExpectedResult = true)]
-        [TestCase(true, true, ExpectedResult = true)]
-        [TestCase(false, false, ExpectedResult = false)]
-        [TestCase(false, true, ExpectedResult = false)]
-        public bool BrowserMonitoringOverridesDeprecatedValue(bool propertyEnabled, bool deprecatedEnabled)
-        {
-            _localConfig.browserMonitoring.captureAttributes = deprecatedEnabled;
-            _localConfig.browserMonitoring.attributes.enabled = propertyEnabled;
-
-            return _defaultConfig.CaptureBrowserMonitoringAttributes;
-        }
-
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool BrowserMonitoringDeprecatedValueOverridesDefault(bool deprecatedEnabled)
-        {
-            _localConfig.browserMonitoring.captureAttributesSpecified = false;
-            _localConfig.browserMonitoring.attributes.enabled = deprecatedEnabled;
-
-            return _defaultConfig.CaptureBrowserMonitoringAttributes;
-        }
-
         [Test]
-        public void BrowserMonitoringUsesDefaultWhenNoConfigValues()
+        public void BrowserMonitoringUsesDefaultWhenNoConfigValue()
         {
-            _localConfig.browserMonitoring.captureAttributesSpecified = false;
             _localConfig.browserMonitoring.attributes.enabledSpecified = false;
 
             Assert.IsFalse(_defaultConfig.CaptureBrowserMonitoringAttributes);
         }
 
-        [TestCase(true, false, ExpectedResult = true)]
-        [TestCase(true, true, ExpectedResult = true)]
-        [TestCase(false, false, ExpectedResult = false)]
-        [TestCase(false, true, ExpectedResult = false)]
-        public bool ErrorCollectorOverridesDeprecatedValue(bool propertyEnabled, bool deprecatedEnabled)
-        {
-            _localConfig.errorCollector.captureAttributes = deprecatedEnabled;
-            _localConfig.errorCollector.attributes.enabled = propertyEnabled;
-
-            return _defaultConfig.CaptureErrorCollectorAttributes;
-        }
-
         [Test]
-        public void ErrorCollectorUsesDefaultWhenNoConfigValues()
+        public void ErrorCollectorUsesDefaultWhenNoConfigValue()
         {
             _localConfig.errorCollector.attributes.enabledSpecified = false;
 
@@ -1236,7 +1193,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void TransactionTracerUsesDefaultWhenNoConfigValues()
+        public void TransactionTracerUsesDefaultWhenNoConfigValue()
         {
             _localConfig.transactionTracer.attributes.enabledSpecified = false;
 
