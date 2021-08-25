@@ -594,11 +594,6 @@ namespace NewRelic.Agent.Core.Configuration
                 return _localConfiguration.errorCollector.attributes.enabled;
             }
 
-            if (_localConfiguration.errorCollector.captureAttributesSpecified)
-            {
-                return _localConfiguration.errorCollector.captureAttributes;
-            }
-
             return CaptureErrorCollectorAttributesDefault;
         }
 
@@ -2179,10 +2174,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         private void LogDeprecationWarnings()
         {
-            if (_localConfiguration.errorCollector.captureAttributesSpecified)
-            {
-                LogDeprecatedPropertyUse("errorCollector.captureAttributes", "errorCollector.attributes.enabled");
-            }
             if (_localConfiguration.browserMonitoring.captureAttributesSpecified)
             {
                 LogDeprecatedPropertyUse("browserMonitoring.captureAttributes", "browserMonitoring.attributes.enabled");
@@ -2265,7 +2256,11 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 LogDisabledPropertyUse("transactionTracer.captureAttributes", "attributes.include");
             }
-
+            //errorCollector.captureAttributes
+            if (_localConfiguration.errorCollector.captureAttributesSpecified)
+            {
+                LogDisabledPropertyUse("errorCollector.captureAttributes", "attributes.include");
+            }
 
         }
 

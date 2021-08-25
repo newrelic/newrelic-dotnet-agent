@@ -1227,20 +1227,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.CaptureErrorCollectorAttributes;
         }
 
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool ErrorCollectorDeprecatedValueOverridesDefault(bool deprecatedEnabled)
-        {
-            _localConfig.errorCollector.captureAttributesSpecified = false;
-            _localConfig.errorCollector.attributes.enabled = deprecatedEnabled;
-
-            return _defaultConfig.CaptureErrorCollectorAttributes;
-        }
-
         [Test]
         public void ErrorCollectorUsesDefaultWhenNoConfigValues()
         {
-            _localConfig.errorCollector.captureAttributesSpecified = false;
             _localConfig.errorCollector.attributes.enabledSpecified = false;
 
             Assert.IsTrue(_defaultConfig.CaptureErrorCollectorAttributes);
