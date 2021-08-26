@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
@@ -16,9 +15,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
     {
         private CacheByDatastoreVendor<string, ParsedSqlStatement> _cache;
 
-        public DatabaseStatementParser(ICacheStatsReporter cacheStatsReporter)
+        public DatabaseStatementParser()
         {
-            _cache = new CacheByDatastoreVendor<string, ParsedSqlStatement>("SqlParsingCache", cacheStatsReporter);
+            _cache = new CacheByDatastoreVendor<string, ParsedSqlStatement>("SqlParsingCache");
         }
 
         public ParsedSqlStatement ParseDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql)

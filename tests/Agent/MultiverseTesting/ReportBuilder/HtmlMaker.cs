@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -170,10 +171,14 @@ namespace ReportBuilder
             AddUpperBoilerplate("Multiverse Testing Report", builder);
             builder.AppendLine("<h2>Welcome to the Multiverse Testing Report</h2>");
             builder.AppendLine(string.Empty);
-            builder.AppendLine("<p>Select an agent version from the list below to see the reports.</p>");
+            builder.AppendLine("<p>Select an agent version from the list below to see the reports, newest to oldest.</p>");
             builder.AppendLine(string.Empty);
             builder.AppendLine("<ul>");
-            foreach (var dir in directoryInfo.EnumerateDirectories())
+
+            var dirs = directoryInfo.GetDirectories().ToList();
+            var vc = new VersionComparer();
+            dirs.Sort(vc);
+            foreach (var dir in dirs)
             {
                 builder.AppendLine($"  <li><a href=\"{dir.Name}/index.html\">{dir.Name}</a></li>");
             }

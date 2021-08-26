@@ -100,7 +100,7 @@ namespace NewRelic.Agent.Core.Configuration
                 _securityPoliciesConfiguration = securityPoliciesConfiguration;
             }
 
-            LogDeprecationWarnings();
+            LogDisabledWarnings();
 
             _newRelicAppSettings = TransformAppSettings();
 
@@ -452,13 +452,7 @@ namespace NewRelic.Agent.Core.Configuration
                 return Memoizer.Memoize(ref _captureAttributesExcludes, () =>
                 {
                     var configExcludes = _localConfiguration.attributes.exclude;
-                    var deprecatedDisabledExcludes = GetDeprecatedExplicitlyDisabledParameters();
-                    var deprecatedIgnoredExcludes = GetDeprecatedIgnoreParameters();
-                    var allExcludes = configExcludes
-                        .Concat(deprecatedDisabledExcludes)
-                        .Concat(deprecatedIgnoredExcludes);
-
-                    return new HashSet<string>(allExcludes);
+                    return new HashSet<string>(configExcludes);
                 });
             }
         }
@@ -488,10 +482,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public virtual bool TransactionEventsAttributesEnabled =>
-            CaptureAttributes
-            && _localConfiguration.transactionEvents.attributes.enabled
-            && (!_localConfiguration.analyticsEvents.captureAttributesSpecified || _localConfiguration.analyticsEvents.captureAttributes);
+        public virtual bool TransactionEventsAttributesEnabled => CaptureAttributes && _localConfiguration.transactionEvents.attributes.enabled;
 
         private HashSet<string> _transactionEventsAttributesInclude;
         public HashSet<string> TransactionEventsAttributesInclude
@@ -537,11 +528,6 @@ namespace NewRelic.Agent.Core.Configuration
                 return _localConfiguration.transactionTracer.attributes.enabled;
             }
 
-            if (_localConfiguration.transactionTracer.captureAttributesSpecified)
-            {
-                return _localConfiguration.transactionTracer.captureAttributes;
-            }
-
             return CaptureTransactionTraceAttributesDefault;
         }
 
@@ -560,11 +546,6 @@ namespace NewRelic.Agent.Core.Configuration
                         if (CaptureRequestParameters)
                         {
                             includes.Add("request.parameters.*");
-                        }
-
-                        if (DeprecatedCaptureIdentityParameters)
-                        {
-                            includes.Add("identity.*");
                         }
 
                         return includes;
@@ -611,11 +592,6 @@ namespace NewRelic.Agent.Core.Configuration
                 return _localConfiguration.errorCollector.attributes.enabled;
             }
 
-            if (_localConfiguration.errorCollector.captureAttributesSpecified)
-            {
-                return _localConfiguration.errorCollector.captureAttributes;
-            }
-
             return CaptureErrorCollectorAttributesDefault;
         }
 
@@ -635,11 +611,6 @@ namespace NewRelic.Agent.Core.Configuration
                         if (CaptureRequestParameters)
                         {
                             includes.Add("request.parameters.*");
-                        }
-
-                        if (DeprecatedCaptureIdentityParameters)
-                        {
-                            includes.Add("identity.*");
                         }
 
                         return includes;
@@ -684,11 +655,6 @@ namespace NewRelic.Agent.Core.Configuration
             if (_localConfiguration.browserMonitoring.attributes.enabledSpecified)
             {
                 return _localConfiguration.browserMonitoring.attributes.enabled;
-            }
-
-            if (_localConfiguration.browserMonitoring.captureAttributesSpecified)
-            {
-                return _localConfiguration.browserMonitoring.captureAttributes;
             }
 
             return CaptureBrowserMonitoringAttributesDefault;
@@ -777,33 +743,9 @@ namespace NewRelic.Agent.Core.Configuration
             return new BoolConfigurationItem(localConfigValue, LocalConfigSource);
         }
 
-        /// This method combines logic for the deprecated parameterGroups.customParameters and the 
-        /// newer customParameters added for implementation of Language Agent Security Policies (LASP). 
-        /// parameterGroups.customParameters will be removed with a future major version release, but customParameters 
-        /// must remain in order maintain the requirements of LASP and High Security Mode (HSM).  
         private bool GetLocalShouldCaptureCustomParameters()
         {
-            var deprecatedSpecified = _localConfiguration.parameterGroups.customParameters.enabledSpecified;
-
-            if ((_localConfiguration.customParameters.enabledSpecified == false)
-                && (deprecatedSpecified == false))
-            {
-                return CaptureCustomParametersAttributesDefault;
-            }
-
-            var localConfigValue = true;
-            if (_localConfiguration.customParameters.enabledSpecified)
-            {
-                localConfigValue = _localConfiguration.customParameters.enabled;
-            }
-
-            if (_localConfiguration.parameterGroups.customParameters.enabledSpecified)
-            {
-                LogDeprecatedPropertyUse("parameterGroups.customParameters", "customParameters");
-                localConfigValue = localConfigValue && _localConfiguration.parameterGroups.customParameters.enabled;
-            }
-
-            return localConfigValue;
+            return _localConfiguration.customParameters.enabledSpecified ? _localConfiguration.customParameters.enabled : CaptureCustomParametersAttributesDefault;
         }
 
         public virtual bool CaptureRequestParameters
@@ -1592,8 +1534,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 return TransactionEventsMaximumSamplesStored > 0 && ServerCanDisable(
                     _serverConfiguration.AnalyticsEventCollectionEnabled,
-                    _localConfiguration.transactionEvents.enabled
-                    && (!_localConfiguration.analyticsEvents.enabledSpecified || _localConfiguration.analyticsEvents.enabled));
+                    _localConfiguration.transactionEvents.enabled);
             }
         }
 
@@ -1602,12 +1543,6 @@ namespace NewRelic.Agent.Core.Configuration
             get
             {
                 var maxValue = _localConfiguration.transactionEvents.maximumSamplesStored;
-                if (_localConfiguration.analyticsEvents.maximumSamplesStoredSpecified)
-                {
-                    LogDeprecatedPropertyUse("analyticsEvents.maximumSamplesStored", "transactionEvents.maximumSamplesStored");
-                    maxValue = _localConfiguration.analyticsEvents.maximumSamplesStored;
-                }
-
                 return (int)EnvironmentOverrides(
                     ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), maxValue),
                     "MAX_TRANSACTION_SAMPLES_STORED");
@@ -1626,17 +1561,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                var enabled = TransactionEventsTransactionsEnabledDefault;
-                if (_localConfiguration.transactionEvents.transactions.enabledSpecified)
-                {
-                    enabled = _localConfiguration.transactionEvents.transactions.enabled;
-                }
-                if (_localConfiguration.analyticsEvents.transactions.enabledSpecified)
-                {
-                    LogDeprecatedPropertyUse("analyticsEvents.transactions.enabled", "transactionEvents.transactions.enabled");
-                    enabled = _localConfiguration.analyticsEvents.transactions.enabled;
-                }
-                return enabled;
+                return _localConfiguration.transactionEvents.transactions.enabledSpecified ? _localConfiguration.transactionEvents.transactions.enabled : TransactionEventsTransactionsEnabledDefault;
             }
         }
 
@@ -2237,164 +2162,120 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
-        #region deprecated parameter group settings
+        #region deprecated/disabled parameter group settings
 
-        private void LogDeprecationWarnings()
+        private void LogDisabledWarnings()
         {
-            if (_localConfiguration.analyticsEvents.captureAttributesSpecified)
+            // analyticsEvents.*
+            if (_localConfiguration.analyticsEvents.transactions.enabledSpecified)
             {
-                LogDeprecatedPropertyUse("analyticsEvents.captureAttributes", "transaction_events.attributes.enabled");
-            }
-            if (_localConfiguration.transactionTracer.captureAttributesSpecified)
-            {
-                LogDeprecatedPropertyUse("transactionTracer.captureAttributes", "transactionTracer.attributes.enabled");
-            }
-            if (_localConfiguration.errorCollector.captureAttributesSpecified)
-            {
-                LogDeprecatedPropertyUse("errorCollector.captureAttributes", "errorCollector.attributes.enabled");
-            }
-            if (_localConfiguration.browserMonitoring.captureAttributesSpecified)
-            {
-                LogDeprecatedPropertyUse("browserMonitoring.captureAttributes", "browserMonitoring.attributes.enabled");
+                LogDisabledPropertyUse("analyticsEvents.transactions.enabled", "transactionEvents.transactions.enabled");
             }
             if (_localConfiguration.analyticsEvents.enabledSpecified)
             {
-                LogDeprecatedPropertyUse("analyticsEvents.enabled", "transactionEvents.enabled");
+                LogDisabledPropertyUse("analyticsEvents.enabled", "transactionEvents.enabled");
             }
-        }
-
-        private void LogDeprecatedPropertyUse(string deprecatedPropertyName, string newPropertyName)
-        {
-            Log.WarnFormat("Deprecated configuration property '{0}'.  Use '{1}'.  See http://docs.newrelic.com for details.", deprecatedPropertyName, newPropertyName);
-        }
-
-        private IEnumerable<string> GetDeprecatedExplicitlyDisabledParameters()
-        {
-            var disabledProperties = new List<string>();
-
-            if (_localConfiguration.parameterGroups != null)
+            if (_localConfiguration.analyticsEvents.captureAttributesSpecified)
             {
-                if (_localConfiguration.parameterGroups.responseHeaderParameters != null &&
-                    _localConfiguration.parameterGroups.responseHeaderParameters.enabledSpecified &&
-                    !_localConfiguration.parameterGroups.responseHeaderParameters.enabled)
-                {
-                    LogDeprecatedPropertyUse("parameterGroups.responseHeaderParameters.enabled", "attributes.exclude");
-                    disabledProperties.Add("response.headers.*");
-                }
-
-                // Log the deprecated parameter, disabling custom parameters is handled separately in AttributeService
-                if (_localConfiguration.parameterGroups.customParameters != null &&
-                    _localConfiguration.parameterGroups.customParameters.enabledSpecified &&
-                    !_localConfiguration.parameterGroups.customParameters.enabled)
-                {
-                    LogDeprecatedPropertyUse("parameterGroups.customParameters.enabled", "attributes.exclude");
-                }
-
-                if (_localConfiguration.parameterGroups.requestHeaderParameters != null &&
-                    _localConfiguration.parameterGroups.requestHeaderParameters.enabledSpecified &&
-                    !_localConfiguration.parameterGroups.requestHeaderParameters.enabled)
-                {
-                    LogDeprecatedPropertyUse("parameterGroups.requestHeaderParameters.enabled", "attributes.exclude");
-                    disabledProperties.Add("request.headers.*");
-                }
+                LogDisabledPropertyUse("analyticsEvents.captureAttributes", "transaction_events.attributes.enabled");
             }
-            return disabledProperties;
+            if (_localConfiguration.analyticsEvents.maximumSamplesStoredSpecified)
+            {
+                LogDisabledPropertyUse("analyticsEvents.maximumSamplesStored", "transaction_events.maximumSamplesStored");
+            }
+            if (_localConfiguration.analyticsEvents.maximumSamplesPerMinuteSpecified)
+            {
+                LogDisabledPropertyUse("analyticsEvents.maximumSamplesPerMinute");
+            }
+
+            // transactionEvents.maximumSamplesPerMinute
+            if (_localConfiguration.transactionEvents.maximumSamplesPerMinuteSpecified)
+            {
+                LogDisabledPropertyUse("transactionEvents.maximumSamplesPerMinute");
+            }
+
+            // parameterGroups.*
+            // parameterGroups.responseHeaderParameters.* has no replacement equivalent, the others
+            // are replaced with attributes.include/exclude
+            if (_localConfiguration.parameterGroups.identityParameters.enabledSpecified)
+            {
+                LogDisabledPropertyUse("parameterGroups.identityParameters.enabled", "attributes.include");
+            }
+            if (_localConfiguration.parameterGroups.identityParameters?.ignore?.Count > 0)
+            {
+                LogDisabledPropertyUse("parameterGroups.identityParameters.ignore", "attributes.exclude");
+            }
+            if (_localConfiguration.parameterGroups.responseHeaderParameters.enabledSpecified)
+            {
+                LogDisabledPropertyUse("parameterGroups.responseHeaderParameters.enabled");
+            }
+            if (_localConfiguration.parameterGroups.responseHeaderParameters?.ignore?.Count > 0)
+            {
+                LogDisabledPropertyUse("parameterGroups.responseHeaderParameters.ignore");
+            }
+            if (_localConfiguration.parameterGroups.customParameters.enabledSpecified)
+            {
+                LogDisabledPropertyUse("parameterGroups.customParameters.enabled", "attributes.include");
+            }
+            if (_localConfiguration.parameterGroups.customParameters?.ignore?.Count > 0)
+            {
+                LogDisabledPropertyUse("parameterGroups.customParameters.ignore", "attributes.exclude");
+            }
+            if (_localConfiguration.parameterGroups.requestHeaderParameters.enabledSpecified)
+            {
+                LogDisabledPropertyUse("parameterGroups.requestHeaderParameters.enabled", "attributes.include");
+            }
+            if (_localConfiguration.parameterGroups.requestHeaderParameters?.ignore?.Count > 0)
+            {
+                LogDisabledPropertyUse("parameterGroups.requestHeaderParameters.ignore", "attributes.exclude");
+            }
+
+            //requestParameters.ignore
+            if (_localConfiguration.requestParameters?.ignore?.Count > 0)
+            {
+                LogDisabledPropertyUse("requestParameters.ignore", "attributes.exclude");
+            }
+
+            //transactionTracer.captureAttributes
+            if (_localConfiguration.transactionTracer.captureAttributesSpecified)
+            {
+                LogDisabledPropertyUse("transactionTracer.captureAttributes", "transactionTracer.attributes.enabled");
+            }
+            //errorCollector.captureAttributes
+            if (_localConfiguration.errorCollector.captureAttributesSpecified)
+            {
+                LogDisabledPropertyUse("errorCollector.captureAttributes", "errorCollector.attributes.enabled");
+            }
+            //browserMonitoring.captureAttributes
+            if (_localConfiguration.browserMonitoring.captureAttributesSpecified)
+            {
+                LogDisabledPropertyUse("browserMonitoring.captureAttributes", "browserMonitoring.attributes.enabled");
+            }
+
         }
 
-        private bool DeprecatedCaptureIdentityParameters
+        // This method is now unused as all previously deprecated config properties have been fully disabled.
+        // However, we may wish to deprecate more config properties in the future, so it seems prudent to
+        // leave this code in here, commented out.
+        //private void LogDeprecatedPropertyUse(string deprecatedPropertyName, string newPropertyName)
+        //{
+        //    Log.WarnFormat("Deprecated configuration property '{0}'.  Use '{1}'.  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", deprecatedPropertyName, newPropertyName);
+        //}
+
+        private void LogDisabledPropertyUse(string disabledPropertyName, string newPropertyName = "")
         {
-            get
+            var replacementText = "No replacement is available";
+            if (newPropertyName != "")
             {
-                var localAttributeValue = false;
-                if (_localConfiguration.parameterGroups.identityParameters.enabledSpecified)
-                {
-                    localAttributeValue = _localConfiguration.parameterGroups.identityParameters.enabled;
-                }
-                return localAttributeValue;
+                replacementText = $"Use {newPropertyName} instead.";
             }
+            Log.WarnFormat("Configuration property '{0}' is disabled (unused) and will be removed from the config schema in a future release.  {1}  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", disabledPropertyName, replacementText);
         }
 
         int? _databaseStatementCacheCapcity = null;
 
         public int DatabaseStatementCacheCapcity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
             TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
-
-        private IEnumerable<string> GetDeprecatedIgnoreParameters()
-        {
-            var ignoreParameters = new List<string>();
-            ignoreParameters.AddRange(DeprecatedIgnoreCustomParameters());
-            ignoreParameters.AddRange(DeprecatedIgnoreIdentityParameters().Select(param => "identity." + param));
-            ignoreParameters.AddRange(DeprecatedIgnoreResponseHeaderParameters().Select(param => "response.headers." + param));
-            ignoreParameters.AddRange(DeprecatedIgnoreRequestHeaderParameters().Select(param => "request.headers." + param));
-            ignoreParameters.AddRange(DeprecatedIgnoreRequestParameters().Select(param => "request.parameters." + param));
-
-            return ignoreParameters.Distinct();
-        }
-
-        private IEnumerable<string> DeprecatedIgnoreCustomParameters()
-        {
-            if (_localConfiguration.parameterGroups != null
-                && _localConfiguration.parameterGroups.customParameters != null
-                && _localConfiguration.parameterGroups.customParameters.ignore != null
-                && _localConfiguration.parameterGroups.customParameters.ignore.Count > 0)
-            {
-                LogDeprecatedPropertyUse("parameterGroups.customParameters.ignore", "attributes.exclude");
-                return _localConfiguration.parameterGroups.customParameters.ignore;
-            }
-            return Enumerable.Empty<string>();
-        }
-
-        private IEnumerable<string> DeprecatedIgnoreIdentityParameters()
-        {
-            if (_localConfiguration.parameterGroups != null
-                && _localConfiguration.parameterGroups.identityParameters != null
-                && _localConfiguration.parameterGroups.identityParameters.ignore != null
-                && _localConfiguration.parameterGroups.identityParameters.ignore.Count > 0)
-            {
-                LogDeprecatedPropertyUse("parameterGroups.identityParameters.ignore", "attributes.exclude");
-                return _localConfiguration.parameterGroups.identityParameters.ignore;
-            }
-            return Enumerable.Empty<string>();
-        }
-
-        private IEnumerable<string> DeprecatedIgnoreResponseHeaderParameters()
-        {
-            if (_localConfiguration.parameterGroups != null
-                && _localConfiguration.parameterGroups.responseHeaderParameters != null
-                && _localConfiguration.parameterGroups.responseHeaderParameters.ignore != null
-                && _localConfiguration.parameterGroups.responseHeaderParameters.ignore.Count > 0)
-            {
-                LogDeprecatedPropertyUse("parameterGroups.responseHeaderParameters.ignore", "attributes.exclude");
-                return _localConfiguration.parameterGroups.responseHeaderParameters.ignore;
-            }
-            return Enumerable.Empty<string>();
-        }
-
-        private IEnumerable<string> DeprecatedIgnoreRequestHeaderParameters()
-        {
-            if (_localConfiguration.parameterGroups != null
-                && _localConfiguration.parameterGroups.requestHeaderParameters != null
-                && _localConfiguration.parameterGroups.requestHeaderParameters.ignore != null
-                && _localConfiguration.parameterGroups.requestHeaderParameters.ignore.Count > 0)
-            {
-                LogDeprecatedPropertyUse("parameterGroups.requestHeaderParameters.ignore", "attributes.exclude");
-                return _localConfiguration.parameterGroups.requestHeaderParameters.ignore;
-            }
-            return Enumerable.Empty<string>();
-        }
-
-        private IEnumerable<string> DeprecatedIgnoreRequestParameters()
-        {
-            if (_localConfiguration.requestParameters != null
-                && _localConfiguration.requestParameters.ignore != null
-                && _localConfiguration.requestParameters.ignore.Count > 0)
-            {
-                LogDeprecatedPropertyUse("requestParameters.ignore", "attributes.exclude");
-                var requestParams = ServerOverrides(_serverConfiguration.RpmConfig.ParametersToIgnore, _localConfiguration.requestParameters.ignore);
-                return requestParams;
-            }
-            return Enumerable.Empty<string>();
-        }
 
         #endregion
 

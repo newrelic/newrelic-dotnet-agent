@@ -62,30 +62,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsFalse(_defaultConfig.AgentEnabled);
         }
 
-        [TestCase(null, null, true, ExpectedResult = true)]
-        [TestCase(null, null, false, ExpectedResult = false)]
-        [TestCase(null, true, true, ExpectedResult = true)]
-        [TestCase(null, true, false, ExpectedResult = false)]
-        [TestCase(null, false, true, ExpectedResult = false)]
-        [TestCase(null, false, false, ExpectedResult = false)]
-        [TestCase(true, null, true, ExpectedResult = true)]
-        [TestCase(true, null, false, ExpectedResult = false)]
-        [TestCase(true, true, true, ExpectedResult = true)]
-        [TestCase(true, true, false, ExpectedResult = false)]
-        [TestCase(true, false, true, ExpectedResult = false)]
-        [TestCase(true, false, false, ExpectedResult = false)]
-        [TestCase(false, null, true, ExpectedResult = false)]
-        [TestCase(false, null, false, ExpectedResult = false)]
-        [TestCase(false, true, true, ExpectedResult = false)]
-        [TestCase(false, true, false, ExpectedResult = false)]
-        [TestCase(false, false, true, ExpectedResult = false)]
-        [TestCase(false, false, false, ExpectedResult = false)]
-        public bool TransactionEventsCanBeDisbledByServer(bool? server, bool? legacyLocal, bool local)
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase(true, true, ExpectedResult = true)]
+        [TestCase(true, false, ExpectedResult = false)]
+        [TestCase(false, true, ExpectedResult = false)]
+        [TestCase(false, false, ExpectedResult = false)]
+        public bool TransactionEventsCanBeDisbledByServer(bool? server, bool local)
         {
             _localConfig.transactionEvents.enabled = local;
-
-            _localConfig.analyticsEvents.enabled = legacyLocal ?? default(bool);
-            _localConfig.analyticsEvents.enabledSpecified = legacyLocal.HasValue;
 
             _serverConfig.AnalyticsEventCollectionEnabled = server;
 
@@ -400,15 +385,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public bool TransactionTracerCaptureAttributesSetFromLocal(bool local)
-        {
-            _localConfig.transactionTracer.captureAttributes = local;
-
-            return _defaultConfig.CaptureTransactionTraceAttributes;
-        }
-
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
         public bool Property_DataTransmissionPutForDataSend_set_from_local(bool local)
         {
             _localConfig.dataTransmission.putForDataSend = local;
@@ -509,14 +485,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsFalse(_defaultConfig.ErrorCollectorCaptureEvents);
         }
 
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool BrowserMonitoringCaptureAttributesSetFromLocal(bool local)
-        {
-            _localConfig.browserMonitoring.captureAttributes = local;
-
-            return _defaultConfig.CaptureBrowserMonitoringAttributes;
-        }
 
         [TestCase(true, null, ExpectedResult = true)]
         [TestCase(false, null, ExpectedResult = false)]
@@ -601,16 +569,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.transactionEvents.enabled = local;
 
             return _defaultConfig.CaptureRequestParameters;
-        }
-
-        [TestCase(new[] { "local" }, new[] { "server" }, "request.parameters.server")]
-        [TestCase(new[] { "local" }, null, "request.parameters.local")]
-        public void RequestParametersToIgnoreSetFromLocalServerOverrides(string[] local, string[] server, string expected)
-        {
-            _serverConfig.RpmConfig.ParametersToIgnore = server;
-            _localConfig.requestParameters.ignore = new List<string>(local);
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains(expected));
         }
 
         [TestCase(false, configurationTransactionTracerRecordSql.obfuscated, null, ExpectedResult = "obfuscated")]
@@ -745,18 +703,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(true, false, ExpectedResult = false)]
         [TestCase(false, true, ExpectedResult = true)]
         [TestCase(false, false, ExpectedResult = false)]
-        public bool LegacyCaptureCustomParametersOverriddenByLocalHighSecurity(bool highSecurityEnabled, bool localEnabled)
-        {
-            _localConfig.highSecurity.enabled = highSecurityEnabled;
-            _localConfig.parameterGroups.customParameters.enabled = localEnabled;
-
-            return _defaultConfig.CaptureCustomParameters;
-        }
-
-        [TestCase(true, true, ExpectedResult = false)]
-        [TestCase(true, false, ExpectedResult = false)]
-        [TestCase(false, true, ExpectedResult = true)]
-        [TestCase(false, false, ExpectedResult = false)]
         public bool CaptureCustomParametersOverriddenByLocalHighSecurity(bool highSecurityEnabled, bool localEnabled)
         {
             _localConfig.highSecurity.enabled = highSecurityEnabled;
@@ -823,23 +769,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsTrue(_defaultConfig.CaptureCustomParameters);
         }
 
-        [TestCase(false, true, true, false, false, ExpectedResult = true)]
-        [TestCase(false, true, false, false, false, ExpectedResult = false)]
-        [TestCase(false, false, true, true, true, ExpectedResult = true)]
-        [TestCase(false, false, true, true, false, ExpectedResult = false)]
-        [TestCase(false, true, true, true, false, ExpectedResult = false)]
-        [TestCase(true, false, true, true, true, ExpectedResult = false)]
-        [TestCase(true, true, true, false, true, ExpectedResult = false)]
-        [TestCase(true, true, true, true, true, ExpectedResult = false)]
-        public bool CaptureCustomParametersHsmDeprecatedAndNew(bool highSecurity, bool deprecatedCustomParametersSpecified, bool deprecatedCustomParametersEnabled, bool customParametersSpecified, bool customParametersEnabled)
+        [TestCase(false, false, false, ExpectedResult = true)]
+        [TestCase(false, true, false, ExpectedResult = false)]
+        [TestCase(false, true, true, ExpectedResult = true)]
+        [TestCase(true, false, true, ExpectedResult = false)]
+        [TestCase(true, true, true, ExpectedResult = false)]
+        public bool CaptureCustomParametersHsmAndLocal(bool highSecurity, bool customParametersSpecified, bool customParametersEnabled)
         {
             _localConfig.highSecurity.enabled = highSecurity;
-
-            if (deprecatedCustomParametersSpecified)
-            {
-                _localConfig.parameterGroups.customParameters.enabledSpecified = deprecatedCustomParametersSpecified;
-                _localConfig.parameterGroups.customParameters.enabled = deprecatedCustomParametersEnabled;
-            }
 
             if (customParametersSpecified)
             {
@@ -851,55 +788,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void CustomParametersToIgnoreSetFromLocal()
-        {
-            _localConfig.parameterGroups.customParameters.ignore = new List<string>() { "local" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("local"));
-        }
-
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool CaptureIdentityParametersSetFromLocal(bool isEnabled)
-        {
-            _localConfig.parameterGroups.identityParameters.enabled = isEnabled;
-            return _defaultConfig.CaptureErrorCollectorAttributesIncludes.Contains("identity.*");
-        }
-
-        [Test]
         public void CaptureIdentityParametersSetFromLocalDefaultsToFalse()
         {
             Assert.IsTrue(_defaultConfig.CaptureAttributesDefaultExcludes.Contains("identity.*"));
         }
 
         [Test]
-        public void IdentityParametersToIgnoreSetFromLocal()
-        {
-            _localConfig.parameterGroups.identityParameters.ignore = new List<string>() { "local" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("identity.local"));
-        }
-
-        [TestCase(true, ExpectedResult = false)]
-        [TestCase(false, ExpectedResult = true)]
-        public bool CaptureResponseHeaderParametersSetFromLocal(bool isEnabled)
-        {
-            _localConfig.parameterGroups.responseHeaderParameters.enabled = isEnabled;
-            return _defaultConfig.CaptureAttributesExcludes.Contains("response.headers.*");
-        }
-
-        [Test]
         public void CaptureResponseHeaderParametersSetFromLocalDefaultsToTrue()
         {
             Assert.IsFalse(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.*"));
-        }
-
-        [Test]
-        public void ResponseHeaderParametersToIgnoreSetFromLocal()
-        {
-            _localConfig.parameterGroups.responseHeaderParameters.ignore = new List<string>() { "local" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.local"));
         }
 
         [TestCase(new[] { "local" }, new[] { "server" }, ExpectedResult = "server")]
@@ -1279,155 +1176,34 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsTrue(_defaultConfig.ThreadProfilingIgnoreMethods.Contains("System.Threading.WaitHandle:WaitAny"));
         }
 
-        [TestCase(true, false, ExpectedResult = true)]
-        [TestCase(true, true, ExpectedResult = true)]
-        [TestCase(false, false, ExpectedResult = false)]
-        [TestCase(false, true, ExpectedResult = false)]
-        public bool BrowserMonitoringOverridesDeprecatedValue(bool propertyEnabled, bool deprecatedEnabled)
-        {
-            _localConfig.browserMonitoring.captureAttributes = deprecatedEnabled;
-            _localConfig.browserMonitoring.attributes.enabled = propertyEnabled;
-
-            return _defaultConfig.CaptureBrowserMonitoringAttributes;
-        }
-
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool BrowserMonitoringDeprecatedValueOverridesDefault(bool deprecatedEnabled)
-        {
-            _localConfig.browserMonitoring.captureAttributesSpecified = false;
-            _localConfig.browserMonitoring.attributes.enabled = deprecatedEnabled;
-
-            return _defaultConfig.CaptureBrowserMonitoringAttributes;
-        }
-
         [Test]
-        public void BrowserMonitoringUsesDefaultWhenNoConfigValues()
+        public void BrowserMonitoringUsesDefaultWhenNoConfigValue()
         {
-            _localConfig.browserMonitoring.captureAttributesSpecified = false;
             _localConfig.browserMonitoring.attributes.enabledSpecified = false;
 
             Assert.IsFalse(_defaultConfig.CaptureBrowserMonitoringAttributes);
         }
 
-        [TestCase(true, false, ExpectedResult = true)]
-        [TestCase(true, true, ExpectedResult = true)]
-        [TestCase(false, false, ExpectedResult = false)]
-        [TestCase(false, true, ExpectedResult = false)]
-        public bool ErrorCollectorOverridesDeprecatedValue(bool propertyEnabled, bool deprecatedEnabled)
-        {
-            _localConfig.errorCollector.captureAttributes = deprecatedEnabled;
-            _localConfig.errorCollector.attributes.enabled = propertyEnabled;
-
-            return _defaultConfig.CaptureErrorCollectorAttributes;
-        }
-
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool ErrorCollectorDeprecatedValueOverridesDefault(bool deprecatedEnabled)
-        {
-            _localConfig.errorCollector.captureAttributesSpecified = false;
-            _localConfig.errorCollector.attributes.enabled = deprecatedEnabled;
-
-            return _defaultConfig.CaptureErrorCollectorAttributes;
-        }
-
         [Test]
-        public void ErrorCollectorUsesDefaultWhenNoConfigValues()
+        public void ErrorCollectorUsesDefaultWhenNoConfigValue()
         {
-            _localConfig.errorCollector.captureAttributesSpecified = false;
             _localConfig.errorCollector.attributes.enabledSpecified = false;
 
             Assert.IsTrue(_defaultConfig.CaptureErrorCollectorAttributes);
         }
 
-        [TestCase(true, false, ExpectedResult = true)]
-        [TestCase(true, true, ExpectedResult = true)]
-        [TestCase(false, false, ExpectedResult = false)]
-        [TestCase(false, true, ExpectedResult = false)]
-        public bool TransactionTracerOverridesDeprecatedValue(bool propertyEnabled, bool deprecatedEnabled)
-        {
-            _localConfig.transactionTracer.captureAttributes = deprecatedEnabled;
-            _localConfig.transactionTracer.attributes.enabled = propertyEnabled;
-
-            return _defaultConfig.CaptureTransactionTraceAttributes;
-        }
-
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool TransactionTracerDeprecatedValueOverridesDefault(bool deprecatedEnabled)
-        {
-            _localConfig.transactionTracer.captureAttributesSpecified = false;
-            _localConfig.transactionTracer.attributes.enabled = deprecatedEnabled;
-
-            return _defaultConfig.CaptureTransactionTraceAttributes;
-        }
-
         [Test]
-        public void TransactionTracerUsesDefaultWhenNoConfigValues()
+        public void TransactionTracerUsesDefaultWhenNoConfigValue()
         {
-            _localConfig.transactionTracer.captureAttributesSpecified = false;
             _localConfig.transactionTracer.attributes.enabledSpecified = false;
 
             Assert.IsTrue(_defaultConfig.CaptureTransactionTraceAttributes);
         }
 
-        [TestCase(true, ExpectedResult = true)]
-        [TestCase(false, ExpectedResult = false)]
-        public bool AnalyticsEventDeprecatedValueOverridesDefault(bool deprecatedEnabled)
-        {
-            _localConfig.analyticsEvents.captureAttributesSpecified = false;
-            _localConfig.transactionEvents.attributes.enabled = deprecatedEnabled;
-
-            return _defaultConfig.TransactionEventsAttributesEnabled;
-        }
-
         [Test]
         public void TransactionEventUsesDefaultWhenNoConfigValues()
         {
-            _localConfig.analyticsEvents.captureAttributesSpecified = false;
-
             Assert.IsTrue(_defaultConfig.TransactionEventsAttributesEnabled);
-        }
-
-        [Test]
-        public void DeprecatedIgnoreIdentityParametersValueBecomesExclude()
-        {
-            _localConfig.parameterGroups.identityParameters.ignore = new List<string>() { "foo" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("identity.foo"));
-        }
-
-        [Test]
-        public void DeprecatedIgnoreCustomParametersValueBecomesExclude()
-        {
-            _localConfig.parameterGroups.customParameters.ignore = new List<string>() { "foo" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("foo"));
-        }
-
-        [Test]
-        public void DeprecatedIgnoreResponseHeaderParametersValueBecomesExclude()
-        {
-            _localConfig.parameterGroups.responseHeaderParameters.ignore = new List<string>() { "foo" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.foo"));
-        }
-
-        [Test]
-        public void DeprecatedIgnoreRequestHeaderParametersValueBecomesExclude()
-        {
-            _localConfig.parameterGroups.requestHeaderParameters.ignore = new List<string>() { "foo" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("request.headers.foo"));
-        }
-
-        [Test]
-        public void Property_deprecated_ignore_requestParameters_value_becomes_exclude()
-        {
-            _localConfig.requestParameters.ignore = new List<string>() { "foo" };
-
-            Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("request.parameters.foo"));
         }
 
         [TestCase(null, null, ExpectedResult = null)]
