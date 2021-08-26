@@ -11,6 +11,9 @@ namespace NewRelic.Agent.Core.Configuration
     /// </summary>
     public class ReportedConfiguration
     {
+        [JsonProperty("agent")]
+        public const string Agent = ".NET Agent";
+
         [JsonProperty("apdex_t")]
         public double? ApdexT { get; set; }
 
