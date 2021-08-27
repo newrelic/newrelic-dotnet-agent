@@ -33,7 +33,6 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
                     var configModifier = new NewRelicConfigModifier(configPath);
 
                     configModifier.ForceTransactionTraces();
-                    configModifier.SetOrDeleteDistributedTraceEnabled(null);
                     configModifier.EnableCat();
                 },
                 exerciseApplication: () =>

@@ -27,7 +27,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
-                    configModifier.SetOrDeleteDistributedTraceEnabled(null);
                     configModifier.EnableCat();
                     configModifier.ForceTransactionTraces();
                 },

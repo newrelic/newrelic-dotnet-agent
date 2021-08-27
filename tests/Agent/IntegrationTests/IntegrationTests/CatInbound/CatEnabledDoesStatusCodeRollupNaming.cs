@@ -27,7 +27,6 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
             (
                 setupConfiguration: () =>
                 {
-                    _fixture.RemoteApplication.NewRelicConfig.SetOrDeleteDistributedTraceEnabled(null);
                     _fixture.RemoteApplication.NewRelicConfig.EnableCat();
                 },
                 exerciseApplication: () =>
