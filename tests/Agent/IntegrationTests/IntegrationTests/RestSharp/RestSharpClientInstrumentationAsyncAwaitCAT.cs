@@ -12,11 +12,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.RestSharp
 {
     [NetFrameworkTest]
-    public class RestSharpInstrumentationTaskResult : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class RestSharpInstrumentationAsyncAwaitCAT : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public RestSharpInstrumentationTaskResult(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
+        public RestSharpInstrumentationAsyncAwaitCAT(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -32,10 +32,10 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.GetRestSharpTaskResultClient(method: "GET", generic: true, cancelable: true);
-                    _fixture.GetRestSharpTaskResultClient(method: "PUT", generic: false, cancelable: false);
-                    _fixture.GetRestSharpTaskResultClient(method: "POST", generic: false, cancelable: false);
-                    _fixture.GetRestSharpTaskResultClient(method: "DELETE", generic: true, cancelable: true);
+                    _fixture.GetRestSharpAsyncAwaitClient(method: "GET", generic: true, cancelable: true);
+                    _fixture.GetRestSharpAsyncAwaitClient(method: "PUT", generic: false, cancelable: false);
+                    _fixture.GetRestSharpAsyncAwaitClient(method: "POST", generic: false, cancelable: false);
+                    _fixture.GetRestSharpAsyncAwaitClient(method: "DELETE", generic: true, cancelable: true);
                 }
             );
             _fixture.Initialize();
@@ -55,16 +55,16 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
                 new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/PUT", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/POST", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/DELETE", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Get", metricScope = @"WebTransaction/MVC/RestSharpController/TaskResultClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Put", metricScope = @"WebTransaction/MVC/RestSharpController/TaskResultClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Post", metricScope = @"WebTransaction/MVC/RestSharpController/TaskResultClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Delete", metricScope = @"WebTransaction/MVC/RestSharpController/TaskResultClient", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Get", metricScope = @"WebTransaction/MVC/RestSharpController/AsyncAwaitClient", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Put", metricScope = @"WebTransaction/MVC/RestSharpController/AsyncAwaitClient", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Post", metricScope = @"WebTransaction/MVC/RestSharpController/AsyncAwaitClient", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Delete", metricScope = @"WebTransaction/MVC/RestSharpController/AsyncAwaitClient", callCount = 1 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()
-                .Where(sample => sample.Path == @"WebTransaction/MVC/RestSharpController/TaskResultClient" || sample.Path == @"WebTransaction/WebAPI/RestAPI/Get")
+                .Where(sample => sample.Path == @"WebTransaction/MVC/RestSharpController/AsyncAwaitClient" || sample.Path == @"WebTransaction/WebAPI/RestAPI/Get")
                 .FirstOrDefault();
 
             Assert.NotNull(transactionSample);
