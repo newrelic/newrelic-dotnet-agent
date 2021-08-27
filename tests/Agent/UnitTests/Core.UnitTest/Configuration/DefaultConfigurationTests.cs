@@ -2052,27 +2052,32 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void SpanEventsMaxSamplesStoredOverriddenByEventHarvestConfig()
+        public void SpanEventsMaxSamplesStoredOverriddenBySpanEventHarvestConfig()
         {
-            _serverConfig.EventHarvestConfig = new EventHarvestConfig
+            _localConfig.spanEvents.maximumSamplesStored = 100;
+
+            Assert.AreEqual(100, _defaultConfig.SpanEventsMaxSamplesStored);
+
+            _serverConfig.SpanEventHarvestConfig = new SingleEventHarvestConfig
             {
                 ReportPeriodMs = 5000,
-                HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.SpanEventHarvestLimitKey, 10 } }
+                HarvestLimit = 10
             };
 
             Assert.AreEqual(10, _defaultConfig.SpanEventsMaxSamplesStored);
         }
 
         [Test]
-        public void SpanEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
+        public void SpanEventsHarvestCycleUsesDefaultOrSpanEventHarvestConfig()
         {
             Assert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.SpanEventsHarvestCycle);
 
-            _serverConfig.EventHarvestConfig = new EventHarvestConfig
+            _serverConfig.SpanEventHarvestConfig = new SingleEventHarvestConfig
             {
                 ReportPeriodMs = 5000,
-                HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.SpanEventHarvestLimitKey, 10 } }
+                HarvestLimit = 10
             };
+
             Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.SpanEventsHarvestCycle);
         }
 
