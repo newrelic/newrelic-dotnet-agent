@@ -946,63 +946,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         }
 
         [Test]
-        public void AcceptDistributedTracePayload_ReportsSupportabilityMetric_IfAcceptCalledMultipleTimes()
-        {
-            // Arrange
-            SetupTransaction();
-
-            Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
-
-            var payload = string.Empty;
-            Mock.Arrange(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>())).Returns(_distributedTracePayload);
-            _agent.CurrentTransaction.AcceptDistributedTracePayload(payload, TransportType.HTTPS);
-
-            Mock.Arrange(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>())).CallOriginal();
-
-            // Act
-            _agent.CurrentTransaction.AcceptDistributedTracePayload(payload, TransportType.HTTPS);
-
-            // Assert
-            Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMultiple(), Occurs.Once());
-        }
-
-        [Test]
-        public void CreateDistributedTracePayload_ShouldReturnPayload_IfConfigIsTrue()
-        {
-            SetupTransaction();
-
-            Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
-
-            var distributedTraceHeaders = Mock.Create<IDistributedTracePayload>();
-            Mock.Arrange(() => distributedTraceHeaders.HttpSafe()).Returns("value1");
-
-            Mock.Arrange(() => _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(Arg.IsAny<IInternalTransaction>(), Arg.IsAny<ISegment>())).Returns(distributedTraceHeaders);
-
-            var payload = _agent.CurrentTransaction.CreateDistributedTracePayload();
-
-            NrAssert.Multiple(
-                () => Assert.AreEqual(distributedTraceHeaders, payload)
-            );
-        }
-
-        [Test]
-        public void CreateDistributedTracePayload_ShouldNotReturnPayload_IfConfigIsFalse()
-        {
-            SetupTransaction();
-
-            Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(false);
-
-            var distributedTraceHeaders = Mock.Create<IDistributedTracePayload>();
-            Mock.Arrange(() => distributedTraceHeaders.HttpSafe()).Returns("value1");
-
-            Mock.Arrange(() => _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(Arg.IsAny<IInternalTransaction>(), Arg.IsAny<ISegment>())).Returns(distributedTraceHeaders);
-
-            var payload = _agent.CurrentTransaction.CreateDistributedTracePayload();
-
-            Assert.AreEqual(DistributedTraceApiModel.EmptyModel, payload);
-        }
-
-        [Test]
         public void TraceMetadata_ShouldReturnEmptyModel_IfDTConfigIsFalse()
         {
             SetupTransaction();
@@ -1033,38 +976,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Assert.AreEqual(traceMetadata.TraceId, testTraceId);
             Assert.AreEqual(traceMetadata.SpanId, testSpanId);
             Assert.AreEqual(traceMetadata.IsSampled, testIsSampled);
-        }
-
-        [Test]
-        public void AcceptDistributedTracePayload_ShouldAccept_IfConfigIsTrue()
-        {
-            SetupTransaction();
-            Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
-
-            var tracingState = Mock.Create<ITracingState>();
-            Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>(), Arg.IsAny<DateTime>())).Returns(tracingState);
-
-            var payload = string.Empty;
-
-            _agent.CurrentTransaction.AcceptDistributedTracePayload(payload, TransportType.HTTPS);
-
-            Assert.IsNotNull(_transaction.TracingState);
-        }
-
-        [Test]
-        public void AcceptDistributedTracePayload_ShouldNotAccept_IfConfigIsFalse()
-        {
-            SetupTransaction();
-            Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(false);
-
-            var tracingState = Mock.Create<ITracingState>();
-            Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>(), Arg.IsAny<DateTime>())).Returns(tracingState);
-
-            var payload = string.Empty;
-
-            _agent.CurrentTransaction.AcceptDistributedTracePayload(payload, TransportType.HTTPS);
-
-            Assert.IsNull(_transaction.TracingState);
         }
 
         [TestCase("Newrelic", "payload", true)]

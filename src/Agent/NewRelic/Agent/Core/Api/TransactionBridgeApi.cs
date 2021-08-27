@@ -37,50 +37,31 @@ namespace NewRelic.Agent.Core.Api
             _configSvc = configSvc;
         }
 
+        [Obsolete("This method has been stubbed out")]
+
         public object CreateDistributedTracePayload()
         {
             try
             {
-                using (new IgnoreWork())
-                {
-                    _apiSupportabilityMetricCounters.Record(ApiMethod.CreateDistributedTracePayload);
-                    return _transaction.CreateDistributedTracePayload();
-                }
+                Log.Warn("CreateDistributedTracePayload was called by an outdated version of the AgentAPI. This method is stubbed out in version 9.x+ of the agent");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                try
-                {
-                    Log.ErrorFormat("Failed to create distributed trace payload: {0}", ex);
-                }
-                catch (Exception)
-                {
-                    //Swallow the error
-                }
-                return null;
             }
+
+            // I hope people are null checking as this will always return null now
+            return null;
         }
 
+        [Obsolete("This method has been stubbed out")]
         public void AcceptDistributedTracePayload(string payload, int transportType)
         {
             try
             {
-                using (new IgnoreWork())
-                {
-                    _apiSupportabilityMetricCounters.Record(ApiMethod.AcceptDistributedTracePayload);
-                    _transaction.AcceptDistributedTracePayload(payload, GetTransportTypeValue(transportType));
-                }
+                Log.Warn("AcceptDistributedTracePayload was called by an outdated version of the AgentAPI. This method is stubbed out in version 9.x+ of the agent");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                try
-                {
-                    Log.ErrorFormat("Error in AcceptDistributedTracePayload(string): {0}", ex);
-                }
-                catch (Exception)
-                {
-                    //Swallow the error
-                }
             }
         }
 
