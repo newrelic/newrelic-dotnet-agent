@@ -33,8 +33,6 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
                 setupConfiguration: () =>
                 {
                     _fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
-                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.SetOrDeleteDistributedTraceEnabled(true);
                 }
             );
 

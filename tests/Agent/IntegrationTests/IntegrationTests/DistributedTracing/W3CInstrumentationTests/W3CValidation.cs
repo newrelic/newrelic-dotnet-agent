@@ -62,8 +62,6 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
                     _fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
                     _fixture.RemoteApplication.NewRelicConfig.SetRequestTimeout(TimeSpan.FromSeconds(10));
                     _fixture.RemoteApplication.NewRelicConfig.ForceTransactionTraces();
-                    _fixture.RemoteApplication.NewRelicConfig.SetOrDeleteDistributedTraceEnabled(true);
-                    _fixture.RemoteApplication.NewRelicConfig.SetCATEnabled(false);
 
                     _fixture.AddCommand($"W3CTestService StartService {_fixture.RemoteApplication.Port}");
                     _fixture.AddCommand($@"GitCommand Clone https://github.com/w3c/trace-context.git {_fixture.RemoteApplication.DestinationApplicationDirectoryPath}\trace-context");
