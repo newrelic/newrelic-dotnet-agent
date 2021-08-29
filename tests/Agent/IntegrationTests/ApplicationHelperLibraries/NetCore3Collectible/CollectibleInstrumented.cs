@@ -3,6 +3,8 @@
 
 
 using NewRelic.Api.Agent;
+using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace NetCore3Collectible
@@ -11,9 +13,15 @@ namespace NetCore3Collectible
     {
         [Trace]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public IDistributedTracePayload GetDistributedTracePayload()
+        public Dictionary<string, string> InsertDistributedTraceHeaders()
         {
-            return NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction?.CreateDistributedTracePayload();
+            var headers = new Dictionary<string, string>();
+            IAgent agent = NewRelic.Api.Agent.NewRelic.GetAgent();
+            ITransaction currentTransaction = agent.CurrentTransaction;
+            var tooMuchWorkToGetAtDataCallback = new Action<Dictionary<string, string>, string, string>((carrier, key, value) => { carrier[key] = value; });
+            currentTransaction.InsertDistributedTraceHeaders(headers, tooMuchWorkToGetAtDataCallback);
+
+            return headers;
         }
     }
 }
