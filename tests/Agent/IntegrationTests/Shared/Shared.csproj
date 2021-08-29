@@ -42,6 +42,7 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.3.100.23" />
     <PackageReference Include="AWSSDK.Core" Version="3.3.101.14" />
+    <PackageReference Include="NewRelic.Agent.Api" Version="8.41.1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">

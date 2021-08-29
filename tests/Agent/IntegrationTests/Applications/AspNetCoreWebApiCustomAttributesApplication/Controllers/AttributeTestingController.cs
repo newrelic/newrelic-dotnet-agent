@@ -14,8 +14,8 @@ namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
         [Route("api/CustomAttributes")]
         public string CustomAttributes()
         {
-            NewRelic.Api.Agent.NewRelic.AddCustomParameter("key", "value");
-            NewRelic.Api.Agent.NewRelic.AddCustomParameter("foo", "bar");
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("key", "value");
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("foo", "bar");
 
             return "success";
         }
@@ -47,7 +47,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
         [Route("api/CustomAttributesKeyNull")]
         public string CustomAttributesKeyNull()
         {
-            NewRelic.Api.Agent.NewRelic.AddCustomParameter(null, "valuewithnullkey");
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute(null, "valuewithnullkey");
             return "success";
         }
 
@@ -55,7 +55,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
         [Route("api/CustomAttributesValueNull")]
         public string CustomAttributesValueNull()
         {
-            NewRelic.Api.Agent.NewRelic.AddCustomParameter("keywithnullvalue", null);
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("keywithnullvalue", null);
             return "success";
         }
     }
