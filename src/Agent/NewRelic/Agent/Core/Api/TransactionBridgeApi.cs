@@ -37,13 +37,13 @@ namespace NewRelic.Agent.Core.Api
             _configSvc = configSvc;
         }
 
-        [Obsolete("This method has been stubbed out")]
+        [Obsolete("This method does nothing in version 9.x+ of the Agent.")]
 
         public object CreateDistributedTracePayload()
         {
             try
             {
-                Log.Warn("CreateDistributedTracePayload was called by an outdated version of the AgentAPI. This method is stubbed out in version 9.x+ of the agent");
+                Log.Warn("CreateDistributedTracePayload was called by an outdated version of the AgentAPI. This method does nothing in version 9.x+ of the Agent.");
             }
             catch (Exception)
             {
@@ -53,12 +53,12 @@ namespace NewRelic.Agent.Core.Api
             return null;
         }
 
-        [Obsolete("This method has been stubbed out")]
+        [Obsolete("This method does nothing in version 9.x+ of the Agent")]
         public void AcceptDistributedTracePayload(string payload, int transportType)
         {
             try
             {
-                Log.Warn("AcceptDistributedTracePayload was called by an outdated version of the AgentAPI. This method is stubbed out in version 9.x+ of the agent");
+                Log.Warn("AcceptDistributedTracePayload was called by an outdated version of the AgentAPI. This method does nothing in version 9.x+ of the Agent");
             }
             catch (Exception)
             {

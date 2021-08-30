@@ -336,7 +336,7 @@ namespace NewRelic.Agent.Core
         /// Only the first 1000 characters are retained.
         /// </param>
         /// <param name="value">The numeric value to add to the current transaction.</param>
-        [Obsolete("This method has been stubbed out and just logs a warning.  Use Transaction.AddCustomAttribute instead")]
+        [Obsolete("This method does nothing in version 9.x+ of the Agent.  Use Transaction.AddCustomAttribute instead")]
         public static void AddCustomParameter(string key, IConvertible value)
         {
             try
@@ -358,7 +358,7 @@ namespace NewRelic.Agent.Core
         /// <param name="value">The value.
         /// Only the first 1000 characters are retained.
         /// </param>
-        [Obsolete("This method has been stubbed out and just logs a warning. Use Transaction.AddCustomAttribute instead")]
+        [Obsolete("This method does nothing in version 9.x+ of the Agent. Use Transaction.AddCustomAttribute instead")]
         public static void AddCustomParameter(string key, string value)
         {
             try
@@ -500,7 +500,7 @@ namespace NewRelic.Agent.Core
         /// Now only returns and empty string.
         /// Supports web applications only.
         /// <returns>An empty string.</returns>
-        [Obsolete("This method has been stubbed out and returns an empty string.")]
+        [Obsolete("This method does nothing in version 9.x+ of the Agent.")]
         public static string GetBrowserTimingFooter()
         {
             try
