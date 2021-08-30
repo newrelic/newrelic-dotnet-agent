@@ -26,10 +26,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="Selenium.Support" Version="2.53.0" />
-    <PackageReference Include="Selenium.WebDriver" Version="2.53.0" />
+    <PackageReference Include="Selenium.Support" Version="3.141.0" />
+    <PackageReference Include="Selenium.WebDriver" Version="3.141.0" />
     <PackageReference Include="SharpZipLib" Version="1.1.0" />
-    <PackageReference Include="WebDriver.IEDriverServer.win32" Version="2.53.0" />
+    <PackageReference Include="WebDriver.IEDriverServer.win32" Version="3.150.1" />
     <PackageReference Include="xunit" Version="2.4.0" />
     <PackageReference Include="xunit.abstractions" Version="2.0.2" />
     <PackageReference Include="xunit.assert" Version="2.4.0" />
@@ -57,7 +57,7 @@
   </ItemGroup>
   <Import Project="Test.targets" />
   <ItemGroup>
-    <Content Include="$(NuGetPackageRoot)\WebDriver.IEDriverServer.win32\2.53.0\content\IEDriverServer.exe">
+    <Content Include="$(NuGetPackageRoot)\WebDriver.IEDriverServer.win32\3.150.1\content\IEDriverServer.exe">
       <Link>IEDriverServer.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
