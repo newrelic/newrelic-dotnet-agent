@@ -2054,9 +2054,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void SpanEventsMaxSamplesStoredOverriddenBySpanEventHarvestConfig()
         {
-            _localConfig.spanEvents.maximumSamplesStored = 100;
+            _localConfig.spanEvents.maximumSamplesStored = 2000;
 
-            Assert.AreEqual(100, _defaultConfig.SpanEventsMaxSamplesStored);
+            Assert.AreEqual(2000, _defaultConfig.SpanEventsMaxSamplesStored);
 
             _serverConfig.SpanEventHarvestConfig = new SingleEventHarvestConfig
             {
@@ -2065,6 +2065,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             };
 
             Assert.AreEqual(10, _defaultConfig.SpanEventsMaxSamplesStored);
+        }
+
+        [Test]
+        public void SpanEventsMaxSamplesStoredCannotBeLessThan1000()
+        {
+            var expectedLimit = 1000;
+            _localConfig.spanEvents.maximumSamplesStored = 10;
+
+            Assert.AreEqual(expectedLimit, _defaultConfig.SpanEventsMaxSamplesStored);
         }
 
         [Test]

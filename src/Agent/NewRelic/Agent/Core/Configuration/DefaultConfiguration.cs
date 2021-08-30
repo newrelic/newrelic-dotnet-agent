@@ -28,6 +28,8 @@ namespace NewRelic.Agent.Core.Configuration
     {
         private const int DefaultSslPort = 443;
         private const int DefaultSqlStatementCacheCapacity = 1000;
+        private const int SPAN_EVENTS_MIN_SAMPLES_STORED = 1000;
+
 
         public static readonly string RawStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.raw);
         public static readonly string ObfuscatedStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.obfuscated);
@@ -882,8 +884,17 @@ namespace NewRelic.Agent.Core.Configuration
 
         public int? SamplingTarget => _serverConfiguration.SamplingTarget;
 
-        public int SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestLimit,
-           EnvironmentOverrides(_localConfiguration.spanEvents.maximumSamplesStored, "NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED").GetValueOrDefault());
+        public int SpanEventsMaxSamplesStored
+        {
+            get
+            {
+                var local = EnvironmentOverrides(_localConfiguration.spanEvents.maximumSamplesStored, "NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED").GetValueOrDefault();
+
+                local = local > SPAN_EVENTS_MIN_SAMPLES_STORED ? local : SPAN_EVENTS_MIN_SAMPLES_STORED;
+
+                return ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestLimit, local);
+            }
+        }
 
         public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
 
