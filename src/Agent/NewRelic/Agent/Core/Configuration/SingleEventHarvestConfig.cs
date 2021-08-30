@@ -10,11 +10,11 @@ namespace NewRelic.Agent.Core.Configuration
     public class SingleEventHarvestConfig
     {
         [JsonProperty("report_period_ms")]
-        public int? ReportPeriodMs { get; set; }
+        public int ReportPeriodMs { get; set; }
 
         [JsonProperty("harvest_limit")]
         public int HarvestLimit { get; set; }
 
-        public TimeSpan? HarvestCycle => ReportPeriodMs.HasValue ? TimeSpan.FromMilliseconds(ReportPeriodMs.Value) : (TimeSpan?)null;
+        public TimeSpan? HarvestCycle => TimeSpan.FromMilliseconds(ReportPeriodMs);
     }
 }
