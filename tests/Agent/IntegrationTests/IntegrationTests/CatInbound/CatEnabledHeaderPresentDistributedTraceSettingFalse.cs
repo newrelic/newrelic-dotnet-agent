@@ -34,11 +34,8 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
                     var configModifier = new NewRelicConfigModifier(configPath);
 
                     configModifier.ForceTransactionTraces();
-
+                    configModifier.EnableCat();
                     configModifier.SetOrDeleteDistributedTraceEnabled(false);
-
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration" }, "crossApplicationTracingEnabled", "true");
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "crossApplicationTracer" }, "enabled", "true");
                 },
                 exerciseApplication: () =>
                 {
