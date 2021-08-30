@@ -55,7 +55,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.AgentApiExecutor
         private static void SomeSlowMethod()
         {
             var stuff = string.Empty;
-            Api.Agent.NewRelic.AddCustomParameter("test", "test");
+            Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("test", "test");
             Thread.Sleep(2000); //needed for OtherTransaction test
         }
 

@@ -336,16 +336,16 @@ namespace NewRelic.Agent.Core
         /// Only the first 1000 characters are retained.
         /// </param>
         /// <param name="value">The numeric value to add to the current transaction.</param>
-        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
+        [Obsolete("This method does nothing in version 9.x+ of the Agent.  Use Transaction.AddCustomAttribute instead")]
         public static void AddCustomParameter(string key, IConvertible value)
         {
-            const ApiMethod apiMetric = ApiMethod.AddCustomParameter;
-            const string apiName = nameof(AddCustomParameter);
-            void work()
+            try
             {
-                InternalApi.AddCustomParameter(key, value);
+                Log.Warn("AddCustomParameter was called by an outdated version of the Agent API. Use Transaction.AddCustomAttribute instead.");
             }
-            TryInvoke(work, apiName, apiMetric);
+            catch (Exception)
+            {
+            }
         }
 
         /// <summary>
@@ -358,16 +358,16 @@ namespace NewRelic.Agent.Core
         /// <param name="value">The value.
         /// Only the first 1000 characters are retained.
         /// </param>
-        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
+        [Obsolete("This method does nothing in version 9.x+ of the Agent. Use Transaction.AddCustomAttribute instead")]
         public static void AddCustomParameter(string key, string value)
         {
-            const ApiMethod apiMetric = ApiMethod.AddCustomParameter;
-            const string apiName = nameof(AddCustomParameter);
-            void work()
+            try
             {
-                InternalApi.AddCustomParameter(key, value);
+                Log.Warn("AddCustomParameter was called by an outdated version of the Agent API. Use Transaction.AddCustomAttribute instead.");
             }
-            TryInvoke(work, apiName, apiMetric);
+            catch (Exception)
+            {
+            }
         }
 
         /// <summary>
@@ -500,13 +500,17 @@ namespace NewRelic.Agent.Core
         /// Now only returns and empty string.
         /// Supports web applications only.
         /// <returns>An empty string.</returns>
-        [Obsolete("This method returns an empty string.")]
-        [ToBeRemovedInFutureRelease()]
+        [Obsolete("This method does nothing in version 9.x+ of the Agent.")]
         public static string GetBrowserTimingFooter()
         {
-            const ApiMethod apiMetric = ApiMethod.GetBrowserTimingFooter;
-            const string apiName = nameof(GetBrowserTimingFooter);
-            return TryInvoke(InternalApi.GetBrowserTimingFooter, apiName, apiMetric) ?? string.Empty;
+            try
+            {
+                Log.Warn("GetBrowserTimingFooter was called by an outdated version of the Agent API.");
+            }
+            catch (Exception)
+            {
+            }
+            return string.Empty;
         }
 
         /// <summary>

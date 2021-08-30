@@ -35,8 +35,8 @@ namespace BasicMvcApplication.Controllers
         // GET: CustomParameters
         public ActionResult CustomParameters(string key1, string value1, string key2, string value2)
         {
-            NewRelic.Api.Agent.NewRelic.AddCustomParameter(key1, value1);
-            NewRelic.Api.Agent.NewRelic.AddCustomParameter(key2, value2);
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute(key1, value1);
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute(key2, value2);
 
             Thread.Sleep(TimeSpan.FromSeconds(1));
 
