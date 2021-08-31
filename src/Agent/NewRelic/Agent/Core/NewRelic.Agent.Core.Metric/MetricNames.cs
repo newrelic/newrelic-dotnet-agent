@@ -929,11 +929,11 @@ namespace NewRelic.Agent.Core.Metric
 
         #region Span Metrics
 
-        private const string SupportabilitySpanEventsPs = SupportabilityPs + "SpanEvent" + PathSeparator;
+        private const string SpanEventsPs = "SpanEvent" + PathSeparator;
 
-        public const string SupportabilitySpanEventsSent = SupportabilitySpanEventsPs + "TotalEventsSent";
-        public const string SupportabilitySpanEventsSeen = SupportabilitySpanEventsPs + "TotalEventsSeen";
-        public const string SupportabilitySpanEventsLimit = SupportabilitySpanEventsPs + "Limit";
+        public const string SupportabilitySpanEventsSent = SpanEventsPs + "TotalEventsSent";
+        public const string SupportabilitySpanEventsSeen = SpanEventsPs + "TotalEventsSeen";
+        public const string SupportabilitySpanEventsLimit = SpanEventsPs + "Limit";
 
 
         #endregion Span Metrics

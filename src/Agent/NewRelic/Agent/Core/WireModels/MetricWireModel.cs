@@ -932,16 +932,12 @@ namespace NewRelic.Agent.Core.WireModels
 
             public MetricWireModel TryBuildSpanEventsSeenMetric(int eventCount)
             {
-                const string proposedName = MetricNames.SupportabilitySpanEventsSeen;
-                var data = MetricDataWireModel.BuildCountData(eventCount);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return TryBuildSupportabilityCountMetric(MetricNames.SupportabilitySpanEventsSeen, eventCount);
             }
 
             public MetricWireModel TryBuildSpanEventsSentMetric(int eventCount)
             {
-                const string proposedName = MetricNames.SupportabilitySpanEventsSent;
-                var data = MetricDataWireModel.BuildCountData(eventCount);
-                return BuildMetric(_metricNameService, proposedName, null, data);
+                return TryBuildSupportabilityCountMetric(MetricNames.SupportabilitySpanEventsSent, eventCount);
             }
 
             public MetricWireModel TryBuildCacheCountMetric(string name, int count)
