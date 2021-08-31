@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
+* Feature [#671](https://github.com/newrelic/newrelic-dotnet-agent/issues/671): The maximum number of samples stored for Span Events can be configured via the `spanEvents.maximumSamplesStored` configuration in the `newrelic.config` or the `NEW_RELIC_SPAN_EVENTS_MAXIMUM_SAMPLES_STORED` Environemnt Variable.([#701](https://github.com/newrelic/newrelic-dotnet-agent/pull/701))
+
 ### Fixes
 
 ## [8.41.1] - 2021-08-25

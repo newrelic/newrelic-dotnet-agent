@@ -828,13 +828,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public TimeSpan SpanEventsHarvestCycle
-        {
-            get
-            {
-                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.SpanEventHarvestCycle(), TimeSpan.FromMinutes(1));
-            }
-        }
+        public TimeSpan SpanEventsHarvestCycle => ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestCycle, TimeSpan.FromMinutes(1));
 
         public bool SpanEventsAttributesEnabled => CaptureAttributes && _localConfiguration.spanEvents.attributes.enabled;
 
@@ -888,7 +882,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         public int? SamplingTarget => _serverConfiguration.SamplingTarget;
 
-        public int SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.EventHarvestConfig?.SpanEventHarvestLimit(), EnvironmentOverrides(_localConfiguration.spanEvents.maximumSamplesStored, "SPAN_EVENTS_MAX_SAMPLES_STORED").GetValueOrDefault()); public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
+        public int SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestLimit,
+           EnvironmentOverrides(_localConfiguration.spanEvents.maximumSamplesStored, "NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED").GetValueOrDefault());
+
+        public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
 
         public bool PayloadSuccessMetricsEnabled => _localConfiguration.distributedTracing.enableSuccessMetrics;
 
