@@ -95,6 +95,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 LogSecurityPolicySettingsOnceAllSettingsResolved();
                 GenerateFasterEventHarvestConfigMetrics(serverConfiguration.EventHarvestConfig);
 
+                GenerateSpanEventsHarvestLimitMetrics(serverConfiguration.SpanEventHarvestConfig);
+
                 _dataRequestWire = _collectorWireFactory.GetCollectorWire(_configuration, serverConfiguration.RequestHeadersMap, _agentHealthReporter);
                 SendAgentSettings();
 
@@ -107,6 +109,14 @@ namespace NewRelic.Agent.Core.DataTransport
                 Disable();
                 Log.Error($"Unable to connect to the New Relic service at {_connectionInfo} : {e}");
                 throw;
+            }
+        }
+
+        private void GenerateSpanEventsHarvestLimitMetrics(SingleEventHarvestConfig spanEventHarvestConfig)
+        {
+            if (spanEventHarvestConfig != null)
+            {
+                _agentHealthReporter.ReportSupportabilityCountMetric(MetricNames.SupportabilitySpanEventsLimit, spanEventHarvestConfig.HarvestLimit);
             }
         }
 
@@ -376,11 +386,6 @@ namespace NewRelic.Agent.Core.DataTransport
             if (GenerateHarvestLimitMetricIfAvailable(MetricNames.SupportabilityEventHarvestTransactionEventHarvestLimit, eventHarvestConfig.TransactionEventHarvestLimit()))
             {
                 fasterEventHarvestEnabledTypes.Add("Transaction events");
-            }
-
-            if (GenerateHarvestLimitMetricIfAvailable(MetricNames.SupportabilityEventHarvestSpanEventHarvestLimit, eventHarvestConfig.SpanEventHarvestLimit()))
-            {
-                fasterEventHarvestEnabledTypes.Add("Span events");
             }
 
             if (fasterEventHarvestEnabledTypes.Count > 0)

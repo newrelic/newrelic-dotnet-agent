@@ -560,7 +560,6 @@ namespace NewRelic.Agent.Core.Metric
         public const string SupportabilityEventHarvestErrorEventHarvestLimit = SupportabilityEventHarvestPs + "ErrorEventData" + SupportabilityEventHarvestHarvestLimit;
         public const string SupportabilityEventHarvestCustomEventHarvestLimit = SupportabilityEventHarvestPs + "CustomEventData" + SupportabilityEventHarvestHarvestLimit;
         public const string SupportabilityEventHarvestTransactionEventHarvestLimit = SupportabilityEventHarvestPs + "AnalyticEventData" + SupportabilityEventHarvestHarvestLimit;
-        public const string SupportabilityEventHarvestSpanEventHarvestLimit = SupportabilityEventHarvestPs + "SpanEventData" + SupportabilityEventHarvestHarvestLimit;
 
 
         public static string GetSupportabilityCATConditionMetricName(CATSupportabilityCondition condition)
@@ -934,6 +933,8 @@ namespace NewRelic.Agent.Core.Metric
 
         public const string SupportabilitySpanEventsSent = SupportabilitySpanEventsPs + "TotalEventsSent";
         public const string SupportabilitySpanEventsSeen = SupportabilitySpanEventsPs + "TotalEventsSeen";
+        public const string SupportabilitySpanEventsLimit = SupportabilitySpanEventsPs + "Limit";
+
 
         #endregion Span Metrics
 
