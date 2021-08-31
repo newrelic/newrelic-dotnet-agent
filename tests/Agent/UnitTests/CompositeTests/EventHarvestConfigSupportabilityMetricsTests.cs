@@ -147,7 +147,7 @@ namespace CompositeTests
             {
                 _compositeTestAgent.ServerConfiguration.EventHarvestConfig = eventHarvestConfig;
 
-                if (eventHarvestConfig.HarvestLimits.ContainsKey("span_event_data"))
+                if (eventHarvestConfig.HarvestLimits != null && eventHarvestConfig.HarvestLimits.ContainsKey("span_event_data"))
                 {
                     _compositeTestAgent.ServerConfiguration.SpanEventHarvestConfig = new SingleEventHarvestConfig()
                     {
