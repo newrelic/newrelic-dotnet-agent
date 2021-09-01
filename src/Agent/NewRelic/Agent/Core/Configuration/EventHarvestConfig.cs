@@ -13,7 +13,6 @@ namespace NewRelic.Agent.Core.Configuration
         public const string ErrorEventHarvestLimitKey = "error_event_data";
         public const string CustomEventHarvestLimitKey = "custom_event_data";
         public const string TransactionEventHarvestLimitKey = "analytic_event_data";
-        public const string SpanEventHarvestLimitKey = "span_event_data";
 
         [JsonProperty("report_period_ms")]
         public int? ReportPeriodMs { get; set; }
@@ -49,16 +48,6 @@ namespace NewRelic.Agent.Core.Configuration
         public TimeSpan? TransactionEventHarvestCycle()
         {
             return GetEventHarvestCycleFor(TransactionEventHarvestLimitKey);
-        }
-
-        public int? SpanEventHarvestLimit()
-        {
-            return GetEventHarvestLimitFor(SpanEventHarvestLimitKey);
-        }
-
-        public TimeSpan? SpanEventHarvestCycle()
-        {
-            return GetEventHarvestCycleFor(SpanEventHarvestLimitKey);
         }
 
         private int? GetEventHarvestLimitFor(string eventType)
