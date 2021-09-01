@@ -242,9 +242,9 @@ namespace CompositeTests
         }
 
         [Test]
-        public void TransactionEventIgnoreErrors()
+        public void TransactionEventIgnoreErrorClasses()
         {
-            _compositeTestAgent.LocalConfiguration.errorCollector.ignoreErrors.exception =
+            _compositeTestAgent.LocalConfiguration.errorCollector.ignoreClasses.errorClass =
                 new List<string>() { "System.OperationCanceledException" };
             _compositeTestAgent.PushConfiguration();
 
