@@ -558,19 +558,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.TransactionEventsEnabled;
         }
 
-        [TestCase(true, true, ExpectedResult = true)]
-        [TestCase(true, false, ExpectedResult = false)]
-        [TestCase(false, true, ExpectedResult = true)]
-        [TestCase(false, false, ExpectedResult = false)]
-        [TestCase(false, null, ExpectedResult = false)]
-        public bool CaptureParametersSetFromLocalServerOverrides(bool local, bool? server)
-        {
-            _serverConfig.RpmConfig.CaptureParametersEnabled = server;
-            _localConfig.transactionEvents.enabled = local;
-
-            return _defaultConfig.CaptureRequestParameters;
-        }
-
         [TestCase(false, configurationTransactionTracerRecordSql.obfuscated, null, ExpectedResult = "obfuscated")]
         [TestCase(false, configurationTransactionTracerRecordSql.off, null, ExpectedResult = "off")]
         [TestCase(false, configurationTransactionTracerRecordSql.raw, null, ExpectedResult = "raw")]
@@ -721,15 +708,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.customParameters.enabled = localEnabled;
 
             return _defaultConfig.CaptureCustomParameters;
-        }
-
-        [Test]
-        public void CaptureRequestParametersOverriddenByLocalHighSecurity()
-        {
-            _localConfig.highSecurity.enabled = true;
-            _localConfig.requestParameters.enabled = true;
-
-            Assert.IsFalse(_defaultConfig.CaptureRequestParameters);
         }
 
 
