@@ -32,9 +32,8 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                     var configModifier = new NewRelicConfigModifier(configPath);
 
                     configModifier.ForceTransactionTraces();
-
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "requestParameters" }, "enabled", "true");
+                    configModifier.AddAttributesInclude("request.parameters.*");
+                    configModifier.SetLogLevel("debug");
                 },
                 exerciseApplication: () =>
                 {
