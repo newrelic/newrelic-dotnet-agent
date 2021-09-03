@@ -1127,8 +1127,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual uint ErrorsMaximumPerPeriod { get { return 20; } }
 
-        public virtual IEnumerable<string> IgnoreErrorsForAgentSettings { get; private set; }
-
         public IDictionary<string, IEnumerable<string>> IgnoreErrorsConfiguration { get; private set; }
         public IEnumerable<string> IgnoreErrorClassesForAgentSettings { get; private set; }
         public IDictionary<string, IEnumerable<string>> IgnoreErrorMessagesForAgentSettings { get; private set; }
@@ -2089,10 +2087,7 @@ namespace NewRelic.Agent.Core.Configuration
             //the ignoreErrorInfo dictionary gets mixed up between ignore messages and ignore classes configurations.
             var ignoreMessages = new Dictionary<string, IEnumerable<string>>(ignoreErrorInfo);
 
-            var ignoreClassesFromErrorCollectorIgnoreErrorsConfig = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception);
-
-            var ignoreClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses, _localConfiguration.errorCollector.ignoreClasses.errorClass)
-                .Concat(ignoreClassesFromErrorCollectorIgnoreErrorsConfig);
+            var ignoreClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses, _localConfiguration.errorCollector.ignoreClasses.errorClass);
 
             var count = ignoreErrorInfo.Count;
 
@@ -2130,7 +2125,6 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
-            IgnoreErrorsForAgentSettings = ignoreClassesFromErrorCollectorIgnoreErrorsConfig;
             IgnoreErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(ignoreErrorInfo);
             IgnoreErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(ignoreMessages);
             IgnoreErrorClassesForAgentSettings = ignoreClasses;
@@ -2249,6 +2243,11 @@ namespace NewRelic.Agent.Core.Configuration
                 LogDisabledPropertyUse("browserMonitoring.captureAttributes", "browserMonitoring.attributes.enabled");
             }
 
+            //errorColelctor.ignoreErrors
+            if (_localConfiguration.errorCollector.ignoreErrors?.exception?.Any() ?? false)
+            {
+                LogDisabledPropertyUse("errorCollector.ignoreErrors", "errorCollector.ignoreClasses");
+            }
         }
 
         // This method is now unused as all previously deprecated config properties have been fully disabled.
