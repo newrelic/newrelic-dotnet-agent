@@ -280,7 +280,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 AgentInstallConfiguration.AgentVersionTimestamp,
                 new SecuritySettingsModel
                     (
-                    _configuration.CaptureRequestParameters,
                     new TransactionTraceSettingsModel(_configuration.TransactionTracerRecordSql)
                     ),
                 _configuration.HighSecurityModeEnabled,

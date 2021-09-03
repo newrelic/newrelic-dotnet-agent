@@ -543,10 +543,6 @@ namespace NewRelic.Agent.Core.Configuration
                     {
                         var includes = new HashSet<string>(_localConfiguration.transactionTracer.attributes.include);
 
-                        if (CaptureRequestParameters)
-                        {
-                            includes.Add("request.parameters.*");
-                        }
 
                         return includes;
                     });
@@ -608,10 +604,6 @@ namespace NewRelic.Agent.Core.Configuration
                     {
                         var includes = new HashSet<string>(_localConfiguration.errorCollector.attributes.include);
 
-                        if (CaptureRequestParameters)
-                        {
-                            includes.Add("request.parameters.*");
-                        }
 
                         return includes;
                     });
@@ -746,17 +738,6 @@ namespace NewRelic.Agent.Core.Configuration
         private bool GetLocalShouldCaptureCustomParameters()
         {
             return _localConfiguration.customParameters.enabledSpecified ? _localConfiguration.customParameters.enabled : CaptureCustomParametersAttributesDefault;
-        }
-
-        public virtual bool CaptureRequestParameters
-        {
-            get
-            {
-                var localAttributeValue = false;
-                var serverAttributeValue = _serverConfiguration.RpmConfig.CaptureParametersEnabled;
-                var enabled = HighSecurityModeOverrides(false, ServerOverrides(serverAttributeValue, localAttributeValue));
-                return enabled;
-            }
         }
 
         #endregion
