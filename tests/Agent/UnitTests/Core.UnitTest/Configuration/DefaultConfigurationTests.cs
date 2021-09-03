@@ -781,8 +781,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(new[] { "local" }, null, ExpectedResult = "local")]
         public string ExceptionsToIgnoreSetFromLocalAndServerOverrides(string[] local, string[] server)
         {
-            _serverConfig.RpmConfig.ErrorCollectorErrorsToIgnore = server;
-            _localConfig.errorCollector.ignoreErrors.exception = new List<string>(local);
+            _serverConfig.RpmConfig.ErrorCollectorIgnoreClasses = server;
+            _localConfig.errorCollector.ignoreClasses.errorClass = new List<string>(local);
 
             CreateDefaultConfiguration();
 
@@ -888,7 +888,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [TestCase(new[] { "Class1", "Class2" }, new[] { "Class1" }, ExpectedResult = "Class1,Class2")]
-        [TestCase(new[] { "Class1" }, new[] { "Class2" }, ExpectedResult = "Class1,Class2")]
+        [TestCase(new[] { "Class1" }, new[] { "Class2" }, ExpectedResult = "Class1")]
         public string IgnoreErrorsAndIgnoreClassesCombineTests(string[] ignoreClasses, string[] ignoreErrors)
         {
             _localConfig.errorCollector.ignoreClasses.errorClass = new List<string>(ignoreClasses);
@@ -897,8 +897,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             CreateDefaultConfiguration();
             return string.Join(",", _defaultConfig.IgnoreErrorsConfiguration.Keys);
         }
-
-
 
         [TestCase("401", new[] { "405" }, ExpectedResult = new[] { "405" })]
         [TestCase("401", new string[0], ExpectedResult = new string[0])]

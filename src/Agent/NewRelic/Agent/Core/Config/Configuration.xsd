@@ -1187,10 +1187,10 @@
                 </xs:documentation>
               </xs:annotation>
             </xs:attribute>
-            <xs:attribute name="maximumSamplesStored" type="xs:int" default="1000">
+            <xs:attribute name="maximumSamplesStored" type="xs:int" default="2000">
               <xs:annotation>
                 <xs:documentation>
-                  The maximum number of samples to store in memory at a time.	Default is 1000.
+                  The maximum number of samples to store in memory at a time. Default is 2000.
                 </xs:documentation>
               </xs:annotation>
             </xs:attribute>
@@ -1281,11 +1281,11 @@
 
             <xs:sequence>
 
-              <xs:element name="ignoreErrors">
+              <xs:element name="ignoreErrors" minOccurs="0" maxOccurs="1">
                 <xs:complexType>
                   <xs:annotation>
                     <xs:documentation>
-                      To stop specific exceptions from reporting to New Relic, list them here.
+                      Disabled: To stop specific exceptions from reporting to New Relic, list them here.
                       Use the full name of the exception, such as "System.IO.FileNotFoundException".
                     </xs:documentation>
                   </xs:annotation>
@@ -1294,7 +1294,7 @@
                     <xs:element name="exception" type="xs:string">
                       <xs:annotation>
                         <xs:documentation>
-                          The full name of an exception to ignore, such as "System.IO.FileNotFoundException".
+                          Disabled: The full name of an exception to ignore, such as "System.IO.FileNotFoundException".
                         </xs:documentation>
                       </xs:annotation>
                     </xs:element>

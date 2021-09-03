@@ -334,7 +334,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 DistributedTracingEnabled = _configuration.DistributedTracingEnabled,
                 ErrorCollectorEnabled = _configuration.ErrorCollectorEnabled,
                 ErrorCollectorIgnoreStatusCodes = _configuration.HttpStatusCodesToIgnore.ToList(),
-                ErrorCollectorIgnoreErrors = _configuration.IgnoreErrorsForAgentSettings.ToList(),
                 ErrorCollectorIgnoreClasses = _configuration.IgnoreErrorClassesForAgentSettings,
                 ErrorCollectorIgnoreMessages = _configuration.IgnoreErrorMessagesForAgentSettings,
                 ErrorCollectorExpectedClasses = _configuration.ExpectedErrorClassesForAgentSettings,
