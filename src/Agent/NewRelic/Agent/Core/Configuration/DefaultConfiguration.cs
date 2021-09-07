@@ -543,10 +543,6 @@ namespace NewRelic.Agent.Core.Configuration
                     {
                         var includes = new HashSet<string>(_localConfiguration.transactionTracer.attributes.include);
 
-                        if (CaptureRequestParameters)
-                        {
-                            includes.Add("request.parameters.*");
-                        }
 
                         return includes;
                     });
@@ -608,10 +604,6 @@ namespace NewRelic.Agent.Core.Configuration
                     {
                         var includes = new HashSet<string>(_localConfiguration.errorCollector.attributes.include);
 
-                        if (CaptureRequestParameters)
-                        {
-                            includes.Add("request.parameters.*");
-                        }
 
                         return includes;
                     });
@@ -746,21 +738,6 @@ namespace NewRelic.Agent.Core.Configuration
         private bool GetLocalShouldCaptureCustomParameters()
         {
             return _localConfiguration.customParameters.enabledSpecified ? _localConfiguration.customParameters.enabled : CaptureCustomParametersAttributesDefault;
-        }
-
-        public virtual bool CaptureRequestParameters
-        {
-            get
-            {
-                var localAttributeValue = false;
-                if (_localConfiguration.requestParameters.enabledSpecified)
-                {
-                    localAttributeValue = _localConfiguration.requestParameters.enabled;
-                }
-                var serverAttributeValue = _serverConfiguration.RpmConfig.CaptureParametersEnabled;
-                var enabled = HighSecurityModeOverrides(false, ServerOverrides(serverAttributeValue, localAttributeValue));
-                return enabled;
-            }
         }
 
         #endregion
@@ -1135,7 +1112,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             var expectedStatusCodes = new List<MatchRule>();
 
-            if(expectedStatusCodeArray == null)
+            if (expectedStatusCodeArray == null)
             {
                 return expectedStatusCodes;
             }
@@ -1156,7 +1133,7 @@ namespace NewRelic.Agent.Core.Configuration
                     matchRule = StatusCodeExactMatchRule.GenerateRule(singleCodeOrRange);
                 }
 
-                if(matchRule == null)
+                if (matchRule == null)
                 {
                     Log.Warn($"Cannot parse {singleCodeOrRange} status code. This status code format is not supported.");
                     continue;
@@ -1325,7 +1302,7 @@ namespace NewRelic.Agent.Core.Configuration
 
                     if (hasObscuringKey && hasObfuscatedPassword)
                     {
-                         _proxyPassword = Strings.Base64Decode(_localConfiguration.service.proxy.passwordObfuscated, ObscuringKey);
+                        _proxyPassword = Strings.Base64Decode(_localConfiguration.service.proxy.passwordObfuscated, ObscuringKey);
                     }
                     else
                     {
@@ -2221,11 +2198,18 @@ namespace NewRelic.Agent.Core.Configuration
                 LogDisabledPropertyUse("parameterGroups.requestHeaderParameters.ignore", "attributes.exclude");
             }
 
+            //requestParameters.*
             //requestParameters.ignore
+            //requestParameters.enabled
             if (_localConfiguration.requestParameters?.ignore?.Count > 0)
             {
                 LogDisabledPropertyUse("requestParameters.ignore", "attributes.exclude");
             }
+            if (_localConfiguration.requestParameters?.enabledSpecified == true)
+            {
+                LogDisabledPropertyUse("requestParameters.enabled", "request.parameters.* in attributes.include");
+            }
+
 
             //transactionTracer.captureAttributes
             if (_localConfiguration.transactionTracer.captureAttributesSpecified)

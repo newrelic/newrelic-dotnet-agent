@@ -48,7 +48,6 @@ namespace NewRelic.Agent.Configuration
         IEnumerable<string> CaptureBrowserMonitoringAttributesExcludes { get; }
         bool CaptureCustomParameters { get; }
         string CaptureCustomParametersSource { get; }
-        bool CaptureRequestParameters { get; }
         string CollectorHost { get; }
         int CollectorPort { get; }
         bool CollectorSendDataOnExit { get; }

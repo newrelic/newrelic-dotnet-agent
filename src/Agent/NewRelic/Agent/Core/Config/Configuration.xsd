@@ -583,8 +583,8 @@
         <xs:element name="requestParameters" minOccurs="0" maxOccurs="1">
           <xs:annotation>
             <xs:documentation>
-              The requestParameters element tells the transaction tracer and the error collector whether or not to capture HTTP parameters.
-              To ignore specific parameters so that they are never captured, specify ignore elements.
+                Disabled: The requestParameters element tells the transaction tracer and the error collector whether or not to capture HTTP parameters.
+                To ignore specific parameters so that they are never captured, specify ignore elements.
             </xs:documentation>
           </xs:annotation>
 
@@ -602,7 +602,7 @@
             <xs:attribute name="enabled" type="xs:boolean" use="optional">
               <xs:annotation>
                 <xs:documentation>
-                  Turns on request parameter capturing for the Transaction Tracer and Error Collector features.	Default is false.
+                    Disabled: Turns on request parameter capturing for the Transaction Tracer and Error Collector features.	Default is false.
                 </xs:documentation>
               </xs:annotation>
             </xs:attribute>
