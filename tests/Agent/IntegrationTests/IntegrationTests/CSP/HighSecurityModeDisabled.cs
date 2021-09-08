@@ -35,15 +35,9 @@ namespace NewRelic.Agent.IntegrationTests.CSP
                     configModifier.ForceTransactionTraces();
                     configModifier.SetLogLevel("debug");
                     configModifier.SetHighSecurityMode(false);
-                    configModifier.SetEnableRequestParameters(true);
+                    configModifier.AddAttributesInclude("request.parameters.*");
                     configModifier.SetTransactionTracerRecordSql("raw");
                     configModifier.SetCustomHostName("custom-host-name");
-
-                    //CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
-                    //CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "requestParameters" }, "enabled", "true");
-                    //CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
-                    //CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "highSecurity" }, "enabled", "false");
-                    //CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "service" }, "licenseKey", Configuration.License);
                 },
                 exerciseApplication: () =>
                 {

@@ -93,15 +93,11 @@ namespace NewRelic.Agent.Core.DataTransport
 
     public class SecuritySettingsModel
     {
-        [JsonProperty("capture_params")]
-        public readonly bool CaptureRequestParameters;
-
         [JsonProperty("transaction_tracer")]
         public readonly TransactionTraceSettingsModel TransactionTraceSettings;
 
-        public SecuritySettingsModel(bool captureRequestParameters, TransactionTraceSettingsModel transactionTraceSettings)
+        public SecuritySettingsModel(TransactionTraceSettingsModel transactionTraceSettings)
         {
-            CaptureRequestParameters = captureRequestParameters;
             TransactionTraceSettings = transactionTraceSettings;
         }
     }

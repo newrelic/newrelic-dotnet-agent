@@ -5,6 +5,7 @@
 using AspNetCore3Features.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -34,11 +35,17 @@ namespace AspNetCore3Features.Controllers
                 var assembly = context.LoadFromAssemblyPath(assemblyPath);
                 var type = assembly.GetType("NetCore3Collectible.CollectibleInstrumented");
                 var instance = Activator.CreateInstance(type);
-                var GetDistributedTracePayload = type.GetMethod("GetDistributedTracePayload", BindingFlags.Instance | BindingFlags.Public);
-                var result = GetDistributedTracePayload?.Invoke(instance, null); //instance method, no parameters
+                
+                var InsertDistributedTraceHeaders = type.GetMethod("InsertDistributedTraceHeaders", BindingFlags.Instance | BindingFlags.Public);
+                var result = InsertDistributedTraceHeaders?.Invoke(instance, null); //instance method, no parameters
                 if (null == result)
                 {
-                    throw new Exception("NetCore3Collectible.CollectibleInstrumented.GetDistributedTracePayload returned a null");
+                    throw new Exception("NetCore3Collectible.CollectibleInstrumented.InsertDistributedTraceHeaders returned a null");
+                }
+
+                if ((result as Dictionary<string, string>)?.Count == 0)
+                {
+                    throw new Exception("NetCore3Collectible.CollectibleInstrumented.InsertDistributedTraceHeaders was empty");
                 }
             }
             context.Unload();

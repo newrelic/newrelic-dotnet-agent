@@ -26,7 +26,8 @@ namespace NewRelic.Agent.Core.WireModels
             Mock.Arrange(() => configuration.CaptureAttributes).Returns(true);
             Mock.Arrange(() => configuration.CaptureAttributesExcludes)
                 .Returns(new List<string>() { "identity.*", "request.headers.*", "response.headers.*" });
-            Mock.Arrange(() => configuration.CaptureRequestParameters).Returns(true);
+            Mock.Arrange(() => configuration.CaptureAttributesIncludes).Returns(new string[] { "request.parameters.*" });
+
             return configuration;
         }
 

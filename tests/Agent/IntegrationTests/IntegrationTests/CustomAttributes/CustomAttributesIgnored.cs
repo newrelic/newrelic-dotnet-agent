@@ -28,12 +28,11 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
                 var configPath = _fixture.DestinationNewRelicConfigFilePath;
                 var configModifier = new NewRelicConfigModifier(configPath);
                 configModifier.ForceTransactionTraces();
-
-                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
-                CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "exclude", "*");
-                CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "include", "name");
-                CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "include", "foo");
-                CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "include", "hey");
+                configModifier.SetLogLevel("debug");
+                configModifier.AddAttributesExclude("*");
+                configModifier.AddAttributesInclude("name");
+                configModifier.AddAttributesInclude("foo");
+                configModifier.AddAttributesInclude("hey");
             },
 
             exerciseApplication: () =>

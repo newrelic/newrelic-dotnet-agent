@@ -33,7 +33,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
                     configModifier.ForceTransactionTraces();
                     configModifier.SetLogLevel("debug");
                     configModifier.SetHighSecurityMode(true);
-                    configModifier.SetEnableRequestParameters(true);
+                    configModifier.AddAttributesInclude("request.parameters.*");
                     configModifier.SetTransactionTracerRecordSql("raw");
                     configModifier.SetCustomHostName("custom-host-name");
                 },

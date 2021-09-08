@@ -15,11 +15,8 @@ using Telerik.JustMock;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Core.Segments.Tests;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Spans;
 using System.Collections.Generic;
 using NewRelic.Agent.TestUtilities;
 
@@ -48,7 +45,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
 
-            _databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
+            _databaseService = new DatabaseService();
             _errorService = new ErrorService(configurationService);
             _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));

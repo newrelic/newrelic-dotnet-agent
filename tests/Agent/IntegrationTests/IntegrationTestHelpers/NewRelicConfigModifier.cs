@@ -34,16 +34,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 "enabled", value.ToString().ToLower());
         }
 
-        public void SetAttributesInclude(string includes)
+        public void AddAttributesInclude(string include)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "attributes" }, "include",
-                includes);
+            CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "attributes" }, "include",
+                include);
         }
 
-        public void SetEnableRequestParameters(bool value)
+        public void AddAttributesExclude(string exclude)
         {
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "requestParameters" },
-                "enabled", value.ToString().ToLower());
+            CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "attributes" }, "exclude",
+                exclude);
         }
 
         public void SetAutoStart(bool value)

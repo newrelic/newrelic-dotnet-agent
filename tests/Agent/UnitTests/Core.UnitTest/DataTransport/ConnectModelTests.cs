@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     new[] { "name1", "name2" },
                     "1.0",
                     0,
-                    new SecuritySettingsModel(true, new TransactionTraceSettingsModel("raw")),
+                    new SecuritySettingsModel(new TransactionTraceSettingsModel("raw")),
                     true,
                     "myIdentifier",
                     new[] { new Label("type1", "value1") },
@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 var json = JsonConvert.SerializeObject(connectModel);
 
-                const string expectedJson = @"{""pid"":1,""language"":""dotnet"",""display_host"":""customHostName"",""host"":""myHost"",""app_name"":[""name1"",""name2""],""agent_version"":""1.0"",""agent_version_timestamp"":0,""security_settings"":{""capture_params"":true,""transaction_tracer"":{""record_sql"":""raw""}},""high_security"":true,""event_harvest_config"":null,""identifier"":""myIdentifier"",""labels"":[{""label_type"":""type1"",""label_value"":""value1""}],""settings"":{""browser_monitoring.loader_debug"":true,""browser_monitoring.loader"":""full""},""metadata"":{},""utilization"":{""metadata_version"":5,""logical_processors"":2,""total_ram_mib"":0,""hostname"":""myHost2"",""full_hostname"":""myHost2.domain.com"",""ip_address"":[""1.2.3.4"",""5.6.7.8""],""config"":{""hostname"":""my-host"",""logical_processors"":1,""total_ram_mib"":2048},""vendors"":{""aws"":{""availabilityZone"":""myZone"",""instanceId"":""myInstanceId"",""instanceType"":""myInstanceType""},""azure"":{""location"":""myLocation"",""name"":""myName"",""vmId"":""myVmId"",""vmSize"":""myVmSize""},""gcp"":{""id"":""myId"",""machineType"":""myMachineType"",""name"":""myName"",""zone"":""myZone""},""pcf"":{""cf_instance_guid"":""myInstanceGuid"",""cf_instance_ip"":""myInstanceIp"",""memory_limit"":""myMemoryLimit""},""kubernetes"":{""kubernetes_service_host"":""10.96.0.1""}}}}";
+                const string expectedJson = @"{""pid"":1,""language"":""dotnet"",""display_host"":""customHostName"",""host"":""myHost"",""app_name"":[""name1"",""name2""],""agent_version"":""1.0"",""agent_version_timestamp"":0,""security_settings"":{""transaction_tracer"":{""record_sql"":""raw""}},""high_security"":true,""event_harvest_config"":null,""identifier"":""myIdentifier"",""labels"":[{""label_type"":""type1"",""label_value"":""value1""}],""settings"":{""browser_monitoring.loader_debug"":true,""browser_monitoring.loader"":""full""},""metadata"":{},""utilization"":{""metadata_version"":5,""logical_processors"":2,""total_ram_mib"":0,""hostname"":""myHost2"",""full_hostname"":""myHost2.domain.com"",""ip_address"":[""1.2.3.4"",""5.6.7.8""],""config"":{""hostname"":""my-host"",""logical_processors"":1,""total_ram_mib"":2048},""vendors"":{""aws"":{""availabilityZone"":""myZone"",""instanceId"":""myInstanceId"",""instanceType"":""myInstanceType""},""azure"":{""location"":""myLocation"",""name"":""myName"",""vmId"":""myVmId"",""vmSize"":""myVmSize""},""gcp"":{""id"":""myId"",""machineType"":""myMachineType"",""name"":""myName"",""zone"":""myZone""},""pcf"":{""cf_instance_guid"":""myInstanceGuid"",""cf_instance_ip"":""myInstanceIp"",""memory_limit"":""myMemoryLimit""},""kubernetes"":{""kubernetes_service_host"":""10.96.0.1""}}}}";
 
                 Assert.AreEqual(expectedJson, json);
             }

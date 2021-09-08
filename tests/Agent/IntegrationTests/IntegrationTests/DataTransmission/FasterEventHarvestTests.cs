@@ -58,7 +58,9 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
                 new Assertions.ExpectedMetric(){ metricName = "Supportability/EventHarvest/ReportPeriod" },
                 new Assertions.ExpectedMetric(){ metricName = "Supportability/EventHarvest/ErrorEventData/HarvestLimit" },
                 new Assertions.ExpectedMetric(){ metricName = "Supportability/EventHarvest/CustomEventData/HarvestLimit" },
-                new Assertions.ExpectedMetric(){ metricName = "Supportability/EventHarvest/AnalyticEventData/HarvestLimit" }
+                new Assertions.ExpectedMetric(){ metricName = "Supportability/EventHarvest/AnalyticEventData/HarvestLimit" },
+                new Assertions.ExpectedMetric(){ metricName = "Supportability/SpanEvent/Limit" }
+
             };
 
             var actualMetrics = Fixture.AgentLog.GetMetrics().ToList();

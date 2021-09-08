@@ -542,17 +542,6 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        /// <summary> (This method is obsolete) gets browser timing footer. </summary>
-        ///
-        /// <returns> An empty string. </returns>
-        [Obsolete]
-        [ToBeRemovedInFutureRelease()]
-        public string GetBrowserTimingFooter()
-        {
-            // This method is deprecated.
-            return string.Empty;
-        }
-
         /// <summary> Disables the automatic instrumentation of browser monitoring hooks in individual
         /// pages Supports web applications only. </summary>
         ///
