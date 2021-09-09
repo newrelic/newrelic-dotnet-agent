@@ -131,8 +131,8 @@ namespace NewRelic.Agent.Core.JsonConverters
             {
                 var type = value.GetType().FullName;
 
-                writer.WriteValue($"Unable to deserialize type {type}");
-                Log.Warn($"Failed to deserialize property {key} of type {type}: {exception.Message}");
+                writer.WriteValue($"Unable to serialize type {type}");
+                Log.Warn($"Failed to serialize property {key} of type {type}: {exception.Message}");
             }
         }
     }
