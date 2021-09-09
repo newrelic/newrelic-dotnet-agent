@@ -21,13 +21,15 @@ namespace NewRelic.Agent.Core
     public static partial class AgentInstallConfiguration
     {
 #if NETSTANDARD2_0
-		private const string NewRelicHomeEnvironmentVariable = "CORECLR_NEWRELIC_HOME";
-		private const string RuntimeDirectoryName = "netcore";
+        private const string NewRelicHomeEnvironmentVariable = "CORECLR_NEWRELIC_HOME";
+        private const string RuntimeDirectoryName = "netcore";
 #else
         private const string NewRelicHomeEnvironmentVariable = "NEWRELIC_HOME";
         private const string RuntimeDirectoryName = "netframework";
 #endif
         private const string NewRelicInstallPathEnvironmentVariable = "NEWRELIC_INSTALL_PATH";
+        private const string NewRelicLogPathEnvironmentVariable = "NEWRELIC_LOG_PATH";
+        private const string NewRelicLogLevelEnvironmentVariable = "NEWRELIC_LOG_LEVEL";
 
         public static bool IsWindows { get; }
 #if NET45
@@ -40,6 +42,8 @@ namespace NewRelic.Agent.Core
         public static bool IsNetCore30OrAbove { get; }
         public static string NewRelicHome { get; }
         public static string NewRelicInstallPath { get; }
+        public static string NewRelicLogPath { get; }
+        public static string NewRelicLogLevel { get; }
         public static string HomeExtensionsDirectory { get; }
         public static string RuntimeHomeExtensionsDirectory { get; }
         public static string InstallPathExtensionsDirectory { get; }
@@ -59,6 +63,8 @@ namespace NewRelic.Agent.Core
 #endif
             NewRelicHome = GetNewRelicHome();
             NewRelicInstallPath = GetNewRelicInstallPath();
+            NewRelicLogPath = GetNewRelicLogPath();
+            NewRelicLogLevel = GetNewRelicLogLevel();
             HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
             RuntimeHomeExtensionsDirectory = HomeExtensionsDirectory != null ? Path.Combine(HomeExtensionsDirectory, RuntimeDirectoryName) : null;
             InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
@@ -177,6 +183,19 @@ namespace NewRelic.Agent.Core
 
             newRelicInstallPath = System.Environment.GetEnvironmentVariable(NewRelicHomeEnvironmentVariable);
             return newRelicInstallPath;
+        }
+
+        private static string GetNewRelicLogPath()
+        {
+            var newRelicLogPath = System.Environment.GetEnvironmentVariable(NewRelicLogPathEnvironmentVariable);
+            if (newRelicLogPath != null && Directory.Exists(newRelicLogPath)) return Path.GetFullPath(newRelicLogPath);
+
+            return newRelicLogPath;
+        }
+
+        private static string GetNewRelicLogLevel()
+        {
+            return System.Environment.GetEnvironmentVariable(NewRelicLogLevelEnvironmentVariable);
         }
 
         private static AgentInfo GetAgentInfo()

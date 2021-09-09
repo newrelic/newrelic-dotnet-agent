@@ -453,14 +453,20 @@ namespace NewRelic.Agent.Core.Config
         {
             get
             {
-                return this.level.ToUpper();
+                // Environment variable or log.level from config...
+                return (AgentInstallConfiguration.NewRelicLogLevel
+                    ?? this.level).ToUpper();
             }
         }
 
         public string GetFullLogFileName()
         {
-            System.Text.StringBuilder fileName = new System.Text.StringBuilder();
-            string logDirectory = directory;
+            var fileName = new System.Text.StringBuilder();
+
+            // Environment variable or log.directory from config...
+            var logDirectory = AgentInstallConfiguration.NewRelicLogPath
+                ?? directory;
+
             if (logDirectory == null)
             {
                 if (AgentInstallConfiguration.NewRelicHome != null)
