@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using NewRelic.Agent.Core.Attributes;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.JsonConverters
 {
@@ -35,7 +36,7 @@ namespace NewRelic.Agent.Core.JsonConverters
                     }
                     else
                     {
-                        writer.WriteValue(outputValue);
+                        WriteValueSafe(writer, attribVal.AttributeDefinition.Name, outputValue);
                     }
                 }
             }
@@ -43,5 +44,96 @@ namespace NewRelic.Agent.Core.JsonConverters
             writer.WriteEndObject();
         }
 
+        public static void WriteObjectCollection(JsonWriter writer, IEnumerable<KeyValuePair<string, object>> collection)
+        {
+            writer.WriteStartObject();
+            foreach (var kvp in collection)
+            {
+                if (kvp.Value == null)
+                {
+                    continue;
+                }
+
+                writer.WritePropertyName(kvp.Key);
+
+                if (kvp.Value is string)
+                {
+                    writer.WriteValue((string)kvp.Value);
+                }
+                else if (kvp.Value is long)
+                {
+                    writer.WriteValue((long)kvp.Value);
+                }
+                else if (kvp.Value is int)
+                {
+                    writer.WriteValue((int)kvp.Value);
+                }
+                else if (kvp.Value is bool)
+                {
+                    writer.WriteValue((bool)kvp.Value);
+                }
+                else if (kvp.Value is double)
+                {
+                    writer.WriteValue((double)kvp.Value);
+                }
+                else if (kvp.Value is float)
+                {
+                    writer.WriteValue((float)kvp.Value);
+                }
+                else if (kvp.Value is decimal)
+                {
+                    writer.WriteValue((decimal)kvp.Value);
+                }
+                else if (kvp.Value is char)
+                {
+                    writer.WriteValue((char)kvp.Value);
+                }
+                else if (kvp.Value is ushort)
+                {
+                    writer.WriteValue((ushort)kvp.Value);
+                }
+                else if (kvp.Value is uint)
+                {
+                    writer.WriteValue((uint)kvp.Value);
+                }
+                else if (kvp.Value is ulong)
+                {
+                    writer.WriteValue((ulong)kvp.Value);
+                }
+                else if (kvp.Value is short)
+                {
+                    writer.WriteValue((short)kvp.Value);
+                }
+                else if (kvp.Value is sbyte)
+                {
+                    writer.WriteValue((sbyte)kvp.Value);
+                }
+                else if (kvp.Value is byte)
+                {
+                    writer.WriteValue((byte)kvp.Value);
+                }
+                else
+                {
+                    WriteValueSafe(writer, kvp.Key, kvp.Value);
+                }
+            }
+
+            writer.WriteEndObject();
+        }
+
+        public static void WriteValueSafe(JsonWriter writer, string key, object value)
+        {
+            try
+            {
+                writer.WriteValue(value);
+            }
+            catch (JsonWriterException exception)
+            {
+                var type = value.GetType().FullName;
+
+                writer.WriteValue($"Unable to deserialize type {type}");
+                Log.Warn($"Failed to deserialize property {key} of type {type}: {exception.Message}");
+            }
+        }
     }
 }
