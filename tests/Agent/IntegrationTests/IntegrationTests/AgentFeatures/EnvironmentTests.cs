@@ -43,7 +43,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             Assert.NotEmpty(plugins);
 
             var hasSystem = plugins.Any(plugin => plugin.Contains("System, Version=4.0.0.0, Culture=neutral, PublicKeyToken="));
-            var hasNetstandard = plugins.Any(plugin => plugin.Contains("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken="));
+            var hasNetstandard = plugins.Any(plugin => plugin.Contains("netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken="));
             var hasCore = plugins.Any(plugin => plugin.Contains("System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken="));
             var hasNrAgentCore = plugins.Any(plugin => plugin.Contains("NewRelic.Agent.Core, Version="));
 

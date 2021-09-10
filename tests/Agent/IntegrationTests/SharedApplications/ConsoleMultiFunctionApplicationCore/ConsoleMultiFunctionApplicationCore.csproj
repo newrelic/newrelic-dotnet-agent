@@ -5,6 +5,7 @@
     <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;netcoreapp3.1;net6.0</TargetFrameworks>
     <!--We have some tests that specifically need to test .NET Core 2.2 behavior, so disabling the warning about 2.2 being EOL-->
     <NoWarn>$(NoWarn);NETSDK1138</NoWarn>
+    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
   </PropertyGroup>
 
   <ItemGroup>

@@ -6,6 +6,7 @@
     <NoWarn>$(NoWarn);NETSDK1138</NoWarn>
     
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
   </PropertyGroup>
 
   <ItemGroup>
