@@ -6,13 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [9.0.0] - Unreleased Feature Branch
 ### New Features
-* Feature [#672](https://github.com/newrelic/newrelic-dotnet-agent/issues/672): Distributed Tracing is enabled by default. ([#700](https://github.com/newrelic/newrelic-dotnet-agent/pull/700))
+* Feature [#672](https://github.com/newrelic/newrelic-dotnet-agent/issues/672): This release of the .NET agent enables Distributed Tracing by default, and deprecates Cross Application Tracing. ([#700](https://github.com/newrelic/newrelic-dotnet-agent/pull/700))
 * Feature [#671](https://github.com/newrelic/newrelic-dotnet-agent/issues/671): The maximum number of samples stored for Span Events can be configured via the `spanEvents.maximumSamplesStored` configuration in the `newrelic.config` or the `NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED` Environemnt Variable.([#701](https://github.com/newrelic/newrelic-dotnet-agent/pull/701))
 
 ### Fixes
 * Fixes issue [#707](https://github.com/newrelic/newrelic-dotnet-agent/issues/707): In 8.40.1 SQL explain plans not being captured for parameterized SQL statements. ([#708](https://github.com/newrelic/newrelic-dotnet-agent/pull/708))
 
 ### Deprecations/Removed Features
+* Cross Application Tracing is now deprecated, and disabled by default. To continue using it, enable it with `crossApplicationTracer.enabled = true` and `distributedTracing.enabled = false`.
 * Issue [#667](https://github.com/newrelic/newrelic-dotnet-agent/issues/611), [668](https://github.com/newrelic/newrelic-dotnet-agent/issues/668), [#669](https://github.com/newrelic/newrelic-dotnet-agent/issues/669): previously deprecated agent configuration options are now disabled.  See the [migration guide](https://docs.newrelic.com/docs/agents/net-agent/getting-started/8x-to-9x-agent-migration-guide/#removal-of-deprecated-agent-configuration-settings) for details.
 * Issue [#666](https://github.com/newrelic/newrelic-dotnet-agent/issues/666): previously deprecated agent APIs have been removed, and disabled in the Agent. Disabled APIs will log a warning when invoked by old versions of the Agent API. See the [migration guide](https://docs.newrelic.com/docs/agents/net-agent/getting-started/8x-to-9x-agent-migration-guide/#removal-of-deprecated-public-agent-api-methods) for details. ([#687](https://github.com/newrelic/newrelic-dotnet-agent/pull/687))
 * Issue [#702](https://github.com/newrelic/newrelic-dotnet-agent/issues/702) Deprecate instrumentation for Castle.Monorail ([#710](https://github.com/newrelic/newrelic-dotnet-agent/pull/710))
