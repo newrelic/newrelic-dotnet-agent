@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core
         private const string RuntimeDirectoryName = "netframework";
 #endif
         private const string NewRelicInstallPathEnvironmentVariable = "NEWRELIC_INSTALL_PATH";
-        private const string NewRelicLogPathEnvironmentVariable = "NEWRELIC_LOG_PATH";
+        private const string NewRelicLogDirectoryEnvironmentVariable = "NEWRELIC_LOG_DIRECTORY";
         private const string NewRelicLogLevelEnvironmentVariable = "NEWRELIC_LOG_LEVEL";
 
         public static bool IsWindows { get; }
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core
         public static bool IsNetCore30OrAbove { get; }
         public static string NewRelicHome { get; }
         public static string NewRelicInstallPath { get; }
-        public static string NewRelicLogPath { get; }
+        public static string NewRelicLogDirectory { get; }
         public static string NewRelicLogLevel { get; }
         public static string HomeExtensionsDirectory { get; }
         public static string RuntimeHomeExtensionsDirectory { get; }
@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core
 #endif
             NewRelicHome = GetNewRelicHome();
             NewRelicInstallPath = GetNewRelicInstallPath();
-            NewRelicLogPath = GetNewRelicLogPath();
+            NewRelicLogDirectory = GetNewRelicLogDirectory();
             NewRelicLogLevel = GetNewRelicLogLevel();
             HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
             RuntimeHomeExtensionsDirectory = HomeExtensionsDirectory != null ? Path.Combine(HomeExtensionsDirectory, RuntimeDirectoryName) : null;
@@ -185,12 +185,12 @@ namespace NewRelic.Agent.Core
             return newRelicInstallPath;
         }
 
-        private static string GetNewRelicLogPath()
+        private static string GetNewRelicLogDirectory()
         {
-            var newRelicLogPath = System.Environment.GetEnvironmentVariable(NewRelicLogPathEnvironmentVariable);
-            if (newRelicLogPath != null && Directory.Exists(newRelicLogPath)) return Path.GetFullPath(newRelicLogPath);
+            var newRelicLogDirectory = System.Environment.GetEnvironmentVariable(NewRelicLogDirectoryEnvironmentVariable);
+            if (newRelicLogDirectory != null && Directory.Exists(newRelicLogDirectory)) return Path.GetFullPath(newRelicLogDirectory);
 
-            return newRelicLogPath;
+            return newRelicLogDirectory;
         }
 
         private static string GetNewRelicLogLevel()

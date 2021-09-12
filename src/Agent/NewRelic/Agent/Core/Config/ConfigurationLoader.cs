@@ -464,7 +464,7 @@ namespace NewRelic.Agent.Core.Config
             var fileName = new System.Text.StringBuilder();
 
             // Environment variable or log.directory from config...
-            var logDirectory = AgentInstallConfiguration.NewRelicLogPath
+            var logDirectory = AgentInstallConfiguration.NewRelicLogDirectory
                 ?? directory;
 
             if (logDirectory == null)
