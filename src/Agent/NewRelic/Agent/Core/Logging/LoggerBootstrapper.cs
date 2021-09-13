@@ -391,6 +391,11 @@ namespace NewRelic.Agent.Core
             // check that the log file is accessible
             try
             {
+                // Create the directory if necessary
+                var directory = Path.GetDirectoryName(fileName);
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+
                 using (File.Open(fileName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write)) { }
             }
             catch (Exception exception)

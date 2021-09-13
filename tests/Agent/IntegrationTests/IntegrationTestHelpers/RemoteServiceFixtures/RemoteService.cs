@@ -195,6 +195,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.EnvironmentVariables.Remove("COR_PROFILER_PATH");
             startInfo.EnvironmentVariables.Remove("NEWRELIC_HOME");
             startInfo.EnvironmentVariables.Remove("NEWRELIC_PROFILER_LOG_DIRECTORY");
+            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
+            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_LEVEL");
             startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
@@ -228,15 +230,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 startInfo.EnvironmentVariables.Add("NEWRELIC_HOME", newRelicHomeDirectoryPath);
             }
 
+            startInfo.EnvironmentVariables.Add("NEWRELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
+
             if (AdditionalEnvironmentVariables != null)
             {
                 foreach (var kp in AdditionalEnvironmentVariables)
                 {
-                    startInfo.EnvironmentVariables.Add(kp.Key, kp.Value);
+                    if (startInfo.EnvironmentVariables.ContainsKey(kp.Key))
+                        startInfo.EnvironmentVariables[kp.Key] = kp.Value;
+                    else
+                        startInfo.EnvironmentVariables.Add(kp.Key, kp.Value);
                 }
             }
-
-            startInfo.EnvironmentVariables.Add("NEWRELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
 
             RemoteProcess = new Process();
             RemoteProcess.StartInfo = startInfo;

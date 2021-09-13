@@ -35,6 +35,21 @@ namespace NewRelic { namespace Profiler
             return _X("NEWRELIC_INSTALL_PATH");
         }
 
+        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectoryEnvironment() override
+        {
+            return TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_LOG_DIRECTORY"));
+        }
+
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectoryEnvironment() override
+        {
+            return TryGetEnvironmentVariable(_X("NEWRELIC_LOG_DIRECTORY"));
+        }
+
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevelEnvironment() override
+        {
+            return TryGetEnvironmentVariable(_X("NEWRELIC_LOG_LEVEL"));
+        }
+
         static std::string ToCharString(xstring_t str)
         {
             return std::string(str.begin(), str.end());
