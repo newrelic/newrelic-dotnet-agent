@@ -13,6 +13,12 @@
 #include <string>
 #include <utility>
 
+#ifdef PAL_STDCPP_COMPAT
+#include "../Profiler/UnixSystemCalls.h"
+#else
+#include "../Profiler/SystemCalls.h"
+#endif
+
 namespace NewRelic { namespace Profiler { namespace Configuration {
     typedef std::set<xstring_t> Processes;
     typedef std::shared_ptr<Processes> ProcessesPtr;
@@ -22,7 +28,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
     class Configuration {
     public:
         // intentionally doesn't take a const wstring& because rapidxml will do destructive operations on the string
-        Configuration(xstring_t globalNewRelicConfiguration, std::pair<xstring_t, bool> localNewRelicConfiguration, xstring_t applicationConfiguration = _X(""))
+        Configuration(xstring_t globalNewRelicConfiguration, std::pair<xstring_t, bool> localNewRelicConfiguration, xstring_t applicationConfiguration = _X(""), std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> systemCalls = nullptr)
             : _agentEnabled(true)
             , _agentEnabledInLocalConfig(false)
             , _logLevel(Logger::Level::LEVEL_INFO)
@@ -32,6 +38,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             , _applicationPoolsAreEnabledByDefault(true)
             , _agentEnabledSetInApplicationConfiguration(false)
             , _agentEnabledViaApplicationConfiguration(false)
+            , _systemCalls(systemCalls)
         {
             try {
                 rapidxml::xml_document<xchar_t> globalNewRelicConfigurationDocument;
@@ -277,6 +284,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         bool _applicationPoolsAreEnabledByDefault;
         bool _agentEnabledSetInApplicationConfiguration;
         bool _agentEnabledViaApplicationConfiguration;
+        std::shared_ptr<NewRelic::Profiler::Logger::IFileDestinationSystemCalls> _systemCalls;
 
         rapidxml::xml_node<xchar_t>* GetConfigurationNode(const rapidxml::xml_document<xchar_t>& document)
         {
@@ -316,6 +324,14 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
         void SetLogLevel(rapidxml::xml_node<xchar_t>* configurationNode)
         {
+            if (_systemCalls) {
+                auto envLevel = _systemCalls->GetNewRelicLogLevelEnvironment();
+                if (envLevel) {
+                    _logLevel = TryParseLogLevel(*envLevel);
+                    return;
+                }
+            }
+
             auto logNode = configurationNode->first_node(_X("log"), 0, false);
             if (logNode == nullptr)
                 return;
@@ -325,25 +341,31 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return;
 
             auto level = logLevelAttribute->value();
+            _logLevel = TryParseLogLevel(level);
+        }
 
-            if (Strings::AreEqualCaseInsensitive(level, _X("off"))) {
-                _logLevel = Logger::Level::LEVEL_ERROR;
-            } else if (Strings::AreEqualCaseInsensitive(level, _X("error"))) {
-                _logLevel = Logger::Level::LEVEL_ERROR;
-            } else if (Strings::AreEqualCaseInsensitive(level, _X("warn"))) {
-                _logLevel = Logger::Level::LEVEL_WARN;
-            } else if (Strings::AreEqualCaseInsensitive(level, _X("info"))) {
-                _logLevel = Logger::Level::LEVEL_INFO;
-            } else if (Strings::AreEqualCaseInsensitive(level, _X("debug"))) {
-                _logLevel = Logger::Level::LEVEL_DEBUG;
-            } else if (Strings::AreEqualCaseInsensitive(level, _X("fine"))) {
-                _logLevel = Logger::Level::LEVEL_DEBUG;
-            } else if (Strings::AreEqualCaseInsensitive(level, _X("verbose"))) {
-                _logLevel = Logger::Level::LEVEL_TRACE;
-            } else if (Strings::AreEqualCaseInsensitive(level, _X("finest"))) {
-                _logLevel = Logger::Level::LEVEL_TRACE;
-            } else if (Strings::AreEqualCaseInsensitive(level, _X("all"))) {
-                _logLevel = Logger::Level::LEVEL_TRACE;
+        Logger::Level TryParseLogLevel(const xstring_t& logText)
+        {
+            if (Strings::AreEqualCaseInsensitive(logText, _X("off"))) {
+                return Logger::Level::LEVEL_ERROR;
+            } else if (Strings::AreEqualCaseInsensitive(logText, _X("error"))) {
+                return Logger::Level::LEVEL_ERROR;
+            } else if (Strings::AreEqualCaseInsensitive(logText, _X("warn"))) {
+                return Logger::Level::LEVEL_WARN;
+            } else if (Strings::AreEqualCaseInsensitive(logText, _X("info"))) {
+                return Logger::Level::LEVEL_INFO;
+            } else if (Strings::AreEqualCaseInsensitive(logText, _X("debug"))) {
+                return Logger::Level::LEVEL_DEBUG;
+            } else if (Strings::AreEqualCaseInsensitive(logText, _X("fine"))) {
+                return Logger::Level::LEVEL_DEBUG;
+            } else if (Strings::AreEqualCaseInsensitive(logText, _X("verbose"))) {
+                return Logger::Level::LEVEL_TRACE;
+            } else if (Strings::AreEqualCaseInsensitive(logText, _X("finest"))) {
+                return Logger::Level::LEVEL_TRACE;
+            } else if (Strings::AreEqualCaseInsensitive(logText, _X("all"))) {
+                return Logger::Level::LEVEL_TRACE;
+            } else {
+                return _logLevel;
             }
         }
 

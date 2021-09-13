@@ -7,8 +7,10 @@
 #include <atlbase.h>
 #include <Windows.h>
 #include <Shlobj.h>
+#include <corerror.h>
 #include "Exceptions.h"
 
+#include "Win32Helpers.h"
 #include "../Logging/Logger.h"
 #include "../Logging/DefaultFileLogLocation.h"
 #include "../MethodRewriter/ISystemCalls.h"
@@ -36,6 +38,21 @@ namespace NewRelic { namespace Profiler
         virtual xstring_t GetNewRelicInstallPath() override
         {
             return _newRelicInstallPath;
+        }
+
+        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectoryEnvironment() override
+        {
+            return TryGetEnvironmentVariable(L"NEWRELIC_PROFILER_LOG_DIRECTORY");
+        }
+
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectoryEnvironment() override
+        {
+            return TryGetEnvironmentVariable(L"NEWRELIC_LOG_DIRECTORY");
+        }
+
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevelEnvironment() override
+        {
+            return TryGetEnvironmentVariable(L"NEWRELIC_LOG_LEVEL");
         }
 
         virtual std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName) override

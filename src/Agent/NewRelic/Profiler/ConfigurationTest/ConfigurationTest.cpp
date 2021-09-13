@@ -7,6 +7,7 @@
 #include "CppUnitTest.h"
 #include "ConfigurationTestTemplates.h"
 #include "../Configuration/Configuration.h"
+#include "../LoggingTest/DefaultFileLogLocationTest.cpp"
 
 #include "../Profiler/Win32Helpers.h"
 
@@ -164,6 +165,23 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
             Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
             Assert::AreEqual(Logger::Level::LEVEL_DEBUG, configuration.GetLoggingLevel());
+        }
+
+        TEST_METHOD(log_level_from_environment_over_xml)
+        {
+            std::wstring configurationXml(L"\
+                <?xml version=\"1.0\"?>\
+                <configuration>\
+                    <log level=\"deBug\"/>\
+                </configuration>\
+                ");
+
+            auto systemCalls = std::make_shared<NewRelic::Profiler::Logger::Test::SystemCalls>();
+
+            systemCalls->environmentVariables[L"NEWRELIC_LOG_LEVEL"] = L"FiNeSt";
+
+            Configuration configuration(configurationXml, _missingConfig, L"", systemCalls);
+            Assert::AreEqual(Logger::Level::LEVEL_TRACE, configuration.GetLoggingLevel());
         }
 
         TEST_METHOD(instrument_process_from_xml)

@@ -22,6 +22,9 @@ namespace NewRelic { namespace Profiler { namespace Logger
         // can throw on failure
         virtual xstring_t GetCommonAppDataFolderPath() = 0;
         virtual xstring_t GetNewRelicHomePath() = 0;
+        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectoryEnvironment() = 0;
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectoryEnvironment() = 0;
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevelEnvironment() = 0;
     };
     typedef std::shared_ptr<IFileDestinationSystemCalls> IFileDestinationSystemCallsPtr;
 
@@ -49,8 +52,15 @@ namespace NewRelic { namespace Profiler { namespace Logger
         // returns path to an existing directory where the log file should be written
         xstring_t GetLogFilePath()
         {
-            // use the environment variable if it is set
-            auto logDirectory = _system->TryGetEnvironmentVariable(GetLogDirectoryEnvironmentVariableName());
+            // use the profiler environment variable if it is set
+            auto logDirectory = _system->GetNewRelicProfilerLogDirectoryEnvironment();
+            if (logDirectory)
+            {
+                return *logDirectory;
+            }
+
+            // use the general environment variable if it is set
+            logDirectory = _system->GetNewRelicLogDirectoryEnvironment();
             if (logDirectory)
             {
                 return *logDirectory;
@@ -98,11 +108,6 @@ namespace NewRelic { namespace Profiler { namespace Logger
         const xstring_t GetStandardLogDirectory()
         {
             return _system->GetCommonAppDataFolderPath() + PATH_SEPARATOR _X("New Relic") PATH_SEPARATOR _X(".NET Agent") PATH_SEPARATOR _X("Logs");
-        }
-
-        static const xstring_t GetLogDirectoryEnvironmentVariableName()
-        {
-            return _X("NEWRELIC_PROFILER_LOG_DIRECTORY");
         }
 
         bool Contains(xstring_t envVarValue, xstring_t searchValue)
