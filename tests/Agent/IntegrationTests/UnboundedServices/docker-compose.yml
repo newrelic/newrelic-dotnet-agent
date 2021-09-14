@@ -4,11 +4,11 @@ services:
     rabbitmq: 
         build: ./rabbitmq 
         ports:
-            - "4369:4369"
             - "5671-5672:5671-5672"
-            - "25672:25672"
-            - "15691-15692"
         hostname: my-rabbit
+        environment:
+            - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-RabbitUser}
+            - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-RabbitPassword}
         container_name: RabbitmqServer
 
     mongodb32: 
