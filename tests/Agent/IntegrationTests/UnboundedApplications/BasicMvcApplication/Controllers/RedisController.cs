@@ -4,7 +4,7 @@
 
 extern alias StackExchangeStrongNameAlias;
 using NewRelic.Agent.IntegrationTests.Shared;
-using System;
+using StackExchange.Redis;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 
@@ -16,12 +16,13 @@ namespace BasicMvcApplication.Controllers
     /// </remarks>
     public class RedisController : Controller
     {
+        private ConfigurationOptions _redisConfigOptions;
+
         [HttpGet]
         public string StackExchangeRedis()
         {
-            var connectionString = StackExchangeRedisConfiguration.StackExchangeRedisConnectionString;
             string value;
-            using (var redis = StackExchange.Redis.ConnectionMultiplexer.Connect(connectionString))
+            using (var redis = ConnectionMultiplexer.Connect(GetRedisConnectionOptions()))
             {
                 var db = redis.GetDatabase();
                 db.StringSet("mykey", "myvalue");
@@ -35,7 +36,7 @@ namespace BasicMvcApplication.Controllers
                 db.StringDecrement("mynumberkey", 1);
                 db.StringIncrement("mynumberkey", 1);
 
-                db.HashSet("myhashkey", new StackExchange.Redis.HashEntry[] { new StackExchange.Redis.HashEntry("one", "a"), new StackExchange.Redis.HashEntry("two", 1) });
+                db.HashSet("myhashkey", new HashEntry[] { new HashEntry("one", "a"), new HashEntry("two", 1) });
                 db.HashDecrement("myhashkey", "two");
                 db.HashIncrement("myhashkey", "two");
                 db.HashExists("myhashkey", "one");
@@ -52,7 +53,7 @@ namespace BasicMvcApplication.Controllers
 
                 db.SetAdd("myset", "woot");
                 db.SetAdd("myotherset", "cool");
-                db.SetCombine(StackExchange.Redis.SetOperation.Union, "myset", "myotherset"); //22
+                db.SetCombine(SetOperation.Union, "myset", "myotherset"); //22
                 db.SetContains("myset", "woot");
                 db.SetLength("myset");
                 db.SetMembers("myset");
@@ -70,10 +71,9 @@ namespace BasicMvcApplication.Controllers
         [HttpGet]
         public string StackExchangeRedisStrongName()
         {
-            var connectionString = StackExchangeRedisConfiguration.StackExchangeRedisConnectionString;
             string value;
             //Alias StrongName assembly to avoid type collisions
-            using (var redis = StackExchangeStrongNameAlias::StackExchange.Redis.ConnectionMultiplexer.Connect(connectionString))
+            using (var redis = StackExchangeStrongNameAlias::StackExchange.Redis.ConnectionMultiplexer.Connect(GetRedisConnectionOptions().ToString()))
             {
                 var db = redis.GetDatabase();
                 db.StringSet("mykey", "myvalue");
@@ -121,9 +121,8 @@ namespace BasicMvcApplication.Controllers
         [HttpGet]
         public async Task<string> StackExchangeRedisAsync()
         {
-            var connectionString = StackExchangeRedisConfiguration.StackExchangeRedisConnectionString;
             string value;
-            using (var redis = StackExchange.Redis.ConnectionMultiplexer.Connect(connectionString))
+            using (var redis = ConnectionMultiplexer.Connect(GetRedisConnectionOptions()))
             {
                 var db = redis.GetDatabase();
                 await db.StringSetAsync("mykey", "myvalue");
@@ -136,7 +135,7 @@ namespace BasicMvcApplication.Controllers
                 await db.StringGetRangeAsync("mykey", 0, 1);
                 await db.StringSetRangeAsync("mykey", 1, "more");
 
-                await db.HashSetAsync("myhashkey", new StackExchange.Redis.HashEntry[] { new StackExchange.Redis.HashEntry("one", "a"), new StackExchange.Redis.HashEntry("two", 1) });
+                await db.HashSetAsync("myhashkey", new HashEntry[] { new HashEntry("one", "a"), new HashEntry("two", 1) });
                 await db.HashDecrementAsync("myhashkey", "two");
                 await db.HashIncrementAsync("myhashkey", "two");
                 await db.HashExistsAsync("myhashkey", "one");
@@ -153,7 +152,7 @@ namespace BasicMvcApplication.Controllers
 
                 await db.SetAddAsync("myset", "woot");
                 await db.SetAddAsync("myotherset", "cool");
-                await db.SetCombineAsync(StackExchange.Redis.SetOperation.Union, "myset", "myotherset"); //22
+                await db.SetCombineAsync(SetOperation.Union, "myset", "myotherset"); //22
                 await db.SetContainsAsync("myset", "woot");
                 await db.SetLengthAsync("myset");
                 await db.SetMembersAsync("myset");
@@ -171,10 +170,9 @@ namespace BasicMvcApplication.Controllers
         [HttpGet]
         public async Task<string> StackExchangeRedisAsyncStrongName()
         {
-            var connectionString = StackExchangeRedisConfiguration.StackExchangeRedisConnectionString;
             string value;
             //Alias StrongName assembly to avoid type collisions
-            using (var redis = StackExchangeStrongNameAlias::StackExchange.Redis.ConnectionMultiplexer.Connect(connectionString))
+            using (var redis = StackExchangeStrongNameAlias::StackExchange.Redis.ConnectionMultiplexer.Connect(GetRedisConnectionOptions().ToString()))
             {
                 var db = redis.GetDatabase();
                 await db.StringSetAsync("mykey", "myvalue");
@@ -218,5 +216,17 @@ namespace BasicMvcApplication.Controllers
 
             return value;
         }
+
+        private ConfigurationOptions GetRedisConnectionOptions()
+        {
+            if (_redisConfigOptions == null)
+            {
+                var connectionString = StackExchangeRedisConfiguration.StackExchangeRedisConnectionString;
+                _redisConfigOptions = ConfigurationOptions.Parse(connectionString);
+                _redisConfigOptions.Password = StackExchangeRedisConfiguration.StackExchangeRedisPassword;
+            }
+            return _redisConfigOptions;
+        }
+
     }
 }

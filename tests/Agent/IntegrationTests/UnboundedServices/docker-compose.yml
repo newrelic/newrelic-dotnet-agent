@@ -25,6 +25,7 @@ services:
                     
     redis:
         build: ./redis
+        command: redis-server --requirepass ${REDIS_PASSWORD:-RedisPassword}
         ports:
             - "6379:6379"
         container_name: RedisServer
