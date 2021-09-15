@@ -4,24 +4,12 @@ Thank you for submitting a pull request.  Please review our [contributing guidel
 
 The what, the why and the how of your PR.
 
-## Testing
-
-What unit or integration tests were added or modified, or why no testing changes were required. 
-
-Do you believe these changes require performance testing?
-
-## Changelog
-
-Please remember to update our [changelog](/src/Agent/CHANGELOG.md) if applicable (or [this changelog](/src/AwsLambda/CHANGELOG.md) for Lambda agent changes),
-
-# Author Checklist (Y/N)
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Unbounded Integration tests pass
+# Author Checklist
+- [ ] Unit tests, Integration tests, and Unbounded tests completed
 - [ ] Performance testing completed with satisfactory results (if required)
-- [ ] Changelog updated
+- [ ] [Agent Changelog](/src/Agent/CHANGELOG.md) or [Lambda Agent changelog](/src/AwsLambda/CHANGELOG.md) updated 
 
-# Reviewer Checklist (Y/N)
+# Reviewer Checklist
 - [ ] Perform code review
-- [ ] This pull request was adequately tested (new/existing tests, performance tests)
+- [ ] Pull request was adequately tested (new/existing tests, performance tests)
 - [ ] Review Changelog
