@@ -41,10 +41,6 @@ services:
         ports:
             - "8091-8094:8091-8094"
             - "11210:11210"
-            - "8095-8096"
-            - "11207"
-            - "11211"
-            - "18091-18096"
         environment:
             # These credentials are only used to configure the Couchbase container 
             # for use by the integration tests. You can change these to any value 
