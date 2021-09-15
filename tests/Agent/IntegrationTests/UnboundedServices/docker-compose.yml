@@ -108,7 +108,6 @@ services:
         command: mysqld --default-authentication-plugin=mysql_native_password
         ports:
             - "3306:3306"
-            - "33060"
         environment:
             # These credentials are only used to configure the MySql container 
             # for use by the integration tests. They must match the values from 
