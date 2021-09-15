@@ -15,12 +15,18 @@ services:
         build: ./mongodb32 
         ports:
             - "27017:27017"
+        environment: 
+            - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-MongoUser}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-MongoPass}
         container_name: MongoDB32Server
 
     mongodb36: 
         build: ./mongodb36 
         ports:
             - "27018:27017"
+        environment: 
+            - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-MongoUser}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-MongoPass}
         container_name: MongoDB36Server
                     
     redis:
