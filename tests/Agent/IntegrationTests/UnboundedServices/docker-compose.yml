@@ -17,7 +17,7 @@ services:
             - "27017:27017"
         environment: 
             - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-MongoUser}
-            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-MongoPass}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-MongoPassword}
         container_name: MongoDB32Server
 
     mongodb36: 
@@ -26,7 +26,7 @@ services:
             - "27018:27017"
         environment: 
             - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-MongoUser}
-            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-MongoPass}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-MongoPassword}
         container_name: MongoDB36Server
                     
     redis:
@@ -54,23 +54,27 @@ services:
         ports:
             - "5432:5432"
         environment:
-            # These credentials are only used to configure the Postgres container 
-            # for use by the integration tests. They must match the values from 
-            # the connection string used by those tests
+            # The username 'postgres' should not change since it needs to match
+            # the same value in the 'database.sql' backup/restore file.
+            # The password must match what is used in the connection string used by
+            # the tests.
             - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=password
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-PostgresPassword}
         container_name: PostgresServer
 
     mssql:
-        build: ./mssql
+        build:
+            context: ./mssql
+            args:
+                SA_PASS: ${SA_PASSWORD:-MssqlPassw0rd}
         ports:
             - "1433:1433"
         environment:
             # The password set here must match the password set in the connection
-            # string being used by the MS SQL tests.  SQL server requires a more
-            # complex password than 'password' and that is why this service does
-            # not follow the same pattern as the others.
-            - SA_PASSWORD=password0TS
+            # string being used by the MS SQL tests, and also match what is set in the
+            # "SA_PASS" container build arg above.  If this password is changed, the container
+            # must be rebuilt.
+            - SA_PASSWORD=${SA_PASSWORD:-MssqlPassw0rd}
         container_name: MssqlServer
 
     oracle:
@@ -81,7 +85,7 @@ services:
         environment:
             # The password set here must match the password set in the connection 
             # string being used by the Oracle unbounded integration tests
-            - ORACLE_PWD=password
+            - ORACLE_PWD=${ORACLE_PWD:-OraclePassword}
         container_name: OracleServer
 
     db2:
@@ -89,16 +93,13 @@ services:
         privileged: true
         ports:
             - "50000:50000"
-            - "22"
-            - "55000"
-            - "60006-60007"
         environment:
             - LICENSE=accept
             # These credentials are only used to configure the Db2 container for 
             # use by the integration tests. They must match the values from the 
             # connection string used by those tests
             - DB2INSTANCE=newrelic
-            - DB2INST1_PASSWORD=password
+            - DB2INST1_PASSWORD=${DB2INST1_PASSWORD:-Db2Password}
             - SAMPLEDB=true
         container_name: Db2Server
 
@@ -112,6 +113,6 @@ services:
             # These credentials are only used to configure the MySql container 
             # for use by the integration tests. They must match the values from 
             # the connection string used by those tests
-            - MYSQL_ROOT_PASSWORD=password
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-MysqlPassword}
         container_name: MySqlServer
         

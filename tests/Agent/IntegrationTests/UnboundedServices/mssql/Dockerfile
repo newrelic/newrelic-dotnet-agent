@@ -1,9 +1,11 @@
 FROM mcr.microsoft.com/mssql/server:2017-latest
 
+ARG SA_PASS=MssqlPassw0rd
+
 ENV ACCEPT_EULA=Y
-ENV MSSQL_SA_PASSWORD=password0TS
-ENV SQLCMDPASSWORD=password0TS
-ENV SA_PASSWORD=password0TS
+ENV MSSQL_SA_PASSWORD=${SA_PASS}
+ENV SQLCMDPASSWORD=${SA_PASS}
+ENV SA_PASSWORD=${SA_PASS}
 
 COPY setup.sh /var/
 COPY entrypoint.sh /var/
