@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Feature [#672](https://github.com/newrelic/newrelic-dotnet-agent/issues/672): This release of the .NET agent enables Distributed Tracing by default, and deprecates Cross Application Tracing. ([#700](https://github.com/newrelic/newrelic-dotnet-agent/pull/700))
 * Feature [#671](https://github.com/newrelic/newrelic-dotnet-agent/issues/671): The maximum number of samples stored for Span Events can be configured via the `spanEvents.maximumSamplesStored` configuration in the `newrelic.config` or the `NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED` Environemnt Variable.([#701](https://github.com/newrelic/newrelic-dotnet-agent/pull/701))
 * Feature [#703](https://github.com/newrelic/newrelic-dotnet-agent/issues/703): Increases the default maximum number of samples stored for Span Events from 1000 to 2000.([#705](https://github.com/newrelic/newrelic-dotnet-agent/pull/705))
-* Feature [#532](https://github.com/newrelic/newrelic-dotnet-agent/issues/532): Adds Environment variable for log level and directory `NEWRELIC_LOG_LEVEL` and `NEWRELIC_LOG_DIRECTORY` to control the Agent and Profiler. ([#717](https://github.com/newrelic/newrelic-dotnet-agent/pull/717))
+* Feature [#532](https://github.com/newrelic/newrelic-dotnet-agent/issues/532): Adds Environment variables for log level `NEWRELIC_LOG_LEVEL` and directory `NEWRELIC_LOG_DIRECTORY` to allow better control of logs for the Agent and the Profiler. ([#717](https://github.com/newrelic/newrelic-dotnet-agent/pull/717))
 
 ### Fixes
-* Fixes issue [#707](https://github.com/newrelic/newrelic-dotnet-agent/issues/707): In 8.40.1 SQL explain plans not being captured for parameterized SQL statements. ([#708](https://github.com/newrelic/newrelic-dotnet-agent/pull/708))
+* Fixes issue [#707](https://github.com/newrelic/newrelic-dotnet-agent/issues/707): In 8.40.1 SQL explain plans are not being captured for parameterized SQL statements. ([#708](https://github.com/newrelic/newrelic-dotnet-agent/pull/708))
 * Fixes issue [#502](https://github.com/newrelic/newrelic-dotnet-agent/issues/502): Agent encountering serialization error ([#715](https://github.com/newrelic/newrelic-dotnet-agent/pull/715))
 * Fixes issue [#679](https://github.com/newrelic/newrelic-dotnet-agent/issues/679): Update grpc libraries to reduce installation size ([#721](https://github.com/newrelic/newrelic-dotnet-agent/pull/721))
 
