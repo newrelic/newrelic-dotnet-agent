@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 * Fixes issue [#707](https://github.com/newrelic/newrelic-dotnet-agent/issues/707): In 8.40.1 SQL explain plans are not being captured for parameterized SQL statements. ([#708](https://github.com/newrelic/newrelic-dotnet-agent/pull/708))
 * Fixes issue [#502](https://github.com/newrelic/newrelic-dotnet-agent/issues/502): Agent encountering serialization error ([#715](https://github.com/newrelic/newrelic-dotnet-agent/pull/715))
-* Fixes issue [#679](https://github.com/newrelic/newrelic-dotnet-agent/issues/679): Update grpc libraries to reduce installation size ([#721](https://github.com/newrelic/newrelic-dotnet-agent/pull/721))
+* Fixes issue [#679](https://github.com/newrelic/newrelic-dotnet-agent/issues/679): Update gRPC libraries from 2.35.0 to 2.40.0 to reduce installation size ([#721](https://github.com/newrelic/newrelic-dotnet-agent/pull/721))
 
 ### Deprecations/Removed Features
 * Cross Application Tracing is now deprecated, and disabled by default. To continue using it, enable it with `crossApplicationTracer.enabled = true` and `distributedTracing.enabled = false`.
