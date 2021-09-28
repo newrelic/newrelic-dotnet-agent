@@ -41,7 +41,7 @@ jobs:
           githubToken: ${{ github.token }}
           install: |
             apt-get update -q -y
-            apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9
+            apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
             echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
             wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | apt-key add -
             mkdir /root/git
