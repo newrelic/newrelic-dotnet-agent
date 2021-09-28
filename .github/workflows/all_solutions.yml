@@ -47,17 +47,23 @@ jobs:
             mkdir /root/git
             cd /root/git
             git clone --branch release/3.0 https://github.com/dotnet/coreclr.git
-            curl -sSL https://cmake.org/files/v3.9/cmake-3.9.0-rc3-Linux-x86_64.tar.gz | tar -xzC /opt
-            ln -s /opt/cmake-3.9.0-rc3-Linux-x86_64/bin/cmake /usr/local/sbin/cmake
+            echo CMakeCMakeCMake
+            git clone --depth 1 --branch v3.9.0-rc3 https://github.com/Kitware/CMake.git
+            cd CMake
+            ./bootstrap && make && make install
+            pwd
+            ls -la
+            echo CMakeCMakeCMake
+            #curl -sSL https://cmake.org/files/v3.9/cmake-3.9.0-rc3-Linux-x86_64.tar.gz | tar -xzC /opt
+            #ln -s /opt/cmake-3.9.0-rc3-Linux-x86_64/bin/cmake /usr/local/sbin/cmake
             rm /usr/bin/cc  || true
             ln -s /usr/bin/clang-3.9 /usr/bin/cc
             rm /usr/bin/c++  || true
             ln -s /usr/bin/clang++-3.9 /usr/bin/c++
-          setup: |
-            cd ${{ env.profiler_path }}
           dockerRunArgs: |
             --volume "${{ env.profiler_path }}:/profiler"
           run: |
+            cd ${{ env.profiler_path }}
             pwd
             ls -la
             echo Done
