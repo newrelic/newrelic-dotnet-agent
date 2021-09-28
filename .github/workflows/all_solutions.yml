@@ -50,5 +50,8 @@ jobs:
             git clone --branch release/3.0 https://github.com/dotnet/coreclr.git
             curl -sSL https://cmake.org/files/v3.9/cmake-3.9.0-rc3-Linux-x86_64.tar.gz | tar -xzC /opt
             ln -s /opt/cmake-3.9.0-rc3-Linux-x86_64/bin/cmake /usr/local/sbin/cmake
-            rm /usr/bin/cc;   ln -s /usr/bin/clang-3.9 /usr/bin/cc
-            rm /usr/bin/c++;  ln -s /usr/bin/clang++-3.9 /usr/bin/c++
+            rm /usr/bin/cc  || true
+            ln -s /usr/bin/clang-3.9 /usr/bin/cc
+            rm /usr/bin/c++  || true
+            ln -s /usr/bin/clang++-3.9 /usr/bin/c++
+            echo DONE
