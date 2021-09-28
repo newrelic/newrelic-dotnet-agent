@@ -18,7 +18,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
         private readonly bool _printOutput = false;
         private const string TEST_ERROR_MESAGE = "WCF Service Testing Exception";
 
-        #region Supporting GetData
+#region Supporting GetData
 
         public string SyncGetData(int value)
         {
@@ -75,10 +75,10 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
             return "OK";
         }
 
-        #endregion
+#endregion
 
 
-        #region Supporting IgnoreTransaction
+#region Supporting IgnoreTransaction
 
         public string SyncIgnoreTransaction(string input)
         {
@@ -124,10 +124,10 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
             return await DoWork(input, true, false);
         }
 
-        #endregion
+#endregion
 
 
-        #region Supporting ThrowException
+#region Supporting ThrowException
 
 
         public string SyncThrowException()
@@ -146,8 +146,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
         {
             if (_printOutput) Console.WriteLine("BeginAsyncThrowException");
 
-            NewRelic.Api.Agent.NewRelic.AddCustomParameter("custom key", "custom value");
-            NewRelic.Api.Agent.NewRelic.AddCustomParameter("custom foo", "custom bar");
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("custom key", "custom value");
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("custom foo", "custom bar");
 
             throw new Exception(TEST_ERROR_MESAGE);
         }
@@ -209,15 +209,15 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
         }
 
 
-        #endregion
+#endregion
 
 
         private async Task<string> DoWork(string value, bool ignoreTransaction, bool throwException)
         {
             if (_printOutput) Console.WriteLine("DoWork");
 
-            NewRelic.Api.Agent.NewRelic.AddCustomParameter("custom key", "custom value");
-            NewRelic.Api.Agent.NewRelic.AddCustomParameter("custom foo", "custom bar");
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("custom key", "custom value");
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("custom foo", "custom bar");
 
             if (ignoreTransaction)
             {

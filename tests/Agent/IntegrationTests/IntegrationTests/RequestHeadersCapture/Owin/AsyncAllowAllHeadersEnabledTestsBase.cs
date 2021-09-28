@@ -32,9 +32,9 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.EnableDistributedTrace();
                     configModifier.ForceTransactionTraces();
+                    configModifier.AddAttributesInclude("request.parameters.*");
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "requestParameters" }, "enabled", "true");
                 },
                 exerciseApplication: () =>
                 {

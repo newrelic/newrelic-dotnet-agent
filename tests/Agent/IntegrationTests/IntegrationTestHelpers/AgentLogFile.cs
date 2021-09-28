@@ -17,7 +17,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         private readonly string _filePath;
         private readonly string _fileName;
 
-        public AgentLogFile(string logDirectoryPath, string fileName, TimeSpan? timeoutOrZero = null)
+        public bool Found => File.Exists(_filePath);
+
+        public AgentLogFile(string logDirectoryPath, string fileName = "", TimeSpan? timeoutOrZero = null, bool throwIfNotFound = true)
         {
             Contract.Assert(logDirectoryPath != null);
 
@@ -31,10 +33,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             do
             {
-                var mostRecentlyUpdatedFile = Directory.GetFiles(logDirectoryPath, searchPattern)
-                    .Where(file => file != null && !file.Contains("audit"))
-                    .OrderByDescending(File.GetLastWriteTimeUtc)
-                    .FirstOrDefault();
+                var mostRecentlyUpdatedFile = Directory.Exists(logDirectoryPath) ?
+                    Directory.GetFiles(logDirectoryPath, searchPattern)
+                        .Where(file => file != null && !file.Contains("audit"))
+                        .OrderByDescending(File.GetLastWriteTimeUtc)
+                        .FirstOrDefault() : null;
+
                 if (mostRecentlyUpdatedFile != null)
                 {
                     _filePath = mostRecentlyUpdatedFile;
@@ -44,11 +48,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 Thread.Sleep(TimeSpan.FromSeconds(1));
             } while (timeTaken.Elapsed < timeout);
 
-            throw new Exception("No agent log file found.");
+            if (throwIfNotFound)
+                throw new Exception("No agent log file found.");
         }
 
         public override IEnumerable<string> GetFileLines()
         {
+            if (!Found)
+                yield break;
+
             string line;
             using (var fileStream = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var streamReader = new StreamReader(fileStream))

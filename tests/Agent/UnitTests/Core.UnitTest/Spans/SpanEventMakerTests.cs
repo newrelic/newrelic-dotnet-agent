@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Config;
@@ -147,7 +146,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             _transactionAttribMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
 
             _spanEventMaker = new SpanEventMaker(_attribDefSvc, _configurationService);
-            _databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
+            _databaseService = new DatabaseService();
 
             _transactionEventMaker =  new TransactionEventMaker(_attribDefSvc);
 

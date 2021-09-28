@@ -13,10 +13,7 @@ using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Segments.Tests;
-using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -31,7 +28,7 @@ namespace NewRelic.Agent.Core.Transformers
         public void SetUp()
         {
             _configurationService = Mock.Create<IConfigurationService>();
-            _databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
+            _databaseService = new DatabaseService();
         }
 
         #region Transform

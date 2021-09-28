@@ -27,7 +27,6 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.ForceTransactionTraces();
                     configModifier.SetOrDeleteSpanEventsEnabled(true);
                 },

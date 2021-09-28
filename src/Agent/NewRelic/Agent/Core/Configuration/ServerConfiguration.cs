@@ -90,6 +90,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("event_harvest_config")]
         public EventHarvestConfig EventHarvestConfig { get; set; }
 
+        [JsonProperty("span_event_harvest_config")]
+        public SingleEventHarvestConfig SpanEventHarvestConfig { get; set; }
+
 
         // CAT
 

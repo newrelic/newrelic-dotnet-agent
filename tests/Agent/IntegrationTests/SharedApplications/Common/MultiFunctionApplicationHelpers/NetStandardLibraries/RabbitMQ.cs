@@ -12,7 +12,6 @@ using NewRelic.Api.Agent;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -26,7 +25,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
     [Library]
     class RabbitMQ
     {
-        private static readonly ConnectionFactory ChannelFactory = new ConnectionFactory() { HostName = RabbitMqConfiguration.RabbitMqServerIp };
+        private static readonly ConnectionFactory ChannelFactory = new ConnectionFactory()
+        { HostName = RabbitMqConfiguration.RabbitMqServerIp,
+          UserName = RabbitMqConfiguration.RabbitMqUsername,
+          Password = RabbitMqConfiguration.RabbitMqPassword };
         private static readonly IConnection Connection = ChannelFactory.CreateConnection();
         private static IModel Channel = Connection.CreateModel();
 

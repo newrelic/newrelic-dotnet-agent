@@ -116,7 +116,7 @@ namespace NewRelic.Agent.Core.Utils
         {
             StackFrame[] stackTraces = GetStackTrace().GetFrames();
             ICollection<StackFrame> frames = StackTraces.ScrubAndTruncate(stackTraces, 3);
-            Assert.AreEqual(2, frames.Count);
+            Assert.AreEqual(3, frames.Count);
         }
 
         [Test]
@@ -125,6 +125,16 @@ namespace NewRelic.Agent.Core.Utils
             StackFrame[] stackTraces = GetStackTrace().GetFrames();
             ICollection<StackFrame> frames = StackTraces.ScrubAndTruncate(stackTraces, 0);
             Assert.AreEqual(0, frames.Count);
+        }
+
+        // The purpose of this test is to verify that we do something reasonable and don't throw an exception
+        // if a max depth greater than the available frames is supplied
+        [Test]
+        public static void TestTruncateWithMaxDepthGreaterThanInputList()
+        {
+            StackFrame[] stackTraces = GetStackTrace().GetFrames();
+            ICollection<StackFrame> frames = StackTraces.ScrubAndTruncate(stackTraces, stackTraces.Length + 666);
+            Assert.LessOrEqual(frames.Count, stackTraces.Length);
         }
 
         [Test]

@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.All" />
-    <PackageReference Include="NewRelic.Agent.Api" Version="6.18.139" />
+    <PackageReference Include="NewRelic.Agent.Api" Version="8.41.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -12,11 +12,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.RestSharp
 {
     [NetFrameworkTest]
-    public class RestSharpInstrumentationTaskResult : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class RestSharpInstrumentationTaskResultCAT : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public RestSharpInstrumentationTaskResult(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
+        public RestSharpInstrumentationTaskResultCAT(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -25,6 +25,8 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+
+                    configModifier.EnableCat();
                     configModifier.ForceTransactionTraces();
                 },
                 exerciseApplication: () =>

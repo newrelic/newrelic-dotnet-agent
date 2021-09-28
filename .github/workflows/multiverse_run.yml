@@ -1,17 +1,31 @@
 name: Run the MultiverseScanner
 
 on:
-  schedule:
-    # At 19:00 on day-of-month 1 and 15.  Must be in single quotes!
-    - cron:  '0 19 1,15 * *'
-  workflow_dispatch:
+  workflow_run:
+    workflows: ['.NET Agent All Solutions Build']
+    types: ['completed']
 
 env:
   DOTNET_NOLOGO: true
 
 jobs:
 
+  get-info:
+    name: "Get information about the source run"
+    runs-on: ubuntu-latest
+    outputs:
+      sourceEvent: ${{ steps.source-run-info.outputs.sourceEvent }}
+    steps:
+      - name: "Get information about the origin 'CI' run"
+        uses: potiuk/get-workflow-origin@v1
+        id: source-run-info
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          sourceRunId: ${{ github.event.workflow_run.id }}
+
   get-s3-artifacts:
+    needs: get-info
+    if: ${{ needs.get-info.outputs.sourceEvent == 'release' }}
     name: Get and Publish S3 Artifacts Locally
     runs-on: ubuntu-latest
     steps:
@@ -49,11 +63,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(Get-Date -format 'dd-MM-yyyy')"
-        shell: powershell
-
       - name: Download S3 Artifacts
         uses: actions/download-artifact@v2
         with:
@@ -67,22 +76,63 @@ jobs:
 
       - name: Run ConsoleScanner
         run: |
-          dir
-          .\ConsoleScanner.exe ".\config.yml" ".\reports-${{ steps.date.outputs.date }}.yml"
+          .\ConsoleScanner.exe ".\config.yml" ".\reports.yml"
         shell: powershell
 
       - name: Upload Reports
         uses: actions/upload-artifact@v2
         with:
           name: mvs-reports
-          path: ${{ github.workspace }}\reports-${{ steps.date.outputs.date }}.yml
+          path: ${{ github.workspace }}\reports.yml
           if-no-files-found: error
 
-      - name: Push artifacts to S3
-        run: |
-          $Env:AWS_ACCESS_KEY_ID="${{ secrets.TEAM_AWS_ACCESS_KEY_ID }}"
-          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.TEAM_AWS_SECRET_ACCESS_KEY }}"
-          $Env:AWS_DEFAULT_REGION="us-west-2"
-          aws s3 cp ${{ github.workspace }}\reports-${{ steps.date.outputs.date }}.yml ${{ secrets.MULTIVERSE_BUCKET_NAME }}/reports/ --acl public-read
-        shell: pwsh
+  run-reportbuilder:
+    needs: [get-s3-artifacts, run-mvs]
+    name: Run the ReportBuilder
+    runs-on: windows-2019
 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: 'gh-pages'
+          fetch-depth: 0
+      
+      - name: Download S3 Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: mvs
+          path: ${{ github.workspace }}
+
+      - name: Download report Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: mvs-reports
+          path: ${{ github.workspace }}
+      
+      - name: Download agent-version Artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: all_solutions.yml
+          run_id: ${{ github.event.workflow_run.id }}
+          name: agent-version
+          path: ${{ github.workspace }}
+          repo: ${{ github.repository }}
+
+      - name: Setup .NET Core 3.1.100
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.100'
+
+      - name: Run ConsoleScanner
+        run: |
+          $agentVersion = Get-Content .\agent_version.txt | Select-Object -first 1
+          .\ReportBuilder.exe "$agentVersion" ".\reports.yml" ".\docs\mvs"
+        shell: powershell
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: gh-pages
+          folder: .

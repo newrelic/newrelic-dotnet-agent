@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
@@ -25,7 +24,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [SetUp]
         public void SetUp()
         {
-            _databaseStatementParser = new DatabaseStatementParser(Mock.Create<ICacheStatsReporter>());
+            _databaseStatementParser = new DatabaseStatementParser();
         }
 
         [TearDown]

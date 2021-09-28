@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ReportBuilder": {
+      "commandName": "Project",
+      "commandLineArgs": "\"1.4.0\" \".\\reports.yml\" \".\\wikitemp\""
+    }
+  }
+}

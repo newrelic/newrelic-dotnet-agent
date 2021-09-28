@@ -4,9 +4,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased] changes
 ### New Features
 ### Fixes
+### Deprecations/Removed Features
+
+## [9.0.0] - 2021-09-16
+### New Features
+* Feature [#672](https://github.com/newrelic/newrelic-dotnet-agent/issues/672): This release of the .NET agent enables Distributed Tracing by default, and deprecates Cross Application Tracing. ([#700](https://github.com/newrelic/newrelic-dotnet-agent/pull/700))
+* Feature [#671](https://github.com/newrelic/newrelic-dotnet-agent/issues/671): The maximum number of samples stored for Span Events can be configured via the `spanEvents.maximumSamplesStored` configuration in the `newrelic.config` or the `NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED` Environemnt Variable.([#701](https://github.com/newrelic/newrelic-dotnet-agent/pull/701))
+* Feature [#703](https://github.com/newrelic/newrelic-dotnet-agent/issues/703): Increases the default maximum number of samples stored for Span Events from 1000 to 2000.([#705](https://github.com/newrelic/newrelic-dotnet-agent/pull/705))
+* Feature [#532](https://github.com/newrelic/newrelic-dotnet-agent/issues/532): Adds Environment variables for log level `NEWRELIC_LOG_LEVEL` and directory `NEWRELIC_LOG_DIRECTORY` to allow better control of logs for the Agent and the Profiler. ([#717](https://github.com/newrelic/newrelic-dotnet-agent/pull/717))
+
+### Fixes
+* Fixes issue [#707](https://github.com/newrelic/newrelic-dotnet-agent/issues/707): In 8.40.1 SQL explain plans are not being captured for parameterized SQL statements. ([#708](https://github.com/newrelic/newrelic-dotnet-agent/pull/708))
+* Fixes issue [#502](https://github.com/newrelic/newrelic-dotnet-agent/issues/502): Agent encountering serialization error ([#715](https://github.com/newrelic/newrelic-dotnet-agent/pull/715))
+* Fixes issue [#679](https://github.com/newrelic/newrelic-dotnet-agent/issues/679): Update gRPC libraries from 2.35.0 to 2.40.0 to reduce installation size ([#721](https://github.com/newrelic/newrelic-dotnet-agent/pull/721))
+
+### Deprecations/Removed Features
+* Cross Application Tracing is now deprecated, and disabled by default. To continue using it, enable it with `crossApplicationTracer.enabled = true` and `distributedTracing.enabled = false`.
+* Issue [#667](https://github.com/newrelic/newrelic-dotnet-agent/issues/611), [668](https://github.com/newrelic/newrelic-dotnet-agent/issues/668), [#669](https://github.com/newrelic/newrelic-dotnet-agent/issues/669): previously deprecated agent configuration options are now disabled.  See the [migration guide](https://docs.newrelic.com/docs/agents/net-agent/getting-started/8x-to-9x-agent-migration-guide/#removal-of-deprecated-agent-configuration-settings) for details.
+* Issue [#666](https://github.com/newrelic/newrelic-dotnet-agent/issues/666): previously deprecated agent APIs have been removed, and disabled in the Agent. Disabled APIs will log a warning when invoked by old versions of the Agent API. See the [migration guide](https://docs.newrelic.com/docs/agents/net-agent/getting-started/8x-to-9x-agent-migration-guide/#removal-of-deprecated-public-agent-api-methods) for details. ([#687](https://github.com/newrelic/newrelic-dotnet-agent/pull/687))
+* Issue [#702](https://github.com/newrelic/newrelic-dotnet-agent/issues/702) Deprecate instrumentation for Castle.Monorail ([#710](https://github.com/newrelic/newrelic-dotnet-agent/pull/710))
+
+## [8.41.1] - 2021-08-25
+### New Features
+### Fixes
+* Fixes issue [#627](https://github.com/newrelic/newrelic-dotnet-agent/issues/627): Grpc channel shutdown can cause `license_key is required` error message. ([#663](https://github.com/newrelic/newrelic-dotnet-agent/pull/663))
+* Fixes issue [#683](https://github.com/newrelic/newrelic-dotnet-agent/issues/683): Requested stack trace depth is not always honored. ([#684](https://github.com/newrelic/newrelic-dotnet-agent/pull/684))
 
 ## [8.41.0] - 2021-07-21
 ### New Features
@@ -184,7 +209,7 @@ When Distributed Tracing and/or Infinite Tracing are enabled, the Agent will now
     * The following items are affected:
 
         * Request Parameters `request.parameter.*`
-        * Custom Attribute Values applied to the Transaction via API Calls [`AddCustomParameter`](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/add-custom-parameter) and [`ITransaction.AddCustomAttribute`](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/itransaction#addcustomattribute).
+        * Custom Attribute Values applied to the Transaction via API Calls [`AddCustomParameter`](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/addcustomparameter-net-agent-api/) and [`ITransaction.AddCustomAttribute`](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/itransaction#addcustomattribute).
         * `request.uri`
         * `response.status`
         * `host.displayName`
@@ -209,7 +234,7 @@ Fixes issue where updating custom instrumentation while application is running c
 ## [8.27] - 2020-04-30
 ### New Features
 * **Support for W3C Trace Context, with easy upgrade from New Relic trace context**
-  * [Distributed Tracing now supports W3C Trace Context headers](https://docs.newrelic.com/docs/understand-dependencies/distributed-tracing/get-started/introduction-distributed-tracing#w3c-support) for HTTP when distributed tracing is enabled.  Our implementation can accept and emit both W3C trace header format and New Relic trace header format. This simplifies agent upgrades, allowing trace context to be propagated between services with older and newer releases of New Relic agents. W3C trace header format will always be accepted and emitted. New Relic trace header format will be accepted, and you can optionally disable emission of the New Relic trace header format.
+  * [Distributed Tracing now supports W3C Trace Context headers](https://docs.newrelic.com/docs/distributed-tracing/concepts/how-new-relic-distributed-tracing-works/#headers) for HTTP when distributed tracing is enabled.  Our implementation can accept and emit both W3C trace header format and New Relic trace header format. This simplifies agent upgrades, allowing trace context to be propagated between services with older and newer releases of New Relic agents. W3C trace header format will always be accepted and emitted. New Relic trace header format will be accepted, and you can optionally disable emission of the New Relic trace header format.
   * When distributed tracing is enabled with `<distributedTracing enabled="true" />`, the .NET agent will now accept W3C's `traceparent` and `tracestate` headers when calling [Transaction.AcceptDistributedTraceHeaders](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/itransaction#acceptdistributedtraceheaders).  When calling [Transaction.InsertDistributedTraceHeaders](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/itransaction#insertdistributedtraceheaders), the .NET agent will include the W3C headers along with the New Relic distributed tracing header, unless the New Relic trace header format is disabled using `<distributedTracing enabled="true" excludeNewrelicHeader="true" />`.
   * The existing `Transaction.AcceptDistributedTracePayload` and `Transaction.CreateDistributedTracePayload` APIs are **deprecated** in favor of [Transaction.AcceptDistributedTraceHeaders](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/itransaction#acceptdistributedtraceheaders) and [Transaction.InsertDistributedTraceHeaders](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/itransaction#insertdistributedtraceheaders).
 
@@ -224,7 +249,7 @@ Fixes issue where updating custom instrumentation while application is running c
 ### New Features
 * **Infinite Tracing on New Relic Edge**
 
-  This release adds support for [Infinite Tracing on New Relic Edge](https://docs.newrelic.com/docs/understand-dependencies/distributed-tracing/enable-configure/enable-distributed-tracing). Infinite Tracing observes 100% of your distributed traces and provides visualizations for the most actionable data so you have the examples of errors and long-running traces so you can better diagnose and troubleshoot your systems.
+  This release adds support for [Infinite Tracing on New Relic Edge](https://docs.newrelic.com/docs/distributed-tracing/enable-configure/language-agents-enable-distributed-tracing/#infinite-tracing). Infinite Tracing observes 100% of your distributed traces and provides visualizations for the most actionable data so you have the examples of errors and long-running traces so you can better diagnose and troubleshoot your systems.
 
   You configure your agent to send traces to a trace observer in New Relic Edge. You view your distributed traces through the New Relic’s UI. There is no need to install a collector on your network.
 
@@ -236,7 +261,7 @@ Fixes issue where updating custom instrumentation while application is running c
 
   Error attributes `error.class` and `error.message` are now included on the span event in which an error or exception was noticed, and, in the case of unhandled exceptions, on any ancestor spans that also exit with an error. The public API method `NoticeError` now attaches these error attributes to the currently executing span.
 
-  [Spans with error details are now highlighted red in the Distributed Tracing UI](https://docs.newrelic.com/docs/apm/distributed-tracing/ui-data/understand-use-distributed-tracing-data#rules-limits), and error details will expose the associated `error.class` and `error.message`. It is also now possible to see when an exception leaves the boundary of the span, and if it is caught in an ancestor span without reaching the entry span. NOTE: This “bubbling up” of exceptions will impact the error count when compared to prior behavior for the same trace. It is possible to have a trace that now has span errors without the trace level showing an error.
+  [Spans with error details are now highlighted red in the Distributed Tracing UI](https://docs.newrelic.com/docs/distributed-tracing/ui-data/understand-use-distributed-tracing-ui/#error-tips), and error details will expose the associated `error.class` and `error.message`. It is also now possible to see when an exception leaves the boundary of the span, and if it is caught in an ancestor span without reaching the entry span. NOTE: This “bubbling up” of exceptions will impact the error count when compared to prior behavior for the same trace. It is possible to have a trace that now has span errors without the trace level showing an error.
 
   If multiple errors occur on the same span, only the most recent error information is added to the attributes. Prior errors on the same span are overwritten.
 
@@ -304,7 +329,9 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.41.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.0.0...HEAD
+[9.0.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.41.1...v9.0.0
+[8.41.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.41.0...v8.41.1
 [8.41.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.40.1...v8.41.0
 [8.40.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.40.0...v8.40.1
 [8.40.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.39.2...v8.40.0

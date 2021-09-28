@@ -37,7 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NewRelic.Agent.Api">
-      <Version>8.14.222</Version>
+      <Version>8.41.1</Version>
     </PackageReference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

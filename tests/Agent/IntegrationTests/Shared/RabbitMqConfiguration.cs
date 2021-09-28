@@ -8,6 +8,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
     public class RabbitMqConfiguration
     {
         private static string _rabbitMqServerIp;
+        private static string _rabbitMqUsername;
+        private static string _rabbitMqPassword;
 
         public static string RabbitMqServerIp
         {
@@ -20,6 +22,32 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 }
 
                 return _rabbitMqServerIp;
+            }
+        }
+        public static string RabbitMqUsername
+        {
+            get
+            {
+                if (_rabbitMqUsername == null)
+                {
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("RabbitMqTests");
+                    _rabbitMqUsername = testConfiguration["Username"];
+                }
+
+                return _rabbitMqUsername;
+            }
+        }
+        public static string RabbitMqPassword
+        {
+            get
+            {
+                if (_rabbitMqPassword == null)
+                {
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("RabbitMqTests");
+                    _rabbitMqPassword = testConfiguration["Password"];
+                }
+
+                return _rabbitMqPassword;
             }
         }
     }

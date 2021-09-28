@@ -158,7 +158,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private readonly InterlockedCounter _workCounter = new InterlockedCounter();
 
-        protected Metadata MetadataHeaders { get; private set; }
+        protected Metadata _metadataHeaders;
+        protected Metadata MetadataHeaders => _metadataHeaders;
         private Metadata CreateMetadataHeaders()
         {
             var headers = new Metadata();
@@ -490,7 +491,9 @@ namespace NewRelic.Agent.Core.DataTransport
 
             LogConfigurationSettings();
 
-            MetadataHeaders = CreateMetadataHeaders();
+            var metadataHeaders = CreateMetadataHeaders();
+
+            Interlocked.Exchange(ref _metadataHeaders, metadataHeaders);
 
             _cancellationTokenSource = new CancellationTokenSource();
 
@@ -623,7 +626,6 @@ namespace NewRelic.Agent.Core.DataTransport
 
             _shouldRestart = withRestart;
             _cancellationTokenSource.Cancel();
-            MetadataHeaders = null;
             _grpcWrapper.Shutdown();
         }
 

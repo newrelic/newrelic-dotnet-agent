@@ -106,7 +106,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
 
-        private string DefaultLogFileDirectoryPath
+        public string DefaultLogFileDirectoryPath
         {
             get
             {

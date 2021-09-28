@@ -25,7 +25,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.SetLogLevel("debug");
                     configModifier.SetHighSecurityMode(false);
-                    configModifier.SetEnableRequestParameters(true);
+                    configModifier.AddAttributesInclude("request.parameters.*");
                 },
                 exerciseApplication: () =>
                 {

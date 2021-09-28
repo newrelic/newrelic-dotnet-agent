@@ -110,7 +110,7 @@ namespace NewRelic.Agent.Core.Utils
         {
             var maxFrames = Math.Min(frames.Length, maxDepth);
             var stackFrames = new List<StackFrame>(maxFrames);
-            for (var i = 0; i < maxFrames; i++)
+            for (var i = 0; i < frames.Length && stackFrames.Count < maxDepth; i++)
             {
                 if (frames[i].GetMethod().DeclaringType != null && !frames[i].GetMethod().DeclaringType.FullName.StartsWith("NewRelic"))
                 {

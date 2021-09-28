@@ -17,46 +17,6 @@ namespace NewRelic.Api.Agent
             _wrappedTransaction = wrappedTransaction ?? _noOpTransaction;
         }
 
-        private static bool _isAcceptDistributedTracePayloadAvailable = true;
-
-        [Obsolete("AcceptDistributedTracePayload is deprecated.")]
-        public void AcceptDistributedTracePayload(string payload, TransportType transportType = TransportType.Unknown)
-        {
-            if (!_isAcceptDistributedTracePayloadAvailable) return;
-
-            try
-            {
-                _wrappedTransaction.AcceptDistributedTracePayload(payload, (int)transportType);
-            }
-            catch (RuntimeBinderException)
-            {
-                _isAcceptDistributedTracePayloadAvailable = false;
-            }
-        }
-
-        private static bool _isCreateDistributedTracePayloadAvailable = true;
-
-        [Obsolete("CreateDistributedTracePayload is deprecated.")]
-        public IDistributedTracePayload CreateDistributedTracePayload()
-        {
-            if (!_isCreateDistributedTracePayloadAvailable) return _noOpTransaction.CreateDistributedTracePayload();
-
-            try
-            {
-                var result = _wrappedTransaction.CreateDistributedTracePayload();
-                if (result != null)
-                {
-                    return new DistributedTracePayload(result);
-                }
-            }
-            catch (RuntimeBinderException)
-            {
-                _isCreateDistributedTracePayloadAvailable = false;
-            }
-
-            return _noOpTransaction.CreateDistributedTracePayload();
-        }
-
         private static bool _isAcceptDistributedTraceHeadersAvailable = true;
 
         public void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType)

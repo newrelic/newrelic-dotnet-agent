@@ -11,6 +11,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         private static string _stackExchangeRedisConnectionString;
         private static string _stackExchangeRedisServer;
         private static string _stackExchangeRedisPort;
+        private static string _stackExchangeRedisPassword;
 
         // example: "1.2.3.4:4444"
         public static string StackExchangeRedisConnectionString
@@ -73,6 +74,19 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 }
 
                 return _stackExchangeRedisPort;
+            }
+        }
+        public static string StackExchangeRedisPassword
+        {
+            get
+            {
+                if (_stackExchangeRedisPassword == null)
+                {
+                    var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("StackExchangeRedisTests");
+                    _stackExchangeRedisPassword = testConfiguration["Password"];
+                }
+
+                return _stackExchangeRedisPassword;
             }
         }
     }
