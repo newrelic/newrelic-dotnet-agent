@@ -56,7 +56,7 @@ jobs:
           setup: |
             cd ${{ env.profiler_path }}
           dockerRunArgs: |
-            --volume ".:/profiler"
+            --volume "${{ env.profiler_path }}:/profiler"
           run: |
             pwd
             ls -la
