@@ -27,9 +27,9 @@ set(BuildType "Debug" CACHE STRING "Build type (Release, Debug)")
 set(Output "NewRelicProfiler" CACHE STRING "Name of output file")
 
 if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "aarch64")
-  set(MARCH_FLAG "-march=aarch64"
+  set(MARCH_FLAG "-march=aarch64")
 else()
-  set(MARCH_FLAG "-march=x86-64"
+  set(MARCH_FLAG "-march=x86-64")
 endif()
 
 if(${WIN32})
