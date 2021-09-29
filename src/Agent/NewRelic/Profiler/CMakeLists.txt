@@ -25,13 +25,6 @@ set(BuildOS ${DefaultBuildOS} CACHE STRING "Operating system for build.")
 set(BuildArch ${DefaultBuildArch} CACHE STRING "Build architecture (x64, x86)")
 set(BuildType "Debug" CACHE STRING "Build type (Release, Debug)")
 set(Output "NewRelicProfiler" CACHE STRING "Name of output file")
-
-if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "aarch64")
-  set(MARCH_FLAG "-march=aarch64")
-else()
-  set(MARCH_FLAG "-march=x86-64")
-endif()
-
 if(${WIN32})
   add_compile_options(
     -fPIC
@@ -41,7 +34,7 @@ if(${WIN32})
 else()
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-strict-aliasing -stdlib=libc++ ${MARCH_FLAG} -Wno-invalid-noreturn -Wno-ignored-attributes -Wno-macro-redefined -fms-extensions -fdeclspec -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-strict-aliasing -stdlib=libc++ -march=${CMAKE_HOST_SYSTEM_PROCESSOR} -Wno-invalid-noreturn -Wno-ignored-attributes -Wno-macro-redefined -fms-extensions -fdeclspec -fPIC")
   set (CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++") 
 endif()
 
