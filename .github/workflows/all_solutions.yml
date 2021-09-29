@@ -58,6 +58,7 @@ jobs:
             --volume "${{ env.profiler_path }}:/profiler"
           run: |
             cd /profiler
+            chmod 777 ./linux/build_profiler.sh
             ./linux/build_profiler.sh
             echo Done
             
