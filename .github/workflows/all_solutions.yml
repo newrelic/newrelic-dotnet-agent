@@ -60,11 +60,17 @@ jobs:
             cd /profiler
             chmod 777 ./linux/build_profiler.sh
             ./linux/build_profiler.sh
-            echo Done
             
-      - name: Outputtest
+      - name: Move Profiler to staging folder
         run: |
-          echo Output
-          cd ${{ env.profiler_path }}
-          ls -la
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/libNewRelicProfiler.so
+        shell: bash
+
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: profiler
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          if-no-files-found: error
             
