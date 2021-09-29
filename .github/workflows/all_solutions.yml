@@ -47,10 +47,9 @@ jobs:
             mkdir /root/git
             cd /root/git
             git clone --branch release/3.0 https://github.com/dotnet/coreclr.git
-            curl -sSL https://cmake.org/files/v3.9/cmake-3.9.0-rc3.tar.gz | tar -xzC ~
-            cd ~/cmake-3.9.0-rc3
-            ./configure
-            make install
+            curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
+            chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
+            ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
             rm /usr/bin/cc  || true
             ln -s /usr/bin/clang-3.9 /usr/bin/cc
             rm /usr/bin/c++  || true
@@ -61,6 +60,7 @@ jobs:
             cd ${{ env.profiler_path }}
             pwd
             ls -la
+            which cmake
             echo Done
             
       - name: Outputtest
