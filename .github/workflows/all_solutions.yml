@@ -57,10 +57,8 @@ jobs:
           dockerRunArgs: |
             --volume "${{ env.profiler_path }}:/profiler"
           run: |
-            cd ${{ env.profiler_path }}
-            pwd
-            ls -la
-            which cmake
+            cd /profiler
+            ./linux/build_profiler.sh
             echo Done
             
       - name: Outputtest
