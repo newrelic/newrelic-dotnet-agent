@@ -26,10 +26,12 @@ jobs:
       
       - name: Clean out _profilerBuild directory
         run: |
-          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.*
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release
+          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
         
       - uses: uraimo/run-on-arch-action@v2.0.5
@@ -50,9 +52,9 @@ jobs:
             curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
             chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
             ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
-            rm /usr/bin/cc  || true
+            rm /usr/bin/cc || true
             ln -s /usr/bin/clang-3.9 /usr/bin/cc
-            rm /usr/bin/c++  || true
+            rm /usr/bin/c++ || true
             ln -s /usr/bin/clang++-3.9 /usr/bin/c++
           dockerRunArgs: |
             --volume "${{ env.profiler_path }}:/profiler"
@@ -63,8 +65,8 @@ jobs:
             
       - name: Move Profiler to staging folder
         run: |
-          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/
-          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/libNewRelicProfiler.so
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/libNewRelicProfiler.so
         shell: bash
 
       - name: Archive Artifacts
