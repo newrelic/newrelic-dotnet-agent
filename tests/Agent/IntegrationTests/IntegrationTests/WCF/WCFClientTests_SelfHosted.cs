@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+#if NETFRAMEWORK
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
@@ -144,3 +145,4 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.Self
         }
     }
 }
+#endif

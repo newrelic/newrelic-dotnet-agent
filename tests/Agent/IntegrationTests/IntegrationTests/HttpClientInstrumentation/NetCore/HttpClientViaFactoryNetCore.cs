@@ -12,6 +12,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation.NetCore
 {
+    [NetCoreTest]
     public class HttpClientViaFactoryNetCore : NewRelicIntegrationTest<AspNetCoreMvcBasicRequestsFixture>
     {
         private readonly AspNetCoreMvcBasicRequestsFixture _fixture;
