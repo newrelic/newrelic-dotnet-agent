@@ -27,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private static readonly string RepositoryRootPath = Path.GetFullPath(Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..","..",".."));
 
-        protected static readonly string SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "tests\\Agent\\IntegrationTests");
+        protected static readonly string SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "tests", "Agent", "IntegrationTests");
 
         public readonly string SourceApplicationsDirectoryPath;
 
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 var homeRootPath = Environment.GetEnvironmentVariable("NR_DEV_HOMEROOT");
                 if (!string.IsNullOrWhiteSpace(homeRootPath) && Directory.Exists(homeRootPath))
                 {
-                    _sourceNewRelicHomeDirectoryPath = $@"{homeRootPath}\newrelichome_x64";
+                    _sourceNewRelicHomeDirectoryPath = Path.Combine(homeRootPath, "newrelichome_x64");
                     return _sourceNewRelicHomeDirectoryPath;
                 }
 
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 var homeRootPath = Environment.GetEnvironmentVariable("NR_DEV_HOMEROOT");
                 if (!string.IsNullOrWhiteSpace(homeRootPath) && Directory.Exists(homeRootPath))
                 {
-                    _sourceNewRelicHomeCoreClrDirectoryPath = $@"{homeRootPath}\newrelichome_x64_coreclr";
+                    _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(homeRootPath, "newrelichome_x64_coreclr");
                     return _sourceNewRelicHomeCoreClrDirectoryPath;
                 }
 

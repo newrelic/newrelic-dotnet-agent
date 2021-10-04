@@ -111,7 +111,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.RedirectStandardError = true;
 
             startInfo.Arguments =
-                $"publish {projectFile} --configuration Release --runtime win-x64 --framework {framework} --output {deployPath}";
+                $"publish --configuration Release --runtime win-x64 --framework {framework} --output {deployPath} {projectFile}";
             process.StartInfo = startInfo;
 
             //We cannot run dotnet publish against the same directory concurrently.
