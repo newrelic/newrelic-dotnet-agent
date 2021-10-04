@@ -24,7 +24,7 @@ namespace ArtifactBuilder.Artifacts
         protected string PackageDirectory;
         protected string OutputDirectory;
 
-        public void Build(bool clearOutput = false)
+        public void Build(bool clearOutput = true)
         {
             FileHelpers.DeleteDirectories(StagingDirectory);
             if (clearOutput)
