@@ -102,7 +102,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[RemoteService]: Publishing to {deployPath}.");
 
-            var runtime = "linux-x64"; // Temp for testing purposes
+            var runtime = Utilities.IsLinux() ? "linux-x64" : "win-x64"; // For ARM support we'll need to add another check
             var process = new Process();
             var startInfo = new ProcessStartInfo();
             startInfo.WindowStyle = ProcessWindowStyle.Hidden;
