@@ -52,7 +52,6 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-release" -Recurse -Force  -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-x64-release" -Recurse -Force  -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
         shell: powershell
@@ -96,7 +95,6 @@ jobs:
       - name: Clean out _profilerBuild directory
         run: |
           rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release || true
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
@@ -112,8 +110,8 @@ jobs:
 
       - name: Move Profiler to staging folder
         run: |
-          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/
-          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/libNewRelicProfiler.so
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
         shell: bash
 
       - name: Archive Artifacts
@@ -140,7 +138,6 @@ jobs:
       - name: Clean out _profilerBuild directory
         run: |
           rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release || true
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
@@ -157,8 +154,8 @@ jobs:
           install: |
             apt-get update -q -y
             apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
-            echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
-            wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | apt-key add -
+            echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
+            wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
             mkdir /root/git
             cd /root/git
             git clone --branch release/3.0 https://github.com/dotnet/coreclr.git
@@ -216,7 +213,6 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-release" -Recurse -Force  -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-x64-release" -Recurse -Force  -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
         shell: powershell
@@ -271,6 +267,7 @@ jobs:
             ${{ github.workspace }}\src\Agent\newrelichome_x64
             ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr
             ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr_linux
+            ${{ github.workspace }}\src\Agent\newrelichome_arm64_coreclr_linux
             ${{ github.workspace }}\src\Agent\newrelichome_x86
             ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
           if-no-files-found: error

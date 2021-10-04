@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
   dos2unix \
   software-properties-common
 
-RUN echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
-RUN wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | apt-key add -
+RUN echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
+RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 
 # The CoreCLR build notes say their repos should be pulled into a `git` directory.
 # That probably isn't necessary, but whatever.
