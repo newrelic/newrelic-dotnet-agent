@@ -34,7 +34,7 @@ if(${WIN32})
 else()
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-strict-aliasing -stdlib=libc++ -march=x86-64 -Wno-invalid-noreturn -Wno-ignored-attributes -Wno-macro-redefined -fms-extensions -fdeclspec -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-strict-aliasing -stdlib=libc++ ${CMAKE_HOST_SYSTEM_PROCESSOR} -Wno-invalid-noreturn -Wno-ignored-attributes -Wno-macro-redefined -fms-extensions -fdeclspec -fPIC")
   set (CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++") 
 endif()
 
