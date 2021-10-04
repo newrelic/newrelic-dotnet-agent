@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
   software-properties-common
 
 RUN echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
-RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+RUN wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 
 # The CoreCLR build notes say their repos should be pulled into a `git` directory.
 # That probably isn't necessary, but whatever.
