@@ -102,16 +102,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[RemoteService]: Publishing to {deployPath}.");
 
+            var runtime = "linux-x64"; // Temp for testing purposes
             var process = new Process();
             var startInfo = new ProcessStartInfo();
             startInfo.WindowStyle = ProcessWindowStyle.Hidden;
             startInfo.UseShellExecute = false;
-            startInfo.FileName = "dotnet.exe";
+            startInfo.FileName = "dotnet";
             startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
 
             startInfo.Arguments =
-                $"publish --configuration Release --runtime win-x64 --framework {framework} --output {deployPath} {projectFile}";
+                $"publish --configuration Release --runtime {runtime} --framework {framework} --output {deployPath} {projectFile}";
+            TestLogger?.WriteLine($"[RemoteService]: executing 'dotnet {startInfo.Arguments}'");
             process.StartInfo = startInfo;
 
             //We cannot run dotnet publish against the same directory concurrently.

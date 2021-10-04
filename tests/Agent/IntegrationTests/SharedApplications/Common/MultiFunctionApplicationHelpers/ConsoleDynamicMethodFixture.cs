@@ -81,7 +81,7 @@ namespace MultiFunctionApplicationHelpers
     public abstract class ConsoleDynamicMethodFixtureCoreSpecificVersion : ConsoleDynamicMethodFixture
     {
         private static readonly string ApplicationDirectoryName = @"ConsoleMultiFunctionApplicationCore";
-        private static readonly string ExecutableName = $"{ApplicationDirectoryName}.exe";
+        private static readonly string ExecutableName = $"{ApplicationDirectoryName}"; // no .exe if Linux, needs .exe if Windows.  Need to make dynamic.
 
         /// <summary>
         /// Use this .ctor to specify a specific .net core version to target.
