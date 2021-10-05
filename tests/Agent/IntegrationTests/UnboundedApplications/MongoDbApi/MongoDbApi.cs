@@ -208,7 +208,7 @@ namespace MongoDbApi
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Mr.Slate");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var cursor = collection.FindSync(filter);
             return cursor;
         }
@@ -219,7 +219,7 @@ namespace MongoDbApi
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Mr.Slate");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var cursor = await collection.FindAsync(filter);
             return cursor;
         }
@@ -230,7 +230,7 @@ namespace MongoDbApi
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "The Great Gazoo" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "The Great Gazoo");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var entity = collection.FindOneAndDelete(filter);
             return entity;
         }
@@ -241,7 +241,7 @@ namespace MongoDbApi
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "The Great 'Async' Gazoo" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "The Great 'Async' Gazoo");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var entity = await collection.FindOneAndDeleteAsync(filter);
             return entity;
         }
@@ -249,12 +249,18 @@ namespace MongoDbApi
         public CustomMongoDbEntity FindOneAndReplace()
         {
             var collection = GetAddCollection();
+
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Joe Rockhead" };
             collection.InsertOne(document);
 
-            var replaceDoc = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Joe Rockhead's Doppelganger" };
-            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Joe Rockhead");
-            var entity = collection.FindOneAndReplace(filter, replaceDoc);
+            var replaceDoc = new CustomMongoDbEntity { Id = document.Id, Name = "Joe Rockhead's Doppelganger" };
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
+
+            var option = new FindOneAndReplaceOptions<CustomMongoDbEntity> { IsUpsert = true };
+
+            collection.FindOneAndReplace<CustomMongoDbEntity>(filter, replaceDoc, option);
+
+            var entity = collection.FindOneAndReplace(filter, replaceDoc, option);
             return entity;
         }
 
@@ -264,9 +270,12 @@ namespace MongoDbApi
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Joe 'Async' Rockhead" };
             collection.InsertOne(document);
 
-            var replaceDoc = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Joe 'Async' Rockhead's Doppelganger" };
-            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Joe 'Async' Rockhead");
-            var entity = await collection.FindOneAndReplaceAsync(filter, replaceDoc);
+            var replaceDoc = new CustomMongoDbEntity { Id = document.Id, Name = "Joe 'Async' Rockhead's Doppelganger" };
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
+
+            var option = new FindOneAndReplaceOptions<CustomMongoDbEntity> { IsUpsert = true };
+
+            var entity = await collection.FindOneAndReplaceAsync(filter, replaceDoc, option);
             return entity;
         }
 
@@ -276,9 +285,12 @@ namespace MongoDbApi
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Roxy Rubble" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Roxy Rubble");
-            var update = Builders<CustomMongoDbEntity>.Update.Set("familyName", "Rubble");
-            var entity = collection.FindOneAndUpdate(filter, update);
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
+            var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "Rubble");
+
+            var option = new FindOneAndUpdateOptions<CustomMongoDbEntity> { IsUpsert = true };
+
+            var entity = collection.FindOneAndUpdate(filter, update, option);
             return entity;
         }
 
@@ -288,9 +300,12 @@ namespace MongoDbApi
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Roxy 'Async' Rubble" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Roxy 'Async' Rubble");
-            var update = Builders<CustomMongoDbEntity>.Update.Set("familyName", "'Async' Rubble");
-            var entity = await collection.FindOneAndUpdateAsync<CustomMongoDbEntity>(filter, update);
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
+            var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "'Async' Rubble");
+
+            var option = new FindOneAndUpdateOptions<CustomMongoDbEntity> { ReturnDocument = ReturnDocument.Before };
+
+            var entity = await collection.FindOneAndUpdateAsync(filter, update, option);
             return entity;
         }
 

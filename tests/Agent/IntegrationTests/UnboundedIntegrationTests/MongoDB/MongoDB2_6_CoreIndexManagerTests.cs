@@ -14,7 +14,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     {
         private readonly RemoteServiceFixtures.MongoDB2_6CoreApplicationFixture _fixture;
 
-        private readonly string DatastorePath = "Datastore/statement/MongoDB/myCoreCollection";
+        private readonly string DatastorePath = "Datastore/statement/MongoDB/myCollection";
 
         public MongoDB2_6_CoreIndexManagerTests(RemoteServiceFixtures.MongoDB2_6CoreApplicationFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
