@@ -9,8 +9,12 @@ RUN apt-get update && apt-get install -y \
   dos2unix \
   software-properties-common
 
-RUN echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
-RUN wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | apt-key add -
+# Current ca-certificates packages has an expired root CA cert - remove it.
+RUN sed -i 's/mozilla\/DST_Root_CA_X3.crt/!mozilla\/DST_Root_CA_X3.crt/g' /etc/ca-certificates.conf
+RUN update-ca-certificates
+
+RUN echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
+RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 
 # The CoreCLR build notes say their repos should be pulled into a `git` directory.
 # That probably isn't necessary, but whatever.
