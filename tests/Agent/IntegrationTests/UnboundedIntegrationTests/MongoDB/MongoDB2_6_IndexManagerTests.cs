@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
 {
-    public class MongoDB2_6_IndexManagerTests<T> : NewRelicIntegrationTest<T>
+    abstract public class MongoDB2_6_IndexManagerTests<T> : NewRelicIntegrationTest<T>
         where T : RemoteServiceFixtures.MongoDB2_6ApplicationFixture
     {
         private readonly RemoteServiceFixtures.MongoDB2_6ApplicationFixture _fixture;
