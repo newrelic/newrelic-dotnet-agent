@@ -69,7 +69,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 var homeRootPath = Environment.GetEnvironmentVariable("NR_DEV_HOMEROOT");
 
-                var homeDirName = Utilities.IsLinux() ? "newrelichome_x64_coreclr_linux" : "newrelichome_x64_coreclr";
+                var homeDirName = Utilities.IsLinux ? "newrelichome_x64_coreclr_linux" : "newrelichome_x64_coreclr";
                 if (!string.IsNullOrWhiteSpace(homeRootPath) && Directory.Exists(homeRootPath))
                 {
                     _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(homeRootPath, homeDirName);
@@ -91,7 +91,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private static string DestinationWorkingDirectoryRemotePath { get { return EnvironmentVariables.DestinationWorkingDirectoryRemotePath ?? DestinationWorkingDirectoryRemoteDefault; } }
 
-        private static readonly string DestinationWorkingDirectoryRemoteDefault = Utilities.IsLinux() ? "/tmp/IntegrationTestWorkingDirectory" : @"C:\IntegrationTestWorkingDirectory";
+        private static readonly string DestinationWorkingDirectoryRemoteDefault = Utilities.IsLinux ? "/tmp/IntegrationTestWorkingDirectory" : @"C:\IntegrationTestWorkingDirectory";
 
         #endregion
 
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             get
             {
-                return Path.Combine(DestinationNewRelicHomeDirectoryPath, Utilities.IsLinux() ? "logs" : "Logs");
+                return Path.Combine(DestinationNewRelicHomeDirectoryPath, Utilities.IsLinux ? "logs" : "Logs");
             }
         }
 

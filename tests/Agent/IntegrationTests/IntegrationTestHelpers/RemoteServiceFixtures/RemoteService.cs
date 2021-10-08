@@ -102,7 +102,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[RemoteService]: Publishing to {deployPath}.");
 
-            var runtime = Utilities.IsLinux() ? "linux-x64" : "win-x64"; // For ARM support we'll need to add another check
+            var runtime = Utilities.IsLinux ? "linux-x64" : "win-x64"; // For ARM support we'll need to add another check
             var process = new Process();
             var startInfo = new ProcessStartInfo();
             startInfo.WindowStyle = ProcessWindowStyle.Hidden;
@@ -177,7 +177,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 : commandLineArguments;
 
             var applicationFilePath = DestinationApplicationExecutablePath;
-            var profilerFilePath = Path.Combine(DestinationNewRelicHomeDirectoryPath, Utilities.IsLinux() ? @"libNewRelicProfiler.so" : @"NewRelic.Profiler.dll");
+            var profilerFilePath = Path.Combine(DestinationNewRelicHomeDirectoryPath, Utilities.IsLinux ? @"libNewRelicProfiler.so" : @"NewRelic.Profiler.dll");
             var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
             var profilerLogDirectoryPath = Path.Combine(DestinationNewRelicHomeDirectoryPath, @"Logs");
 

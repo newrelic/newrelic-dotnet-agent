@@ -13,14 +13,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 #else
         public static string Configuration = "Release";
 #endif
-        public static bool IsLinux()
+
+        public static bool IsLinux
         {
+            get
+            {
 #if NETFRAMEWORK
             return false;
 #endif
 #if NETSTANDARD2_0
-            return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
+                return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
 #endif
+            }
         }
 
         public static T ThrowIfNull<T>(T value, string valueName)
