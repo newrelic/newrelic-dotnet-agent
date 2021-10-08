@@ -112,7 +112,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             get
             {
-                return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Logs");
+                return Path.Combine(DestinationNewRelicHomeDirectoryPath, Utilities.IsLinux() ? "logs" : "Logs");
             }
         }
 

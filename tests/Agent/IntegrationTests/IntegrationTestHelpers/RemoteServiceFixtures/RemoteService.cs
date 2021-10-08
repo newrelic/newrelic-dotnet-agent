@@ -177,7 +177,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 : commandLineArguments;
 
             var applicationFilePath = DestinationApplicationExecutablePath;
-            var profilerFilePath = Path.Combine(DestinationNewRelicHomeDirectoryPath, @"NewRelic.Profiler.dll");
+            var profilerFilePath = Path.Combine(DestinationNewRelicHomeDirectoryPath, Utilities.IsLinux() ? @"libNewRelicProfiler.so" : @"NewRelic.Profiler.dll");
             var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
             var profilerLogDirectoryPath = Path.Combine(DestinationNewRelicHomeDirectoryPath, @"Logs");
 
