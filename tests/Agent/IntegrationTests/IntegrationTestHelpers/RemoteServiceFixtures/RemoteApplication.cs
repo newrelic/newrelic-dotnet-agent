@@ -282,8 +282,21 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             ? RemoteProcess.ExitCode
             : (int?)null;
 
-        public bool IsRunning => (!RemoteProcess?.HasExited) ?? false;
-
+        public bool IsRunning
+        {
+            get 
+            {
+                try
+                {
+                    return (!RemoteProcess?.HasExited) ?? false;
+                }
+                catch (InvalidOperationException)
+                {
+                    // handles Linux behavior where the process info gets cleaned up as soon as the process exits
+                    return false;
+                }
+            }
+        }   
 
         /// <summary>
         /// Determines if the process' standard input will be exposed and thus be manipulated.

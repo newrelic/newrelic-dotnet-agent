@@ -192,6 +192,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 RedirectStandardInput = RedirectStandardInput
             };
 
+            Console.WriteLine($"[{DateTime.Now}] RemoteService.Start(): FileName={applicationFilePath}, Arguments={arguments}, WorkingDirectory={DestinationApplicationDirectoryPath}, RedirectStandardOutput={captureStandardOutput}, RedirectStandardError={captureStandardOutput}, RedirectStandardInput={RedirectStandardInput}");
+
             startInfo.EnvironmentVariables.Remove("COR_ENABLE_PROFILING");
             startInfo.EnvironmentVariables.Remove("COR_PROFILER");
             startInfo.EnvironmentVariables.Remove("COR_PROFILER_PATH");
