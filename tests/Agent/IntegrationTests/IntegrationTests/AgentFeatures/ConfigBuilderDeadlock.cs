@@ -10,6 +10,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
+    [NetFrameworkTest]
     public class ConfigBuilderDeadlock : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW471>
     {
         protected readonly ConsoleDynamicMethodFixtureFW471 _fixture;

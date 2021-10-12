@@ -15,12 +15,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         private const string MongoCollectionPath = "/api/MongoDB";
         private readonly string _deleteDatabaseUrl;
 
-
-        public MongoDB2_6ApplicationFixture() : base(new RemoteWebApplication("MongoDB2_6Application", ApplicationType.Unbounded))
+        public MongoDB2_6ApplicationFixture(bool isCore) : base(isCore ? new RemoteService("MongoDB2_6CoreApplication", "MongoDB2_6CoreApplication.exe", "net5", ApplicationType.Unbounded, isCoreApp: true, publishApp: true) :
+            new RemoteWebApplication("MongoDB2_6Application", ApplicationType.Unbounded))
         {
-            _baseUrl = $"http://{DestinationServerName}:{Port}";
-            _deleteDatabaseUrl = $"http://{DestinationServerName}:{Port}/{MongoCollectionPath}/DropDatabase?dbName=";
-
+            _baseUrl = $"http://localhost:{Port}";
+            _deleteDatabaseUrl = $"{_baseUrl}{MongoCollectionPath}/DropDatabase?dbName=";
         }
 
         #region BasicCollectionMethods
@@ -839,5 +838,21 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         #endregion
 
+    }
+
+    public class MongoDB2_6FrameworkApplicationFixture : MongoDB2_6ApplicationFixture
+    {
+        public MongoDB2_6FrameworkApplicationFixture() : base(false)
+        {
+
+        }
+    }
+
+    public class MongoDB2_6CoreApplicationFixture : MongoDB2_6ApplicationFixture
+    {
+        public MongoDB2_6CoreApplicationFixture() : base(true)
+        {
+
+        }
     }
 }

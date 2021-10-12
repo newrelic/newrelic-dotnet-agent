@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if NETFRAMEWORK
 
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -231,3 +232,4 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
         }
     }
 }
+#endif

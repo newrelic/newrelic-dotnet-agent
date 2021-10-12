@@ -6,6 +6,8 @@
     <NoWarn>$(NoWarn);NETSDK1138</NoWarn>
     
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

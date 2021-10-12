@@ -4,20 +4,20 @@
 
 using MongoDB.Bson;
 
-namespace MongoDB2_6CoreApplication
+namespace MongoDbApi
 {
-    public class CustomMongoDB2_6Entity
+    public class CustomMongoDbEntity
     {
         public ObjectId Id { get; set; }
 
         public string Name { get; set; }
 
-        public CustomMongoDB2_6Entity()
+        public CustomMongoDbEntity()
         {
 
         }
 
-        public CustomMongoDB2_6Entity(ObjectId id, string name)
+        public CustomMongoDbEntity(ObjectId id, string name)
         {
             Id = id;
             Name = name;
