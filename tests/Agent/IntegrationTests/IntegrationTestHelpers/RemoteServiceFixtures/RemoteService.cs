@@ -49,16 +49,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             _publishApp = publishApp;
             _applicationDirectoryName = applicationDirectoryName;
-            _executableName = executableName;
+            _executableName = SanitizeExecutableName(executableName);
             _createsPidFile = createsPidFile;
             _targetFramework = string.Empty;
+        }
+
+        private string SanitizeExecutableName(string executableName)
+        {
+            if (Utilities.IsLinux)
+            {
+                return executableName.Replace(".exe", "");
+            }
+            return executableName;
         }
 
         public RemoteService(string applicationDirectoryName, string executableName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false) : base(applicationType, isCoreApp)
         {
             _publishApp = publishApp;
             _applicationDirectoryName = applicationDirectoryName;
-            _executableName = executableName;
+            _executableName = SanitizeExecutableName(executableName);
             _createsPidFile = createsPidFile;
             _targetFramework = targetFramework ?? string.Empty;
         }
