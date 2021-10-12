@@ -58,9 +58,9 @@ namespace ArtifactBuilder.Artifacts
             }
 
             //Linux packages
-            CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\LinuxDeb", "*.deb", OutputDirectory);
-            CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\LinuxRpm", "*.rpm", OutputDirectory);
-            CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\LinuxTar", "*.tar.gz", OutputDirectory);
+            CopyAllFilesAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\LinuxDeb", "*.deb", OutputDirectory);
+            CopyAllFilesAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\LinuxRpm", "*.rpm", OutputDirectory);
+            CopyAllFilesAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\LinuxTar", "*.tar.gz", OutputDirectory);
 
             //Copying Readme.txt file
             FileHelpers.CopyFile($@"{PackageDirectory}\Readme.txt", $@"{OutputDirectory}");
@@ -81,6 +81,19 @@ namespace ArtifactBuilder.Artifacts
 
             File.Copy(filePath, $@"{destinationDirectory}\{destinationFileName}");
             File.Copy($@"{sourceDirectory}\{SourceShaFileName}", $@"{ShaDirectory}\{destinationFileName}{ShaFileExtension}");
+        }
+
+        private void CopyAllFilesAndChecksum(string sourceDirectory, string sourceFileSearchPattern, string destinationDirectory)
+        {
+            var files = Directory.GetFiles(sourceDirectory, sourceFileSearchPattern);
+
+            foreach (var filePath in files)
+            {
+                var fileName = Path.GetFileName(filePath);
+
+                File.Copy(filePath, $@"{destinationDirectory}\{fileName}");
+                File.Copy($"{filePath}.sha256", $@"{ShaDirectory}\{fileName}.sha256");
+            }
         }
 
         private void CreateSHAValuesTableMarkdownFile(string shaDirectory, string outputFilename)
