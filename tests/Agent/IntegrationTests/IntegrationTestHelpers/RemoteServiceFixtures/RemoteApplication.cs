@@ -27,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private static readonly string RepositoryRootPath = Path.GetFullPath(Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..","..",".."));
 
-        protected static readonly string SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "tests\\Agent\\IntegrationTests");
+        protected static readonly string SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "tests", "Agent", "IntegrationTests");
 
         public readonly string SourceApplicationsDirectoryPath;
 
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 var homeRootPath = Environment.GetEnvironmentVariable("NR_DEV_HOMEROOT");
                 if (!string.IsNullOrWhiteSpace(homeRootPath) && Directory.Exists(homeRootPath))
                 {
-                    _sourceNewRelicHomeDirectoryPath = $@"{homeRootPath}\newrelichome_x64";
+                    _sourceNewRelicHomeDirectoryPath = Path.Combine(homeRootPath, "newrelichome_x64");
                     return _sourceNewRelicHomeDirectoryPath;
                 }
 
@@ -68,13 +68,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 }
 
                 var homeRootPath = Environment.GetEnvironmentVariable("NR_DEV_HOMEROOT");
+
+                var homeDirName = Utilities.IsLinux ? "newrelichome_x64_coreclr_linux" : "newrelichome_x64_coreclr";
                 if (!string.IsNullOrWhiteSpace(homeRootPath) && Directory.Exists(homeRootPath))
                 {
-                    _sourceNewRelicHomeCoreClrDirectoryPath = $@"{homeRootPath}\newrelichome_x64_coreclr";
+                    _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(homeRootPath, homeDirName);
                     return _sourceNewRelicHomeCoreClrDirectoryPath;
                 }
 
-                _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "newrelichome_x64_coreclr");
+                _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", homeDirName);
                 return _sourceNewRelicHomeCoreClrDirectoryPath;
             }
             set
@@ -89,7 +91,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private static string DestinationWorkingDirectoryRemotePath { get { return EnvironmentVariables.DestinationWorkingDirectoryRemotePath ?? DestinationWorkingDirectoryRemoteDefault; } }
 
-        private static readonly string DestinationWorkingDirectoryRemoteDefault = @"C:\IntegrationTestWorkingDirectory";
+        private static readonly string DestinationWorkingDirectoryRemoteDefault = Utilities.IsLinux ? "/tmp/IntegrationTestWorkingDirectory" : @"C:\IntegrationTestWorkingDirectory";
 
         #endregion
 
@@ -110,7 +112,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             get
             {
-                return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Logs");
+                return Path.Combine(DestinationNewRelicHomeDirectoryPath, Utilities.IsLinux ? "logs" : "Logs");
             }
         }
 
@@ -280,8 +282,21 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             ? RemoteProcess.ExitCode
             : (int?)null;
 
-        public bool IsRunning => (!RemoteProcess?.HasExited) ?? false;
-
+        public bool IsRunning
+        {
+            get 
+            {
+                try
+                {
+                    return (!RemoteProcess?.HasExited) ?? false;
+                }
+                catch (InvalidOperationException)
+                {
+                    // handles Linux behavior where the process info gets cleaned up as soon as the process exits
+                    return false;
+                }
+            }
+        }   
 
         /// <summary>
         /// Determines if the process' standard input will be exposed and thus be manipulated.

@@ -10,9 +10,9 @@ using MongoDB.Driver.Linq;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared;
 
-namespace MongoDB2_6Application
+namespace MongoDbApi
 {
-    internal class MongoDB2_6Api
+    public class MongoDbApi
     {
 
         const string CollectionName = "myCollection";
@@ -21,12 +21,12 @@ namespace MongoDB2_6Application
         private readonly string _defaultCollectionName;
         private readonly IMongoClient _client;
 
-        private MongoDB2_6Api()
+        public MongoDbApi()
         {
             _client = new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDb26ConnectionString));
         }
 
-        public MongoDB2_6Api(string databaseName = "myDb")
+        public MongoDbApi(string databaseName = "myDb")
         {
             _client = new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDb26ConnectionString));
             _db = _client.GetDatabase(databaseName);
@@ -48,31 +48,31 @@ namespace MongoDB2_6Application
         public void InsertOne()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
             collection.InsertOne(document);
         }
 
         public async Task InsertOneAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred 'Async' Flintstone" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred 'Async' Flintstone" };
             await collection.InsertOneAsync(document);
         }
 
         public void InsertMany()
         {
             var collection = GetAddCollection();
-            var doc1 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Willma Flintstone" };
-            var doc2 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Pebbles Flintstone" };
-            collection.InsertMany(new List<CustomMongoDB2_6Entity>() { doc1, doc2 });
+            var doc1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma Flintstone" };
+            var doc2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Pebbles Flintstone" };
+            collection.InsertMany(new List<CustomMongoDbEntity>() { doc1, doc2 });
         }
 
         public async Task InsertManyAsync()
         {
             var collection = GetAddCollection();
-            var document1 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Willma 'Async' Flintstone" };
-            var document2 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Pebbles 'Async' Flintstone" };
-            await collection.InsertManyAsync(new List<CustomMongoDB2_6Entity>() { document1, document2 });
+            var document1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma 'Async' Flintstone" };
+            var document2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Pebbles 'Async' Flintstone" };
+            await collection.InsertManyAsync(new List<CustomMongoDbEntity>() { document1, document2 });
         }
 
         #endregion
@@ -81,17 +81,17 @@ namespace MongoDB2_6Application
         public void ReplaceOne()
         {
             var collection = GetAddCollection();
-            collection.InsertOne(new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Mr. Slate" });
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Mr.Slate");
-            collection.ReplaceOne(filter, new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" });
+            collection.InsertOne(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" });
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Mr.Slate");
+            collection.ReplaceOne(filter, new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" });
         }
 
         public async Task ReplaceOneAsync()
         {
             var collection = GetAddCollection();
-            collection.InsertOne(new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Mr. Slate" });
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Mr.Slate");
-            await collection.ReplaceOneAsync(filter, new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" });
+            collection.InsertOne(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" });
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Mr.Slate");
+            await collection.ReplaceOneAsync(filter, new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" });
         }
         #endregion
 
@@ -100,11 +100,11 @@ namespace MongoDB2_6Application
         public UpdateResult UpdateOne()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Dino Flintstone" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Dino Flintstone" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Dino Flintstone");
-            var update = Builders<CustomMongoDB2_6Entity>.Update.Set("name", "Dinosaur Flintstone");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Dino Flintstone");
+            var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "Dinosaur Flintstone");
             var result = collection.UpdateOne(filter, update);
             return result;
         }
@@ -112,11 +112,11 @@ namespace MongoDB2_6Application
         public async Task<UpdateResult> UpdateOneAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Dino Flintstone" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Dino Flintstone" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Dino 'Async' Flintstone");
-            var update = Builders<CustomMongoDB2_6Entity>.Update.Set("name", "Dinosaur 'Async' Flintstone");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Dino 'Async' Flintstone");
+            var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "Dinosaur 'Async' Flintstone");
             var result = await collection.UpdateOneAsync(filter, update);
             return result;
         }
@@ -124,12 +124,12 @@ namespace MongoDB2_6Application
         public UpdateResult UpdateMany()
         {
             var collection = GetAddCollection();
-            var doc1 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Willma Flintstone" };
-            var doc2 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Pebbles Flintstone" };
-            collection.InsertMany(new List<CustomMongoDB2_6Entity>() { doc1, doc2 });
+            var doc1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma Flintstone" };
+            var doc2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Pebbles Flintstone" };
+            collection.InsertMany(new List<CustomMongoDbEntity>() { doc1, doc2 });
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.In("name", new List<string> { "Willma Flintstone", "Pebbles Flintstone" });
-            var update = Builders<CustomMongoDB2_6Entity>.Update.Set("familyName", "Flintstone");
+            var filter = Builders<CustomMongoDbEntity>.Filter.In("Name", new List<string> { "Willma Flintstone", "Pebbles Flintstone" });
+            var update = Builders<CustomMongoDbEntity>.Update.Set("familyName", "Flintstone");
             var result = collection.UpdateMany(filter, update);
             return result;
         }
@@ -137,12 +137,12 @@ namespace MongoDB2_6Application
         public async Task<UpdateResult> UpdateManyAsync()
         {
             var collection = GetAddCollection();
-            var doc1 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Willma Flintstone" };
-            var doc2 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Pebbles Flintstone" };
-            collection.InsertMany(new List<CustomMongoDB2_6Entity>() { doc1, doc2 });
+            var doc1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma Flintstone" };
+            var doc2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Pebbles Flintstone" };
+            collection.InsertMany(new List<CustomMongoDbEntity>() { doc1, doc2 });
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.In("name", new List<string> { "Willma Flintstone", "Pebbles Flintstone" });
-            var update = Builders<CustomMongoDB2_6Entity>.Update.Set("familyName", "Flintstone 'Async'");
+            var filter = Builders<CustomMongoDbEntity>.Filter.In("Name", new List<string> { "Willma Flintstone", "Pebbles Flintstone" });
+            var update = Builders<CustomMongoDbEntity>.Update.Set("familyName", "Flintstone 'Async'");
             var result = await collection.UpdateManyAsync(filter, update);
             return result;
         }
@@ -154,10 +154,10 @@ namespace MongoDB2_6Application
         public DeleteResult DeleteOne()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Barney Rubble" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Barney Rubble" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Barney Rubble");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Barney Rubble");
             var result = collection.DeleteOne(filter);
             return result;
         }
@@ -165,10 +165,10 @@ namespace MongoDB2_6Application
         public async Task<DeleteResult> DeleteOneAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Barney 'Async' Rubble" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Barney 'Async' Rubble" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Barney 'Async' Rubble");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Barney 'Async' Rubble");
             var result = await collection.DeleteOneAsync(filter);
             return result;
         }
@@ -176,11 +176,11 @@ namespace MongoDB2_6Application
         public DeleteResult DeleteMany()
         {
             var collection = GetAddCollection();
-            var document1 = (new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Betty Rubble" });
-            var document2 = (new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "BamBam Rubble" });
-            collection.InsertMany(new List<CustomMongoDB2_6Entity>() { document1, document2 });
+            var document1 = (new CustomMongoDbEntity { Id = new ObjectId(), Name = "Betty Rubble" });
+            var document2 = (new CustomMongoDbEntity { Id = new ObjectId(), Name = "BamBam Rubble" });
+            collection.InsertMany(new List<CustomMongoDbEntity>() { document1, document2 });
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.In("name", new List<string> { "Betty Rubble", "BamBam Rubble" });
+            var filter = Builders<CustomMongoDbEntity>.Filter.In("Name", new List<string> { "Betty Rubble", "BamBam Rubble" });
             var result = collection.DeleteMany(filter);
             return result;
 
@@ -189,11 +189,11 @@ namespace MongoDB2_6Application
         public async Task<DeleteResult> DeleteManyAsync()
         {
             var collection = GetAddCollection();
-            var document1 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Betty 'Async' Rubble" };
-            var document2 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "BamBam 'Async' Rubble" };
-            collection.InsertMany(new List<CustomMongoDB2_6Entity>() { document1, document2 });
+            var document1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Betty 'Async' Rubble" };
+            var document2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "BamBam 'Async' Rubble" };
+            collection.InsertMany(new List<CustomMongoDbEntity>() { document1, document2 });
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.In("name", new List<string> { "Betty 'Async' Rubble", "BamBam 'Async' Rubble" });
+            var filter = Builders<CustomMongoDbEntity>.Filter.In("Name", new List<string> { "Betty 'Async' Rubble", "BamBam 'Async' Rubble" });
             var result = await collection.DeleteManyAsync(filter);
             return result;
         }
@@ -202,95 +202,110 @@ namespace MongoDB2_6Application
 
         #region Find
 
-        public IAsyncCursor<CustomMongoDB2_6Entity> FindSync()
+        public IAsyncCursor<CustomMongoDbEntity> FindSync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Mr. Slate" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Mr.Slate");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var cursor = collection.FindSync(filter);
             return cursor;
         }
 
-        public async Task<IAsyncCursor<CustomMongoDB2_6Entity>> FindAsync()
+        public async Task<IAsyncCursor<CustomMongoDbEntity>> FindAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Mr. Slate" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Mr.Slate");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var cursor = await collection.FindAsync(filter);
             return cursor;
         }
 
-        public CustomMongoDB2_6Entity FindOneAndDelete()
+        public CustomMongoDbEntity FindOneAndDelete()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "The Great Gazoo" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "The Great Gazoo" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "The Great Gazoo");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var entity = collection.FindOneAndDelete(filter);
             return entity;
         }
 
-        public async Task<CustomMongoDB2_6Entity> FindOneAndDeleteAsync()
+        public async Task<CustomMongoDbEntity> FindOneAndDeleteAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "The Great 'Async' Gazoo" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "The Great 'Async' Gazoo" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "The Great 'Async' Gazoo");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var entity = await collection.FindOneAndDeleteAsync(filter);
             return entity;
         }
 
-        public CustomMongoDB2_6Entity FindOneAndReplace()
+        public CustomMongoDbEntity FindOneAndReplace()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Joe Rockhead" };
+
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Joe Rockhead" };
             collection.InsertOne(document);
 
-            var replaceDoc = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Joe Rockhead's Doppelganger" };
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Joe Rockhead");
-            var entity = collection.FindOneAndReplace(filter, replaceDoc);
+            var replaceDoc = new CustomMongoDbEntity { Id = document.Id, Name = "Joe Rockhead's Doppelganger" };
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
+
+            var option = new FindOneAndReplaceOptions<CustomMongoDbEntity> { IsUpsert = true };
+
+            collection.FindOneAndReplace<CustomMongoDbEntity>(filter, replaceDoc, option);
+
+            var entity = collection.FindOneAndReplace(filter, replaceDoc, option);
             return entity;
         }
 
-        public async Task<CustomMongoDB2_6Entity> FindOneAndReplaceAsync()
+        public async Task<CustomMongoDbEntity> FindOneAndReplaceAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Joe 'Async' Rockhead" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Joe 'Async' Rockhead" };
             collection.InsertOne(document);
 
-            var replaceDoc = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Joe 'Async' Rockhead's Doppelganger" };
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Joe 'Async' Rockhead");
-            var entity = await collection.FindOneAndReplaceAsync(filter, replaceDoc);
+            var replaceDoc = new CustomMongoDbEntity { Id = document.Id, Name = "Joe 'Async' Rockhead's Doppelganger" };
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
+
+            var option = new FindOneAndReplaceOptions<CustomMongoDbEntity> { IsUpsert = true };
+
+            var entity = await collection.FindOneAndReplaceAsync(filter, replaceDoc, option);
             return entity;
         }
 
-        public CustomMongoDB2_6Entity FindOneAndUpdate()
+        public CustomMongoDbEntity FindOneAndUpdate()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Roxy Rubble" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Roxy Rubble" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Roxy Rubble");
-            var update = Builders<CustomMongoDB2_6Entity>.Update.Set("familyName", "Rubble");
-            var entity = collection.FindOneAndUpdate(filter, update);
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
+            var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "Rubble");
+
+            var option = new FindOneAndUpdateOptions<CustomMongoDbEntity> { IsUpsert = true };
+
+            var entity = collection.FindOneAndUpdate(filter, update, option);
             return entity;
         }
 
-        public async Task<CustomMongoDB2_6Entity> FindOneAndUpdateAsync()
+        public async Task<CustomMongoDbEntity> FindOneAndUpdateAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Roxy 'Async' Rubble" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Roxy 'Async' Rubble" };
             collection.InsertOne(document);
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Roxy 'Async' Rubble");
-            var update = Builders<CustomMongoDB2_6Entity>.Update.Set("familyName", "'Async' Rubble");
-            var entity = await collection.FindOneAndUpdateAsync<CustomMongoDB2_6Entity>(filter, update);
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
+            var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "'Async' Rubble");
+
+            var option = new FindOneAndUpdateOptions<CustomMongoDbEntity> { ReturnDocument = ReturnDocument.Before };
+
+            var entity = await collection.FindOneAndUpdateAsync(filter, update, option);
             return entity;
         }
 
@@ -301,12 +316,12 @@ namespace MongoDB2_6Application
         public BulkWriteResult BulkWrite()
         {
             var collection = GetAddCollection();
-            var doc1 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            var doc2 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Willma Flintstone" };
+            var doc1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            var doc2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma Flintstone" };
 
-            var result = collection.BulkWrite(new WriteModel<CustomMongoDB2_6Entity>[] {
-                new InsertOneModel<CustomMongoDB2_6Entity>(doc1),
-                new InsertOneModel<CustomMongoDB2_6Entity>(doc2)
+            var result = collection.BulkWrite(new WriteModel<CustomMongoDbEntity>[] {
+                new InsertOneModel<CustomMongoDbEntity>(doc1),
+                new InsertOneModel<CustomMongoDbEntity>(doc2)
             });
             return result;
         }
@@ -314,19 +329,22 @@ namespace MongoDB2_6Application
         public async Task<BulkWriteResult> BulkWriteAsync()
         {
             var collection = GetAddCollection();
-            var doc1 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred 'Async' Flintstone" };
-            var doc2 = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Willma 'Async' Flintstone" };
+            var doc1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred 'Async' Flintstone" };
+            var doc2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma 'Async' Flintstone" };
 
-            var result = await collection.BulkWriteAsync(new WriteModel<CustomMongoDB2_6Entity>[] {
-                new InsertOneModel<CustomMongoDB2_6Entity>(doc1),
-                new InsertOneModel<CustomMongoDB2_6Entity>(doc2)
+            var result = await collection.BulkWriteAsync(new WriteModel<CustomMongoDbEntity>[] {
+                new InsertOneModel<CustomMongoDbEntity>(doc1),
+                new InsertOneModel<CustomMongoDbEntity>(doc2)
             });
             return result;
         }
 
-        public IAsyncCursor<CustomMongoDB2_6Entity> Aggregate()
+        public IAsyncCursor<CustomMongoDbEntity> Aggregate()
         {
             var collection = GetAddCollection();
+
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            collection.InsertOne(document);
 
             var match = new BsonDocument
             {
@@ -334,22 +352,22 @@ namespace MongoDB2_6Application
                     "$match",
                     new BsonDocument
                     {
-                        { "name", "Fred Flintstone" }
+                        { "Name", "Fred Flintstone" }
                     }
                 }
             };
 
             var pipeline = new[] { match };
-            var result = collection.Aggregate<CustomMongoDB2_6Entity>(pipeline);
+            var result = collection.Aggregate<CustomMongoDbEntity>(pipeline);
             return result;
         }
 
         public long Count()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
             collection.InsertOne(document);
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Fred Flintstone");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
             return collection.Count(filter);
         }
@@ -357,9 +375,9 @@ namespace MongoDB2_6Application
         public async Task<long> CountAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
             collection.InsertOne(document);
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Fred Flintstone");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
             return await collection.CountAsync(filter);
         }
@@ -367,27 +385,27 @@ namespace MongoDB2_6Application
         public IAsyncCursor<string> Distinct()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
             collection.InsertOne(document);
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Fred Flintstone");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
-            return collection.Distinct<string>("name", filter);
+            return collection.Distinct<string>("Name", filter);
         }
 
         public async Task<IAsyncCursor<string>> DistinctAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
             collection.InsertOne(document);
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Fred Flintstone");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
-            return await collection.DistinctAsync<string>("name", filter);
+            return await collection.DistinctAsync<string>("Name", filter);
         }
 
         public IAsyncCursor<BsonDocument> MapReduce()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
             collection.InsertOne(document);
 
             var mapJs = @"function mapF() {
@@ -401,9 +419,9 @@ namespace MongoDB2_6Application
 
             BsonJavaScript map = new BsonJavaScript(mapJs);
             BsonJavaScript reduce = new BsonJavaScript(reduceJs);
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Fred Flintstone");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
-            MapReduceOptions<CustomMongoDB2_6Entity, BsonDocument> options = new MapReduceOptions<CustomMongoDB2_6Entity, BsonDocument>
+            MapReduceOptions<CustomMongoDbEntity, BsonDocument> options = new MapReduceOptions<CustomMongoDbEntity, BsonDocument>
             {
                 Filter = filter,
                 OutputOptions = MapReduceOutputOptions.Inline
@@ -415,7 +433,7 @@ namespace MongoDB2_6Application
         public async Task<IAsyncCursor<BsonDocument>> MapReduceAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
             collection.InsertOne(document);
 
             var mapJs = @"function mapF() {
@@ -429,9 +447,9 @@ namespace MongoDB2_6Application
 
             BsonJavaScript map = new BsonJavaScript(mapJs);
             BsonJavaScript reduce = new BsonJavaScript(reduceJs);
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Eq("name", "Fred Flintstone");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
-            MapReduceOptions<CustomMongoDB2_6Entity, BsonDocument> options = new MapReduceOptions<CustomMongoDB2_6Entity, BsonDocument>
+            MapReduceOptions<CustomMongoDbEntity, BsonDocument> options = new MapReduceOptions<CustomMongoDbEntity, BsonDocument>
             {
                 Filter = filter,
                 OutputOptions = MapReduceOutputOptions.Inline
@@ -446,7 +464,7 @@ namespace MongoDB2_6Application
             try
             {
                 var collection = GetAddCollection();
-                var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" };
+                var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
                 collection.InsertOne(document);
                 collection.Watch();
 
@@ -464,7 +482,7 @@ namespace MongoDB2_6Application
             try
             {
                 var collection = GetAddCollection();
-                var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" };
+                var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
                 collection.InsertOne(document);
                 await collection.WatchAsync();
 
@@ -535,7 +553,7 @@ namespace MongoDB2_6Application
             var collectionName = "NamedCollection";
             var newName = "RenamedCollection";
 
-            var collection = _db.GetCollection<CustomMongoDB2_6Entity>(collectionName);
+            var collection = _db.GetCollection<CustomMongoDbEntity>(collectionName);
             EnsureCollectionExists(collection);
 
             _db.RenameCollection(collectionName, newName);
@@ -548,7 +566,7 @@ namespace MongoDB2_6Application
             var collectionName = "NamedCollectionAsync";
             var newName = "RenamedCollectionAsync";
 
-            var collection = _db.GetCollection<CustomMongoDB2_6Entity>(collectionName);
+            var collection = _db.GetCollection<CustomMongoDbEntity>(collectionName);
             EnsureCollectionExists(collection);
 
             await _db.RenameCollectionAsync(collectionName, newName);
@@ -577,38 +595,38 @@ namespace MongoDB2_6Application
         public int CreateOne()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
             collection.InsertOne(document);
-            collection.Indexes.CreateOne(Builders<CustomMongoDB2_6Entity>.IndexKeys.Ascending(k => k.Name));
+            collection.Indexes.CreateOne(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name));
             return 1;
         }
 
         public async Task<int> CreateOneAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
             collection.InsertOne(document);
-            await collection.Indexes.CreateOneAsync(Builders<CustomMongoDB2_6Entity>.IndexKeys.Ascending(k => k.Name));
+            await collection.Indexes.CreateOneAsync(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name));
             return 1;
         }
 
         public int CreateMany()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
             collection.InsertOne(document);
 
-            var result = collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDB2_6Entity>(Builders<CustomMongoDB2_6Entity>.IndexKeys.Ascending(k => k.Name)) });
+            var result = collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
             return result.Count();
         }
 
         public async Task<int> CreateManyAsync()
         {
             var collection = GetAddCollection();
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
             collection.InsertOne(document);
 
-            var result = await collection.Indexes.CreateManyAsync(new[] { new CreateIndexModel<CustomMongoDB2_6Entity>(Builders<CustomMongoDB2_6Entity>.IndexKeys.Ascending(k => k.Name)) });
+            var result = await collection.Indexes.CreateManyAsync(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
             return result.Count();
         }
 
@@ -627,14 +645,14 @@ namespace MongoDB2_6Application
         public void DropOne()
         {
             var collection = GetAddCollection();
-            collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDB2_6Entity>(Builders<CustomMongoDB2_6Entity>.IndexKeys.Ascending(k => k.Name)) });
+            collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
             collection.Indexes.DropOne("Name_1");
         }
 
         public async Task DropOneAsync()
         {
             var collection = GetAddCollection();
-            collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDB2_6Entity>(Builders<CustomMongoDB2_6Entity>.IndexKeys.Ascending(k => k.Name)) });
+            collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
             await collection.Indexes.DropOneAsync("Name_1");
         }
 
@@ -683,13 +701,13 @@ namespace MongoDB2_6Application
 
             collection.InsertMany(new[]
             {
-                new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" },
-                new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Alan Flintstone" }
+                new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" },
+                new CustomMongoDbEntity { Id = new ObjectId(), Name = "Alan Flintstone" }
             });
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Exists("Name");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Exists("Name");
 
-            var cursor = collection.FindSync(filter, new FindOptions<CustomMongoDB2_6Entity, CustomMongoDB2_6Entity>()
+            var cursor = collection.FindSync(filter, new FindOptions<CustomMongoDbEntity, CustomMongoDbEntity>()
             {
                 BatchSize = 1
             });
@@ -704,13 +722,13 @@ namespace MongoDB2_6Application
 
             collection.InsertMany(new[]
             {
-                new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Fred Flintstone" },
-                new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "Alan Flintstone" }
+                new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" },
+                new CustomMongoDbEntity { Id = new ObjectId(), Name = "Alan Flintstone" }
             });
 
-            var filter = Builders<CustomMongoDB2_6Entity>.Filter.Exists("Name");
+            var filter = Builders<CustomMongoDbEntity>.Filter.Exists("Name");
 
-            var cursor = await collection.FindAsync(filter, new FindOptions<CustomMongoDB2_6Entity, CustomMongoDB2_6Entity>()
+            var cursor = await collection.FindAsync(filter, new FindOptions<CustomMongoDbEntity, CustomMongoDbEntity>()
             {
                 BatchSize = 1
             });
@@ -723,24 +741,24 @@ namespace MongoDB2_6Application
 
         #region Helpers
 
-        private IMongoCollection<CustomMongoDB2_6Entity> GetAddCollection(string collectionName = null)
+        private IMongoCollection<CustomMongoDbEntity> GetAddCollection(string collectionName = null)
         {
             collectionName = collectionName ?? _defaultCollectionName;
 
-            var collection = _db.GetCollection<CustomMongoDB2_6Entity>(collectionName);
+            var collection = _db.GetCollection<CustomMongoDbEntity>(collectionName);
 
             if (collection == null)
             {
                 _db.CreateCollection(collectionName);
-                collection = _db.GetCollection<CustomMongoDB2_6Entity>(collectionName);
+                collection = _db.GetCollection<CustomMongoDbEntity>(collectionName);
             }
 
             return collection;
         }
 
-        private void EnsureCollectionExists(IMongoCollection<CustomMongoDB2_6Entity> collection)
+        private void EnsureCollectionExists(IMongoCollection<CustomMongoDbEntity> collection)
         {
-            var document = new CustomMongoDB2_6Entity { Id = new ObjectId(), Name = "collection_exists_document" };
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "collection_exists_document" };
             collection.InsertOne(document);
         }
 

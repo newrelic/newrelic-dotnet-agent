@@ -9,12 +9,12 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
 {
-    [NetFrameworkTest]
-    public class MongoDB2_6_DatabaseTests : NewRelicIntegrationTest<RemoteServiceFixtures.MongoDB2_6ApplicationFixture>
+    abstract public class MongoDB2_6_DatabaseTests<T> : NewRelicIntegrationTest<T>
+        where T : RemoteServiceFixtures.MongoDB2_6ApplicationFixture
     {
         private readonly RemoteServiceFixtures.MongoDB2_6ApplicationFixture _fixture;
 
-        public MongoDB2_6_DatabaseTests(RemoteServiceFixtures.MongoDB2_6ApplicationFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public MongoDB2_6_DatabaseTests(T fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -126,8 +126,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
 
             Assert.NotNull(m);
         }
+    }
+    [NetFrameworkTest]
+    public class MongoDB2_6_FrameworkDatabaseTests : MongoDB2_6_DatabaseTests<RemoteServiceFixtures.MongoDB2_6FrameworkApplicationFixture>
+    {
+        public MongoDB2_6_FrameworkDatabaseTests(RemoteServiceFixtures.MongoDB2_6FrameworkApplicationFixture fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+        }
+    }
 
-
-
+    [NetCoreTest]
+    public class MongoDB2_6_CoreDatabaseTests : MongoDB2_6_DatabaseTests<RemoteServiceFixtures.MongoDB2_6CoreApplicationFixture>
+    {
+        public MongoDB2_6_CoreDatabaseTests(RemoteServiceFixtures.MongoDB2_6CoreApplicationFixture fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+        }
     }
 }
