@@ -76,8 +76,10 @@ namespace ArtifactBuilder
         private static void BuildLinuxPackages()
         {
             new LinuxPackage("LinuxDeb", "_amd64", "deb").Build();
+            new LinuxPackage("LinuxDeb", "_arm64", "deb").Build(clearOutput: false);
             new LinuxPackage("LinuxRpm", ".x86_64", "rpm").Build();
             new LinuxPackage("LinuxTar", "_amd64", "tar.gz").Build();
+            new LinuxPackage("LinuxTar", "_arm64", "tar.gz").Build(clearOutput: false);
         }
 
         private static void BuildDownloadSite(string[] args)

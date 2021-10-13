@@ -10,7 +10,7 @@
 Param(
     [ValidateSet("Debug","Release")][string]$Configuration = "Debug",
     [ValidateSet("All", "Windows", "Linux","Framework", "CoreAll","CoreWindows","CoreLinux")][string]$Type = "All",
-    [ValidateSet("All","x64","x86")][string]$Architecture = "All",
+    [ValidateSet("All","x64","x86","ARM64")][string]$Architecture = "All",
     [string]$HomePath = "$env:NR_DEV_HOMEROOT",
     [switch]$KeepNewRelicConfig = $false,
     [switch]$SetSystemEnvironment = $false,
@@ -156,16 +156,31 @@ if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "CoreAll" -or $T
     }
 }
 
-if($Type -like "All" -or $Type -like "Linux" -or $Type -like "CoreAll" -or $Type -like "CoreLinux") {
-    New-HomeStructure -Path "$HomePath" -Name "newrelichome_x64_coreclr_linux"
-    Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Extensions $netstandard20WrapperHash
-    Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Extensions $netstandard20StorageArray
-    Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core"
-    Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core" -Architecture "x64" -Linux
-    Copy-AgentApi  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core"
+if ($Type -like "All" -or $Type -like "Linux" -or $Type -like "CoreAll" -or $Type -like "CoreLinux") {
+    if ($Architecture -like "All" -or $Architecture -like "x64") {
+        New-HomeStructure -Path "$HomePath" -Name "newrelichome_x64_coreclr_linux"
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Extensions $netstandard20WrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Extensions $netstandard20StorageArray
+        Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core"
+        Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core" -Architecture "x64" -Linux
+        Copy-AgentApi  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core"
 
-    if (-Not $KeepNewRelicConfig) {
-        Copy-NewRelicConfig -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux\"
+        if (-Not $KeepNewRelicConfig) {
+            Copy-NewRelicConfig -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux\"
+        }
+    }
+
+    if ($Architecture -like "All" -or $Architecture -like "ARM64") {
+        New-HomeStructure -Path "$HomePath" -Name "newrelichome_arm64_coreclr_linux"
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Extensions $netstandard20WrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Extensions $netstandard20StorageArray
+        Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Configuration "$Configuration" -Type "Core"
+        Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Configuration "$Configuration" -Type "Core" -Architecture "ARM64" -Linux
+        Copy-AgentApi  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Configuration "$Configuration" -Type "Core"
+
+        if (-Not $KeepNewRelicConfig) {
+            Copy-NewRelicConfig -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_arm64_coreclr_linux\"
+        }
     }
 }
 

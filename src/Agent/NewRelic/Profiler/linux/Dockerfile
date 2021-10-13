@@ -31,6 +31,10 @@ RUN apt-get update && apt-get install -y \
   clang-3.9 \
   lldb-3.9
 
+# Remove expired root CA cert
+RUN sed -i 's/mozilla\/DST_Root_CA_X3.crt/!mozilla\/DST_Root_CA_X3.crt/g' /etc/ca-certificates.conf
+RUN update-ca-certificates
+
 # Install cmake 3.9
 RUN curl -sSL https://cmake.org/files/v3.9/cmake-3.9.0-rc3-Linux-x86_64.tar.gz | tar -xzC /opt
 RUN ln -s /opt/cmake-3.9.0-rc3-Linux-x86_64/bin/cmake /usr/local/sbin/cmake
