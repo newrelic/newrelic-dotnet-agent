@@ -41,11 +41,7 @@ namespace NewRelic.Agent.Core.Wrapper
             //If the instrumentation indicates a desire to track this work as a separate transaction, check if this is possible
             if (instrumentedMethodCall.InstrumentedMethodInfo.RequestedWrapperName == ForceNewTransansactionOnAsyncWrapperName)
             {
-                if (!transactionAlreadyExists)
-                {
-                    agent.Logger.Log(Extensions.Logging.Level.Debug, $"Ignoring request to track {name} as a separate transaction because this call is not already encapsulated within a transaction.");
-                }
-                else
+                if (transactionAlreadyExists)
                 {
                     trackWorkAsNewTransaction = agent.TryTrackAsyncWorkOnNewTransaction();
 

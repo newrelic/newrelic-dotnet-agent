@@ -52,7 +52,8 @@ namespace NewRelic.Agent.Core
         private static HashSet<string> _deferInitializationOnTheseMethods = new HashSet<string>
         {
             "System.Net.Http.HttpClient.SendAsync",
-            "System.Net.HttpWebRequest.SerializeHeaders"
+            "System.Net.HttpWebRequest.SerializeHeaders",
+            "System.Net.HttpWebRequest.GetResponse"
         };
 
         private static HashSet<string> DeferInitializationOnTheseMethods
