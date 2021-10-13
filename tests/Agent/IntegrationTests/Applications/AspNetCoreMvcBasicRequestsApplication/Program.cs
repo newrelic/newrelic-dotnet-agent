@@ -5,6 +5,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -27,7 +28,7 @@ namespace AspNetCoreMvcBasicRequestsApplication
         {
             var commandLine = string.Join(" ", args);
 
-            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
+            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
             Console.WriteLine($"[{_applicationName}] Joined args: {commandLine}");
 
@@ -43,18 +44,58 @@ namespace AspNetCoreMvcBasicRequestsApplication
             var ct = new CancellationTokenSource();
             var task = BuildWebHost(args).RunAsync(ct.Token);
 
-            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + _port);
             CreatePidFile();
-            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+
+            WaitForTestCompletion();
+            //var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + _port);
+            
+            //eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
 
             ct.Cancel();
 
             task.GetAwaiter().GetResult();
         }
 
+        private static void WaitForTestCompletion()
+        {
+            var minutesToWait = 5;
+
+            using (NamedPipeServerStream pipeServer =
+            new NamedPipeServerStream($"app_server_wait_for_all_request_done_{_port}", PipeDirection.In))
+            {
+                var task = pipeServer.WaitForConnectionAsync();
+                if (task.Wait(TimeSpan.FromMinutes(minutesToWait)))
+                {
+                    try
+                    {
+                        // Read user input and send that to the client process.
+                        using (StreamReader sr = new StreamReader(pipeServer))
+                        {
+                            string temp;
+                            while ((temp = sr.ReadLine()) != null)
+                            {
+                                Console.WriteLine("Received from client: {0}", temp);
+                            }
+                        }
+                    }
+                    // Catch the IOException that is raised if the pipe is broken
+                    // or disconnected.
+                    catch (IOException e)
+                    {
+                        Console.WriteLine("ERROR: {0}", e.Message);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Timed out waiting for test completion.");
+                }
+            }
+        }
+
         private static void CreatePidFile()
         {
             var pid = Process.GetCurrentProcess().Id;
+            Console.WriteLine($"Pid={pid}");
             var applicationDirectory =
                 Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath),
                     _applicationName);

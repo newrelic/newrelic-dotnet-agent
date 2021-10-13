@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Net;
 using System.Reflection;
 using System.Threading;
@@ -322,20 +323,47 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 return;
             }
 
-            var expectedWaitHandle = "app_server_wait_for_all_request_done_" + Port;
+            var shutdownChannelName = "app_server_wait_for_all_request_done_" + Port;
+            
+            TestLogger?.WriteLine($"[RemoteApplication] Sending shutdown signal to {ApplicationDirectoryName}.");
 
-            try
+            if (Utilities.IsLinux)
             {
-                TestLogger?.WriteLine($"[RemoteApplication] Sending shutdown signal to {ApplicationDirectoryName}.");
-                //The test runner opens an event created by the app server and set it to signal the app server that the test has finished. 
-                var remoteAppEvent = EventWaitHandle.OpenExisting(expectedWaitHandle);
-                remoteAppEvent.Set();
+                using (NamedPipeClientStream pipeClient =
+                    new NamedPipeClientStream(".", shutdownChannelName, PipeDirection.Out))
+                {
+                    try
+                    {
+                        pipeClient.Connect(1000); // 1 second connect timeout
+
+                        using (StreamWriter sw = new StreamWriter(pipeClient))
+                        {
+                            sw.AutoFlush = true;
+                            sw.WriteLine("Okay to shut down now");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        TestLogger?.WriteLine($"[RemoteApplication] FAILED sending shutdown signal to named pipe \"{shutdownChannelName}\": {ex}.");
+                        RemoteProcess.Kill();
+                    }
+                }
             }
-            catch (Exception ex)
+            else
             {
-                TestLogger?.WriteLine($"[RemoteApplication] FAILED sending shutdown signal to wait handle \"{expectedWaitHandle}\": {ex}.");
-                RemoteProcess.Kill();
+                try
+                {
+                    //The test runner opens an event created by the app server and set it to signal the app server that the test has finished. 
+                    var remoteAppEvent = EventWaitHandle.OpenExisting(shutdownChannelName);
+                    remoteAppEvent.Set();
+                }
+                catch (Exception ex)
+                {
+                    TestLogger?.WriteLine($"[RemoteApplication] FAILED sending shutdown signal to wait handle \"{shutdownChannelName}\": {ex}.");
+                    RemoteProcess.Kill();
+                }
             }
+
         }
 
         public virtual void Dispose()
