@@ -24,11 +24,14 @@ namespace AspNetCoreMvcBasicRequestsApplication
 
         private static string _applicationName;
 
+        private static readonly bool _isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
+
         public static void Main(string[] args)
         {
             var commandLine = string.Join(" ", args);
 
-            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath)
+                + (_isLinux ? string.Empty : ".exe");
 
             Console.WriteLine($"[{_applicationName}] Joined args: {commandLine}");
 
@@ -47,9 +50,6 @@ namespace AspNetCoreMvcBasicRequestsApplication
             CreatePidFile();
 
             WaitForTestCompletion();
-            //var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + _port);
-            
-            //eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
 
             ct.Cancel();
 
@@ -59,36 +59,46 @@ namespace AspNetCoreMvcBasicRequestsApplication
         private static void WaitForTestCompletion()
         {
             var minutesToWait = 5;
+            var shutdownChannelName = "app_server_wait_for_all_request_done_" + _port;
 
-            using (NamedPipeServerStream pipeServer =
-            new NamedPipeServerStream($"app_server_wait_for_all_request_done_{_port}", PipeDirection.In))
+            // On Linux, we have to used named pipes as the IPC mechanism because named EventWaitHandles aren't supported
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
             {
-                var task = pipeServer.WaitForConnectionAsync();
-                if (task.Wait(TimeSpan.FromMinutes(minutesToWait)))
+                using (NamedPipeServerStream pipeServer =
+                new NamedPipeServerStream(shutdownChannelName, PipeDirection.In))
                 {
-                    try
+                    var task = pipeServer.WaitForConnectionAsync();
+                    if (task.Wait(TimeSpan.FromMinutes(minutesToWait)))
                     {
-                        // Read user input and send that to the client process.
-                        using (StreamReader sr = new StreamReader(pipeServer))
+                        try
                         {
-                            string temp;
-                            while ((temp = sr.ReadLine()) != null)
+                            // Read user input and send that to the client process.
+                            using (StreamReader sr = new StreamReader(pipeServer))
                             {
-                                Console.WriteLine("Received from client: {0}", temp);
+                                string temp;
+                                while ((temp = sr.ReadLine()) != null)
+                                {
+                                    Console.WriteLine("Received from client: {0}", temp);
+                                }
                             }
                         }
+                        // Catch the IOException that is raised if the pipe is broken
+                        // or disconnected.
+                        catch (IOException e)
+                        {
+                            Console.WriteLine("ERROR: {0}", e.Message);
+                        }
                     }
-                    // Catch the IOException that is raised if the pipe is broken
-                    // or disconnected.
-                    catch (IOException e)
+                    else
                     {
-                        Console.WriteLine("ERROR: {0}", e.Message);
+                        Console.WriteLine("Timed out waiting for test completion.");
                     }
                 }
-                else
-                {
-                    Console.WriteLine("Timed out waiting for test completion.");
-                }
+            }
+            else
+            {
+                var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, shutdownChannelName);
+                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(minutesToWait));
             }
         }
 
