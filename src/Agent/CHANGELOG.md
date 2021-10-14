@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] changes
 ### New Features
 ### Fixes
-* Fixes issue [#754](https://github.com/newrelic/newrelic-dotnet-agent/issues/754): Agent could cause applications that uses configuration builders from `Microsoft.Configuration.ConfigurationBuilders` to hang on startup. ([#753](https://github.com/newrelic/newrelic-dotnet-agent/pull/753)
+* Fixes issue [#754](https://github.com/newrelic/newrelic-dotnet-agent/issues/754): Agent could cause applications that use configuration builders from `Microsoft.Configuration.ConfigurationBuilders` to hang on startup. ([#753](https://github.com/newrelic/newrelic-dotnet-agent/pull/753)
 
 ### Deprecations/Removed Features
 
