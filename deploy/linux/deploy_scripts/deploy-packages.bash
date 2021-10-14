@@ -203,6 +203,7 @@ if [[ "$ACTION" == 'release' ]]; then
   findpkgs() {
     {
       find "$APT_REPO" -name "${PRODUCT_NAME}_${VERSION}_amd64.deb"
+      find "$APT_REPO" -name "${PRODUCT_NAME}_${VERSION}_arm64.deb"
       find "$YUM_REPO" -name "${PRODUCT_NAME}-${VERSION}-1.x86_64.rpm"
     } | unique_files_by_basename
   }
@@ -244,6 +245,7 @@ elif [[ "$ACTION" == 'rollback' ]]; then
   findpkgs() {
     {
       find "$PREFIX/$TARGET" -name "${PRODUCT_NAME}_${VERSION}_amd64.deb"
+      find "$PREFIX/$TARGET" -name "${PRODUCT_NAME}_${VERSION}_arm64.deb"
       find "$PREFIX/$TARGET" -name "${PRODUCT_NAME}-${VERSION}-1.x86_64.rpm"
     } | unique_files_by_basename
   }
