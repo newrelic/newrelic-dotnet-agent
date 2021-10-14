@@ -149,11 +149,12 @@ promote_file() {
 #   $* - package files
 #
 promote_deb() {
-  local SPEC ARCH_amd64 ARCH_i386 PACKAGE
+  local SPEC ARCH_amd64 ARCH_i386 ARCH_arm64 PACKAGE
 
   SPEC="$DESTINATION/debian"
   ARCH_amd64=$(repopath -d non-free -a amd64 "$SPEC")
   ARCH_i386=$(repopath -d non-free -a i386 "$SPEC")
+  ARCH_arm64=$(repopath -d non-free -a arm64 "$SPEC")
 
   while [[ $# -gt 0 ]]; do
     PACKAGE=$1; shift
@@ -166,9 +167,13 @@ promote_deb() {
 	*_i386.deb)
           copy_file "$SPEC" "$PACKAGE" "$ARCH_i386"
           ;;
+	*_arm64.deb)
+          copy_file "$SPEC" "$PACKAGE" "$ARCH_arm64"
+          ;;
 	*_all.deb)
           copy_file "$SPEC" "$PACKAGE" "$ARCH_amd64"
           copy_file "$SPEC" "$PACKAGE" "$ARCH_i386"
+          copy_file "$SPEC" "$PACKAGE" "$ARCH_arm64"
           ;;
 	*)
 	  skip_file "$SPEC" "$PACKAGE"
