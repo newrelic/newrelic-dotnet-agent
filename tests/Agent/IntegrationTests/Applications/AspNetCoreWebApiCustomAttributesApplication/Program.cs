@@ -2,15 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
-using System.IO;
-using System.Linq;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.CodeAnalysis;
-using System.Diagnostics;
 using System.Threading;
-using System.Reflection;
+using ApplicationLifecycle;
 
 namespace AspNetCoreWebApiCustomAttributesApplication
 {
@@ -20,8 +15,15 @@ namespace AspNetCoreWebApiCustomAttributesApplication
 
         public static void Main(string[] args)
         {
+            _port = AppLifecycleManager.GetPortFromArgs(args);
+
             var ct = new CancellationTokenSource();
             var task = BuildWebHost(args).RunAsync(ct.Token);
+
+            AppLifecycleManager.CreatePidFile();
+
+            AppLifecycleManager.WaitForTestCompletion(_port);
+
 
             ct.Cancel();
 
