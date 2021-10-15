@@ -106,7 +106,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistributedTracingApiApplic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Owin4WebApi", "Applications\Owin4WebApi\Owin4WebApi.csproj", "{83FA6862-73F2-4305-9B7C-2DF849D80C36}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Testing.Assertions", "..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{2A932B62-8787-4963-8D53-F83BF6ACBB5C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Testing.Assertions", "..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{2A932B62-8787-4963-8D53-F83BF6ACBB5C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleInstrumentationLoader", "Applications\ConsoleInstrumentationLoader\ConsoleInstrumentationLoader.csproj", "{C3D78B19-80F7-4210-B848-A5AA2BF5D13F}"
 EndProject
@@ -138,6 +138,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SharedApplications", "SharedApplications", "{AD5B3EF6-1222-46B1-8FD4-6084FF75FA30}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{30CF078E-E531-441E-83AB-24AB9B1C179F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationLifecycle", "ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj", "{3C182E17-0085-4B30-8AA9-B229ABED7A39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -365,6 +367,10 @@ Global
 		{6FD48F14-8D60-4BB0-8DC9-72E4A4D43DFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6FD48F14-8D60-4BB0-8DC9-72E4A4D43DFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6FD48F14-8D60-4BB0-8DC9-72E4A4D43DFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C182E17-0085-4B30-8AA9-B229ABED7A39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C182E17-0085-4B30-8AA9-B229ABED7A39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C182E17-0085-4B30-8AA9-B229ABED7A39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C182E17-0085-4B30-8AA9-B229ABED7A39}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -419,6 +425,7 @@ Global
 		{8AC32C1E-2C20-4ECE-8480-700E28C3E43D} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{6FD48F14-8D60-4BB0-8DC9-72E4A4D43DFF} = {30CF078E-E531-441E-83AB-24AB9B1C179F}
 		{30CF078E-E531-441E-83AB-24AB9B1C179F} = {AD5B3EF6-1222-46B1-8FD4-6084FF75FA30}
+		{3C182E17-0085-4B30-8AA9-B229ABED7A39} = {CB5B7DCD-F949-4435-BC39-C34F4F3D2009}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3830ABDF-4AEA-4D91-83A2-13F091D1DF5F}

@@ -2,120 +2,33 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Pipes;
-using System.Linq;
+using ApplicationLifecycle;
 using System.Net;
-using System.Reflection;
 using System.Threading;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.CodeAnalysis;
 
 namespace AspNetCoreMvcBasicRequestsApplication
 {
     public class Program
     {
-        private const string DefaultPort = "5001";
-
         private static string _port;
-
-        private static string _applicationName;
-
-        private static readonly bool _isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
-
         public static void Main(string[] args)
         {
-            var commandLine = string.Join(" ", args);
-
-            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath)
-                + (_isLinux ? string.Empty : ".exe");
-
-            Console.WriteLine($"[{_applicationName}] Joined args: {commandLine}");
-
-            var result = CommandLineParser.SplitCommandLineIntoArguments(commandLine, true);
-
-            var argPort = result.FirstOrDefault()?.Split('=')[1];
-            _port = argPort ?? DefaultPort;
-
-            Console.WriteLine($"[{_applicationName}] Received port: {argPort} | Using port: {_port}");
+            _port = AppLifecycleManager.GetPortFromArgs(args);
 
             OverrideSslSettingsForMockNewRelic();
 
             var ct = new CancellationTokenSource();
             var task = BuildWebHost(args).RunAsync(ct.Token);
 
-            CreatePidFile();
+            AppLifecycleManager.CreatePidFile();
 
-            WaitForTestCompletion();
+            AppLifecycleManager.WaitForTestCompletion(_port);
 
             ct.Cancel();
 
             task.GetAwaiter().GetResult();
-        }
-
-        private static void WaitForTestCompletion()
-        {
-            var minutesToWait = 5;
-            var shutdownChannelName = "app_server_wait_for_all_request_done_" + _port;
-
-            // On Linux, we have to used named pipes as the IPC mechanism because named EventWaitHandles aren't supported
-            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
-            {
-                using (NamedPipeServerStream pipeServer =
-                new NamedPipeServerStream(shutdownChannelName, PipeDirection.In))
-                {
-                    var task = pipeServer.WaitForConnectionAsync();
-                    if (task.Wait(TimeSpan.FromMinutes(minutesToWait)))
-                    {
-                        try
-                        {
-                            // Read user input and send that to the client process.
-                            using (StreamReader sr = new StreamReader(pipeServer))
-                            {
-                                string temp;
-                                while ((temp = sr.ReadLine()) != null)
-                                {
-                                    Console.WriteLine("Received from client: {0}", temp);
-                                }
-                            }
-                        }
-                        // Catch the IOException that is raised if the pipe is broken
-                        // or disconnected.
-                        catch (IOException e)
-                        {
-                            Console.WriteLine("ERROR: {0}", e.Message);
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Timed out waiting for test completion.");
-                    }
-                }
-            }
-            else
-            {
-                var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, shutdownChannelName);
-                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(minutesToWait));
-            }
-        }
-
-        private static void CreatePidFile()
-        {
-            var pid = Process.GetCurrentProcess().Id;
-            Console.WriteLine($"Pid={pid}");
-            var applicationDirectory =
-                Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath),
-                    _applicationName);
-            var pidFilePath = applicationDirectory + ".pid";
-
-            using (var file = File.CreateText(pidFilePath))
-            {
-                file.WriteLine(pid);
-            }
-
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
