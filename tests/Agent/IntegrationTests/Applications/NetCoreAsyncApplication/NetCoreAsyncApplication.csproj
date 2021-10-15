@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,6 +7,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis" Version="2.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj" />
   </ItemGroup>
 
 </Project>

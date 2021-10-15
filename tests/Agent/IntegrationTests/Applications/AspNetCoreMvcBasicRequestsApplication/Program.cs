@@ -13,6 +13,7 @@ namespace AspNetCoreMvcBasicRequestsApplication
     public class Program
     {
         private static string _port;
+
         public static void Main(string[] args)
         {
             _port = AppLifecycleManager.GetPortFromArgs(args);

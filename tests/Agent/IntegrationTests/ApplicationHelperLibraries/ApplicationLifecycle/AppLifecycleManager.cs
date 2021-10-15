@@ -21,11 +21,17 @@ namespace ApplicationLifecycle
 
     public class AppLifecycleManager
     {
+        private const string ShutdownChannelPrefix = "app_server_wait_for_all_request_done_";
+
         private const string DefaultPort = "5001";
+
+        private const int MinutesToWait = 5;
 
         private static string _applicationName;
 
         private static readonly bool _isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+
+        private static EventWaitHandle _eventWaitHandle;
 
         private static string ApplicationName
         {
@@ -55,17 +61,14 @@ namespace ApplicationLifecycle
 
         public static void WaitForTestCompletion(string port)
         {
-            var minutesToWait = 5;
-            var shutdownChannelName = "app_server_wait_for_all_request_done_" + port;
-
             // On Linux, we have to used named pipes as the IPC mechanism because named EventWaitHandles aren't supported
             if (_isLinux)
             {
                 using (NamedPipeServerStream pipeServer =
-                new NamedPipeServerStream(shutdownChannelName, PipeDirection.In))
+                new NamedPipeServerStream(ShutdownChannelPrefix + port, PipeDirection.In))
                 {
                     var task = pipeServer.WaitForConnectionAsync();
-                    if (task.Wait(TimeSpan.FromMinutes(minutesToWait)))
+                    if (task.Wait(TimeSpan.FromMinutes(MinutesToWait)))
                     {
                         try
                         {
@@ -94,9 +97,14 @@ namespace ApplicationLifecycle
             }
             else
             {
-                var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, shutdownChannelName);
-                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(minutesToWait));
+                _eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownChannelPrefix + port);
+                _eventWaitHandle.WaitOne(TimeSpan.FromMinutes(MinutesToWait));
             }
+        }
+
+        public static void CreateEventWaitHandle(string port)
+        {
+            _eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownChannelPrefix + port);
         }
 
         public static void CreatePidFile()
