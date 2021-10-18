@@ -4,7 +4,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace NetStandardClassLibrary
+namespace NetStandardTestLibrary
 {
     public class MyClass
     {
