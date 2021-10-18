@@ -44,7 +44,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.multiverse_artifacts_path }}
-          key: multiverse-${{ hashFiles('{{ env.multiverse_artifacts_path }}/**') }}
+          key: multiverse-${{ hashFiles('**/tests/Agent/MultiverseTesting/ConsoleScanner/bin/Release/netcoreapp3.1/ConsoleScanner.exe') }}
 
 #      - name: Push artifacts to S3
 #        run: |
