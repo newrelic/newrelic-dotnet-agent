@@ -28,6 +28,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          
+      - name: Run ID
+        run: |
+          echo ${{ github.run_id }}
+        shell: powershell
+          
       
       - name: Cache Multiverse Testing Suite
         id: multiverse-cache
