@@ -29,11 +29,22 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      
+      - name: Cache Windows Profiler
+        id: cache-windows-profiler
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release/**/*
+            ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release/**/*
+          key: multiverse-${{ hashFiles('**/src/Agent/NewRelic/Profiler') }}
 
       - name: Add msbuild to PATH
+        if: steps.cache-windows-profiler.outputs.cache-hit != 'true'
         uses: microsoft/setup-msbuild@v1
 
       - name: Clean out _profilerBuild directory
+        if: steps.cache-windows-profiler.outputs.cache-hit != 'true'
         run: |
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
@@ -43,6 +54,7 @@ jobs:
         shell: powershell
 
       - name: Build x64
+        if: steps.cache-windows-profiler.outputs.cache-hit != 'true'
         run: |
           Write-Host "List NuGet Sources"
           dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
@@ -51,17 +63,11 @@ jobs:
         shell: powershell
         
       - name: Build x86
+        if: steps.cache-windows-profiler.outputs.cache-hit != 'true'
         run: |
           Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
           MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
-
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: profiler
-          path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
-          if-no-files-found: error
 
   build-linux-x64-profiler:
     name: Build Linux x64 Profiler
@@ -76,8 +82,16 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      
+      - name: Cache Linux-x64 Profiler
+        id: cache-linux-x64-profiler
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/**/*
+          key: multiverse-${{ hashFiles('**/src/Agent/NewRelic/Profiler') }}
 
       - name: Clean out _profilerBuild directory
+        if: steps.cache-linux-x64-profiler.outputs.cache-hit != 'true'
         run: |
           rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
@@ -87,6 +101,7 @@ jobs:
         shell: bash
 
       - name: Build Linux Profler
+        if: steps.cache-linux-x64-profiler.outputs.cache-hit != 'true'
         run: |
           cd ${{ env.profiler_path }}
           docker-compose build build
@@ -94,17 +109,11 @@ jobs:
         shell: bash
 
       - name: Move Profiler to staging folder
+        if: steps.cache-linux-x64-profiler.outputs.cache-hit != 'true'
         run: |
           mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/
           mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
         shell: bash
-
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: profiler
-          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
-          if-no-files-found: error
 
   build-linux-arm64-profiler:
     name: Build Linux ARM64 Profiler
@@ -118,8 +127,16 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Cache Linux-ARM64 Profiler
+        id: cache-linux-arm64-profiler
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/**/*
+          key: multiverse-${{ hashFiles('**/src/Agent/NewRelic/Profiler') }}
       
       - name: Clean out _profilerBuild directory
+        if: steps.cache-linux-arm64-profiler.outputs.cache-hit != 'true'
         run: |
           rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
@@ -128,9 +145,9 @@ jobs:
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
         
-      - uses: uraimo/run-on-arch-action@v2.0.5
-        name: Run commands
-        id: runcmd
+      - name: Build Linux Profler
+        if: steps.cache-linux-arm64-profiler.outputs.cache-hit != 'true'
+        uses: uraimo/run-on-arch-action@v2.0.5
         with:
           arch: aarch64
           distro: ubuntu18.04
@@ -158,18 +175,12 @@ jobs:
             ./linux/build_profiler.sh
             
       - name: Move Profiler to staging folder
+        if: steps.cache-linux-arm64-profiler.outputs.cache-hit != 'true'
         run: |
           mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/
           mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/libNewRelicProfiler.so
         shell: bash
 
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: profiler
-          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
-          if-no-files-found: error
-          
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-test-fullagent-msi:
     needs: [ build-windows-profiler, build-linux-x64-profiler, build-linux-arm64-profiler ]
@@ -179,7 +190,7 @@ jobs:
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
       msi_solution_path: ${{ github.workspace }}\src\Agent\MsiInstaller\MsiInstaller.sln
-      
+
     outputs:
       agentVersion: ${{ steps.agentVersion.outputs.version }}
 
@@ -204,12 +215,29 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
         shell: powershell
 
-      - name: Download Profiler Artifacts Before Agent Build
-        uses: actions/download-artifact@v2
+      - name: Cache Windows Profiler
+        id: cache-windows-profiler
+        uses: actions/cache@v2
         with:
-          name: profiler
-          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
-            
+          path: |
+            ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release/**/*
+            ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release/**/*
+          key: multiverse-${{ hashFiles('**/src/Agent/NewRelic/Profiler') }}
+
+      - name: Cache Linux-x64 Profiler
+        id: cache-linux-x64-profiler
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/**/*
+          key: multiverse-${{ hashFiles('**/src/Agent/NewRelic/Profiler') }}
+
+      - name: Cache Linux-ARM64 Profiler
+        id: cache-linux-arm64-profiler
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/**/*
+          key: multiverse-${{ hashFiles('**/src/Agent/NewRelic/Profiler') }}
+
       - name: Build FullAgent.sln
         run: |
           Write-Host "List NuGet Sources"
@@ -218,25 +246,16 @@ jobs:
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
         shell: powershell
 
-      - name: Create agent_version.txt
+      - name: Create agentVersion
         id: agentVersion
         run: |
           $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
-          Write-Host "Agent version $agentVersion"
-          $agentVersion | Out-File -FilePath ${{ github.workspace }}\agent_version.txt -encoding utf8
           Write-Host "::set-output name=version::$agentVersion"
         shell: powershell
-        
-      - name: Create agent_version.txt artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: agent-version
-          path: ${{ github.workspace }}\agent_version.txt
-          if-no-files-found: error
 
   run-multiverse_testing_suite:
     needs: build-test-fullagent-msi
-    #if: ${{ github.event.release }}
-    uses: jaffinito/newrelic-dotnet-agent/.github/workflows/multiverse_run.yml@main
+    if: ${{ github.event.release }}
+    uses: newrelic/newrelic-dotnet-agent/.github/workflows/multiverse_run.yml@${{ github.sha }}
     with:
       agentVersion: ${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
