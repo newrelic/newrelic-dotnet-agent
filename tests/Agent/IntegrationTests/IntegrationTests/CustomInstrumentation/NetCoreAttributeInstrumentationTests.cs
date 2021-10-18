@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
+using MultiFunctionApplicationHelpers;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -13,15 +13,28 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetCoreTest]
-    public class NetCoreAttributeInstrumentationTests : NewRelicIntegrationTest<RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture>
+    public class NetCoreAttributeInstrumentationTestsCore31 : NetCoreAttributeInstrumentationTests<ConsoleDynamicMethodFixtureCore31>
     {
-        private readonly RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture _fixture;
-
-        public NetCoreAttributeInstrumentationTests(RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture fixture, ITestOutputHelper output) : base(fixture)
+        public NetCoreAttributeInstrumentationTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output)
         {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions
+        }
+    }
+
+    public abstract class NetCoreAttributeInstrumentationTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    {
+        private const string LibraryClassName = "MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.AttributeInstrumentation";
+
+        protected readonly TFixture Fixture;
+
+        public NetCoreAttributeInstrumentationTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        {
+            Fixture = fixture;
+            Fixture.TestLogger = output;
+
+            Fixture.AddCommand("AttributeInstrumentation DoSomething");
+
+            Fixture.Actions
             (
                 setupConfiguration: () =>
                 {
@@ -29,10 +42,11 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
 
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "instrumentation", "applications", "application" }, "name", "NetCoreAttributeInstrumentationApplication.exe");
+                    //CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "instrumentation", "applications", "application" }, "name", "NetCoreAttributeInstrumentationApplication.exe");
                 }
             );
-            _fixture.Initialize();
+
+            Fixture.Initialize();
         }
 
         [Fact]
@@ -40,21 +54,21 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomething", metricScope = @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomethingInside", metricScope = @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"OtherTransaction/Custom/{LibraryClassName}/DoSomething", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"DotNet/{LibraryClassName}/DoSomething", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/DoSomething", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"DotNet/{LibraryClassName}/DoSomethingInside", metricScope = $"OtherTransaction/Custom/{LibraryClassName}/DoSomething", callCount = 1 },
             };
 
             var expectedTransactionTraceSegments = new List<string>
             {
-                @"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomething",
-                @"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomethingInside"
+                $"DotNet/{LibraryClassName}/DoSomething",
+                $"DotNet/{LibraryClassName}/DoSomethingInside"
             };
 
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSamples = _fixture.AgentLog.GetTransactionSamples().ToList();
+            var metrics = Fixture.AgentLog.GetMetrics().ToList();
+            var transactionSamples = Fixture.AgentLog.GetTransactionSamples().ToList();
 
-            var transactionSample = transactionSamples.Where(sample => sample.Path == @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething")
+            var transactionSample = transactionSamples.Where(sample => sample.Path == $"OtherTransaction/Custom/{LibraryClassName}/DoSomething")
                 .FirstOrDefault();
 
             Assert.NotNull(metrics);
