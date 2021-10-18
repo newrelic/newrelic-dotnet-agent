@@ -27,6 +27,7 @@ jobs:
     env:
       multiverse_solution_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\MultiverseTesting.sln
       multiverse_artifacts_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Release\netcoreapp3.1
+      MVS_XML_PATH: ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper
 
     steps:
       - name: Checkout
