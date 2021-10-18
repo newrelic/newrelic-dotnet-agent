@@ -2,7 +2,14 @@ name: .NET Agent All Solutions Build
 
 # Does not run on PUSH since we have already ran all the test
 on:
+  pull_request:
+    branches: 
+    - main
+  release:
+    types: [ published ]
   workflow_dispatch:
+  schedule:
+    - cron:  '0 9 * * 6'
 
 concurrency: 
   group: ${{ github.ref }}
@@ -14,52 +21,226 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
-  
-  build-publish-multiverse-testing:
-    name: Build and Publish Multiverse Testing Suite
+
+  build-windows-profiler:
+    name: Build Windows Profiler
     runs-on: windows-2019
 
     env:
-      multiverse_solution_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\MultiverseTesting.sln
-      multiverse_artifacts_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Release\netcoreapp3.1
+      profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
+      profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
+      output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          
-      - name: Run ID
-        run: |
-          echo ${{ github.run_id }}
-        shell: powershell
-          
-      
-      - name: Cache Multiverse Testing Suite
-        id: multiverse-cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.multiverse_artifacts_path }}
-          key: multiverse-${{ hashFiles('**/tests/Agent/MultiverseTesting') }}
 
       - name: Add msbuild to PATH
-        if: steps.multiverse-cache.outputs.cache-hit != 'true'
         uses: microsoft/setup-msbuild@v1
 
-      - name: Build MultiverseTesting.sln
-        if: steps.multiverse-cache.outputs.cache-hit != 'true'
+      - name: Clean out _profilerBuild directory
+        run: |
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-x64-release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
+        shell: powershell
+
+      - name: Build x64
         run: |
           Write-Host "List NuGet Sources"
           dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+          MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
+        shell: powershell
+        
+      - name: Build x86
+        run: |
+          Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+          MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
 
-#      - name: Push artifacts to S3
-#        run: |
-#          $Env:AWS_ACCESS_KEY_ID="${{ secrets.TEAM_AWS_ACCESS_KEY_ID }}"
-#          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.TEAM_AWS_SECRET_ACCESS_KEY }}"
-#          $Env:AWS_DEFAULT_REGION="us-west-2"
-#          Compress-Archive -Path "${{ env.multiverse_artifacts_path }}" -DestinationPath C:\MultiverseTesting.zip
-#          aws s3 cp C:\MultiverseTesting.zip ${{ secrets.MULTIVERSE_BUCKET_NAME }} --acl public-read
-#        shell: pwsh
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: profiler
+          path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
+          if-no-files-found: error
+
+  build-linux-x64-profiler:
+    name: Build Linux x64 Profiler
+    runs-on: ubuntu-18.04
+
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+      #<other env vars here>
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Clean out _profilerBuild directory
+        run: |
+          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
+        shell: bash
+
+      - name: Build Linux Profler
+        run: |
+          cd ${{ env.profiler_path }}
+          docker-compose build build
+          docker-compose run build
+        shell: bash
+
+      - name: Move Profiler to staging folder
+        run: |
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
+        shell: bash
+
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: profiler
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          if-no-files-found: error
+
+  build-linux-arm64-profiler:
+    name: Build Linux ARM64 Profiler
+    runs-on: ubuntu-18.04
+    
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      
+      - name: Clean out _profilerBuild directory
+        run: |
+          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
+        shell: bash
+        
+      - uses: uraimo/run-on-arch-action@v2.0.5
+        name: Run commands
+        id: runcmd
+        with:
+          arch: aarch64
+          distro: ubuntu18.04
+          githubToken: ${{ github.token }}
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
+            echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
+            wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+            mkdir /root/git
+            cd /root/git
+            git clone --branch release/3.0 https://github.com/dotnet/coreclr.git
+            curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
+            chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
+            ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
+            rm /usr/bin/cc || true
+            ln -s /usr/bin/clang-3.9 /usr/bin/cc
+            rm /usr/bin/c++ || true
+            ln -s /usr/bin/clang++-3.9 /usr/bin/c++
+          dockerRunArgs: |
+            --volume "${{ env.profiler_path }}:/profiler"
+          run: |
+            cd /profiler
+            chmod 777 ./linux/build_profiler.sh
+            ./linux/build_profiler.sh
+            
+      - name: Move Profiler to staging folder
+        run: |
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/libNewRelicProfiler.so
+        shell: bash
+
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: profiler
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          if-no-files-found: error
+          
+  # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
+  build-test-fullagent-msi:
+    needs: [ build-windows-profiler, build-linux-x64-profiler, build-linux-arm64-profiler ]
+    name: Build and Test FullAgent and MSIInstaller
+    runs-on: windows-2019
+
+    env:
+      fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
+      msi_solution_path: ${{ github.workspace }}\src\Agent\MsiInstaller\MsiInstaller.sln
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Setup VSTest Path
+        uses: darenm/Setup-VSTest@v1
+
+      - name: Clean out _profilerBuild directory
+        run: |
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-x64-release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
+        shell: powershell
+
+      - name: Download Profiler Artifacts Before Agent Build
+        uses: actions/download-artifact@v2
+        with:
+          name: profiler
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+            
+      - name: Build FullAgent.sln
+        run: |
+          Write-Host "List NuGet Sources"
+          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
+        shell: powershell
+
+      - name: Create agent_version.txt
+        id: agentVersion
+        run: |
+          $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
+          Write-Host "Agent version $agentVersion"
+          $agentVersion | Out-File -FilePath ${{ github.workspace }}\agent_version.txt -encoding utf8
+          Write-Host "::set-output name=version::$agentVersion"
+        shell: powershell
+        
+      - name: Create agent_version.txt artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: agent-version
+          path: ${{ github.workspace }}\agent_version.txt
+          if-no-files-found: error
+
+  run-multiverse_testing_suite:
+    needs: build-test-fullagent-msi
+    #if: ${{ github.event.release }}
+    uses: newrelic/newrelic-dotnet-agent/.github/workflows/multiverse_run.yml@${{ github.sha }}
+    with:
+      agentVersion: ${{ steps.agentVersion.outputs.version }}
