@@ -60,8 +60,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RejitMvcApplication", "Appl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCoreMvcBasicRequestsApplication", "Applications\AspNetCoreMvcBasicRequestsApplication\AspNetCoreMvcBasicRequestsApplication.csproj", "{EDA8AF34-CC6C-47A6-87BF-FFE7D6DC878D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetCoreAttributeInstrumentationApplication", "Applications\NetCoreAttributeInstrumentationApplication\NetCoreAttributeInstrumentationApplication.csproj", "{1005EDC7-1531-4C38-9933-98E5B3088512}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCoreWebApiCustomAttributesApplication", "Applications\AspNetCoreWebApiCustomAttributesApplication\AspNetCoreWebApiCustomAttributesApplication.csproj", "{E28E36CD-A15F-4438-ADCA-40B26844592A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OwinRemotingClient", "Applications\OwinRemotingClient\OwinRemotingClient.csproj", "{C07AF48C-AFE2-40FC-AFB5-E3E872F5CD7D}"
@@ -139,7 +137,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SharedApplications", "Share
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{30CF078E-E531-441E-83AB-24AB9B1C179F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationLifecycle", "ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj", "{3C182E17-0085-4B30-8AA9-B229ABED7A39}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLifecycle", "ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj", "{3C182E17-0085-4B30-8AA9-B229ABED7A39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -227,10 +225,6 @@ Global
 		{EDA8AF34-CC6C-47A6-87BF-FFE7D6DC878D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EDA8AF34-CC6C-47A6-87BF-FFE7D6DC878D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EDA8AF34-CC6C-47A6-87BF-FFE7D6DC878D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1005EDC7-1531-4C38-9933-98E5B3088512}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1005EDC7-1531-4C38-9933-98E5B3088512}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1005EDC7-1531-4C38-9933-98E5B3088512}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1005EDC7-1531-4C38-9933-98E5B3088512}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E28E36CD-A15F-4438-ADCA-40B26844592A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E28E36CD-A15F-4438-ADCA-40B26844592A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E28E36CD-A15F-4438-ADCA-40B26844592A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -391,7 +385,6 @@ Global
 		{887C1553-B842-4712-865B-6FFAB01EE7EA} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{2F2A1324-5D9C-4C66-91EC-D66F50DC4336} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{EDA8AF34-CC6C-47A6-87BF-FFE7D6DC878D} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
-		{1005EDC7-1531-4C38-9933-98E5B3088512} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{E28E36CD-A15F-4438-ADCA-40B26844592A} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{C07AF48C-AFE2-40FC-AFB5-E3E872F5CD7D} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{D203693A-F862-4598-92F2-B91C3959EDE6} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
