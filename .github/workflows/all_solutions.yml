@@ -255,7 +255,6 @@ jobs:
 
   run-multiverse_testing_suite:
     needs: build-test-fullagent-msi
-    if: ${{ github.event.release }}
     uses: jaffinito/newrelic-dotnet-agent/.github/workflows/multiverse_run.yml@main
     with:
       agentVersion: ${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
