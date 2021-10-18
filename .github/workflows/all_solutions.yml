@@ -24,18 +24,17 @@ jobs:
       multiverse_artifacts_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Release\netcoreapp3.1
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      
       - name: Cache Multiverse Testing Suite
         id: multiverse-cache
         uses: actions/cache@v2
         with:
           path: ${{ env.multiverse_artifacts_path }}
           key: multiverse-${{ hashFiles('**/tests/Agent/MultiverseTesting') }}
-          
-      - name: Checkout
-        if: steps.multiverse-cache.outputs.cache-hit != 'true'
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
 
       - name: Add msbuild to PATH
         if: steps.multiverse-cache.outputs.cache-hit != 'true'
