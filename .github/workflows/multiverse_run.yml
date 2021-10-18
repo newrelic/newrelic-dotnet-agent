@@ -15,10 +15,6 @@ on:
         default: '0.0.0.0'
         required: true
 
-concurrency: 
-  group: ${{ github.ref }}
-  cancel-in-progress: true
-
 env:
   DOTNET_NOLOGO: true
 
