@@ -24,27 +24,31 @@ jobs:
       multiverse_artifacts_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Release\netcoreapp3.1
 
     steps:
+      - name: Cache Multiverse Testing Suite
+        id: multiverse-cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.multiverse_artifacts_path }}
+          key: multiverse-${{ hashFiles('**/tests/Agent/MultiverseTesting') }}
+          
       - name: Checkout
+        if: steps.multiverse-cache.outputs.cache-hit != 'true'
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
+        if: steps.multiverse-cache.outputs.cache-hit != 'true'
         uses: microsoft/setup-msbuild@v1
 
       - name: Build MultiverseTesting.sln
+        if: steps.multiverse-cache.outputs.cache-hit != 'true'
         run: |
           Write-Host "List NuGet Sources"
           dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution_path }}
         shell: powershell
-
-      - name: Cache Multiverse Testing Suite
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.multiverse_artifacts_path }}
-          key: multiverse-${{ hashFiles('**/tests/Agent/MultiverseTesting') }}
 
 #      - name: Push artifacts to S3
 #        run: |
