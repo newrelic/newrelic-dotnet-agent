@@ -70,7 +70,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 var homeRootPath = Environment.GetEnvironmentVariable("NR_DEV_HOMEROOT");
 
-                var homeDirName = Utilities.IsLinux ? "newrelichome_x64_coreclr_linux" : "newrelichome_x64_coreclr";
+                var homeDirName = Utilities.RuntimeHomeDirName;
                 if (!string.IsNullOrWhiteSpace(homeRootPath) && Directory.Exists(homeRootPath))
                 {
                     _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(homeRootPath, homeDirName);
