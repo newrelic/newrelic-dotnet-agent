@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;netcoreapp3.1;net461;net471;net48</TargetFrameworks>
@@ -54,6 +54,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
   </ItemGroup>
 
 </Project>
