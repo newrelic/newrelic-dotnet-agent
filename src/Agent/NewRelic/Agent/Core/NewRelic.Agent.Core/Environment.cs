@@ -48,11 +48,12 @@ namespace NewRelic.Agent.Core
                 // This API is only supported on .net FX 4.7 + so limiting it
                 // to .net core since that is the one affected. 
                 AddVariable(".NET Version", () => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription.ToString());
+                AddVariable("Processor Architecture", () => System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString());
 #else
                 AddVariable(".NET Version", () => System.Environment.Version.ToString());
+                AddVariable("Processor Architecture", () => (IntPtr.Size == 8) ? "X64" : "X86");
 #endif
                 AddVariable("Total Physical System Memory", () => TotalPhysicalMemory);
-                AddVariable("x64", () => (IntPtr.Size == 8) ? "yes" : "no");
 
                 var process = TryGetCurrentProcess();
                 AddVariable("StartTime", () => process?.StartTime.ToString("o"));
