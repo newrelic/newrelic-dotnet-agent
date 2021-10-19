@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
@@ -28,7 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         {
             _fixture = fixture;
 
-            var deleteFileFilePath = _fixture.RemoteApplication.DestinationExtensionsDirectoryPath + @"\Integration.Testing.DeleteXmlFileTest.xml";
+            var deleteFileFilePath = Path.Combine(_fixture.RemoteApplication.DestinationExtensionsDirectoryPath, "Integration.Testing.DeleteXmlFileTest.xml");
 
             _fixture.TestLogger = output;
             _fixture.Actions(
@@ -58,18 +59,18 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				//transactions
-				new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
+                //transactions
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomDeleteMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Rejit/GetDeleteFile", callCount = 1 },
 
-				// Unscoped
-				new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
+                // Unscoped
+                new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomDeleteMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetDeleteFile", callCount = 2 },
 
-				// Scoped
-				new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
+                // Scoped
+                new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomDeleteMetricName", metricScope = "WebTransaction/Custom/MyCustomDeleteMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetDeleteFile", metricScope = "WebTransaction/MVC/Rejit/GetDeleteFile", callCount = 1 }
             };
