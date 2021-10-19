@@ -6,6 +6,7 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -192,7 +193,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
                 {
                     var configPath = Fixture.DestinationNewRelicConfigFilePath;
 
-                    var instrumentationFilePath = $@"{Fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentation.xml";
+                    var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
                     Fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
 
