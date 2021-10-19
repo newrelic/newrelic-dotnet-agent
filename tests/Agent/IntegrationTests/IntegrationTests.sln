@@ -18,9 +18,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTests", "Integra
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}"
-	ProjectSection(SolutionItems) = preProject
-		Applications\AspNet5BasicWebApiApplication\AspNet5BasicWebApiApplication.csproj = Applications\AspNet5BasicWebApiApplication\AspNet5BasicWebApiApplication.csproj
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomAttributesWebApi", "Applications\CustomAttributesWebApi\CustomAttributesWebApi.csproj", "{9E5D7614-414C-427E-83A9-2A723409F45D}"
 EndProject
@@ -134,6 +131,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{30CF078E-E531-441E-83AB-24AB9B1C179F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLifecycle", "ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj", "{3C182E17-0085-4B30-8AA9-B229ABED7A39}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNet5BasicWebApiApplication", "Applications\AspNet5BasicWebApiApplication\AspNet5BasicWebApiApplication.csproj", "{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -353,6 +352,10 @@ Global
 		{3C182E17-0085-4B30-8AA9-B229ABED7A39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C182E17-0085-4B30-8AA9-B229ABED7A39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C182E17-0085-4B30-8AA9-B229ABED7A39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -405,6 +408,7 @@ Global
 		{6FD48F14-8D60-4BB0-8DC9-72E4A4D43DFF} = {30CF078E-E531-441E-83AB-24AB9B1C179F}
 		{30CF078E-E531-441E-83AB-24AB9B1C179F} = {AD5B3EF6-1222-46B1-8FD4-6084FF75FA30}
 		{3C182E17-0085-4B30-8AA9-B229ABED7A39} = {CB5B7DCD-F949-4435-BC39-C34F4F3D2009}
+		{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3830ABDF-4AEA-4D91-83A2-13F091D1DF5F}

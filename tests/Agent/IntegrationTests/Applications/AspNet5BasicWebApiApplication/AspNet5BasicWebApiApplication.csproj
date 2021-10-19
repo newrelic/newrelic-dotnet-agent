@@ -8,4 +8,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="2.10.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj" />
+  </ItemGroup>
+
 </Project>
