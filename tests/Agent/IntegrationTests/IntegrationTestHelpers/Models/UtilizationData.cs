@@ -2,11 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.Models
@@ -21,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         public int LogicalProcessors { get; set; }
 
         [JsonProperty("total_ram_mib")]
-        public int TotalRamMib { get; set; }
+        public int? TotalRamMib { get; set; }
 
         [JsonProperty("hostname")]
         public string HostName { get; set; }
