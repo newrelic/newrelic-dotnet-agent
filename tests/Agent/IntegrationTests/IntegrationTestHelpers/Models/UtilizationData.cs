@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         public int LogicalProcessors { get; set; }
 
         [JsonProperty("total_ram_mib")]
-        public int? TotalRamMib { get; set; }
+        public int? TotalRamMib { get; set; } // this property is nullable because it doesn't get sent on Linux as of October 2021
 
         [JsonProperty("hostname")]
         public string HostName { get; set; }
