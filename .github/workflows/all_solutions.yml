@@ -560,7 +560,6 @@ jobs:
       matrix:
         namespace: [ Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, Oracle, Postgres, RabbitMq, Redis ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
-    if: false # Disabling the unbounded integration test job until the service host is back online
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
