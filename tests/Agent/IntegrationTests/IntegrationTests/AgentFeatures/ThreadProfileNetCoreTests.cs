@@ -14,12 +14,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetCoreTest]
-    public class ThreadProfileNetCoreTests : NewRelicIntegrationTest<AspNetCoreMvcWithCollectorFixture>
+    public class ThreadProfileNetCoreTests : NewRelicIntegrationTest<AspNet5WebApiWithCollectorFixture>
     {
-        private readonly AspNetCoreMvcWithCollectorFixture _fixture;
+        private readonly AspNet5WebApiWithCollectorFixture _fixture;
         private string _threadProfileString;
 
-        public ThreadProfileNetCoreTests(AspNetCoreMvcWithCollectorFixture fixture, ITestOutputHelper output)
+        public ThreadProfileNetCoreTests(AspNet5WebApiWithCollectorFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
@@ -76,7 +76,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         {
             NrAssert.Multiple(
                 () => Assert.Contains(@"""OTHER"":[[[""Native"",""Function Call"",0]", _threadProfileString),
-                () => Assert.Contains(@"[""AspNetCoreMvcBasicRequestsApplication.Program"",""Main"",0]", _threadProfileString),
+                () => Assert.Contains(@"[""AspNet5BasicWebApiApplication.Program"",""Main"",0]", _threadProfileString),
                 () => Assert.Contains(@"System.Threading", _threadProfileString),
                 () => Assert.Contains(@"Microsoft.AspNetCore.Mvc", _threadProfileString)
             );

@@ -3,6 +3,7 @@
 
 
 using System.Diagnostics;
+using System.Net;
 using System.Threading;
 using ApplicationLifecycle;
 using Microsoft.AspNetCore;
@@ -17,6 +18,8 @@ namespace AspNet5BasicWebApiApplication
         public static void Main(string[] args)
         {
             _port = AppLifecycleManager.GetPortFromArgs(args);
+
+            OverrideSslSettingsForMockNewRelic();
 
             Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
@@ -37,6 +40,22 @@ namespace AspNet5BasicWebApiApplication
                 .UseStartup<Startup>()
                 .UseUrls($@"http://localhost:{_port}/")
                 .Build();
+
+        /// <summary>
+        /// When the MockNewRelic app is used in place of the normal New Relic / Collector endpoints,
+        /// the mock version uses a self-signed cert that will not be "trusted."
+        ///
+        /// This forces all validation checks to pass.
+        /// </summary>
+        private static void OverrideSslSettingsForMockNewRelic()
+        {
+            ServicePointManager.ServerCertificateValidationCallback = delegate
+            {
+                //force trust on all certificates for simplicity
+                return true;
+            };
+        }
+
 
     }
 }
