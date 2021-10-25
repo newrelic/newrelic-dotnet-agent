@@ -20,4 +20,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
         }
     }
+    public sealed class SkipOnLinuxFactAttribute : FactAttribute
+    {
+        public SkipOnLinuxFactAttribute(string reason)
+        {
+            if (Utilities.IsLinux)
+            {
+                Skip = $"Skipping test on Linux. Reason = {reason}";
+            }
+        }
+    }
 }

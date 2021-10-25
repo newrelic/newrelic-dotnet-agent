@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
@@ -31,7 +32,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                     configModifier.ForceTransactionTraces();
 
                     //The purpose of this custom instrumentation file is to ignore noisy transactions.
-                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentation.xml";
+                    var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "System.Web.Extensions", "System.Web.Handlers.ScriptResourceHandler", "ProcessRequest", "NewRelic.Agent.Core.Tracer.Factories.IgnoreTransactionTracerFactory");
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "System.Web", "System.Web.Handlers.AssemblyResourceLoader", "GetAssemblyInfo", "NewRelic.Agent.Core.Tracer.Factories.IgnoreTransactionTracerFactory");
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "System.Web.Extensions", "System.Web.Script.Services.RestClientProxyHandler", "ProcessRequest", "NewRelic.Agent.Core.Tracer.Factories.IgnoreTransactionTracerFactory");

@@ -8,6 +8,7 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 using System.Net;
+using System.IO;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
@@ -25,7 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
             (
                 setupConfiguration: () =>
                 {
-                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentation.xml";
+                    var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
                     //System.IO.Path.Combine seems to always be hit by MVC. Could move to console application w/ direct execution if ever have issues.
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "mscorlib", "System.IO.Path", "Combine");

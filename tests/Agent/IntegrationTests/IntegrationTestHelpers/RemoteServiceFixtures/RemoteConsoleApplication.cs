@@ -46,6 +46,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public override void Shutdown()
         {
+            if (RemoteProcess is null)
+            {
+                // We might not have ever started the application, e.g. if the test is being skipped.
+                return;
+            }
+            
             if (_processHasBeenShutdown)
             {
                 RemoteProcess.WaitForExit();
@@ -56,14 +62,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             try
             {
-                if (RemoteProcess.HasExited || RemoteProcess.WaitForExit(Convert.ToInt32(_timeout.TotalMilliseconds)))
+                if (!IsRunning || RemoteProcess.WaitForExit(Convert.ToInt32(_timeout.TotalMilliseconds)))
                 {
                     // Allows for any asynchronous writing to complete
                     RemoteProcess.WaitForExit();
                     return;
                 }
 
-                if (!RemoteProcess.HasExited)
+                if (IsRunning)
                 {
                     RemoteProcess.Kill();
                 }

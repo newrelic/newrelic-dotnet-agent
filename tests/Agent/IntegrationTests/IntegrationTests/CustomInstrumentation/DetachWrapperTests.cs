@@ -3,6 +3,7 @@
 
 
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
@@ -29,7 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
             (
                 setupConfiguration: () =>
                 {
-                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\TerminatingSegmentInstrumentation.xml";
+                    var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "TerminatingSegmentInstrumentation.xml");
 
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "AspNetCoreMvcBasicRequestsApplication", "AspNetCoreMvcBasicRequestsApplication.Controllers.DetachWrapperController", "AsyncMethodWithExternalCall", "DetachWrapper");
                 },

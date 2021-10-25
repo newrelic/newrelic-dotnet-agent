@@ -41,8 +41,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var address = $"http://localhost:{Port}/";
             var request = (HttpWebRequest)WebRequest.Create(address);
             request.Method = "POST";
-            request.Referer = "http://example.com";
-            request.Host = "FakeHost";
+            request.Referer = "http://example.com/";
+            request.Host = "fakehost:1234";
             request.UserAgent = "FakeUserAgent";
             request.Accept = "text/html";
 
