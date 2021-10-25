@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 ### New Features
+* Feature [#365](https://github.com/newrelic/newrelic-dotnet-agent/issues/365): This version adds support for the Linux ARM64/AWS Graviton2 platform using .NET 5.0.
+  * Includes a new `Processor Architecture` property reported by the Agent with the Environment.
 ### Fixes
 ### Deprecations/Removed Features
 
