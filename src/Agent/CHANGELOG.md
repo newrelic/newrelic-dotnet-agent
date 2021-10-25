@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 ### New Features
+* Feature [#365](https://github.com/newrelic/newrelic-dotnet-agent/issues/365): This version adds support for the Linux ARM64/AWS Graviton2 platform using .NET 5.0.
+  * Includes a new `Processor Architecture` property reported by the Agent with the Environment.
 ### Fixes
+* Fixes issue [#754](https://github.com/newrelic/newrelic-dotnet-agent/issues/754): Agent could cause applications that use configuration builders from `Microsoft.Configuration.ConfigurationBuilders` to hang on startup. ([#753](https://github.com/newrelic/newrelic-dotnet-agent/pull/753)
+
 ### Deprecations/Removed Features
 
 ## [9.0.0] - 2021-09-16
