@@ -48,10 +48,10 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
             var expectedAttributes = new Dictionary<string, object>
             {
                 { "request.method", "POST" },
-                { "request.headers.referer", "http://example.com" },
+                { "request.headers.referer", "http://example.com/" },
                 { "request.headers.accept", "text/html" },
                 { "request.headers.content-length", "5" },
-                { "request.headers.host", "fakehost" },
+                { "request.headers.host", "fakehost:1234" },
                 { "request.headers.user-agent", "FakeUserAgent" },
                 { "request.headers.foo", "bar" }
             };

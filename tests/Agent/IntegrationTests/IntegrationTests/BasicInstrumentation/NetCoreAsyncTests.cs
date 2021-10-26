@@ -3,6 +3,7 @@
 
 
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
@@ -26,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
             (
                 setupConfiguration: () =>
                 {
-                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentation.xml";
+                    var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "NetCoreAsyncApplication", "NetCoreAsyncApplication.AsyncUseCases", "IoBoundNoSpecialAsync", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.OtherTransactionWrapperAsync", "IoBoundNoSpecialAsync", 7);
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "NetCoreAsyncApplication", "NetCoreAsyncApplication.AsyncUseCases", "IoBoundConfigureAwaitFalseAsync", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.OtherTransactionWrapperAsync", "IoBoundConfigureAwaitFalseAsync", 7);

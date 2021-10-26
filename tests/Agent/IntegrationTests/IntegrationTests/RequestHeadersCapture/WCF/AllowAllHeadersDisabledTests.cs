@@ -1,6 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if NETFRAMEWORK
 using System.Collections.Generic;
 using System.Linq;
 using MultiFunctionApplicationHelpers;
@@ -172,3 +173,4 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
 
     #endregion Self
 }
+#endif

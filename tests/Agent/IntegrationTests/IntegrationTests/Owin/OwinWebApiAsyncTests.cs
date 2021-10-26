@@ -11,6 +11,7 @@ using NewRelic.Testing.Assertions;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
+using System.IO;
 
 namespace NewRelic.Agent.IntegrationTests.Owin
 {
@@ -33,7 +34,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
 
-                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentation.xml";
+                    var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, assemblyName, $"{assemblyName}.Controllers.AsyncAwaitController", "CustomMethodAsync1", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "CustomMethodAsync1");
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, assemblyName, $"{assemblyName}.Controllers.AsyncAwaitController", "CustomMethodAsync2", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "CustomMethodAsync2");

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
@@ -28,7 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         {
             _fixture = fixture;
 
-            var changeAttributeFilePath = _fixture.RemoteApplication.DestinationExtensionsDirectoryPath + @"\Integration.Testing.ChangeAttributeTest.xml";
+            var changeAttributeFilePath = Path.Combine(_fixture.RemoteApplication.DestinationExtensionsDirectoryPath, "Integration.Testing.ChangeAttributeTest.xml");
 
             _fixture.TestLogger = output;
             _fixture.Actions(
@@ -58,30 +59,30 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				//transactions
-				new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
+                //transactions
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Home/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomChangeMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomRenamedMetricName", callCount = 1 },
 
-				// Unscoped
-				new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
+                // Unscoped
+                new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomChangeMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenamedMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetChangeAttributeValue", callCount = 2 },
 
-				// Scoped
-				new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
+                // Scoped
+                new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = "WebTransaction/MVC/Home/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomChangeMetricName", metricScope = "WebTransaction/Custom/MyCustomChangeMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomRenamedMetricName", metricScope = "WebTransaction/Custom/MyCustomRenamedMetricName", callCount = 1 }
             };
 
             var notExpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				//transactions
-				new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Rejit/GetChangeAttributeValue" },
+                //transactions
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Rejit/GetChangeAttributeValue" },
 
-				// Scoped
-				new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetChangeAttributeValue", metricScope = "WebTransaction/MVC/Rejit/GetChangeAttributeValue" }
+                // Scoped
+                new Assertions.ExpectedMetric { metricName = @"DotNet/RejitController/GetChangeAttributeValue", metricScope = "WebTransaction/MVC/Rejit/GetChangeAttributeValue" }
             };
 
             var metrics = CommonUtils.GetMetrics(_fixture.AgentLog);

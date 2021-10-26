@@ -132,7 +132,7 @@ function Copy-AgentRoot {
         [Parameter(Mandatory=$true)][string]$Destination,
         [Parameter(Mandatory=$true)][ValidateSet("Debug","Release")][string]$Configuration,
         [Parameter(Mandatory=$true)][ValidateSet("Framework","Core")][string]$Type,
-        [Parameter(Mandatory=$true)][ValidateSet("x64","x86")][string]$Architecture,
+        [Parameter(Mandatory=$true)][ValidateSet("x64","x86","ARM64")][string]$Architecture,
         [switch]$Linux
     )
 
@@ -155,8 +155,14 @@ function Copy-AgentRoot {
 
     $grpcDir = Get-GrpcPackagePath $RootDirectory
     if ($Linux) {
-        Copy-Item -Path "$grpcDir\runtimes\linux-x64\native\libgrpc_csharp_ext.x64.so" -Destination "$Destination" -Force 
-        Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\linux-release\libNewRelicProfiler.so" -Destination "$Destination" -Force 
+        if ($Architecture -like "x64") {
+            Copy-Item -Path "$grpcDir\runtimes\linux-x64\native\libgrpc_csharp_ext.x64.so" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\linux-x64-release\libNewRelicProfiler.so" -Destination "$Destination" -Force 
+        }
+        if ($Architecture -like "ARM64") {
+            Copy-Item -Path "$grpcDir\runtimes\linux-arm64\native\libgrpc_csharp_ext.arm64.so" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\linux-arm64-release\libNewRelicProfiler.so" -Destination "$Destination" -Force 
+        }
     }
     else {
         Copy-Item -Path "$grpcDir\runtimes\win-x86\native\*.dll" -Destination "$Destination" -Force
