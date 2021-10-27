@@ -3,6 +3,7 @@
 
 
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
@@ -28,7 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                     configModifier.ForceTransactionTraces();
 
-                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentation.xml";
+                    var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "BasicMvcApplication", "BasicMvcApplication.Controllers.CustomInstrumentationAsyncController", "CustomMethodBackgroundThread", "AsyncForceNewTransactionWrapper", "MyCustomMetricName");
                 },

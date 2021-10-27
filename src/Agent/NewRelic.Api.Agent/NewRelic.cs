@@ -480,62 +480,6 @@ namespace NewRelic.Api.Agent
         #region Transaction APIs
 
         /// <summary>
-        /// Add a key/value pair to the current transaction.  These are reported in errors and transaction traces.
-        /// Supports web applications only.
-        /// </summary>
-        /// <param name="key">The key name to add to the transaction parameters.
-        /// Only the first 1000 characters are retained.
-        /// </param>
-        /// <param name="value">The numeric value to add to the current transaction.</param>
-        /// <example>
-        /// <code>
-        ///   NewRelic.Api.Agent.NewRelic.AddCustomParameter("UserGuid", 1234);
-        /// </code>
-        /// </example>
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        [Obsolete("This method will be deprecated in future versions of the API.  Use GetAgent().CurrentTransaction.AddCustomAttribute(string, object) instead.")]
-        public static void AddCustomParameter(string key, IConvertible value)
-        {
-            try
-            {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.AddCustomParameter({nameof(key)},{nameof(value)})");
-            }
-            catch
-            {
-                // Swallow any exception thrown from here
-            }
-        }
-
-        /// <summary>
-        /// Add a key/value pair to the current transaction.  These are reported in errors and transaction traces.
-        /// Supports web applications only.
-        /// </summary>
-        /// <param name="key">The key.
-        /// Only the first 1000 characters are retained.
-        /// </param>
-        /// <param name="value">The value.
-        /// Only the first 1000 characters are retained.
-        /// </param>
-        /// <example>
-        /// <code>
-        ///   NewRelic.Api.Agent.NewRelic.AddCustomParameter("UserCultureSetting", "En-US");
-        /// </code>
-        /// </example>
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        [Obsolete("This method will be deprecated in future versions of the API.  Use GetAgent().CurrentTransaction.AddCustomAttribute(string, object) instead.")]
-        public static void AddCustomParameter(string key, string value)
-        {
-            try
-            {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.AddCustomParameter({nameof(key)},{nameof(value)})");
-            }
-            catch
-            {
-                // Swallow any exception thrown from here
-            }
-        }
-
-        /// <summary>
         /// Set the name of the current transaction.
         /// Supports web applications only.
         /// </summary>
@@ -679,25 +623,6 @@ namespace NewRelic.Api.Agent
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.GetBrowserTimingHeader(nonce)");
             return "<!-- New Relic Header -->";
-        }
-
-        /// <summary>
-        /// Returns the html snippet to be inserted into the footer of html pages to enable Real User Monitoring.
-        /// </summary>
-        /// <example>
-        /// <code>
-        /// ...
-        ///     &lt;&#37;= NewRelic.Api.Agent.NewRelic.GetBrowserTimingFooter()&#37;>
-        ///   &lt;/body>
-        /// &lt;/html>
-        /// </code>
-        /// </example>
-        /// <returns>An html string to be embedded at the bottom of an html page.</returns>
-        [Obsolete]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static string GetBrowserTimingFooter()
-        {
-            return "<!-- New Relic Footer is Obsolete -->";
         }
 
         /// <summary>

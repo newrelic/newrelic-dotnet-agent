@@ -27,10 +27,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 {
                     var newRelicConfigFilePath = DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(newRelicConfigFilePath);
+                    configModifier.AddAttributesInclude("request.parameters.*");
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(newRelicConfigFilePath, new[] { "configuration", "log" }, "level", "debug");
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(newRelicConfigFilePath, new[] { "configuration", "requestParameters" }, "enabled", "true");
-
+                    
                     var appConfigFilePath = Path.Combine(RemoteApplication.DestinationApplicationDirectoryPath, ExecutableName) + ".config";
                     CommonUtils.SetAppNameInAppConfig(appConfigFilePath, "RulesWebApi");
                 },

@@ -90,8 +90,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         public EnvironmentCoreTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
             : base(fixture, output) { }
 
-        protected override string ExpectedNrConfig => @"\newrelichome\newrelic.config";
-        protected override string ExpectedAppConfig => @"\AspNetCoreMvcBasicRequestsApplication\appsettings.json";
+        protected override string ExpectedNrConfig => Utilities.IsLinux ? @"/newrelichome/newrelic.config" : @"\newrelichome\newrelic.config";
+        protected override string ExpectedAppConfig => Utilities.IsLinux ? @"/AspNetCoreMvcBasicRequestsApplication/appsettings.json" : @"\AspNetCoreMvcBasicRequestsApplication\appsettings.json";
 
         protected override void ExerciseApplication() => _fixture.Get();
     }

@@ -97,7 +97,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
         //        param     include                         exclude  
         [TestCase(null,     null,                           null,                       false   )]
-        [TestCase(true,     null,                           null,                       true    )]
+        [TestCase(true,     null,                           null,                       false    )]
         [TestCase(false,    null,                           null,                       false   )]
         [TestCase(false,    "request.parameters.*",         null,                       true    )]
         [TestCase(null,     "request.parameters.*",         null,                       true    )]

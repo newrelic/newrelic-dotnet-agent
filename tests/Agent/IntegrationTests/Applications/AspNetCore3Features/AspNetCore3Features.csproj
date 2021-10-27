@@ -12,6 +12,7 @@
 
 
   <ItemGroup>
+    <ProjectReference Include="..\..\ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj" />
     <ProjectReference Include="..\..\ApplicationHelperLibraries\NetCore3Collectible\NetCore3Collectible.csproj" />
   </ItemGroup>
 

@@ -30,7 +30,8 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
                 Mock.Arrange(() => configuration.CrossApplicationTracingEnabled).Returns(true);
                 //Mock.Arrange(() => configuration.CaptureAttributesExcludes)
                 //    .Returns(new List<string>() { "identity.*", "request.headers.*", "response.headers.*" });
-                Mock.Arrange(() => configuration.CaptureRequestParameters).Returns(true);
+                Mock.Arrange(() => configuration.CaptureAttributesIncludes).Returns(new string[] { "request.parameters.*" });
+
                 return configuration;
             }
             private ConfigurationAutoResponder _configAutoResponder;

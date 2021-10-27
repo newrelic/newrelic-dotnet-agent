@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <functional>
 #include <CppUnitTest.h>
-#include "UnreferencedFunctions.h"
 #include "..\Logging\DefaultFileLogLocation.h"
 
 
@@ -81,6 +80,21 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
         {
             return L"NEWRELIC_HOME";
         }
+
+        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectoryEnvironment() override
+        {
+            return TryGetEnvironmentVariable(L"NEWRELIC_PROFILER_LOG_DIRECTORY");
+        }
+
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectoryEnvironment() override
+        {
+            return TryGetEnvironmentVariable(L"NEWRELIC_LOG_DIRECTORY");
+        }
+
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevelEnvironment() override
+        {
+            return TryGetEnvironmentVariable(L"NEWRELIC_LOG_LEVEL");
+        }
     };
 
     TEST_CLASS(DefaultFileLogLocationTestt)
@@ -130,6 +144,29 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
 
             auto fileName = DefaultFileLogLocation(systemCalls).GetPathAndFileName();
             Assert::AreEqual(std::wstring(L"C:\\Foo\\\\NewRelic.Profiler.1234.log"), fileName);
+        }
+
+        TEST_METHOD(profiler_log_directory_environment_variable_over_all)
+        {
+            auto systemCalls = std::make_shared<SystemCalls>();
+
+            systemCalls->environmentVariables[L"NEWRELIC_HOME"] = L"C:\\Foo\\Home";
+            systemCalls->environmentVariables[L"NEWRELIC_PROFILER_LOG_DIRECTORY"] = L"C:\\Foo\\Profiler";
+            systemCalls->environmentVariables[L"NEWRELIC_LOG_DIRECTORY"] = L"C:\\Foo\\General";
+
+            auto fileName = DefaultFileLogLocation(systemCalls).GetPathAndFileName();
+            Assert::AreEqual(std::wstring(L"C:\\Foo\\Profiler\\NewRelic.Profiler.1234.log"), fileName);
+        }
+
+        TEST_METHOD(general_log_directory_environment_variable_over_home)
+        {
+            auto systemCalls = std::make_shared<SystemCalls>();
+
+            systemCalls->environmentVariables[L"NEWRELIC_HOME"] = L"C:\\Foo\\Home";
+            systemCalls->environmentVariables[L"NEWRELIC_LOG_DIRECTORY"] = L"C:\\Foo\\General";
+
+            auto fileName = DefaultFileLogLocation(systemCalls).GetPathAndFileName();
+            Assert::AreEqual(std::wstring(L"C:\\Foo\\General\\NewRelic.Profiler.1234.log"), fileName);
         }
 
         TEST_METHOD(common_app_data_fallback)

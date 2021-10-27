@@ -34,5 +34,10 @@ namespace AspNet5BasicWebApiApplication.Controllers
                 return "Error";
             }
         }
+
+        public string AwesomeName()
+        {
+            return "Chuck Norris";
+        }
     }
 }

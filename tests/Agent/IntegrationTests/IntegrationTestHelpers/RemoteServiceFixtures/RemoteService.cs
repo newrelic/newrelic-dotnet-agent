@@ -49,16 +49,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             _publishApp = publishApp;
             _applicationDirectoryName = applicationDirectoryName;
-            _executableName = executableName;
+            _executableName = SanitizeExecutableName(executableName);
             _createsPidFile = createsPidFile;
             _targetFramework = string.Empty;
+        }
+
+        private string SanitizeExecutableName(string executableName)
+        {
+            if (Utilities.IsLinux)
+            {
+                return executableName.Replace(".exe", "");
+            }
+            return executableName;
         }
 
         public RemoteService(string applicationDirectoryName, string executableName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false, bool publishApp = false) : base(applicationType, isCoreApp)
         {
             _publishApp = publishApp;
             _applicationDirectoryName = applicationDirectoryName;
-            _executableName = executableName;
+            _executableName = SanitizeExecutableName(executableName);
             _createsPidFile = createsPidFile;
             _targetFramework = targetFramework ?? string.Empty;
         }
@@ -102,16 +111,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[RemoteService]: Publishing to {deployPath}.");
 
+            var runtime = Utilities.CurrentRuntime;
             var process = new Process();
             var startInfo = new ProcessStartInfo();
             startInfo.WindowStyle = ProcessWindowStyle.Hidden;
             startInfo.UseShellExecute = false;
-            startInfo.FileName = "dotnet.exe";
+            startInfo.FileName = "dotnet";
             startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
 
             startInfo.Arguments =
-                $"publish {projectFile} --configuration Release --runtime win-x64 --framework {framework} --output {deployPath}";
+                $"publish --configuration Release --runtime {runtime} --framework {framework} --output {deployPath} {projectFile}";
+            TestLogger?.WriteLine($"[RemoteService]: executing 'dotnet {startInfo.Arguments}'");
             process.StartInfo = startInfo;
 
             //We cannot run dotnet publish against the same directory concurrently.
@@ -175,9 +186,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 : commandLineArguments;
 
             var applicationFilePath = DestinationApplicationExecutablePath;
-            var profilerFilePath = Path.Combine(DestinationNewRelicHomeDirectoryPath, @"NewRelic.Profiler.dll");
+            var profilerFilePath = Path.Combine(DestinationNewRelicHomeDirectoryPath, Utilities.IsLinux ? @"libNewRelicProfiler.so" : @"NewRelic.Profiler.dll");
             var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
-            var profilerLogDirectoryPath = Path.Combine(DestinationNewRelicHomeDirectoryPath, @"Logs");
+            var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;
 
             var startInfo = new ProcessStartInfo
             {
@@ -190,11 +201,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 RedirectStandardInput = RedirectStandardInput
             };
 
+            Console.WriteLine($"[{DateTime.Now}] RemoteService.Start(): FileName={applicationFilePath}, Arguments={arguments}, WorkingDirectory={DestinationApplicationDirectoryPath}, RedirectStandardOutput={captureStandardOutput}, RedirectStandardError={captureStandardOutput}, RedirectStandardInput={RedirectStandardInput}");
+
             startInfo.EnvironmentVariables.Remove("COR_ENABLE_PROFILING");
             startInfo.EnvironmentVariables.Remove("COR_PROFILER");
             startInfo.EnvironmentVariables.Remove("COR_PROFILER_PATH");
             startInfo.EnvironmentVariables.Remove("NEWRELIC_HOME");
             startInfo.EnvironmentVariables.Remove("NEWRELIC_PROFILER_LOG_DIRECTORY");
+            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_DIRECTORY");
+            startInfo.EnvironmentVariables.Remove("NEWRELIC_LOG_LEVEL");
             startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
@@ -228,15 +243,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 startInfo.EnvironmentVariables.Add("NEWRELIC_HOME", newRelicHomeDirectoryPath);
             }
 
+            startInfo.EnvironmentVariables.Add("NEWRELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
+
             if (AdditionalEnvironmentVariables != null)
             {
                 foreach (var kp in AdditionalEnvironmentVariables)
                 {
-                    startInfo.EnvironmentVariables.Add(kp.Key, kp.Value);
+                    if (startInfo.EnvironmentVariables.ContainsKey(kp.Key))
+                        startInfo.EnvironmentVariables[kp.Key] = kp.Value;
+                    else
+                        startInfo.EnvironmentVariables.Add(kp.Key, kp.Value);
                 }
             }
-
-            startInfo.EnvironmentVariables.Add("NEWRELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
 
             RemoteProcess = new Process();
             RemoteProcess.StartInfo = startInfo;

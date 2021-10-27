@@ -11,7 +11,7 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests
 {
-    [NetFrameworkTest]
+    [NetCoreTest]
     public class TraceIdTests : NewRelicIntegrationTest<AspNetCore3BasicWebApiApplicationFixture>
     {
         private readonly AspNetCore3BasicWebApiApplicationFixture _fixture;
@@ -27,7 +27,6 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.SetOrDeleteSpanEventsEnabled(true);
                     configModifier.SetLogLevel("all");
                 },

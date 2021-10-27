@@ -11,6 +11,9 @@ namespace NewRelic.Agent.Core.Configuration
     /// </summary>
     public class ReportedConfiguration
     {
+        [JsonProperty("agent")]
+        public const string Agent = ".NET Agent";
+
         [JsonProperty("apdex_t")]
         public double? ApdexT { get; set; }
 
@@ -43,9 +46,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("error_collector.ignore_status_codes")]
         public IEnumerable<string> ErrorCollectorIgnoreStatusCodes { get; set; }
-
-        [JsonProperty("error_collector.ignore_errors")]
-        public IEnumerable<string> ErrorCollectorIgnoreErrors { get; set; }
 
         [JsonProperty("error_collector.ignore_classes")]
         public IEnumerable<string> ErrorCollectorIgnoreClasses { get; set; }

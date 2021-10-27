@@ -166,36 +166,6 @@ namespace NewRelic.Agent.Api
             _agentApiImplementation?.NoticeError(message, customAttributes, isExpected);
         }
 
-        /// <summary> Add a key/value pair to the current transaction.  These are reported in errors and
-        /// transaction traces. Supports web applications only. </summary>
-        ///
-        /// <param name="key">   The key name to add to the transaction parameters. Only the first 1000
-        /// characters are retained. </param>
-        /// <param name="value"> The numeric value to add to the current transaction. If the value is a
-        /// float it is recorded as a number, otherwise, <paramref name="value"/> is converted to a
-        /// string. (via <c>value.ToString(CultureInfo.InvariantCulture);</c> </param>
-        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
-        public static void AddCustomParameter(string key, IConvertible value)
-        {
-            _agentApiImplementation?.AddCustomParameter(key, value);
-        }
-
-        /// <summary> A Add a key/value pair to the current transaction.  These are reported in errors and
-        /// transaction traces. Supports web applications only. </summary>
-        ///
-        /// <exception cref="ArgumentNullException"> Thrown when <paramref name="key"/> or
-        /// <paramref name="value"/> is null. </exception>
-        ///
-        /// <param name="key">   The key name for the custom parameter.  Only the first 1000 characters
-        /// are retained. </param>
-        /// <param name="value"> The value associated with the custom parameter. Only the first 1000
-        /// characters are retained. </param>
-        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
-        public static void AddCustomParameter(string key, string value)
-        {
-            _agentApiImplementation?.AddCustomParameter(key, value);
-        }
-
         /// <summary> Set the name of the current transaction. Supports web applications only. </summary>
         ///
         /// <exception cref="ArgumentNullException"> Thrown when <paramref name="key"/> is null. </exception>
@@ -285,15 +255,6 @@ namespace NewRelic.Agent.Api
         public static string GetBrowserTimingHeader(string nonce)
         {
             return _agentApiImplementation?.GetBrowserTimingHeader(nonce) ?? string.Empty;
-        }
-
-        /// <summary> (This method is obsolete) gets browser timing footer. </summary>
-        ///
-        /// <returns> An empty string. </returns>
-        [Obsolete]
-        public static string GetBrowserTimingFooter()
-        {
-            return _agentApiImplementation?.GetBrowserTimingFooter() ?? string.Empty;
         }
 
         /// <summary>

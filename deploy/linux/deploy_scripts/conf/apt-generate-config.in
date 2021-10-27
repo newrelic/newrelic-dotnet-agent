@@ -23,8 +23,14 @@ BinDirectory "dists/@TARGETREPO@/non-free/binary-i386" {
   SrcPackages "dists/@TARGETREPO@/non-free/source/Sources";
 };
 
+BinDirectory "dists/@TARGETREPO@/non-free/binary-arm64" {
+  Packages "dists/@TARGETREPO@/non-free/binary-arm64/Packages";
+  Contents "dists/@TARGETREPO@/Contents-arm64";
+  SrcPackages "dists/@TARGETREPO@/non-free/source/Sources";
+};
+
 Tree "dists/@TARGETREPO@" {
   Sections "non-free";
-  Architectures "i386 amd64";
+  Architectures "i386 amd64 arm64";
 };
 

@@ -16,6 +16,6 @@ namespace NewRelic.Agent.MultiverseScanner.Reporting
 
         public string PackageName;
 
-        public List<AssemblyReport> AssemblyReports = new List<AssemblyReport>();
+        public AssemblyReport AssemblyReport;
     }
 }

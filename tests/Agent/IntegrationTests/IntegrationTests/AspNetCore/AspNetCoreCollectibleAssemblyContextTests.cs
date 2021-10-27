@@ -70,7 +70,7 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
         private readonly List<Assertions.ExpectedMetric> _generalMetrics = new List<Assertions.ExpectedMetric>
         {
             new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/CurrentTransaction", callCount = ExpectedTransactionCount },
-            new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/CreateDistributedTracePayload", callCount = ExpectedTransactionCount },
+            new Assertions.ExpectedMetric { metricName = @"Supportability/ApiInvocation/InsertDistributedTraceHeaders", callCount = ExpectedTransactionCount },
         };
 
         private readonly List<Assertions.ExpectedMetric> _collectibleMetrics = new List<Assertions.ExpectedMetric>

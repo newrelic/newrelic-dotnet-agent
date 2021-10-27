@@ -2,47 +2,31 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using ApplicationLifecycle;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
-using Microsoft.CodeAnalysis;
 
 namespace MockNewRelic
 {
     public class Program
     {
-        private const string DefaultPort = "5001";
-
         private static string _port;
 
         public static void Main(string[] args)
         {
-            var commandLine = string.Join(" ", args);
-
-            Console.WriteLine($"[MockNewRelic] Joined args: {commandLine}");
-
-            var result = CommandLineParser.SplitCommandLineIntoArguments(commandLine, true);
-
-            var argPort = result.FirstOrDefault()?.Split('=')[1];
-            _port = argPort ?? DefaultPort;
-
-            Console.WriteLine($"[MockNewRelic] Received port: {argPort} | Using port: {_port}");
+            _port = AppLifecycleManager.GetPortFromArgs(args);
 
             var ct = new CancellationTokenSource();
             var task = BuildWebHost(args).RunAsync(ct.Token);
 
-            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + _port);
-            CreatePidFile();
-            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            AppLifecycleManager.CreatePidFile();
+
+            AppLifecycleManager.WaitForTestCompletion(_port);
 
             ct.Cancel();
 
@@ -65,19 +49,5 @@ namespace MockNewRelic
                 })
                 .Build();
 
-        private static void CreatePidFile()
-        {
-            var pid = Process.GetCurrentProcess().Id;
-            var applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
-            var applicationDirectory =
-                Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath),
-                    applicationName);
-            var pidFilePath = applicationDirectory + ".pid";
-
-            using (var file = File.CreateText(pidFilePath))
-            {
-                file.WriteLine(pid);
-            }
-        }
     }
 }

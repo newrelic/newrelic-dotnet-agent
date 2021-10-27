@@ -941,7 +941,7 @@ namespace Profiler {
             auto localNewRelicConfigurationXml = GetLocalConfigurationFromDisk(_systemCalls);
             auto applicationConfigurationXml = GetApplicationConfigurationFromDisk(_systemCalls);
 
-            auto configuration = std::make_shared<Configuration::Configuration>(globalNewRelicConfigurationXml, localNewRelicConfigurationXml, applicationConfigurationXml);
+            auto configuration = std::make_shared<Configuration::Configuration>(globalNewRelicConfigurationXml, localNewRelicConfigurationXml, applicationConfigurationXml, _systemCalls);
             nrlog::StdLog.SetLevel(configuration->GetLoggingLevel());
             LogInfo(L"<-- New logging level set: ", nrlog::GetLevelString(nrlog::StdLog.GetLevel()));
 

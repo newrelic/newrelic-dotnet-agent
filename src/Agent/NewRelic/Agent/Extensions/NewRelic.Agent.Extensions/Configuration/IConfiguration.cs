@@ -48,7 +48,6 @@ namespace NewRelic.Agent.Configuration
         IEnumerable<string> CaptureBrowserMonitoringAttributesExcludes { get; }
         bool CaptureCustomParameters { get; }
         string CaptureCustomParametersSource { get; }
-        bool CaptureRequestParameters { get; }
         string CollectorHost { get; }
         int CollectorPort { get; }
         bool CollectorSendDataOnExit { get; }
@@ -96,7 +95,6 @@ namespace NewRelic.Agent.Configuration
         IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; }
         IEnumerable<string> ExpectedErrorStatusCodesForAgentSettings { get; }
         IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; }
-        IEnumerable<string> IgnoreErrorsForAgentSettings { get; }
         IDictionary<string, IEnumerable<string>> IgnoreErrorsConfiguration { get; }
         IEnumerable<string> IgnoreErrorClassesForAgentSettings { get; }
         IDictionary<string, IEnumerable<string>> IgnoreErrorMessagesForAgentSettings { get; }

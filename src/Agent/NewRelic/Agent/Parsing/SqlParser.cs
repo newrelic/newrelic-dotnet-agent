@@ -416,6 +416,7 @@ namespace NewRelic.Parsing
                 sql = Regex.Replace(sql, $@"@\b{paramName}\b", value.ToString());
             }
 
+            command.Parameters.Clear();
             command.CommandText = sql;
             return true;
         }

@@ -3,7 +3,9 @@ name: .NET Agent All Solutions Build
 # Does not run on PUSH since we have already ran all the test
 on:
   pull_request:
-    branches: [ main ]
+    branches: 
+    - main
+    - 9x-feature-branch
   release:
     types: [ published ]
   workflow_dispatch:
@@ -50,7 +52,8 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-x64-release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
         shell: powershell
 
       - name: Build x64
@@ -74,9 +77,9 @@ jobs:
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
           if-no-files-found: error
 
-  build-linux-profiler:
+  build-linux-x64-profiler:
     needs: cancel-previous-workflow-runs
-    name: Build Linux Profiler
+    name: Build Linux x64 Profiler
     runs-on: ubuntu-18.04
 
     env:
@@ -91,10 +94,11 @@ jobs:
 
       - name: Clean out _profilerBuild directory
         run: |
-          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.*
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release
+          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
 
       - name: Build Linux Profler
@@ -106,8 +110,73 @@ jobs:
 
       - name: Move Profiler to staging folder
         run: |
-          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/
-          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/libNewRelicProfiler.so
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
+        shell: bash
+
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: profiler
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          if-no-files-found: error
+
+  build-linux-arm64-profiler:
+    needs: cancel-previous-workflow-runs
+    name: Build Linux ARM64 Profiler
+    runs-on: ubuntu-18.04
+    
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      
+      - name: Clean out _profilerBuild directory
+        run: |
+          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
+        shell: bash
+        
+      - uses: uraimo/run-on-arch-action@v2.0.5
+        name: Run commands
+        id: runcmd
+        with:
+          arch: aarch64
+          distro: ubuntu18.04
+          githubToken: ${{ github.token }}
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
+            echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
+            wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+            mkdir /root/git
+            cd /root/git
+            git clone --branch release/3.0 https://github.com/dotnet/coreclr.git
+            curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
+            chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
+            ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
+            rm /usr/bin/cc || true
+            ln -s /usr/bin/clang-3.9 /usr/bin/cc
+            rm /usr/bin/c++ || true
+            ln -s /usr/bin/clang++-3.9 /usr/bin/c++
+          dockerRunArgs: |
+            --volume "${{ env.profiler_path }}:/profiler"
+          run: |
+            cd /profiler
+            chmod 777 ./linux/build_profiler.sh
+            ./linux/build_profiler.sh
+            
+      - name: Move Profiler to staging folder
+        run: |
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/libNewRelicProfiler.so
         shell: bash
 
       - name: Archive Artifacts
@@ -119,7 +188,7 @@ jobs:
 
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-test-fullagent-msi:
-    needs: [ build-windows-profiler, build-linux-profiler ]
+    needs: [ build-windows-profiler, build-linux-x64-profiler, build-linux-arm64-profiler ]
     name: Build and Test FullAgent and MSIInstaller
     runs-on: windows-2019
 
@@ -144,7 +213,8 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-x64-release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
         shell: powershell
 
       - name: Download Profiler Artifacts Before Agent Build
@@ -197,6 +267,7 @@ jobs:
             ${{ github.workspace }}\src\Agent\newrelichome_x64
             ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr
             ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr_linux
+            ${{ github.workspace }}\src\Agent\newrelichome_arm64_coreclr_linux
             ${{ github.workspace }}\src\Agent\newrelichome_x86
             ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
           if-no-files-found: error
@@ -550,6 +621,73 @@ jobs:
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
           if-no-files-found: error
 
+  run-integration-tests-linux-arm64:
+    needs: build-test-fullagent-msi
+    name: Run IntegrationTests linux-arm64
+    runs-on: ubuntu-18.04
+    if: false
+
+    env:
+      test_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/TestResults
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Download Agent Home Folders
+        uses: actions/download-artifact@v2
+        with:
+          name: homefolders
+          path: src/Agent
+
+      - name: Run test commands
+        uses: uraimo/run-on-arch-action@v2.0.5
+        with:
+          arch: aarch64
+          distro: ubuntu18.04
+          githubToken: ${{ github.token }}
+
+          env: |
+            test_secrets: '${{ secrets.TEST_SECRETS }}'
+            NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+            DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
+
+          install: |
+            apt-get update -q -y && apt-get install -q -y curl
+            export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+            mkdir -p /usr/share/dotnet
+            curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/2.1.818/dotnet-sdk-2.1.818-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
+            curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
+            curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
+            ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
+            dotnet help
+
+          dockerRunArgs: |
+            --volume "${{ env.test_path }}:/tmp/IntegrationTestWorkingDirectory"
+
+          run: |
+            cd tests/Agent/IntegrationTests/IntegrationTests
+            echo $test_secrets | dotnet user-secrets set --project "../Shared"
+            dotnet test -f netcoreapp3.1 -c Release -l "trx" --filter "FullyQualifiedName~ApiCallsTestsCore|FullyQualifiedName~InfiniteTracingNetCoreLatestTests"
+
+      - name: Archive IntegrationTestWorkingDirectory on Failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: integration-test-artifacts-linux-arm64
+          path: ${{ env.test_path }}/**/*
+          if-no-files-found: error
+
+      - name: Archive Test Artifacts
+        uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: integration-test-artifacts-linux-arm64
+          path: ${{ env.test_path }}/*.trx
+          if-no-files-found: error
+
   run-unbounded-tests:
     needs: [build-unbounded-tests]
     name: Run Unbounded Tests
@@ -558,7 +696,6 @@ jobs:
       matrix:
         namespace: [ Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, Oracle, Postgres, RabbitMq, Redis ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
-    if: false # Disabling the unbounded integration test job until the service host is back online
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared

@@ -17,5 +17,11 @@ namespace NewRelic.Agent.MultiverseScanner.Reporting
             MethodSignature = exactMethodMatcher.MethodSignature;
             IsValid = isValid;
         }
+
+        public MethodValidation(string methodSignature, bool isValid)
+        {
+            MethodSignature = methodSignature;
+            IsValid = isValid;
+        }
     }
 }
