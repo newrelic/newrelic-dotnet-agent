@@ -11,9 +11,9 @@ namespace NewRelic.Agent.IntegrationTests.Shared
     {
         private string _configurationCategory { get; set; }
 
-        public TestSettings DefaultSetting { get; set; }
+        public TestSettings DefaultSetting { get; set; } = new TestSettings();
 
-        public Dictionary<string, TestSettings> TestSettingOverrides { get; set; }
+        public Dictionary<string, TestSettings> TestSettingOverrides { get; set; } = new Dictionary<string, TestSettings>();
 
         public string this[string key]
         {

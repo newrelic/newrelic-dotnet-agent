@@ -1,7 +1,13 @@
 #!/bin/bash
 
-PACKAGE_NAME='newrelic-netcore20-agent'
+ARCH='amd64'
 AGENT_HOMEDIR='newrelichome_x64_coreclr_linux'
+PACKAGE_NAME='newrelic-netcore20-agent'
+
+if [ "$1" = "arm64" ]; then
+    ARCH="arm64"
+    AGENT_HOMEDIR='newrelichome_arm64_coreclr_linux'
+fi
 
 if [ -z "$AGENT_VERSION" ]; then
     # Get version from agent core dll
@@ -15,11 +21,10 @@ if [ -z "$AGENT_VERSION" ]; then
 fi
 
 echo "AGENT_VERSION=${AGENT_VERSION}"
-INSTALL_ROOT=/tmp/${PACKAGE_NAME}
-ARCH='amd64'
+INSTALL_ROOT=/tmp/${ARCH}/${PACKAGE_NAME}
 PACKAGE_FILE_BASENAME="${PACKAGE_NAME}_${AGENT_VERSION}_$ARCH"
 
-mkdir ${INSTALL_ROOT} && mkdir ${INSTALL_ROOT}/DEBIAN
+mkdir /tmp/${ARCH} && mkdir ${INSTALL_ROOT} && mkdir ${INSTALL_ROOT}/DEBIAN
 
 INSTALL_LOCATION=${INSTALL_ROOT}/usr/local/${PACKAGE_NAME}
 
@@ -51,9 +56,9 @@ cp /deb/agentinfo.json .
 
 # create debian package
 dpkg-deb --build ${INSTALL_ROOT}
-cp /tmp/${PACKAGE_NAME}.deb /release/${PACKAGE_FILE_BASENAME}.deb
+cp /tmp/${ARCH}/${PACKAGE_NAME}.deb /release/${PACKAGE_FILE_BASENAME}.deb
 # create a copy of the agent that only uses the package name to make it easy to link to builds
-cp /tmp/${PACKAGE_NAME}.deb /release/${PACKAGE_NAME}.deb
+cp /tmp/${ARCH}/${PACKAGE_NAME}.deb /release/${PACKAGE_NAME}_${ARCH}.deb
 
 # agentinfo.json for tar.gz
 cp /common/agentinfo.json .

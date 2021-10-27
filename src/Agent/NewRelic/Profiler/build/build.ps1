@@ -31,7 +31,7 @@ Write-Host "Building Platform=$Platform and Configuration=$Configuration"
 $profilerRoot = "$rootDirectory\src\Agent\NewRelic\Profiler"
 $profilerSolutionPath = "$profilerRoot\NewRelic.Profiler.sln"
 $outputPath = "$rootDirectory\src\Agent\_profilerBuild"
-$linuxOutputPath = "$outputPath\linux-release"
+$linuxamd64OutputPath = "$outputPath\linux-x64-release"
 
 $buildx64 = $Platform -eq "all" -or $Platform -eq "windows" -or $Platform -eq "x64"
 $buildx86 = $Platform -eq "all" -or $Platform -eq "windows" -or $Platform -eq "x86"
@@ -55,7 +55,7 @@ if ($buildx86) {
 }
 
 if ($buildLinux) {
-    Write-Host "-- Profiler build: linux-release"
+    Write-Host "-- Profiler build: linux-x64-release"
 
     if ($Configuration -eq "Debug") {
         Write-Host "Configuration=Debug is not currently supported by this script when building the linux profiler. Building Configuration=Release instead."
@@ -64,6 +64,6 @@ if ($buildLinux) {
     & $profilerRoot\build\scripts\build_linux.ps1
     ExitIfFailLastExitCode
 
-    if (!(Test-Path $linuxOutputPath)) { New-Item $linuxOutputPath -ItemType Directory }
-    Move-Item "$profilerRoot\libNewRelicProfiler.so" "$linuxOutputPath"
+    if (!(Test-Path $linuxamd64OutputPath)) { New-Item $linuxamd64OutputPath -ItemType Directory }
+    Move-Item "$profilerRoot\libNewRelicProfiler.so" "$linuxamd64OutputPath"
 }

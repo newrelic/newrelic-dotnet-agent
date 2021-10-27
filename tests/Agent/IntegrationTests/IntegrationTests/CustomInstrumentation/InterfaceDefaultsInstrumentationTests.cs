@@ -3,6 +3,7 @@
 
 
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -15,8 +16,6 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
     {
         private readonly RemoteServiceFixtures.AspNetCore3FeaturesFixture _fixture;
 
-        private const int ExpectedTransactionCount = 2;
-
         public InterfaceDefaultsInstrumentationTests(RemoteServiceFixtures.AspNetCore3FeaturesFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
@@ -26,7 +25,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
             (
                 setupConfiguration: () =>
                 {
-                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentation.xml";
+                    var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "AspNetCore3Features", "AspNetCore3Features.Controllers.ILoggerNoAttributes", "LogException");
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "AspNetCore3Features", "AspNetCore3Features.Controllers.ConsoleLoggerNoAttributesNoDefault", "LogMessage");

@@ -11,7 +11,7 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests
 {
-    [NetFrameworkTest]
+    [NetCoreTest]
     public class TraceIdTests : NewRelicIntegrationTest<AspNetCore3BasicWebApiApplicationFixture>
     {
         private readonly AspNetCore3BasicWebApiApplicationFixture _fixture;
