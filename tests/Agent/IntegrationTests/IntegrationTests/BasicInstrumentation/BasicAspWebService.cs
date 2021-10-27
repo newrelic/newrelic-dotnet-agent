@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -88,3 +89,4 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         }
     }
 }
+#endif

@@ -97,9 +97,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             httpWebRequest.Method = "POST";
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Accept = "application/json";
-            httpWebRequest.Referer = "http://example.com";
+            httpWebRequest.Referer = "http://example.com/";
             httpWebRequest.UserAgent = "FakeUserAgent";
-            httpWebRequest.Host = "fakehost";
+            httpWebRequest.Host = "fakehost:1234";
             httpWebRequest.Headers.Add("foo", "bar");
 
             var serializedBody = JsonConvert.SerializeObject(body);
