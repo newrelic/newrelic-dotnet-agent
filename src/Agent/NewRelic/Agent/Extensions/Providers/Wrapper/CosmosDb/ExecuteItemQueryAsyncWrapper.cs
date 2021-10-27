@@ -45,18 +45,18 @@ namespace NewRelic.Providers.Wrapper.CosmosDb
 
             object querySpec = instrumentedMethodCall.MethodCall.MethodArguments[6];
 
-            var splittedAddressArray = resourceAddress.Split('/');
+            var splitAddressArray = resourceAddress.Split('/');
             var databaseName = "Unknown";
             var model = "Unknown";
 
-            if (splittedAddressArray.Length > 1)
+            if (splitAddressArray.Length > 1)
             {
-                databaseName = string.IsNullOrEmpty(splittedAddressArray[1]) ? databaseName : splittedAddressArray[1];
+                databaseName = string.IsNullOrEmpty(splitAddressArray[1]) ? databaseName : splitAddressArray[1];
             }
 
-            if (splittedAddressArray.Length > 3)
+            if (splitAddressArray.Length > 3)
             {
-                model = string.IsNullOrEmpty(splittedAddressArray[3]) ? model : splittedAddressArray[3];
+                model = string.IsNullOrEmpty(splitAddressArray[3]) ? model : splitAddressArray[3];
             }
 
             var operation = $"{operationType}{resourceType}";
