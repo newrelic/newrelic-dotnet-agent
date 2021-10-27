@@ -10,20 +10,23 @@ using System.Threading.Tasks;
 
 namespace NewRelic.Providers.Wrapper.CosmosDb
 {
-    public class RequestInvokerHandlerWrapper : IWrapper
+    public class ExecuteItemQueryAsyncWrapper : IWrapper
     {
         public bool IsTransactionRequired => true;
 
         private const string AssemblyName = "Microsoft.Azure.Cosmos.Client";
 
-        private const string RequestInvokerHandlerFullTypeName = "Microsoft.Azure.Cosmos.Handlers.RequestInvokerHandler";
+        private const string ClientContextCoreFullTypeName = "Microsoft.Azure.Cosmos.ClientContextCore";
         private const string CosmosClientFullTypeName = "Microsoft.Azure.Cosmos.CosmosClient";
+        private const string CosmosQueryClientCoreFullTypeName = "Microsoft.Azure.Cosmos.CosmosQueryClientCore";
+        private const string SqlQuerySpecFullTypeName = "Microsoft.Azure.Cosmos.Query.Core.SqlQuerySpec";
 
 
         private Func<object, object> _getClient;
         private Func<object, Uri> _endpointGetter;
-
-        private const string WrapperName = "RequestInvokerHandlerWrapper";
+        private Func<object, object> _getClientContextGetter;
+        private Func<object, string> _queryGetter;
+        private const string WrapperName = "ExecuteItemQueryAsyncWrapper";
 
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -39,6 +42,8 @@ namespace NewRelic.Providers.Wrapper.CosmosDb
             string resourceAddress = instrumentedMethodCall.MethodCall.MethodArguments[0].ToString();
             object resourceType = instrumentedMethodCall.MethodCall.MethodArguments[1].ToString();
             object operationType = instrumentedMethodCall.MethodCall.MethodArguments[2].ToString();
+
+            object querySpec = instrumentedMethodCall.MethodCall.MethodArguments[6];
 
             var splittedAddressArray = resourceAddress.Split('/');
             var databaseName = "Unknown";
@@ -56,11 +61,17 @@ namespace NewRelic.Providers.Wrapper.CosmosDb
 
             var operation = $"{operationType}{resourceType}";
 
-            var clientGetter = _getClient ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(AssemblyName, RequestInvokerHandlerFullTypeName, "client");
+            var queryGetter = _queryGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(AssemblyName, SqlQuerySpecFullTypeName, "QueryText");
+
+            var clientContextGetter = _getClientContextGetter ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(AssemblyName, CosmosQueryClientCoreFullTypeName, "clientContext");
+
+            var clientGetter = _getClient ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(AssemblyName, ClientContextCoreFullTypeName, "client");
 
             var endpointGetter =  _endpointGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>(AssemblyName, CosmosClientFullTypeName, "Endpoint");
 
-            var client = clientGetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
+            var clientContext = clientContextGetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
+
+            var client = clientGetter.Invoke(clientContext);
 
             var endpoint = endpointGetter.Invoke(client);
 
@@ -68,6 +79,7 @@ namespace NewRelic.Providers.Wrapper.CosmosDb
                 instrumentedMethodCall.MethodCall,
                 new ParsedSqlStatement(DatastoreVendor.CosmosDB, model, operation),
                 connectionInfo: endpoint != null ? new ConnectionInfo(endpoint.Host, endpoint.Port.ToString(), databaseName) : new ConnectionInfo(string.Empty, string.Empty, databaseName),
+                commandText : querySpec != null ? _queryGetter.Invoke(querySpec) : string.Empty,
                 isLeaf: true);
 
             return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
