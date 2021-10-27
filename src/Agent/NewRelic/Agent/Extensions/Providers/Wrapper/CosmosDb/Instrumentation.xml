@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+		<tracerFactory name="RequestInvokerHandlerWrapper">
+			<match assemblyName="Microsoft.Azure.Cosmos.Client" className="Microsoft.Azure.Cosmos.Handlers.RequestInvokerHandler">
+				<exactMethodMatcher methodName="SendAsync" parameters="System.String,Microsoft.Azure.Documents.ResourceType,Microsoft.Azure.Documents.OperationType,Microsoft.Azure.Cosmos.RequestOptions,Microsoft.Azure.Cosmos.ContainerInternal,Microsoft.Azure.Cosmos.FeedRange,System.IO.Stream,System.Action`1[Microsoft.Azure.Cosmos.RequestMessage],Microsoft.Azure.Cosmos.Tracing.ITrace,System.Threading.CancellationToken" />
+			</match>
+		</tracerFactory>
+		<tracerFactory name="ExecuteItemQueryAsyncWrapper">
+			<match assemblyName="Microsoft.Azure.Cosmos.Client" className="Microsoft.Azure.Cosmos.CosmosQueryClientCore">
+			<exactMethodMatcher methodName="ExecuteItemQueryAsync" parameters="System.String,Microsoft.Azure.Documents.ResourceType,Microsoft.Azure.Documents.OperationType,System.Guid,Microsoft.Azure.Cosmos.FeedRange,Microsoft.Azure.Cosmos.QueryRequestOptions,Microsoft.Azure.Cosmos.Query.Core.SqlQuerySpec,System.String,System.Boolean,System.Int32,Microsoft.Azure.Cosmos.Tracing.ITrace,System.Threading.CancellationToken" />
+			</match>
+		</tracerFactory>
+	</instrumentation>
+</extension>
