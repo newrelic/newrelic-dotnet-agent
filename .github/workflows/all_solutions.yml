@@ -436,6 +436,12 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1
 
+      - name: Add .NET 6 Preview SDK
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+          include-prerelease: true
+
       - name: Build IntegrationTests.sln
         run: |
           Write-Host "List NuGet Sources"
@@ -471,6 +477,12 @@ jobs:
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1
+
+      - name: Add .NET 6 Preview SDK
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+          include-prerelease: true
 
       - name: Build UnboundedIntegrationTests.sln
         run: |
@@ -558,6 +570,12 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
             dotnet-version: '5.0.100'
+
+      - name: Setup .NET 6.0
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+          include-prerelease: true
 
       - name: Set up secrets
         env:
@@ -661,6 +679,7 @@ jobs:
             curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/2.1.818/dotnet-sdk-2.1.818-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
             curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
             curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
+            curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
             ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
             dotnet help
 
@@ -714,6 +733,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Setup .NET 6.0
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+          include-prerelease: true
 
       - name: Download Agent Home Folders
         uses: actions/download-artifact@v2
