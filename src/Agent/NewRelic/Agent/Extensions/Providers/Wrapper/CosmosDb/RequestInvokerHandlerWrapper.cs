@@ -41,8 +41,8 @@ namespace NewRelic.Providers.Wrapper.CosmosDb
             object operationType = instrumentedMethodCall.MethodCall.MethodArguments[2].ToString();
 
             var splittedAddressArray = resourceAddress.Split('/');
-            var databaseName = "Unknown";
-            var model = "Unknown";
+            var databaseName = string.Empty;
+            var model = string.Empty;
 
             if (splittedAddressArray.Length > 1)
             {
