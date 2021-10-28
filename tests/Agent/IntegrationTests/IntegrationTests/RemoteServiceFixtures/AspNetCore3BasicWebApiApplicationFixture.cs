@@ -12,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"AspNetCore3BasicWebApiApplication";
         private const string ExecutableName = @"AspNetCore3BasicWebApiApplication.exe";
-        private const string TargetFramework = "net6.0";
+        private const string TargetFramework = "netcoreapp3.1";
 
         public AspNetCore3BasicWebApiApplicationFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded, true, true, true))
         {
