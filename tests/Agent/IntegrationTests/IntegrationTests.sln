@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29409.12
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31825.309
 MinimumVisualStudioVersion = 15.0.26228.04
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTests", "IntegrationTests\IntegrationTests.csproj", "{EE939277-76B4-4099-B3D6-300C8D70F3C1}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -132,7 +132,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{30CF07
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLifecycle", "ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj", "{3C182E17-0085-4B30-8AA9-B229ABED7A39}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNet5BasicWebApiApplication", "Applications\AspNet5BasicWebApiApplication\AspNet5BasicWebApiApplication.csproj", "{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCoreBasicWebApiApplication", "Applications\AspNetCoreBasicWebApiApplication\AspNetCoreBasicWebApiApplication.csproj", "{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
