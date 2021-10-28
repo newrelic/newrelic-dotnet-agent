@@ -170,7 +170,7 @@ namespace NewRelic.Agent.Core.Segments
 
         public override string GetTransactionTraceName()
         {
-            var name = Model == null ? DatastoreVendorName.GetDatastoreOperation(Operation) : MetricNames.GetDatastoreStatement(DatastoreVendorName, Model, Operation);
+            var name = string.IsNullOrEmpty(Model) ? DatastoreVendorName.GetDatastoreOperation(Operation) : MetricNames.GetDatastoreStatement(DatastoreVendorName, Model, Operation);
             return name.ToString();
         }
 
