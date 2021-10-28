@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;netcoreapp3.1;net461;net471;net48;net6.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;netcoreapp3.1;net5.0;net6.0;net461;net471;net48</TargetFrameworks>
     <!--We have some tests that specifically need to test .NET Core 2.2 behavior, so disabling the warning about 2.2 being EOL-->
     <NoWarn>$(NoWarn);NETSDK1138</NoWarn>
     
@@ -48,8 +48,7 @@
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
-
-    <!--  TODO: .NET 5 tests???  -->
+    <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net5.0'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     
   </ItemGroup>
