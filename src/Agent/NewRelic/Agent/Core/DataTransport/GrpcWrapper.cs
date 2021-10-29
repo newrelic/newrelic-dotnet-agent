@@ -76,6 +76,9 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             try
             {
+                
+                _channel?.ShutdownAsync()?.Wait();
+                
                 _channel = null;
 
                 var credentials = ssl ? new SslCredentials() : ChannelCredentials.Insecure;
@@ -86,11 +89,16 @@ namespace NewRelic.Agent.Core.DataTransport
                     _channel = channel;
                     return true;
                 }
+                else
+                {
+                    channel.ShutdownAsync().Wait();
+                }
 
                 return false;
             }
             catch (Exception ex)
             {
+                _channel?.ShutdownAsync()?.Wait();
                 _channel = null;
 
                 const string errorMessage = "Unable to create new gRPC Channel";
@@ -201,7 +209,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             try
             {
-                _channel.ShutdownAsync();
+                _channel.ShutdownAsync().Wait();
             }
             catch (Exception ex)
             {
@@ -218,7 +226,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             try
             {
-                requestStream.CompleteAsync();
+                requestStream.CompleteAsync().Wait();
             }
             catch (Exception ex)
             {
