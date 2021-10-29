@@ -422,7 +422,7 @@ jobs:
   build-integration-tests:
     needs: build-test-fullagent-msi
     name: Build IntegrationTests
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     env:
       integration_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
@@ -434,7 +434,9 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
+        uses: microsoft/setup-msbuild@v1.0.3
+        with:
+          vs-prerelease: true
 
       - name: Add .NET 6 Preview SDK
         uses: actions/setup-dotnet@v1
