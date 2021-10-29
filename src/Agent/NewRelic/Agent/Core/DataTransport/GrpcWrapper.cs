@@ -119,7 +119,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception) { }
 
-            // Esure channel connection attempt shutdown on timeout
+            // Ensure channel connection attempt shutdown on timeout
             channel.ShutdownAsync().Wait();
 
             return false;

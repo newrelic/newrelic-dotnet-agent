@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             if (!channel.ConnectAsync().Wait(connectTimeoutMs, cancellationToken))
             {
-                // Esure channel connection attempt shutdown on timeout
+                // Ensure channel connection attempt shutdown on timeout
                 channel.ShutdownAsync().Wait();
 
                 throw new GrpcWrapperChannelNotAvailableException();
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             if (!channel.ConnectAsync().Wait(connectTimeoutMs, cancellationToken))
             {
-                // Esure channel connection attempt shutdown on timeout
+                // Ensure channel connection attempt shutdown on timeout
                 channel.ShutdownAsync().Wait();
 
                 throw new GrpcWrapperChannelNotAvailableException();
