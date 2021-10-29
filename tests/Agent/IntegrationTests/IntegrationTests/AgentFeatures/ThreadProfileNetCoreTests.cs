@@ -74,11 +74,22 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         [Fact]
         public void Test()
         {
+            var expectedMainMethodSignature = "";
+
+            if (_fixture.GetType() == typeof(AspNetCoreWebApiWithCollectorFixture_net50))
+            {
+                expectedMainMethodSignature = @"[""AspNetCore5BasicWebApiApplication.Program"",""Main"",0]";
+            }
+            else if (_fixture.GetType() == typeof(AspNetCoreWebApiWithCollectorFixture_net60))
+            {
+                expectedMainMethodSignature = @"[""AspNetCore6BasicWebApiApplication.Program"",""Main"",0]";
+            }
+
             NrAssert.Multiple(
                 () => Assert.Contains(@"""OTHER"":[[[""Native"",""Function Call"",0]", _threadProfileString),
-                () => Assert.Contains(@"[""AspNetCoreBasicWebApiApplication.Program"",""Main"",0]", _threadProfileString),
+                () => Assert.Contains(expectedMainMethodSignature, _threadProfileString),
                 () => Assert.Contains(@"System.Threading", _threadProfileString),
-                () => Assert.Contains(@"Microsoft.AspNetCore.Mvc", _threadProfileString)
+                () => Assert.Contains(@"Microsoft.AspNetCore.Server.Kestrel", _threadProfileString)
             );
         }
 

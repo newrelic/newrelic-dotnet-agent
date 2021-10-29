@@ -8,10 +8,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public abstract class AspNetCoreWebApiWithCollectorFixture : MockNewRelicFixture
     {
-        private const string ApplicationDirectoryName = @"AspNetCoreBasicWebApiApplication";
-        private const string ExecutableName = @"AspNetCoreBasicWebApiApplication.exe";
-
-        protected AspNetCoreWebApiWithCollectorFixture(string TargetFramework) : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded, true, true, true))
+        protected AspNetCoreWebApiWithCollectorFixture(string ApplicationDirectoryName, string ExecutableName, string TargetFramework) : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded, true, true, true))
         {
         }
 
@@ -25,17 +22,16 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
     public class AspNetCoreWebApiWithCollectorFixture_net50 : AspNetCoreWebApiWithCollectorFixture
     {
-        public AspNetCoreWebApiWithCollectorFixture_net50() : base("net5.0")
+        public AspNetCoreWebApiWithCollectorFixture_net50() : base("AspNetCore5BasicWebApiApplication", "AspNetCore5BasicWebApiApplication.exe", "net5.0")
         {
         }
     }
 
     public class AspNetCoreWebApiWithCollectorFixture_net60 : AspNetCoreWebApiWithCollectorFixture
     {
-        public AspNetCoreWebApiWithCollectorFixture_net60() : base("net6.0")
+        public AspNetCoreWebApiWithCollectorFixture_net60() : base("AspNetCore6BasicWebApiApplication", "AspNetCore6BasicWebApiApplication.exe", "net6.0")
         {
         }
     }
-
 
 }
