@@ -37,53 +37,47 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task CreateReadAndDeleteDatabase(string databaseId)
         {
-            try
-            {
-                var endpoint = CosmosDBConfiguration.CosmosDBServer;
+            var endpoint = CosmosDBConfiguration.CosmosDBServer;
                 var authKey = CosmosDBConfiguration.AuthKey;
 
-                using (CosmosClient client = new CosmosClient(endpoint, authKey, _cosmosClientOptions))
+            using CosmosClient client = new CosmosClient(endpoint, authKey, _cosmosClientOptions);
+            var databaseResponse = await client.CreateDatabaseIfNotExistsAsync(databaseId);
+
+            var database = databaseResponse.Database;
+
+            // Read the database from Azure Cosmos
+            var readResponse = await database.ReadAsync();
+
+            // Create a container/collection
+            await readResponse.Database.CreateContainerAsync("testContainer", "/pk");
+
+            // Read database using GetDatabaseQueryIterator()
+            using (FeedIterator<DatabaseProperties> iterator = client.GetDatabaseQueryIterator<DatabaseProperties>())
+            {
+                while (iterator.HasMoreResults)
                 {
-                    var databaseResponse = await client.CreateDatabaseIfNotExistsAsync(databaseId);
-
-                    var database = databaseResponse.Database;
-
-                    // Read the database from Azure Cosmos
-                    var readResponse = await database.ReadAsync();
-
-                    // Create a container/collection
-                    await readResponse.Database.CreateContainerAsync("testContainer", "/pk");
-
-                    // Read database using GetDatabaseQueryIterator()
-                    using (FeedIterator<DatabaseProperties> iterator = client.GetDatabaseQueryIterator<DatabaseProperties>())
+                    foreach (DatabaseProperties db in await iterator.ReadNextAsync())
                     {
-                        while (iterator.HasMoreResults)
-                        {
-                            foreach (DatabaseProperties db in await iterator.ReadNextAsync())
-                            {
-                                Console.WriteLine(db.Id);
-                            }
-                        }
+                        Console.WriteLine(db.Id);
                     }
-
-                    // Read database using GetDatabaseStreamQueryIterator
-                    using (FeedIterator iterator = client.GetDatabaseQueryStreamIterator())
-                    {
-                        while (iterator.HasMoreResults)
-                        {
-                            using ResponseMessage response = await iterator.ReadNextAsync();
-                            using (StreamReader sr = new StreamReader(response.Content))
-                            {
-                                sr.ReadToEnd();
-                            }
-                        }
-                    }
-
-                    // Delete the database from Azure Cosmos.
-                    await database.DeleteAsync();
                 }
             }
-            catch { }
+
+            // Read database using GetDatabaseStreamQueryIterator
+            using (FeedIterator iterator = client.GetDatabaseQueryStreamIterator())
+            {
+                while (iterator.HasMoreResults)
+                {
+                    using ResponseMessage response = await iterator.ReadNextAsync();
+                    using (StreamReader sr = new StreamReader(response.Content))
+                    {
+                        sr.ReadToEnd();
+                    }
+                }
+            }
+
+            // Delete the database from Azure Cosmos.
+            await database.DeleteAsync();
         }
 
 
