@@ -448,6 +448,8 @@ jobs:
         run: |
           Write-Host "List NuGet Sources"
           dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+          Write-Host "Checking installed targeting packs"
+          Get-ChildItem "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework"
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
           MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
         shell: powershell
