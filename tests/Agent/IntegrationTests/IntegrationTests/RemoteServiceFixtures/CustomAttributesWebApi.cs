@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = "CustomAttributesWebApi";
         private const string ExecutableName = "NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi.exe";
-        private const string TargetFramework = "net451";
+        private const string TargetFramework = "net461";
 
 
         public readonly string ExpectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributes";

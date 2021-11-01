@@ -16,7 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"Owin2WebApi";
         private const string ExecutableName = @"Owin2WebApi.exe";
-        private const string TargetFramework = "net451";
+        private const string TargetFramework = "net461";
 
         public RulesWebApi()
             : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))

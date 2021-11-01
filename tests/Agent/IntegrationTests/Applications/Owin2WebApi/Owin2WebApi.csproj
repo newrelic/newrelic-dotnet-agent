@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFramework>net451</TargetFramework>
+    <TargetFramework>net461</TargetFramework>
     <OutputType>exe</OutputType>
     <RootNamespace>Owin2WebApi</RootNamespace>
     <AssemblyName>Owin2WebApi</AssemblyName>

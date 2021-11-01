@@ -10,7 +10,7 @@ namespace NewRelic.Agent.IntegrationTests
     {
         private const string ApplicationDirectoryName = @"Owin4WebApi";
         private const string ExecutableName = @"Owin4WebApi.exe";
-        private const string TargetFramework = "net451";
+        private const string TargetFramework = "net461";
 
         public OwinTracingChainFixture() :
             this(ApplicationDirectoryName, ExecutableName, TargetFramework)
