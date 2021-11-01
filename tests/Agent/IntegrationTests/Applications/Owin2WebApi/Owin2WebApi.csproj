@@ -40,7 +40,4 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\ToBeInstrumented\ToBeInstrumented.csproj" />
-  </ItemGroup>
 </Project>

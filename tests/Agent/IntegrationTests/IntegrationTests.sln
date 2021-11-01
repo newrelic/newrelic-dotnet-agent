@@ -24,8 +24,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HostedWebCore", "HostedWebC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicMvcApplication", "Applications\BasicMvcApplication\BasicMvcApplication.csproj", "{599A1D30-4859-4714-8F10-52942E165B3C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToBeInstrumented", "ToBeInstrumented\ToBeInstrumented.csproj", "{0012380D-8065-4624-A38A-68EE72C709B9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicWebApplication", "Applications\BasicWebApplication\BasicWebApplication.csproj", "{ABA30329-4619-4D2D-8606-68639419420B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicWebService", "Applications\BasicWebService\BasicWebService.csproj", "{C4F7465E-C9E7-4087-A99B-E5CDD6182FB5}"
@@ -155,10 +153,6 @@ Global
 		{599A1D30-4859-4714-8F10-52942E165B3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{599A1D30-4859-4714-8F10-52942E165B3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{599A1D30-4859-4714-8F10-52942E165B3C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0012380D-8065-4624-A38A-68EE72C709B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0012380D-8065-4624-A38A-68EE72C709B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0012380D-8065-4624-A38A-68EE72C709B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0012380D-8065-4624-A38A-68EE72C709B9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{ABA30329-4619-4D2D-8606-68639419420B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{ABA30329-4619-4D2D-8606-68639419420B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABA30329-4619-4D2D-8606-68639419420B}.Release|Any CPU.ActiveCfg = Release|Any CPU
