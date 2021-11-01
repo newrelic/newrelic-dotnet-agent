@@ -3,7 +3,6 @@
 
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using System;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
