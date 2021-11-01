@@ -77,7 +77,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assert.Equal(6, operationDatastoreSpans.Count())
+                () => Assert.Equal(7, operationDatastoreSpans.Count())
             );
         }
     }
