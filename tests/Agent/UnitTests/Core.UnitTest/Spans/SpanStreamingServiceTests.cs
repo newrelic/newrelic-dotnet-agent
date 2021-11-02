@@ -1,26 +1,26 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Agent.Core.Segments;
-using NUnit.Framework;
-using System.Collections.Generic;
-using System.Linq;
-using Telerik.JustMock;
-using Grpc.Core;
-using System.Threading;
-using NewRelic.Testing.Assertions;
 using System;
 using System.Collections.Concurrent;
-using NewRelic.Agent.Configuration;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Collections;
-using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
+using NewRelic.Testing.Assertions;
+using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
@@ -339,14 +339,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var countShutdowns = 0;
             var signalIsDone = new ManualResetEventSlim();
-            // When starting the service, a shutdown is issued as a means to restart.
-            // When starting the channel, this also occurs.
-            // Ignore these first two shutdowns in our determination of svc.stop
+            // When starting the channel, a shutdown is initiated to reset everything
+            // Ignore this in our determination of svc.stop
             _grpcWrapper.WithShutdownImpl = () =>
             {
                 countShutdowns++;
 
-                if (countShutdowns > 2)
+                if (countShutdowns > 1)
                 {
                     signalIsDone.Set();
                 }
@@ -579,12 +578,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             //var expectedAttempts = new[] { item1, item1 };
             var expectedAttempts = new List<TRequest>() { item1, item1 };
 
-            NrAssert.Multiple
-            (
-                () => Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), "Task didn't complete"),
-                () => CollectionAssert.AreEqual(expectedAttempts, actualAttempts),
-                () => CollectionAssert.AreEqual(new[] { _expectedDelayAfterErrorSendingASpan }, actualDelays)
-            );
+            Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), "Task didn't complete");
+            CollectionAssert.AreEqual(expectedAttempts, actualAttempts);
+            CollectionAssert.AreEqual(new[] { _expectedDelayAfterErrorSendingASpan }, actualDelays);
         }
 
         [Test]
@@ -1182,14 +1178,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return true;
             };
 
-            // When starting the service, a shutdown is issued as a means to restart.
-            // When starting the channel, this also occurs.
-            // Ignore these first two shutdowns in our determination of svc.stop
+            // When starting the channel, a shutdown is initiated to reset everything
+            // Ignore this in our determination of svc.stop
             _grpcWrapper.WithShutdownImpl = () =>
             {
                 countShutdowns++;
 
-                if (countShutdowns > 2)
+                if (countShutdowns > 1)
                 {
                     signalIsDone.Set();
                 }
@@ -1245,14 +1240,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var countShutdowns = 0;
             var signalIsDone = new ManualResetEventSlim();
-            // When starting the service, a shutdown is issued as a means to restart.
-            // When starting the channel, this also occurs.
-            // Ignore these first two shutdowns in our determination of svc.stop
+            // When starting the channel, a shutdown is initiated to reset everything
+            // Ignore this in our determination of svc.stop
             _grpcWrapper.WithShutdownImpl = () =>
             {
                 countShutdowns++;
 
-                if (countShutdowns > 2)
+                if (countShutdowns > 1)
                 {
                     signalIsDone.Set();
                 }
@@ -1262,12 +1256,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             _streamingSvc.StartConsumingCollection(sourceCollection);
 
-            NrAssert.Multiple
-            (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count")
-            );
+            Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire");
+            Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count");
+            Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count");
         }
 
         [Test]
@@ -1301,14 +1292,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var countShutdowns = 0;
             var signalIsDone = new ManualResetEventSlim();
-            // When starting the service, a shutdown is issued as a means to restart.
-            // When starting the channel, this also occurs.
-            // Ignore these first two shutdowns in our determination of svc.stop
+            // When starting the channel, a shutdown is initiated to reset everything
+            // Ignore this in our determination of svc.stop
             _grpcWrapper.WithShutdownImpl = () =>
             {
                 countShutdowns++;
 
-                if (countShutdowns > 2)
+                if (countShutdowns > 1)
                 {
                     signalIsDone.Set();
                 }
