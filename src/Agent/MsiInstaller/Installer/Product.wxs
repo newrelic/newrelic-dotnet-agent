@@ -350,6 +350,14 @@ SPDX-License-Identifier: Apache-2.0
         <File Id="CoreNewRelic.Agent.Extensions.dll" Name="NewRelic.Agent.Extensions.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\NewRelic.Agent.Extensions.dll"/>
       </Component>
 
+      <!--Google gRPC CSharp Extensions-->
+      <Component Id="CoregRPCCSharpExtensionsLibx64" Guid="{3AC8931D-8D17-4834-A21F-783B61B1910C}">
+        <File Id="Coregrpc_csharp_ext.x64.dll" Name="grpc_csharp_ext.x64.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\grpc_csharp_ext.x64.dll"/>
+      </Component>
+      <Component Id="CoregRPCCSharpExtensionsLibx86" Guid="{7078C7BE-0216-4ECE-AC3F-6647D7C04DD3}">
+        <File Id="Coregrpc_csharp_ext.x86.dll" Name="grpc_csharp_ext.x86.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\grpc_csharp_ext.x86.dll"/>
+      </Component>
+
       <!-- Configuration -->
       <Component Id="CoreConfigurationShortcuts" Guid="{3F39FDDD-A607-4DA3-9B4D-3169D65BE49C}">
         <Shortcut Id="CoreExtensionsShortcut" Name="Extensions" Target="[CoreExtensionsFolder]" WorkingDirectory="CoreExtensionsFolder" Advertise="no"/>
