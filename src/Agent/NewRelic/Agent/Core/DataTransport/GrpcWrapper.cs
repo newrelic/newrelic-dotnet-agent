@@ -88,6 +88,8 @@ namespace NewRelic.Agent.Core.DataTransport
                     return true;
                 }
 
+                // Ensure channel connection attempt shutdown on timeout
+                channel.ShutdownAsync().Wait();
                 return false;
             }
             catch (Exception ex)
@@ -118,9 +120,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
             }
             catch (Exception) { }
-
-            // Ensure channel connection attempt shutdown on timeout
-            channel.ShutdownAsync().Wait();
 
             return false;
         }
