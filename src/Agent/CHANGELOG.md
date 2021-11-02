@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] changes
 ### New Features
 ### Fixes
+* Fixes issue [#780](https://github.com/newrelic/newrelic-dotnet-agent/issues/780): Improves management of gRPC channels during connection failure scenarios. ([#782](https://github.com/newrelic/newrelic-dotnet-agent/pull/782))
 * Fixes issue [#781](https://github.com/newrelic/newrelic-dotnet-agent/issues/781): Windows MSI installer was not deploying gRPC libraries for netcore applications. ([#788](https://github.com/newrelic/newrelic-dotnet-agent/pull/788))
 
 ## [9.1.0] - 2021-10-26

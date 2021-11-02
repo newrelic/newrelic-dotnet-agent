@@ -513,8 +513,6 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private bool CreateChannel(CancellationToken cancellationToken)
         {
-            _grpcWrapper.Shutdown();
-
             var attemptId = 0;
 
             var endpointIpAddr = GetIpAddressFromHostname(EndpointHost);
@@ -525,7 +523,6 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 try
                 {
-
                     var createdChannel = false;
                     using (_agentTimerService.StartNew(_timerEventNameForChannel))
                     {
@@ -584,7 +581,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 var delayPeriodMs = _backoffDelaySequenceConnectMs[delayIdx];
 
                 LogMessage(LogLevel.Finest, $"Backoff for {delayPeriodMs}ms before attempting to reconnect.");
-
                 _delayer.Delay(delayPeriodMs, cancellationToken);
 
                 attemptId++;
