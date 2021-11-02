@@ -18,6 +18,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
     [Library]
     public class CosmosDBExerciser
     {
+        //This configuration is necessary to bypass the SSL connection error when testing with the CosmosDB server emulator without installing a cert.
         static readonly CosmosClientOptions _cosmosClientOptions = new CosmosClientOptions()
         {
             HttpClientFactory = () =>
