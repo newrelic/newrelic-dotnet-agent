@@ -23,9 +23,9 @@ namespace MultiFunctionApplicationHelpers
         }
     }
 
-    public class ConsoleDynamicMethodFixtureFW461 : ConsoleDynamicMethodFixtureFWSpecificVersion
+    public class ConsoleDynamicMethodFixtureFW462 : ConsoleDynamicMethodFixtureFWSpecificVersion
     {
-        public ConsoleDynamicMethodFixtureFW461() : base("net461")
+        public ConsoleDynamicMethodFixtureFW462() : base("net462")
         {
         }
     }
