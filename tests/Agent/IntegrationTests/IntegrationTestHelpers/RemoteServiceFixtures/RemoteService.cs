@@ -81,7 +81,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
             else if (_publishApp)
             {
-                PublishWithDotnetExe(string.IsNullOrWhiteSpace(_targetFramework) ? "net461" : _targetFramework);
+                PublishWithDotnetExe(string.IsNullOrWhiteSpace(_targetFramework) ? "net462" : _targetFramework);
                 CopyNewRelicHomeDirectoryToRemote();
                 if (!UseLocalConfig)
                 {

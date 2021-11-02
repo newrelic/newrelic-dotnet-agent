@@ -11,7 +11,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"DistributedTracingApiApplication";
         private const string ExecutableName = @"DistributedTracingApiApplication.exe";
-        private const string TargetFramework = "net461";
+        private const string TargetFramework = "net462";
 
         public DistributedTracingApiFixture()
             : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))

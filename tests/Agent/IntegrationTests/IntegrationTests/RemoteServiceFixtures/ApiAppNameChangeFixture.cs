@@ -11,7 +11,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"ApiAppNameChange";
         private const string ExecutableName = @"NewRelic.Agent.IntegrationTests.Applications.ApiAppNameChange.exe";
-        private const string TargetFramework = "net461";
+        private const string TargetFramework = "net462";
 
         public ApiAppNameChangeFixture()
             : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))

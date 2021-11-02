@@ -2,7 +2,7 @@
   <PropertyGroup>
     <RootNamespace>HostedWebCore</RootNamespace>
     <AssemblyName>HostedWebCore</AssemblyName>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <CodeContractsAssemblyMode>1</CodeContractsAssemblyMode>
     <OutputType>exe</OutputType>

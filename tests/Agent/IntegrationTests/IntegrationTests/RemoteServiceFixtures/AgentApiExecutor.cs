@@ -11,7 +11,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"AgentApiExecutor";
         private const string ExecutableName = @"NewRelic.Agent.IntegrationTests.Applications.AgentApiExecutor.exe";
-        private const string TargetFramework = "net461";
+        private const string TargetFramework = "net462";
 
         public AgentApiExecutor()
             : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))

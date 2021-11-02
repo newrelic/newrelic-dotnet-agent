@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net461</TargetFrameworks>
+    <TargetFrameworks>net462</TargetFrameworks>
     <OutputType>exe</OutputType>
     <RootNamespace>Owin4WebApi</RootNamespace>
     <AssemblyName>Owin4WebApi</AssemblyName>

@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <AssemblyName>DistributedTracingApiApplication</AssemblyName>
     <RootNamespace>NewRelic.Agent.IntegrationTests.Applications.DistributedTracingApiApplication</RootNamespace>
     <OutputType>exe</OutputType>

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;netcoreapp3.1;net5.0;net6.0;net461;net471;net48</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;netcoreapp3.1;net5.0;net6.0;net462;net471;net48</TargetFrameworks>
     <!--We have some tests that specifically need to test .NET Core 2.2 behavior, so disabling the warning about 2.2 being EOL-->
     <NoWarn>$(NoWarn);NETSDK1138</NoWarn>
     
@@ -42,7 +42,7 @@
       or ConsoleMultiFunctionApplicationCore, and the various subclasses in ConsoleDynamicMethodFixture specify particular
       target frameworks of the ConsoleMF apps. -->
   <ItemGroup>
-    <PackageReference Include="RabbitMQ.Client" Version="3.5.2" Condition="'$(TargetFramework)' == 'net461'" />
+    <PackageReference Include="RabbitMQ.Client" Version="3.5.2" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
