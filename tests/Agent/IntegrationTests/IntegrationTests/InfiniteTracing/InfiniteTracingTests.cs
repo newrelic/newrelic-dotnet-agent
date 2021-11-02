@@ -81,9 +81,9 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
     }
 
     [NetFrameworkTest]
-    public class InfiniteTracingFW461Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW461>
+    public class InfiniteTracingFW462Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public InfiniteTracingFW461Tests(ConsoleDynamicMethodFixtureFW461 fixture, ITestOutputHelper output)
+        public InfiniteTracingFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
