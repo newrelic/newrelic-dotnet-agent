@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-#if NET451
+#if NET462
 using System;
 using System.Collections.Generic;
 using Couchbase;

@@ -13,11 +13,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation.NetCore
 {
     [NetCoreTest]
-    public class HttpClientInstrumentationNet5 : NewRelicIntegrationTest<AspNet5BasicWebApiApplicationFixture>
+    public abstract class HttpClientInstrumentationTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture: AspNetCoreBasicWebApiApplicationFixture
     {
-        private readonly AspNet5BasicWebApiApplicationFixture _fixture;
+        private readonly AspNetCoreBasicWebApiApplicationFixture _fixture;
 
-        public HttpClientInstrumentationNet5(AspNet5BasicWebApiApplicationFixture fixture, ITestOutputHelper output)
+        protected HttpClientInstrumentationTestsBase(TFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
@@ -75,4 +75,20 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation.NetCore
             );
         }
     }
+
+    public class HttpClientInstrumentationTests_net50 : HttpClientInstrumentationTestsBase<AspNetCoreBasicWebApiApplicationFixture_net50>
+    {
+        public HttpClientInstrumentationTests_net50(AspNetCoreBasicWebApiApplicationFixture_net50 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+    public class HttpClientInstrumentationTests_net60 : HttpClientInstrumentationTestsBase<AspNetCoreBasicWebApiApplicationFixture_net60>
+    {
+        public HttpClientInstrumentationTests_net60(AspNetCoreBasicWebApiApplicationFixture_net60 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
 }

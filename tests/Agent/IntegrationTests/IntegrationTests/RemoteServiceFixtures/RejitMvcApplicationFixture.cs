@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         }
 
         protected AspNetCoreReJitMvcApplicationFixture(bool useTieredCompilation)
-            : base(new RemoteService("AspNetCoreMvcRejitApplication", "AspNetCoreMvcRejitApplication.exe", ApplicationType.Bounded, true, true, true))
+            : base(new RemoteService("AspNetCoreMvcRejitApplication", "AspNetCoreMvcRejitApplication.exe", "netcoreapp3.1", ApplicationType.Bounded, true, true, true))
         {
             RemoteApplication.UseTieredCompilation = useTieredCompilation;
         }

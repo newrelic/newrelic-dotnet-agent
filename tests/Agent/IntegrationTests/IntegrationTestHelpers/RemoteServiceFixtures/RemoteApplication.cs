@@ -180,7 +180,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
 
-        protected const string HostedWebCoreTargetFramework = "net451";
+        protected const string HostedWebCoreTargetFramework = "net462";
 
         public bool UseTieredCompilation { get; set; } = false;
 

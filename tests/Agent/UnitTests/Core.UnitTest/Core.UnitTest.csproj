@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net45</TargetFrameworks>
+    <TargetFrameworks>net462</TargetFrameworks>
     <RootNamespace>NewRelic.Agent.Core</RootNamespace>
     <AssemblyName>NewRelic.Agent.Core.UnitTest</AssemblyName>
     <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>
