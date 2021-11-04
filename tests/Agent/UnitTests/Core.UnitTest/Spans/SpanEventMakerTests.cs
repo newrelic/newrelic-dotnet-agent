@@ -70,6 +70,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
         private string _obfuscatedSql;
         private ParsedSqlStatement _parsedSqlStatement;
+        private ParsedSqlStatement _parsedSqlStatementWithEmptyModel;
         private ConnectionInfo _connectionInfo;
 
         private ConfigurationAutoResponder _configAutoResponder;
@@ -164,6 +165,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             // Datastore Segments
             _connectionInfo = new ConnectionInfo("localhost", "1234", "default", "maininstance");
             _parsedSqlStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, System.Data.CommandType.Text, ShortQuery);
+
             _obfuscatedSql = _databaseService.GetObfuscatedSql(ShortQuery, DatastoreVendor.MSSQL);
             _baseDatastoreSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
             _baseDatastoreSegment.SetSegmentData(new DatastoreSegmentData(_databaseService, _parsedSqlStatement, ShortQuery, _connectionInfo));
@@ -441,6 +443,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
                 () => Assert.AreEqual(DatastoreVendor.MSSQL.ToString(), (string)spanEventIntrinsicAttributes["component"]),
                 () => Assert.AreEqual(_parsedSqlStatement.Model, (string)spanEventAgentAttributes["db.collection"]),
 
+
                 //This also tests the lazy instantiation on span event attrib values
                 () => Assert.AreEqual(_obfuscatedSql, (string)spanEventAgentAttributes["db.statement"]),
 
@@ -448,6 +451,44 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
                 () => Assert.AreEqual($"{_connectionInfo.Host}:{_connectionInfo.PortPathOrId}", (string)spanEventAgentAttributes["peer.address"]),
                 () => Assert.AreEqual(_connectionInfo.Host, (string)spanEventAgentAttributes["peer.hostname"]),
                 () => Assert.AreEqual("client", (string)spanEventIntrinsicAttributes["span.kind"])
+            );
+        }
+
+        [Test]
+        public void Do_Not_Generate_DbCollection_Attribute_When_Model_IsNullOrEmpty()
+        {
+            var testSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
+            testSegment.SetSegmentData(new DatastoreSegmentData(_databaseService,
+                parsedSqlStatement: new ParsedSqlStatement(DatastoreVendor.CosmosDB, string.Empty, "ReadDatabase"),
+                connectionInfo: new ConnectionInfo("localhost", "1234", "default", "maininstance")));
+
+            // ARRANGE
+            var segments = new List<Segment>()
+            {
+                testSegment
+            };
+            
+
+            var immutableTransaction = BuildTestTransaction(segments, true, false);
+
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            // ACT
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
+            var spanEvent = spanEvents.ToList()[1];
+            var spanEventIntrinsicAttributes = spanEvent.IntrinsicAttributes();
+            var spanEventAgentAttributes = spanEvent.AgentAttributes();
+
+            // ASSERT
+
+            NrAssert.Multiple
+            (
+                () => Assert.True(!spanEventAgentAttributes.ContainsKey("db.collection")),
+                () => Assert.AreEqual("default", (string)spanEventAgentAttributes["db.instance"]),
+                () => Assert.AreEqual("localhost:1234", (string)spanEventAgentAttributes["peer.address"]),
+                () => Assert.AreEqual("localhost", (string)spanEventAgentAttributes["peer.hostname"])
             );
         }
 
