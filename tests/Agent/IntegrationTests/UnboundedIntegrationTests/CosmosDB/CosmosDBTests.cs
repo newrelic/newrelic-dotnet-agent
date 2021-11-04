@@ -17,22 +17,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
-
+        private string _testContainerName = "testContainer";
 
         protected CosmosDBTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
 
-            _fixture.SetTimeout(TimeSpan.FromMinutes(5));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
 
             _fixture.AddCommand($"CosmosDBExerciser StartAgent");
+
             _fixture.AddCommand($"CosmosDBExerciser CreateReadAndDeleteDatabase test_db_{Guid.NewGuid().ToString("n").Substring(0, 4)}");
 
             _fixture.AddCommand($"CosmosDBExerciser CreateReadAndDeleteContainers test_db_{Guid.NewGuid().ToString("n").Substring(0, 4)} testContainer");
-
-            _fixture.AddCommand($"CosmosDBExerciser Wait");
-
 
             _fixture.Actions
             (
@@ -89,9 +87,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
 
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateReadAndDeleteContainers", callCount = 1 },
 
-                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/testContainer/ReadCollection", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateReadAndDeleteContainers", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateReadAndDeleteContainers", callCount = 1 },
 
-                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/testContainer/DeleteCollection", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateReadAndDeleteContainers", callCount = 1 }
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/DeleteCollection", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateReadAndDeleteContainers", callCount = 1 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();

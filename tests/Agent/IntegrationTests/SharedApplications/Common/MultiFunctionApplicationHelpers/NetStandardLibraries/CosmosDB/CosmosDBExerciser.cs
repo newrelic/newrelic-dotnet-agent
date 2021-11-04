@@ -61,7 +61,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                     {
                         foreach (DatabaseProperties db in await iterator.ReadNextAsync())
                         {
-                            Console.WriteLine(db.Id);
+                            Assert.False(string.IsNullOrEmpty(db.Id));
                         }
                     }
                 }
@@ -74,7 +74,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                         using ResponseMessage response = await iterator.ReadNextAsync();
                         using (StreamReader sr = new StreamReader(response.Content))
                         {
-                            sr.ReadToEnd();
+                            var a = sr.ReadToEnd();
+                            Assert.False(string.IsNullOrEmpty(a));
                         }
                     }
                 }
@@ -128,12 +129,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             NewRelic.Api.Agent.NewRelic.StartAgent();
             //Get everything started up and time for initial Sample().
             Thread.Sleep(TimeSpan.FromSeconds(10));
-        }
-
-        [LibraryMethod]
-        public static void Wait()
-        {
-            Thread.Sleep(TimeSpan.FromSeconds(70));
         }
     }
 }
