@@ -12,6 +12,7 @@ using Microsoft.Azure.Cosmos;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
+using Xunit;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
 {
@@ -39,48 +40,87 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
         public async Task CreateReadAndDeleteDatabase(string databaseId)
         {
             var endpoint = CosmosDBConfiguration.CosmosDBServer;
-                var authKey = CosmosDBConfiguration.AuthKey;
+            var authKey = CosmosDBConfiguration.AuthKey;
 
             using CosmosClient client = new CosmosClient(endpoint, authKey, _cosmosClientOptions);
+
             var databaseResponse = await client.CreateDatabaseIfNotExistsAsync(databaseId);
 
             var database = databaseResponse.Database;
 
-            // Read the database from Azure Cosmos
-            var readResponse = await database.ReadAsync();
-
-            // Create a container/collection
-            await readResponse.Database.CreateContainerAsync("testContainer", "/pk");
-
-            // Read database using GetDatabaseQueryIterator()
-            using (FeedIterator<DatabaseProperties> iterator = client.GetDatabaseQueryIterator<DatabaseProperties>())
+            try
             {
-                while (iterator.HasMoreResults)
+
+                // Read the database from Azure Cosmos
+                var readResponse = await database.ReadAsync();
+
+                // Read database using GetDatabaseQueryIterator()
+                using (FeedIterator<DatabaseProperties> iterator = client.GetDatabaseQueryIterator<DatabaseProperties>())
                 {
-                    foreach (DatabaseProperties db in await iterator.ReadNextAsync())
+                    while (iterator.HasMoreResults)
                     {
-                        Console.WriteLine(db.Id);
+                        foreach (DatabaseProperties db in await iterator.ReadNextAsync())
+                        {
+                            Console.WriteLine(db.Id);
+                        }
+                    }
+                }
+
+                // Read database using GetDatabaseStreamQueryIterator
+                using (FeedIterator iterator = client.GetDatabaseQueryStreamIterator())
+                {
+                    while (iterator.HasMoreResults)
+                    {
+                        using ResponseMessage response = await iterator.ReadNextAsync();
+                        using (StreamReader sr = new StreamReader(response.Content))
+                        {
+                            sr.ReadToEnd();
+                        }
                     }
                 }
             }
-
-            // Read database using GetDatabaseStreamQueryIterator
-            using (FeedIterator iterator = client.GetDatabaseQueryStreamIterator())
+            finally
             {
-                while (iterator.HasMoreResults)
-                {
-                    using ResponseMessage response = await iterator.ReadNextAsync();
-                    using (StreamReader sr = new StreamReader(response.Content))
-                    {
-                        sr.ReadToEnd();
-                    }
-                }
+                // Delete the database from Azure Cosmos.
+                await database.DeleteAsync();
             }
-
-            // Delete the database from Azure Cosmos.
-            await database.DeleteAsync();
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task CreateReadAndDeleteContainers(string databaseId, string containerId)
+        {
+            var endpoint = CosmosDBConfiguration.CosmosDBServer;
+            var authKey = CosmosDBConfiguration.AuthKey;
+
+            using var client = new CosmosClient(endpoint, authKey, _cosmosClientOptions);
+            var databaseResponse = await client.CreateDatabaseIfNotExistsAsync(databaseId);
+            var database = databaseResponse.Database;
+
+            try
+            {
+                await database.CreateContainerAsync(containerId, "/pk");
+
+                string queryText = "SELECT * FROM c";
+                using FeedIterator<ContainerProperties> feedIterator = database.GetContainerQueryIterator<ContainerProperties>(queryText);
+                while (feedIterator.HasMoreResults)
+                {
+                    var r = await feedIterator.ReadNextAsync();
+
+                    foreach (var c in r)
+                    {
+                        var container = database.GetContainer(c.Id);
+                        await container.ReadContainerAsync();
+                        await container.DeleteContainerAsync();
+                    }
+                }
+            }
+            finally
+            {
+                await database.DeleteAsync();
+            }
+        }
 
         [LibraryMethod]
         public static void StartAgent()
