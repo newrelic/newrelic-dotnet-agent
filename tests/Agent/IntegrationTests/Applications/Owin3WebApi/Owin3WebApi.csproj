@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net451</TargetFrameworks>
+    <TargetFrameworks>net462</TargetFrameworks>
     <OutputType>exe</OutputType>
     <RootNamespace>Owin3WebApi</RootNamespace>
     <AssemblyName>Owin3WebApi</AssemblyName>
@@ -31,8 +31,4 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
 
-  
-  <ItemGroup>
-    <ProjectReference Include="..\..\ToBeInstrumented\ToBeInstrumented.csproj" />
-  </ItemGroup>
 </Project>

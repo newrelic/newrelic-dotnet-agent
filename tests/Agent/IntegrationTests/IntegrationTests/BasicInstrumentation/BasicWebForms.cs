@@ -32,6 +32,10 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 {
                     _fixture.GetSlow();
                     _fixture.Get404();
+
+                    // Make a request with an invalid query string to ensure that the agent handles it safely
+                    var queryStringParams = new Dictionary<string, string> { { "a", "<b>" } };
+                    _fixture.GetWithQueryString(queryStringParams, true);
                 }
             );
             _fixture.Initialize();
@@ -42,29 +46,37 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/ASP/webformslow.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-
-				// On hold until we port the Page.PerformPreInit instrumentation to a wrapper
-				//new Assertions.ExpectedMetric { metricName = @"DotNet/System.Web.UI.Page/PerformPreInit", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-
-				new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/StatusCode/404" }
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 3 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 3 }
             };
+
+            foreach (var webFormName in new List<string>() { "webform1.aspx", "webformslow.aspx"} )
+            {
+                var endpointMetrics = new List<Assertions.ExpectedMetric>
+                {
+                new Assertions.ExpectedMetric { metricName = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"WebTransactionTotalTime/ASP/{webFormName}", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 },
+                };
+                expectedMetrics.AddRange(endpointMetrics);
+                if (webFormName == "webformslow.aspx")
+                {
+                    // These metrics don't appear when `webform1.aspx` is the requested endpoint because of the invalid query string
+                    expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 });
+                    expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = $"WebTransaction/ASP/{webFormName}", callCount = 1 });
+                }
+            }
+            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = @"WebTransaction/StatusCode/404" });
+
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/Integrated Pipeline" },
@@ -82,11 +94,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 @"MapRequestHandler",
                 @"AcquireRequestState",
                 @"ExecuteRequestHandler",
-				
-				// On hold until we port the Page.PerformPreInit instrumentation to a wrapper
-				//@"DotNet/System.Web.UI.Page/PerformPreInit",
-
-				@"ReleaseRequestState",
+                @"ReleaseRequestState",
                 @"UpdateRequestCache",
                 @"EndRequest",
             };

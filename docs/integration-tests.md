@@ -1,12 +1,24 @@
 # New Relic .NET agent integration tests
 
-Tests the integration of the New Relic .NET agent with various .NET applications. This test suite will only run on Windows.
+Tests the integration of the New Relic .NET agent with various .NET applications.
+
+This test suite can be run on both Windows and Linux, however:
+
+* Only tests with the `[NetCoreTest]` attribute (which sets an XUnit trait named `RuntimeFramework` to `NetCore`) can run on Linux.
+* Testing on Linux is done from the command line with `dotnet test`.
+* The rest of this document describes how to set up and run the integration tests to be run from Visual Studio on Windows.
 
 ## Installation
-Requires Visual Studio 2019 Version 16.8 or greater.
+Requires Visual Studio 2022 Version 17.0 Preview 7.0 or greater.
 
 ### Additional items to install
-* ASP.NET and web development workload for Visual Studio 2019.
+* ASP.NET and web development workload for Visual Studio 2022.
+* The following .NET Core/.NET SDKs:
+  * .NET Core 2.1 (out of support, but we currently still have tests which target this runtime)
+  * .NET Core 2.2 (ditto)
+  * .NET Core 3.1
+  * .NET 5
+  * .NET 6
 * Required Windows features
   * Windows features can be enabled as follows:
     ```
@@ -123,4 +135,6 @@ Requires Visual Studio 2019 Version 16.8 or greater.
 
 1. Build the `FullAgent.sln`.
 2. Running Visual Studio as an Administrator, open the `IntegrationTests.sln` solution and build the solution. After a successful build, the tests are listed in the Visual Studio test explorer window.
-3. Run all tests or selected tests. 
+3. The recommended "Group By" order for the tests in the test explorer is `Project`, `Traits`, `Namespace`, `Class`.
+4. The main `IntegrationTests` test project is multi-targeted to both a .NET Framework and a .NET Core version to support both Windows/.NET Framework and Linux testing.  If you are running tests from Visual Studio on Windows, it is only necessary to run the .NET Framework version of the tests.  (Note: this is the runtime of the **test code**, not the test target applications.  The variant of the New Relic .NET agent (Framework/Core) being tested depends on the latter.)
+5. Run all tests or selected tests. 

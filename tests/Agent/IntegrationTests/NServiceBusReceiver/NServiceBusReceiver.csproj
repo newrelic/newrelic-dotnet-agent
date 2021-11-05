@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
     <RootNamespace>NServiceBusReceiver</RootNamespace>
     <AssemblyName>NServiceBusReceiver</AssemblyName>
-    <TargetFrameworks>net45</TargetFrameworks>
+    <TargetFrameworks>net462</TargetFrameworks>
     <Description>Project used for testing NServiceBus receive messages</Description>
   </PropertyGroup>
 

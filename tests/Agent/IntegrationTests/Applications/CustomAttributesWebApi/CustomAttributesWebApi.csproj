@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFramework>net451</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <RootNamespace>NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi</RootNamespace>
     <AssemblyName>NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi</AssemblyName>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -30,8 +30,5 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\ToBeInstrumented\ToBeInstrumented.csproj" />
   </ItemGroup>
 </Project>

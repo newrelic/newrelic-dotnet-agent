@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Sinks.SumoLogic;
 
@@ -34,12 +35,12 @@ namespace SerilogSumologicApplication
                 .WriteTo.SumoLogic("https://endpoint3.collection.us2.sumologic.com/receiver/v1/http/ZaVnC4dhaV3RNOE402S4RYn9UbAqGrwPSgZoI_9Cm3dy4JWEwJkAEIVpxcS6gWbCj-Xl2W00HfdMhWtSWDo6vRFfmKNfOWXLztlFKBeyiZhUXeptcmKoVA==", "MiddlewareLogTest", handler: loggingHandler)
                 .CreateLogger();
 
-            services.AddMvc();
+            services.AddMvc(x => x.EnableEndpointRouting = false);
 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
@@ -19,7 +18,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         // This base fixture class targets the Owin2 WebApi test application; its derived classes target Owin3 and 4
         private const string ApplicationDirectoryName = @"Owin2WebApi";
         private const string ExecutableName = @"Owin2WebApi.exe";
-        private const string TargetFramework = "net451";
+        private const string TargetFramework = "net462";
 
         public string AssemblyName;
 
@@ -97,9 +96,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             httpWebRequest.Method = "POST";
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Accept = "application/json";
-            httpWebRequest.Referer = "http://example.com";
+            httpWebRequest.Referer = "http://example.com/";
             httpWebRequest.UserAgent = "FakeUserAgent";
-            httpWebRequest.Host = "fakehost";
+            httpWebRequest.Host = "fakehost:1234";
             httpWebRequest.Headers.Add("foo", "bar");
 
             var serializedBody = JsonConvert.SerializeObject(body);
@@ -227,7 +226,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"Owin3WebApi";
         private const string ExecutableName = @"Owin3WebApi.exe";
-        private const string TargetFramework = "net451";
+        private const string TargetFramework = "net462";
 
         public Owin3WebApiFixture()
             : base(ApplicationDirectoryName, ExecutableName, TargetFramework)
@@ -239,7 +238,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"Owin4WebApi";
         private const string ExecutableName = @"Owin4WebApi.exe";
-        private const string TargetFramework = "net451";
+        private const string TargetFramework = "net462";
 
         public Owin4WebApiFixture()
             : base(ApplicationDirectoryName, ExecutableName, TargetFramework)

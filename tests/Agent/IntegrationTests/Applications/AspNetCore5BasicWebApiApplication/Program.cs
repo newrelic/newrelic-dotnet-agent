@@ -9,7 +9,7 @@ using ApplicationLifecycle;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
-namespace AspNet5BasicWebApiApplication
+namespace AspNetCore5BasicWebApiApplication
 {
     public class Program
     {
