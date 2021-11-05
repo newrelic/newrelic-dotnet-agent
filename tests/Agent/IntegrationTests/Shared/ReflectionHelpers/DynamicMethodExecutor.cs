@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers
 {
@@ -31,7 +32,13 @@ namespace NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers
                 }
             }
 
-            method.Invoke(objInst, paramValues.ToArray());
+            var returnValue = method.Invoke(objInst, paramValues.ToArray());
+
+            if (returnValue is Task task)
+            {
+                task.Wait();
+            }
+
         }
 
         public static IEnumerable<object> MapParameterValues(MethodInfo method, string[] args)
