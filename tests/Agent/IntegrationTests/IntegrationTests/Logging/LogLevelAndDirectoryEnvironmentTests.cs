@@ -91,9 +91,16 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     }
 
     [NetCoreTest]
-    public class LogLevelAndDirectoryEnvironmentTests_net5 : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreLatest>
+    public class LogLevelAndDirectoryEnvironmentTests_net5 : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCore50>
     {
-        public LogLevelAndDirectoryEnvironmentTests_net5(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public LogLevelAndDirectoryEnvironmentTests_net5(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output) { }
+    }
+
+    [NetCoreTest]
+    public class LogLevelAndDirectoryEnvironmentTests_net6 : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public LogLevelAndDirectoryEnvironmentTests_net6(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output) { }
     }
 }

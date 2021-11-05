@@ -14,12 +14,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetCoreTest]
-    public class ThreadProfileNetCoreTests : NewRelicIntegrationTest<AspNet5WebApiWithCollectorFixture>
+    public abstract class ThreadProfileNetCoreTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture: AspNetCoreWebApiWithCollectorFixture
     {
-        private readonly AspNet5WebApiWithCollectorFixture _fixture;
+        private readonly AspNetCoreWebApiWithCollectorFixture _fixture;
         private string _threadProfileString;
 
-        public ThreadProfileNetCoreTests(AspNet5WebApiWithCollectorFixture fixture, ITestOutputHelper output)
+        protected ThreadProfileNetCoreTestsBase(TFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
@@ -74,11 +74,22 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         [Fact]
         public void Test()
         {
+            var expectedMainMethodSignature = "";
+
+            if (_fixture.GetType() == typeof(AspNetCoreWebApiWithCollectorFixture_net50))
+            {
+                expectedMainMethodSignature = @"[""AspNetCore5BasicWebApiApplication.Program"",""Main"",0]";
+            }
+            else if (_fixture.GetType() == typeof(AspNetCoreWebApiWithCollectorFixture_net60))
+            {
+                expectedMainMethodSignature = @"[""AspNetCore6BasicWebApiApplication.Program"",""Main"",0]";
+            }
+
             NrAssert.Multiple(
                 () => Assert.Contains(@"""OTHER"":[[[""Native"",""Function Call"",0]", _threadProfileString),
-                () => Assert.Contains(@"[""AspNet5BasicWebApiApplication.Program"",""Main"",0]", _threadProfileString),
+                () => Assert.Contains(expectedMainMethodSignature, _threadProfileString),
                 () => Assert.Contains(@"System.Threading", _threadProfileString),
-                () => Assert.Contains(@"Microsoft.AspNetCore.Mvc", _threadProfileString)
+                () => Assert.Contains(@"Microsoft.AspNetCore.Server.Kestrel", _threadProfileString)
             );
         }
 
@@ -111,4 +122,20 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             }
         }
     }
+
+    public class ThreadProfileNet5Tests : ThreadProfileNetCoreTestsBase<AspNetCoreWebApiWithCollectorFixture_net50>
+    {
+        public ThreadProfileNet5Tests(AspNetCoreWebApiWithCollectorFixture_net50 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+    public class ThreadProfileNet6Tests : ThreadProfileNetCoreTestsBase<AspNetCoreWebApiWithCollectorFixture_net60>
+    {
+        public ThreadProfileNet6Tests(AspNetCoreWebApiWithCollectorFixture_net60 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
 }

@@ -277,18 +277,6 @@ namespace NewRelic.Agent.Core.Samplers
             Stop();
         }
 
-        private void HandleException(Exception ex)
-        {
-            if (ex is UnauthorizedAccessException)
-            {
-                HandleUnauthorizedException();
-                return;
-            }
-
-            HandleProblem();
-
-        }
-
         private void HandleProblem()
         {
             _countConsecutiveSamplingFailures++;
@@ -321,9 +309,15 @@ namespace NewRelic.Agent.Core.Samplers
                     return;
                 }
             }
+            catch (UnauthorizedAccessException)
+            {
+                HandleUnauthorizedException();
+                return;
+            }
             catch (Exception ex)
             {
-                HandleException(ex);
+                LogMessage(LogLevel.Finest, $"An exception occurred while attempting the to get the current Performance Counter Instance Name", ex);
+                HandleProblem();
                 return;
             }
 
@@ -354,11 +348,15 @@ namespace NewRelic.Agent.Core.Samplers
 
                 _countConsecutiveSamplingFailures = 0;
             }
+            catch (UnauthorizedAccessException)
+            {
+                HandleUnauthorizedException();
+            }
             catch (Exception ex)
             {
                 LogMessage(LogLevel.Error, $"Unable to get GC performance counter sample for Performance Counter Instance '{_perfCounterInstanceName}'.", ex);
 
-                HandleException(ex);
+                HandleProblem();
             }
         }
     }

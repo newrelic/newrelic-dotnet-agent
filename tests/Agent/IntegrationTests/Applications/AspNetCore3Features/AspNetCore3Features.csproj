@@ -7,13 +7,12 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="2.10.0" />
-  </ItemGroup>
-
-
-  <ItemGroup>
     <ProjectReference Include="..\..\ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj" />
     <ProjectReference Include="..\..\ApplicationHelperLibraries\NetCore3Collectible\NetCore3Collectible.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
 
 </Project>

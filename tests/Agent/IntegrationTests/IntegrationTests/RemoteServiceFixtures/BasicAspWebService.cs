@@ -1,9 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if NETFRAMEWORK
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using Xunit;
 using OpenQA.Selenium;
 using OpenQA.Selenium.IE;
 
@@ -46,3 +46,5 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         }
     }
 }
+
+#endif

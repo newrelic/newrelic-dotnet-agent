@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
     <RootNamespace>HostedWebCore</RootNamespace>
     <AssemblyName>HostedWebCore</AssemblyName>
-    <TargetFramework>net451</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <CodeContractsAssemblyMode>1</CodeContractsAssemblyMode>
     <OutputType>exe</OutputType>

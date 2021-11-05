@@ -28,7 +28,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
         }
 
-        public static string Arch => RuntimeInformation.ProcessArchitecture.ToString().ToLower();
+        public static string Arch => RuntimeInformation.OSArchitecture.ToString().ToLower();
         public static string CurrentRuntime => $"{(IsLinux ? "linux" : "win")}-{Arch}";
         public static string RuntimeHomeDirName => $"newrelichome_{Arch}_coreclr{(IsLinux ? "_linux" : "")}";
 

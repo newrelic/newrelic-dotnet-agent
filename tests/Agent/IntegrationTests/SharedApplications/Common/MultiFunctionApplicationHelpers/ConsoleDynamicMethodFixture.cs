@@ -23,9 +23,9 @@ namespace MultiFunctionApplicationHelpers
         }
     }
 
-    public class ConsoleDynamicMethodFixtureFW461 : ConsoleDynamicMethodFixtureFWSpecificVersion
+    public class ConsoleDynamicMethodFixtureFW462 : ConsoleDynamicMethodFixtureFWSpecificVersion
     {
-        public ConsoleDynamicMethodFixtureFW461() : base("net461")
+        public ConsoleDynamicMethodFixtureFW462() : base("net462")
         {
         }
     }
@@ -45,12 +45,6 @@ namespace MultiFunctionApplicationHelpers
     }
 
 
-    public class ConsoleDynamicMethodFixtureCore22 : ConsoleDynamicMethodFixtureCoreSpecificVersion
-    {
-        public ConsoleDynamicMethodFixtureCore22() : base("netcoreapp2.2")
-        {
-        }
-    }
     public class ConsoleDynamicMethodFixtureCore21 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
         public ConsoleDynamicMethodFixtureCore21() : base("netcoreapp2.1")
@@ -58,9 +52,23 @@ namespace MultiFunctionApplicationHelpers
         }
     }
 
+    public class ConsoleDynamicMethodFixtureCore22 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureCore22() : base("netcoreapp2.2")
+        {
+        }
+    }
+
     public class ConsoleDynamicMethodFixtureCore31 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
         public ConsoleDynamicMethodFixtureCore31() : base("netcoreapp3.1")
+        {
+        }
+    }
+
+    public class ConsoleDynamicMethodFixtureCore50 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureCore50() : base("net5.0")
         {
         }
     }
@@ -73,7 +81,7 @@ namespace MultiFunctionApplicationHelpers
     /// </summary>
     public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
-        public ConsoleDynamicMethodFixtureCoreLatest() : base("net5.0")
+        public ConsoleDynamicMethodFixtureCoreLatest() : base("net6.0")
         {
         }
     }

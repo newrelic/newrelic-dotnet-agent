@@ -3,13 +3,11 @@
 
 
 using System;
-using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
-namespace AspNet5BasicWebApiApplication.Controllers
+namespace AspNetCore5BasicWebApiApplication.Controllers
 {
     [ApiController]
     [Route("api/[controller]/[action]")]

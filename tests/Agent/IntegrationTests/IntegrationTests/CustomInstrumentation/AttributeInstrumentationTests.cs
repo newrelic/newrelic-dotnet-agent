@@ -14,9 +14,9 @@ using NewRelic.Agent.IntegrationTestHelpers.Models;
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetFrameworkTest]
-    public class AttributeInstrumentationTestsFW461 : AttributeInstrumentationTests<ConsoleDynamicMethodFixtureFW461>
+    public class AttributeInstrumentationTestsFW462 : AttributeInstrumentationTests<ConsoleDynamicMethodFixtureFW462>
     {
-        public AttributeInstrumentationTestsFW461(ConsoleDynamicMethodFixtureFW461 fixture, ITestOutputHelper output)
+        public AttributeInstrumentationTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

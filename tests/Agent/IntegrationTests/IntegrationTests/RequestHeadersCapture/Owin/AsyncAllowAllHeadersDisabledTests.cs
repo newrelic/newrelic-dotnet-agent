@@ -57,8 +57,8 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
                 // Captured headers
                 { "request.headers.connection", "Keep-Alive" },
                 { "request.headers.accept", "application/json" },
-                { "request.headers.host", "fakehost" },
-                { "request.headers.referer", "http://example.com" },
+                { "request.headers.host", "fakehost:1234" },
+                { "request.headers.referer", "http://example.com/" },
                 { "request.headers.content-length", "7" },
                 { "request.headers.user-agent", "FakeUserAgent" },
                 { "request.headers.foo", "bar" }

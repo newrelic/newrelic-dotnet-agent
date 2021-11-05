@@ -76,7 +76,8 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             try
             {
-                _channel = null;
+                // Ensure old channel disposed before new
+                Shutdown();
 
                 var credentials = ssl ? new SslCredentials() : ChannelCredentials.Insecure;
                 var channel = new Channel(host, port, credentials);
@@ -87,12 +88,12 @@ namespace NewRelic.Agent.Core.DataTransport
                     return true;
                 }
 
+                // Ensure channel connection attempt shutdown on timeout
+                channel.ShutdownAsync().Wait();
                 return false;
             }
             catch (Exception ex)
             {
-                _channel = null;
-
                 const string errorMessage = "Unable to create new gRPC Channel";
 
                 var grpcEx = ex as RpcException ?? ex.InnerException as RpcException;
@@ -110,20 +111,17 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             try
             {
-                if (!channel.ConnectAsync().Wait(connectTimeoutMs, cancellationToken) || _notConnectedStates.Contains(channel.State))
+                if (channel.ConnectAsync().Wait(connectTimeoutMs, cancellationToken) && !_notConnectedStates.Contains(channel.State))
                 {
-                    return false;
+                    using (CreateStreamsImpl(channel, headers, connectTimeoutMs, cancellationToken))
+                    {
+                        return true;
+                    }
                 }
+            }
+            catch (Exception) { }
 
-                using (CreateStreamsImpl(channel, headers, connectTimeoutMs, cancellationToken))
-                {
-                    return true;
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            return false;
         }
 
         public bool CreateStreams(Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken, out IClientStreamWriter<TRequest> requestStream, out IAsyncStreamReader<TResponse> responseStream)
@@ -201,7 +199,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             try
             {
-                _channel.ShutdownAsync();
+                _channel.ShutdownAsync().Wait();
             }
             catch (Exception ex)
             {
@@ -218,7 +216,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             try
             {
-                requestStream.CompleteAsync();
+                requestStream.CompleteAsync().Wait();
             }
             catch (Exception ex)
             {
