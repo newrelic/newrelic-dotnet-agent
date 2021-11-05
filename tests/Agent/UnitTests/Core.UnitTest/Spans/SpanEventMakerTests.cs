@@ -70,7 +70,6 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
         private string _obfuscatedSql;
         private ParsedSqlStatement _parsedSqlStatement;
-        private ParsedSqlStatement _parsedSqlStatementWithEmptyModel;
         private ConnectionInfo _connectionInfo;
 
         private ConfigurationAutoResponder _configAutoResponder;
