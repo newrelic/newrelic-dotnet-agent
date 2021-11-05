@@ -196,6 +196,9 @@ jobs:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
       msi_solution_path: ${{ github.workspace }}\src\Agent\MsiInstaller\MsiInstaller.sln
 
+    outputs:
+      agentVersion: ${{ steps.agentVersion.outputs.version }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -231,20 +234,13 @@ jobs:
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
         shell: powershell
 
-      - name: Create agent_version.txt
+      - name: Create agentVersion
+        id: agentVersion
         run: |
           $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
-          Write-Host "Agent version $agentVersion"
-          $agentVersion | Out-File -FilePath ${{ github.workspace }}\agent_version.txt -encoding utf8
+          Write-Host "::set-output name=version::$agentVersion"
         shell: powershell
-        
-      - name: Create agent_version.txt artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: agent-version
-          path: ${{ github.workspace }}\agent_version.txt
-          if-no-files-found: error
-      
+
       - name: Archive NewRelic.NuGetHelper
         uses: actions/upload-artifact@v2
         with:
@@ -867,12 +863,6 @@ jobs:
         with:
           name: homefolders
           path: src/Agent
-      
-      - name: Download Agent Version
-        uses: actions/download-artifact@v2
-        with:
-          name: agent-version
-          path: ${{ github.workspace }}
 
       - name: Convert GPG Key Into File
         id: write_gpgkey
@@ -890,10 +880,7 @@ jobs:
 
       - name: Build RPM
         run: |
-          sudo apt install dos2unix -y
-          dos2unix ${{ github.workspace }}/agent_version.txt
-          agentVersion=$(head -n 1 ${{ github.workspace }}/agent_version.txt)
-          agentVersion=${agentVersion/$'\r\n\t'}
+          agentVersion=${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
           cd ${{ github.workspace }}/build/Linux
           docker-compose build build_rpm
           docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
@@ -930,18 +917,9 @@ jobs:
           name: msi-build-folder-artifacts
           path: src/_build
 
-      - name: Download agent_version.txt
-        uses: actions/download-artifact@v2
-        with:
-          name: agent-version
-          path: ${{ github.workspace }}
-
       - name: Build Debian Package
         run: |
-          sudo apt install dos2unix -y
-          dos2unix ${{ github.workspace }}/agent_version.txt
-          agentVersion=$(head -n 1 ${{ github.workspace }}/agent_version.txt)
-          agentVersion=${agentVersion/$'\r\n\t'}
+          agentVersion=${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
           cd ${{ github.workspace }}/build/Linux
           docker-compose build build_deb
           docker-compose run -e AGENT_VERSION=$agentVersion build_deb
@@ -1021,3 +999,11 @@ jobs:
             ${{ github.workspace }}\build\BuildArtifacts
             ${{ github.workspace }}\deploy
           if-no-files-found: error
+  
+  run-multiverse_testing_suite:
+    name: Build and Publish Multiverse Testing Suite
+    needs: build-test-fullagent-msi
+    if: ${{ github.event.release }}
+    uses: newrelic/newrelic-dotnet-agent/.github/workflows/multiverse_run.yml@main
+    with:
+      agentVersion: ${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
