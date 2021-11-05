@@ -213,7 +213,11 @@ namespace NewRelic.Agent.Core.Segments
                 AttribDefs.DbStatement.TrySetValue(attribVals, GetObfuscatedSQL());
             }
 
-            AttribDefs.DbCollection.TrySetValue(attribVals, _parsedSqlStatement.Model);
+            if (!string.IsNullOrEmpty(_parsedSqlStatement.Model))
+            {
+                AttribDefs.DbCollection.TrySetValue(attribVals, _parsedSqlStatement.Model);
+            }
+
             AttribDefs.DbInstance.TrySetValue(attribVals, DatabaseName);
             AttribDefs.PeerAddress.TrySetValue(attribVals, $"{Host}:{PortPathOrId}");
             AttribDefs.PeerHostname.TrySetValue(attribVals, Host);
