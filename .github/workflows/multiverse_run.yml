@@ -1,73 +1,60 @@
 name: Run the MultiverseScanner
 
 on:
-  workflow_run:
-    workflows: ['.NET Agent All Solutions Build']
-    types: ['completed']
+  workflow_call:
+    inputs:
+      agentVersion:
+        description: 'Agent version being tested'
+        default: '0.0.0.0'
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      agentVersion:
+        description: 'Agent version being tested'
+        default: '0.0.0.0'
+        required: true
 
 env:
   DOTNET_NOLOGO: true
 
 jobs:
 
-  get-info:
-    name: "Get information about the source run"
-    runs-on: ubuntu-latest
-    outputs:
-      sourceEvent: ${{ steps.source-run-info.outputs.sourceEvent }}
-    steps:
-      - name: "Get information about the origin 'CI' run"
-        uses: potiuk/get-workflow-origin@v1
-        id: source-run-info
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          sourceRunId: ${{ github.event.workflow_run.id }}
-
-  get-s3-artifacts:
-    needs: get-info
-    if: ${{ needs.get-info.outputs.sourceEvent == 'release' }}
-    name: Get and Publish S3 Artifacts Locally
-    runs-on: ubuntu-latest
-    steps:
-      - name: Dependencies
-        run: sudo apt install -y unzip
-        shell: bash
-
-      - name: Download S3 Artifacts
-        run:  curl https://multiverse-testing.s3-us-west-2.amazonaws.com/MultiverseTesting.zip -O
-        shell: bash
-      
-      - name: Extract files
-        run: unzip MultiverseTesting.zip
-        shell: bash
-      
-      - name: Upload Locally
-        uses: actions/upload-artifact@v2
-        with:
-          name: mvs
-          path: ${{ github.workspace }}/netcoreapp3.1
-          if-no-files-found: error
-    
-  run-mvs:
-    needs: get-s3-artifacts
-    name: Run the MultiverseScanner
+  build-run-publish-multiverse-testing:
+    name: Build and Publish Multiverse Testing Suite
     runs-on: windows-2019
-
+    continue-on-error: true
+    
     env:
+      multiverse_solution_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\MultiverseTesting.sln
+      multiverse_artifacts_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Release\netcoreapp3.1
       MVS_XML_PATH: ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Download S3 Artifacts
-        uses: actions/download-artifact@v2
+      - name: Cache Multiverse Testing Suite
+        id: cache-multiverse
+        uses: actions/cache@v2
         with:
-          name: mvs
-          path: ${{ github.workspace }}
+          path: ${{ env.multiverse_artifacts_path }}
+          key: multiverse-${{ hashFiles('**/tests/Agent/MultiverseTesting') }}
+
+      - name: Add msbuild to PATH
+        if: steps.cache-multiverse.outputs.cache-hit != 'true'
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Build MultiverseTesting.sln
+        if: steps.cache-multiverse.outputs.cache-hit != 'true'
+        run: |
+          Write-Host "List NuGet Sources"
+          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution_path }}
+        shell: powershell
 
       - name: Setup .NET Core 3.1.100
         uses: actions/setup-dotnet@v1
@@ -76,6 +63,7 @@ jobs:
 
       - name: Run ConsoleScanner
         run: |
+          cd ${{ env.multiverse_artifacts_path }}
           .\ConsoleScanner.exe ".\config.yml" ".\reports.yml"
         shell: powershell
 
@@ -86,53 +74,14 @@ jobs:
           path: ${{ github.workspace }}\reports.yml
           if-no-files-found: error
 
-  run-reportbuilder:
-    needs: [get-s3-artifacts, run-mvs]
-    name: Run the ReportBuilder
-    runs-on: windows-2019
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          ref: 'gh-pages'
-          fetch-depth: 0
-      
-      - name: Download S3 Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: mvs
-          path: ${{ github.workspace }}
-
-      - name: Download report Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: mvs-reports
-          path: ${{ github.workspace }}
-      
-      - name: Download agent-version Artifact
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: all_solutions.yml
-          run_id: ${{ github.event.workflow_run.id }}
-          name: agent-version
-          path: ${{ github.workspace }}
-          repo: ${{ github.repository }}
-
-      - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '3.1.100'
-
-      - name: Run ConsoleScanner
+      - name: Run ReportBuilder
         run: |
-          $agentVersion = Get-Content .\agent_version.txt | Select-Object -first 1
-          .\ReportBuilder.exe "$agentVersion" ".\reports.yml" ".\docs\mvs"
+          cd ${{ env.multiverse_artifacts_path }}
+          .\ReportBuilder.exe "${{ inputs.agentVersion }}" ".\reports.yml" ".\docs\mvs"
         shell: powershell
 
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@4.1.4
+        uses: JamesIves/github-pages-deploy-action@4
         with:
           branch: gh-pages
           folder: .
