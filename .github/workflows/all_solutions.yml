@@ -196,6 +196,9 @@ jobs:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
       msi_solution_path: ${{ github.workspace }}\src\Agent\MsiInstaller\MsiInstaller.sln
 
+    outputs:
+      agentVersion: ${{ steps.agentVersion.outputs.version }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -231,20 +234,13 @@ jobs:
           MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
         shell: powershell
 
-      - name: Create agent_version.txt
+      - name: Create agentVersion
+        id: agentVersion
         run: |
           $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
-          Write-Host "Agent version $agentVersion"
-          $agentVersion | Out-File -FilePath ${{ github.workspace }}\agent_version.txt -encoding utf8
+          Write-Host "::set-output name=version::$agentVersion"
         shell: powershell
-        
-      - name: Create agent_version.txt artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: agent-version
-          path: ${{ github.workspace }}\agent_version.txt
-          if-no-files-found: error
-      
+
       - name: Archive NewRelic.NuGetHelper
         uses: actions/upload-artifact@v2
         with:
@@ -376,48 +372,6 @@ jobs:
           name: test-results
           path: ${{ github.workspace }}\TestResults
           if-no-files-found: error
-
-  build-publish-multiverse-testing:
-    needs: cancel-previous-workflow-runs
-    name: Build and Publish Multiverse Testing Suite
-    runs-on: windows-2019
-
-    env:
-      multiverse_solution_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\MultiverseTesting.sln
-      multiverse_artifacts_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Release\netcoreapp3.1
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
-
-      - name: Build MultiverseTesting.sln
-        run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution_path }}
-        shell: powershell
-
-      - name: Archive the artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: multiverse-testing
-          path: ${{ env.multiverse_artifacts_path }}
-          if-no-files-found: error
-      
-      - name: Push artifacts to S3
-        run: |
-          $Env:AWS_ACCESS_KEY_ID="${{ secrets.TEAM_AWS_ACCESS_KEY_ID }}"
-          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.TEAM_AWS_SECRET_ACCESS_KEY }}"
-          $Env:AWS_DEFAULT_REGION="us-west-2"
-          Compress-Archive -Path "${{ env.multiverse_artifacts_path }}" -DestinationPath C:\MultiverseTesting.zip
-          aws s3 cp C:\MultiverseTesting.zip ${{ secrets.MULTIVERSE_BUCKET_NAME }} --acl public-read
-        shell: pwsh
 
   build-integration-tests:
     needs: build-test-fullagent-msi
@@ -867,12 +821,6 @@ jobs:
         with:
           name: homefolders
           path: src/Agent
-      
-      - name: Download Agent Version
-        uses: actions/download-artifact@v2
-        with:
-          name: agent-version
-          path: ${{ github.workspace }}
 
       - name: Convert GPG Key Into File
         id: write_gpgkey
@@ -890,10 +838,7 @@ jobs:
 
       - name: Build RPM
         run: |
-          sudo apt install dos2unix -y
-          dos2unix ${{ github.workspace }}/agent_version.txt
-          agentVersion=$(head -n 1 ${{ github.workspace }}/agent_version.txt)
-          agentVersion=${agentVersion/$'\r\n\t'}
+          agentVersion=${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
           cd ${{ github.workspace }}/build/Linux
           docker-compose build build_rpm
           docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
@@ -930,18 +875,9 @@ jobs:
           name: msi-build-folder-artifacts
           path: src/_build
 
-      - name: Download agent_version.txt
-        uses: actions/download-artifact@v2
-        with:
-          name: agent-version
-          path: ${{ github.workspace }}
-
       - name: Build Debian Package
         run: |
-          sudo apt install dos2unix -y
-          dos2unix ${{ github.workspace }}/agent_version.txt
-          agentVersion=$(head -n 1 ${{ github.workspace }}/agent_version.txt)
-          agentVersion=${agentVersion/$'\r\n\t'}
+          agentVersion=${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
           cd ${{ github.workspace }}/build/Linux
           docker-compose build build_deb
           docker-compose run -e AGENT_VERSION=$agentVersion build_deb
@@ -1021,3 +957,11 @@ jobs:
             ${{ github.workspace }}\build\BuildArtifacts
             ${{ github.workspace }}\deploy
           if-no-files-found: error
+  
+  run-multiverse_testing_suite:
+    name: Build and Publish Multiverse Testing Suite
+    needs: build-test-fullagent-msi
+    if: ${{ github.event.release }}
+    uses: newrelic/newrelic-dotnet-agent/.github/workflows/multiverse_run.yml@main
+    with:
+      agentVersion: ${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
