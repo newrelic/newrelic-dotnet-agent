@@ -373,48 +373,6 @@ jobs:
           path: ${{ github.workspace }}\TestResults
           if-no-files-found: error
 
-  build-publish-multiverse-testing:
-    needs: cancel-previous-workflow-runs
-    name: Build and Publish Multiverse Testing Suite
-    runs-on: windows-2019
-
-    env:
-      multiverse_solution_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\MultiverseTesting.sln
-      multiverse_artifacts_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Release\netcoreapp3.1
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
-
-      - name: Build MultiverseTesting.sln
-        run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution_path }}
-        shell: powershell
-
-      - name: Archive the artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: multiverse-testing
-          path: ${{ env.multiverse_artifacts_path }}
-          if-no-files-found: error
-      
-      - name: Push artifacts to S3
-        run: |
-          $Env:AWS_ACCESS_KEY_ID="${{ secrets.TEAM_AWS_ACCESS_KEY_ID }}"
-          $Env:AWS_SECRET_ACCESS_KEY="${{ secrets.TEAM_AWS_SECRET_ACCESS_KEY }}"
-          $Env:AWS_DEFAULT_REGION="us-west-2"
-          Compress-Archive -Path "${{ env.multiverse_artifacts_path }}" -DestinationPath C:\MultiverseTesting.zip
-          aws s3 cp C:\MultiverseTesting.zip ${{ secrets.MULTIVERSE_BUCKET_NAME }} --acl public-read
-        shell: pwsh
-
   build-integration-tests:
     needs: build-test-fullagent-msi
     name: Build IntegrationTests
