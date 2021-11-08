@@ -71,7 +71,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: mvs-reports
-          path: ${{ github.workspace }}\reports.yml
+          path: ${{ env.multiverse_artifacts_path }}\reports.yml
           if-no-files-found: error
 
       - name: Run ReportBuilder
