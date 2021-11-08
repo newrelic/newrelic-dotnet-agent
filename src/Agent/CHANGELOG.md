@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] changes
 ### New Features
 * Adds additional logging to the Garbage Collection performance metrics to aid in troubleshooting performance counter issues. ([#792](https://github.com/newrelic/newrelic-dotnet-agent/pull/792))
+* Allows NewRelicSegmentName to be specified for SQL, to implement [this suggestion](https://discuss.newrelic.com/t/provide-a-pattern-to-explicitly-name-sql-queries-displayed-in-databases-dashboard/78755). 
 ### Fixes
 
 ## [9.1.1] - 2021-11-02
