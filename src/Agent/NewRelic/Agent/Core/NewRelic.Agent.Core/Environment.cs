@@ -17,6 +17,7 @@ using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Agent.Configuration;
+using NewRelic.Core;
 
 namespace NewRelic.Agent.Core
 {
@@ -50,7 +51,7 @@ namespace NewRelic.Agent.Core
                 AddVariable(".NET Version", () => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription.ToString());
                 AddVariable("Processor Architecture", () => System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString());
 #else
-                AddVariable(".NET Version", () => System.Environment.Version.ToString());
+                AddVariable(".NET Version", () => DotnetVersion.GetDotnetFrameworkVersion().ToString());
                 AddVariable("Processor Architecture", () => (IntPtr.Size == 8) ? "X64" : "X86");
 #endif
                 AddVariable("Total Physical System Memory", () => TotalPhysicalMemory);
