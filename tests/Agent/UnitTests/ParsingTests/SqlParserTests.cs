@@ -176,6 +176,31 @@ namespace ParsingTests
         }
 
         [Test]
+        public void SqlParserTest_PullNameFromComment()
+        {
+            var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, @"select *
+				/* NewRelicSegmentName: DudeService.GetAllDudes */
+				from dude");
+            Assert.IsNotNull(parsedDatabaseStatement);
+            Assert.AreEqual("dude - [dudeservice.getalldudes]", parsedDatabaseStatement.Model);
+            Assert.AreEqual("dude - [dudeservice.getalldudes]/select", parsedDatabaseStatement.ToString());
+        }
+        
+        [Test]
+        public void SqlParserTest_PullNameFromComment_ReplaceSlashes()
+        {
+            var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, @"select *
+				/* NewRelicSegmentName: DudeService/GetAllDudes */
+				from dude");
+            Assert.IsNotNull(parsedDatabaseStatement);
+            Assert.AreEqual("dude - [dudeservice|getalldudes]", parsedDatabaseStatement.Model);
+
+            // "dude - [dudeservice/getalldudes]/select" would cause "getalldudes" to be seen as the operation
+            Assert.AreEqual("dude - [dudeservice|getalldudes]/select", parsedDatabaseStatement.ToString());
+        }
+                
+
+        [Test]
         public void SqlParserTest_TestSelectWithBracket()
         {
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from [dude]");
