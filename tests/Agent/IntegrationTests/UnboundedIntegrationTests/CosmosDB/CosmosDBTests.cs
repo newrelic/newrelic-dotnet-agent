@@ -32,6 +32,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
 
             _fixture.AddCommand($"CosmosDBExerciser CreateReadAndDeleteContainers test_db_{Guid.NewGuid().ToString("n").Substring(0, 4)} testContainer");
 
+            _fixture.AddCommand($"CosmosDBExerciser CreateAndReadItems test_db_{Guid.NewGuid().ToString("n").Substring(0, 4)} testContainer");
+
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -90,6 +92,37 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateReadAndDeleteContainers", callCount = 1 },
 
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/DeleteCollection", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateReadAndDeleteContainers", callCount = 1 }
+            };
+
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+            NrAssert.Multiple
+            (
+                () => Assertions.MetricsExist(expectedMetrics, metrics)
+            );
+        }
+
+        [Fact]
+        public void CreateAndReadItemsTests()
+        {
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateAndReadItems", callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateAndReadItems", callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateAndReadItems", callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateAndReadItems", callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateAndReadItems", callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/CreateDocument", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateAndReadItems", callCount = 2 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/UpsertDocument", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateAndReadItems", callCount = 2 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadFeedDocument", metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateAndReadItems", callCount = 1 },
+
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
