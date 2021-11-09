@@ -151,6 +151,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                 await UpsertItemsAsync(container);
 
                 await ReadAllItems(container);
+
+                await ReadManyItems(container);
             }
             finally
             {
@@ -174,6 +176,36 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             }
         }
 
+        private static async Task ReadManyItems(Container container)
+        {
+            // Create item list with (id, pkvalue) tuples
+            List<(string, PartitionKey)> itemList = new List<(string, PartitionKey)>
+            {
+                ("SalesOrder1", new PartitionKey("Account1")),
+                ("SalesOrder2", new PartitionKey("Account1")),
+            };
+
+            var feedResponse = await container.ReadManyItemsAsync<SalesOrder>(itemList);
+
+            Assert.True(feedResponse.Count == 2);
+
+            Console.WriteLine($"\n Account Number: {feedResponse.First().AccountNumber}; total sales: {feedResponse.Count};");
+
+            // ReadManyStreamApi
+            using var responseMessage = await container.ReadManyItemsStreamAsync(itemList);
+
+            if (responseMessage.IsSuccessStatusCode)
+            {
+                dynamic streamResponse = FromStream<dynamic>(responseMessage.Content); 
+                var salesOrders = streamResponse.Documents.ToObject<List<SalesOrder>>();
+                Assert.True(salesOrders.Count == 2);
+            }
+            else
+            {
+                throw new Exception($"ReadManyItemsStreamAsync() failed. Status code: {responseMessage.StatusCode} Message: {responseMessage.ErrorMessage}");
+            }
+        }
+
         private static async Task CreateItemsAsync(Container container)
         {
             Console.WriteLine("\n Creating items");
@@ -189,6 +221,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             if (response2.IsSuccessStatusCode)
             {
                 _ = FromStream<SalesOrder>(response2.Content);
+            }
+            else
+            {
+                throw new Exception($"Create item from stream failed. Status code: {response2.StatusCode} Message: {response2.ErrorMessage}");
             }
         }
 
