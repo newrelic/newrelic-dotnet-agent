@@ -17,6 +17,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
+
+        private string UniqueDbName => "test_db_" + Guid.NewGuid().ToString("n").Substring(0, 4);
         private string _testContainerName = "testContainer";
 
         protected CosmosDBTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
@@ -28,11 +30,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
 
             _fixture.AddCommand($"CosmosDBExerciser StartAgent");
 
-            _fixture.AddCommand($"CosmosDBExerciser CreateReadAndDeleteDatabase test_db_{Guid.NewGuid().ToString("n").Substring(0, 4)}");
+            _fixture.AddCommand($"CosmosDBExerciser CreateReadAndDeleteDatabase {UniqueDbName}");
 
-            _fixture.AddCommand($"CosmosDBExerciser CreateReadAndDeleteContainers test_db_{Guid.NewGuid().ToString("n").Substring(0, 4)} testContainer");
+            _fixture.AddCommand($"CosmosDBExerciser CreateReadAndDeleteContainers {UniqueDbName} {_testContainerName}");
 
-            _fixture.AddCommand($"CosmosDBExerciser CreateAndReadItems test_db_{Guid.NewGuid().ToString("n").Substring(0, 4)} testContainer");
+            _fixture.AddCommand($"CosmosDBExerciser CreateAndReadItems {UniqueDbName} {_testContainerName}");
 
             _fixture.Actions
             (
