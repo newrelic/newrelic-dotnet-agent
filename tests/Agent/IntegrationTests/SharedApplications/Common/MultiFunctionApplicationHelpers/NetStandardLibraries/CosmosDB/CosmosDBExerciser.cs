@@ -182,8 +182,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                 await UpsertItemsAsync(container);
 
                 await QueryItems(container);
-
-                //await ReadManyItems(container);
             }
             finally
             {
