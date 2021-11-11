@@ -16,6 +16,7 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
@@ -192,10 +193,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
 
         private static async Task QueryItems(Container container)
         {
-            QueryDefinition query = new QueryDefinition("SELECT * FROM SalesOrders s WHERE s.AccountNumber = @accountNumber AND s.TotalDue > @totalDue")
-                .WithParameter("@accountNumber", "Account1")
-                .WithParameter("@totalDue", 0);
+            QueryDefinition query = new QueryDefinition("SELECT * FROM SalesOrders s WHERE s.AccountNumber = 'Account1' AND s.TotalDue > 0");
 
+            // GetItemQueryIterator
             using var resultSet = container.GetItemQueryIterator<SalesOrder>(
                 queryDefinition: query,
                 requestOptions: new QueryRequestOptions()
@@ -206,7 +206,29 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             {
                 var response = await resultSet.ReadNextAsync();
                 Assert.True(response.Count == 4);
-                Console.WriteLine($"\n Account Number: {response.First().AccountNumber}; total sales: {response.Count};");
+                Console.WriteLine($"\n Account Number: {response.First().AccountNumber}; total due: {response.First().TotalDue};");
+            }
+
+            // GetItemQueryStreamIterator
+            using var queryStreamIterator = container.GetItemQueryStreamIterator(
+                queryDefinition: query,
+                continuationToken: null,
+                requestOptions: new QueryRequestOptions()
+                {
+                    PartitionKey = new PartitionKey("Account1")
+                });
+            while (queryStreamIterator.HasMoreResults)
+            {
+                using (var response = await queryStreamIterator.ReadNextAsync())
+                {
+                    using (StreamReader sr = new StreamReader(response.Content))
+                    using (JsonTextReader jtr = new JsonTextReader(sr))
+                    {
+                        JObject result = JObject.Load(jtr);
+                        Assert.NotNull(result);
+                        Console.WriteLine($"\n Query returned {result["Documents"].Count()} documents.");
+                    }
+                }
             }
         }
 
