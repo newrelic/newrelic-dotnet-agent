@@ -160,6 +160,56 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             }
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task CreateAndQueryItems(string databaseId, string containerId)
+        {
+            var endpoint = CosmosDBConfiguration.CosmosDBServer;
+            var authKey = CosmosDBConfiguration.AuthKey;
+
+            using var client = new CosmosClient(endpoint, authKey, _cosmosClientOptions);
+            var databaseResponse = await client.CreateDatabaseIfNotExistsAsync(databaseId);
+            var database = databaseResponse.Database;
+
+            try
+            {
+                Container container = await database.CreateContainerIfNotExistsAsync(containerId, "/AccountNumber");
+
+                await CreateItemsAsync(container);
+
+                await UpsertItemsAsync(container);
+
+                await QueryItems(container);
+
+                //await ReadManyItems(container);
+            }
+            finally
+            {
+                await database.DeleteAsync();
+            }
+        }
+
+        private static async Task QueryItems(Container container)
+        {
+            QueryDefinition query = new QueryDefinition("SELECT * FROM SalesOrders s WHERE s.AccountNumber = @accountNumber AND s.TotalDue > @totalDue")
+                .WithParameter("@accountNumber", "Account1")
+                .WithParameter("@totalDue", 0);
+
+            using var resultSet = container.GetItemQueryIterator<SalesOrder>(
+                queryDefinition: query,
+                requestOptions: new QueryRequestOptions()
+                {
+                    PartitionKey = new PartitionKey("Account1")
+                });
+            while (resultSet.HasMoreResults)
+            {
+                var response = await resultSet.ReadNextAsync();
+                Assert.True(response.Count == 4);
+                Console.WriteLine($"\n Account Number: {response.First().AccountNumber}; total sales: {response.Count};");
+            }
+        }
+
         private static async Task ReadAllItems(Container container)
         {
             using var resultSet = container.GetItemQueryIterator<SalesOrder>(
