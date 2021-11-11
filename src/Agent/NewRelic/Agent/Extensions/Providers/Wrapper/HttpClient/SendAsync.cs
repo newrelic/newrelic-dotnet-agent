@@ -97,9 +97,8 @@ namespace NewRelic.Providers.Wrapper.HttpClient
             }
             else
             {
-                // With .Net 6 the HttpClient headers are not thread safe, so we need our continuation to happen synchronously.
+                // With .Net 6 the HttpClient headers are especially not thread safe (and weren't guaranteed to be before), so we need our continuation to happen synchronously.
                 // This does mean any work done by TryProcessResponse will be included in the instrumented method segment.
-
                 return Delegates.GetAsyncDelegateFor<Task<HttpResponseMessage>>(agent, segment, true, InvokeTryProcessResponse, TaskContinuationOptions.ExecuteSynchronously);
 
                 void InvokeTryProcessResponse(Task<HttpResponseMessage> httpResponseMessage)
@@ -173,7 +172,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
                 externalSegmentData.SetHttpStatusCode((int)httpStatusCode);
 
                 // Everything after this is for CAT, so bail if we're not using it
-                if (!agent.Configuration.CrossApplicationTracingEnabled)
+                if (agent.Configuration.DistributedTracingEnabled || !agent.Configuration.CrossApplicationTracingEnabled)
                     return;
 
                 var flattenedHeaders = response.Headers?.Select(Flatten);
