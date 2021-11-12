@@ -3,7 +3,9 @@
 
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -24,6 +26,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
     [Library]
     public class CosmosDBExerciser
     {
+        static long globalDocCounter = 0;
+
         //This configuration is necessary to bypass the SSL connection error when testing with the CosmosDB server emulator without installing a cert.
         static readonly CosmosClientOptions _cosmosClientOptions = new CosmosClientOptions()
         {
@@ -230,6 +234,87 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             }
         }
 
+        /// <summary>
+        /// This testing method asynchrously creates n numbers of items as quickly as possible in CosmosBD using 2 workers. 
+        /// </summary>
+        /// <param name="databaseId"></param>
+        /// <param name="containerId"></param>
+        /// <returns></returns>
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static async Task CreateItemsConcurrentlyAsync(string databaseId, string containerId, int itemsToCreate)
+        {
+
+            var endpoint = CosmosDBConfiguration.CosmosDBServer;
+            var authKey = CosmosDBConfiguration.AuthKey;
+
+            _cosmosClientOptions.AllowBulkExecution = true;
+
+            using var client = new CosmosClient(endpoint, authKey, _cosmosClientOptions);
+            var databaseResponse = await client.CreateDatabaseIfNotExistsAsync(databaseId);
+            var database = databaseResponse.Database;
+
+            try
+            {
+                Container container = await database.CreateContainerAsync(containerId, "/AccountNumber");
+
+                var cancellationTokenSource = new CancellationTokenSource();
+                cancellationTokenSource.CancelAfter(30 * 1000);
+                CancellationToken cancellationToken = cancellationTokenSource.Token;
+
+                var stopwatch = Stopwatch.StartNew();
+                long startMilliseconds = stopwatch.ElapsedMilliseconds;
+
+                try
+                {
+                    var documentsToImportInBatch = new ConcurrentQueue<KeyValuePair<PartitionKey, Stream>>();
+
+                    for (int i = 0; i < itemsToCreate; i++)
+                    {
+                        var salesOrder = GetSalesOrderSample($"SalesOrder{i}");
+                        documentsToImportInBatch.Enqueue(new KeyValuePair<PartitionKey, Stream>(new PartitionKey(salesOrder.AccountNumber), ToStream(salesOrder)));
+                    }
+
+                    var workerTasks = new List<Task>();
+                    var numWorkers = 2;
+
+                    for (int i = 0; i < numWorkers; i++)
+                    {
+                        workerTasks.Add(Task.Run(() =>
+                        {
+                            while (!cancellationToken.IsCancellationRequested && Interlocked.Read(ref globalDocCounter) < itemsToCreate)
+                            {
+                                if (documentsToImportInBatch.TryDequeue(out var item))
+                                {
+                                    _ = container.CreateItemStreamAsync(item.Value, item.Key, null, cancellationToken)
+                                    .ContinueWith((Task<ResponseMessage> task) =>
+                                    {
+                                        if (task.IsCompleted)
+                                        {
+                                            Interlocked.Increment(ref globalDocCounter);
+                                        }
+                                        task.Dispose();
+                                    });
+                                }
+                            }
+                        }));
+                    }
+
+                    await Task.WhenAll(workerTasks);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
+            }
+            finally
+            {
+                _cosmosClientOptions.AllowBulkExecution = false;
+                await database.DeleteAsync();
+            }
+        }
+
         private static async Task ReadAllItems(Container container)
         {
             using var resultSet = container.GetItemQueryIterator<SalesOrder>(
@@ -367,8 +452,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                 return _serializer.Deserialize<T>(jsonTextReader);
             }
         }
-
-
 
         private static SalesOrder GetSalesOrderSample(string itemId)
         {

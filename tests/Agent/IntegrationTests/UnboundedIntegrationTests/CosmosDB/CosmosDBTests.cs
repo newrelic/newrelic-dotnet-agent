@@ -21,7 +21,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
         private string UniqueDbName => "test_db_" + Guid.NewGuid().ToString("n").Substring(0, 4);
         private string _testContainerName = "testContainer";
 
-        protected CosmosDBTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
+        protected CosmosDBTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -37,6 +37,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             _fixture.AddCommand($"CosmosDBExerciser CreateAndReadItems {UniqueDbName} {_testContainerName}");
 
             _fixture.AddCommand($"CosmosDBExerciser CreateAndQueryItems {UniqueDbName} {_testContainerName}");
+
+            var itemsToCreate = 20;
+
+            _fixture.AddCommand($"CosmosDBExerciser CreateItemsConcurrentlyAsync {UniqueDbName} {_testContainerName} {itemsToCreate}");
 
             _fixture.Actions
             (
@@ -196,6 +200,36 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
+            );
+        }
+
+        [Fact]
+        public void BulkCreatingItemsTests()
+        {
+            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateItemsConcurrentlyAsync";
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/BatchDocument", metricScope = expectedTransactionName, callCount = 1 }
+            };
+
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+            var spanEvents = _fixture.AgentLog.GetSpanEvents();
+
+            var traceId = spanEvents.Where(@event => @event.IntrinsicAttributes["name"].ToString().Equals(expectedTransactionName)).FirstOrDefault().IntrinsicAttributes["traceId"];
+
+            var operationDatastoreSpans = spanEvents.Where(@event => @event.IntrinsicAttributes["traceId"].ToString().Equals(traceId) && @event.IntrinsicAttributes["name"].ToString().Contains("Datastore/"));
+            NrAssert.Multiple
+            (
+                () => Assertions.MetricsExist(expectedMetrics, metrics)
             );
         }
     }
