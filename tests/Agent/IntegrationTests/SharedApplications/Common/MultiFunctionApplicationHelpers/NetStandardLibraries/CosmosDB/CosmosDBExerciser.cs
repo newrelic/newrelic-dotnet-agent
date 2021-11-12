@@ -16,6 +16,7 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
@@ -157,6 +158,75 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             finally
             {
                 await database.DeleteAsync();
+            }
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task CreateAndQueryItems(string databaseId, string containerId)
+        {
+            var endpoint = CosmosDBConfiguration.CosmosDBServer;
+            var authKey = CosmosDBConfiguration.AuthKey;
+
+            using var client = new CosmosClient(endpoint, authKey, _cosmosClientOptions);
+            var databaseResponse = await client.CreateDatabaseIfNotExistsAsync(databaseId);
+            var database = databaseResponse.Database;
+
+            try
+            {
+                Container container = await database.CreateContainerIfNotExistsAsync(containerId, "/AccountNumber");
+
+                await CreateItemsAsync(container);
+
+                await UpsertItemsAsync(container);
+
+                await QueryItems(container);
+            }
+            finally
+            {
+                await database.DeleteAsync();
+            }
+        }
+
+        private static async Task QueryItems(Container container)
+        {
+            QueryDefinition query = new QueryDefinition("SELECT * FROM SalesOrders s WHERE s.AccountNumber = 'Account1' AND s.TotalDue > 0");
+
+            // GetItemQueryIterator
+            using var resultSet = container.GetItemQueryIterator<SalesOrder>(
+                queryDefinition: query,
+                requestOptions: new QueryRequestOptions()
+                {
+                    PartitionKey = new PartitionKey("Account1")
+                });
+            while (resultSet.HasMoreResults)
+            {
+                var response = await resultSet.ReadNextAsync();
+                Assert.True(response.Count == 4);
+                Console.WriteLine($"\n Account Number: {response.First().AccountNumber}; total due: {response.First().TotalDue};");
+            }
+
+            // GetItemQueryStreamIterator
+            using var queryStreamIterator = container.GetItemQueryStreamIterator(
+                queryDefinition: query,
+                continuationToken: null,
+                requestOptions: new QueryRequestOptions()
+                {
+                    PartitionKey = new PartitionKey("Account1")
+                });
+            while (queryStreamIterator.HasMoreResults)
+            {
+                using (var response = await queryStreamIterator.ReadNextAsync())
+                {
+                    using (StreamReader sr = new StreamReader(response.Content))
+                    using (JsonTextReader jtr = new JsonTextReader(sr))
+                    {
+                        JObject result = JObject.Load(jtr);
+                        Assert.NotNull(result);
+                        Console.WriteLine($"\n Query returned {result["Documents"].Count()} documents.");
+                    }
+                }
             }
         }
 
