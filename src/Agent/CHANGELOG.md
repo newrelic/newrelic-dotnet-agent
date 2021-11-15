@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 ### New Features
+* Adds automatic instrumentation for the `Microsoft.Azure.Cosmos` client library. ([#811](https://github.com/newrelic/newrelic-dotnet-agent/pull/811))
 * Adds additional logging to the Garbage Collection performance metrics to aid in troubleshooting performance counter issues. ([#792](https://github.com/newrelic/newrelic-dotnet-agent/pull/792))
 ### Fixes
 
