@@ -312,6 +312,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             {
                 _cosmosClientOptions.AllowBulkExecution = false;
                 await database.DeleteAsync();
+                Interlocked.Exchange(ref globalDocCounter, 0);
             }
         }
 
