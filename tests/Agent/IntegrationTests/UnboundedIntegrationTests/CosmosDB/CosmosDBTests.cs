@@ -222,15 +222,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-            var spanEvents = _fixture.AgentLog.GetSpanEvents();
-
-            var traceId = spanEvents.Where(@event => @event.IntrinsicAttributes["name"].ToString().Equals(expectedTransactionName)).FirstOrDefault().IntrinsicAttributes["traceId"];
-
-            var operationDatastoreSpans = spanEvents.Where(@event => @event.IntrinsicAttributes["traceId"].ToString().Equals(traceId) && @event.IntrinsicAttributes["name"].ToString().Contains("Datastore/"));
-            NrAssert.Multiple
-            (
-                () => Assertions.MetricsExist(expectedMetrics, metrics)
-            );
+            Assertions.MetricsExist(expectedMetrics, metrics);
         }
     }
 
