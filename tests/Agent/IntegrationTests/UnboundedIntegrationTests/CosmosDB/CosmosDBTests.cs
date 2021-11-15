@@ -42,6 +42,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
 
             _fixture.AddCommand($"CosmosDBExerciser CreateItemsConcurrentlyAsync {UniqueDbName} {_testContainerName} {itemsToCreate}");
 
+            _fixture.AddCommand($"CosmosDBExerciser CreateAndExecuteStoredProc {UniqueDbName} {_testContainerName}");
+
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -218,6 +220,33 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, callCount = 1 },
 
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/BatchDocument", metricScope = expectedTransactionName, callCount = 1 }
+            };
+
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+            Assertions.MetricsExist(expectedMetrics, metrics);
+        }
+
+        [Fact]
+        public void CreateAndExecuteStoredProcTests()
+        {
+            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB.CosmosDBExerciser/CreateAndExecuteStoredProc";
+
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, callCount = 1 },
+
+                //From calling Scripts.CreateStoredProcedureAsync()
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/CreateStoredProcedure", metricScope = expectedTransactionName, callCount = 1 },
+
+                //From calling Scripts.ExecuteStoredProcedureAsync()
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ExecuteJavaScriptStoredProcedure", metricScope = expectedTransactionName, callCount = 1 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();

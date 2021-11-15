@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Scripts;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
@@ -191,6 +192,49 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             {
                 await database.DeleteAsync();
             }
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task CreateAndExecuteStoredProc(string databaseId, string containerId)
+        {
+            Console.WriteLine("Tests CosmosDB stored procedures");
+
+            var endpoint = CosmosDBConfiguration.CosmosDBServer;
+            var authKey = CosmosDBConfiguration.AuthKey;
+
+            using var client = new CosmosClient(endpoint, authKey, _cosmosClientOptions);
+            var databaseResponse = await client.CreateDatabaseIfNotExistsAsync(databaseId);
+            var database = databaseResponse.Database;
+
+            try
+            {
+                Container container = await database.CreateContainerIfNotExistsAsync(containerId, "/pk");
+
+                var cosmosScripts = container.Scripts;
+                var scriptId = "HelloWorldStoredProc";
+
+                Console.WriteLine("Creates HelloWorldStoredProc.js Stored procedure");
+
+                var sproc = await cosmosScripts.CreateStoredProcedureAsync(
+                    new StoredProcedureProperties(
+                        scriptId,
+                        File.ReadAllText("NetStandardLibraries/CosmosDB/StoredProcedures/HelloWorldStoredProc.js")));
+
+                Console.WriteLine("Executes HelloWorldStoredProc.js stored procedure");
+
+                var response = await container.Scripts.ExecuteStoredProcedureAsync<string>(
+                    scriptId, new PartitionKey(1), null);
+
+                Assert.True(String.Equals("Hello, World", response.Resource), "Failed to execute HelloWorldStoredProc.js stored procedure.");
+
+            }
+            finally
+            {
+                await database.DeleteAsync();
+            }
+
         }
 
         private static async Task QueryItems(Container container)

@@ -65,4 +65,10 @@
     <ProjectReference Include="..\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="NetStandardLibraries\CosmosDB\StoredProcedures\HelloWorldStoredProc.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
