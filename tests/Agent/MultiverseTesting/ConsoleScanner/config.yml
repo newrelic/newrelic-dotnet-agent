@@ -27,7 +27,7 @@
   - name: cosmosdb
     xml-file: ${{ MVS_XML_PATH }}\CosmosDb\Instrumentation.xml
     nuget-packages:
-       - { package-name: Microsoft.Azure.Cosmos, versions: [3.0.0, 3.22.1] }
+       - { package-name: Microsoft.Azure.Cosmos, versions: [3.17.0, 3.23.0] }
     local-assemblies:
 
   # not available from nuget, assembly in inst.xml is System.dll
