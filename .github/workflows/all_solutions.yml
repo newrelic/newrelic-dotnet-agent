@@ -671,7 +671,7 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        namespace: [ Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, Oracle, Postgres, RabbitMq, Redis ]
+        namespace: [ CosmosDB, Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, Oracle, Postgres, RabbitMq, Redis ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:

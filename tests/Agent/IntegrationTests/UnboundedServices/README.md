@@ -38,7 +38,7 @@ To stop the services:
 
 It is generally best to only the the service for the tests you happen to be working on at the time (see note above).  To run a single service, execute the following:
 
-`docker-compose run --service-ports <service>`
+`docker-compose up <service>`
 
 See the docker-compose.yml file for the names of the services provided.
 
