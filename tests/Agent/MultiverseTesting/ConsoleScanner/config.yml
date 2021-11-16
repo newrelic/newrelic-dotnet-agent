@@ -24,6 +24,12 @@
   #      - { package-name: CouchbaseNetClient, versions: [2.3.8, 2.4.8, 2.5.12, 2.6.2, 2.7.23, 3.0.7, 3.1.2] }
   #   local-assemblies:
 
+  - name: cosmosdb
+    xml-file: ${{ MVS_XML_PATH }}\CosmosDb\Instrumentation.xml
+    nuget-packages:
+       - { package-name: Microsoft.Azure.Cosmos, versions: [3.0.0, 3.22.1] }
+    local-assemblies:
+
   # not available from nuget, assembly in inst.xml is System.dll
   # - name: httpWebRequest
   #   xml-file: C:\git\newrelic-dotnet-agent\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\HttpWebRequest\Instrumentation.xml
