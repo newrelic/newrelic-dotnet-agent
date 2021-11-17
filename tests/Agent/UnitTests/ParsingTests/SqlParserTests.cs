@@ -179,7 +179,7 @@ namespace ParsingTests
         public void SqlParserTest_PullNameFromComment()
         {
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, @"select *
-				/* NewRelicSegmentName: DudeService.GetAllDudes */
+				/* NewRelicQueryName: DudeService.GetAllDudes */
 				from dude");
             Assert.IsNotNull(parsedDatabaseStatement);
             Assert.AreEqual("dude - [dudeservice.getalldudes]", parsedDatabaseStatement.Model);
@@ -190,7 +190,7 @@ namespace ParsingTests
         public void SqlParserTest_PullNameFromComment_ReplaceSlashes()
         {
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, @"select *
-				/* NewRelicSegmentName: DudeService/GetAllDudes */
+				/* NewRelicQueryName: DudeService/GetAllDudes */
 				from dude");
             Assert.IsNotNull(parsedDatabaseStatement);
             Assert.AreEqual("dude - [dudeservice|getalldudes]", parsedDatabaseStatement.Model);

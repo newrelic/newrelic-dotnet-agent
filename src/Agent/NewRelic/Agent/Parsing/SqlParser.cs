@@ -74,7 +74,7 @@ namespace NewRelic.Parsing
         private const string SingleSqlStatementPhrase = @"^[^;]*[\s;]*$";
 
         private const string CommentPhrase = @"/\*.*?\*/"; //The ? makes the searching lazy
-        private const string SegmentNamePhrase = @"/\* *NewRelicSegmentName: *(.*?)\*/"; //The ? makes the searching lazy
+        private const string QueryNamePhrase = @"/\* *NewRelicQueryName: *(.*?)\*/"; //The ? makes the searching lazy
         private const string LeadingSetPhrase = @"^(?:\s*\bset\b.+?\;)+(?!(\s*\bset\b))";
         private const string StartObjectNameSeparator = @"[\s\(\[`\""]*";
         private const string EndObjectNameSeparator = @"[\s\)\]`\""]*";
@@ -98,7 +98,7 @@ namespace NewRelic.Parsing
         private const string DeclareString = DeclarePhrase + VariableNamePhrase;
 
         private static readonly Regex CommentPattern = new Regex(CommentPhrase, RegexOptions.Compiled | RegexOptions.Singleline);
-        private static readonly Regex SegmentNamePattern = new Regex(SegmentNamePhrase, RegexOptions.Compiled | RegexOptions.Singleline);
+        private static readonly Regex QueryNamePattern = new Regex(QueryNamePhrase, RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly Regex LeadingSetPattern = new Regex(LeadingSetPhrase, RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
         private static readonly Regex ValidMetricNameMatcher = new Regex(MetricNamePhrase, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex SingleSqlStatementMatcher = new Regex(SingleSqlStatementPhrase, PatternSwitches);
@@ -158,7 +158,7 @@ namespace NewRelic.Parsing
 
         private static string GetExplicitModel(string commandText)
         {
-            var match = SegmentNamePattern.Match(commandText);
+            var match = QueryNamePattern.Match(commandText);
             if (match.Success)
             {
                 return match.Groups[1].Value.Trim();
