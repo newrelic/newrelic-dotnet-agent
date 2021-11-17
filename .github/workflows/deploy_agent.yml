@@ -298,4 +298,8 @@ jobs:
           fi
         shell: bash
 
-        
+      - name: Clear Fastly cache
+        if: ${{ success() }}
+        run: |
+          curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
+        shell: bash
