@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
             return GetAsyncDelegateFor<T>(agent, segment, TaskContinueWithOption.UseSynchronizationContext);
         }
 
-        public static AfterWrappedMethodDelegate GetAsyncDelegateFor<T>(IAgent agent, ISegment segment, bool holdTransactionOpen, Action<T> onComplete) where T : Task
+        public static AfterWrappedMethodDelegate GetAsyncDelegateFor<T>(IAgent agent, ISegment segment, bool holdTransactionOpen, Action<T> onComplete, TaskContinuationOptions? continuationOptions = null) where T : Task
         {
             return GetDelegateFor<T>(
                 onFailure: segment.End,
@@ -93,7 +93,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 
             void InvokeOnSuccess(Task task)
             {
-                OnSuccess(task, agent, segment, holdTransactionOpen, onComplete, TaskContinueWithOption.None, null);
+                OnSuccess(task, agent, segment, holdTransactionOpen, onComplete, TaskContinueWithOption.None, continuationOptions);
             }
         }
 

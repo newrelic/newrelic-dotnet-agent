@@ -6,9 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 ### New Features
+* Adds automatic instrumentation for the `Microsoft.Azure.Cosmos` client library. ([#811](https://github.com/newrelic/newrelic-dotnet-agent/pull/811))
 * Adds additional logging to the Garbage Collection performance metrics to aid in troubleshooting performance counter issues. ([#792](https://github.com/newrelic/newrelic-dotnet-agent/pull/792))
+* Feature [#800](https://github.com/newrelic/newrelic-dotnet-agent/issues/800): for .NET Framework apps instrumented with the .NET Framework agent, the value of the ".NET Version" property in the Environment data page will more accurately reflect the version of .NET Framework in use. ([#801](https://github.com/newrelic/newrelic-dotnet-agent/pull/801))  
 * Allows NewRelicSegmentName to be specified for SQL, to implement [this suggestion](https://discuss.newrelic.com/t/provide-a-pattern-to-explicitly-name-sql-queries-displayed-in-databases-dashboard/78755). 
 ### Fixes
+* Fixes issue [#803](https://github.com/newrelic/newrelic-dotnet-agent/issues/803): Thread safety issue in access to HTTP headers collection in HttpClient on .Net 6. ([#804](https://github.com/newrelic/newrelic-dotnet-agent/pull/804))
 
 ## [9.1.1] - 2021-11-02
 ### Fixes

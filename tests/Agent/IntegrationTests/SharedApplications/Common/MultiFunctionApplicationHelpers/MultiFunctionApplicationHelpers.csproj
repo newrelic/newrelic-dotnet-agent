@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;netcoreapp3.1;net5.0;net6.0;net462;net471;net48</TargetFrameworks>
@@ -7,6 +7,7 @@
     
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,7 @@
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.2.7" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Owin" Version="4.1.0">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
@@ -54,9 +56,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.csproj" />
     <ProjectReference Include="..\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="NetStandardLibraries\CosmosDB\StoredProcedures\HelloWorldStoredProc.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

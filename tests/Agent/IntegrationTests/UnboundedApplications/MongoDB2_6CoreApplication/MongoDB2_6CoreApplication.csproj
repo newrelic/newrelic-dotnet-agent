@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5</TargetFramework>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

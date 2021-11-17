@@ -75,6 +75,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         Postgres,
         Redis,
         //SQLite,
+        CosmosDB,
         Other
     }
 

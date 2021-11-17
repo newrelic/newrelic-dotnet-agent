@@ -97,13 +97,9 @@ namespace NewRelic.Providers.Wrapper.HttpClient
             }
             else
             {
-                // 1.  Since this finishes on a background thread, it is possible it will race the end of
-                //     the transaction. Using holdTransactionOpen = true to prevent the transaction from ending early.
-                // 2.  Do not want to post to the sync context as this library is commonly used with the
-                //     blocking TPL pattern of .Result or .Wait(). Posting to the sync context will result
-                //     in recording time waiting for the current unit of work on the sync context to finish.
-                //     This overload GetAsyncDelegateFor does not use the synchronization context's task scheduler.
-                return Delegates.GetAsyncDelegateFor<Task<HttpResponseMessage>>(agent, segment, true, InvokeTryProcessResponse);
+                // With .Net 6 the HttpClient headers are especially not thread safe (and weren't guaranteed to be before), so we need our continuation to happen synchronously.
+                // This does mean any work done by TryProcessResponse will be included in the instrumented method segment.
+                return Delegates.GetAsyncDelegateFor<Task<HttpResponseMessage>>(agent, segment, true, InvokeTryProcessResponse, TaskContinuationOptions.ExecuteSynchronously);
 
                 void InvokeTryProcessResponse(Task<HttpResponseMessage> httpResponseMessage)
                 {
@@ -175,11 +171,13 @@ namespace NewRelic.Providers.Wrapper.HttpClient
                 var httpStatusCode = response.StatusCode;
                 externalSegmentData.SetHttpStatusCode((int)httpStatusCode);
 
-                var headers = response.Headers?.ToList();
-                if (headers == null)
+                // Everything after this is for CAT, so bail if we're not using it
+                if (agent.Configuration.DistributedTracingEnabled || !agent.Configuration.CrossApplicationTracingEnabled)
                     return;
 
-                var flattenedHeaders = headers.Select(Flatten);
+                var flattenedHeaders = response.Headers?.Select(Flatten);
+                if (flattenedHeaders == null)
+                    return;
 
                 transaction.ProcessInboundResponse(flattenedHeaders, segment);
             }
