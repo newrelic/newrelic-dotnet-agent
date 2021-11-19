@@ -301,12 +301,22 @@ namespace NewRelic.Agent.Core.Configuration
             public IEnumerable<string> Terms { get; set; }
         }
 
-        public static ServerConfiguration FromJson(string json)
+        public static ServerConfiguration FromJson(string json, ServerConfigurationCreationOptions options = default)
         {
+            options ??= new ServerConfigurationCreationOptions();
+
             var serverConfiguration = JsonConvert.DeserializeObject<ServerConfiguration>(json);
             Debug.Assert(serverConfiguration != null);
 
-            serverConfiguration.UsingServerSideConfig = JsonContainsNonNullProperty(json, "agent_config");
+            if (options.IgnoreAgentServerConfig)
+            {
+                serverConfiguration.RpmConfig = new AgentConfig();
+                serverConfiguration.UsingServerSideConfig = false;
+            }
+            else
+            {
+                serverConfiguration.UsingServerSideConfig = JsonContainsNonNullProperty(json, "agent_config");
+            }
 
             return serverConfiguration;
         }
@@ -320,10 +330,10 @@ namespace NewRelic.Agent.Core.Configuration
                 && dictionary[propertyName] != null;
         }
 
-        public static ServerConfiguration FromDeserializedReturnValue(object deserializedJson)
+        public static ServerConfiguration FromDeserializedReturnValue(object deserializedJson, ServerConfigurationCreationOptions options = default)
         {
             var json = JsonConvert.SerializeObject(deserializedJson);
-            return FromJson(json);
+            return FromJson(json, options);
         }
 
         [OnError]
@@ -331,5 +341,16 @@ namespace NewRelic.Agent.Core.Configuration
         {
             Log.ErrorFormat("Json serializer context path: {0}. Error message: {1}", errorContext.Path, errorContext.Error.Message);
         }
+    }
+
+    /// <summary>
+    /// Provides options controlling the creation of <see cref="ServerConfiguration"/> instances.
+    /// </summary>
+    public class ServerConfigurationCreationOptions
+    {
+        /// <summary>
+        /// Ignores the server-side agent configuration provided by the server.
+        /// </summary>
+        public bool IgnoreAgentServerConfig { get; set; }
     }
 }

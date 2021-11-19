@@ -239,6 +239,20 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsFalse(_defaultConfig.TransactionEventsEnabled);
         }
 
+        [Test]
+        public void DisableServerConfigIsFalseByDefault()
+        {
+            Assert.IsFalse(_defaultConfig.DisableServerConfiguration);
+        }
+
+        [TestCase("true", ExpectedResult = true)]
+        [TestCase("false", ExpectedResult = false)]
+        public bool DisableServerConfigSetFromEnvironment(string environment)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_SERVER_CONFIG")).Returns(environment);
+            return _defaultConfig.DisableServerConfiguration;
+        }
+
         [TestCase(true, null, null, ExpectedResult = true)]
         [TestCase(true, null, true, ExpectedResult = true)]
         [TestCase(true, null, false, ExpectedResult = false)]

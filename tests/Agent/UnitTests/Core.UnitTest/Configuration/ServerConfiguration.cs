@@ -111,6 +111,19 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             var serverConfiguration = ServerConfiguration.FromJson(json);
             return serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes;
         }
+
+        [TestCase(true, ExpectedResult = null)]
+        [TestCase(false, ExpectedResult = true)]
+        public bool? when_ignore_server_config_set_agent_config_is_ignored(bool ignoreServerConfig)
+        {
+            var options = new ServerConfigurationCreationOptions
+            {
+                IgnoreAgentServerConfig = ignoreServerConfig
+            };
+
+            var serverConfiguration = ServerConfiguration.FromJson(@"{""agent_run_id"":42,""agent_config"": {""slow_sql.enabled"":true}}", options);
+            return serverConfiguration.RpmConfig.SlowSqlEnabled;
+        }
     }
 
     [TestFixture]

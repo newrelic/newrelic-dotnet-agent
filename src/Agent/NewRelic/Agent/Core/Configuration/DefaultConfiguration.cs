@@ -378,6 +378,21 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private bool? _disableServerConfiguration;
+
+        public bool DisableServerConfiguration
+        {
+            get
+            {
+                if (!_disableServerConfiguration.HasValue)
+                {
+                    _disableServerConfiguration = EnvironmentOverrides(false, "NEW_RELIC_DISABLE_SERVER_CONFIG");
+                }
+
+                return _disableServerConfiguration.Value;
+            }
+        }
+
         public bool AllowAllRequestHeaders => HighSecurityModeOverrides(false, _localConfiguration.allowAllHeaders.enabled);
 
         #region Attributes
