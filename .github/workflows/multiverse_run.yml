@@ -26,9 +26,9 @@ jobs:
     
     env:
       multiverse_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting
-      multiverse_solution: ${{ multiverse_path }}\MultiverseTesting.sln
-      multiverse_consolescanner_path: ${{ multiverse_path }}\ConsoleScanner\bin\Release\netcoreapp3.1
-      multiverse_reportbuilder_path: ${{ multiverse_path }}\ReportBuilder\bin\Release\netcoreapp3.1
+      multiverse_solution: ${{ github.workspace }}\tests\Agent\MultiverseTesting\MultiverseTesting.sln
+      multiverse_consolescanner_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Release\netcoreapp3.1
+      multiverse_reportbuilder_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ReportBuilder\bin\Release\netcoreapp3.1
       MVS_XML_PATH: ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper
 
     steps:
