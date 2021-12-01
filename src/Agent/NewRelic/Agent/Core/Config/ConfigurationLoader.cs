@@ -1,4 +1,4 @@
-// Copyright 2020 New Relic, Inc. All rights reserved.
+    // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Events;
@@ -383,13 +383,20 @@ namespace NewRelic.Agent.Core.Config
 
         private static string GetConfigSchemaContents()
         {
-#if NET45
-			return Properties.Resources.Configuration;
-#else
-            var home = AgentInstallConfiguration.NewRelicHome;
-            var xsdFile = Path.Combine(home, "newrelic.xsd");
-            return File.ReadAllText(xsdFile);
-#endif
+            var configSchemaContents = string.Empty;
+
+            try
+            {
+                var home = AgentInstallConfiguration.NewRelicHome;
+                var xsdFile = Path.Combine(home, "newrelic.xsd");
+                configSchemaContents = File.ReadAllText(xsdFile);
+            }
+            catch (Exception ex)
+            {
+                Log.WarnFormat("An error occurred reading config file schema: {0}", ex.Message);
+            }
+
+            return configSchemaContents;
         }
 
         /// <summary>
