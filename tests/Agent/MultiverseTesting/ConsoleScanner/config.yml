@@ -151,7 +151,7 @@
 
   # TODO: figure out what dlls to test re: .net fw & .net core
   # - name: httpClient
-  #   xml-file: C:/Users/LyniceSpangler/source/repos/dotnet-multiverse-scanner/TestData/HttpClient/Instrumentation.xml
+  #   xml-file: ???
   #   nuget-packages:
   #       - { package-name: microsoft.netframework.referenceassemblies.net45, versions: [1.0.0] }
   #       - { package-name: microsoft.netnetcore.app, versions: [2.1.25, 2.2.8] }
