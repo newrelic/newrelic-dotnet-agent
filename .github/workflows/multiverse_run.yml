@@ -64,16 +64,54 @@ jobs:
           ./ConsoleScanner "./config.yml" "./reports.yml"
         shell: bash
 
-      - name: Upload Reports
+      - name: Upload MVS
         uses: actions/upload-artifact@v2
         with:
-          name: mvs-reports
-          path: ${{ env.multiverse_consolescanner_path }}/reports.yml
+          name: mvs
+          path: |
+            ${{ env.multiverse_consolescanner_path }}
+            ${{ env.multiverse_reportbuilder_path }}
+            ! ${{ env.multiverse_consolescanner_path }}/NugetData/**/*
+            ! ${{ env.multiverse_consolescanner_path }}/runtimes/**/*
           if-no-files-found: error
+          retention-days: 1
+
+  publish-docs:
+    needs: build-run-publish-multiverse-testing
+    name: Publish Docs to gh-pages
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    env:
+      multiverse_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting
+      multiverse_solution: ${{ github.workspace }}/tests/Agent/MultiverseTesting/MultiverseTesting.sln
+      multiverse_consolescanner_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ConsoleScanner/bin/Release/netcoreapp3.1
+      multiverse_reportbuilder_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ReportBuilder/bin/Release/netcoreapp3.1
+      MVS_XML_PATH: ${{ github.workspace }}/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper
+
+    steps:
+      - name: Setup .NET Core 3.1.100
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.100'
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: 'gh-pages'
+          fetch-depth: 0
+
+      - name: Download MVS
+        uses: actions/download-artifact@v2
+        with:
+          name: mvs
+          path: ${{ env.multiverse_path }}
 
       - name: Run ReportBuilder
         run: |
           cd ${{ env.multiverse_reportbuilder_path }}
+          sudo chmod 777 ./ReportBuilder
           ./ReportBuilder "${{ github.event.inputs.agentVersion }}" "${{ env.multiverse_consolescanner_path }}/reports.yml" "${{ github.workspace }}/docs/mvs"
         shell: bash
 
