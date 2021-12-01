@@ -21,15 +21,15 @@ env:
 jobs:
   build-run-publish-multiverse-testing:
     name: Build and Publish Multiverse Testing Suite
-    runs-on: windows-2019
+    runs-on: ubuntu-latest
     continue-on-error: true
     
     env:
-      multiverse_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting
-      multiverse_solution: ${{ github.workspace }}\tests\Agent\MultiverseTesting\MultiverseTesting.sln
-      multiverse_consolescanner_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ConsoleScanner\bin\Release\netcoreapp3.1
-      multiverse_reportbuilder_path: ${{ github.workspace }}\tests\Agent\MultiverseTesting\ReportBuilder\bin\Release\netcoreapp3.1
-      MVS_XML_PATH: ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper
+      multiverse_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting
+      multiverse_solution: ${{ github.workspace }}/tests/Agent/MultiverseTesting/MultiverseTesting.sln
+      multiverse_consolescanner_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ConsoleScanner/bin/Release/netcoreapp3.1
+      multiverse_reportbuilder_path: ${{ github.workspace }}/tests/Agent/MultiverseTesting/ReportBuilder/bin/Release/netcoreapp3.1
+      MVS_XML_PATH: ${{ github.workspace }}/src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper
 
     steps:
       - name: Checkout
@@ -44,18 +44,14 @@ jobs:
           path: ${{ env.multiverse_path }}
           key: multiverse-${{ hashFiles('**/tests/Agent/MultiverseTesting') }}
 
-      - name: Add msbuild to PATH
-        if: steps.cache-multiverse.outputs.cache-hit != 'true'
-        uses: microsoft/setup-msbuild@v1
-
       - name: Build MultiverseTesting.sln
         if: steps.cache-multiverse.outputs.cache-hit != 'true'
         run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution }}"
-          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.multiverse_solution }}
-        shell: powershell
+          echo "List NuGet Sources (necessary to avoid subsequent problems with NuGet package restore)"
+          dotnet nuget list source
+          echo "dotnet build ${{ env.multiverse_solution }} --configuration Release"
+          dotnet build ${{ env.multiverse_solution }} --configuration Release
+        shell: bash
 
       - name: Setup .NET Core 3.1.100
         uses: actions/setup-dotnet@v1
@@ -65,21 +61,21 @@ jobs:
       - name: Run ConsoleScanner
         run: |
           cd ${{ env.multiverse_consolescanner_path }}
-          .\ConsoleScanner.exe ".\config.yml" ".\reports.yml"
-        shell: powershell
+          ./ConsoleScanner "./config.yml" "./reports.yml"
+        shell: bash
 
       - name: Upload Reports
         uses: actions/upload-artifact@v2
         with:
           name: mvs-reports
-          path: ${{ env.multiverse_consolescanner_path }}\reports.yml
+          path: ${{ env.multiverse_consolescanner_path }}/reports.yml
           if-no-files-found: error
 
       - name: Run ReportBuilder
         run: |
           cd ${{ env.multiverse_reportbuilder_path }}
-          .\ReportBuilder.exe "${{ inputs.agentVersion }}" "${{ env.multiverse_consolescanner_path }}\reports.yml" "${{ github.workspace }}\docs\mvs"
-        shell: powershell
+          ./ReportBuilder "${{ github.event.inputs.agentVersion }}" "${{ env.multiverse_consolescanner_path }}/reports.yml" "${{ github.workspace }}/docs/mvs"
+        shell: bash
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@4.1.5
