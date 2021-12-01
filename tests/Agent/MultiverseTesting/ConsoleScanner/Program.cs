@@ -22,7 +22,7 @@ namespace NewRelic.Agent.ConsoleScanner
 
         private static List<InstrumentationReport> _instrumentationReports = new List<InstrumentationReport>();
         private static XmlSerializer _xmlSerializer = new XmlSerializer(typeof(Extension));
-        private static readonly string _nugetDataDirectory = $@"{Environment.CurrentDirectory}\NugetData";
+        private static readonly string _nugetDataDirectory = $@"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}NugetData";
 
         public static void Main(string[] args)
         {

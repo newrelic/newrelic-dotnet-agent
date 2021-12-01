@@ -44,10 +44,6 @@ jobs:
           path: ${{ env.multiverse_path }}
           key: multiverse-${{ hashFiles('**/tests/Agent/MultiverseTesting') }}
 
-      - name: Add msbuild to PATH
-        if: steps.cache-multiverse.outputs.cache-hit != 'true'
-        uses: microsoft/setup-msbuild@v1
-
       - name: Build MultiverseTesting.sln
         if: steps.cache-multiverse.outputs.cache-hit != 'true'
         run: |
@@ -65,7 +61,7 @@ jobs:
       - name: Run ConsoleScanner
         run: |
           cd ${{ env.multiverse_consolescanner_path }}
-          ./ConsoleScanner.exe "./config.yml" "./reports.yml"
+          ./ConsoleScanner "./config.yml" "./reports.yml"
         shell: bash
 
       - name: Upload Reports
@@ -78,7 +74,7 @@ jobs:
       - name: Run ReportBuilder
         run: |
           cd ${{ env.multiverse_reportbuilder_path }}
-          ./ReportBuilder.exe "${{ inputs.agentVersion }}" "${{ env.multiverse_consolescanner_path }}/reports.yml" "${{ github.workspace }}/docs/mvs"
+          ./ReportBuilder "${{ github.event.inputs.agentVersion }}" "${{ env.multiverse_consolescanner_path }}/reports.yml" "${{ github.workspace }}/docs/mvs"
         shell: bash
 
       - name: Deploy 🚀
