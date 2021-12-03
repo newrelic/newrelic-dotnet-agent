@@ -8,6 +8,7 @@ using System;
 using System.Messaging;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NServiceBus;
+using NServiceBus.Logging;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
 {
@@ -27,13 +28,16 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
             Logger.Info($"Starting NServiceBusReceiverHost");
             SetupQueues();
 
+            var defaultFactory = LogManager.Use<DefaultFactory>();
+            defaultFactory.Level(LogLevel.Error);
+
             var busConfig = new BusConfiguration();
             busConfig.UsePersistence<InMemoryPersistence>();
             busConfig.UseTransport<MsmqTransport>();
             busConfig.DiscardFailedMessagesInsteadOfSendingToErrorQueue();
             busConfig.EndpointName(_endpointName);
             var startableBus = Bus.Create(busConfig);
-            var _bus = startableBus.Start();
+            _bus = startableBus.Start();
             Logger.Info($"NServiceBusReceiverHost Started");
         }
 
