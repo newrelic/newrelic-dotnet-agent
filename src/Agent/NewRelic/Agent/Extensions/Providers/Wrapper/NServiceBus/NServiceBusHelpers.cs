@@ -17,8 +17,30 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
         private static Func<object, object> _getMessageFromIncomingLogicalMessageContextFunc;
         private static Func<object, Dictionary<string, string>> _getHeadersFromIncomingLogicalMessageContextFunc;
 
+        private static Func<object, object> _getMessageFromOutgoingSendContextFunc;
+        private static Func<object, object> _getMessageFromOutgoingPublishContextFunc;
+
+        public const string OutgoingSendContextTypeName = "NServiceBus.OutgoingSendContext";
+        public const string OutgoingPublishContextTypeName = "NServiceBus.OutgoingPublishContext";
+
 
         private static Func<object, Type> _getMessageTypeFunc;
+
+        public static object GetMessageFromOutgoingContext(object outgoingContext)
+        {
+            if (outgoingContext.GetType().FullName == OutgoingSendContextTypeName)
+            {
+                var getMessageFromOutgoingSendContextFunc = _getMessageFromOutgoingSendContextFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(outgoingContext.GetType(), "Message");
+                return getMessageFromOutgoingSendContextFunc(outgoingContext);
+            }
+            else if (outgoingContext.GetType().FullName == OutgoingPublishContextTypeName)
+            {
+                var getMessageFromOutgoingPublishContextFunc = _getMessageFromOutgoingPublishContextFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(outgoingContext.GetType(), "Message");
+                return getMessageFromOutgoingPublishContextFunc(outgoingContext);
+            }
+
+            return null;
+        }
 
         public static object GetMessageFromIncomingLogicalMessageContext(object incomingLogicalMessageContext)
         {
@@ -78,7 +100,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 
         public static void CreateOutboundHeaders(IAgent agent, object logicalMessage)
         {
-            // not sure why we just bail if the headers are null, we might not want to keep this behavior
+            // We need headers to attach CAT/DT payload, bail out if headers are null,
             var headers = GetHeaders(logicalMessage);
             if (headers == null)
             {
