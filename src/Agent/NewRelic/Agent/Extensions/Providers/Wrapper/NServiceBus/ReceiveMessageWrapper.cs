@@ -41,7 +41,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 
             if (headers == null)
             {
-                throw new NullReferenceException("headers"); // again, not sure about this...
+                throw new NullReferenceException("headers");
             }
 
             var queueName = NServiceBusHelpers.TryGetQueueName(logicalMessage);
