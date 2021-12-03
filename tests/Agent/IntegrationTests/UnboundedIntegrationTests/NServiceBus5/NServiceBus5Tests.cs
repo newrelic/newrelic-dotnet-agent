@@ -10,7 +10,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
+namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
 {
     public abstract class NServiceBus5TestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture

@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 using Assert = Xunit.Assert;
 using MultiFunctionApplicationHelpers;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
+namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
 {
     public abstract class NServiceBus5ReceiveTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
