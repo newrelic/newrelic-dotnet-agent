@@ -52,7 +52,7 @@
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net5.0'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net6.0'" />
-    
+    <PackageReference Include="NServiceBus" Version="5.0.0" Condition="'$(TargetFramework)' == 'net462'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -63,6 +63,10 @@
     <ProjectReference Include="..\..\..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.csproj" />
     <ProjectReference Include="..\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+    <Reference Include="System.Messaging" />
   </ItemGroup>
 
   <ItemGroup>
