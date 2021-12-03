@@ -5,14 +5,21 @@ SPDX-License-Identifier: Apache-2.0
 -->
 <extension xmlns="urn:newrelic-extension">
 	<instrumentation>
-		<tracerFactory>
+		<tracerFactory name="ReceiveMessageWrapper">
 			<match assemblyName="NServiceBus.Core" className="NServiceBus.InvokeHandlersBehavior">
 				<exactMethodMatcher methodName="Invoke" parameters="NServiceBus.Pipeline.Contexts.IncomingContext,System.Action" />
 			</match>
 		</tracerFactory>
-		<tracerFactory>
+		<tracerFactory name="SendMessageWrapper">
 			<match assemblyName="NServiceBus.Core" className="NServiceBus.Unicast.UnicastBus">
 				<exactMethodMatcher methodName="SendMessage" parameters="NServiceBus.Unicast.SendOptions,NServiceBus.Unicast.Messages.LogicalMessage" />
+			</match>
+		</tracerFactory>
+
+		<!--NSB 6 and above instrumentation points-->
+		<tracerFactory name="LoadHandlersConnectorWrapper">
+			<match assemblyName="NServiceBus.Core" className="NServiceBus.LoadHandlersConnector">
+				<exactMethodMatcher methodName="Invoke" parameters="NServiceBus.Pipeline.IIncomingLogicalMessageContext,System.Func`2[NServiceBus.Pipeline.IInvokeHandlerContext,System.Threading.Tasks.Task]" />
 			</match>
 		</tracerFactory>
 	</instrumentation>

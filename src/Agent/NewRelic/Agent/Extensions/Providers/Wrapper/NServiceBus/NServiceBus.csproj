@@ -1,25 +1,21 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
     <PropertyGroup>
-        <TargetFramework>net45</TargetFramework>
+        <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
         <AssemblyName>NewRelic.Providers.Wrapper.NServiceBus</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.NServiceBus</RootNamespace>
         <Description>NServiceBus Wrapper Provider for New Relic .NET Agent</Description>
     </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="NServiceBus" Version="5.2.0" />
-    </ItemGroup>
-    <ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
         <Reference Include="System" />
         <Reference Include="System.Core" />
         <Reference Include="System.Data.DataSetExtensions" />
         <Reference Include="System.Xml.Linq" />
-        <Reference Include="Microsoft.CSharp" />
         <Reference Include="System.Data" />
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="Instrumentation.xml">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
     <ItemGroup>
