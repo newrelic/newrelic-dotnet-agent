@@ -22,11 +22,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
             _fixture = fixture;
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand("NServiceBusReceiverHost Start");
+            _fixture.AddCommand("NServiceBusSetup Setup");
             _fixture.AddCommand("NServiceBusService Start");
             _fixture.AddCommand("NServiceBusService Send");
+            _fixture.AddCommand("RootCommands DelaySeconds 5");
             _fixture.AddCommand("NServiceBusService Stop");
-            _fixture.AddCommand("NServiceBusReceiverHost Stop");
 
             _fixture.Actions
             (

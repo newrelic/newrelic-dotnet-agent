@@ -32,7 +32,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
                 typeof(SampleNServiceBusMessage2)
             };
             busConfig.TypesToScan(typeToScan);
-            busConfig.DiscardFailedMessagesInsteadOfSendingToErrorQueue();
+            busConfig.CustomConfigurationSource(new ConfigurationSource());
             _bus = NServiceBus.Bus.Create(busConfig);
             _random = new Random();
             Logger.Info($"NServiceBusService Started");
@@ -53,27 +53,23 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
         {
             var message = new SampleNServiceBusMessage(_random.Next(), "Foo bar");
             _bus.Send(DestinationReceiverHost, message);
-            Logger.Info(string.Format("Message with ID={0} sent via NServiceBus", message.Id));
+            Logger.Info($"Message with ID={message.Id} sent via NServiceBus" );
         }
 
         [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void SendValid()
         {
             var message = new SampleNServiceBusMessage2(_random.Next(), "Valid");
             _bus.Send(DestinationReceiverHost, message);
-            Logger.Info(string.Format("Message with ID={0} sent via NServiceBus", message.Id));
+            Logger.Info($"Message with ID={message.Id} sent via NServiceBus");
         }
 
         [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void SendInvalid()
         {
             var message = new SampleNServiceBusMessage2(_random.Next(), "Invalid", false);
             _bus.Send(DestinationReceiverHost, message);
-            Logger.Info(string.Format("Message with ID={0} sent via NServiceBus", message.Id));
+            Logger.Info($"Message with ID={message.Id} sent via NServiceBus");
         }
     }
 }

@@ -9,11 +9,18 @@ using NServiceBus;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
 {
-    public class MessageHandler : IHandleMessages<SampleNServiceBusMessage>
+    public class MessageHandler : IHandleMessages<SampleNServiceBusMessage2>
     {
-        public void Handle(SampleNServiceBusMessage message)
+        public void Handle(SampleNServiceBusMessage2 message)
         {
-            Logger.Info("Received message with contents={1}", message.FooBar);
+            var valid = message.IsValid ? "Valid" : "Invalid";
+            Logger.Info($"Received {valid} message with contents={message.FooBar}");
+
+            if (!message.IsValid)
+            {
+                Logger.Info("Message was invalid, throwing an exception!");
+                throw new Exception("An exception was thrown inside the NServiceBus Receive Handler!!!!");
+            }
         }
     }
 }
