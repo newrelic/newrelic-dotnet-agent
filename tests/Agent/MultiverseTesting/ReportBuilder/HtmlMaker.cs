@@ -193,7 +193,7 @@ namespace ReportBuilder
         private void AddStyleSheet(string outputPath)
         {
             var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            File.Copy($@"{exeDir}\styles.css", $@"{outputPath}\styles.css", true);
+            File.Copy($@"{exeDir}{Path.DirectorySeparatorChar}styles.css", $@"{outputPath}{Path.DirectorySeparatorChar}styles.css", true);
         }
 
         private void AddUpperBoilerplate(string title, StringBuilder builder)
