@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;netcoreapp3.1;net5.0;net6.0;net462;net471;net48</TargetFrameworks>
@@ -52,7 +52,7 @@
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net5.0'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net6.0'" />
-    
+    <PackageReference Include="NServiceBus" Version="5.0.0" Condition="'$(TargetFramework)' == 'net462'" />
   </ItemGroup>
 
   <ItemGroup>
