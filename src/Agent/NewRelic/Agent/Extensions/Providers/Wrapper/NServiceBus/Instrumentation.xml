@@ -22,5 +22,10 @@ SPDX-License-Identifier: Apache-2.0
 				<exactMethodMatcher methodName="Invoke" parameters="NServiceBus.Pipeline.IIncomingLogicalMessageContext,System.Func`2[NServiceBus.Pipeline.IInvokeHandlerContext,System.Threading.Tasks.Task]" />
 			</match>
 		</tracerFactory>
+		<tracerFactory name="PipelineWrapper">
+			<match assemblyName="NServiceBus.Core" className="NServiceBus.Pipeline`1">
+				<exactMethodMatcher methodName="Invoke" parameters="!0" />
+			</match>
+		</tracerFactory>
 	</instrumentation>
 </extension>
