@@ -6,6 +6,7 @@ on:
     branches: 
     - main
     - cosmosdb_feature_branch
+    - nservicebus7-feature-branch
   release:
     types: [ published ]
   workflow_dispatch:
