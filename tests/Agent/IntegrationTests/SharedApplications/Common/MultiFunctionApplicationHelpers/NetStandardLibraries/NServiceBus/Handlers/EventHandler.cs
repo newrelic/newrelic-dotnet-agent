@@ -6,6 +6,8 @@ using MultiFunctionApplicationHelpers;
 using NServiceBus;
 using NServiceBus.Logging;
 
+#if !NET462
+
 namespace NServiceBusTests
 {
     public class EventHandler :
@@ -18,3 +20,5 @@ namespace NServiceBusTests
         }
     }
 }
+
+#endif

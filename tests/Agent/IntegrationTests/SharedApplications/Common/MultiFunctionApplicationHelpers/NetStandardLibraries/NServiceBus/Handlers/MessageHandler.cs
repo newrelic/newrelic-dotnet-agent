@@ -4,7 +4,8 @@
 using System.Threading.Tasks;
 using MultiFunctionApplicationHelpers;
 using NServiceBus;
-using NServiceBus.Logging;
+
+#if !NET462
 
 namespace NServiceBusTests
 {
@@ -18,3 +19,5 @@ namespace NServiceBusTests
         }
     }
 }
+
+#endif

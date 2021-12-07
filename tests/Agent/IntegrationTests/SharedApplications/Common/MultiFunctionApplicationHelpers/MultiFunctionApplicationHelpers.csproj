@@ -33,7 +33,6 @@
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
     <PackageReference Include="NewRelic.Agent.Api" Version="8.41.1" />
-    <PackageReference Include="NServiceBus" Version="7.5.0" />
     <PackageReference Include="Owin" Version="1.0.0">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
@@ -54,6 +53,13 @@
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net5.0'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="NServiceBus" Version="5.0.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
+    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net5.0'" />
+    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net6.0'" />
   </ItemGroup>
 
   <ItemGroup>

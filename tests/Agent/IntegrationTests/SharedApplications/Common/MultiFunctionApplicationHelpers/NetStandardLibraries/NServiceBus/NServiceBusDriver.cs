@@ -17,6 +17,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
+#if !NET462
+
 namespace NServiceBusTests
 {
     [Library]
@@ -106,3 +108,5 @@ namespace NServiceBusTests
         }
     }
 }
+
+#endif
