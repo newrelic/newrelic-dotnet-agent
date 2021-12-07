@@ -33,6 +33,7 @@
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
     <PackageReference Include="NewRelic.Agent.Api" Version="8.41.1" />
+    <PackageReference Include="NServiceBus" Version="7.5.0" />
     <PackageReference Include="Owin" Version="1.0.0">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
