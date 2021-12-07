@@ -16,7 +16,7 @@ public class ConfigurationSource : IConfigurationSource
         {
             var config = new MessageForwardingInCaseOfFaultConfig
             {
-                ErrorQueue = "error"
+                ErrorQueue = "nservicebusreceiverhost.error"
             };
 
             return config as T;
@@ -48,7 +48,7 @@ public class ConfigurationSource : IConfigurationSource
         {
             var config = new AuditConfig
             {
-                QueueName = "audit"
+                QueueName = "nservicebusreceiverhost.audit"
             };
 
             return config as T;
