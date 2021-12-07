@@ -25,17 +25,17 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
             _fixture.SetTimeout(TimeSpan.FromMinutes(3));
 
             // Startup
-            _fixture.AddCommand("NServiceBusDriver StartAgent");
             _fixture.AddCommand("NServiceBusDriver StartNServiceBus");
 
             // Execute tests
             _fixture.AddCommand("NServiceBusDriver PublishEvent");
             _fixture.AddCommand("NServiceBusDriver SendCommand");
+
             _fixture.AddCommand("NServiceBusDriver PublishMessage");
             _fixture.AddCommand("NServiceBusDriver SendMessage");
 
             // Wait...
-            _fixture.AddCommand("NServiceBusDriver Sleep");
+            _fixture.AddCommand("RootCommands DelaySeconds 5");
 
             // Shut down
             _fixture.AddCommand("NServiceBusDriver StopNServiceBus");
@@ -103,15 +103,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     public class NServiceBusTestsFW48 : NServiceBusTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public NServiceBusTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetFrameworkTest]
-    public class NServiceBusTestsFWLatest : NServiceBusTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public NServiceBusTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

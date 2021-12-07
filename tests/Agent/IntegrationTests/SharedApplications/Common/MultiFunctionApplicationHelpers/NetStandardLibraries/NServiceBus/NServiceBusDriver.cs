@@ -16,6 +16,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 #if !NET462
 
@@ -25,14 +26,6 @@ namespace NServiceBusTests
     class NServiceBusDriver
     {
         private IEndpointInstance _endpoint;
-
-        [LibraryMethod]
-        public static void StartAgent()
-        {
-            NewRelic.Api.Agent.NewRelic.StartAgent();
-            //Get everything started up and time for initial Sample().
-            Thread.Sleep(TimeSpan.FromSeconds(10));
-        }
 
         [LibraryMethod]
         public void StartNServiceBus()
@@ -63,7 +56,7 @@ namespace NServiceBusTests
             var @event = new Event();
             Logger.Info($"Sending NServiceBus Event with Id: {@event.Id}");
             _endpoint.Publish(@event).Wait();
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            Task.Delay(TimeSpan.FromSeconds(2)).Wait();
         }
 
         [LibraryMethod]
@@ -74,7 +67,7 @@ namespace NServiceBusTests
             var command = new Command();
             Logger.Info($"Sending NServiceBus Command with Id: {command.Id}");
             _endpoint.SendLocal(command).Wait();
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            Task.Delay(TimeSpan.FromSeconds(2)).Wait();
         }
 
         [LibraryMethod]
@@ -85,7 +78,7 @@ namespace NServiceBusTests
             var message = new Message();
             Logger.Info($"Publishing NServiceBus Message with Id: {message.Id}");
             _endpoint.Publish(message).Wait();
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            Task.Delay(TimeSpan.FromSeconds(2)).Wait();
         }
 
         [LibraryMethod]
@@ -97,15 +90,9 @@ namespace NServiceBusTests
             Logger.Info($"Sending NServiceBus Message with Id: {message.Id}");
             
             _endpoint.SendLocal(message).Wait();
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            Task.Delay(TimeSpan.FromSeconds(2)).Wait();
         }
 
-        //TODO: Use Jacob's new method, or wait on logs
-        [LibraryMethod]
-        public void Sleep()
-        {
-            Thread.Sleep(TimeSpan.FromSeconds(5));
-        }
     }
 }
 
