@@ -19,10 +19,10 @@ namespace NewRelic.Agent.Core.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("NewRelic.Agent.Core.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace NewRelic.Agent.Core.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,15 +63,14 @@ namespace NewRelic.Agent.Core.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
         ///&lt;!-- The documentation in here must be kept up to date with that embedded in comments in newrelic.config --&gt;
-        ///&lt;xs:schema attributeFormDefault=&quot;unqualified&quot; elementFormDefault=&quot;qualified&quot; targetNamespace=&quot;urn:newrelic-config&quot; xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:nr=&quot;Configuration.xsd&quot;&gt;
-        ///	&lt;xs:element name=&quot;configuration&quot;&gt;
-        ///		&lt;xs:complexType&gt;
-        ///			&lt;xs:all&gt;
-        ///				&lt;xs:element name=&quot;service&quot; minOccurs=&quot;1&quot; maxOccurs=&quot;1&quot;&gt;
-        ///					&lt;xs:complexType&gt;
-        ///						&lt;xs:annotatio [rest of string was truncated]&quot;;.
+        ///&lt;xs:schema attributeFormDefault=&quot;unqualified&quot; elementFormDefault=&quot;qualified&quot; xmlns:tns=&quot;urn:newrelic-config&quot; targetNamespace=&quot;urn:newrelic-config&quot; xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:nr=&quot;Configuration.xsd&quot;&gt;
+        ///
+        ///    &lt;xs:complexType name=&quot;ErrorClassCollection&quot;&gt;
+        ///        &lt;xs:annotation&gt;
+        ///            &lt;xs:documentation&gt;
+        ///                A list of fully [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string Configuration {
+        public static string Configuration {
             get {
                 return ResourceManager.GetString("Configuration", resourceCulture);
             }

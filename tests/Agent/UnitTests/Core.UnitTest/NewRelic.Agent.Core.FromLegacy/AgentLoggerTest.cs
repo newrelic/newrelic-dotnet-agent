@@ -380,7 +380,10 @@ namespace NewRelic.Agent.Core
                 "   <log level=\"{0}\"/>" +
                 "</configuration>",
                 logLevel);
-            var configuration = ConfigurationLoader.InitializeFromXml(xml);
+
+            Func<string> configSchemaSource = () => Properties.Resources.Configuration;
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
             return configuration.LogConfig;
         }
 
@@ -395,7 +398,10 @@ namespace NewRelic.Agent.Core
                 "   <log level=\"{0}\" auditLog=\"true\"/>" +
                 "</configuration>",
                 logLevel);
-            var configuration = ConfigurationLoader.InitializeFromXml(xml);
+
+            Func<string> configSchemaSource = () => Properties.Resources.Configuration;
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
             return configuration.LogConfig;
         }
 
@@ -410,7 +416,10 @@ namespace NewRelic.Agent.Core
                 "   <log level=\"{0}\" console=\"true\"/>" +
                 "</configuration>",
                 logLevel);
-            var configuration = ConfigurationLoader.InitializeFromXml(xml);
+
+            Func<string> configSchemaSource = () => Properties.Resources.Configuration;
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
             return configuration.LogConfig;
         }
 
