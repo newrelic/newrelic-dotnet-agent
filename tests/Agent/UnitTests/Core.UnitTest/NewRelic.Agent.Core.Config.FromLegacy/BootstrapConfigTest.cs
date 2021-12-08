@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Globalization;
+using System.Threading;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Config
@@ -24,6 +26,24 @@ namespace NewRelic.Agent.Core.Config
                         "An error occurred parsing newrelic.config - The 'bogus' attribute is not declared." :
                         "An error occurred parsing newrelic.config - XmlSchema error: Attribute declaration was not found for bogus";
                 Assert.IsTrue(logging.HasMessageThatContains(errorMessage));
+            }
+        }
+
+        [Test]
+        public void TestAllTheCultures()
+        {
+            CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
+            foreach(CultureInfo culture in cultures)
+            {
+                Console.WriteLine($"Testing Culture: {culture.Name}");
+                Thread.CurrentThread.CurrentCulture = culture;
+                Thread.CurrentThread.CurrentUICulture = culture;
+
+                ConfigurationLoader.InitializeFromXml(
+                    "<configuration xmlns=\"urn:newrelic-config\">" +
+                    "<service bogus=\"true\" licenseKey=\"dude\"/>" +
+                    "<application><name>My App</name></application>" +
+                    "</configuration>");
             }
         }
     }
