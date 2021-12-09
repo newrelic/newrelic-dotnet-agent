@@ -17,17 +17,8 @@ jobs:
           organization: newrelic
           username: ${{ github.event.issue.user.login }}
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Log Result
-        run: |
-          result=${{steps.is_organization_member.outputs.result}}
-          echo "$result"
-
-          expressionResult=${{steps.is_organization_member.outputs.result == 'false'}}
-          echo "$expressionResult"
-
       - name: Set Community Label If Needed
-        if: ${{steps.is_organization_member.outputs.result == false}}
+        if: ${{steps.is_organization_member.outputs.result == 'false'}}
         uses: andymckay/labeler@master
         with:
           add-labels: "community"
