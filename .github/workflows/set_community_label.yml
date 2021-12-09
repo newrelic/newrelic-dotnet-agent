@@ -23,7 +23,7 @@ jobs:
           result=${{steps.is_organization_member.outputs.result}}
           echo "$result"
 
-          expressionResult=${{steps.is_organization_member.outputs.result == false}}
+          expressionResult=${{steps.is_organization_member.outputs.result == 'false'}}
           echo "$expressionResult"
 
       - name: Set Community Label If Needed
