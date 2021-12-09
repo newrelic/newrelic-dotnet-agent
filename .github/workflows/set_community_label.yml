@@ -27,7 +27,7 @@ jobs:
           echo "$expressionResult"
 
       - name: Set Community Label If Needed
-        if: ${{steps.is_organization_member.outputs.result}}
+        if: ${{steps.is_organization_member.outputs.result == false}}
         uses: andymckay/labeler@master
         with:
           add-labels: "community"
