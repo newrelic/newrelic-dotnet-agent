@@ -10,6 +10,7 @@ using NewRelic.Core.Logging;
 using NUnit.Framework;
 using log4net.Appender;
 using log4net.Core;
+using System.IO;
 
 namespace NewRelic.Agent.Core
 {
@@ -381,7 +382,8 @@ namespace NewRelic.Agent.Core
                 "</configuration>",
                 logLevel);
 
-            Func<string> configSchemaSource = () => Properties.Resources.Configuration;
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
             return configuration.LogConfig;
@@ -399,7 +401,8 @@ namespace NewRelic.Agent.Core
                 "</configuration>",
                 logLevel);
 
-            Func<string> configSchemaSource = () => Properties.Resources.Configuration;
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
             return configuration.LogConfig;
@@ -417,7 +420,8 @@ namespace NewRelic.Agent.Core
                 "</configuration>",
                 logLevel);
 
-            Func<string> configSchemaSource = () => Properties.Resources.Configuration;
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
             return configuration.LogConfig;

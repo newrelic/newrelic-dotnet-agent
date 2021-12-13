@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.IO;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Config
@@ -17,7 +18,8 @@ namespace NewRelic.Agent.Core.Config
                                  "<application><name>My App</name></application>" +
                                  "</configuration>";
 
-            Func<string> configSchemaSource = () => Properties.Resources.Configuration;
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
 
             using (var logging = new TestUtilities.Logging())
             {
