@@ -53,9 +53,11 @@
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net5.0'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="NServiceBus" Version="5.0.0" Condition="'$(TargetFramework)' == 'net462'" />
-    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="NServiceBus" Version="6.5.10" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <!-- NServiceBus 6.5 only appears to support .NET Framework. Uncomment for 'fun' -->
+    <!-- <PackageReference Include="NServiceBus" Version="6.5.10 " Condition="'$(TargetFramework)' == 'netcoreapp2.1'" /> -->
+    <PackageReference Include="NServiceBus" Version="7.5.0 " Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
     <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="NServiceBus" Version="7.5.0" Condition="'$(TargetFramework)' == 'net5.0'" />

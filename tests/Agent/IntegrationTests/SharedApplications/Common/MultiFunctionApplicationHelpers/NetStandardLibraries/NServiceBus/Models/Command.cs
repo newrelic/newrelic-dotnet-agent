@@ -6,5 +6,5 @@ using NServiceBus;
 
 namespace NServiceBusTests
 {
-    public class Command : Message, ICommand { }
+    public class Command : BaseModel, ICommand { }
 }

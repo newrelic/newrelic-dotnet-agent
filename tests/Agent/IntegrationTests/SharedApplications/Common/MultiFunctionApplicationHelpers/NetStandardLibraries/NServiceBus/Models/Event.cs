@@ -6,5 +6,5 @@ using NServiceBus;
 
 namespace NServiceBusTests
 {
-    public class Event : Message, IEvent { }
+    public class Event : BaseModel, IEvent { }
 }
