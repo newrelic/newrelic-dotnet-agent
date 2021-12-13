@@ -3,6 +3,7 @@
 
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 
@@ -15,6 +16,12 @@ namespace MultiFunctionApplicationHelpers
         public static void DelaySeconds(int seconds)
         {
             Task.Delay(TimeSpan.FromSeconds(seconds)).Wait();
+        }
+
+        [LibraryMethod]
+        public static void LaunchDebugger()
+        {
+            Debugger.Launch();
         }
     }
 }

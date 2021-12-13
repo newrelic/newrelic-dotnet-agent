@@ -86,7 +86,7 @@ namespace NServiceBusTests
         [LibraryMethod]
         public void StartNServiceBusWithAsyncEventHandler()
         {
-            StartNServiceBusInternal(typeof(EventHandler));
+            StartNServiceBusInternal(typeof(AsyncEventHandler));
         }
 
         [LibraryMethod]
