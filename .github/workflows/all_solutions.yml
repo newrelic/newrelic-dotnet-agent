@@ -76,7 +76,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: profiler
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
@@ -120,7 +120,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -185,7 +185,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -247,21 +247,21 @@ jobs:
         shell: powershell
 
       - name: Archive NewRelic.NuGetHelper
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: NewRelic.NuGetHelper
           path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\bin
           if-no-files-found: error
           
       - name: Archive NewRelic.Agent.Extensions
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: NewRelic.Agent.Extensions
           path: ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\Release
           if-no-files-found: error
 
       - name: Archive FullAgent Home folders
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: homefolders
           path: |
@@ -310,14 +310,14 @@ jobs:
         shell: powershell
 
       - name: Archive msi _build Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: msi-build-folder-artifacts
           path: ${{ github.workspace }}\src\_build
           if-no-files-found: error
 
       - name: Archive NewRelic.OpenTracing.AmazonLambda.Tracer
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: NewRelic.OpenTracing.AmazonLambda.Tracer
           path: ${{ github.workspace }}\src\AwsLambda\AwsLambdaOpenTracer\bin\Release\netstandard2.0-ILRepacked
@@ -372,7 +372,7 @@ jobs:
 
       - name: Archive Test Results
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: test-results
           path: ${{ github.workspace }}\TestResults
@@ -412,7 +412,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: integrationtests
           path: |
@@ -456,7 +456,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: unboundedintegrationtests
           path: |
@@ -586,7 +586,7 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: integration-test-artifacts
           path: |
@@ -596,7 +596,7 @@ jobs:
 
       - name: Archive Test Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: integration-test-artifacts
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
@@ -656,14 +656,14 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: integration-test-artifacts-linux-arm64
           path: ${{ env.test_path }}/**/*
           if-no-files-found: error
 
       - name: Archive Test Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         if: ${{ always() }}
         with:
           name: integration-test-artifacts-linux-arm64
@@ -787,7 +787,7 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: integration-test-artifacts
           path: |
@@ -797,7 +797,7 @@ jobs:
 
       - name: Archive Test Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: integration-test-artifacts
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
@@ -850,7 +850,7 @@ jobs:
         shell: bash
       
       - name: Archive RPM Package Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: rpm-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -889,7 +889,7 @@ jobs:
         shell: bash
         
       - name: Archive Debian Package Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: debian-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -955,7 +955,7 @@ jobs:
         shell: powershell
 
       - name: Archive Deploy Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: deploy-artifacts
           path: |
