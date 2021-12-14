@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Globalization;
-using System.Threading;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Config
