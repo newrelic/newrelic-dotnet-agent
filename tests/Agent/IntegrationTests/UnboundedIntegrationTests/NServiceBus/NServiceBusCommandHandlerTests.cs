@@ -72,14 +72,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 
             var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Message/NServiceBus/Queue/Temp");
             var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Message/NServiceBus/Queue/Temp");
-            //var errorTrace =
-            //    _fixture.AgentLog.TryGetErrorTrace(
-            //        "OtherTransaction/Message/NServiceBus/Queue/Temp");
 
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
                 () => Assert.NotNull(transactionEvent)
-               // () => Assert.NotNull(errorTrace)
             );
 
             NrAssert.Multiple
