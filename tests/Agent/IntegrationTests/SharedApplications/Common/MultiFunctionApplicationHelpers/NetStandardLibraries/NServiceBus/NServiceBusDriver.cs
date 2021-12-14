@@ -27,11 +27,11 @@ namespace NServiceBusTests
     {
         private IEndpointInstance _endpoint;
 
-        
+
         private void StartNServiceBusInternal(Type handlerToAllow = null)
         {
             Logger.Info($"Starting NServiceBus");
-            if(handlerToAllow != null)
+            if (handlerToAllow != null)
             {
                 Logger.Info($"Enabling handler: {handlerToAllow.Name}");
             }

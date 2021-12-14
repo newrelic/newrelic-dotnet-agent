@@ -22,7 +22,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(10));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(3));
 
             // Startup
             _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithThrowingCommandHandler");
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
-                    
+
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
                 }
@@ -55,7 +55,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         [Fact]
         public void ThrowingCommandHandlerInstrumentationWorks()
         {
-             var expectedMetrics = new List<Assertions.ExpectedMetric>
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Consume/Temp"},
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Consume/Temp",
