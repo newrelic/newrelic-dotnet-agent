@@ -50,17 +50,17 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/NServiceBusTests.Command", callCount = 1},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/NServiceBusTests.Command", callCount = 1, metricScope = "OtherTransaction/Custom/NServiceBusTests.NServiceBusDriver/SendCommandInTransaction"}
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/NsbTests.Command", callCount = 1},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/NsbTests.Command", callCount = 1, metricScope = "OtherTransaction/Custom/NsbTests.NServiceBusDriver/SendCommandInTransaction"}
             };
             var expectedTransactionTraceSegments = new List<string>
             {
-                @"MessageBroker/NServiceBus/Queue/Produce/Named/NServiceBusTests.Command"
+                @"MessageBroker/NServiceBus/Queue/Produce/Named/NsbTests.Command"
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Custom/NServiceBusTests.NServiceBusDriver/SendCommandInTransaction");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Custom/NServiceBusTests.NServiceBusDriver/SendCommandInTransaction");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Custom/NsbTests.NServiceBusDriver/SendCommandInTransaction");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Custom/NsbTests.NServiceBusDriver/SendCommandInTransaction");
 
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
