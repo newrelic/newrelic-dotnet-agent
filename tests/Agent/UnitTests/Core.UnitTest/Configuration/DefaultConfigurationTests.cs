@@ -242,15 +242,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void DisableServerConfigIsFalseByDefault()
         {
-            Assert.IsFalse(_defaultConfig.DisableServerConfiguration);
+            Assert.IsFalse(_defaultConfig.IgnoreServerSideConfiguration);
         }
 
         [TestCase("true", ExpectedResult = true)]
         [TestCase("false", ExpectedResult = false)]
         public bool DisableServerConfigSetFromEnvironment(string environment)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_SERVER_CONFIG")).Returns(environment);
-            return _defaultConfig.DisableServerConfiguration;
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG")).Returns(environment);
+            return _defaultConfig.IgnoreServerSideConfiguration;
         }
 
         [TestCase(true, null, null, ExpectedResult = true)]

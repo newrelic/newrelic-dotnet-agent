@@ -378,18 +378,18 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        private bool? _disableServerConfiguration;
+        private bool? _ignoreServerSideConfiguration;
 
-        public bool DisableServerConfiguration
+        public bool IgnoreServerSideConfiguration
         {
             get
             {
-                if (!_disableServerConfiguration.HasValue)
+                if (!_ignoreServerSideConfiguration.HasValue)
                 {
-                    _disableServerConfiguration = EnvironmentOverrides(false, "NEW_RELIC_DISABLE_SERVER_CONFIG");
+                    _ignoreServerSideConfiguration = EnvironmentOverrides(false, "NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG");
                 }
 
-                return _disableServerConfiguration.Value;
+                return _ignoreServerSideConfiguration.Value;
             }
         }
 

@@ -233,11 +233,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             Log.InfoFormat("Agent {0} connected to {1}:{2}", GetIdentifier(), _connectionInfo.Host, _connectionInfo.Port);
 
-            var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(responseMap,
-                new ServerConfigurationCreationOptions
-                {
-                    IgnoreAgentServerConfig = _configuration.DisableServerConfiguration
-                });
+            var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(responseMap, _configuration.IgnoreServerSideConfiguration);
             LogConfigurationMessages(serverConfiguration);
 
             return serverConfiguration;

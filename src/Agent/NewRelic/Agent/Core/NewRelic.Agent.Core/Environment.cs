@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core
                 if (!String.IsNullOrEmpty(configurationService.Configuration.AppSettingsConfigFilePath))
                     AddVariable("Application Config", () => configurationService.Configuration.AppSettingsConfigFilePath);
 
-                AddVariable("Server-Config Disabled", () => configurationService.Configuration.DisableServerConfiguration);
+                AddVariable("Server-Config Ignored", () => configurationService.Configuration.IgnoreServerSideConfiguration);
 
 #if NET45
                 // This stuff is only available to web apps.

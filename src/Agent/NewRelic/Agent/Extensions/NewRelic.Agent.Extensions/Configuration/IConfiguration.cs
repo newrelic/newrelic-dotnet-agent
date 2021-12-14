@@ -136,7 +136,7 @@ namespace NewRelic.Agent.Configuration
         int CustomEventsMaximumSamplesStored { get; }
         TimeSpan CustomEventsHarvestCycle { get; }
         bool DisableSamplers { get; }
-        bool DisableServerConfiguration { get; }
+        bool IgnoreServerSideConfiguration { get; }
         bool ThreadProfilingEnabled { get; }
         bool TransactionEventsEnabled { get; }
         int TransactionEventsMaximumSamplesStored { get; }

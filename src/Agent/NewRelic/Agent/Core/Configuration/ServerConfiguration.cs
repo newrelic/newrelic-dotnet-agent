@@ -301,14 +301,12 @@ namespace NewRelic.Agent.Core.Configuration
             public IEnumerable<string> Terms { get; set; }
         }
 
-        public static ServerConfiguration FromJson(string json, ServerConfigurationCreationOptions options = default)
+        public static ServerConfiguration FromJson(string json, bool ignoreServerConfiguration = false)
         {
-            options ??= new ServerConfigurationCreationOptions();
-
             var serverConfiguration = JsonConvert.DeserializeObject<ServerConfiguration>(json);
             Debug.Assert(serverConfiguration != null);
 
-            if (options.IgnoreAgentServerConfig)
+            if (ignoreServerConfiguration)
             {
                 serverConfiguration.RpmConfig = new AgentConfig();
                 serverConfiguration.UsingServerSideConfig = false;
@@ -330,10 +328,10 @@ namespace NewRelic.Agent.Core.Configuration
                 && dictionary[propertyName] != null;
         }
 
-        public static ServerConfiguration FromDeserializedReturnValue(object deserializedJson, ServerConfigurationCreationOptions options = default)
+        public static ServerConfiguration FromDeserializedReturnValue(object deserializedJson, bool ignoreServerConfiguration = false)
         {
             var json = JsonConvert.SerializeObject(deserializedJson);
-            return FromJson(json, options);
+            return FromJson(json, ignoreServerConfiguration);
         }
 
         [OnError]
@@ -341,16 +339,5 @@ namespace NewRelic.Agent.Core.Configuration
         {
             Log.ErrorFormat("Json serializer context path: {0}. Error message: {1}", errorContext.Path, errorContext.Error.Message);
         }
-    }
-
-    /// <summary>
-    /// Provides options controlling the creation of <see cref="ServerConfiguration"/> instances.
-    /// </summary>
-    public class ServerConfigurationCreationOptions
-    {
-        /// <summary>
-        /// Ignores the server-side agent configuration provided by the server.
-        /// </summary>
-        public bool IgnoreAgentServerConfig { get; set; }
     }
 }
