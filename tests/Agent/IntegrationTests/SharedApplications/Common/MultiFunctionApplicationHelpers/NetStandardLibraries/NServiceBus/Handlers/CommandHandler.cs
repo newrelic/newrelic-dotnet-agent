@@ -7,7 +7,7 @@ using NServiceBus;
 
 #if !NET462
 
-namespace NServiceBusTests
+namespace NsbTests
 {
     public class CommandHandler :
     IHandleMessages<Command>

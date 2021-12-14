@@ -3,7 +3,7 @@
 
 using System;
 
-namespace NServiceBusTests
+namespace NsbTests
 {
     public class BaseModel
     {

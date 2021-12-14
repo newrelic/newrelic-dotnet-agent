@@ -13,27 +13,20 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 {
-    public abstract class NServiceBusCommandHandlerTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class NsbAsyncEventHandlerTests<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        protected NServiceBusCommandHandlerTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected NsbAsyncEventHandlerTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _fixture.SetTimeout(TimeSpan.FromMinutes(3));
 
-            // Startup
-            _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithCommandHandler");
-
-            // Execute tests
-            _fixture.AddCommand("NServiceBusDriver SendCommand");
-
-            // Wait...
+            _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithAsyncEventHandler");
+            _fixture.AddCommand("NServiceBusDriver PublishEvent");
             _fixture.AddCommand("RootCommands DelaySeconds 5");
-
-            // Shut down
             _fixture.AddCommand("NServiceBusDriver StopNServiceBus");
 
             _fixture.Actions
@@ -53,7 +46,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
 
         [Fact]
-        public void CommandHandlerInstrumentationWorks()
+        public void AsyncEventHandlerInstrumentationWorks()
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -86,85 +79,73 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
-    // This test is commented out because the .NET Framework 4.6.2 tests use version 5 of NServiceBus.
-    // The tests in this file are meant for version 6/7+ of NServiceBus.
-
-    //[NetFrameworkTest]
-    //public class NServiceBusTestsFW462 : NServiceBusTestsBase<ConsoleDynamicMethodFixtureFW462>
-    //{
-    //    public NServiceBusTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-    //        : base(fixture, output)
-    //    {
-    //    }
-    //}
-
     [NetFrameworkTest]
-    public class NServiceBusCommandHandlerTestsFW471 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class NsbAsyncEventHandlerTestsFW471 : NsbAsyncEventHandlerTests<ConsoleDynamicMethodFixtureFW471>
     {
-        public NServiceBusCommandHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public NsbAsyncEventHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class NServiceBusCommandHandlerTestsFW48 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
+    public class NsbAsyncEventHandlerTestsFW48 : NsbAsyncEventHandlerTests<ConsoleDynamicMethodFixtureFW48>
     {
-        public NServiceBusCommandHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+        public NsbAsyncEventHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCore21 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore21>
+    public class NsbAsyncEventHandlerTestsCore21 : NsbAsyncEventHandlerTests<ConsoleDynamicMethodFixtureCore21>
     {
-        public NServiceBusCommandHandlerTestsCore21(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+        public NsbAsyncEventHandlerTestsCore21(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCore22 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore22>
+    public class NsbAsyncEventHandlerTestsCore22 : NsbAsyncEventHandlerTests<ConsoleDynamicMethodFixtureCore22>
     {
-        public NServiceBusCommandHandlerTestsCore22(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+        public NsbAsyncEventHandlerTestsCore22(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCore31 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class NsbAsyncEventHandlerTestsCore31 : NsbAsyncEventHandlerTests<ConsoleDynamicMethodFixtureCore31>
     {
-        public NServiceBusCommandHandlerTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public NsbAsyncEventHandlerTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCore50 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class NsbAsyncEventHandlerTestsCore50 : NsbAsyncEventHandlerTests<ConsoleDynamicMethodFixtureCore50>
     {
-        public NServiceBusCommandHandlerTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+        public NsbAsyncEventHandlerTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCore60 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class NsbAsyncEventHandlerTestsCore60 : NsbAsyncEventHandlerTests<ConsoleDynamicMethodFixtureCore60>
     {
-        public NServiceBusCommandHandlerTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public NsbAsyncEventHandlerTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCoreLatest : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class NsbAsyncEventHandlerTestsCoreLatest : NsbAsyncEventHandlerTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public NServiceBusCommandHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public NsbAsyncEventHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

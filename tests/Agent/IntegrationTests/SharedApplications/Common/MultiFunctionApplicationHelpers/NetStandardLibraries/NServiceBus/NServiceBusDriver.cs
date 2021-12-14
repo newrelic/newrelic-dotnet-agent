@@ -6,7 +6,7 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using NServiceBus;
-using NServiceBusTests;
+using NsbTests;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 
 #if !NET462
 
-namespace NServiceBusTests
+namespace NsbTests
 {
     [Library]
     class NServiceBusDriver

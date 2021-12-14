@@ -7,7 +7,7 @@ using NServiceBus;
 
 #if !NET462
 
-namespace NServiceBusTests
+namespace NsbTests
 {
     public class AsyncCommandHandler :
     IHandleMessages<Command>
