@@ -4,7 +4,11 @@
 using System;
 using NServiceBus;
 
+#if !NET462
+
 namespace NServiceBusTests
 {
     public class Command : BaseModel, ICommand { }
 }
+
+#endif

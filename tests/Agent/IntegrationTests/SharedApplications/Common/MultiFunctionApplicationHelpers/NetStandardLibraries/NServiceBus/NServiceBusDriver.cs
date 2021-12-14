@@ -43,8 +43,8 @@ namespace NServiceBusTests
             endpointConfiguration.SendFailedMessagesTo("error");
             endpointConfiguration.EnableInstallers();
 
+            // We want to control which handlers are loaded for different test cases
             endpointConfiguration.AssemblyScanner().ScanAppDomainAssemblies = false;
-
             var typesToIgnore = new List<Type>
             {
                 typeof(CommandHandler),
@@ -55,6 +55,13 @@ namespace NServiceBusTests
             };
             typesToIgnore.Remove(handlerToAllow);
             endpointConfiguration.AssemblyScanner().ExcludeTypes(typesToIgnore.ToArray());
+
+            // Disable retry for failure tests
+            endpointConfiguration.Recoverability().Immediate(
+                immediate =>
+                {
+                    immediate.NumberOfRetries(0);
+                });
 
             _endpoint = Endpoint.Start(endpointConfiguration).Result;
         }
@@ -75,6 +82,12 @@ namespace NServiceBusTests
         public void StartNServiceBusWithAsyncCommandHandler()
         {
             StartNServiceBusInternal(typeof(AsyncCommandHandler));
+        }
+
+        [LibraryMethod]
+        public void StartNServiceBusWithThrowingCommandHandler()
+        {
+            StartNServiceBusInternal(typeof(ThrowingCommandHandler));
         }
 
         [LibraryMethod]

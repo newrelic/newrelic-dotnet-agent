@@ -13,19 +13,19 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 {
-    public abstract class NServiceBusCommandHandlerTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class NServiceBusThrowingCommandHandlerTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        protected NServiceBusCommandHandlerTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected NServiceBusThrowingCommandHandlerTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(3));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(10));
 
             // Startup
-            _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithCommandHandler");
+            _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithThrowingCommandHandler");
 
             // Execute tests
             _fixture.AddCommand("NServiceBusDriver SendCommand");
@@ -53,7 +53,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
 
         [Fact]
-        public void CommandHandlerInstrumentationWorks()
+        public void ThrowingCommandHandlerInstrumentationWorks()
         {
              var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -72,14 +72,17 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 
             var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Message/NServiceBus/Queue/Temp");
             var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Message/NServiceBus/Queue/Temp");
-            //var errorTrace =
-            //    _fixture.AgentLog.TryGetErrorTrace(
-            //        "OtherTransaction/Message/NServiceBus/Queue/Temp");
+
+            // TODO: Currently we aren't getting any error trace data for this instrumentation, I do see the exception is captured
+            // in the span_event_data though... leaving this test broken as we likely want the behavior to be consistent between NSB5 and 7
+            var errorTrace =
+                _fixture.AgentLog.TryGetErrorTrace(
+                    "MessageBroker/NServiceBus/Queue/Consume/Temp");
 
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
-                () => Assert.NotNull(transactionEvent)
-               // () => Assert.NotNull(errorTrace)
+                () => Assert.NotNull(transactionEvent),
+                () => Assert.NotNull(errorTrace)
             );
 
             NrAssert.Multiple
@@ -103,72 +106,72 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     //}
 
     [NetFrameworkTest]
-    public class NServiceBusCommandHandlerTestsFW471 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class NServiceBusThrowingCommandHandlerTestsFW471 : NServiceBusThrowingCommandHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public NServiceBusCommandHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public NServiceBusThrowingCommandHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class NServiceBusCommandHandlerTestsFW48 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
+    public class NServiceBusThrowingCommandHandlerTestsFW48 : NServiceBusThrowingCommandHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
-        public NServiceBusCommandHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+        public NServiceBusThrowingCommandHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCore21 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore21>
+    public class NServiceBusThrowingCommandHandlerTestsCore21 : NServiceBusThrowingCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore21>
     {
-        public NServiceBusCommandHandlerTestsCore21(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+        public NServiceBusThrowingCommandHandlerTestsCore21(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCore22 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore22>
+    public class NServiceBusThrowingCommandHandlerTestsCore22 : NServiceBusThrowingCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore22>
     {
-        public NServiceBusCommandHandlerTestsCore22(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+        public NServiceBusThrowingCommandHandlerTestsCore22(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCore31 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class NServiceBusThrowingCommandHandlerTestsCore31 : NServiceBusThrowingCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public NServiceBusCommandHandlerTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public NServiceBusThrowingCommandHandlerTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCore50 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class NServiceBusThrowingCommandHandlerTestsCore50 : NServiceBusThrowingCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public NServiceBusCommandHandlerTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+        public NServiceBusThrowingCommandHandlerTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCore60 : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class NServiceBusThrowingCommandHandlerTestsCore60 : NServiceBusThrowingCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCore60>
     {
-        public NServiceBusCommandHandlerTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public NServiceBusThrowingCommandHandlerTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class NServiceBusCommandHandlerTestsCoreLatest : NServiceBusCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class NServiceBusThrowingCommandHandlerTestsCoreLatest : NServiceBusThrowingCommandHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public NServiceBusCommandHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public NServiceBusThrowingCommandHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
