@@ -73,6 +73,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
             );
+
+            Assert.DoesNotContain("Transaction was garbage collected without ever ending", _fixture.AgentLog.GetFullLogAsString());
         }
     }
 
