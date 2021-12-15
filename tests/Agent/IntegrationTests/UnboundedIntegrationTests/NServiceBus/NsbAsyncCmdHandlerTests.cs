@@ -13,12 +13,12 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 {
-    public abstract class NsbAsyncCmdHandlerTests<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class NsbAsyncCmdHandlerTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        protected NsbAsyncCmdHandlerTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected NsbAsyncCmdHandlerTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -43,25 +43,25 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
 
         [Fact]
-        public void AsyncCommandHandlerInstrumentationWorks()
+        public void Test()
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Consume/Temp"},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Consume/Temp",
-                                                metricScope = @"OtherTransaction/Message/NServiceBus/Queue/Temp"},
-                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Message/NServiceBus/Queue/Temp"}
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Consume/Named/NsbTests.Command"},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Consume/Named/NsbTests.Command",
+                                                metricScope = @"OtherTransaction/Message/NServiceBus/Queue/Named/NsbTests.Command"},
+                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Message/NServiceBus/Queue/Named/NsbTests.Command"}
             };
 
             var expectedTransactionTraceSegments = new List<string>
             {
-                @"MessageBroker/NServiceBus/Queue/Consume/Temp"
+                @"MessageBroker/NServiceBus/Queue/Consume/Named/NsbTests.Command"
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Message/NServiceBus/Queue/Temp");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Message/NServiceBus/Queue/Temp");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("OtherTransaction/Message/NServiceBus/Queue/Named/NsbTests.Command");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("OtherTransaction/Message/NServiceBus/Queue/Named/NsbTests.Command");
 
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
@@ -77,7 +77,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetFrameworkTest]
-    public class NsbAsyncCmdHandlerTestsFW471 : NsbAsyncCmdHandlerTests<ConsoleDynamicMethodFixtureFW471>
+    public class NsbAsyncCmdHandlerTestsFW471 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public NsbAsyncCmdHandlerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -86,7 +86,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetFrameworkTest]
-    public class NsbAsyncCmdHandlerTestsFW48 : NsbAsyncCmdHandlerTests<ConsoleDynamicMethodFixtureFW48>
+    public class NsbAsyncCmdHandlerTestsFW48 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public NsbAsyncCmdHandlerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -95,7 +95,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbAsyncCmdHandlerTestsCore21 : NsbAsyncCmdHandlerTests<ConsoleDynamicMethodFixtureCore21>
+    public class NsbAsyncCmdHandlerTestsCore21 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCore21>
     {
         public NsbAsyncCmdHandlerTestsCore21(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbAsyncCmdHandlerTestsCore22 : NsbAsyncCmdHandlerTests<ConsoleDynamicMethodFixtureCore22>
+    public class NsbAsyncCmdHandlerTestsCore22 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCore22>
     {
         public NsbAsyncCmdHandlerTestsCore22(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -113,7 +113,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbAsyncCmdHandlerTestsCore31 : NsbAsyncCmdHandlerTests<ConsoleDynamicMethodFixtureCore31>
+    public class NsbAsyncCmdHandlerTestsCore31 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public NsbAsyncCmdHandlerTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -122,7 +122,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbAsyncCmdHandlerTestsCore50 : NsbAsyncCmdHandlerTests<ConsoleDynamicMethodFixtureCore50>
+    public class NsbAsyncCmdHandlerTestsCore50 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public NsbAsyncCmdHandlerTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -131,7 +131,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbAsyncCmdHandlerTestsCore60 : NsbAsyncCmdHandlerTests<ConsoleDynamicMethodFixtureCore60>
+    public class NsbAsyncCmdHandlerTestsCore60 : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCore60>
     {
         public NsbAsyncCmdHandlerTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -140,7 +140,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbAsyncCmdHandlerTestsCoreLatest : NsbAsyncCmdHandlerTests<ConsoleDynamicMethodFixtureCoreLatest>
+    public class NsbAsyncCmdHandlerTestsCoreLatest : NsbAsyncCmdHandlerTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NsbAsyncCmdHandlerTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)

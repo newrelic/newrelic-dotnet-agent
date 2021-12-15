@@ -29,15 +29,12 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
             var incomingLogicalMessageContext = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
             var message = NServiceBusHelpers.GetMessageFromIncomingLogicalMessageContext(incomingLogicalMessageContext);
-
             if (message == null)
             {
                 throw new NullReferenceException("logicalMessage");
             }
 
-            var headers = NServiceBusHelpers.GetHeadersFromIncomingLogicalMessageContext(incomingLogicalMessageContext);
-
-            var queueName = NServiceBusHelpers.TryGetQueueName(message);
+            var queueName = NServiceBusHelpers.TryGetQueueNameLoadHandlersConnector(message);
 
             //If the transaction does not exist.
             if (!transaction.IsValid)
@@ -53,6 +50,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 
             var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, BrokerVendorName, queueName);
 
+            var headers = NServiceBusHelpers.GetHeadersFromIncomingLogicalMessageContext(incomingLogicalMessageContext);
             NServiceBusHelpers.ProcessHeaders(headers, agent);
 
             void OnComplete(Task task)
@@ -60,6 +58,10 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
                 if (task?.Status == TaskStatus.RanToCompletion)
                 {
                     transaction.End();
+                }
+                else if (task?.Status == TaskStatus.Faulted)
+                {
+                    transaction.NoticeError(task.Exception);
                 }
             }
 

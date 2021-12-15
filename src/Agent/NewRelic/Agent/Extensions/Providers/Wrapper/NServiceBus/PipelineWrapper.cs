@@ -36,10 +36,10 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 
                 var message = NServiceBusHelpers.GetMessageFromOutgoingContext(outgoingContext);
 
-                var queueName = NServiceBusHelpers.TryGetQueueName(message);
+                var queueName = NServiceBusHelpers.TryGetQueueNamePipeline(message);
                 var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Produce, BrokerVendorName, queueName);
 
-                NServiceBusHelpers.CreateOutboundHeaders(agent, outgoingContext);
+                NServiceBusHelpers.CreateOutboundHeadersPipeline(agent, outgoingContext);
                 return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
             }
 

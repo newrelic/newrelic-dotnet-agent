@@ -11,7 +11,10 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 {
     public class NServiceBusHelpers
     {
-        private static Func<object, Dictionary<string, string>> _getHeadersFunc;
+        private static Func<object, Dictionary<string, string>> _getHeadersSendMessageFunc;
+        private static Func<object, Dictionary<string, string>> _getHeadersPipelineFunc;
+        private static Func<object, Dictionary<string, string>> _getHeadersReceiveMessageFunc;
+
         private static Func<object, object> _getIncomingLogicalMessageFunc;
 
         private static Func<object, object> _getMessageFromIncomingLogicalMessageContextFunc;
@@ -24,7 +27,12 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
         public const string OutgoingPublishContextTypeName = "NServiceBus.OutgoingPublishContext";
 
 
-        private static Func<object, Type> _getMessageTypeFunc;
+        private static Func<object, Type> _getMessageTypeSendMessageFunc;
+        private static Func<object, Type> _getMessageTypePipelineFunc;
+        private static Func<object, Type> _getMessageTypeReceiveMessageFunc;
+        private static Func<object, Type> _getMessageTypeLoadHandlersConnectorFunc;
+
+        #region Wrapper Specific Helpers - does not depend on other bypasser results
 
         public static object GetMessageFromOutgoingContext(object outgoingContext)
         {
@@ -48,6 +56,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
             return getLogicalMessageContextFunc(incomingLogicalMessageContext);
         }
 
+
         public static Dictionary<string, string> GetHeadersFromIncomingLogicalMessageContext(object incomingLogicalMessageContext)
         {
             var getHeadersFromIncomingLogicalMessageContextFunc = _getHeadersFromIncomingLogicalMessageContextFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Dictionary<string, string>>(incomingLogicalMessageContext.GetType(), "Headers");
@@ -60,57 +69,59 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
             return getLogicalMessageFunc(incomingContext);
         }
 
-        public static Dictionary<string, string> GetHeaders(object logicalMessage)
+        public static Dictionary<string, string> GetHeadersReceiveMessage(object logicalMessage)
         {
-            var getHeadersFunc = _getHeadersFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Dictionary<string, string>>(logicalMessage.GetType(), "Headers");
-            return getHeadersFunc(logicalMessage);
+            var getHeadersReceiveMessageFunc = _getHeadersReceiveMessageFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Dictionary<string, string>>(logicalMessage.GetType(), "Headers");
+            return getHeadersReceiveMessageFunc(logicalMessage);
         }
 
-        public static void SetHeaders(object logicalMessage, Dictionary<string, string> headers)
-        {
-            // Unlike the GetHeaders function, we can't cache this action.  It is only valid for the specific logicalMessage object instance provided.
-            var action = VisibilityBypasser.Instance.GeneratePropertySetter<Dictionary<string, string>>(logicalMessage, "Headers");
+        #endregion
 
-            action(headers);
-        }
-
-        /// <summary>
-        /// Returns a metric name based on the type of message. The source/destination queue isn't always known (depending on the circumstances) and in some cases isn't even relevant. The message type is always known and is always relevant.
-        /// </summary>
-        /// <param name="logicalMessage"></param>
-        /// <returns></returns>
-        public static string TryGetQueueName(object logicalMessage)
-        {
-            var getMessageTypeFunc = _getMessageTypeFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Type>(logicalMessage.GetType(), "MessageType");
-
-            var messageType = getMessageTypeFunc(logicalMessage);
-
-            if (messageType == null)
-            {
-                return null;
-            }
-
-            return messageType.FullName;
-        }
-
+        // receive - load; no bypaser in here
         public static void ProcessHeaders(Dictionary<string, string> headers, IAgent agent)
         {
-            agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.HTTP);
-        }
-
-        public static void CreateOutboundHeaders(IAgent agent, object logicalMessage)
-        {
-            // We need headers to attach CAT/DT payload, bail out if headers are null,
-            var headers = GetHeaders(logicalMessage);
             if (headers == null)
             {
                 return;
             }
 
+            agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.HTTP);
+
+            static IEnumerable<string> GetHeaderValue(Dictionary<string, string> carrier, string key)
+            {
+                if (carrier != null)
+                {
+                    foreach (var item in carrier)
+                    {
+                        if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return new string[] { item.Value };
+                        }
+                    }
+                }
+                return null;
+            }
+        }
+
+        public static void CreateOutboundHeadersSendMessage(IAgent agent, object logicalMessage)
+        {
+            var getHeadersSendMessageFunc = _getHeadersSendMessageFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Dictionary<string, string>>(logicalMessage.GetType(), "Headers");
+            CreateOutboundHeaders(agent, logicalMessage, getHeadersSendMessageFunc);
+        }
+
+        public static void CreateOutboundHeadersPipeline(IAgent agent, object logicalMessage)
+        {
+            var getHeadersPipelineFunc = _getHeadersPipelineFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Dictionary<string, string>>(logicalMessage.GetType(), "Headers");
+            CreateOutboundHeaders(agent, logicalMessage, getHeadersPipelineFunc);
+        }
+
+        private static void CreateOutboundHeaders(IAgent agent, object logicalMessage, Func<object, Dictionary<string, string>> getHeaders)
+        {
+            // We don't need to check if headers are null since we will create the headers object if its null
+            // create action for use later
             var setHeaders = new Action<object, string, string>((carrier, key, value) =>
             {
-                var headers = GetHeaders(carrier);
-
+                var headers = getHeaders(logicalMessage);
                 if (headers == null)
                 {
                     headers = new Dictionary<string, string>();
@@ -126,22 +137,69 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
             });
 
             agent.CurrentTransaction.InsertDistributedTraceHeaders(logicalMessage, setHeaders);
-        }
 
-        private static IEnumerable<string> GetHeaderValue(Dictionary<string, string> carrier, string key)
-        {
-            if (carrier != null)
+            static void SetHeaders(object logicalMessage, Dictionary<string, string> headers)
             {
-                foreach (var item in carrier)
-                {
-                    if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return new string[] { item.Value };
-                    }
-                }
+                // Unlike the GetHeaders function, we can't cache this action.  It is only valid for the specific logicalMessage object instance provided.
+                var action = VisibilityBypasser.Instance.GeneratePropertySetter<Dictionary<string, string>>(logicalMessage, "Headers");
+                action(headers);
             }
-            return null;
         }
 
+        /// <summary>
+        /// Returns a metric name based on the type of message. The source/destination queue isn't always known (depending on the circumstances) and in some cases isn't even relevant. The message type is always known and is always relevant.
+        /// </summary>
+        /// <param name="logicalMessage"></param>
+        /// <returns></returns>
+        public static string TryGetQueueNameSendMessage(object logicalMessage)
+        {
+            var getMessageTypeFunc = _getMessageTypeSendMessageFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Type>(logicalMessage.GetType(), "MessageType");
+            return TryGetQueueName(logicalMessage, getMessageTypeFunc);
+        }
+
+        /// <summary>
+        /// Returns a metric name based on the type of message. The source/destination queue isn't always known (depending on the circumstances) and in some cases isn't even relevant. The message type is always known and is always relevant.
+        /// </summary>
+        /// <param name="logicalMessage"></param>
+        /// <returns></returns>
+        public static string TryGetQueueNamePipeline(object logicalMessage)
+        {
+            var getMessageTypeFunc = _getMessageTypePipelineFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Type>(logicalMessage.GetType(), "MessageType");
+            return TryGetQueueName(logicalMessage, getMessageTypeFunc);
+        }
+
+        /// <summary>
+        /// Returns a metric name based on the type of message. The source/destination queue isn't always known (depending on the circumstances) and in some cases isn't even relevant. The message type is always known and is always relevant.
+        /// </summary>
+        /// <param name="logicalMessage"></param>
+        /// <returns></returns>
+        public static string TryGetQueueNameReceiveMessage(object logicalMessage)
+        {
+            var getMessageTypeFunc = _getMessageTypeReceiveMessageFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Type>(logicalMessage.GetType(), "MessageType");
+            return TryGetQueueName(logicalMessage, getMessageTypeFunc);
+        }
+
+        /// <summary>
+        /// Returns a metric name based on the type of message. The source/destination queue isn't always known (depending on the circumstances) and in some cases isn't even relevant. The message type is always known and is always relevant.
+        /// </summary>
+        /// <param name="logicalMessage"></param>
+        /// <returns></returns>
+        public static string TryGetQueueNameLoadHandlersConnector(object logicalMessage)
+        {
+            var getMessageTypeFunc = _getMessageTypeLoadHandlersConnectorFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Type>(logicalMessage.GetType(), "MessageType");
+            return TryGetQueueName(logicalMessage, getMessageTypeFunc);
+        }
+
+        private static string TryGetQueueName(object logicalMessage, Func<object, Type> getMessageType)
+        {
+            var messageType = getMessageType(logicalMessage);
+
+            if (messageType == null)
+            {
+                return null;
+            }
+
+            return messageType.FullName;
+        }
     }
 }

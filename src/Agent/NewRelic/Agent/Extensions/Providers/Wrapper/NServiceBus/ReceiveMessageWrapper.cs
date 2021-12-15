@@ -31,20 +31,13 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
             var incomingContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<object>(IncomingContextIndex);
 
             var logicalMessage = NServiceBusHelpers.GetIncomingLogicalMessage(incomingContext);
-
             if (logicalMessage == null)
             {
                 throw new NullReferenceException("logicalMessage");
             }
 
-            var headers = NServiceBusHelpers.GetHeaders(logicalMessage);
+            var queueName = NServiceBusHelpers.TryGetQueueNameReceiveMessage(logicalMessage);
 
-            if (headers == null)
-            {
-                throw new NullReferenceException("headers");
-            }
-
-            var queueName = NServiceBusHelpers.TryGetQueueName(logicalMessage);
             transaction = agent.CreateTransaction(
                 destinationType: MessageBrokerDestinationType.Queue,
                 brokerVendorName: BrokerVendorName,
@@ -52,6 +45,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 
             var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, BrokerVendorName, queueName);
 
+            var headers = NServiceBusHelpers.GetHeadersReceiveMessage(logicalMessage);
             NServiceBusHelpers.ProcessHeaders(headers, agent);
 
             return Delegates.GetDelegateFor(
