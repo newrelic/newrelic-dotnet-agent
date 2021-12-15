@@ -18,6 +18,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
         public void Setup()
         {
             MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost", true);
+            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.audit", true);
             MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.error", true);
             MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.retries", true);
             MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.timeouts", true);

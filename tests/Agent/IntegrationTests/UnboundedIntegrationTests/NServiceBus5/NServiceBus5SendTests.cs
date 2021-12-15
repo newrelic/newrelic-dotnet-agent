@@ -12,12 +12,12 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
 {
-    public abstract class NServiceBus5TestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class NServiceBus5SendTests<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        protected NServiceBus5TestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected NServiceBus5SendTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -71,9 +71,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
     }
 
     [NetFrameworkTest]
-    public class NServiceBus5OnFW462Tests : NServiceBus5TestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class NServiceBus5SendOnFW462Tests : NServiceBus5SendTests<ConsoleDynamicMethodFixtureFW462>
     {
-        public NServiceBus5OnFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        public NServiceBus5SendOnFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
         {
         }
     }

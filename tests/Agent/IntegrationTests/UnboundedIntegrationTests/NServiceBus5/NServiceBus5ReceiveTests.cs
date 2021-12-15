@@ -19,7 +19,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        protected NServiceBus5ReceiveTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
+        protected NServiceBus5ReceiveTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
             );
 
             _fixture.Initialize();
-           // _fixture.AgentLog.WaitForLogLine(AgentLogFile.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(2));
+            // _fixture.AgentLog.WaitForLogLine(AgentLogFile.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(2));
         }
 
 
