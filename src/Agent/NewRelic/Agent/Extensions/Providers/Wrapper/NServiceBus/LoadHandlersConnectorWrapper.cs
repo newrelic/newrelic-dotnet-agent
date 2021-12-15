@@ -55,13 +55,22 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 
             void OnComplete(Task task)
             {
-                if (task?.Status == TaskStatus.RanToCompletion)
+                if (task == null)
                 {
-                    transaction.End();
+                    return;
                 }
-                else if (task?.Status == TaskStatus.Faulted)
+
+                if (task.Status == TaskStatus.Faulted)
                 {
                     transaction.NoticeError(task.Exception);
+                }
+
+                if (task.Status == TaskStatus.RanToCompletion
+                    || task.Status == TaskStatus.Canceled
+                    || task.Status == TaskStatus.Faulted)
+                {
+                    segment.End();
+                    transaction.End();
                 }
             }
 
