@@ -13,12 +13,12 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 {
-    public abstract class NsbPublishTests<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class NsbPublishTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        protected NsbPublishTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected NsbPublishTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
 
         [Fact]
-        public void PublishInstrumentationWorks()
+        public void Test()
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -73,7 +73,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetFrameworkTest]
-    public class NsbPublishTestsFW471 : NsbPublishTests<ConsoleDynamicMethodFixtureFW471>
+    public class NsbPublishTestsFW471 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public NsbPublishTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -82,7 +82,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetFrameworkTest]
-    public class NsbPublishTestsFW48 : NsbPublishTests<ConsoleDynamicMethodFixtureFW48>
+    public class NsbPublishTestsFW48 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public NsbPublishTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -91,7 +91,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbPublishTestsCore21 : NsbPublishTests<ConsoleDynamicMethodFixtureCore21>
+    public class NsbPublishTestsCore21 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCore21>
     {
         public NsbPublishTestsCore21(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -100,7 +100,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbPublishTestsCore22 : NsbPublishTests<ConsoleDynamicMethodFixtureCore22>
+    public class NsbPublishTestsCore22 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCore22>
     {
         public NsbPublishTestsCore22(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -109,7 +109,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbPublishTestsCore31 : NsbPublishTests<ConsoleDynamicMethodFixtureCore31>
+    public class NsbPublishTestsCore31 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public NsbPublishTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -118,7 +118,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbPublishTestsCore50 : NsbPublishTests<ConsoleDynamicMethodFixtureCore50>
+    public class NsbPublishTestsCore50 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public NsbPublishTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -127,7 +127,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbPublishTestsCore60 : NsbPublishTests<ConsoleDynamicMethodFixtureCore60>
+    public class NsbPublishTestsCore60 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCore60>
     {
         public NsbPublishTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output)
@@ -136,7 +136,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbPublishTestsCoreLatest : NsbPublishTests<ConsoleDynamicMethodFixtureCoreLatest>
+    public class NsbPublishTestsCoreLatest : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NsbPublishTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)

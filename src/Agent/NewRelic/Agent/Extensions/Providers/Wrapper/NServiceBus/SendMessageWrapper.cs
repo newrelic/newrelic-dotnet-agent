@@ -38,10 +38,11 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
                 return Delegates.NoOp;
             }
 
-            var queueName = NServiceBusHelpers.TryGetQueueName(logicalMessage);
+            var queueName = NServiceBusHelpers.TryGetQueueNameSendMessage(logicalMessage);
             var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Produce, BrokerVendorName, queueName);
 
-            NServiceBusHelpers.CreateOutboundHeaders(agent, logicalMessage);
+            NServiceBusHelpers.CreateOutboundHeadersSendMessage(agent, logicalMessage);
+
             return Delegates.GetDelegateFor(segment);
         }
     }
