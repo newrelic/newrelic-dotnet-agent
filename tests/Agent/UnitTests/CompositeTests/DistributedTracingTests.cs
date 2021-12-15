@@ -104,7 +104,7 @@ namespace CompositeTests
             var actualSpan = spanEvents.FirstOrDefault(span => !span.IntrinsicAttributes().ContainsKey("nr.entryPoint"));
 
             //Test that the information we get on our spans matches the info that we added to the request.
-            TestPayloadInfoMatchesSpanInfo(Payload, rootSpan, actualSpan);
+            TestPayloadInfoMatchesSpanInfo(Payload, rootSpan, actualSpan, "datastore");
 
             var agentAttributes = actualSpan.AgentAttributes();
 
@@ -151,7 +151,7 @@ namespace CompositeTests
             var actualSpan = spanEvents.FirstOrDefault(span => !span.IntrinsicAttributes().ContainsKey("nr.entryPoint"));
 
             // Test the spans match the payload info from which they were created. 
-            TestPayloadInfoMatchesSpanInfo(Payload, rootSpan, actualSpan);
+            TestPayloadInfoMatchesSpanInfo(Payload, rootSpan, actualSpan, "datastore");
 
             var agentAttributes = actualSpan.AgentAttributes();
 
@@ -218,6 +218,49 @@ namespace CompositeTests
             Assert.AreEqual("generic", (string)actualSpanIntrinsicAttributes["category"]);
         }
 
+        [Test]
+        public void ExternalHttpSpanEvent_HasExpectedAttributes()
+        {
+            var url = "http://127.0.0.2:123/Fake/Url";
+            var method = "POST";
+
+            _compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
+            _compositeTestAgent.PushConfiguration();
+
+            var tx = _agent.CreateTransaction(
+                isWeb: true,
+                category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+                transactionDisplayName: "name",
+                doNotTrackAsUnitOfWork: true);
+
+            _agent.CurrentTransaction.AcceptDistributedTraceHeaders(NewRelicHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
+
+            var segment = _agent.StartExternalRequestSegmentOrThrow(new Uri(url), method);
+            segment.End();
+            tx.End();
+
+            _compositeTestAgent.Harvest();
+
+            var spanEvents = _compositeTestAgent.SpanEvents;
+
+            Assert.AreEqual(2, spanEvents.Count);
+
+            // The faux span we create to contain the actual spans.
+            var rootSpan = spanEvents.FirstOrDefault(span => span.IntrinsicAttributes().ContainsKey("nr.entryPoint"));
+
+            // The span created from the segment at the top of the test.
+            var actualSpan = spanEvents.FirstOrDefault(span => !span.IntrinsicAttributes().ContainsKey("nr.entryPoint"));
+
+            //Test that the information we get on our spans matches the info that we added to the request.
+            TestPayloadInfoMatchesSpanInfo(Payload, rootSpan, actualSpan, "http");
+
+            var agentAttributes = actualSpan.AgentAttributes();
+
+            //The specific test
+            Assert.AreEqual(url, agentAttributes["http.url"]);
+            Assert.AreEqual(method, agentAttributes["http.method"]);
+        }
+
         private static Dictionary<string, string> NewRelicHeaders
         {
             get
@@ -245,7 +288,7 @@ namespace CompositeTests
             TransactionId = "e8b91a159289ff74"
         };
 
-        private static void TestPayloadInfoMatchesSpanInfo(DistributedTracePayload payload, ISpanEventWireModel rootSpan, ISpanEventWireModel actualSpan)
+        private static void TestPayloadInfoMatchesSpanInfo(DistributedTracePayload payload, ISpanEventWireModel rootSpan, ISpanEventWireModel actualSpan, string actualCategory)
         {
             Assert.NotNull(rootSpan);
 
@@ -267,7 +310,7 @@ namespace CompositeTests
             Assert.IsTrue(AttributeComparer.IsEqualTo(payload.Sampled, actualSpanIntrinsicAttributes["sampled"]));
             Assert.IsTrue(AttributeComparer.IsEqualTo(rootSpanIntrinsicAttributes["guid"], actualSpanIntrinsicAttributes["parentId"]));
             Assert.IsTrue(AttributeComparer.IsEqualTo(rootSpanIntrinsicAttributes["transactionId"], actualSpanIntrinsicAttributes["transactionId"]));
-            Assert.IsTrue(AttributeComparer.IsEqualTo("datastore", actualSpanIntrinsicAttributes["category"]));
+            Assert.IsTrue(AttributeComparer.IsEqualTo(actualCategory, actualSpanIntrinsicAttributes["category"]));
         }
 
         private bool IsLowerCase(string id)

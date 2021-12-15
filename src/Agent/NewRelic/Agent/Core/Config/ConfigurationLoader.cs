@@ -305,7 +305,7 @@ namespace NewRelic.Agent.Core.Config
         {
             using (StreamReader stream = new StreamReader(fileName))
             {
-                configuration config = InitializeFromXml(stream.ReadToEnd(), fileName);
+                configuration config = InitializeFromXml(stream.ReadToEnd(), GetConfigSchemaContents, fileName);
                 config.ConfigurationFileName = fileName;
                 return config;
             }
@@ -328,10 +328,11 @@ namespace NewRelic.Agent.Core.Config
         /// <summary>
         /// Initialize the configuration by reading xml from a string.
         /// </summary>
-        /// <param name="xml"></param>
+        /// <param name="configXml"></param>
+        /// <param name="configSchemaSource">A method that returns a string containing the config schema (xsd).</param>
         /// <param name="provenance">The file name or other user-friendly locus where the xml came from.</param>
         /// <returns>The configuration.</returns>
-        public static configuration InitializeFromXml(string xml, string provenance = "unknown")
+        public static configuration InitializeFromXml(string configXml, Func<string> configSchemaSource, string provenance = "unknown")
         {
             configuration config;
 
@@ -341,20 +342,38 @@ namespace NewRelic.Agent.Core.Config
             root.Namespace = "urn:newrelic-config";
             XmlSerializer serializer = new XmlSerializer(typeof(configuration), root);
 
-            using (TextReader reader = new StringReader(xml))
+            using (TextReader reader = new StringReader(configXml))
             {
                 config = serializer.Deserialize(reader) as configuration;
                 if (config == null)
-                    throw new InvalidDataException(string.Format("Unable to deserialize the provided xml: {0}", xml));
-                config.Initialize(xml, provenance);
+                    throw new InvalidDataException(string.Format("Unable to deserialize the provided xml: {0}", configXml));
+                config.Initialize(configXml, provenance);
             }
 
-            // xml validation with schema file
+            // Validate the config xml with the supplied schema.  Note that any validation failures do not prevent
+            // agent initialization and only generate a warning log message.
+            try
+            {
+                ValidateConfigXmlWithSchema(configXml, configSchemaSource());
+            }
+            catch (Exception ex)
+            {
+                Log.WarnFormat("An unknown error occurred when performing XML schema validation on config file {0}: {1}", NewRelicConfigFileName, ex.Message);
+            }
+
+            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
+
+            return config;
+        }
+
+        private static void ValidateConfigXmlWithSchema(string configXml, string schemaXml)
+        {
+            // xml validation with schema
             ValidationEventHandler eventHandler = new ValidationEventHandler(ValidationEventHandler);
 
-            using (var configStringReader = new StringReader(GetConfigSchemaContents()))
+            using (var configStringReader = new StringReader(schemaXml))
             using (var schemaReader = new XmlTextReader(configStringReader))
-            using (var stringReader = new StringReader(xml))
+            using (var stringReader = new StringReader(configXml))
             using (var xmlReader = XmlReader.Create(stringReader))
             {
                 XmlDocument document = new XmlDocument();
@@ -375,21 +394,24 @@ namespace NewRelic.Agent.Core.Config
                     Log.WarnFormat("An error occurred parsing {0} - {1}", NewRelicConfigFileName, ex.Message);
                 }
             }
-
-            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
-
-            return config;
         }
 
         private static string GetConfigSchemaContents()
         {
-#if NET45
-			return Properties.Resources.Configuration;
-#else
-            var home = AgentInstallConfiguration.NewRelicHome;
-            var xsdFile = Path.Combine(home, "newrelic.xsd");
-            return File.ReadAllText(xsdFile);
-#endif
+            var configSchemaContents = string.Empty;
+
+            try
+            {
+                var home = AgentInstallConfiguration.NewRelicHome;
+                var xsdFile = Path.Combine(home, "newrelic.xsd");
+                configSchemaContents = File.ReadAllText(xsdFile);
+            }
+            catch (Exception ex)
+            {
+                Log.WarnFormat("An error occurred reading config file schema: {0}", ex.Message);
+            }
+
+            return configSchemaContents;
         }
 
         /// <summary>

@@ -8,6 +8,7 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -27,20 +28,49 @@ namespace NewRelic.Agent.Core.Utilities
 
         public ulong? GetTotalPhysicalMemoryBytes()
         {
-            try
+            var isLinux = false;
+#if NETSTANDARD2_0
+            isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+#endif
+            if (isLinux)
             {
-                MemoryStatus status = new MemoryStatus();
-                status.length = Marshal.SizeOf(status);
-                if (!GlobalMemoryStatusEx(ref status))
+                try
                 {
-                    int err = Marshal.GetLastWin32Error();
-                    throw new Win32Exception(err);
+                    var memInfo = File.ReadAllText("/proc/meminfo");
+                    var memTotalRegex = new Regex(@"MemTotal\:\s*(\d+)\ kB");
+                    var match = memTotalRegex.Match(memInfo);
+                    if (match.Success)
+                    {
+                        // Despite the text of meminfo showing everything as 'kB' which should be
+                        // 'kilobytes', i.e. 1000 bytes, in fact it is reporting 'kibibytes' (KiB, 1024 bytes)
+                        var memTotalKiB = ulong.Parse(match.Groups[1].Value);
+                        return memTotalKiB * 1024;
+                    }
+                    return null;
                 }
-                return status.totalPhys;
+                catch (Exception ex)
+                {
+                    Log.Warn("GetTotalPhysicalMemoryBytes(): exception caught trying to read from /proc/meminfo: " + ex.Message);
+                    return null;
+                }
             }
-            catch (Exception)
+            else
             {
-                return null;
+                try
+                {
+                    MemoryStatus status = new MemoryStatus();
+                    status.length = Marshal.SizeOf(status);
+                    if (!GlobalMemoryStatusEx(ref status))
+                    {
+                        int err = Marshal.GetLastWin32Error();
+                        throw new Win32Exception(err);
+                    }
+                    return status.totalPhys;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
             }
         }
 
