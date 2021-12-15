@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Core.Utilities
         {
             var isLinux = false;
 #if NETSTANDARD2_0
-            RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+            isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 #endif
             if (isLinux)
             {
@@ -48,8 +48,9 @@ namespace NewRelic.Agent.Core.Utilities
                     }
                     return null;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Log.Warn("GetTotalPhysicalMemoryBytes(): exception caught trying to read from /proc/meminfo: " + ex.Message);
                     return null;
                 }
             }
