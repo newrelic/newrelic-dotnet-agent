@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 ### New Features
+* NServiceBus versions 6 and 7 are now supported in .NET Framework and .NET Core. ([#857](https://github.com/newrelic/newrelic-dotnet-agent/pull/857))
 
 ### Fixes
 * Fixes issue [#36](https://github.com/newrelic/newrelic-dotnet-agent/issues/36): Total system memory will now be correctly reported on Linux. ([#855](https://github.com/newrelic/newrelic-dotnet-agent/pull/855))
