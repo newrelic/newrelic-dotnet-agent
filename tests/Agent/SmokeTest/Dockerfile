@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.1
+FROM mcr.microsoft.com/dotnet/sdk:6.0
 
 RUN apt-get update
 RUN apt-get install -y less vim dos2unix

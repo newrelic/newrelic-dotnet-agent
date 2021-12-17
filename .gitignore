@@ -129,6 +129,10 @@ tests/Agent/PlatformTests/Applications/NetFrameworkBasicApplication/packages
 /Tests/Benchmarking/BenchmarkDotNet.Artifacts
 *.dgml
 
+#SmokeTest
+tests/Agent/SmokeTest/logs/
+tests/Agent/SmokeTest/agent/
+
 # Include built binaries so that building the profiler is not necessary when only doing managed agent work
 # The Home Builder picks up profiler binaries from this location
 src/Agent/_profilerBuild/**/*.exp
