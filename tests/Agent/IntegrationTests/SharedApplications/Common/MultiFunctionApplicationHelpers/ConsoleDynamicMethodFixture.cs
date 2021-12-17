@@ -9,9 +9,16 @@ using System.Linq;
 
 namespace MultiFunctionApplicationHelpers
 {
-    public class ConsoleDynamicMethodFixtureFWLatest : ConsoleDynamicMethodFixtureFWSpecificVersion
+    public class ConsoleDynamicMethodFixtureFWLatest : ConsoleDynamicMethodFixtureFW48
     {
-        public ConsoleDynamicMethodFixtureFWLatest() : base("net48")
+        public ConsoleDynamicMethodFixtureFWLatest()
+        {
+        }
+    }
+
+    public class ConsoleDynamicMethodFixtureFW48 : ConsoleDynamicMethodFixtureFWSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureFW48() : base("net48")
         {
         }
     }
@@ -73,15 +80,22 @@ namespace MultiFunctionApplicationHelpers
         }
     }
 
+    public class ConsoleDynamicMethodFixtureCore60 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureCore60() : base("net6.0")
+        {
+        }
+    }
+
     /// <summary>
     /// Use this fixture if you don't care about which .net core version the test application should use.
     /// If you need to test against a feature that belongs to a specific .net core version, then consider
     /// using one of the existing specific version fixtures, or create a new specific version.
     /// When testing newer .net core preview releases, this targetFramework version should be updated.
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCoreSpecificVersion
+    public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore60
     {
-        public ConsoleDynamicMethodFixtureCoreLatest() : base("net6.0")
+        public ConsoleDynamicMethodFixtureCoreLatest()
         {
         }
     }

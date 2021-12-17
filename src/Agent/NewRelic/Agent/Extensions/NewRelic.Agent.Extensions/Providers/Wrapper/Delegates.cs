@@ -73,12 +73,6 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
             };
         }
 
-        [Obsolete("Use GetAsyncDelegateFor<T>")]
-        public static AfterWrappedMethodDelegate GetAsyncDelegateFor(IAgent agent, ISegment segment)
-        {
-            return GetAsyncDelegateFor<Task>(agent, segment, TaskContinueWithOption.UseSynchronizationContext);
-        }
-
         public static AfterWrappedMethodDelegate GetAsyncDelegateFor<T>(IAgent agent, ISegment segment) where T : Task
         {
             return GetAsyncDelegateFor<T>(agent, segment, TaskContinueWithOption.UseSynchronizationContext);

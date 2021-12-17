@@ -2,12 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
-using NServiceBus.Pipeline.Contexts;
-using NServiceBus.Unicast.Messages;
 
 namespace NewRelic.Providers.Wrapper.NServiceBus
 {
@@ -16,38 +13,40 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
     /// </summary>
     public class ReceiveMessageWrapper : IWrapper
     {
+        private const string BrokerVendorName = "NServiceBus";
+        private const string WrapperName = "ReceiveMessageWrapper";
+
+        private const int IncomingContextIndex = 0;
+
         public bool IsTransactionRequired => false;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            var method = methodInfo.Method;
-            var canWrap = method.MatchesAny(assemblyName: "NServiceBus.Core", typeName: "NServiceBus.InvokeHandlersBehavior", methodName: "Invoke", parameterSignature: "NServiceBus.Pipeline.Contexts.IncomingContext,System.Action");
-            return new CanWrapResponse(canWrap);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall,
             IAgent agent, ITransaction transaction)
         {
-            var incomingContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<IncomingContext>(0);
-            var logicalMessage = incomingContext.IncomingLogicalMessage;
+            var incomingContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<object>(IncomingContextIndex);
+
+            var logicalMessage = NServiceBusHelpers.GetIncomingLogicalMessage(incomingContext);
             if (logicalMessage == null)
+            {
                 throw new NullReferenceException("logicalMessage");
+            }
 
-            var headers = logicalMessage.Headers;
+            var queueName = NServiceBusHelpers.TryGetQueueNameReceiveMessage(logicalMessage);
 
-            if (headers == null)
-                throw new NullReferenceException("headers");
-
-            const string brokerVendorName = "NServiceBus";
-            var queueName = TryGetQueueName(logicalMessage);
             transaction = agent.CreateTransaction(
                 destinationType: MessageBrokerDestinationType.Queue,
-                brokerVendorName: brokerVendorName,
+                brokerVendorName: BrokerVendorName,
                 destination: queueName);
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, brokerVendorName, queueName);
+            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, BrokerVendorName, queueName);
 
-            ProcessHeaders(headers, agent);
+            var headers = NServiceBusHelpers.GetHeadersReceiveMessage(logicalMessage);
+            NServiceBusHelpers.ProcessHeaders(headers, agent);
 
             return Delegates.GetDelegateFor(
                 onFailure: transaction.NoticeError,
@@ -58,32 +57,5 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
                 });
         }
 
-        private void ProcessHeaders(Dictionary<string, string> headers, IAgent agent)
-        {
-            agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.HTTP);
-        }
-
-        IEnumerable<string> GetHeaderValue(Dictionary<string, string> carrier, string key)
-        {
-            if (carrier != null)
-            {
-                foreach (var item in carrier)
-                {
-                    if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return new string[] { item.Value };
-                    }
-                }
-            }
-            return null;
-        }
-
-        private static string TryGetQueueName(LogicalMessage logicalMessage)
-        {
-            if (logicalMessage.MessageType == null)
-                return null;
-
-            return logicalMessage.MessageType.FullName;
-        }
     }
 }

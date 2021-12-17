@@ -44,7 +44,6 @@
     <PackageReference Include="CouchbaseNetClient" Version="2.3.8" />
     <PackageReference Include="log4net" Version="1.2.10" />
     <PackageReference Include="Oracle.ManagedDataAccess" Version="12.1.2400" />
-    <PackageReference Include="NServiceBus" Version="5.0.0" />
     <PackageReference Include="xunit" version="2.4.0" />
     <PackageReference Include="xunit.assert" Version="2.4.0" />
     <PackageReference Include="xunit.core" Version="2.4.0" />
