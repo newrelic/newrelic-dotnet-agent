@@ -18,4 +18,4 @@ else
     apt-get install -y ${package_name}
 fi
 
-dotnet "/app/bin/Release/netcoreapp2.1/debian-x64/AgentSmokeTest.dll" | tee -a /logs/appOutput.log
+dotnet "/app/bin/Release/net6.0/debian-x64/AgentSmokeTest.dll" | tee -a /logs/appOutput.log
