@@ -233,7 +233,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             Log.InfoFormat("Agent {0} connected to {1}:{2}", GetIdentifier(), _connectionInfo.Host, _connectionInfo.Port);
 
-            var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(responseMap);
+            var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(responseMap, _configuration.IgnoreServerSideConfiguration);
             LogConfigurationMessages(serverConfiguration);
 
             return serverConfiguration;
@@ -243,6 +243,9 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             if (serverConfiguration.HighSecurityEnabled == true)
                 Log.Info("The agent is in high security mode.  No request parameters will be collected and sql obfuscation is enabled.");
+
+            if (serverConfiguration.UsingServerSideConfig == false)
+                Log.Info("Server-side agent configuration is not being used.");
 
             if (serverConfiguration.Messages == null)
                 return;
