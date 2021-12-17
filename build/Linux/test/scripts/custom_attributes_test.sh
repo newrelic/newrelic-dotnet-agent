@@ -9,7 +9,7 @@ install_agent
 verify_no_logs
 
 CORECLR_ENABLE_PROFILING=0 dotnet build
-/usr/local/newrelic-netcore20-agent/run.sh dotnet bin/Debug/net6.0/custom_attributes.dll
+dotnet bin/Debug/net6.0/custom_attributes.dll
 
 verify_logs_exist
 
