@@ -239,16 +239,29 @@ namespace NewRelic.Agent.Core.DataTransport
             return serverConfiguration;
         }
 
-        private static void LogConfigurationMessages(ServerConfiguration serverConfiguration)
+        private void LogConfigurationMessages(ServerConfiguration serverConfiguration)
         {
             if (serverConfiguration.HighSecurityEnabled == true)
+            {
                 Log.Info("The agent is in high security mode.  No request parameters will be collected and sql obfuscation is enabled.");
+            }
 
-            if (serverConfiguration.UsingServerSideConfig == false)
-                Log.Info("Server-side agent configuration is not being used.");
+            if (serverConfiguration.ServerSideConfigurationEnabled)
+            {
+                if (_configuration.IgnoreServerSideConfiguration)
+                {
+                    Log.Info("Server-Side Configuration is enabled, but the agent is configured to ignore it.");
+                }
+                else
+                {
+                    Log.Info("Server-Side Configuration is enabled.");
+                }
+            }
 
             if (serverConfiguration.Messages == null)
+            {
                 return;
+            }
 
             foreach (var message in serverConfiguration.Messages)
             {
@@ -331,7 +344,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 EncodingKey = _configuration.EncodingKey,
                 TrustedAccountIds = _configuration.TrustedAccountIds.ToList(),
                 MaxStackTraceLines = _configuration.StackTraceMaximumFrames,
-                UsingServerSideConfig = _configuration.UsingServerSideConfig,
+                ServerSideConfigurationEnabled = _configuration.ServerSideConfigurationEnabled,
+                IgnoreServerSideConfiguration = _configuration.IgnoreServerSideConfiguration,
                 ThreadProfilerEnabled = _configuration.ThreadProfilingEnabled,
                 CrossApplicationTracerEnabled = _configuration.CrossApplicationTracingEnabled,
                 DistributedTracingEnabled = _configuration.DistributedTracingEnabled,
