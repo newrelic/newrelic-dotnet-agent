@@ -1,82 +1,88 @@
 # This builds an Ubuntu image, clones the coreclr github repo and builds it.
 # It then sets up the environment for compiling the New Relic .NET profiler.
-FROM ubuntu:14.04
+FROM ubuntu:20.04
 
 RUN apt-get update
 RUN apt-get install -y \
   wget \
   curl \
   git \
-  software-properties-common
-
-RUN echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
-RUN wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | apt-key add -
+  gnupg
+  
+RUN echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main" | tee /etc/apt/sources.list.d/llvm.list
+RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN apt-get update
+
+# Putting this on it's own line, tzdata is a dependency of one of the packages being installed below
+# and it needs to be told what timezone it is in.  Just use UTC.
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 
 RUN apt-get install -y \
   libc++-dev \
   cmake \
-  llvm-3.5 \
-  clang-3.5 \
-  lldb-3.6 \
-  lldb-3.6-dev \
-  libunwind8 \
-  libunwind8-dev \
+  llvm-13 \
+  clang \
+  lldb-13 \
+  libunwind-13 \
+  libunwind-13-dev \
   gettext \
   libicu-dev \
   liblttng-ust-dev \
   libcurl4-openssl-dev \
   libssl-dev \
-  uuid-dev
+  uuid-dev \
+  zlib1g-dev \
+  libkrb5-dev \
+  locales \
+  locales-all
 
 # The CoreCLR build notes say their repos should be pulled into a `git` directory.
-# That probably isn't necessary, but whatever.
+# Not sure how necessary that is.
 RUN mkdir /root/git
 WORKDIR /root/git
 
-RUN git clone --branch release/2.0.0 https://github.com/dotnet/coreclr.git
-#RUN git clone --branch release/2.0.0 https://github.com/dotnet/corefx.git
+RUN git clone --branch release/6.0 https://github.com/dotnet/runtime.git
 
 # Build CoreCLR
-RUN cd /root/git/coreclr;./build.sh skiptests
+RUN cd /root/git/runtime; ./build.sh clr
 
-# Install the newer build tools for the profiler build
+# # Install the newer build tools for the profiler build
 
-RUN apt-get remove -y cmake
+# RUN apt-get remove -y cmake
 
-# Install cmake 3.9
-RUN curl -sSL https://cmake.org/files/v3.9/cmake-3.9.0-rc3-Linux-x86_64.tar.gz | sudo tar -xzC /opt
-RUN ln -s /opt/cmake-3.9.0-rc3-Linux-x86_64/bin/cmake /usr/local/sbin/cmake
+# # Install cmake 3.9
+# RUN curl -sSL https://cmake.org/files/v3.9/cmake-3.9.0-rc3-Linux-x86_64.tar.gz | sudo tar -xzC /opt
+# RUN ln -s /opt/cmake-3.9.0-rc3-Linux-x86_64/bin/cmake /usr/local/sbin/cmake
 
-RUN apt-get remove -y llvm-3.5 clang-3.5 lldb-3.6 lldb-3.6-dev
-RUN apt-get install -y clang-3.9 lldb-3.9
+# RUN apt-get remove -y llvm-3.5 clang-3.5 lldb-3.6 lldb-3.6-dev
+# RUN apt-get install -y clang-3.9 lldb-3.9
 
-RUN rm /usr/bin/cc;   ln -s /usr/bin/clang-3.9 /usr/bin/cc
-RUN rm /usr/bin/c++;  ln -s /usr/bin/clang++-3.9 /usr/bin/c++
+# RUN rm /usr/bin/cc;   ln -s /usr/bin/clang-3.9 /usr/bin/cc
+# RUN rm /usr/bin/c++;  ln -s /usr/bin/clang++-3.9 /usr/bin/c++
 
-# Install dotnet 2.0 preview
+# # Install dotnet 2.0 preview
 
-RUN sh -c 'echo "deb [arch=amd64] http://apt-mo.trafficmanager.net/repos/dotnet/ trusty main" > /etc/apt/sources.list.d/dotnetdev.list'
-RUN apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
-RUN apt-get update
+# RUN sh -c 'echo "deb [arch=amd64] http://apt-mo.trafficmanager.net/repos/dotnet/ trusty main" > /etc/apt/sources.list.d/dotnetdev.list'
+# RUN apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
+# RUN apt-get update
 
-RUN apt-get install -y dotnet-sdk-2.0.0-preview2-006488
+# RUN apt-get install -y dotnet-sdk-2.0.0-preview2-006488
 
-WORKDIR /root/git
+# WORKDIR /root/git
 
-# Environment for running the profiler
+# # Environment for running the profiler
 
-ENV CORECLR_ENABLE_PROFILING=1
-ENV CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}
-ENV CORECLR_PROFILER_PATH=/profiler/libNewRelicProfiler.so
-ENV CORECLR_NEWRELIC_HOME=/agent
-ENV CORECLR_BINARIES=/root/git/coreclr/bin/Product/Linux.x64.Debug
+# ENV CORECLR_ENABLE_PROFILING=1
+# ENV CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}
+# ENV CORECLR_PROFILER_PATH=/profiler/libNewRelicProfiler.so
+# ENV CORECLR_NEWRELIC_HOME=/agent
+# ENV CORECLR_BINARIES=/root/git/coreclr/bin/Product/Linux.x64.Debug
 
-# (Try to) enable CLR logging
-ENV COMPlus_LogEnable=1
-ENV COMPlus_LogToConsole=1
-ENV COMPlus_LogLevel=10
+# # (Try to) enable CLR logging
+# ENV COMPlus_LogEnable=1
+# ENV COMPlus_LogToConsole=1
+# ENV COMPlus_LogLevel=10
 
-# Write a debug.sh script in $CORECLR_BINARIES that runs lldb on a .NET app
-RUN echo 'lldb-3.9 -o "plugin load libsosplugin.so" -o "process launch -s"  -o "breakpoint set -n LOADLoadLibraryDirect" corerun $CORECLR_BINARIES/bin/Debug/netcoreapp2.0/Linux.x64.Debug.dll' > $CORECLR_BINARIES/debug.sh
-RUN chmod +x $CORECLR_BINARIES/debug.sh
+# # Write a debug.sh script in $CORECLR_BINARIES that runs lldb on a .NET app
+# RUN echo 'lldb-3.9 -o "plugin load libsosplugin.so" -o "process launch -s"  -o "breakpoint set -n LOADLoadLibraryDirect" corerun $CORECLR_BINARIES/bin/Debug/netcoreapp2.0/Linux.x64.Debug.dll' > $CORECLR_BINARIES/debug.sh
+# RUN chmod +x $CORECLR_BINARIES/debug.sh
