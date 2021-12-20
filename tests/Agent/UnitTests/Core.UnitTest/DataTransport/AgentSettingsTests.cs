@@ -20,6 +20,7 @@ namespace NewRelic.Agent.Core.Configuration
         List<long> TrustedAccountIds = new List<long> { 123456, 098765 };
         const int MaxStackTraceLines = 100;
         const bool UsingServerSideConfig = false;
+        const bool IgnoreServerSideConfig = false;
         const bool ThreadProfilerEnabled = false;
         const bool CrossApplicationTracerEnabled = false;
         const bool DistributedTracingEnabled = true;
@@ -57,6 +58,7 @@ namespace NewRelic.Agent.Core.Configuration
             Mock.Arrange(() => configuration.TrustedAccountIds).Returns(TrustedAccountIds);
             Mock.Arrange(() => configuration.StackTraceMaximumFrames).Returns(MaxStackTraceLines);
             Mock.Arrange(() => configuration.ServerSideConfigurationEnabled).Returns(UsingServerSideConfig);
+            Mock.Arrange(() => configuration.IgnoreServerSideConfiguration).Returns(IgnoreServerSideConfig);
             Mock.Arrange(() => configuration.ThreadProfilingEnabled).Returns(ThreadProfilerEnabled);
             Mock.Arrange(() => configuration.CrossApplicationTracingEnabled).Returns(CrossApplicationTracerEnabled);
             Mock.Arrange(() => configuration.DistributedTracingEnabled).Returns(DistributedTracingEnabled);
@@ -86,6 +88,7 @@ namespace NewRelic.Agent.Core.Configuration
                 TrustedAccountIds = configuration.TrustedAccountIds.ToList(),
                 MaxStackTraceLines = configuration.StackTraceMaximumFrames,
                 ServerSideConfigurationEnabled = configuration.ServerSideConfigurationEnabled,
+                IgnoreServerSideConfiguration = configuration.IgnoreServerSideConfiguration,
                 ThreadProfilerEnabled = configuration.ThreadProfilingEnabled,
                 CrossApplicationTracerEnabled = configuration.CrossApplicationTracingEnabled,
                 DistributedTracingEnabled = configuration.DistributedTracingEnabled,
@@ -110,7 +113,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             var json = JsonConvert.SerializeObject(agentSettings);
 
-            const string expectedJson = @"{""agent"":"".NET Agent"",""apdex_t"":10.0,""cross_process_id"":""acctId#appId"",""encoding_key"":""thisistheencodingkey"",""trusted_account_ids"":[123456,98765],""max_stack_trace_lines"":100,""server_side_configuration_enabled"":false,""thread_profiler.enabled"":false,""cross_application_tracer.enabled"":false,""distributed_tracing.enabled"":true,""error_collector.enabled"":true,""error_collector.ignore_status_codes"":[""401"",""404""],""error_collector.ignore_classes"":[""ExceptionClass1""],""error_collector.ignore_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_classes"":[""ExceptionClass1""],""error_collector.expected_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_status_codes"":[""403"",""500""],""transaction_tracer.stack_trace_threshold"":11.0,""transaction_tracer.explain_enabled"":false,""transaction_tracer.max_sql_statements"":100,""transaction_tracer.max_explain_plans"":10,""transaction_tracer.explain_threshold"":12.0,""transaction_tracer.transaction_threshold"":13.0,""transaction_tracer.record_sql"":""obfuscate"",""slow_sql.enabled"":false,""browser_monitoring.auto_instrument"":true,""transaction_event.max_samples_stored"":10000}";
+            const string expectedJson = @"{""agent"":"".NET Agent"",""apdex_t"":10.0,""cross_process_id"":""acctId#appId"",""encoding_key"":""thisistheencodingkey"",""trusted_account_ids"":[123456,98765],""max_stack_trace_lines"":100,""server_side_configuration_enabled"":false,""ignore_server_side_configuration"":false,""thread_profiler.enabled"":false,""cross_application_tracer.enabled"":false,""distributed_tracing.enabled"":true,""error_collector.enabled"":true,""error_collector.ignore_status_codes"":[""401"",""404""],""error_collector.ignore_classes"":[""ExceptionClass1""],""error_collector.ignore_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_classes"":[""ExceptionClass1""],""error_collector.expected_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_status_codes"":[""403"",""500""],""transaction_tracer.stack_trace_threshold"":11.0,""transaction_tracer.explain_enabled"":false,""transaction_tracer.max_sql_statements"":100,""transaction_tracer.max_explain_plans"":10,""transaction_tracer.explain_threshold"":12.0,""transaction_tracer.transaction_threshold"":13.0,""transaction_tracer.record_sql"":""obfuscate"",""slow_sql.enabled"":false,""browser_monitoring.auto_instrument"":true,""transaction_event.max_samples_stored"":10000}";
 
             Assert.AreEqual(expectedJson, json);
         }
