@@ -22,17 +22,17 @@ namespace MultiFunctionApplicationHelpers
             Console.WriteLine($"Keep Alive on Error: {keepAliveOnError}");
             Console.WriteLine();
 
-
             while (!shouldExit)
             {
                 Console.Write($"{DateTime.Now.ToLongTimeString()} >");
-                var command = Console.ReadLine().Trim();
-
+                var command = Console.ReadLine();
+                    
                 if (string.IsNullOrWhiteSpace(command))
                 {
                     continue;
                 }
 
+                command = command.Trim();
                 var startPos = 0;
                 for (startPos = 0; startPos < command.Length; startPos++)
                 {
@@ -43,12 +43,11 @@ namespace MultiFunctionApplicationHelpers
                 }
 
                 command = command.Substring(startPos);
-
                 if (string.IsNullOrWhiteSpace(command))
                 {
                     continue;
                 }
-                
+
                 Console.WriteLine();
                 if (command.Equals("exit", StringComparison.OrdinalIgnoreCase) || command.Equals("quit", StringComparison.OrdinalIgnoreCase))
                 {
@@ -64,7 +63,6 @@ namespace MultiFunctionApplicationHelpers
 
                 ExecuteCommand(methodExecutor, keepAliveOnError, command);
             }
-
         }
 
         static void ExecuteCommand(DynamicMethodExecutor methodExecutor, bool keepAliveOnError, string commandText)

@@ -301,12 +301,20 @@ namespace NewRelic.Agent.Core.Configuration
             public IEnumerable<string> Terms { get; set; }
         }
 
-        public static ServerConfiguration FromJson(string json)
+        public static ServerConfiguration FromJson(string json, bool ignoreServerConfiguration = false)
         {
             var serverConfiguration = JsonConvert.DeserializeObject<ServerConfiguration>(json);
             Debug.Assert(serverConfiguration != null);
 
-            serverConfiguration.UsingServerSideConfig = JsonContainsNonNullProperty(json, "agent_config");
+            if (ignoreServerConfiguration)
+            {
+                serverConfiguration.RpmConfig = new AgentConfig();
+                serverConfiguration.UsingServerSideConfig = false;
+            }
+            else
+            {
+                serverConfiguration.UsingServerSideConfig = JsonContainsNonNullProperty(json, "agent_config");
+            }
 
             return serverConfiguration;
         }
@@ -320,10 +328,10 @@ namespace NewRelic.Agent.Core.Configuration
                 && dictionary[propertyName] != null;
         }
 
-        public static ServerConfiguration FromDeserializedReturnValue(object deserializedJson)
+        public static ServerConfiguration FromDeserializedReturnValue(object deserializedJson, bool ignoreServerConfiguration = false)
         {
             var json = JsonConvert.SerializeObject(deserializedJson);
-            return FromJson(json);
+            return FromJson(json, ignoreServerConfiguration);
         }
 
         [OnError]

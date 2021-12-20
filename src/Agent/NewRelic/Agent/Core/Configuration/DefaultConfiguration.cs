@@ -378,6 +378,21 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private bool? _ignoreServerSideConfiguration;
+
+        public bool IgnoreServerSideConfiguration
+        {
+            get
+            {
+                if (!_ignoreServerSideConfiguration.HasValue)
+                {
+                    _ignoreServerSideConfiguration = EnvironmentOverrides(false, "NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG");
+                }
+
+                return _ignoreServerSideConfiguration.Value;
+            }
+        }
+
         public bool AllowAllRequestHeaders => HighSecurityModeOverrides(false, _localConfiguration.allowAllHeaders.enabled);
 
         #region Attributes
