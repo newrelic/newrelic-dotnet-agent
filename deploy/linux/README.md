@@ -3,7 +3,7 @@
 The assets in this path are used to deploy the Linux packages (.deb and .rpm) for the .NET Core Agent to New Relic's public package sources (apt.newrelic.com and yum.newrelic.com).
 
 ## Requirements
-1. Docker, with the ability to run Linux containers.  **NOTE**: do NOT run this process using the WSL2 backend, use the legacy Hyper-V backend instead.  The process will run for a very long time and then fail with errors during the APT repo metadata generation process if WSL2 is used, due to the Windows-to-Linux filesystem sharing performance problems with that backend.
+1. Docker, with the ability to run Linux containers.
 2. AWS S3 access keys with read/write access to the bucket(s) you are updating
 3. A Linux-like command line environment, such as `git-bash` on Windows, or a real Linux system or VM (e.g. WSL2)
 
@@ -23,23 +23,18 @@ To deploy the .rpm and .deb packages for a particular release version (e.g. 6.18
         echo "S3_BUCKET=s3://your-s3-bucket" >>docker.env
         echo "AWS_ACCESS_KEY_ID=AKAKAKAKAKAKAKA" >>docker.env
         echo "AWS_SECRET_ACCESS_KEY=6SQ6SQ6SQ6SQ6SQ6SQ6SQ6SQ6SQ6SQ6SQ" >>docker.env
-        echo "GPG_KEYS=/deployscripts/gpg.tar.bz2" >>docker.env
+        echo "GPG_KEYS=/data/deploy_scripts/gpg.tar.bz2" >>docker.env
 
 4. Optionally, add additional non-required environment variables to the environment file:
     - `AWS_DEFAULT_REGION` (defaults to `us-west-2`)
     - `AWS_DEFAULT_OUTPUT` (defaults to `text`)
     - `ACTION` (value can be `release` (add new packages to the repos) or `rollback` (remove existing packages from the repos), defaults to `release`)
 
-5. Make sure all script files have the correct permissions and line endings for Linux:
-
-        find . -name "*.bash" |xargs chmod a+x
-        find . -type f |xargs dos2unix
-
-6. Build the Docker container:
+5. Build the Docker container:
 
         docker-compose build
 
-7. Run the deploy (or rollback) process:
+6. Run the deploy (or rollback) process:
 
         docker-compose run deploy_packages
 

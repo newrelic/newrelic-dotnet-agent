@@ -32,4 +32,6 @@ AWS_DEFAULT_OUTPUT=${AWS_DEFAULT_OUTPUT:-text}
 ACTION=${ACTION:-release}
 S3_BUCKET=${S3_BUCKET:-$}
 
-/deployscripts/deploy-packages.bash -p /data/s3 -i /packages -a "$ACTION" -s "$S3_BUCKET" -v "$AGENT_VERSION"
+mkdir -p /data/s3
+
+/data/deploy_scripts/deploy-packages.bash -p /data/s3 -i /packages -a "$ACTION" -s "$S3_BUCKET" -v "$AGENT_VERSION"
