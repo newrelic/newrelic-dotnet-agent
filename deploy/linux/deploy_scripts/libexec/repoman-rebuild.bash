@@ -13,7 +13,10 @@
 ###   --help                     print this message and exit
 ###
 
+# exit on any error
 set -e
+# exit a pipeline if any stage has an error
+set -o pipefail
 
 export TARGET
 if [[ ! -d $DEPLOY_HOME ]]; then
