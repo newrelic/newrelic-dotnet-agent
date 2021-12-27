@@ -47,7 +47,10 @@
 ###   [0] https://aws.amazon.com/cli/
 ###
 
+# exit on any error
 set -e
+# exit a pipeline if any stage has an error
+set -o pipefail
 
 # Determine our location in the filesystem.
 # See: http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
