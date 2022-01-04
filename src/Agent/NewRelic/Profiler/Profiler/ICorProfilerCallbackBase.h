@@ -667,6 +667,8 @@ namespace Profiler {
         xstring_t _productName = _X("");
         xstring_t _agentCoreDllPath = _X("");
 
+        bool _isCoreClr = false;
+
         MethodRewriter::MethodRewriterPtr GetMethodRewriter()
         {
             return std::atomic_load(&_methodRewriter);
