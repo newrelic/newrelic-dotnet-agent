@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [9.3.0] changes
+## [9.3.0] - 2022-01-04
 ### New Features
 * NServiceBus versions 6 and 7 are now supported in .NET Framework and .NET Core. ([#857](https://github.com/newrelic/newrelic-dotnet-agent/pull/857))
 * Add ability to disable agent support for Server-Configuration with `NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG` environment variable. The available value options are `true` and `false`. ([#814](https://github.com/newrelic/newrelic-dotnet-agent/pull/814))
