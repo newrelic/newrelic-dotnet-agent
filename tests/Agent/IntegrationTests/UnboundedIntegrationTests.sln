@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnboundedIntegrationTests",
 	ProjectSection(ProjectDependencies) = postProject
 		{5CF71C91-EE5E-4F8D-8FEE-AE497A32BF8B} = {5CF71C91-EE5E-4F8D-8FEE-AE497A32BF8B}
 		{EA98CDD2-655D-4239-9B9F-44EB806DEE53} = {EA98CDD2-655D-4239-9B9F-44EB806DEE53}
-		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9} = {F4F32DD5-910F-4AC7-85CE-17C72A4847C9}
-		{8F6605E4-7801-4ADF-AD8F-144517608000} = {8F6605E4-7801-4ADF-AD8F-144517608000}
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTestHelpers", "IntegrationTestHelpers\IntegrationTestHelpers.csproj", "{9AABBBB0-32FC-4DA3-A38C-96A50A7ABAC1}"
@@ -19,13 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnboundedApplications", "Un
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicMvcApplication", "UnboundedApplications\BasicMvcApplication\BasicMvcApplication.csproj", "{EA98CDD2-655D-4239-9B9F-44EB806DEE53}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NServiceBusReceiver", "NServiceBusReceiver\NServiceBusReceiver.csproj", "{8F6605E4-7801-4ADF-AD8F-144517608000}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{F4B857C6-8458-41C7-9254-F9CE97BB473A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSMQBasicMVCApplication", "UnboundedApplications\MSMQBasicMVCApplication\MSMQBasicMVCApplication.csproj", "{34192288-A54A-4F2F-AE70-516065BF0498}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBusBasicMvcApplication", "UnboundedApplications\NServiceBusBasicMvcApplication\NServiceBusBasicMvcApplication.csproj", "{744CBD02-1618-4D68-97B2-A2F2CE863628}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoDBApplication", "UnboundedApplications\MongoDBApplication\MongoDBApplication.csproj", "{A8308E64-6659-4EFB-A9C4-0C48D4C99A61}"
 EndProject
@@ -33,11 +27,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoDB2_6Application", "Un
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongoDB2_6CoreApplication", "UnboundedApplications\MongoDB2_6CoreApplication\MongoDB2_6CoreApplication.csproj", "{D9266E7E-2F62-4D5D-A47C-DFE4C36647E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Testing.Assertions", "..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{2A932B62-8787-4963-8D53-F83BF6ACBB5C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Testing.Assertions", "..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{2A932B62-8787-4963-8D53-F83BF6ACBB5C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicMvcCoreApplication", "UnboundedApplications\BasicMvcCoreApplication\BasicMvcCoreApplication.csproj", "{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBusReceiverHost", "UnboundedApplications\NServiceBusReceiverHost\NServiceBusReceiverHost.csproj", "{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SharedApplications", "SharedApplications", "{859E490D-4C1A-4D9D-8271-5FE2E0726ADE}"
 	ProjectSection(SolutionItems) = preProject
@@ -54,7 +46,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MultiFunctionApplicationHel
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetStandardTestLibrary", "SharedApplications\Common\NetStandardTestLibrary\NetStandardTestLibrary.csproj", "{B64766CA-8731-493F-8417-61A70F783EB7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoDbApi", "UnboundedApplications\MongoDbApi\MongoDbApi.csproj", "{39F0F3D0-F672-4B3B-939B-08FA8E4FE722}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongoDbApi", "UnboundedApplications\MongoDbApi\MongoDbApi.csproj", "{39F0F3D0-F672-4B3B-939B-08FA8E4FE722}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -78,10 +70,6 @@ Global
 		{EA98CDD2-655D-4239-9B9F-44EB806DEE53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA98CDD2-655D-4239-9B9F-44EB806DEE53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA98CDD2-655D-4239-9B9F-44EB806DEE53}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8F6605E4-7801-4ADF-AD8F-144517608000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8F6605E4-7801-4ADF-AD8F-144517608000}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8F6605E4-7801-4ADF-AD8F-144517608000}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8F6605E4-7801-4ADF-AD8F-144517608000}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F4B857C6-8458-41C7-9254-F9CE97BB473A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F4B857C6-8458-41C7-9254-F9CE97BB473A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4B857C6-8458-41C7-9254-F9CE97BB473A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -90,10 +78,6 @@ Global
 		{34192288-A54A-4F2F-AE70-516065BF0498}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34192288-A54A-4F2F-AE70-516065BF0498}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34192288-A54A-4F2F-AE70-516065BF0498}.Release|Any CPU.Build.0 = Release|Any CPU
-		{744CBD02-1618-4D68-97B2-A2F2CE863628}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{744CBD02-1618-4D68-97B2-A2F2CE863628}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{744CBD02-1618-4D68-97B2-A2F2CE863628}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{744CBD02-1618-4D68-97B2-A2F2CE863628}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A8308E64-6659-4EFB-A9C4-0C48D4C99A61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A8308E64-6659-4EFB-A9C4-0C48D4C99A61}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8308E64-6659-4EFB-A9C4-0C48D4C99A61}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -114,10 +98,6 @@ Global
 		{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -145,12 +125,10 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{EA98CDD2-655D-4239-9B9F-44EB806DEE53} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{34192288-A54A-4F2F-AE70-516065BF0498} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
-		{744CBD02-1618-4D68-97B2-A2F2CE863628} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{A8308E64-6659-4EFB-A9C4-0C48D4C99A61} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{647EC539-DF8B-4DF0-BFD5-D4E13B38E140} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{D9266E7E-2F62-4D5D-A47C-DFE4C36647E5} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
-		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{8D07A4F7-70FD-40D4-AA95-BA9A98F14CD0} = {859E490D-4C1A-4D9D-8271-5FE2E0726ADE}
 		{5350D3F3-CE09-4992-9756-ACCC92A9129C} = {859E490D-4C1A-4D9D-8271-5FE2E0726ADE}
 		{129FF113-1F3A-4DAA-8D6F-287DF67A68FA} = {859E490D-4C1A-4D9D-8271-5FE2E0726ADE}
@@ -159,7 +137,7 @@ Global
 		{39F0F3D0-F672-4B3B-939B-08FA8E4FE722} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {656848E2-BFD2-4092-9328-C6CDF39B1274}
 		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Data.6.0.1304.0\lib\NET45
+		SolutionGuid = {656848E2-BFD2-4092-9328-C6CDF39B1274}
 	EndGlobalSection
 EndGlobal

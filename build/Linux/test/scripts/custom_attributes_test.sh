@@ -9,7 +9,7 @@ install_agent
 verify_no_logs
 
 CORECLR_ENABLE_PROFILING=0 dotnet build
-dotnet bin/Debug/netcoreapp2.1/custom_attributes.dll
+dotnet bin/Debug/net6.0/custom_attributes.dll
 
 verify_logs_exist
 

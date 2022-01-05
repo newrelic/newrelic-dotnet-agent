@@ -24,7 +24,10 @@
 ###    --help               print this message and exit
 ###
 
+# exit on any error
 set -e
+# exit a pipeline if any stage has an error
+set -o pipefail
 
 if [[ ! -d $DEPLOY_HOME ]]; then
   printf '%s: DEPLOY_HOME is not defined\n' "$(basename "$0")" >&2

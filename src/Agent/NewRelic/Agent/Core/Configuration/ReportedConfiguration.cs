@@ -29,8 +29,11 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("max_stack_trace_lines")]
         public int MaxStackTraceLines { get; set; }
 
-        [JsonProperty("using_server_side_config")]
-        public bool UsingServerSideConfig { get; set; }
+        [JsonProperty("server_side_configuration_enabled")]
+        public bool ServerSideConfigurationEnabled { get; set; }
+
+        [JsonProperty("ignore_server_side_configuration")]
+        public bool IgnoreServerSideConfiguration { get; set; }
 
         [JsonProperty("thread_profiler.enabled")]
         public bool ThreadProfilerEnabled { get; set; }

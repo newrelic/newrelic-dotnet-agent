@@ -5,13 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased] changes
+* Allows NewRelicQueryName to be specified for SQL, to implement [this suggestion](https://discuss.newrelic.com/t/provide-a-pattern-to-explicitly-name-sql-queries-displayed-in-databases-dashboard/78755). 
+
+## [9.3.0] - 2022-01-04
+### New Features
+* NServiceBus versions 6 and 7 are now supported in .NET Framework and .NET Core. ([#857](https://github.com/newrelic/newrelic-dotnet-agent/pull/857))
+* Add ability to disable agent support for Server-Configuration with `NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG` environment variable. The available value options are `true` and `false`. ([#814](https://github.com/newrelic/newrelic-dotnet-agent/pull/814))
+
+### Fixes
+* Fixes issue [#36](https://github.com/newrelic/newrelic-dotnet-agent/issues/36): Total system memory will now be correctly reported on Linux. ([#855](https://github.com/newrelic/newrelic-dotnet-agent/pull/855))
+
+## [9.2.0] - 2021-11-18
+### .NET 6 Compatibility
+As of version 9.2.0, the New Relic .NET Core agent supports .NET 6.
+
 ### New Features
 * Adds automatic instrumentation for the `Microsoft.Azure.Cosmos` client library. ([#811](https://github.com/newrelic/newrelic-dotnet-agent/pull/811))
 * Adds additional logging to the Garbage Collection performance metrics to aid in troubleshooting performance counter issues. ([#792](https://github.com/newrelic/newrelic-dotnet-agent/pull/792))
-* Feature [#800](https://github.com/newrelic/newrelic-dotnet-agent/issues/800): for .NET Framework apps instrumented with the .NET Framework agent, the value of the ".NET Version" property in the Environment data page will more accurately reflect the version of .NET Framework in use. ([#801](https://github.com/newrelic/newrelic-dotnet-agent/pull/801))  
-* Allows NewRelicQueryName to be specified for SQL, to implement [this suggestion](https://discuss.newrelic.com/t/provide-a-pattern-to-explicitly-name-sql-queries-displayed-in-databases-dashboard/78755). 
+* Feature [#800](https://github.com/newrelic/newrelic-dotnet-agent/issues/800): On .NET Framework apps instrumented with the .NET Framework agent, the value of the ".NET Version" property in the Environment data page will more accurately reflect the version of .NET Framework in use. ([#801](https://github.com/newrelic/newrelic-dotnet-agent/pull/801))  
 ### Fixes
-* Fixes issue [#803](https://github.com/newrelic/newrelic-dotnet-agent/issues/803): Thread safety issue in access to HTTP headers collection in HttpClient on .Net 6. ([#804](https://github.com/newrelic/newrelic-dotnet-agent/pull/804))
+* Fixes issue [#803](https://github.com/newrelic/newrelic-dotnet-agent/issues/803): Thread safety issue occurred when accessing HTTP headers collection in HttpClient on .NET 6. ([#804](https://github.com/newrelic/newrelic-dotnet-agent/pull/804))
 
 ## [9.1.1] - 2021-11-02
 ### Fixes
@@ -345,7 +358,9 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.1.1...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.3.0...HEAD
+[9.3.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.2.0...v9.3.0
+[9.2.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.1.1...v9.2.0
 [9.1.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.1.0...v9.1.1
 [9.1.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.0.0...v9.1.0
 [9.0.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.41.1...v9.0.0

@@ -28,7 +28,7 @@ function check_rpm_install_status {
 
 # install the .deb package
 function install_debian_no_env {
-    latest_deb=$(ls -1 /release/${PACKAGE_NAME}*.deb |tail -n 1)
+    latest_deb=$(ls -1 /release/${PACKAGE_NAME}*_amd64.deb |tail -n 1)
     OK -n "$latest_deb"
     IS "$latest_deb" =~ deb
     dpkg -i "$latest_deb"
@@ -37,7 +37,7 @@ function install_debian_no_env {
 
 # install the .rpm package
 function install_rpm_no_env {
-    latest_rpm=$(ls -1 /release/${PACKAGE_NAME}*.rpm |tail -n 1)
+    latest_rpm=$(ls -1 /release/${PACKAGE_NAME}*.x86_64.rpm |tail -n 1)
     OK -n "$latest_rpm"
     IS "$latest_rpm" =~ rpm
     rpm -ivh "$latest_rpm"
