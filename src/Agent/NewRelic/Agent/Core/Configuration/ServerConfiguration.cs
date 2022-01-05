@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         // Server Side Config
 
-        public bool UsingServerSideConfig { get; private set; }
+        public bool ServerSideConfigurationEnabled { get; private set; }
 
         [JsonProperty("agent_config")]
         public AgentConfig RpmConfig { get; set; }
@@ -309,12 +309,9 @@ namespace NewRelic.Agent.Core.Configuration
             if (ignoreServerConfiguration)
             {
                 serverConfiguration.RpmConfig = new AgentConfig();
-                serverConfiguration.UsingServerSideConfig = false;
             }
-            else
-            {
-                serverConfiguration.UsingServerSideConfig = JsonContainsNonNullProperty(json, "agent_config");
-            }
+
+            serverConfiguration.ServerSideConfigurationEnabled = JsonContainsNonNullProperty(json, "agent_config");
 
             return serverConfiguration;
         }

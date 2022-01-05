@@ -136,7 +136,6 @@ namespace NewRelic.Agent.Configuration
         int CustomEventsMaximumSamplesStored { get; }
         TimeSpan CustomEventsHarvestCycle { get; }
         bool DisableSamplers { get; }
-        bool IgnoreServerSideConfiguration { get; }
         bool ThreadProfilingEnabled { get; }
         bool TransactionEventsEnabled { get; }
         int TransactionEventsMaximumSamplesStored { get; }
@@ -154,7 +153,8 @@ namespace NewRelic.Agent.Configuration
         TimeSpan TransactionTracerStackThreshold { get; }
         int TransactionTracerMaxStackTraces { get; }
         IEnumerable<long> TrustedAccountIds { get; }
-        bool UsingServerSideConfig { get; }
+        bool ServerSideConfigurationEnabled { get; }
+        bool IgnoreServerSideConfiguration { get; }
         IEnumerable<RegexRule> UrlRegexRules { get; }
         IEnumerable<Regex> RequestPathExclusionList { get; }
         IDictionary<string, double> WebTransactionsApdex { get; }

@@ -1670,7 +1670,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual IEnumerable<long> TrustedAccountIds { get { return _serverConfiguration.TrustedIds ?? new List<long>(); } }
 
-        public bool UsingServerSideConfig { get { return _serverConfiguration.UsingServerSideConfig; } }
+        public bool ServerSideConfigurationEnabled { get { return _serverConfiguration.ServerSideConfigurationEnabled; } }
 
         #region Metric naming
 

@@ -281,7 +281,7 @@ jobs:
             echo "AWS_ACCESS_KEY_ID=${{ secrets.TEST_BUCKET_AWS_ACCESS_KEY_ID }}" >> docker.env
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.TEST_BUCKET_AWS_SECRET_ACCESS_KEY }}" >> docker.env
           fi
-          echo "GPG_KEYS=/deployscripts/gpg.tar.bz2" >> docker.env
+          echo "GPG_KEYS=/data/deploy_scripts/gpg.tar.bz2" >> docker.env
         shell: bash
 
       - name: Build and Run Container
