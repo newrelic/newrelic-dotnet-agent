@@ -24,18 +24,24 @@ namespace NewRelic { namespace Profiler
         xstring_t _newRelicHomePathEnvVar;
         xstring_t _newRelicInstallPathEnvVar;
 
-        SystemCalls(bool isCoreClr)
+        SystemCalls()
+        {
+        }
+
+        virtual void SetNewRelicHomeAndInstallPathEnvVar(bool isCoreClr) override
         {
             if (isCoreClr)
             {
                 _newRelicHomePathEnvVar = _X("CORECLR_NEWRELIC_HOME");
-                _newRelicHomePathEnvVar = _X("NEWRELIC_INSTALL_PATH");
+                _newRelicInstallPathEnvVar = _X("NEWRELIC_INSTALL_PATH");
             }
             else
             {
                 _newRelicHomePathEnvVar = _X("NEWRELIC_HOME");
-                _newRelicHomePathEnvVar = _X("NEWRELIC_INSTALL_PATH");
+                _newRelicInstallPathEnvVar = _X("NEWRELIC_INSTALL_PATH");
             }
+
+            return;
         }
 
         virtual xstring_t GetNewRelicHomePathEnvVar() override

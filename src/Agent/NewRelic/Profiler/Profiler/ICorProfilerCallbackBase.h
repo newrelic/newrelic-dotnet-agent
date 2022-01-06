@@ -171,6 +171,7 @@ namespace Profiler {
         // Base profiler initialization method
         virtual HRESULT __stdcall Initialize(IUnknown* pICorProfilerInfoUnk) override
         {
+            _systemCalls = std::make_shared<SystemCalls>();
 #ifdef DEBUG
             DelayProfilerAttach();
 #endif
@@ -205,7 +206,7 @@ namespace Profiler {
                 }
 
                 // set systemCalls and productName
-                _systemCalls = std::make_shared<SystemCalls>(_isCoreClr);
+                _systemCalls->SetNewRelicHomeAndInstallPathEnvVar(_isCoreClr);
                 _productName = _isCoreClr ? _X("New Relic .NET CoreCLR Agent") : _X("New Relic .NET Agent");
 
                 HRESULT loggingInitResult = InitializeLogging();
