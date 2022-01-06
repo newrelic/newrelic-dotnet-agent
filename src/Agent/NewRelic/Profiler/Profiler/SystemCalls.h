@@ -21,23 +21,23 @@ namespace NewRelic { namespace Profiler
 
     struct SystemCalls : Logger::IFileDestinationSystemCalls, MethodRewriter::ISystemCalls
     {
-        xstring_t _newRelicHomePath;
-        xstring_t _newRelicInstallPath;
+        xstring_t _newRelicHomePathEnvVar;
+        xstring_t _newRelicInstallPathEnvVar;
 
-        SystemCalls(xstring_t newRelicHomePath, xstring_t newRelicInstallPath)
+        SystemCalls(xstring_t newRelicHomePathEnvVar, xstring_t newRelicInstallPathEnvVar)
         {
-            _newRelicHomePath = newRelicHomePath;
-            _newRelicInstallPath = newRelicInstallPath;
+            _newRelicHomePathEnvVar = newRelicHomePathEnvVar;
+            _newRelicInstallPathEnvVar = newRelicInstallPathEnvVar;
         }
 
-        virtual xstring_t GetNewRelicHomePath() override
+        virtual xstring_t GetNewRelicHomePathEnvVar() override
         {
-            return _newRelicHomePath;
+            return _newRelicHomePathEnvVar;
         }
 
-        virtual xstring_t GetNewRelicInstallPath() override
+        virtual xstring_t GetNewRelicInstallPathEnvVar() override
         {
-            return _newRelicInstallPath;
+            return _newRelicInstallPathEnvVar;
         }
 
         virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectoryEnvironment() override

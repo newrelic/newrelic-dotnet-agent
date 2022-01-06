@@ -25,12 +25,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return EnvironmentVariableResult(variableName);
         }
 
-        virtual std::wstring GetNewRelicHomePath() override
+        virtual std::wstring GetNewRelicHomePathEnvVar() override
         {
             return L"NEWRELIC_HOME_DIRECTORY";
         }
 
-        virtual std::wstring GetNewRelicInstallPath() override
+        virtual std::wstring GetNewRelicInstallPathEnvVar() override
         {
             return L"NEWRELIC_INSTALL_PATH";
         }

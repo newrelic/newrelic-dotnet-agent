@@ -25,12 +25,12 @@ namespace NewRelic { namespace Profiler
     struct SystemCalls : Logger::IFileDestinationSystemCalls, MethodRewriter::ISystemCalls
     {
 
-        virtual xstring_t GetNewRelicHomePath() override
+        virtual xstring_t GetNewRelicHomePathEnvVar() override
         {
             return _X("CORECLR_NEWRELIC_HOME");
         }
 
-        virtual xstring_t GetNewRelicInstallPath() override
+        virtual xstring_t GetNewRelicInstallPathEnvVar() override
         {
             return _X("NEWRELIC_INSTALL_PATH");
         }

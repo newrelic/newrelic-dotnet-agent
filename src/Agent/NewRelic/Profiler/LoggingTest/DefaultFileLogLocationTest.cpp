@@ -76,7 +76,7 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
             else return L"C:\\Common\\AppData\\FolderPath";
         }
 
-        virtual std::wstring GetNewRelicHomePath() override
+        virtual std::wstring GetNewRelicHomePathEnvVar() override
         {
             return L"NEWRELIC_HOME";
         }

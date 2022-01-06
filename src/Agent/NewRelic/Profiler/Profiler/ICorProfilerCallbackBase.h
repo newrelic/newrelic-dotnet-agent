@@ -836,7 +836,7 @@ namespace Profiler {
 
         static std::unique_ptr<xstring_t> TryGetNewRelicHomeFromEnvironment(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
         {
-            return systemCalls->TryGetEnvironmentVariable(systemCalls->GetNewRelicHomePath());
+            return systemCalls->TryGetEnvironmentVariable(systemCalls->GetNewRelicHomePathEnvVar());
         }
 
         static xstring_t GetNewRelicHomePath(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
@@ -981,8 +981,8 @@ namespace Profiler {
 
         std::unique_ptr<xstring_t> GetAgentCoreDllPath()
         {
-            auto nrInstallPathEnvVar = _systemCalls->GetNewRelicInstallPath();
-            auto nrHomeEnvVar = _systemCalls->GetNewRelicHomePath();
+            auto nrInstallPathEnvVar = _systemCalls->GetNewRelicInstallPathEnvVar();
+            auto nrHomeEnvVar = _systemCalls->GetNewRelicHomePathEnvVar();
             auto runtimeDirectoryName = GetRuntimeExtensionsDirectoryName();
 
             auto maybeCorePath = TryGetCorePathFromBasePath(_systemCalls->TryGetEnvironmentVariable(nrInstallPathEnvVar), runtimeDirectoryName);

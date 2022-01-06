@@ -21,7 +21,7 @@ namespace NewRelic { namespace Profiler { namespace Logger
         virtual void DirectoryCreate(const xstring_t& logFilePath) = 0;
         // can throw on failure
         virtual xstring_t GetCommonAppDataFolderPath() = 0;
-        virtual xstring_t GetNewRelicHomePath() = 0;
+        virtual xstring_t GetNewRelicHomePathEnvVar() = 0;
         virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectoryEnvironment() = 0;
         virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectoryEnvironment() = 0;
         virtual std::unique_ptr<xstring_t> GetNewRelicLogLevelEnvironment() = 0;
@@ -73,7 +73,7 @@ namespace NewRelic { namespace Profiler { namespace Logger
             }
 
             // if there is a NEWRELIC_HOME environment variable log relative to it
-            logDirectory = _system->TryGetEnvironmentVariable(_system->GetNewRelicHomePath());
+            logDirectory = _system->TryGetEnvironmentVariable(_system->GetNewRelicHomePathEnvVar());
             if (logDirectory)
             {
                 return *logDirectory + 
