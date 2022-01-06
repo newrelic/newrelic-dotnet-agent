@@ -39,11 +39,6 @@ namespace NewRelic { namespace Profiler
         }
 #pragma warning (pop)
 
-        virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t /* commandLine */, xstring_t appPoolId) override
-        {
-            return configuration->ShouldInstrumentNetFramework(processPath, appPoolId);
-        }
-
         virtual xstring_t GetRuntimeExtensionsDirectoryName() override
         {
             return _X("netframework");

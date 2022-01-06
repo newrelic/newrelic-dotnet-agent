@@ -265,7 +265,10 @@ namespace Profiler {
             return eventMask;
         }
 
-        virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t commandLine, xstring_t appPoolId) = 0;
+        bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t commandLine, xstring_t appPoolId)
+        {
+            return _isCoreClr ? configuration->ShouldInstrumentNetCore(processPath, appPoolId, commandLine) : configuration->ShouldInstrumentNetFramework(processPath, appPoolId);
+        }
 
         virtual void ConfigureEventMask(IUnknown*) = 0;
 
