@@ -71,10 +71,9 @@ namespace Profiler {
         std::atomic<int> _referenceCount;
 
     public:
-        ICorProfilerCallbackBase(std::shared_ptr<SystemCalls> systemCalls)
+        ICorProfilerCallbackBase()
             : _referenceCount(0)
         {
-            _systemCalls = systemCalls;
         }
 
         virtual ~ICorProfilerCallbackBase()
@@ -175,17 +174,6 @@ namespace Profiler {
 #ifdef DEBUG
             DelayProfilerAttach();
 #endif
-            HRESULT loggingInitResult = InitializeLogging();
-            if (FAILED(loggingInitResult))
-            {
-                return loggingInitResult;
-            }
-
-            LogTrace(_productName);
-
-            if (FAILED(MinimumDotnetVersionCheck(pICorProfilerInfoUnk))) {
-                return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
-            }
 
             // initialization stuff, they should be logging their own errors and only throwing up if they want to cancel activation
             try {
@@ -193,6 +181,42 @@ namespace Profiler {
                 if (FAILED(corProfilerInfoInitResult)) {
                     // Since MinimumDotnetVersionCheck already queried for minimum required interface, this check is just for safety
                     LogError(_X("Error initializing CLR profiler info: "), corProfilerInfoInitResult);
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+
+                // determine clr type
+                COR_PRF_RUNTIME_TYPE runtimeType;
+                auto runtimeInfoResult = _corProfilerInfo4->GetRuntimeInformation(nullptr, &runtimeType, nullptr, nullptr, nullptr, nullptr, 0, nullptr, nullptr);
+
+                if (FAILED(runtimeInfoResult)) {
+                    LogError(_X("Error retrieving runtime information: "), runtimeInfoResult);
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+
+                if (runtimeType == COR_PRF_DESKTOP_CLR) {
+                    _isCoreClr = false;
+                }
+                else if (runtimeType == COR_PRF_CORE_CLR) {
+                    _isCoreClr = true;
+                }
+                else {
+                    LogError(_X("Unknown Runtime Type found: "), runtimeType);
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+
+                // set systemCalls and productName
+                _systemCalls = std::make_shared<SystemCalls>(_isCoreClr);
+                _productName = _isCoreClr ? _X("New Relic .NET CoreCLR Agent") : _X("New Relic .NET Agent");
+
+                HRESULT loggingInitResult = InitializeLogging();
+                if (FAILED(loggingInitResult))
+                {
+                    return loggingInitResult;
+                }
+
+                LogTrace(_productName);
+
+                if (FAILED(MinimumDotnetVersionCheck(pICorProfilerInfoUnk))) {
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
@@ -221,7 +245,7 @@ namespace Profiler {
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
-        _functionResolver = std::make_shared<FunctionResolver>(_corProfilerInfo4);
+                _functionResolver = std::make_shared<FunctionResolver>(_corProfilerInfo4);
 
                 ConfigureEventMask(pICorProfilerInfoUnk);
 

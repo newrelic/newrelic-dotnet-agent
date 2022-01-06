@@ -20,13 +20,10 @@ namespace NewRelic { namespace Profiler {
             : ICorProfilerCallbackBase(
 #ifdef PAL_STDCPP_COMPAT
                   std::make_shared<SystemCalls>()
-#else
-                  std::make_shared<SystemCalls>(_X("CORECLR_NEWRELIC_HOME"), _X("NEWRELIC_INSTALL_PATH"))
 #endif
               )
         {
             GetSingletonish() = this;
-            _productName = _X("New Relic .NET CoreCLR Agent");
         }
 
         ~CoreCLRCorProfilerCallbackImpl()
