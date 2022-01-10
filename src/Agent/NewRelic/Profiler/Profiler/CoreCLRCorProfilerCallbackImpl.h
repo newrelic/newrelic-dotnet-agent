@@ -68,34 +68,6 @@ namespace NewRelic { namespace Profiler {
             }
             return S_OK;
         }
-
-        //
-        // On CoreCLR we aren't seeing JITs for all of the methods that we're interested in.
-        // To work around that, we rejit all of the methods of interest in an assembly when
-        // its module loads.
-        //
-        // ICorProfilerCallback
-        virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId, HRESULT status) override
-        {
-            if (SUCCEEDED(status)) {
-                try {
-                    auto assemblyName = GetAssemblyName(moduleId);
-
-                    if (GetMethodRewriter()->ShouldInstrumentAssembly(assemblyName)) {
-                        LogTrace("Assembly module loaded: ", assemblyName);
-
-                        auto instrumentationPoints = std::make_shared<Configuration::InstrumentationPointSet>(GetMethodRewriter()->GetAssemblyInstrumentation(assemblyName));
-                        auto methodDefs = GetMethodDefs(moduleId, instrumentationPoints);
-
-                        if (methodDefs != nullptr) {
-                            RejitModuleFunctions(moduleId, methodDefs);
-                        }
-                    }
-                } catch (...) {
-                }
-            }
-            return S_OK;
-        }
     };
 }
 }

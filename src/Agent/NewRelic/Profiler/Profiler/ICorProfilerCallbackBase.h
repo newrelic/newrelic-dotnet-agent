@@ -24,6 +24,8 @@
 #include <string>
 #include <thread>
 #include <utility>
+#include "../ModuleInjector/ModuleInjector.h"
+#include "Module.h"
 
 #ifdef PAL_STDCPP_COMPAT
 #include "UnixSystemCalls.h"
@@ -69,6 +71,8 @@ namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
+        std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
+
 
     public:
         ICorProfilerCallbackBase()
@@ -90,7 +94,70 @@ namespace Profiler {
         virtual HRESULT __stdcall AssemblyUnloadStarted(AssemblyID assemblyId) override { return S_OK; }
         virtual HRESULT __stdcall AssemblyUnloadFinished(AssemblyID assemblyId, HRESULT hrStatus) override { return S_OK; }
         virtual HRESULT __stdcall ModuleLoadStarted(ModuleID moduleId) override { return S_OK; }
-        virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus) override { return S_OK; }
+        virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus) override
+        {
+            if (_isCoreClr)
+            {
+                if (SUCCEEDED(hrStatus)) {
+                    try {
+                        auto assemblyName = GetAssemblyName(moduleId);
+
+                        if (GetMethodRewriter()->ShouldInstrumentAssembly(assemblyName)) {
+                            LogTrace("Assembly module loaded: ", assemblyName);
+
+                            auto instrumentationPoints = std::make_shared<Configuration::InstrumentationPointSet>(GetMethodRewriter()->GetAssemblyInstrumentation(assemblyName));
+                            auto methodDefs = GetMethodDefs(moduleId, instrumentationPoints);
+
+                            if (methodDefs != nullptr) {
+                                RejitModuleFunctions(moduleId, methodDefs);
+                            }
+                        }
+                    }
+                    catch (...) {
+                    }
+                }
+                return S_OK;
+            }
+            else
+            {
+                // if the module did not load correctly then we don't want to mess with it
+                if (FAILED(hrStatus))
+                {
+                    return hrStatus;
+                }
+
+                LogTrace("Module Injection Started. ", moduleId);
+
+                ModuleInjector::IModulePtr module;
+                try
+                {
+                    module = std::make_shared<Module>(_corProfilerInfo4, moduleId);
+                }
+                catch (const NewRelic::Profiler::MessageException& exception)
+                {
+                    (void)exception;
+                    return S_OK;
+                }
+                catch (...)
+                {
+                    LogError(L"An exception was thrown while getting details about a module.");
+                    return E_FAIL;
+                }
+
+                try
+                {
+                    _moduleInjector->InjectIntoModule(*module);
+                }
+                catch (...)
+                {
+                    LogError(L"An exception was thrown while attempting to inject into a module.");
+                    return E_FAIL;
+                }
+
+                LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
+                return S_OK;
+            }
+        }
         virtual HRESULT __stdcall ModuleUnloadStarted(ModuleID moduleId) override { return S_OK; }
         virtual HRESULT __stdcall ModuleUnloadFinished(ModuleID moduleId, HRESULT hrStatus) override { return S_OK; }
         virtual HRESULT __stdcall ModuleAttachedToAssembly(ModuleID moduleId, AssemblyID AssemblyId) override { return S_OK; }
@@ -265,6 +332,8 @@ namespace Profiler {
         {
             return eventMask;
         }
+
+
 
         bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t commandLine, xstring_t appPoolId)
         {

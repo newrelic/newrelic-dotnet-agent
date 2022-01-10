@@ -4,8 +4,6 @@
 #pragma once
 
 #include "ICorProfilerCallbackBase.h"
-#include "../ModuleInjector/ModuleInjector.h"
-#include "Module.h"
 
 namespace NewRelic { namespace Profiler
 {
@@ -53,47 +51,6 @@ namespace NewRelic { namespace Profiler
                 return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
             }
 
-            return S_OK;
-        }
-
-        // ICorProfilerCallback
-        virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId, HRESULT status) override
-        {
-            // if the module did not load correctly then we don't want to mess with it
-            if (FAILED(status))
-            {
-                return status;
-            }
-
-            LogTrace("Module Injection Started. ", moduleId);
-
-            ModuleInjector::IModulePtr module;
-            try
-            {
-                module = std::make_shared<Module>(_corProfilerInfo4, moduleId);
-            }
-            catch (const NewRelic::Profiler::MessageException& exception)
-            {
-                (void)exception;
-                return S_OK;
-            }
-            catch (...)
-            {
-                LogError(L"An exception was thrown while getting details about a module.");
-                return E_FAIL;
-            }
-
-            try
-            {
-                _moduleInjector->InjectIntoModule(*module);
-            }
-            catch (...)
-            {
-                LogError(L"An exception was thrown while attempting to inject into a module.");
-                return E_FAIL;
-            }
-
-            LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
             return S_OK;
         }
 
