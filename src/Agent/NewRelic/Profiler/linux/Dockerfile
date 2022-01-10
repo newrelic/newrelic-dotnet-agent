@@ -19,13 +19,9 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 
 RUN apt-get install -y \
-  libc++-dev \
+  make \
+  binutils \
   cmake \
-  llvm-13 \
-  clang \
-  lldb-13 \
-  libunwind-13 \
-  libunwind-13-dev \
   gettext \
   libicu-dev \
   liblttng-ust-dev \
@@ -37,31 +33,18 @@ RUN apt-get install -y \
   locales \
   locales-all
 
+  # LLVM
+RUN apt-get install -y libllvm-13-ocaml-dev libllvm13 llvm-13 llvm-13-dev llvm-13-doc llvm-13-examples llvm-13-runtime \
+# Clang and co
+clang-13 clang-tools-13 clang-13-doc libclang-common-13-dev libclang-13-dev libclang1-13 clang-format-13 python3-clang-13 clangd-13 \
+# lldb, lld, libc++, libunwind
+lldb-13 lld-13 libc++-13-dev libc++abi-13-dev libunwind-13-dev
+
 # The CoreCLR build notes say their repos should be pulled into a `git` directory.
 # Not sure how necessary that is.
 RUN mkdir /root/git
 WORKDIR /root/git
 
-RUN git clone --branch release/6.0 https://github.com/dotnet/runtime.git
+RUN git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
 
-# Build CoreCLR
-RUN cd /root/git/runtime; ./build.sh clr
-
-# Install the build tools that the profiler requires
-#RUN apt-get update && apt-get install -y \
-#  make \
-#  binutils \
-#  libc++-dev \
-#  clang-3.9 \
-#  lldb-3.9
-
-# Remove expired root CA cert
-#RUN sed -i 's/mozilla\/DST_Root_CA_X3.crt/!mozilla\/DST_Root_CA_X3.crt/g' /etc/ca-certificates.conf
-#RUN update-ca-certificates
-
-# Install cmake 3.9
-#RUN curl -sSL https://cmake.org/files/v3.9/cmake-3.9.0-rc3-Linux-x86_64.tar.gz | tar -xzC /opt
-#RUN ln -s /opt/cmake-3.9.0-rc3-Linux-x86_64/bin/cmake /usr/local/sbin/cmake
-
-#RUN rm /usr/bin/cc;   ln -s /usr/bin/clang-3.9 /usr/bin/cc
-#RUN rm /usr/bin/c++;  ln -s /usr/bin/clang++-3.9 /usr/bin/c++
+RUN ln -sf /usr/bin/clang-13 /usr/bin/cc; ln -sf /usr/bin/clang++-13 /usr/bin/c++
