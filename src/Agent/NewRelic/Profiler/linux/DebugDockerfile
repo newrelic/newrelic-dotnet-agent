@@ -1,15 +1,16 @@
 # This builds an Ubuntu image, clones the coreclr github repo and builds it.
 # It then sets up the environment for compiling the New Relic .NET profiler.
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
 RUN apt-get update
 RUN apt-get install -y \
   wget \
   curl \
   git \
+  dos2unix \
   gnupg
   
-RUN echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main" | tee /etc/apt/sources.list.d/llvm.list
+RUN echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main" | tee /etc/apt/sources.list.d/llvm.list
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN apt-get update
 
@@ -18,21 +19,10 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 
 RUN apt-get install -y \
+  cmake llvm-7 clang-7 lldb-7 liblldb-7-dev libunwind8 libunwind8-dev gettext libicu-dev liblttng-ust-dev libcurl4-openssl-dev libssl-dev libnuma-dev libkrb5-dev \
   libc++-dev \
-  cmake \
-  llvm-13 \
-  clang \
-  lldb-13 \
-  libunwind-13 \
-  libunwind-13-dev \
-  gettext \
-  libicu-dev \
-  liblttng-ust-dev \
-  libcurl4-openssl-dev \
-  libssl-dev \
   uuid-dev \
   zlib1g-dev \
-  libkrb5-dev \
   locales \
   locales-all
 
@@ -41,48 +31,38 @@ RUN apt-get install -y \
 RUN mkdir /root/git
 WORKDIR /root/git
 
-RUN git clone --branch release/6.0 https://github.com/dotnet/runtime.git
+RUN git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
 
-# Build CoreCLR
-RUN cd /root/git/runtime; ./build.sh clr
+# Build CoreCLR with clang 7
+RUN cd /root/git/coreclr; ./build.sh -clang7
 
-# # Install the newer build tools for the profiler build
+# Set up to build the profiler
+RUN ln -sf /usr/bin/clang-7 /usr/bin/cc; ln -sf /usr/bin/clang++-7 /usr/bin/c++
 
-# RUN apt-get remove -y cmake
+# Install dotnet core 3.1
+RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+  dpkg -i packages-microsoft-prod.deb && rm packages-microsoft-prod.deb && \
+  apt-get install -y apt-transport-https && apt-get update && apt-get install -y dotnet-sdk-3.1
 
-# # Install cmake 3.9
-# RUN curl -sSL https://cmake.org/files/v3.9/cmake-3.9.0-rc3-Linux-x86_64.tar.gz | sudo tar -xzC /opt
-# RUN ln -s /opt/cmake-3.9.0-rc3-Linux-x86_64/bin/cmake /usr/local/sbin/cmake
+WORKDIR /root/git
 
-# RUN apt-get remove -y llvm-3.5 clang-3.5 lldb-3.6 lldb-3.6-dev
-# RUN apt-get install -y clang-3.9 lldb-3.9
+# Environment for running the profiler
 
-# RUN rm /usr/bin/cc;   ln -s /usr/bin/clang-3.9 /usr/bin/cc
-# RUN rm /usr/bin/c++;  ln -s /usr/bin/clang++-3.9 /usr/bin/c++
+ENV CORECLR_ENABLE_PROFILING=1
+ENV CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}
+ENV CORECLR_PROFILER_PATH=/profiler/libNewRelicProfiler.so
+ENV CORECLR_NEWRELIC_HOME=/agent
+ENV CORECLR_BINARIES=/root/git/coreclr/bin/Product/Linux.x64.Debug
 
-# # Install dotnet 2.0 preview
+# (Try to) enable CLR logging
+ENV COMPlus_LogEnable=1
+ENV COMPlus_LogToConsole=1
+ENV COMPlus_LogLevel=10
 
-# RUN sh -c 'echo "deb [arch=amd64] http://apt-mo.trafficmanager.net/repos/dotnet/ trusty main" > /etc/apt/sources.list.d/dotnetdev.list'
-# RUN apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
-# RUN apt-get update
+# Install SOS extension
+RUN dotnet tool install -g --version 3.1 dotnet-sos && \
+  /root/.dotnet/tools/dotnet-sos install
 
-# RUN apt-get install -y dotnet-sdk-2.0.0-preview2-006488
-
-# WORKDIR /root/git
-
-# # Environment for running the profiler
-
-# ENV CORECLR_ENABLE_PROFILING=1
-# ENV CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}
-# ENV CORECLR_PROFILER_PATH=/profiler/libNewRelicProfiler.so
-# ENV CORECLR_NEWRELIC_HOME=/agent
-# ENV CORECLR_BINARIES=/root/git/coreclr/bin/Product/Linux.x64.Debug
-
-# # (Try to) enable CLR logging
-# ENV COMPlus_LogEnable=1
-# ENV COMPlus_LogToConsole=1
-# ENV COMPlus_LogLevel=10
-
-# # Write a debug.sh script in $CORECLR_BINARIES that runs lldb on a .NET app
-# RUN echo 'lldb-3.9 -o "plugin load libsosplugin.so" -o "process launch -s"  -o "breakpoint set -n LOADLoadLibraryDirect" corerun $CORECLR_BINARIES/bin/Debug/netcoreapp2.0/Linux.x64.Debug.dll' > $CORECLR_BINARIES/debug.sh
-# RUN chmod +x $CORECLR_BINARIES/debug.sh
+# Write a debug.sh script in $CORECLR_BINARIES that runs lldb on a .NET app
+RUN echo 'lldb-7 -o "plugin load libsosplugin.so" -o "process launch -s"  -o "breakpoint set -n LOADLoadLibraryDirect" corerun $CORECLR_BINARIES/bin/Debug/netcoreapp3.1/Linux.x64.Debug.dll' > $CORECLR_BINARIES/debug.sh
+RUN chmod +x $CORECLR_BINARIES/debug.sh
