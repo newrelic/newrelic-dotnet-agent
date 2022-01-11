@@ -24,6 +24,14 @@ namespace NewRelic { namespace Profiler
 
     struct SystemCalls : Logger::IFileDestinationSystemCalls, MethodRewriter::ISystemCalls
     {
+        SystemCalls()
+        {
+        }
+
+        virtual void SetNewRelicHomeAndInstallPathEnvVar(bool isCoreClr) override
+        {
+            return;
+        }
 
         virtual xstring_t GetNewRelicHomePathEnvVar() override
         {
