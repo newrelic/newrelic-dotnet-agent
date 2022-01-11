@@ -330,21 +330,86 @@ namespace Profiler {
 
         virtual DWORD OverrideEventMask(DWORD eventMask)
         {
+            if (!_isCoreClr)
+            {
+                _moduleInjector.reset(new ModuleInjector::ModuleInjector());
+            }
+
             return eventMask;
         }
-
-
 
         bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t commandLine, xstring_t appPoolId)
         {
             return _isCoreClr ? configuration->ShouldInstrumentNetCore(processPath, appPoolId, commandLine) : configuration->ShouldInstrumentNetFramework(processPath, appPoolId);
         }
 
-        virtual void ConfigureEventMask(IUnknown*) = 0;
+        virtual void ConfigureEventMask(IUnknown* pICorProfilerInfoUnk)
+        {
+            if (_isCoreClr)
+            {
+                // register for events that we are interested in getting callbacks for
+// SetEventMask2 requires ICorProfilerInfo5. It allows setting the high-order bits of the profiler event mask.
+// 0x8 = COR_PRF_HIGH_DISABLE_TIERED_COMPILATION <- this was introduced in ICorProfilerCallback9 which we're not currently implementing
+// see this PR: https://github.com/dotnet/coreclr/pull/14643/files#diff-e7d550d94de30cdf5e7f3a25647a2ae1R626
+// Just passing in the hardcoded 0x8 seems to actually disable tiered compilation,
+// but we should see about actually referencing and implementing ICorProfilerCallback9
 
-        virtual xstring_t GetRuntimeExtensionsDirectoryName() = 0;
+                CComPtr<ICorProfilerInfo5> _corProfilerInfo5;
+                const DWORD COR_PRF_HIGH_DISABLE_TIERED_COMPILATION = 0x8;
 
-        virtual HRESULT MinimumDotnetVersionCheck(IUnknown*) = 0;
+                if (FAILED(pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo5), (void**)&_corProfilerInfo5))) {
+                    LogDebug(L"Calling SetEventMask().");
+                    ThrowOnError(_corProfilerInfo4->SetEventMask, _eventMask);
+                }
+                else {
+                    LogDebug(L"Calling SetEventMask2().");
+                    ThrowOnError(_corProfilerInfo5->SetEventMask2, _eventMask, COR_PRF_HIGH_DISABLE_TIERED_COMPILATION);
+                }
+            }
+            else
+            {
+                // register for events that we are interested in getting callbacks for
+                LogDebug(L"Calling SetEventMask().");
+                ThrowOnError(_corProfilerInfo4->SetEventMask, _eventMask);
+            }
+        }
+
+        virtual xstring_t GetRuntimeExtensionsDirectoryName()
+        {
+            if (_isCoreClr)
+            {
+                return _X("netcore");
+            }
+            else
+            {
+                return _X("netframework");
+            }
+        }
+
+        virtual HRESULT MinimumDotnetVersionCheck(IUnknown* pICorProfilerInfoUnk)
+        {
+            if (_isCoreClr)
+            {
+                CComPtr<ICorProfilerInfo8> temp;
+                HRESULT result = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo8), (void**)&temp);
+                if (FAILED(result)) {
+                    LogError(_X(".NET Core 2.0 or greater required. Profiler not attaching."));
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+                return S_OK;
+            }
+            else
+            {
+                CComPtr<ICorProfilerInfo4> temp;
+                HRESULT interfaceCheckResult = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo4), (void**)&temp);
+                if (FAILED(interfaceCheckResult)) {
+                    LogError(_X(".NET Framework 4.5 is required.  Detaching New Relic profiler."));
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+
+                return S_OK;
+            }
+        }
 
         virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject) override
         {
