@@ -3,10 +3,7 @@
 #include "stdafx.h"
 #include <atomic>
 
-#include "CoreCLRCorProfilerCallbackImpl.h"
-#ifndef PAL_STDCPP_COMPAT
-#include "FrameworkCorProfilerCallbackImpl.h"
-#endif
+#include "CorProfilerCallbackImpl.h"
 
 namespace NewRelic { namespace Profiler {
 
@@ -59,17 +56,10 @@ namespace NewRelic { namespace Profiler {
                 return CLASS_E_NOAGGREGATION;
             }
 
-            std::unique_ptr<ICorProfilerCallbackBase> profiler;
+            std::unique_ptr<CorProfilerCallbackImpl> profiler;
 
-#ifdef PAL_STDCPP_COMPAT
-            profiler = std::make_unique<NewRelic::Profiler::CoreCLRCorProfilerCallbackImpl>();
-#else
-            if (_coreCLRProfiler) {
-                profiler = std::make_unique<NewRelic::Profiler::CoreCLRCorProfilerCallbackImpl>();
-            } else {
-                profiler = std::make_unique<NewRelic::Profiler::FrameworkCorProfilerCallbackImpl>();
-            }
-#endif
+            profiler = std::make_unique<NewRelic::Profiler::CorProfilerCallbackImpl>();
+
             if (!profiler) {
                 return E_FAIL;
             }

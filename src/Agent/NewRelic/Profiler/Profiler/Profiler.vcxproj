@@ -233,17 +233,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ClassFactory.hpp" />
-    <ClInclude Include="CoreCLRCorProfilerCallbackImpl.h" />
     <ClInclude Include="CorTokenizer.h" />
     <ClInclude Include="CorTokenResolver.h" />
     <ClInclude Include="Exceptions.h" />
-    <ClInclude Include="FrameworkCorProfilerCallbackImpl.h" />
     <ClInclude Include="Function.h" />
     <ClInclude Include="FunctionHeaderInfo.h" />
     <ClInclude Include="FunctionPreprocessor.h" />
     <ClInclude Include="FunctionResolver.h" />
     <ClInclude Include="guids.h" />
-    <ClInclude Include="ICorProfilerCallbackBase.h" />
+    <ClInclude Include="CorProfilerCallbackImpl.h" />
     <ClInclude Include="CommonDefinitions.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="OpCodes.h" />

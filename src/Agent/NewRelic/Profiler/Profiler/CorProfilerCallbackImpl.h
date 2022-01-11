@@ -15,7 +15,7 @@
 #include "../ThreadProfiler/ThreadProfiler.h"
 #include "Function.h"
 #include "FunctionResolver.h"
-#include "ICorProfilerCallbackBase.h"
+#include "CorProfilerCallbackImpl.h"
 #include "Win32Helpers.h"
 #include "guids.h"
 #include <fstream>
@@ -67,7 +67,7 @@ namespace Profiler {
 
     typedef std::set<xstring_t> FilePaths;
 
-    class ICorProfilerCallbackBase : public ICorProfilerCallback4 {
+    class CorProfilerCallbackImpl : public ICorProfilerCallback4 {
 
     private:
         std::atomic<int> _referenceCount;
@@ -75,13 +75,16 @@ namespace Profiler {
 
 
     public:
-        ICorProfilerCallbackBase()
+        CorProfilerCallbackImpl()
             : _referenceCount(0)
         {
+            GetSingletonish() = this;
         }
 
-        virtual ~ICorProfilerCallbackBase()
+        ~CorProfilerCallbackImpl()
         {
+            if (GetSingletonish() == this)
+                GetSingletonish() = nullptr;
         }
 
         // Unimplemented ICorProfilerCallback
@@ -619,7 +622,7 @@ namespace Profiler {
             auto oldInstrumentationByAssembly = GroupByAssemblyName(oldInstrumentationPoints);
             auto newInstrumentationByAssembly = GroupByAssemblyName(instrumentationConfiguration->GetInstrumentationPoints());
 
-            std::thread t1(&NewRelic::Profiler::ICorProfilerCallbackBase::RejitInstrumentationPoints, this, oldInstrumentationByAssembly, newInstrumentationByAssembly);
+            std::thread t1(&NewRelic::Profiler::CorProfilerCallbackImpl::RejitInstrumentationPoints, this, oldInstrumentationByAssembly, newInstrumentationByAssembly);
 
             // block the calling managed thread until the worker thread has finished
             t1.join();
@@ -808,9 +811,9 @@ namespace Profiler {
         }
 
         // there is only one by convention, but that is not guaranteed anywhere
-        static ICorProfilerCallbackBase*& GetSingletonish()
+        static CorProfilerCallbackImpl*& GetSingletonish()
         {
-            static ICorProfilerCallbackBase* s_profiler = nullptr;
+            static CorProfilerCallbackImpl* s_profiler = nullptr;
             return s_profiler;
         }
 
@@ -1278,7 +1281,7 @@ namespace Profiler {
     extern "C" __declspec(dllexport) HRESULT __cdecl InstrumentationRefresh()
     {
         LogInfo("Refreshing instrumentation");
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError("Unable to refresh instrumentation because the profiler reference is invalid.");
             return E_FAIL;
@@ -1289,7 +1292,7 @@ namespace Profiler {
     extern "C" __declspec(dllexport) HRESULT __cdecl AddCustomInstrumentation(const char* fileName, const char* xml)
     {
         LogTrace("Adding custom instrumentation");
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError("Unable to add custom instrumentation because the profiler reference is invalid.");
             return E_FAIL;
@@ -1300,7 +1303,7 @@ namespace Profiler {
     extern "C" __declspec(dllexport) HRESULT __cdecl ApplyCustomInstrumentation()
     {
         LogTrace("Applying custom instrumentation");
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError("Unable to apply custom instrumentation because the profiler reference is invalid.");
             return E_FAIL;
@@ -1310,7 +1313,7 @@ namespace Profiler {
 
     extern "C" __declspec(dllexport) void __cdecl ReleaseProfile() noexcept
     {
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError(L"ReleaseProfile: entry point called before the profiler has been initialized");
             return;
@@ -1322,7 +1325,7 @@ namespace Profiler {
     // failureCallback error codes are 1 - stack too deep, 2 - no Stack Snapshooter supplied, or error codes returned by DoStackSnapshot
     extern "C" __declspec(dllexport) HRESULT __cdecl RequestProfile(void** snapshots, int* length) noexcept
     {
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError(L"RequestProfile: entry point called before the profiler has been initialized");
             return E_UNEXPECTED;
@@ -1334,7 +1337,7 @@ namespace Profiler {
     // called by managed code to get function information from function IDs
     extern "C" __declspec(dllexport) HRESULT __cdecl RequestFunctionNames(UINT_PTR* functionIds, int length, void** results) noexcept
     {
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError(L"RequestFunctionNames: entry point called before the profiler has been initialized");
             return E_UNEXPECTED;
@@ -1344,7 +1347,7 @@ namespace Profiler {
 
     extern "C" __declspec(dllexport) void __cdecl ShutdownThreadProfiler() noexcept
     {
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError(L"ShutdownThreadProfiler: entry point called before the profiler has been initialized");
             return;
@@ -1355,7 +1358,7 @@ namespace Profiler {
     //This method is used only to verify thread profiling.  It is only used by tests in ProfiledMethod project.
     extern "C" __declspec(dllexport) uintptr_t __cdecl GetCurrentExecutionEngineThreadId()
     {
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError(L"GetCurrentExecutionEngineThreadId: entry point called before the profiler has been initialized");
             return 0;
