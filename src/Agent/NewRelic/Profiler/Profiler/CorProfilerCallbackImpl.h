@@ -24,12 +24,12 @@
 #include <string>
 #include <thread>
 #include <utility>
-#include "../ModuleInjector/ModuleInjector.h"
-#include "Module.h"
 
 #ifdef PAL_STDCPP_COMPAT
 #include "UnixSystemCalls.h"
 #else
+#include "../ModuleInjector/ModuleInjector.h"
+#include "Module.h"
 #include "SystemCalls.h"
 #include <shellapi.h>
 #endif
@@ -71,8 +71,10 @@ namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
-        std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
 
+#ifndef PAL_STDCPP_COMPAT
+        std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
+#endif
 
     public:
         CorProfilerCallbackImpl()
@@ -123,6 +125,8 @@ namespace Profiler {
             }
             else
             {
+#ifndef PAL_STDCPP_COMPAT
+
                 // if the module did not load correctly then we don't want to mess with it
                 if (FAILED(hrStatus))
                 {
@@ -158,6 +162,7 @@ namespace Profiler {
                 }
 
                 LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
+#endif
                 return S_OK;
             }
         }
@@ -333,11 +338,12 @@ namespace Profiler {
 
         virtual DWORD OverrideEventMask(DWORD eventMask)
         {
+#ifndef PAL_STDCPP_COMPAT
             if (!_isCoreClr)
             {
                 _moduleInjector.reset(new ModuleInjector::ModuleInjector());
             }
-
+#endif
             return eventMask;
         }
 
