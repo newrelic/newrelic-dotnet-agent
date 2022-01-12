@@ -146,6 +146,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
             Fixture.TestLogger = output;
 
             Fixture.AddCommand($"PerformanceMetrics Test {THREADPOOL_WORKER_MAX} {THREADPOOL_COMPLETION_MAX}");
+            Fixture.AddCommand($"RootCommands DelaySeconds 70"); // ???
+
+            Fixture.SetTimeout(System.TimeSpan.FromSeconds(120));
 
             Fixture.Actions
             (
@@ -163,12 +166,11 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         public void ExpectedMetrics_GarbageCollection()
         {
             var metrics = Fixture.AgentLog.GetMetrics().ToList();
-
             var metricNames = metrics.Select(x => x.MetricSpec.Name).OrderBy(x => x).ToArray();
 
             TestMetrics("GC", metricNames, ExpectedMetricNames_GC);
 
-            var sumOfAllGcCallCounts = metrics.Where(x => x.MetricSpec.Name.StartsWith("GC/"))
+            var sumOfAllGcCallCounts = metrics.Where(x => x.MetricSpec.Name == "GC/Gen0/Collections")
                 .Select(x => x.Values.CallCount).Aggregate((x, y) => x + y);
 
             Assert.NotEqual(0UL, sumOfAllGcCallCounts);

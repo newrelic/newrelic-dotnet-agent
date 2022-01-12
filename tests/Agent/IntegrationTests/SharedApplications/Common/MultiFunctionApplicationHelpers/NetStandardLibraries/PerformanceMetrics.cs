@@ -15,6 +15,9 @@ namespace MultiFunctionApplicationHelpers.Libraries
         [LibraryMethod]
         public static void Test(int countMaxWorkerThreads, int countMaxCompletionThreads)
         {
+            // We just need atleast one known GC invocation to verify our metrics.
+            GC.Collect();
+
             Logger.Info($"Setting Threadpool Max Threads: {countMaxWorkerThreads} worker/{countMaxCompletionThreads} completion.");
 
             ThreadPool.SetMaxThreads(countMaxWorkerThreads, countMaxCompletionThreads);
