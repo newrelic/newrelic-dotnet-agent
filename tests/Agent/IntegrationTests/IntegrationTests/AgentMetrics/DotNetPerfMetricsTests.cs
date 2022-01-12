@@ -163,9 +163,15 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         public void ExpectedMetrics_GarbageCollection()
         {
             var metrics = Fixture.AgentLog.GetMetrics().ToList();
+
             var metricNames = metrics.Select(x => x.MetricSpec.Name).OrderBy(x => x).ToArray();
 
             TestMetrics("GC", metricNames, ExpectedMetricNames_GC);
+
+            var sumOfAllGcCallCounts = metrics.Where(x => x.MetricSpec.Name.StartsWith("GC/"))
+                .Select(x => x.Values.CallCount).Aggregate((x, y) => x + y);
+
+            Assert.NotEqual(0UL, sumOfAllGcCallCounts);
         }
 
         [Fact]
