@@ -17,6 +17,7 @@ namespace NewRelic { namespace Profiler
 
     public:
         FrameworkCorProfilerCallbackImpl()
+            : ICorProfilerCallbackBase()
         {
             GetSingletonish() = this;
         }

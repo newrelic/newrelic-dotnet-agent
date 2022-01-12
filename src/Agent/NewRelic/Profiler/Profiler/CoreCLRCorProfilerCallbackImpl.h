@@ -17,11 +17,7 @@ namespace NewRelic { namespace Profiler {
 
     public:
         CoreCLRCorProfilerCallbackImpl()
-            : ICorProfilerCallbackBase(
-#ifdef PAL_STDCPP_COMPAT
-                  std::make_shared<SystemCalls>()
-#endif
-              )
+            : ICorProfilerCallbackBase()
         {
             GetSingletonish() = this;
         }
