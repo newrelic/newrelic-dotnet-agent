@@ -325,7 +325,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         void SetLogLevel(rapidxml::xml_node<xchar_t>* configurationNode)
         {
             if (_systemCalls) {
-                auto envLevel = _systemCalls->GetNewRelicLogLevelEnvironment();
+                auto envLevel = _systemCalls->GetNewRelicLogLevel();
                 if (envLevel) {
                     _logLevel = TryParseLogLevel(*envLevel);
                     return;

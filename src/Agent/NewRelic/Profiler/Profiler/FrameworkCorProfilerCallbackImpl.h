@@ -17,10 +17,9 @@ namespace NewRelic { namespace Profiler
 
     public:
         FrameworkCorProfilerCallbackImpl()
-            : ICorProfilerCallbackBase(std::make_shared<SystemCalls>(_X("NEWRELIC_HOME"), _X("NEWRELIC_INSTALL_PATH")))
+            : ICorProfilerCallbackBase()
         {
             GetSingletonish() = this;
-            _productName = _X("New Relic .NET Agent");
         }
 
         ~FrameworkCorProfilerCallbackImpl()
@@ -40,11 +39,6 @@ namespace NewRelic { namespace Profiler
             ThrowOnError(_corProfilerInfo4->SetEventMask, _eventMask);
         }
 #pragma warning (pop)
-
-        virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t /* commandLine */, xstring_t appPoolId) override
-        {
-            return configuration->ShouldInstrumentNetFramework(processPath, appPoolId);
-        }
 
         virtual xstring_t GetRuntimeExtensionsDirectoryName() override
         {

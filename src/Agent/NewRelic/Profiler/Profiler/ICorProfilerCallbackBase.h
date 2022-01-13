@@ -71,10 +71,10 @@ namespace Profiler {
         std::atomic<int> _referenceCount;
 
     public:
-        ICorProfilerCallbackBase(std::shared_ptr<SystemCalls> systemCalls)
+        ICorProfilerCallbackBase()
             : _referenceCount(0)
         {
-            _systemCalls = systemCalls;
+            _systemCalls = std::make_shared<SystemCalls>();
         }
 
         virtual ~ICorProfilerCallbackBase()
@@ -175,17 +175,6 @@ namespace Profiler {
 #ifdef DEBUG
             DelayProfilerAttach();
 #endif
-            HRESULT loggingInitResult = InitializeLogging();
-            if (FAILED(loggingInitResult))
-            {
-                return loggingInitResult;
-            }
-
-            LogTrace(_productName);
-
-            if (FAILED(MinimumDotnetVersionCheck(pICorProfilerInfoUnk))) {
-                return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
-            }
 
             // initialization stuff, they should be logging their own errors and only throwing up if they want to cancel activation
             try {
@@ -193,6 +182,42 @@ namespace Profiler {
                 if (FAILED(corProfilerInfoInitResult)) {
                     // Since MinimumDotnetVersionCheck already queried for minimum required interface, this check is just for safety
                     LogError(_X("Error initializing CLR profiler info: "), corProfilerInfoInitResult);
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+
+                // determine clr type
+                COR_PRF_RUNTIME_TYPE runtimeType;
+                auto runtimeInfoResult = _corProfilerInfo4->GetRuntimeInformation(nullptr, &runtimeType, nullptr, nullptr, nullptr, nullptr, 0, nullptr, nullptr);
+
+                if (FAILED(runtimeInfoResult)) {
+                    LogError(_X("Error retrieving runtime information: "), runtimeInfoResult);
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+
+                if (runtimeType == COR_PRF_DESKTOP_CLR) {
+                    _isCoreClr = false;
+                }
+                else if (runtimeType == COR_PRF_CORE_CLR) {
+                    _isCoreClr = true;
+                }
+                else {
+                    LogError(_X("Unknown Runtime Type found: "), runtimeType);
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+
+                // set systemCalls and productName
+                _systemCalls->SetCoreAgent(_isCoreClr);
+                _productName = _isCoreClr ? _X("New Relic .NET CoreCLR Agent") : _X("New Relic .NET Agent");
+
+                HRESULT loggingInitResult = InitializeLogging();
+                if (FAILED(loggingInitResult))
+                {
+                    return loggingInitResult;
+                }
+
+                LogTrace(_productName);
+
+                if (FAILED(MinimumDotnetVersionCheck(pICorProfilerInfoUnk))) {
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
@@ -211,7 +236,7 @@ namespace Profiler {
                 this->SetMethodRewriter(methodRewriter);
 
                 LogTrace("Checking to see if we should instrument this process.");
-                auto forceProfiling = _systemCalls->TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
+                auto forceProfiling = _systemCalls->GetForceProfiling();
                 auto processPath = GetAndTransformProcessPath();
                 auto commandLine = _systemCalls->GetProgramCommandLine();
                 auto appPoolId = GetAppPoolId(_systemCalls);
@@ -221,7 +246,7 @@ namespace Profiler {
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
-        _functionResolver = std::make_shared<FunctionResolver>(_corProfilerInfo4);
+                _functionResolver = std::make_shared<FunctionResolver>(_corProfilerInfo4);
 
                 ConfigureEventMask(pICorProfilerInfoUnk);
 
@@ -241,7 +266,10 @@ namespace Profiler {
             return eventMask;
         }
 
-        virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t commandLine, xstring_t appPoolId) = 0;
+        bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t commandLine, xstring_t appPoolId)
+        {
+            return _isCoreClr ? configuration->ShouldInstrumentNetCore(processPath, appPoolId, commandLine) : configuration->ShouldInstrumentNetFramework(processPath, appPoolId);
+        }
 
         virtual void ConfigureEventMask(IUnknown*) = 0;
 
@@ -752,7 +780,7 @@ namespace Profiler {
         {
             //This will pull the app pool name out of instances of IIS > 5.1
             //For more information see http://msdn.microsoft.com/en-us/library/ms524602(v=vs.90).aspx
-            auto appPoolId = systemCalls->TryGetEnvironmentVariable(_X("APP_POOL_ID"));
+            auto appPoolId = systemCalls->GetAppPoolId();
             if (appPoolId == nullptr) {
                 return _X("");
             } else {
@@ -836,7 +864,7 @@ namespace Profiler {
 
         static std::unique_ptr<xstring_t> TryGetNewRelicHomeFromEnvironment(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
         {
-            return systemCalls->TryGetEnvironmentVariable(systemCalls->GetNewRelicHomePath());
+            return systemCalls->GetNewRelicHomePath();
         }
 
         static xstring_t GetNewRelicHomePath(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
@@ -981,19 +1009,20 @@ namespace Profiler {
 
         std::unique_ptr<xstring_t> GetAgentCoreDllPath()
         {
-            auto nrInstallPathEnvVar = _systemCalls->GetNewRelicInstallPath();
-            auto nrHomeEnvVar = _systemCalls->GetNewRelicHomePath();
             auto runtimeDirectoryName = GetRuntimeExtensionsDirectoryName();
 
-            auto maybeCorePath = TryGetCorePathFromBasePath(_systemCalls->TryGetEnvironmentVariable(nrInstallPathEnvVar), runtimeDirectoryName);
+            auto maybeCorePath = TryGetCorePathFromBasePath(_systemCalls->GetNewRelicInstallPath(), runtimeDirectoryName);
             if (maybeCorePath != nullptr)
                 return maybeCorePath;
 
-            maybeCorePath = TryGetCorePathFromBasePath(_systemCalls->TryGetEnvironmentVariable(nrHomeEnvVar), runtimeDirectoryName);
+            maybeCorePath = TryGetCorePathFromBasePath(_systemCalls->GetNewRelicHomePath(), runtimeDirectoryName);
             if (maybeCorePath != nullptr)
                 return maybeCorePath;
 
-            LogError(L"Unable to find ", nrInstallPathEnvVar, L" or ", nrHomeEnvVar, L" environment variables.  Aborting instrumentation.");
+            auto homeEnvVar = _systemCalls->GetNewRelicHomePathVariable();
+            auto installEnvVar = _systemCalls->GetNewRelicInstallPathVariable();
+
+            LogError(L"Unable to find ", homeEnvVar, L" or ", installEnvVar, L" environment variables.  Aborting instrumentation.");
             return nullptr;
         }
 
@@ -1104,7 +1133,7 @@ namespace Profiler {
 
         void DelayProfilerAttach()
         {
-            auto profilerDelay = _systemCalls->TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_DELAY_IN_SEC"));
+            auto profilerDelay = _systemCalls->GetProfilerDelay();
             if (profilerDelay != nullptr) {
                 auto seconds = xstoi(*profilerDelay);
                 std::this_thread::sleep_for(std::chrono::seconds(seconds));

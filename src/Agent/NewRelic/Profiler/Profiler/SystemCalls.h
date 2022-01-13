@@ -19,40 +19,10 @@ namespace NewRelic { namespace Profiler
 {
     using NewRelic::Profiler::MethodRewriter::FilePaths;
 
-    struct SystemCalls : Logger::IFileDestinationSystemCalls, MethodRewriter::ISystemCalls
+    struct SystemCalls : MethodRewriter::ISystemCalls
     {
-        xstring_t _newRelicHomePath;
-        xstring_t _newRelicInstallPath;
-
-        SystemCalls(xstring_t newRelicHomePath, xstring_t newRelicInstallPath)
+        SystemCalls()
         {
-            _newRelicHomePath = newRelicHomePath;
-            _newRelicInstallPath = newRelicInstallPath;
-        }
-
-        virtual xstring_t GetNewRelicHomePath() override
-        {
-            return _newRelicHomePath;
-        }
-
-        virtual xstring_t GetNewRelicInstallPath() override
-        {
-            return _newRelicInstallPath;
-        }
-
-        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectoryEnvironment() override
-        {
-            return TryGetEnvironmentVariable(L"NEWRELIC_PROFILER_LOG_DIRECTORY");
-        }
-
-        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectoryEnvironment() override
-        {
-            return TryGetEnvironmentVariable(L"NEWRELIC_LOG_DIRECTORY");
-        }
-
-        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevelEnvironment() override
-        {
-            return TryGetEnvironmentVariable(L"NEWRELIC_LOG_LEVEL");
         }
 
         virtual std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName) override

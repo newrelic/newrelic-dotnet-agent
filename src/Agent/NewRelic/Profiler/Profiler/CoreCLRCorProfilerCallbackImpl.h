@@ -17,16 +17,9 @@ namespace NewRelic { namespace Profiler {
 
     public:
         CoreCLRCorProfilerCallbackImpl()
-            : ICorProfilerCallbackBase(
-#ifdef PAL_STDCPP_COMPAT
-                  std::make_shared<SystemCalls>()
-#else
-                  std::make_shared<SystemCalls>(_X("CORECLR_NEWRELIC_HOME"), _X("NEWRELIC_INSTALL_PATH"))
-#endif
-              )
+            : ICorProfilerCallbackBase()
         {
             GetSingletonish() = this;
-            _productName = _X("New Relic .NET CoreCLR Agent");
         }
 
         ~CoreCLRCorProfilerCallbackImpl()
@@ -54,11 +47,6 @@ namespace NewRelic { namespace Profiler {
                 LogDebug(L"Calling SetEventMask2().");
                 ThrowOnError(_corProfilerInfo5->SetEventMask2, _eventMask, COR_PRF_HIGH_DISABLE_TIERED_COMPILATION);
             }
-        }
-
-        virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t commandLine, xstring_t appPoolId) override
-        {
-            return configuration->ShouldInstrumentNetCore(processPath, appPoolId, commandLine);
         }
 
         virtual xstring_t GetRuntimeExtensionsDirectoryName() override
