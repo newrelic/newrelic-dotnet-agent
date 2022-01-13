@@ -76,22 +76,22 @@ namespace NewRelic { namespace Profiler { namespace Logger { namespace Test
             else return L"C:\\Common\\AppData\\FolderPath";
         }
 
-        virtual std::wstring GetNewRelicHomePathEnvVar() override
+        virtual std::unique_ptr<xstring_t> GetNewRelicHomePath() override
         {
-            return L"NEWRELIC_HOME";
+            return TryGetEnvironmentVariable(L"NEWRELIC_HOME");
         }
 
-        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectoryEnvironment() override
+        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectory() override
         {
             return TryGetEnvironmentVariable(L"NEWRELIC_PROFILER_LOG_DIRECTORY");
         }
 
-        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectoryEnvironment() override
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectory() override
         {
             return TryGetEnvironmentVariable(L"NEWRELIC_LOG_DIRECTORY");
         }
 
-        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevelEnvironment() override
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevel() override
         {
             return TryGetEnvironmentVariable(L"NEWRELIC_LOG_LEVEL");
         }

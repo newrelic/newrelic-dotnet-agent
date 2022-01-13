@@ -77,9 +77,10 @@ namespace Profiler {
 #endif
 
     public:
-        CorProfilerCallbackImpl()
+        ICorProfilerCallbackBase()
             : _referenceCount(0)
         {
+            _systemCalls = std::make_shared<SystemCalls>();
             GetSingletonish() = this;
         }
 
@@ -281,7 +282,7 @@ namespace Profiler {
                 }
 
                 // set systemCalls and productName
-                _systemCalls->SetNewRelicHomeAndInstallPathEnvVar(_isCoreClr);
+                _systemCalls->SetCoreAgent(_isCoreClr);
                 _productName = _isCoreClr ? _X("New Relic .NET CoreCLR Agent") : _X("New Relic .NET Agent");
 
                 HRESULT loggingInitResult = InitializeLogging();
@@ -311,7 +312,7 @@ namespace Profiler {
                 this->SetMethodRewriter(methodRewriter);
 
                 LogTrace("Checking to see if we should instrument this process.");
-                auto forceProfiling = _systemCalls->TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
+                auto forceProfiling = _systemCalls->GetForceProfiling();
                 auto processPath = GetAndTransformProcessPath();
                 auto commandLine = _systemCalls->GetProgramCommandLine();
                 auto appPoolId = GetAppPoolId(_systemCalls);
@@ -923,7 +924,7 @@ namespace Profiler {
         {
             //This will pull the app pool name out of instances of IIS > 5.1
             //For more information see http://msdn.microsoft.com/en-us/library/ms524602(v=vs.90).aspx
-            auto appPoolId = systemCalls->TryGetEnvironmentVariable(_X("APP_POOL_ID"));
+            auto appPoolId = systemCalls->GetAppPoolId();
             if (appPoolId == nullptr) {
                 return _X("");
             } else {
@@ -1007,7 +1008,7 @@ namespace Profiler {
 
         static std::unique_ptr<xstring_t> TryGetNewRelicHomeFromEnvironment(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
         {
-            return systemCalls->TryGetEnvironmentVariable(systemCalls->GetNewRelicHomePathEnvVar());
+            return systemCalls->GetNewRelicHomePath();
         }
 
         static xstring_t GetNewRelicHomePath(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
@@ -1152,19 +1153,20 @@ namespace Profiler {
 
         std::unique_ptr<xstring_t> GetAgentCoreDllPath()
         {
-            auto nrInstallPathEnvVar = _systemCalls->GetNewRelicInstallPathEnvVar();
-            auto nrHomeEnvVar = _systemCalls->GetNewRelicHomePathEnvVar();
             auto runtimeDirectoryName = GetRuntimeExtensionsDirectoryName();
 
-            auto maybeCorePath = TryGetCorePathFromBasePath(_systemCalls->TryGetEnvironmentVariable(nrInstallPathEnvVar), runtimeDirectoryName);
+            auto maybeCorePath = TryGetCorePathFromBasePath(_systemCalls->GetNewRelicInstallPath(), runtimeDirectoryName);
             if (maybeCorePath != nullptr)
                 return maybeCorePath;
 
-            maybeCorePath = TryGetCorePathFromBasePath(_systemCalls->TryGetEnvironmentVariable(nrHomeEnvVar), runtimeDirectoryName);
+            maybeCorePath = TryGetCorePathFromBasePath(_systemCalls->GetNewRelicHomePath(), runtimeDirectoryName);
             if (maybeCorePath != nullptr)
                 return maybeCorePath;
 
-            LogError(L"Unable to find ", nrInstallPathEnvVar, L" or ", nrHomeEnvVar, L" environment variables.  Aborting instrumentation.");
+            auto homeEnvVar = _systemCalls->GetNewRelicHomePathVariable();
+            auto installEnvVar = _systemCalls->GetNewRelicInstallPathVariable();
+
+            LogError(L"Unable to find ", homeEnvVar, L" or ", installEnvVar, L" environment variables.  Aborting instrumentation.");
             return nullptr;
         }
 
@@ -1275,7 +1277,7 @@ namespace Profiler {
 
         void DelayProfilerAttach()
         {
-            auto profilerDelay = _systemCalls->TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_DELAY_IN_SEC"));
+            auto profilerDelay = _systemCalls->GetProfilerDelay();
             if (profilerDelay != nullptr) {
                 auto seconds = xstoi(*profilerDelay);
                 std::this_thread::sleep_for(std::chrono::seconds(seconds));
