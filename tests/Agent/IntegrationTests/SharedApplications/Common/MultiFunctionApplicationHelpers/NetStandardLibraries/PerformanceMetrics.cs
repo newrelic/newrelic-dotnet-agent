@@ -15,9 +15,6 @@ namespace MultiFunctionApplicationHelpers.Libraries
         [LibraryMethod]
         public static void Test(int countMaxWorkerThreads, int countMaxCompletionThreads)
         {
-            // We just need atleast one known GC invocation to verify our metrics.
-            GC.Collect();
-
             Logger.Info($"Setting Threadpool Max Threads: {countMaxWorkerThreads} worker/{countMaxCompletionThreads} completion.");
 
             ThreadPool.SetMaxThreads(countMaxWorkerThreads, countMaxCompletionThreads);
@@ -35,7 +32,10 @@ namespace MultiFunctionApplicationHelpers.Libraries
         {
             Logger.Info("Instrumented Method to start the Agent");
 
-            //Get everything started up and time for initial Sample().
+            // We need atleast one known GC invocation to verify our GC metrics.
+            GC.Collect();
+
+            // Get everything started up and time for initial Sample().
             Thread.Sleep(TimeSpan.FromSeconds(10));
         }
     }

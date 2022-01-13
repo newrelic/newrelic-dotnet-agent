@@ -75,9 +75,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
     }
 
     [NetCoreTest]
-    public class DotNetPerfMetricsTestsCoreLatest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCore31>
+    public class DotNetPerfMetricsTestsCoreLatest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public DotNetPerfMetricsTestsCoreLatest(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public DotNetPerfMetricsTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
@@ -146,9 +146,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
             Fixture.TestLogger = output;
 
             Fixture.AddCommand($"PerformanceMetrics Test {THREADPOOL_WORKER_MAX} {THREADPOOL_COMPLETION_MAX}");
-            Fixture.AddCommand($"RootCommands DelaySeconds 70"); // ???
-
-            Fixture.SetTimeout(System.TimeSpan.FromSeconds(120));
 
             Fixture.Actions
             (
@@ -170,10 +167,10 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 
             TestMetrics("GC", metricNames, ExpectedMetricNames_GC);
 
-            var sumOfAllGcCallCounts = metrics.Where(x => x.MetricSpec.Name == "GC/Gen0/Collections")
+            var sumOfAllGcGen0Collections = metrics.Where(x => x.MetricSpec.Name == "GC/Gen0/Collections")
                 .Select(x => x.Values.CallCount).Aggregate((x, y) => x + y);
 
-            Assert.NotEqual(0UL, sumOfAllGcCallCounts);
+            Assert.NotEqual(0UL, sumOfAllGcGen0Collections);
         }
 
         [Fact]
