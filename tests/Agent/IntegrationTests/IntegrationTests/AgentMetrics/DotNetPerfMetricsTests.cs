@@ -20,58 +20,35 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         {
         }
 
-        protected override string[] ExpectedMetricNames_GC => new string[]
-        {
-                "GC/Gen0/Size",
-                "GC/Gen0/Promoted",
-                "GC/Gen1/Size",
-                "GC/Gen1/Promoted",
-                "GC/Gen2/Size",
-                "GC/LOH/Size",
-                "GC/Handles",
-                "GC/Induced",
-                "GC/PercentTimeInGC",
-                "GC/Gen0/Collections",
-                "GC/Gen1/Collections",
-                "GC/Gen2/Collections"
-        };
-
-        protected override string[] ExpectedMetricNames_Memory => new string[]
-        {
-            "Memory/Physical",
-            "Memory/WorkingSet"
-        };
-
-        protected override string[] ExpectedMetricNames_CPU => new string[]
-        {
-            "CPU/User/Utilization",
-            "CPU/User Time"
-        };
+        protected override string[] ExpectedMetricNames_GC => ExpectedMetricNames_GC_NetFramework;
     }
 
     [NetCoreTest]
     public class DotNetPerfMetricsTestsCore22 : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCore22>
     {
+        // We specifically need to use .NET Core 2.2 because we want to validate that we don't try to get
+        // GC data that isn't available
         public DotNetPerfMetricsTestsCore22(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
 
+        // GC metrics don't work in .NET Core <3.0
         protected override string[] ExpectedMetricNames_GC => new string[]
         {
         };
 
-        protected override string[] ExpectedMetricNames_Memory => new string[]
-        {
-            "Memory/Physical",
-            "Memory/WorkingSet"
-        };
+    }
 
-        protected override string[] ExpectedMetricNames_CPU => new string[]
+    [NetCoreTest]
+    public class DotNetPerfMetricsTestsCore31 : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCore31>
+    {
+        public DotNetPerfMetricsTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output)
         {
-            "CPU/User/Utilization",
-            "CPU/User Time"
-        };
+        }
+
+        protected override string[] ExpectedMetricNames_GC => ExpectedMetricNames_GC_NetCore;
     }
 
     [NetCoreTest]
@@ -82,36 +59,10 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         {
         }
 
-        protected override string[] ExpectedMetricNames_GC => new string[]
-        {
-            "GC/Gen0/Size",
-            "GC/Gen0/Promoted",
-            "GC/Gen1/Size",
-            "GC/Gen1/Promoted",
-            "GC/Gen2/Size",
-            "GC/Gen2/Survived",
-            "GC/LOH/Size",
-            "GC/LOH/Survived",
-            "GC/Handles",
-            "GC/Induced",
-            "GC/Gen0/Collections",
-            "GC/Gen1/Collections",
-            "GC/Gen2/Collections",
-        };
-
-        protected override string[] ExpectedMetricNames_Memory => new string[]
-        {
-            "Memory/Physical",
-            "Memory/WorkingSet"
-        };
-
-        protected override string[] ExpectedMetricNames_CPU => new string[]
-        {
-            "CPU/User/Utilization",
-            "CPU/User Time"
-        };
+        protected override string[] ExpectedMetricNames_GC => ExpectedMetricNames_GC_NetCore;
     }
 
+    
     public abstract class DotNetPerfMetricsTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private const ulong COUNT_GC_INDUCED = 5;
@@ -126,8 +77,47 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         protected readonly TFixture Fixture;
 
         protected abstract string[] ExpectedMetricNames_GC { get; }
-        protected abstract string[] ExpectedMetricNames_Memory { get; }
-        protected abstract string[] ExpectedMetricNames_CPU { get; }
+        protected string[] ExpectedMetricNames_GC_NetFramework => new string[]
+        {
+            "GC/Gen0/Size",
+            "GC/Gen0/Promoted",
+            "GC/Gen1/Size",
+            "GC/Gen1/Promoted",
+            "GC/Gen2/Size",
+            "GC/LOH/Size",
+            "GC/Handles",
+            "GC/Induced",
+            "GC/PercentTimeInGC",
+            "GC/Gen0/Collections",
+            "GC/Gen1/Collections",
+            "GC/Gen2/Collections"
+        };
+        protected string[] ExpectedMetricNames_GC_NetCore => new string[]
+        {
+            "GC/Gen0/Size",
+            "GC/Gen0/Promoted",
+            "GC/Gen1/Size",
+            "GC/Gen1/Promoted",
+            "GC/Gen2/Size",
+            "GC/Gen2/Survived",
+            "GC/LOH/Size",
+            "GC/LOH/Survived",
+            "GC/Handles",
+            "GC/Induced",
+            "GC/Gen0/Collections",
+            "GC/Gen1/Collections",
+            "GC/Gen2/Collections"
+        };
+        protected string[] ExpectedMetricNames_Memory => new string[]
+        {
+            "Memory/Physical",
+            "Memory/WorkingSet"
+        };
+        protected string[] ExpectedMetricNames_CPU => new string[]
+        {
+            "CPU/User/Utilization",
+            "CPU/User Time"
+        };
 
         protected string[] ExpectedMetricNames_Threadpool => new string[]
         {
