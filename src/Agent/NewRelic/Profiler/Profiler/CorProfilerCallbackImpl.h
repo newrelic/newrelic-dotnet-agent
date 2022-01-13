@@ -77,7 +77,7 @@ namespace Profiler {
 #endif
 
     public:
-        ICorProfilerCallbackBase()
+        CorProfilerCallbackImpl()
             : _referenceCount(0)
         {
             _systemCalls = std::make_shared<SystemCalls>();
