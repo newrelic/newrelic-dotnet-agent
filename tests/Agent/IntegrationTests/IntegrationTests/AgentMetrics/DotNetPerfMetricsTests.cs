@@ -167,11 +167,14 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 
             TestMetrics("GC", metricNames, ExpectedMetricNames_GC);
 
-            // There was an issue where GC metrics were being sent without actually being hooked up to any data, this check verifies that we are getting any data at all
-            var sumOfAllGcGen0Collections = metrics.Where(x => x.MetricSpec.Name == "GC/Gen0/Collections")
-                .Select(x => x.Values.CallCount).Aggregate((x, y) => x + y);
+            if (ExpectedMetricNames_GC.Length > 0)
+            {
+                // There was an issue where GC metrics were being sent without actually being hooked up to any data, this check verifies that we are getting any data at all
+                var sumOfAllGcGen0Collections = metrics.Where(x => x.MetricSpec.Name == "GC/Gen0/Collections")
+                    .Select(x => x.Values.CallCount).Aggregate((x, y) => x + y);
 
-            Assert.NotEqual(0UL, sumOfAllGcGen0Collections);
+                Assert.NotEqual(0UL, sumOfAllGcGen0Collections);
+            }
         }
 
         [Fact]
