@@ -310,10 +310,8 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 serverConfiguration.RpmConfig = new AgentConfig();
             }
-            else
-            {
-                serverConfiguration.ServerSideConfigurationEnabled = JsonContainsNonNullProperty(json, "agent_config");
-            }
+
+            serverConfiguration.ServerSideConfigurationEnabled = JsonContainsNonNullProperty(json, "agent_config");
 
             return serverConfiguration;
         }

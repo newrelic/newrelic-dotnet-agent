@@ -136,13 +136,13 @@ namespace NewRelic.Agent.Core.Samplers
 
     public class GCEventsListener : SampledEventListener<Dictionary<GCSampleType, float>>
     {
-        //The Microsoft EventID to listen to, corresponds to "Microsoft-Windows-DotNETRuntime"
-        public static readonly Guid DotNetEventSourceID = Guid.Parse("5e5bb766-bbfc-5662-0548-1d44fad9bb56");
+        //The Microsoft Event Source to listen to "Microsoft-Windows-DotNETRuntime"
+        public static readonly string DotNetEventSourceName = "Microsoft-Windows-DotNETRuntime";
 
         /// <summary>
         /// Allows us to mainpulate the event source ID for testing purposes
         /// </summary>
-        public static Guid EventSourceIDToMonitor = DotNetEventSourceID;
+        public static string EventSourceNameToMonitor = DotNetEventSourceName;
 
         public const int GCKeyword = 0x1;
         public const int EventID_GCStart = 1;
@@ -174,7 +174,8 @@ namespace NewRelic.Agent.Core.Samplers
 
         protected override void OnEventSourceCreated(EventSource eventSource)
         {
-            if (eventSource.Guid == EventSourceIDToMonitor)
+
+            if (eventSource.Name == EventSourceNameToMonitor)
             {
                 _eventSource = eventSource;
                 StartListening();
