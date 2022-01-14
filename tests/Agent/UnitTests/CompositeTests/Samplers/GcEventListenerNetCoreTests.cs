@@ -16,14 +16,14 @@ namespace NewRelic.Agent.Core.Samplers
         [SetUp]
         public void SetUp()
         {
-            GCEventsListener.EventSourceIDToMonitor = TestGCEventSource.EventSourceID;
+            GCEventsListener.EventSourceNameToMonitor = TestGCEventSource.EventSourceName;
         }
 
 
         [TearDown]
         public void TearDown()
         {
-            GCEventsListener.EventSourceIDToMonitor = GCEventsListener.DotNetEventSourceID;
+            GCEventsListener.EventSourceNameToMonitor = GCEventsListener.DotNetEventSourceName;
         }
 
         [Test]
@@ -209,10 +209,11 @@ namespace NewRelic.Agent.Core.Samplers
         }
 
 
-        [EventSource(Guid = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA")]
+        [EventSource(Guid = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA", Name = "TestGCEventSource")]
         public class TestGCEventSource : EventSource
         {
             public static readonly Guid EventSourceID = Guid.Parse("AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA");
+            public static readonly string EventSourceName = "TestGCEventSource";
 
             public const int GCStartReasonCode_SmallObjectHeapAlloc = 0x0;
             public const int GCStartReasonCode_Induced = 0x1;
