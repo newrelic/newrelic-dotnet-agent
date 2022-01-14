@@ -24,11 +24,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
     }
 
     [NetCoreTest]
-    public class DotNetPerfMetricsTestsCore22 : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCore22>
+    public class DotNetPerfMetricsTestsCore21 : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCore21>
     {
-        // We specifically need to use .NET Core 2.2 because we want to validate that we don't try to get
-        // GC data that isn't available
-        public DotNetPerfMetricsTestsCore22(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+        public DotNetPerfMetricsTestsCore21(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
