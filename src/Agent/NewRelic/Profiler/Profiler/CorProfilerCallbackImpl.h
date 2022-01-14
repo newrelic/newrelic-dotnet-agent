@@ -15,7 +15,6 @@
 #include "../ThreadProfiler/ThreadProfiler.h"
 #include "Function.h"
 #include "FunctionResolver.h"
-#include "ICorProfilerCallbackBase.h"
 #include "Win32Helpers.h"
 #include "guids.h"
 #include <fstream>
@@ -28,6 +27,8 @@
 #ifdef PAL_STDCPP_COMPAT
 #include "UnixSystemCalls.h"
 #else
+#include "../ModuleInjector/ModuleInjector.h"
+#include "Module.h"
 #include "SystemCalls.h"
 #include <shellapi.h>
 #endif
@@ -65,20 +66,27 @@ namespace Profiler {
 
     typedef std::set<xstring_t> FilePaths;
 
-    class ICorProfilerCallbackBase : public ICorProfilerCallback4 {
+    class CorProfilerCallbackImpl : public ICorProfilerCallback4 {
 
     private:
         std::atomic<int> _referenceCount;
 
+#ifndef PAL_STDCPP_COMPAT
+        std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
+#endif
+
     public:
-        ICorProfilerCallbackBase()
+        CorProfilerCallbackImpl()
             : _referenceCount(0)
         {
             _systemCalls = std::make_shared<SystemCalls>();
+            GetSingletonish() = this;
         }
 
-        virtual ~ICorProfilerCallbackBase()
+        ~CorProfilerCallbackImpl()
         {
+            if (GetSingletonish() == this)
+                GetSingletonish() = nullptr;
         }
 
         // Unimplemented ICorProfilerCallback
@@ -91,7 +99,6 @@ namespace Profiler {
         virtual HRESULT __stdcall AssemblyUnloadStarted(AssemblyID assemblyId) override { return S_OK; }
         virtual HRESULT __stdcall AssemblyUnloadFinished(AssemblyID assemblyId, HRESULT hrStatus) override { return S_OK; }
         virtual HRESULT __stdcall ModuleLoadStarted(ModuleID moduleId) override { return S_OK; }
-        virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus) override { return S_OK; }
         virtual HRESULT __stdcall ModuleUnloadStarted(ModuleID moduleId) override { return S_OK; }
         virtual HRESULT __stdcall ModuleUnloadFinished(ModuleID moduleId, HRESULT hrStatus) override { return S_OK; }
         virtual HRESULT __stdcall ModuleAttachedToAssembly(ModuleID moduleId, AssemblyID AssemblyId) override { return S_OK; }
@@ -261,8 +268,83 @@ namespace Profiler {
             }
         }
 
+        virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus) override
+        {
+            if (_isCoreClr)
+            {
+                if (SUCCEEDED(hrStatus)) {
+                    try {
+                        auto assemblyName = GetAssemblyName(moduleId);
+
+                        if (GetMethodRewriter()->ShouldInstrumentAssembly(assemblyName)) {
+                            LogTrace("Assembly module loaded: ", assemblyName);
+
+                            auto instrumentationPoints = std::make_shared<Configuration::InstrumentationPointSet>(GetMethodRewriter()->GetAssemblyInstrumentation(assemblyName));
+                            auto methodDefs = GetMethodDefs(moduleId, instrumentationPoints);
+
+                            if (methodDefs != nullptr) {
+                                RejitModuleFunctions(moduleId, methodDefs);
+                            }
+                        }
+                    }
+                    catch (...) {
+                    }
+                }
+                return S_OK;
+            }
+            else
+            {
+#ifndef PAL_STDCPP_COMPAT
+
+                // if the module did not load correctly then we don't want to mess with it
+                if (FAILED(hrStatus))
+                {
+                    return hrStatus;
+                }
+
+                LogTrace("Module Injection Started. ", moduleId);
+
+                ModuleInjector::IModulePtr module;
+                try
+                {
+                    module = std::make_shared<Module>(_corProfilerInfo4, moduleId);
+                }
+                catch (const NewRelic::Profiler::MessageException& exception)
+                {
+                    (void)exception;
+                    return S_OK;
+                }
+                catch (...)
+                {
+                    LogError(L"An exception was thrown while getting details about a module.");
+                    return E_FAIL;
+                }
+
+                try
+                {
+                    _moduleInjector->InjectIntoModule(*module);
+                }
+                catch (...)
+                {
+                    LogError(L"An exception was thrown while attempting to inject into a module.");
+                    return E_FAIL;
+                }
+
+                LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
+#endif
+                return S_OK;
+            }
+        }
+
+
         virtual DWORD OverrideEventMask(DWORD eventMask)
         {
+#ifndef PAL_STDCPP_COMPAT
+            if (!_isCoreClr)
+            {
+                _moduleInjector.reset(new ModuleInjector::ModuleInjector());
+            }
+#endif
             return eventMask;
         }
 
@@ -271,11 +353,73 @@ namespace Profiler {
             return _isCoreClr ? configuration->ShouldInstrumentNetCore(processPath, appPoolId, commandLine) : configuration->ShouldInstrumentNetFramework(processPath, appPoolId);
         }
 
-        virtual void ConfigureEventMask(IUnknown*) = 0;
+        virtual void ConfigureEventMask(IUnknown* pICorProfilerInfoUnk)
+        {
+            if (_isCoreClr)
+            {
+                // register for events that we are interested in getting callbacks for
+// SetEventMask2 requires ICorProfilerInfo5. It allows setting the high-order bits of the profiler event mask.
+// 0x8 = COR_PRF_HIGH_DISABLE_TIERED_COMPILATION <- this was introduced in ICorProfilerCallback9 which we're not currently implementing
+// see this PR: https://github.com/dotnet/coreclr/pull/14643/files#diff-e7d550d94de30cdf5e7f3a25647a2ae1R626
+// Just passing in the hardcoded 0x8 seems to actually disable tiered compilation,
+// but we should see about actually referencing and implementing ICorProfilerCallback9
 
-        virtual xstring_t GetRuntimeExtensionsDirectoryName() = 0;
+                CComPtr<ICorProfilerInfo5> _corProfilerInfo5;
+                const DWORD COR_PRF_HIGH_DISABLE_TIERED_COMPILATION = 0x8;
 
-        virtual HRESULT MinimumDotnetVersionCheck(IUnknown*) = 0;
+                if (FAILED(pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo5), (void**)&_corProfilerInfo5))) {
+                    LogDebug(L"Calling SetEventMask().");
+                    ThrowOnError(_corProfilerInfo4->SetEventMask, _eventMask);
+                }
+                else {
+                    LogDebug(L"Calling SetEventMask2().");
+                    ThrowOnError(_corProfilerInfo5->SetEventMask2, _eventMask, COR_PRF_HIGH_DISABLE_TIERED_COMPILATION);
+                }
+            }
+            else
+            {
+                // register for events that we are interested in getting callbacks for
+                LogDebug(L"Calling SetEventMask().");
+                ThrowOnError(_corProfilerInfo4->SetEventMask, _eventMask);
+            }
+        }
+
+        virtual xstring_t GetRuntimeExtensionsDirectoryName()
+        {
+            if (_isCoreClr)
+            {
+                return _X("netcore");
+            }
+            else
+            {
+                return _X("netframework");
+            }
+        }
+
+        virtual HRESULT MinimumDotnetVersionCheck(IUnknown* pICorProfilerInfoUnk)
+        {
+            if (_isCoreClr)
+            {
+                CComPtr<ICorProfilerInfo8> temp;
+                HRESULT result = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo8), (void**)&temp);
+                if (FAILED(result)) {
+                    LogError(_X(".NET Core 2.0 or greater required. Profiler not attaching."));
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+                return S_OK;
+            }
+            else
+            {
+                CComPtr<ICorProfilerInfo4> temp;
+                HRESULT interfaceCheckResult = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo4), (void**)&temp);
+                if (FAILED(interfaceCheckResult)) {
+                    LogError(_X(".NET Framework 4.5 is required.  Detaching New Relic profiler."));
+                    return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                }
+
+                return S_OK;
+            }
+        }
 
         virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject) override
         {
@@ -485,7 +629,7 @@ namespace Profiler {
             auto oldInstrumentationByAssembly = GroupByAssemblyName(oldInstrumentationPoints);
             auto newInstrumentationByAssembly = GroupByAssemblyName(instrumentationConfiguration->GetInstrumentationPoints());
 
-            std::thread t1(&NewRelic::Profiler::ICorProfilerCallbackBase::RejitInstrumentationPoints, this, oldInstrumentationByAssembly, newInstrumentationByAssembly);
+            std::thread t1(&NewRelic::Profiler::CorProfilerCallbackImpl::RejitInstrumentationPoints, this, oldInstrumentationByAssembly, newInstrumentationByAssembly);
 
             // block the calling managed thread until the worker thread has finished
             t1.join();
@@ -674,9 +818,9 @@ namespace Profiler {
         }
 
         // there is only one by convention, but that is not guaranteed anywhere
-        static ICorProfilerCallbackBase*& GetSingletonish()
+        static CorProfilerCallbackImpl*& GetSingletonish()
         {
-            static ICorProfilerCallbackBase* s_profiler = nullptr;
+            static CorProfilerCallbackImpl* s_profiler = nullptr;
             return s_profiler;
         }
 
@@ -1145,7 +1289,7 @@ namespace Profiler {
     extern "C" __declspec(dllexport) HRESULT __cdecl InstrumentationRefresh()
     {
         LogInfo("Refreshing instrumentation");
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError("Unable to refresh instrumentation because the profiler reference is invalid.");
             return E_FAIL;
@@ -1156,7 +1300,7 @@ namespace Profiler {
     extern "C" __declspec(dllexport) HRESULT __cdecl AddCustomInstrumentation(const char* fileName, const char* xml)
     {
         LogTrace("Adding custom instrumentation");
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError("Unable to add custom instrumentation because the profiler reference is invalid.");
             return E_FAIL;
@@ -1167,7 +1311,7 @@ namespace Profiler {
     extern "C" __declspec(dllexport) HRESULT __cdecl ApplyCustomInstrumentation()
     {
         LogTrace("Applying custom instrumentation");
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError("Unable to apply custom instrumentation because the profiler reference is invalid.");
             return E_FAIL;
@@ -1177,7 +1321,7 @@ namespace Profiler {
 
     extern "C" __declspec(dllexport) void __cdecl ReleaseProfile() noexcept
     {
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError(L"ReleaseProfile: entry point called before the profiler has been initialized");
             return;
@@ -1189,7 +1333,7 @@ namespace Profiler {
     // failureCallback error codes are 1 - stack too deep, 2 - no Stack Snapshooter supplied, or error codes returned by DoStackSnapshot
     extern "C" __declspec(dllexport) HRESULT __cdecl RequestProfile(void** snapshots, int* length) noexcept
     {
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError(L"RequestProfile: entry point called before the profiler has been initialized");
             return E_UNEXPECTED;
@@ -1201,7 +1345,7 @@ namespace Profiler {
     // called by managed code to get function information from function IDs
     extern "C" __declspec(dllexport) HRESULT __cdecl RequestFunctionNames(UINT_PTR* functionIds, int length, void** results) noexcept
     {
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError(L"RequestFunctionNames: entry point called before the profiler has been initialized");
             return E_UNEXPECTED;
@@ -1211,7 +1355,7 @@ namespace Profiler {
 
     extern "C" __declspec(dllexport) void __cdecl ShutdownThreadProfiler() noexcept
     {
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError(L"ShutdownThreadProfiler: entry point called before the profiler has been initialized");
             return;
@@ -1222,7 +1366,7 @@ namespace Profiler {
     //This method is used only to verify thread profiling.  It is only used by tests in ProfiledMethod project.
     extern "C" __declspec(dllexport) uintptr_t __cdecl GetCurrentExecutionEngineThreadId()
     {
-        auto profiler = ICorProfilerCallbackBase::GetSingletonish();
+        auto profiler = CorProfilerCallbackImpl::GetSingletonish();
         if (profiler == nullptr) {
             LogError(L"GetCurrentExecutionEngineThreadId: entry point called before the profiler has been initialized");
             return 0;
