@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] changes
 ### New Features
 * Allows NewRelicQueryName to be specified for SQL, to implement [this suggestion](https://discuss.newrelic.com/t/provide-a-pattern-to-explicitly-name-sql-queries-displayed-in-databases-dashboard/78755). Thanks to community contributor @kevinpohlmeier for the implementation. ([#799](https://github.com/newrelic/newrelic-dotnet-agent/pull/799))
+
 ### Fixes
+* Resolves an issue where GC metrics were not being properly captured for .NET 6 applications ([#874](https://github.com/newrelic/newrelic-dotnet-agent/pull/874))
+
 
 ## [9.3.0] - 2022-01-04
 ### New Features
