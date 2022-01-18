@@ -74,6 +74,7 @@ namespace NewRelic.Parsing
         private const string SingleSqlStatementPhrase = @"^[^;]*[\s;]*$";
 
         private const string CommentPhrase = @"/\*.*?\*/"; //The ? makes the searching lazy
+        private const string QueryNamePhrase = @"/\* *NewRelicQueryName: *(.*?)\*/"; //The ? makes the searching lazy
         private const string LeadingSetPhrase = @"^(?:\s*\bset\b.+?\;)+(?!(\s*\bset\b))";
         private const string StartObjectNameSeparator = @"[\s\(\[`\""]*";
         private const string EndObjectNameSeparator = @"[\s\)\]`\""]*";
@@ -97,6 +98,7 @@ namespace NewRelic.Parsing
         private const string DeclareString = DeclarePhrase + VariableNamePhrase;
 
         private static readonly Regex CommentPattern = new Regex(CommentPhrase, RegexOptions.Compiled | RegexOptions.Singleline);
+        private static readonly Regex QueryNamePattern = new Regex(QueryNamePhrase, RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly Regex LeadingSetPattern = new Regex(LeadingSetPhrase, RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
         private static readonly Regex ValidMetricNameMatcher = new Regex(MetricNamePhrase, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex SingleSqlStatementMatcher = new Regex(SingleSqlStatementPhrase, PatternSwitches);
@@ -130,6 +132,9 @@ namespace NewRelic.Parsing
                     case CommandType.StoredProcedure:
                         return new ParsedSqlStatement(datastoreVendor, StringsHelper.FixDatabaseObjectName(commandText), "ExecuteProcedure");
                 }
+
+                var explicitModel = GetExplicitModel(commandText);
+
                 // Remove comments.
                 var statement = CommentPattern.Replace(commandText, string.Empty).TrimStart();
 
@@ -143,12 +148,23 @@ namespace NewRelic.Parsing
                     statement = LeadingSetPattern.Replace(statement, string.Empty).TrimStart();
                 }
 
-                return _statementParser(datastoreVendor, commandType, commandText, statement);
+                return _statementParser(datastoreVendor, commandType, commandText, statement, explicitModel);
             }
             catch
             {
                 return new ParsedSqlStatement(datastoreVendor, null, null);
             }
+        }
+
+        private static string GetExplicitModel(string commandText)
+        {
+            var match = QueryNamePattern.Match(commandText);
+            if (match.Success)
+            {
+                return match.Groups[1].Value.Trim();
+            }
+
+            return null;
         }
 
         public static bool IsValidName(string name)
@@ -207,17 +223,17 @@ namespace NewRelic.Parsing
                 new WaitforStatementParser().ParseStatement);
         }
 
-        private delegate ParsedSqlStatement ParseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string commandText, string statement);
+        private delegate ParsedSqlStatement ParseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string commandText, string statement, string explicitModel);
 
         private static ParseStatement CreateCompoundStatementParser(params ParseStatement[] parsers)
         {
             //The parsers params are used inside a return function that is referenced by a static class member.
             //This effectively makes theses parsers stay with agent entire time.
-            return (datastoreVendor, commandType, commandText, statement) =>
+            return (datastoreVendor, commandType, commandText, statement, explicitModel) =>
             {
                 foreach (var parser in parsers)
                 {
-                    var parsedStatement = parser(datastoreVendor, commandType, commandText, statement);
+                    var parsedStatement = parser(datastoreVendor, commandType, commandText, statement, explicitModel);
                     if (parsedStatement != null)
                     {
                         return parsedStatement;
@@ -247,7 +263,7 @@ namespace NewRelic.Parsing
                 _operations.Add(key);
             }
 
-            public virtual ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, string commandText, string statement)
+            public virtual ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, string commandText, string statement, string explicitModel)
             {
                 if (!string.IsNullOrEmpty(_shortcut) && !statement.StartsWith(_shortcut, StringComparison.CurrentCultureIgnoreCase))
                 {
@@ -280,7 +296,8 @@ namespace NewRelic.Parsing
                         model = "ParseError";
                     }
                 }
-                return CreateParsedDatabaseStatement(vendor, model);
+                
+                return CreateParsedDatabaseStatement(vendor, GetFullModel(model, explicitModel));
             }
 
             protected virtual bool IsValidModelName(string name)
@@ -299,12 +316,16 @@ namespace NewRelic.Parsing
             private static readonly Regex SelectMatcher = new Regex(@"^select\s+([^\s,]*).*", PatternSwitches);
             private static readonly Regex FromMatcher = new Regex(@"\s+from\s+", PatternSwitches);
 
-            public ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, string commandText, string statement)
+            public ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, string commandText, string statement, string explicitModel)
             {
                 var matcher = SelectMatcher.Match(statement);
                 if (matcher.Success)
                 {
-                    return FromMatcher.Match(statement).Success ? new ParsedSqlStatement(vendor, "(subquery)", "select") : new ParsedSqlStatement(vendor, "VARIABLE", "select");
+                    string model = FromMatcher.Match(statement).Success
+                        ? "(subquery)"
+                        : "VARIABLE";
+                    
+                    return new ParsedSqlStatement(vendor, GetFullModel(model, explicitModel), "select");
                 }
                 return null;
             }
@@ -439,6 +460,20 @@ namespace NewRelic.Parsing
         {
             //All single quotes in the string are replaced by two singe quotes as sql server doesn't parse single quotes in strings. 
             return "'" + str.Replace("'", "''") + "'";
+        }
+
+        private static string GetFullModel(string baseModel, string explicitModel)
+        {
+            if (explicitModel == null)
+            {
+                return baseModel;
+            }
+
+            // Forward slashes will cause the incorrect thing to be registered as the "operation".
+            // Change them to pipes. If the user doesn't like that, they can do their own replacement.
+            string escapedExplicitModel = explicitModel.Replace("/", "|");
+
+            return $"{baseModel} - [{escapedExplicitModel}]";
         }
     }
 }
