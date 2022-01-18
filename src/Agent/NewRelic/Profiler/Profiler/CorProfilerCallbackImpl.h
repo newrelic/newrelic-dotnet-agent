@@ -248,7 +248,7 @@ namespace Profiler {
                 auto commandLine = _systemCalls->GetProgramCommandLine();
                 auto appPoolId = GetAppPoolId(_systemCalls);
                 LogInfo(L"Command line: ", commandLine);
-                if (!forceProfiling && !ShouldInstrument(configuration, processPath, commandLine, appPoolId)) {
+                if (!forceProfiling && !configuration->ShouldInstrument(processPath, commandLine, appPoolId, _isCoreClr)) {
                     LogInfo("This process should not be instrumented, unloading profiler.");
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
@@ -346,11 +346,6 @@ namespace Profiler {
             }
 #endif
             return eventMask;
-        }
-
-        bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t commandLine, xstring_t appPoolId)
-        {
-            return _isCoreClr ? configuration->ShouldInstrumentNetCore(processPath, appPoolId, commandLine) : configuration->ShouldInstrumentNetFramework(processPath, appPoolId);
         }
 
         virtual void ConfigureEventMask(IUnknown* pICorProfilerInfoUnk)
