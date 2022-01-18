@@ -707,17 +707,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
             var traceParentHeaderValue = headers.Where(header => header.Key == TraceParentHeaderName).Select(header => header.Value).FirstOrDefault();
 
             var traceIdExpectedLength = 32;
-            var tracepararent = W3CTraceparent.GetW3CTraceParentFromHeader(traceParentHeaderValue);
+            var traceparent = W3CTraceparent.GetW3CTraceParentFromHeader(traceParentHeaderValue);
 
             var expectedTraceId = transaction.TraceId;
             expectedTraceId = expectedTraceId.PadLeft(traceIdExpectedLength, '0').ToLowerInvariant();
             var expectedParentId = expectedSpanGuid;
 
-            Assert.That(tracepararent.TraceId.Length == traceIdExpectedLength);
-            Assert.That(tracepararent.TraceId == expectedTraceId);
-            Assert.That(tracepararent.Version == 0);
-            Assert.That(tracepararent.ParentId == expectedParentId);
-            Assert.That(tracepararent.TraceFlags == "01");
+            Assert.That(traceparent.TraceId.Length == traceIdExpectedLength);
+            Assert.That(traceparent.TraceId == expectedTraceId);
+            Assert.That(traceparent.Version == 0);
+            Assert.That(traceparent.ParentId == expectedParentId);
+            Assert.That(traceparent.TraceFlags == "01");
 
             var nrHeaderValue = headers.Where(header => header.Key == NewRelicPayloadHeaderName).Select(header => header.Value).FirstOrDefault();
             Assert.NotNull(nrHeaderValue);
