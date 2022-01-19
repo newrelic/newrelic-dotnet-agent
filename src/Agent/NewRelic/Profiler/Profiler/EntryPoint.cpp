@@ -20,14 +20,13 @@ BOOL STDMETHODCALLTYPE DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID
     return TRUE;
 }
 
-extern "C" {
-    HRESULT STDMETHODCALLTYPE DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
+extern "C"
+{
+    HRESULT STDMETHODCALLTYPE DllGetClassObject(REFCLSID /* rclsid */, REFIID riid, void** ppv)
     {
         //std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 30));
-        if (ppv == NULL || !(rclsid == CLSID_NewRelicProfiler || rclsid == CLSID_NewRelicCorCLRProfiler))
-            return E_FAIL;
 
-        auto factory = new NewRelic::Profiler::ClassFactory(rclsid == CLSID_NewRelicCorCLRProfiler);
+        auto factory = new NewRelic::Profiler::ClassFactory();
         if (factory == nullptr)
         {
             return E_FAIL;

@@ -14,11 +14,11 @@ namespace NewRelic { namespace Profiler {
     class ClassFactory : public IClassFactory
     {
     public:
-        ClassFactory(bool coreCLRProfiler) : _referenceCount(1)
+        ClassFactory() : _referenceCount(1)
         {
-            _coreCLRProfiler = coreCLRProfiler;
         }
-        ~ClassFactory() {
+        ~ClassFactory()
+        {
         }
 
         HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject) override
@@ -34,10 +34,12 @@ namespace NewRelic { namespace Profiler {
             *ppvObject = nullptr;
             return E_NOINTERFACE;
         }
+
         virtual ULONG STDMETHODCALLTYPE AddRef() override
         {
             return std::atomic_fetch_add(&this->_referenceCount, 1) + 1;
         }
+
         virtual ULONG STDMETHODCALLTYPE Release() override
         {
             int count = std::atomic_fetch_sub(&this->_referenceCount, 1) - 1;
@@ -49,6 +51,7 @@ namespace NewRelic { namespace Profiler {
 
             return count;
         }
+
         virtual HRESULT STDMETHODCALLTYPE CreateInstance(IUnknown* pUnkOuter, REFIID riid, void** ppvObject) override
         {
             if (pUnkOuter != nullptr) {
@@ -56,9 +59,7 @@ namespace NewRelic { namespace Profiler {
                 return CLASS_E_NOAGGREGATION;
             }
 
-            std::unique_ptr<CorProfilerCallbackImpl> profiler;
-
-            profiler = std::make_unique<NewRelic::Profiler::CorProfilerCallbackImpl>();
+            auto profiler = std::make_unique<NewRelic::Profiler::CorProfilerCallbackImpl>();
 
             if (!profiler) {
                 return E_FAIL;
@@ -66,6 +67,7 @@ namespace NewRelic { namespace Profiler {
 
             return profiler.release()->QueryInterface(riid, ppvObject);
         }
+
         virtual HRESULT STDMETHODCALLTYPE LockServer(BOOL fLock) override
         {
             (void)fLock;
@@ -74,6 +76,5 @@ namespace NewRelic { namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
-        bool _coreCLRProfiler;
     };
 }}
