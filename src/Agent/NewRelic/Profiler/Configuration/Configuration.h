@@ -171,102 +171,16 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 });
         }
 
-        bool ShouldInstrumentNetCore(xstring_t const& processPath, xstring_t const& appPoolId, xstring_t const& commandLine)
+        bool ShouldInstrument(xstring_t const& processPath, xstring_t const& appPoolId, xstring_t const& commandLine, bool isCoreClr)
         {
-            //If it contains MsBuild, it is a build command and should not be profiled.
-            bool isMsBuildInvocation = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("MSBuild.dll"));
-            bool isKudu = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("Kudu.Services.Web"));
-
-            std::vector<xstring_t> out;
-            Tokenize(commandLine, out);
-
-            //Search for "dotnet run" or "dotnet publish" variations.
-            //If it is a hit, it should not instrument the invocation of dotnet.exe
-            //Example Hits:    dotnet run
-            //                dotnet.exe run -f netcoreapp2.2
-            //                "c\program files\dotnet.exe" run
-            //                f:\program files\dotnet.exe run -f netcoreapp2.2
-            //                all of the above with publish instead of run.
-
-            for (std::size_t i = 0; i < out.size(); i++) {
-
-                bool isDotNetProcess =    EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet\"")) || 
-                    EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet'")) ||
-                    EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet")) || 
-                    EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet.exe\"")) ||
-                    EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet.exe'")) ||
-                    EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet.exe"));
-
-                if (isDotNetProcess && i < out.size() - 1) {
-                    if (NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("run")) ||
-                        NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("publish")) ||
-                        NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("restore")) ||
-                        NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("new"))) {
-
-                        LogInfo(L"This process will not be instrumented. Command line identified as invalid invocation for instrumentation");
-                        return false;
-                    } else {
-                        break;
-                    }
-                }
+            if (isCoreClr)
+            {
+                return ShouldInstrumentNetCore(processPath, appPoolId, commandLine);
             }
-
-            if (isMsBuildInvocation || isKudu) {
-                LogInfo(L"This process will not be instrumented. Command line identified as invalid invocation for instrumentation");
-                return false;
+            else
+            {
+                return ShouldInstrumentNetFramework(processPath, appPoolId);
             }
-
-            if (IsW3wpProcess(processPath)) {
-                return ShouldInstrumentApplicationPool(appPoolId);
-            }
-
-            return true;
-        }
-
-        // test to see if we should instrument this application at all
-        bool ShouldInstrumentNetFramework(xstring_t const& processPath, xstring_t const& appPoolId)
-        {
-            return ShouldInstrumentProcess(processPath, appPoolId);
-        }
-
-        virtual bool ShouldInstrumentProcess(const xstring_t& processName, const xstring_t& appPoolId)
-        {
-            if (!_agentEnabled) {
-                LogInfo("New Relic has been disabled via newrelic.config file.");
-                return false;
-            }
-
-            if (_agentEnabledSetInApplicationConfiguration) {
-                if (_agentEnabledViaApplicationConfiguration) {
-                    LogInfo(L"Enabling instrumentation for this process due to existence of NewRelic.AgentEnabled=true in ", processName, L".config.");
-                    return true;
-                } else {
-                    LogInfo(L"Disabling instrumentation for this process due to the existence of NewRelic.AgentEnabled in ", processName, L".config which is set to a value other than 'true'.");
-                    return false;
-                }
-            }
-
-            if (IsProcessInProcessList(_processes, processName)) {
-                LogInfo(L"Enabling instrumentation for this process (", processName, ") due to existence of application node in newrelic.config.");
-                return true;
-            }
-
-            if (IsW3wpProcess(processName)) {
-                return ShouldInstrumentApplicationPool(appPoolId);
-            }
-
-            if (ShouldInstrumentDefaultProcess(processName)) {
-                LogInfo(L"Enabling instrumentation for this process (", processName, L") due to it being in a predefined set of processes to be instrumented.");
-                return true;
-            }
-
-            if (_agentEnabledInLocalConfig) {
-                LogInfo(L"Enabling instrumentation for this process due to existence of agentEnabled=true in local newrelic.config.");
-                return true;
-            }
-
-            LogInfo(L"This process (", processName, ") is not configured to be instrumented.");
-            return false;
         }
 
         virtual Logger::Level GetLoggingLevel()
@@ -559,6 +473,108 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
             return false;
         }
+
+        // Test to see if we should instrument this .NET Core application at all
+        bool ShouldInstrumentNetCore(xstring_t const& processPath, xstring_t const& appPoolId, xstring_t const& commandLine)
+        {
+            //If it contains MsBuild, it is a build command and should not be profiled.
+            bool isMsBuildInvocation = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("MSBuild.dll"));
+            bool isKudu = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("Kudu.Services.Web"));
+
+            std::vector<xstring_t> out;
+            Tokenize(commandLine, out);
+
+            //Search for "dotnet run" or "dotnet publish" variations.
+            //If it is a hit, it should not instrument the invocation of dotnet.exe
+            //Example Hits:    dotnet run
+            //                dotnet.exe run -f netcoreapp2.2
+            //                "c\program files\dotnet.exe" run
+            //                f:\program files\dotnet.exe run -f netcoreapp2.2
+            //                all of the above with publish instead of run.
+
+            for (std::size_t i = 0; i < out.size(); i++) {
+
+                bool isDotNetProcess = EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet\"")) ||
+                    EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet'")) ||
+                    EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet")) ||
+                    EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet.exe\"")) ||
+                    EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet.exe'")) ||
+                    EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet.exe"));
+
+                if (isDotNetProcess && i < out.size() - 1) {
+                    if (NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("run")) ||
+                        NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("publish")) ||
+                        NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("restore")) ||
+                        NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("new"))) {
+
+                        LogInfo(L"This process will not be instrumented. Command line identified as invalid invocation for instrumentation");
+                        return false;
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+
+            if (isMsBuildInvocation || isKudu) {
+                LogInfo(L"This process will not be instrumented. Command line identified as invalid invocation for instrumentation");
+                return false;
+            }
+
+            if (IsW3wpProcess(processPath)) {
+                return ShouldInstrumentApplicationPool(appPoolId);
+            }
+
+            return true;
+        }
+
+        // Test to see if we should instrument this .NET Framework application at all
+        bool ShouldInstrumentNetFramework(xstring_t const& processPath, xstring_t const& appPoolId)
+        {
+            return ShouldInstrumentProcess(processPath, appPoolId);
+        }
+
+        bool ShouldInstrumentProcess(const xstring_t& processName, const xstring_t& appPoolId)
+        {
+            if (!_agentEnabled) {
+                LogInfo("New Relic has been disabled via newrelic.config file.");
+                return false;
+            }
+
+            if (_agentEnabledSetInApplicationConfiguration) {
+                if (_agentEnabledViaApplicationConfiguration) {
+                    LogInfo(L"Enabling instrumentation for this process due to existence of NewRelic.AgentEnabled=true in ", processName, L".config.");
+                    return true;
+                }
+                else {
+                    LogInfo(L"Disabling instrumentation for this process due to the existence of NewRelic.AgentEnabled in ", processName, L".config which is set to a value other than 'true'.");
+                    return false;
+                }
+            }
+
+            if (IsProcessInProcessList(_processes, processName)) {
+                LogInfo(L"Enabling instrumentation for this process (", processName, ") due to existence of application node in newrelic.config.");
+                return true;
+            }
+
+            if (IsW3wpProcess(processName)) {
+                return ShouldInstrumentApplicationPool(appPoolId);
+            }
+
+            if (ShouldInstrumentDefaultProcess(processName)) {
+                LogInfo(L"Enabling instrumentation for this process (", processName, L") due to it being in a predefined set of processes to be instrumented.");
+                return true;
+            }
+
+            if (_agentEnabledInLocalConfig) {
+                LogInfo(L"Enabling instrumentation for this process due to existence of agentEnabled=true in local newrelic.config.");
+                return true;
+            }
+
+            LogInfo(L"This process (", processName, ") is not configured to be instrumented.");
+            return false;
+        }
+
     };
     typedef std::shared_ptr<Configuration> ConfigurationPtr;
 }}}
