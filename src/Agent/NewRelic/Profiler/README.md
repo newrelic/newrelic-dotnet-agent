@@ -12,9 +12,9 @@ These steps are all executed by the CLR as defined by the Microsoft profiling sp
 
 1. If `COR_ENABLE_PROFILING`/`CORECLR_ENABLE_PROFILING` environment variable is missing or set to something other than 1 then no profiler is attached.
 1. Find path to profiler DLL.
- 1. If the `COR_PROFILER_PATH`/`CORECLR_PROFILER_PATH` environment variable is set then use that.
- 1. Else lookup the GUID found in `COR_PROFILER` in the registry under `HKEY_CLASSES_ROOT\CLSID` (.NET Framework only).
-    - .NET Framework New Relic profiler GUID: `{71DA0A04-7777-4EC6-9643-7D28B46A8A41}`
+    1. If the `COR_PROFILER_PATH`/`CORECLR_PROFILER_PATH` environment variable is set then use that.
+    1. Else lookup the GUID found in `COR_PROFILER` in the registry under `HKEY_CLASSES_ROOT\CLSID` (.NET Framework only).
+        - .NET Framework New Relic profiler GUID: `{71DA0A04-7777-4EC6-9643-7D28B46A8A41}`
 1. Load the profiler DLL (`NewRelic.Profiler.dll`) off disk and into memory.
 1. Read the profiler DLL as a COM library.
 1. Instantiate the provided `CorProfilerCallbackImpl`.
