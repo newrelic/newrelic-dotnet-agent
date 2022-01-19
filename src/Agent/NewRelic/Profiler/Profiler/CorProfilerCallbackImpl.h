@@ -33,8 +33,7 @@
 #include <shellapi.h>
 #endif
 
-namespace NewRelic {
-namespace Profiler {
+namespace NewRelic { namespace Profiler {
 // disable unused parameter warnings for this class
 #pragma warning(push)
 #pragma warning(disable : 4100)
@@ -184,7 +183,8 @@ namespace Profiler {
 #endif
 
             // initialization stuff, they should be logging their own errors and only throwing up if they want to cancel activation
-            try {
+            try
+            {
                 HRESULT corProfilerInfoInitResult = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo4), (void**)&_corProfilerInfo4);
                 if (FAILED(corProfilerInfoInitResult)) {
                     // Since MinimumDotnetVersionCheck already queried for minimum required interface, this check is just for safety
@@ -192,29 +192,20 @@ namespace Profiler {
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
-                // determine clr type
-                COR_PRF_RUNTIME_TYPE runtimeType;
-                auto runtimeInfoResult = _corProfilerInfo4->GetRuntimeInformation(nullptr, &runtimeType, nullptr, nullptr, nullptr, nullptr, 0, nullptr, nullptr);
+                // Need runtime information to determine CLR type
+                auto runtimeInfo = std::make_shared<RuntimeInfo>();
+                auto runtimeInfoResult = _corProfilerInfo4->GetRuntimeInformation(nullptr,
+                    &runtimeInfo->runtimeType, &runtimeInfo->majorVersion, &runtimeInfo->minorVersion, nullptr, nullptr, 0, nullptr, nullptr);
 
                 if (FAILED(runtimeInfoResult)) {
                     LogError(_X("Error retrieving runtime information: "), runtimeInfoResult);
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
-                if (runtimeType == COR_PRF_DESKTOP_CLR) {
-                    _isCoreClr = false;
-                }
-                else if (runtimeType == COR_PRF_CORE_CLR) {
-                    _isCoreClr = true;
-                }
-                else {
-                    LogError(_X("Unknown Runtime Type found: "), runtimeType);
+                if (!SetClrType(runtimeInfo)) {
+                    LogError(_X("Unknown Runtime Type found: "), runtimeInfo->runtimeType);
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
-
-                // set systemCalls and productName
-                _systemCalls->SetCoreAgent(_isCoreClr);
-                _productName = _isCoreClr ? _X("New Relic .NET CoreCLR Agent") : _X("New Relic .NET Agent");
 
                 HRESULT loggingInitResult = InitializeLogging();
                 if (FAILED(loggingInitResult))
@@ -257,7 +248,7 @@ namespace Profiler {
 
                 ConfigureEventMask(pICorProfilerInfoUnk);
 
-                LogRuntimeInfo();
+                LogRuntimeInfo(runtimeInfo);
 
                 LogInfo(L"Profiler initialized");
                 return S_OK;
@@ -455,12 +446,12 @@ namespace Profiler {
         {
             LogTrace(__func__, L". ", functionId);
 
-      auto setILFunctionBody = [&](Function& function, LPCBYTE pHeader, ULONG) {
+            auto setILFunctionBody = [&](Function& function, LPCBYTE pHeader, ULONG) {
                 return _corProfilerInfo4->SetILFunctionBody(function.GetModuleID(), function.GetMethodToken(), pHeader);
             };
 
             // on JIT just ask for a rejit for instrumented methods
-        HRESULT hr = ProcessMethodJit(functionId, false, setILFunctionBody);
+            HRESULT hr = ProcessMethodJit(functionId, false, setILFunctionBody);
             //HRESULT hr = ProcessMethodJit(functionId, false);
 
             LogTrace(__func__, L"Finished. ", functionId);
@@ -486,7 +477,7 @@ namespace Profiler {
             return S_OK;
         }
 
-    virtual HRESULT __stdcall GetReJITParameters(ModuleID moduleId, mdMethodDef methodId, ICorProfilerFunctionControl* pFunctionControl) override
+        virtual HRESULT __stdcall GetReJITParameters(ModuleID moduleId, mdMethodDef methodId, ICorProfilerFunctionControl* pFunctionControl) override
         {
             LogTrace(__func__, L" called");
 
@@ -1075,23 +1066,6 @@ namespace Profiler {
             return millisecondsInteger;
         }
 
-        static std::shared_ptr<RuntimeInfo> GetRuntimeInfo(CComPtr<ICorProfilerInfo4> corProfilerInfo4)
-        {
-            auto runtimeInfo = std::make_shared<RuntimeInfo>();
-            corProfilerInfo4->GetRuntimeInformation(
-                &runtimeInfo->clrInstanceId,
-                &runtimeInfo->runtimeType,
-                &runtimeInfo->majorVersion,
-                &runtimeInfo->minorVersion,
-                &runtimeInfo->buildNumber,
-                &runtimeInfo->qfeVersion,
-                0,
-                nullptr,
-                nullptr);
-
-            return runtimeInfo;
-        }
-
         HRESULT InitializeLogging()
         {
             // if logging fails to initialize then just bail
@@ -1260,9 +1234,27 @@ namespace Profiler {
 #endif
         }
 
-        void LogRuntimeInfo()
+        bool SetClrType(std::shared_ptr<RuntimeInfo> runtimeInfo)
         {
-            auto runtimeInfo = GetRuntimeInfo(_corProfilerInfo4);
+            if (runtimeInfo->runtimeType == COR_PRF_DESKTOP_CLR) {
+                _isCoreClr = false;
+            }
+            else if (runtimeInfo->runtimeType == COR_PRF_CORE_CLR) {
+                _isCoreClr = true;
+            }
+            else {
+                return false;
+            }
+
+            // set systemCalls and productName
+            _systemCalls->SetCoreAgent(_isCoreClr);
+            _productName = _isCoreClr ? _X("New Relic .NET CoreCLR Agent") : _X("New Relic .NET Agent");
+
+            return true;
+        }
+
+        void LogRuntimeInfo(std::shared_ptr<RuntimeInfo> runtimeInfo)
+        {
             if (runtimeInfo != nullptr) {
                 LogTrace(L"CLR version: ", runtimeInfo->majorVersion, L".", runtimeInfo->minorVersion);
             }
@@ -1375,5 +1367,4 @@ namespace Profiler {
     }
 
 #pragma warning(pop)
-}
-}
+}}
