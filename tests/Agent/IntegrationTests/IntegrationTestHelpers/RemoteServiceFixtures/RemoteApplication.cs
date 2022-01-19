@@ -227,7 +227,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public ITestLogger TestLogger { get; set; }
 
-        protected bool IsCoreApp { get; }
+        public bool IsCoreApp { get; }
 
         public bool UseLocalConfig { get; set; }
 
