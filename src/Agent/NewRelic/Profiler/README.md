@@ -11,6 +11,7 @@ Refer to our [development documentation](../../../../docs/development.md#profile
 These steps are all executed by the CLR as defined by the Microsoft profiling spec.
 
 1. If `COR_ENABLE_PROFILING`/`CORECLR_ENABLE_PROFILING` environment variable is missing or set to something other than 1 then no profiler is attached.
+1. If `COR_PROFILER`/`CORECLR_PROFILER` environment variable is missing or set to something other than a GUID (any) then no profiler is attached.
 1. Find path to profiler DLL.
     1. If the `COR_PROFILER_PATH`/`CORECLR_PROFILER_PATH` environment variable is set then use that.
     1. Else lookup the GUID found in `COR_PROFILER` in the registry under `HKEY_CLASSES_ROOT\CLSID` (.NET Framework only).
