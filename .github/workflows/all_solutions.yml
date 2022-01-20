@@ -497,12 +497,12 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        namespace: [ AgentFeatures, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
-          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
-          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
-          ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
-          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
-          RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHandling]
+        namespace: [ AgentFeatures, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, Configuration, CSP, 
+          CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, HttpClientInstrumentation.NetCore, 
+          HttpClientInstrumentation.NetFramework, InfiniteTracing, Logging, Owin, ReJit.NetCore, ReJit.NetFramework, 
+          RemoteServiceFixtures, RequestHandling, RequestHeadersCapture.Asp35, RequestHeadersCapture.AspNetCore, 
+          RequestHeadersCapture.Owin, RequestHeadersCapture.WCF, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
+          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
