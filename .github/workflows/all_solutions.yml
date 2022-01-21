@@ -36,7 +36,7 @@ jobs:
   build-windows-profiler:
     needs: cancel-previous-workflow-runs
     name: Build Windows Profiler
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     env:
       profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
