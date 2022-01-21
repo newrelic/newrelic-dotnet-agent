@@ -12,4 +12,7 @@
     <ClCompile Include="SignatureParserTest.cpp" />
     <ClCompile Include="TestModuleAttributes.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)newrelic-icon.png" />
+  </ItemGroup>
 </Project>

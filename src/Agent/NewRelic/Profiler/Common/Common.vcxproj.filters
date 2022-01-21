@@ -7,4 +7,7 @@
     <ClInclude Include="OnDestruction.h" />
     <ClInclude Include="xplat.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)newrelic-icon.png" />
+  </ItemGroup>
 </Project>

@@ -9,4 +9,7 @@
     <ClCompile Include="TestModuleAttributes.cpp" />
     <ClCompile Include="StringsTest.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)newrelic-icon.png" />
+  </ItemGroup>
 </Project>
