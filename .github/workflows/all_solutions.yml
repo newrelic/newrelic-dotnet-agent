@@ -195,7 +195,7 @@ jobs:
   build-test-fullagent-msi:
     needs: [ build-windows-profiler, build-linux-x64-profiler, build-linux-arm64-profiler ]
     name: Build and Test FullAgent and MSIInstaller
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
@@ -469,7 +469,7 @@ jobs:
   build-platform-tests: 
     needs: build-test-fullagent-msi
     name: Build PlatformTests
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     env:
       platform_solution_path: ${{ github.workspace }}\tests\Agent\PlatformTests\PlatformTests.sln
@@ -494,7 +494,7 @@ jobs:
   run-integration-tests:
     needs: [build-integration-tests]
     name: Run IntegrationTests
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         namespace: [ AgentFeatures, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
@@ -673,7 +673,7 @@ jobs:
   run-unbounded-tests:
     needs: [build-unbounded-tests]
     name: Run Unbounded Tests
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         namespace: [ CosmosDB, Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, NServiceBus5, Oracle, Postgres, RabbitMq, Redis ]
@@ -899,7 +899,7 @@ jobs:
     needs: [ create-package-rpm, create-package-deb ]
     if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
     name: Run ArtifactBuilder
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     steps:
       - name: Checkout
