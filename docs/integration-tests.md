@@ -177,7 +177,7 @@ As previously mentioned, the agent solution needs to be built on Windows.  If yo
 3. In the VM, from the shell:
 
 ```
-cd $PATH_TO_AGENT_REPO/tests/Agent/IntegrationTests/IntegrationTests
+cd {DOTNET_AGENT_REPO_PATH}/tests/Agent/IntegrationTests/IntegrationTests
 dotnet test -f netcoreapp3.1 -c Release --filter RuntimeFramework=NetCore
 ```
 
