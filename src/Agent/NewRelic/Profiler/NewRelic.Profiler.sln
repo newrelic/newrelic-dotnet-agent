@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30128.74
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 15.0.26228.9
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "Common\Common.vcxproj", "{1FA45857-E2E9-4157-8180-87F4458FA2B1}"
 EndProject
@@ -203,12 +203,12 @@ Global
 		{12FD0BFD-5BCC-48C7-8136-C6D63195EB98}.Release|x64.Build.0 = Release|Any CPU
 		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Debug|Win32.ActiveCfg = Debug|x86
 		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Debug|Win32.Build.0 = Debug|x86
-		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Debug|x64.ActiveCfg = Debug|x64
-		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Debug|x64.Build.0 = Debug|x64
+		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Debug|x64.Build.0 = Debug|Any CPU
 		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Release|Win32.ActiveCfg = Release|x86
 		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Release|Win32.Build.0 = Release|x86
-		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Release|x64.ActiveCfg = Release|x64
-		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Release|x64.Build.0 = Release|x64
+		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Release|x64.ActiveCfg = Release|Any CPU
+		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
