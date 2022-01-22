@@ -10,8 +10,6 @@
     <OutputType>Package</OutputType>
     <IntermediateOutputPath>$(SolutionDir)..\..\_build\$(Platform)-$(Configuration)\$(OutputName)\</IntermediateOutputPath>
     <OutputPath>$(SolutionDir)..\..\_build\$(Platform)-$(Configuration)\$(OutputName)\</OutputPath>
-    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
-    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DefineConstants>Debug</DefineConstants>
@@ -56,8 +54,11 @@
       <Name>WixUtilExtension</Name>
     </WixExtension>
   </ItemGroup>
-  <Import Project="$(WixTargetsPath)" />
-
+  <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />
+  <Target Name="EnsureWixToolsetInstalled" Condition=" '$(WixTargetsImported)' != 'true' ">
+    <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
+  </Target>
   <PropertyGroup>
     <WindowsSdkPathBin>$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSDKLocation('Windows', '10.0'))bin</WindowsSdkPathBin>
     <WindowsSdkPath>$(WindowsSdkPathBin)\10.0.18362.0</WindowsSdkPath>
