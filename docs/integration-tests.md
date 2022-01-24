@@ -2,13 +2,10 @@
 
 Tests the integration of the New Relic .NET agent with various .NET applications.
 
-This test suite can be run on both Windows and Linux, however:
+This test suite can be run on both [Windows](#testing-on-windows-with-visual-studio) and [Linux](#testing-on-linux-with-dotnet-test).
 
-* Only tests with the `[NetCoreTest]` attribute (which sets an XUnit trait named `RuntimeFramework` to `NetCore`) can run on Linux.
-* Testing on Linux is done from the command line with `dotnet test`.
-* The rest of this document describes how to set up and run the integration tests to be run from Visual Studio on Windows.
+## Testing on Windows with Visual Studio
 
-## Installation
 Requires Visual Studio 2022 Version 17.0 Preview 7.0 or greater.
 
 ### Additional items to install
@@ -131,10 +128,60 @@ Requires Visual Studio 2022 Version 17.0 Preview 7.0 or greater.
 }
 ```
 
-## Run tests
+### Run tests
 
 1. Build the `FullAgent.sln`.
 2. Running Visual Studio as an Administrator, open the `IntegrationTests.sln` solution and build the solution. After a successful build, the tests are listed in the Visual Studio test explorer window.
 3. The recommended "Group By" order for the tests in the test explorer is `Project`, `Traits`, `Namespace`, `Class`.
 4. The main `IntegrationTests` test project is multi-targeted to both a .NET Framework and a .NET Core version to support both Windows/.NET Framework and Linux testing.  If you are running tests from Visual Studio on Windows, it is only necessary to run the .NET Framework version of the tests.  (Note: this is the runtime of the **test code**, not the test target applications.  The variant of the New Relic .NET agent (Framework/Core) being tested depends on the latter.)
 5. Run all tests or selected tests. 
+
+## Testing on Linux with dotnet test
+
+First, a few caveats:
+
+* Only tests with the `[NetCoreTest]` attribute (which sets an XUnit trait named `RuntimeFramework` to `NetCore`) can run on Linux.
+* The agent solution still needs to be built on Windows in Visual Studio, or from the command line using the [build.ps1](../build/build.ps1) script (which uses Visual Studio tooling).
+
+We recommend using [WSL](https://docs.microsoft.com/en-us/windows/wsl/about) to install an Ubuntu 20.04+ VM on your Windows 10 development system.
+
+### Linux system setup
+
+You will need to install the .NET Core/5+ SDKs for .NET Core 2.1, .NET Core 3.1, .NET 5, and .NET 6.
+
+```
+apt-get update -q -y && sudo apt-get install -q -y curl
+sudo mkdir -p /usr/share/dotnet
+
+sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/2.1.818/dotnet-sdk-2.1.818-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
+sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
+sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
+sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
+
+sudo ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
+dotnet --list-sdks
+```
+
+### Set up test secrets
+
+Refer to the section above in the Windows setup instructions regarding configuring test secrets.  Everything is the same, except that the command for adding the secrets looks like:
+
+`cat {SECRET_FILE_PATH}/secrets.json | dotnet user-secrets set --project {DOTNET_AGENT_REPO_PATH}/tests/Agent/IntegrationTests/Shared`
+
+### Run tests
+
+As previously mentioned, the agent solution needs to be built on Windows.  If you are using an Ubuntu VM in WSL, you can use this workflow to run the agent integration tests on Linux:
+
+1. Build the FullAgent.sln in Visual Studio.
+2. Copy the agent repo to the Ubuntu VM.  The VM's filesystem can be accessed from the Windows host using this path: `\\wsl$\Ubuntu-20.04` (replace `Ubuntu-20.04` with the name of your VM if it's different).
+3. In the VM, from the shell:
+
+```
+cd {DOTNET_AGENT_REPO_PATH}/tests/Agent/IntegrationTests/IntegrationTests
+dotnet test -f netcoreapp3.1 -c Release --filter RuntimeFramework=NetCore
+```
+
+For more details on how to use dotnet test, see https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-test.
+
+
+
