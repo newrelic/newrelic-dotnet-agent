@@ -400,6 +400,22 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
         }
 
+        public void IncrementLogLinesCount(string logLevel)
+        {
+            if (_configurationService.Configuration.LogMetricsCollectorEnabled)
+            {
+                _agentHealthReporter.IncrementLogLinesCount(logLevel);
+            }
+        }
+
+        public void UpdateLogSize(string logLevel, int logLineSize)
+        {
+            if (_configurationService.Configuration.LogMetricsCollectorEnabled)
+            {
+                _agentHealthReporter.UpdateLogSize(logLevel, logLineSize);
+            }
+        }
+
         #endregion
 
         #region Helpers

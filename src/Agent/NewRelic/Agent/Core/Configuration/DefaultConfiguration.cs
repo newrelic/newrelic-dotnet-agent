@@ -1778,6 +1778,18 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
+        #region Log Events and Metrics
+
+        public virtual bool LogMetricsCollectorEnabled
+        {
+            get
+            {
+                return _localConfiguration.logSending.metrics.enabled;
+            }
+        }
+
+        #endregion
+
         private bool? _diagnosticsCaptureAgentTiming;
         public bool DiagnosticsCaptureAgentTiming
         {

@@ -1576,6 +1576,37 @@
           </xs:complexType>
         </xs:element>
 
+          <xs:element name="logSending" minOccurs="0" maxOccurs="1">
+              <xs:annotation>
+                  <xs:documentation>
+                      Allows configuration of the built in agent log forwarding, metrics, and decorating.
+                  </xs:documentation>
+              </xs:annotation>
+              <xs:complexType>
+                  <xs:sequence>
+                      <xs:element name="metrics" minOccurs="0" maxOccurs="1">
+                          <xs:annotation>
+                              <xs:documentation>
+                                  When enabled, sends up metrics on the number of log lines being created in total and at different severity levels.
+                              </xs:documentation>
+                          </xs:annotation>
+                          <xs:complexType>
+                              <xs:attribute name="enabled" type="xs:boolean" default="true">
+                                  <xs:annotation>
+                                      <xs:documentation>
+                                          Controls whether or not logging metrics are captured. Defaults to true.
+                                      </xs:documentation>
+                                  </xs:annotation>
+                              </xs:attribute>
+                          </xs:complexType>
+                      </xs:element>
+
+                      
+
+                  </xs:sequence>
+              </xs:complexType>
+          </xs:element>
+
         <xs:element name="threadProfiling" minOccurs="0" maxOccurs="1">
           <xs:complexType>
             <xs:sequence>
