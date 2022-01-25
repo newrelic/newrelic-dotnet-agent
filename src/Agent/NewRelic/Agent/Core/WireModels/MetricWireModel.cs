@@ -461,6 +461,13 @@ namespace NewRelic.Agent.Core.WireModels
                 return BuildMetric(_metricNameService, proposedName, null, data);
             }
 
+            public MetricWireModel TryBuildSupportabilityDataUsageMetric(string metricName, long callCount, float dataSent, float dataReceived)
+            {
+                var proposedName = MetricNames.GetSupportabilityName(metricName);
+                var data = MetricDataWireModel.BuildDataUsageValue(callCount, dataSent, dataReceived);
+                return BuildMetric(_metricNameService, proposedName, null, data);
+            }
+
             public MetricWireModel TryBuildSupportabilitySummaryMetric(string metricName, float totalValue, int countSamples, float minValue, float maxValue)
             {
                 var proposedName = MetricNames.GetSupportabilityName(metricName);

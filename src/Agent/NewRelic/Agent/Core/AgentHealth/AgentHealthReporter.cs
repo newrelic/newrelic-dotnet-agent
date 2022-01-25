@@ -85,6 +85,12 @@ namespace NewRelic.Agent.Core.AgentHealth
             TrySend(metric);
         }
 
+        public void ReportSupportabilityDataUsageMetric(string metricName, long callCount, float bytesSent, float bytesReceived)
+        {
+            var metric = _metricBuilder.TryBuildSupportabilityDataUsageMetric(metricName, callCount, bytesSent, bytesReceived);
+            TrySend(metric);
+        }
+
         private void ReportSupportabilitySummaryMetric(string metricName, float totalSize, int countSamples, float minValue, float maxValue)
         {
             var metric = _metricBuilder.TryBuildSupportabilitySummaryMetric(metricName, totalSize, countSamples, minValue, maxValue);
@@ -541,7 +547,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportDotnetVersion();
             ReportAgentInfo();
             CollectInfiniteTracingMetrics();
-            CollectSupportabilityExternalApiDataUsageMetrics();
+            CollectSupportabilityDataUsageMetrics();
         }
 
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)
@@ -603,22 +609,33 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         // TODO: Determine if we want to refactor to InterlockedCounters vs storing samples...
         private BlockingCollection<ExternalApiDataUsageSample> _externalApiDataUsageSamples = new BlockingCollection<ExternalApiDataUsageSample>();
-        public void ReportSupportabilityExteralApiDataUsage(string api, string apiArea, long dataSent, long dataReceived)
+        public void ReportSupportabilityDataUsage(string api, string apiArea, long dataSent, long dataReceived)
         {
             _externalApiDataUsageSamples.Add(new ExternalApiDataUsageSample(api, apiArea, dataSent, dataReceived));
         }
 
-        private void CollectSupportabilityExternalApiDataUsageMetrics()
+        private void CollectSupportabilityDataUsageMetrics()
         {
-            var apiData = _externalApiDataUsageSamples.GetConsumingEnumerable().GroupBy(x => x.Api);
-            foreach (var apiArea in apiData)
+            var currentHarvest = _externalApiDataUsageSamples.GetConsumingEnumerable().ToArray();
+            foreach (var api in currentHarvest.GroupBy(x => x.Api))
             {
                 // report top level api metric
-                var name = apiArea.Key;
-                var interactionCount = apiArea.LongCount();
-                long bytesSent = apiArea.Aggregate(0L, (sum ,val) => sum + val.DataSent);
-            }
+                var name = api.Key;
+                var interactionCount = api.LongCount();
+                long bytesSent = api.Sum(x => x.DataSent);
+                long bytesReceved = api.Sum(x => x.DataReceived);
+                ReportSupportabilityDataUsageMetric($"Supportability/DotNET/{name}/Output/Bytes", interactionCount, bytesSent, bytesReceved);
 
+                // report sub-metrics
+                foreach (var apiArea in api.GroupBy(x => x.ApiArea))
+                {
+                    var areaName = apiArea.Key;
+                    var areaInteractionCount = apiArea.LongCount();
+                    var areaBytesSent = apiArea.Sum(x => x.DataSent);
+                    var areaBytesReceived = apiArea.Sum(x => x.DataReceived);
+                    ReportSupportabilityDataUsageMetric($"Supportability/DotNET/{name}/Output/Bytes/{areaName}", areaInteractionCount, areaBytesSent, areaBytesReceived);
+                }
+            }
         }
 
         private class ExternalApiDataUsageSample

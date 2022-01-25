@@ -70,7 +70,9 @@ namespace NewRelic.Agent.Core.DataTransport
                 AuditLog(Direction.Sent, Source.InstrumentedApp, uri);
                 AuditLog(Direction.Sent, Source.InstrumentedApp, serializedData);
 
-                var requestPayload = GetRequestPayload(serializedData);
+                var bytes = new UTF8Encoding().GetBytes(serializedData);
+                var uncompressedByteCount = bytes.Length;
+                var requestPayload = GetRequestPayload(bytes);
                 var request = BuildRequest(uri, connectionInfo, requestPayload);
 
                 // Check serializedData length < MaxPayloadSizeInBytes before sending
@@ -87,7 +89,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 var response = SendRequest(request, requestPayload.Data);
 
                 //TODO: Finish this impl JOSH
-                _agentHealthReporter.ReportSupportabilityExteralApiDataUsage("Collector", method, request.);
+                _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response).Length);
 
                 Log.DebugFormat("Received : {0}", response);
                 AuditLog(Direction.Received, Source.Collector, response);
@@ -137,10 +139,8 @@ namespace NewRelic.Agent.Core.DataTransport
             return uriBuilder.Uri.ToString().Replace("%3F", "?");
         }
 
-        private CollectorRequestPayload GetRequestPayload(string serializedData)
+        private CollectorRequestPayload GetRequestPayload(byte[] bytes)
         {
-            var bytes = new UTF8Encoding().GetBytes(serializedData);
-
             var shouldCompress = bytes.Length >= CompressMinimumByteLength;
 
             string compressionType = null;
