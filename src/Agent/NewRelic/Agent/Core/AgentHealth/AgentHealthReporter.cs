@@ -14,6 +14,7 @@ using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 
@@ -540,6 +541,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportDotnetVersion();
             ReportAgentInfo();
             CollectInfiniteTracingMetrics();
+            CollectSupportabilityExternalApiDataUsageMetrics();
         }
 
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)
@@ -598,6 +600,42 @@ namespace NewRelic.Agent.Core.AgentHealth
             return false;
         }
 
+
+        // TODO: Determine if we want to refactor to InterlockedCounters vs storing samples...
+        private BlockingCollection<ExternalApiDataUsageSample> _externalApiDataUsageSamples = new BlockingCollection<ExternalApiDataUsageSample>();
+        public void ReportSupportabilityExteralApiDataUsage(string api, string apiArea, long dataSent, long dataReceived)
+        {
+            _externalApiDataUsageSamples.Add(new ExternalApiDataUsageSample(api, apiArea, dataSent, dataReceived));
+        }
+
+        private void CollectSupportabilityExternalApiDataUsageMetrics()
+        {
+            var apiData = _externalApiDataUsageSamples.GetConsumingEnumerable().GroupBy(x => x.Api);
+            foreach (var apiArea in apiData)
+            {
+                // report top level api metric
+                var name = apiArea.Key;
+                var interactionCount = apiArea.LongCount();
+                long bytesSent = apiArea.Aggregate(0L, (sum ,val) => sum + val.DataSent);
+            }
+
+        }
+
+        private class ExternalApiDataUsageSample
+        {
+            public readonly string Api;
+            public readonly string ApiArea;
+            public readonly long DataSent;
+            public readonly long DataReceived;
+
+            public ExternalApiDataUsageSample(string api, string apiArea, long dataSent, long dataReceived)
+            {
+                Api = api;
+                ApiArea = apiArea;
+                DataSent = dataSent;
+                DataReceived = dataReceived;
+            }
+        }
 
         private class RecurringLogData
         {

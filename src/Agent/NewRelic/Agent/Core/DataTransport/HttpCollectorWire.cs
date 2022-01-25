@@ -86,6 +86,9 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 var response = SendRequest(request, requestPayload.Data);
 
+                //TODO: Finish this impl JOSH
+                _agentHealthReporter.ReportSupportabilityExteralApiDataUsage("Collector", method, request.);
+
                 Log.DebugFormat("Received : {0}", response);
                 AuditLog(Direction.Received, Source.Collector, response);
 
