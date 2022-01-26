@@ -616,10 +616,11 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportSupportabilityDataUsage(string api, string apiArea, long dataSent, long dataReceived)
         {
             // Unless memory or allocation overhead is an issue, I'm not sure if this impl is really a problem.
+            var newDataSample = new DestinationInteractionSample(api, apiArea, dataSent, dataReceived);
             _externalApiDataUsageLock.EnterReadLock();
             try
             {
-                _externalApiDataUsageSamples.Add(new DestinationInteractionSample(api, apiArea, dataSent, dataReceived));
+                _externalApiDataUsageSamples.Add(newDataSample);
             }
             finally
             {
