@@ -540,6 +540,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void CollectMetrics()
         {
+            // Josh sayeth: so, like, all of these could/should(?) be separate IOutOfBoundMetricCollectors....
+            // Josh also sayeth: we are at over 600 lines in this cs file
             CollectDistributedTraceSuccessMetrics();
             CollectTraceContextSuccessMetrics();
             ReportAgentVersion(AgentInstallConfiguration.AgentVersion, _dnsStatic.GetHostName());
