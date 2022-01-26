@@ -608,40 +608,16 @@ namespace NewRelic.Agent.Core.AgentHealth
             return false;
         }
 
-
-        // TODO: Refactor to InterlockedCounters vs storing samples... unless I can think of a clever way to store samples
-        private ReaderWriterLockSlim _externalApiDataUsageLock = new ReaderWriterLockSlim();
         private ConcurrentBag<DestinationInteractionSample> _externalApiDataUsageSamples = new ConcurrentBag<DestinationInteractionSample>();
 
         public void ReportSupportabilityDataUsage(string api, string apiArea, long dataSent, long dataReceived)
         {
-            // Unless memory or allocation overhead is an issue, I'm not sure if this impl is really a problem.
-            var newDataSample = new DestinationInteractionSample(api, apiArea, dataSent, dataReceived);
-            _externalApiDataUsageLock.EnterReadLock();
-            try
-            {
-                _externalApiDataUsageSamples.Add(newDataSample);
-            }
-            finally
-            {
-                _externalApiDataUsageLock.ExitReadLock();
-            }
+            _externalApiDataUsageSamples.Add(new DestinationInteractionSample(api, apiArea, dataSent, dataReceived));
         }
 
         private void CollectSupportabilityDataUsageMetrics()
         {
-            var currentHarvest = _externalApiDataUsageSamples;
-            var nextHarvest = new ConcurrentBag<DestinationInteractionSample>();
-
-            _externalApiDataUsageLock.EnterWriteLock();
-            try
-            {
-                _externalApiDataUsageSamples = nextHarvest;
-            }
-            finally
-            {
-                _externalApiDataUsageLock.ExitWriteLock();
-            }
+            var currentHarvest = Interlocked.Exchange(ref _externalApiDataUsageSamples, new ConcurrentBag<DestinationInteractionSample>());
 
             foreach (var api in currentHarvest.GroupBy(x => x.Api))
             {
