@@ -608,23 +608,36 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 
         // TODO: Refactor to InterlockedCounters vs storing samples... unless I can think of a clever way to store samples
-        private readonly object _externalApiDataUsageLock = new object();
-        private HashSet<ExternalApiDataUsageSample> _externalApiDataUsageSamples = new HashSet<ExternalApiDataUsageSample>();
+        private ReaderWriterLockSlim _externalApiDataUsageLock = new ReaderWriterLockSlim();
+        private ConcurrentBag<DestinationInteractionSample> _externalApiDataUsageSamples = new ConcurrentBag<DestinationInteractionSample>();
+
         public void ReportSupportabilityDataUsage(string api, string apiArea, long dataSent, long dataReceived)
         {
-            // Yes, I'm bad, and I know it.. this will be refactored.. I'm just prototyping
-            lock (_externalApiDataUsageLock)
+            // Unless memory or allocation overhead is an issue, I'm not sure if this impl is really a problem.
+            _externalApiDataUsageLock.EnterReadLock();
+            try
             {
-                _externalApiDataUsageSamples.Add(new ExternalApiDataUsageSample(api, apiArea, dataSent, dataReceived));
+                _externalApiDataUsageSamples.Add(new DestinationInteractionSample(api, apiArea, dataSent, dataReceived));
+            }
+            finally
+            {
+                _externalApiDataUsageLock.ExitReadLock();
             }
         }
 
         private void CollectSupportabilityDataUsageMetrics()
         {
             var currentHarvest = _externalApiDataUsageSamples;
-            lock (_externalApiDataUsageLock)
+            var nextHarvest = new ConcurrentBag<DestinationInteractionSample>();
+
+            _externalApiDataUsageLock.EnterWriteLock();
+            try
             {
-                _externalApiDataUsageSamples = new HashSet<ExternalApiDataUsageSample>();
+                _externalApiDataUsageSamples = nextHarvest;
+            }
+            finally
+            {
+                _externalApiDataUsageLock.ExitWriteLock();
             }
 
             foreach (var api in currentHarvest.GroupBy(x => x.Api))
@@ -633,8 +646,8 @@ namespace NewRelic.Agent.Core.AgentHealth
                 var name = api.Key;
                 var interactionCount = api.LongCount();
                 long bytesSent = api.Sum(x => x.DataSent);
-                long bytesReceved = api.Sum(x => x.DataReceived);
-                ReportSupportabilityDataUsageMetric($"DotNET/{name}/Output/Bytes", interactionCount, bytesSent, bytesReceved);
+                long bytesReceived = api.Sum(x => x.DataReceived);
+                ReportSupportabilityDataUsageMetric($"DotNET/{name}/Output/Bytes", interactionCount, bytesSent, bytesReceived);
 
                 // report sub-metrics
                 foreach (var apiArea in api.GroupBy(x => x.ApiArea))
@@ -648,14 +661,14 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
         }
 
-        private class ExternalApiDataUsageSample
+        private class DestinationInteractionSample
         {
             public readonly string Api;
             public readonly string ApiArea;
             public readonly long DataSent;
             public readonly long DataReceived;
 
-            public ExternalApiDataUsageSample(string api, string apiArea, long dataSent, long dataReceived)
+            public DestinationInteractionSample(string api, string apiArea, long dataSent, long dataReceived)
             {
                 Api = api;
                 ApiArea = apiArea;
