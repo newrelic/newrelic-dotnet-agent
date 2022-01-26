@@ -607,16 +607,26 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
 
-        // TODO: Determine if we want to refactor to InterlockedCounters vs storing samples...
-        private BlockingCollection<ExternalApiDataUsageSample> _externalApiDataUsageSamples = new BlockingCollection<ExternalApiDataUsageSample>();
+        // TODO: Refactor to InterlockedCounters vs storing samples... unless I can think of a clever way to store samples
+        private readonly object _externalApiDataUsageLock = new object();
+        private HashSet<ExternalApiDataUsageSample> _externalApiDataUsageSamples = new HashSet<ExternalApiDataUsageSample>();
         public void ReportSupportabilityDataUsage(string api, string apiArea, long dataSent, long dataReceived)
         {
-            _externalApiDataUsageSamples.Add(new ExternalApiDataUsageSample(api, apiArea, dataSent, dataReceived));
+            // Yes, I'm bad, and I know it.. this will be refactored.. I'm just prototyping
+            lock (_externalApiDataUsageLock)
+            {
+                _externalApiDataUsageSamples.Add(new ExternalApiDataUsageSample(api, apiArea, dataSent, dataReceived));
+            }
         }
 
         private void CollectSupportabilityDataUsageMetrics()
         {
-            var currentHarvest = _externalApiDataUsageSamples.GetConsumingEnumerable().ToArray();
+            var currentHarvest = _externalApiDataUsageSamples;
+            lock (_externalApiDataUsageLock)
+            {
+                _externalApiDataUsageSamples = new HashSet<ExternalApiDataUsageSample>();
+            }
+
             foreach (var api in currentHarvest.GroupBy(x => x.Api))
             {
                 // report top level api metric
@@ -624,7 +634,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 var interactionCount = api.LongCount();
                 long bytesSent = api.Sum(x => x.DataSent);
                 long bytesReceved = api.Sum(x => x.DataReceived);
-                ReportSupportabilityDataUsageMetric($"Supportability/DotNET/{name}/Output/Bytes", interactionCount, bytesSent, bytesReceved);
+                ReportSupportabilityDataUsageMetric($"DotNET/{name}/Output/Bytes", interactionCount, bytesSent, bytesReceved);
 
                 // report sub-metrics
                 foreach (var apiArea in api.GroupBy(x => x.ApiArea))
@@ -633,7 +643,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                     var areaInteractionCount = apiArea.LongCount();
                     var areaBytesSent = apiArea.Sum(x => x.DataSent);
                     var areaBytesReceived = apiArea.Sum(x => x.DataReceived);
-                    ReportSupportabilityDataUsageMetric($"Supportability/DotNET/{name}/Output/Bytes/{areaName}", areaInteractionCount, areaBytesSent, areaBytesReceived);
+                    ReportSupportabilityDataUsageMetric($"DotNET/{name}/Output/Bytes/{areaName}", areaInteractionCount, areaBytesSent, areaBytesReceived);
                 }
             }
         }
