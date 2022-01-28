@@ -1055,7 +1055,7 @@ namespace NewRelic.Agent.Core.Metric
             if(!subMap.TryGetValue(destinationArea, out var value))
             {
                 value = $"Supportability/DotNET/{destination}/Output/Bytes/{destinationArea}";
-                subMap.TryAdd(destination, value);
+                subMap.TryAdd(destinationArea, value);
             }
 
             return value;

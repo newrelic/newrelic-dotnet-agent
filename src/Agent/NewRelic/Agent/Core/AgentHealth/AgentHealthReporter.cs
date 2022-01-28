@@ -622,8 +622,8 @@ namespace NewRelic.Agent.Core.AgentHealth
                 // Setup top level metrics to aggregate
                 var destinationName = string.IsNullOrWhiteSpace(destination.Key) ? "UnspecifiedDestination" : destination.Key;
                 var destinationCallCount = 0L;
-                long destinationBytesSent = 0L;
-                long destinationBytesReceived = 0L;
+                var destinationBytesSent = 0L;
+                var destinationBytesReceived = 0L;
 
                 // inspect and report sub-metrics
                 foreach (var destinationArea in destination.GroupBy(x => x.ApiArea))
