@@ -619,40 +619,47 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             var currentHarvest = Interlocked.Exchange(ref _externalApiDataUsageSamples, new ConcurrentBag<DestinationInteractionSample>());
 
-            foreach (var api in currentHarvest.GroupBy(x => x.Api))
+            foreach (var destination in currentHarvest.GroupBy(x => x.Api))
             {
-                // report top level api metric
-                var name = api.Key;
-                var interactionCount = api.LongCount();
-                long bytesSent = api.Sum(x => x.DataSent);
-                long bytesReceived = api.Sum(x => x.DataReceived);
-                ReportSupportabilityDataUsageMetric($"DotNET/{name}/Output/Bytes", interactionCount, bytesSent, bytesReceived);
+                // Setup top level metrics to aggregate
+                var destinationName = string.IsNullOrWhiteSpace(destination.Key) ? "UnspecifiedDestination" : destination.Key;
+                var destinationCallCount = 0L;
+                long destinationBytesSent = 0L;
+                long destinationBytesReceived = 0L;
 
-                // report sub-metrics
-                foreach (var apiArea in api.GroupBy(x => x.ApiArea))
+                // inspect and report sub-metrics
+                foreach (var destinationArea in destination.GroupBy(x => x.ApiArea))
                 {
-                    var areaName = apiArea.Key;
-                    var areaInteractionCount = apiArea.LongCount();
-                    var areaBytesSent = apiArea.Sum(x => x.DataSent);
-                    var areaBytesReceived = apiArea.Sum(x => x.DataReceived);
-                    ReportSupportabilityDataUsageMetric($"DotNET/{name}/Output/Bytes/{areaName}", areaInteractionCount, areaBytesSent, areaBytesReceived);
+                    var destinationAreaName = string.IsNullOrWhiteSpace(destinationArea.Key) ? "UnspecifiedDestinationArea" : destinationArea.Key;
+                    var destinationAreaCallCount = 0L;
+                    var destinationAreaBytesSent = 0L;
+                    var destinationAreaBytesReceived = 0L;
+
+                    // accumulate values for this destination sub-area 
+                    foreach (var dataSample in destinationArea)
+                    {
+                        destinationAreaCallCount++;
+                        destinationAreaBytesSent += dataSample.BytesSent;
+                        destinationAreaBytesReceived += dataSample.BytesReceived;
+                    }
+
+                    // increment top level metrics
+                    destinationCallCount += destinationAreaCallCount;
+                    destinationBytesSent += destinationAreaBytesSent;
+                    destinationBytesReceived += destinationAreaBytesReceived;
+
+                    ReportSupportabilityDataUsageMetric(
+                        MetricNames.GetPerDestinationAreaDataUsageMetricName(destinationName, destinationAreaName),
+                        destinationAreaCallCount,
+                        destinationAreaBytesSent,
+                        destinationAreaBytesReceived);
                 }
-            }
-        }
 
-        private class DestinationInteractionSample
-        {
-            public readonly string Api;
-            public readonly string ApiArea;
-            public readonly long DataSent;
-            public readonly long DataReceived;
-
-            public DestinationInteractionSample(string api, string apiArea, long dataSent, long dataReceived)
-            {
-                Api = api;
-                ApiArea = apiArea;
-                DataSent = dataSent;
-                DataReceived = dataReceived;
+                ReportSupportabilityDataUsageMetric(
+                    MetricNames.GetPerDestinationDataUsageMetricName(destinationName),
+                    destinationCallCount,
+                    destinationBytesSent,
+                    destinationBytesReceived);
             }
         }
 
