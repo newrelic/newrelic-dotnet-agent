@@ -88,7 +88,6 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 var response = SendRequest(request, requestPayload.Data);
 
-                //TODO: Finish this impl JOSH
                 _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response).Length);
 
                 Log.DebugFormat("Received : {0}", response);
