@@ -6,7 +6,7 @@
     <description>The New Relic Lambda Tracer is an OpenTracing Tracer implementation specifically designed to support AWS Lambda.</description>
     <authors>New Relic</authors>
     <projectUrl>https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring</projectUrl>
-    <iconUrl>http://newrelic.com/images/avatar-newrelic.png</iconUrl>
+    <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
     <license type="expression">Apache-2.0</license>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <tags>NewRelic Amazon AWS Lambda OpenTracing</tags>

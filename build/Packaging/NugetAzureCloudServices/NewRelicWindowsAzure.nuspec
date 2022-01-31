@@ -8,7 +8,7 @@
     <owners>New Relic</owners>
     <license type="expression">Apache-2.0</license>
     <projectUrl>https://github.com/newrelic/nuget-azure-cloud-services</projectUrl>
-    <iconUrl>http://newrelic.com/images/avatar-newrelic.png</iconUrl>
+    <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Make sure you go to New Relic first to sign up and get your key at http://newrelic.com. Performance monitoring will never be the same after you do!  
             The package is available through your NuGet package manager and on the web at http://nuget.org/packages/NewRelicWindowsAzure  
