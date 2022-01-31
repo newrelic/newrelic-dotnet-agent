@@ -7,8 +7,8 @@
     <authors>New Relic</authors>
     <owners>New Relic</owners>
     <license type="expression">Apache-2.0</license>
-    <projectUrl>https://newrelic.com/.NET</projectUrl>
-    <iconUrl>http://newrelic.com/images/avatar-newrelic.png</iconUrl>
+    <projectUrl>https://docs.newrelic.com/docs/apm/agents/net-agent/other-installation/net-agent-install-resources#scriptable-installer</projectUrl>
+    <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>This package is meant to be used on conjunction with the New Relic .Net Agent thin installer scripts</description>
     <summary>This package contains all of the files necessary for installing the New Relic .Net Agent via the thin installer scripts</summary>
