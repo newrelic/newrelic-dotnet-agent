@@ -51,19 +51,11 @@ namespace NewRelic.Agent.IntegrationTests.LogInstrumentation
             var expectedDebugMessages = 1;
             var expectedTotalMessages = 2;
 
-            // same method used in the wrapper
-            var expectedInfoMessageSize = InfoMessage.Length * sizeof(Char);
-            var expectdeDebugMessageSize = DebugMessage.Length * sizeof(Char);
-            var expectedTotalMessagesSize = expectedInfoMessageSize + expectdeDebugMessageSize;
-
             var actualMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"Logging/lines/INFO", callCount = expectedInfoMessages },
                 new Assertions.ExpectedMetric { metricName = @"Logging/lines/DEBUG", callCount = expectedDebugMessages },
                 new Assertions.ExpectedMetric { metricName = @"Logging/lines", callCount = expectedTotalMessages },
-                new Assertions.ExpectedMetric { metricName = @"Logging/size/INFO", callCount = expectedInfoMessageSize },
-                new Assertions.ExpectedMetric { metricName = @"Logging/size/DEBUG", callCount = expectdeDebugMessageSize },
-                new Assertions.ExpectedMetric { metricName = @"Logging/size", callCount = expectedTotalMessagesSize },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics();

@@ -408,14 +408,6 @@ namespace NewRelic.Agent.Core
             }
         }
 
-        public void UpdateLogSize(string logLevel, int logLineSize)
-        {
-            if (_configurationService.Configuration.LogMetricsCollectorEnabled)
-            {
-                _agentHealthReporter.UpdateLogSize(logLevel, logLineSize);
-            }
-        }
-
         #endregion
 
         #region Helpers

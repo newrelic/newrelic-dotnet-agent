@@ -29,7 +29,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         private readonly IList<RecurringLogData> _recurringLogDatas = new ConcurrentList<RecurringLogData>();
         private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
         private readonly ConcurrentDictionary<string, InterlockedCounter> _logLinesCountByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
-        private readonly ConcurrentDictionary<string, InterlockedCounter> _logLinesSizeByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
 
         private PublishMetricDelegate _publishMetricDelegate;
         private InterlockedCounter _payloadCreateSuccessCounter;
@@ -546,21 +545,6 @@ namespace NewRelic.Agent.Core.AgentHealth
             {
                 TrySend(_metricBuilder.TryBuildLoggingMetricsLinesCountMetric(totalCount));
             }
-
-            var totalSize = 0;
-            foreach (var logsSizeCounter in _logLinesSizeByLevel)
-            {
-                if (TryGetCount(logsSizeCounter.Value, out var linesSize))
-                {
-                    totalSize += linesSize;
-                    TrySend(_metricBuilder.TryBuildLoggingMetricsSizeBySeverityMetric(logsSizeCounter.Key, linesSize));
-                }
-            }
-
-            if (totalSize > 0)
-            {
-                TrySend(_metricBuilder.TryBuildLoggingMetricsSizeMetric(totalSize));
-            }
         }
 
         public void IncrementLogLinesCount(string logLevel)
@@ -568,13 +552,6 @@ namespace NewRelic.Agent.Core.AgentHealth
             var normalizedLevel = logLevel.ToUpper();
             _logLinesCountByLevel.TryAdd(normalizedLevel, new InterlockedCounter());
             _logLinesCountByLevel[normalizedLevel].Increment();
-        }
-
-        public void UpdateLogSize(string logLevel, int logLineSize)
-        {
-            var normalizedLevel = logLevel.ToUpper();
-            _logLinesSizeByLevel.TryAdd(normalizedLevel, new InterlockedCounter());
-            _logLinesSizeByLevel[normalizedLevel].Add(logLineSize);
         }
 
         #endregion

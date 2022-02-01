@@ -17,7 +17,5 @@ namespace NewRelic.Agent.Api.Experimental
         void RecordSupportabilityMetric(string metricName, int count = 1);
 
         void IncrementLogLinesCount(string logLevel);
-
-        void UpdateLogSize(string logLevel, int logLineSize);
     }
 }

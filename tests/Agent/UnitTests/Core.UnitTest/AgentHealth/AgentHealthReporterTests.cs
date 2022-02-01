@@ -196,49 +196,5 @@ namespace NewRelic.Agent.Core.AgentHealth
                 () => Assert.AreEqual(3, allLines.Data.Value0)
                 );
         }
-
-        [Test]
-        public void UpdateLogSize_LevelIsNormalized()
-        {
-            _agentHealthReporter.UpdateLogSize("info", 10);
-            _agentHealthReporter.UpdateLogSize("Info", 10);
-            _agentHealthReporter.UpdateLogSize("InFO", 10);
-            _agentHealthReporter.CollectLoggingMetrics();
-
-            var infoLevelSize = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/size/INFO");
-            var allSize = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/size");
-
-            NrAssert.Multiple(
-                () => Assert.AreEqual(2, _publishedMetrics.Count),
-                () => Assert.AreEqual($"Logging/size/INFO", infoLevelSize.MetricName.Name),
-                () => Assert.AreEqual($"Logging/size", allSize.MetricName.Name)
-                );
-        }
-
-        [Test]
-        public void UpdateLogSize_CheckLevelsAndCounts()
-        {
-            _agentHealthReporter.UpdateLogSize("info", 10);
-            _agentHealthReporter.UpdateLogSize("debug", 10);
-            _agentHealthReporter.UpdateLogSize("finest", 10);
-            _agentHealthReporter.CollectLoggingMetrics();
-
-            var infoLevelSize = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/size/INFO");
-            var debugLevelSize = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/size/DEBUG");
-            var finestLevelSize = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/size/FINEST");
-            var allSize = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/size");
-
-            NrAssert.Multiple(
-                () => Assert.AreEqual(4, _publishedMetrics.Count),
-                () => Assert.AreEqual($"Logging/size/INFO", infoLevelSize.MetricName.Name),
-                () => Assert.AreEqual(10, infoLevelSize.Data.Value0),
-                () => Assert.AreEqual($"Logging/size/DEBUG", debugLevelSize.MetricName.Name),
-                () => Assert.AreEqual(10, debugLevelSize.Data.Value0),
-                () => Assert.AreEqual($"Logging/size/FINEST", finestLevelSize.MetricName.Name),
-                () => Assert.AreEqual(10, finestLevelSize.Data.Value0),
-                () => Assert.AreEqual($"Logging/size", allSize.MetricName.Name),
-                () => Assert.AreEqual(30, allSize.Data.Value0)
-                );
-        }
     }
 }

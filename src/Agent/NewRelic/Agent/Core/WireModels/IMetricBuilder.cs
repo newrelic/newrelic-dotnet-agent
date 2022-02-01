@@ -198,10 +198,6 @@ namespace NewRelic.Agent.Core.WireModels
 
         MetricWireModel TryBuildLoggingMetricsLinesCountBySeverityMetric(string logLevel, int count);
 
-        MetricWireModel TryBuildLoggingMetricsSizeBySeverityMetric(string logLevel, int size);
-
         MetricWireModel TryBuildLoggingMetricsLinesCountMetric(int count);
-
-        MetricWireModel TryBuildLoggingMetricsSizeMetric(int size);
     }
 }
