@@ -260,5 +260,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "processHost" },
                     "displayName", customHostName);
         }
+
+        public NewRelicConfigModifier EnableLogMetrics(bool enable)
+        {
+            CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending", "metrics" }, "enabled", enable.ToString().ToLower());
+            return this;
+        }
     }
 }

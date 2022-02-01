@@ -16,5 +16,6 @@ namespace NewRelic.Agent.Api.Experimental
         /// <param name="count">Defaults to 1.0f</param>
         void RecordSupportabilityMetric(string metricName, int count = 1);
 
+        void IncrementLogLinesCount(string logLevel);
     }
 }

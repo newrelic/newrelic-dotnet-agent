@@ -2415,6 +2415,17 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         #endregion
 
+        #region Log Metrics and Events
+
+        [Test]
+        public void LogMetricsCollectorEnabledIsTrueInLocalConfigByDefault()
+        {
+            Assert.IsTrue(_localConfig.logSending.metrics.enabled);
+        }
+
+        #endregion
+
+
         #region Capture Attributes
 
         [TestCase(null, false)]

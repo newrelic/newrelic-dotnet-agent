@@ -28,6 +28,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         private readonly IDnsStatic _dnsStatic;
         private readonly IList<RecurringLogData> _recurringLogDatas = new ConcurrentList<RecurringLogData>();
         private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
+        private readonly ConcurrentDictionary<string, InterlockedCounter> _logLinesCountByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
 
         private PublishMetricDelegate _publishMetricDelegate;
         private InterlockedCounter _payloadCreateSuccessCounter;
@@ -526,6 +527,35 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #endregion
 
+        #region Log Events and Metrics
+
+        public void CollectLoggingMetrics()
+        {
+            var totalCount = 0;
+            foreach (var logLinesCounter in _logLinesCountByLevel)
+            {
+                if (TryGetCount(logLinesCounter.Value, out var linesCount))
+                {
+                    totalCount += linesCount;
+                    TrySend(_metricBuilder.TryBuildLoggingMetricsLinesCountBySeverityMetric(logLinesCounter.Key, linesCount));
+                }
+            }
+
+            if (totalCount > 0)
+            {
+                TrySend(_metricBuilder.TryBuildLoggingMetricsLinesCountMetric(totalCount));
+            }
+        }
+
+        public void IncrementLogLinesCount(string logLevel)
+        {
+            var normalizedLevel = logLevel.ToUpper();
+            _logLinesCountByLevel.TryAdd(normalizedLevel, new InterlockedCounter());
+            _logLinesCountByLevel[normalizedLevel].Increment();
+        }
+
+        #endregion
+
         public void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint)
         {
             TrySend(_metricBuilder.TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(endpoint));
@@ -540,6 +570,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportDotnetVersion();
             ReportAgentInfo();
             CollectInfiniteTracingMetrics();
+            CollectLoggingMetrics();
         }
 
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)

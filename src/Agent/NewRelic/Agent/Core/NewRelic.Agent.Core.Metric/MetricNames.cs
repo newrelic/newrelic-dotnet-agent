@@ -1008,5 +1008,22 @@ namespace NewRelic.Agent.Core.Metric
         }
 
         #endregion Performance Metrics
+
+        #region Log Metrics
+
+        private const string LoggingMetrics = "Logging";
+        private const string LoggingMetricsDotnetLines = LoggingMetrics + PathSeparator + "lines";
+
+        public static string GetLoggingMetricsLinesBySeverityName(string logLevel)
+        {
+            return LoggingMetricsDotnetLines + PathSeparator + logLevel;
+        }
+
+        public static string GetLoggingMetricsLinesName()
+        {
+            return LoggingMetricsDotnetLines;
+        }
+
+        #endregion
     }
 }
