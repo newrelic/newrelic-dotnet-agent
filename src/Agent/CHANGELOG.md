@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 ### New Features
+### Fixes
+
+## [9.5.0] - 2022-02-01
+### New Features
 * Internal improvements to runtime detection logic in the profiler component of the agent. ([#891](https://github.com/newrelic/newrelic-dotnet-agent/pull/891))
 ### Fixes
 * Fixed an [issue with NuGet package metadata](https://github.com/newrelic/newrelic-dotnet-agent/issues/896). ([#901](https://github.com/newrelic/newrelic-dotnet-agent/pull/901))
@@ -13,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [9.4.0] - 2022-01-18
 ### New Features
 * Allows NewRelicQueryName to be specified for SQL, to implement [this suggestion](https://discuss.newrelic.com/t/provide-a-pattern-to-explicitly-name-sql-queries-displayed-in-databases-dashboard/78755). Thanks to community contributor @kevinpohlmeier for the implementation. ([#799](https://github.com/newrelic/newrelic-dotnet-agent/pull/799))
-
 ### Fixes
 * Resolves an issue where GC metrics were not being properly captured for .NET 6 applications ([#874](https://github.com/newrelic/newrelic-dotnet-agent/pull/874))
 
@@ -21,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 * NServiceBus versions 6 and 7 are now supported in .NET Framework and .NET Core. ([#857](https://github.com/newrelic/newrelic-dotnet-agent/pull/857))
 * Add ability to disable agent support for Server-Configuration with `NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG` environment variable. The available value options are `true` and `false`. ([#814](https://github.com/newrelic/newrelic-dotnet-agent/pull/814))
-
 ### Fixes
 * Fixes issue [#36](https://github.com/newrelic/newrelic-dotnet-agent/issues/36): Total system memory will now be correctly reported on Linux. ([#855](https://github.com/newrelic/newrelic-dotnet-agent/pull/855))
 * Fixes an issue in `newrelic.config` file schema validation that could block agent startup. ([#835](https://github.com/newrelic/newrelic-dotnet-agent/pull/835))
@@ -369,7 +371,8 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.4.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.5.0...HEAD
+[9.5.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.4.0...v9.5.0
 [9.4.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.3.0...v9.4.0
 [9.3.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.2.0...v9.3.0
 [9.2.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.1.1...v9.2.0
