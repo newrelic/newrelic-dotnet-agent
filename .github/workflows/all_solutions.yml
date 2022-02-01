@@ -10,7 +10,7 @@ on:
     branches: 
     - main
     # TODO: Trim everything below this when appropriate
-    - nservicebus7-feature-branch
+    - logsinst-feature-branch
   release:
     types: [ published ]
   workflow_dispatch:
