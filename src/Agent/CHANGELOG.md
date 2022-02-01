@@ -6,7 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 ### New Features
+* Internal improvements to runtime detection logic in the profiler component of the agent. ([#891](https://github.com/newrelic/newrelic-dotnet-agent/pull/891))
 ### Fixes
+* Fixed an [issue with NuGet package metadata](https://github.com/newrelic/newrelic-dotnet-agent/issues/896). ([#901](https://github.com/newrelic/newrelic-dotnet-agent/pull/901))
 
 ## [9.4.0] - 2022-01-18
 ### New Features
