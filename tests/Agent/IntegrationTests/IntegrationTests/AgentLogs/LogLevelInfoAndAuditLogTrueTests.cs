@@ -8,14 +8,14 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.Logging
+namespace NewRelic.Agent.IntegrationTests.AgentLogs
 {
     [NetFrameworkTest]
-    public class LogLevelInfoAndAuditLogNotSetTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class LogLevelInfoAndAuditLogTrueTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public LogLevelInfoAndAuditLogNotSetTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
+        public LogLevelInfoAndAuditLogTrueTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -28,6 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     configModifier.ForceTransactionTraces();
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "info");
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "auditLog", "true");
                 },
                 exerciseApplication: () =>
                 {
@@ -43,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             Assert.NotNull(_fixture.AgentLog);
             var auditLogFile = Directory.EnumerateFiles(_fixture.DestinationNewRelicLogFileDirectoryPath, "newrelic_agent_*_audit.log")
                 .FirstOrDefault();
-            Assert.Null(auditLogFile);
+            Assert.NotNull(auditLogFile);
         }
     }
 }
