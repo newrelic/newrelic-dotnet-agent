@@ -31,10 +31,10 @@ namespace NewRelic.Agent.Core.JsonConverters
 
         public override void WriteJson(JsonWriter jsonWriter, LogEventWireModelCollection value, JsonSerializer serializer)
         {
-            WriteJsonImpl(jsonWriter, value, serializer);
+            WriteJsonImpl(jsonWriter, value);
         }
 
-        public static void WriteJsonImpl(JsonWriter jsonWriter, LogEventWireModelCollection value, JsonSerializer serializer)
+        private static void WriteJsonImpl(JsonWriter jsonWriter, LogEventWireModelCollection value)
         {
             jsonWriter.WriteStartObject();
 

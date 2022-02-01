@@ -7,7 +7,6 @@ using NewRelic.Collections;
 namespace NewRelic.Agent.Core.WireModels
 {
     public class LogEventWireModel : IHasPriority
-
     {
         /// <summary>
         /// The UTC timestamp in unix milliseconds. 
@@ -30,7 +29,7 @@ namespace NewRelic.Agent.Core.WireModels
         public string SpanId { get; }
 
         /// <summary>
-        /// The traced if of the transaction.
+        /// The traced id of the transaction.
         /// </summary>
         public string TraceId { get; }
 
