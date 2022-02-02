@@ -1600,9 +1600,29 @@
                               </xs:attribute>
                           </xs:complexType>
                       </xs:element>
-
-                      
-
+                      <xs:element name="forwarding" minOccurs="0" maxOccurs="1">
+                          <xs:annotation>
+                              <xs:documentation>
+                                  When enabled, send up captures and send up log messages with logs-in-context data.
+                              </xs:documentation>
+                          </xs:annotation>
+                          <xs:complexType>
+                              <xs:attribute name="enabled" type="xs:boolean" default="true">
+                                  <xs:annotation>
+                                      <xs:documentation>
+                                          Controls whether or not log forwarding occurs. Defaults to true.
+                                      </xs:documentation>
+                                  </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="maxSamplesStored" type="xs:int" default="50000">
+                                  <xs:annotation>
+                                      <xs:documentation>
+                                          The maximum number of log emssages captured per minute. Default is 50000 messages.
+                                      </xs:documentation>
+                                  </xs:annotation>
+                              </xs:attribute>
+                          </xs:complexType>
+                      </xs:element>
                   </xs:sequence>
               </xs:complexType>
           </xs:element>
