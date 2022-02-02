@@ -34,6 +34,7 @@ namespace NewRelic.Agent.Core.DataTransport
         DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> enumerable);
         DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels);
         DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents);
+        DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents);
     }
 
     public class DataTransportService : ConfigurationBasedService, IDataTransportService
@@ -105,6 +106,11 @@ namespace NewRelic.Agent.Core.DataTransport
         public DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels)
         {
             return TrySendDataRequest("sql_trace_data", sqlTraceWireModels);
+        }
+
+        public DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents)
+        {
+            return TrySendDataRequest("log_event_data", loggingEvents);
         }
 
         public DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics)
