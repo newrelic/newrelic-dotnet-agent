@@ -11,6 +11,7 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
+using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -23,6 +24,7 @@ namespace NewRelic.Agent.Core.Transactions
         /// parent segment (unless it is a root segment).
         /// </summary>
         IList<Segment> Segments { get; }
+        IList<LogEventWireModel> LogEvents { get; }
         ICandidateTransactionName CandidateTransactionName { get; }
         void RollupTransactionNameByStatusCodeIfNeeded();
         ITransactionMetadata TransactionMetadata { get; }

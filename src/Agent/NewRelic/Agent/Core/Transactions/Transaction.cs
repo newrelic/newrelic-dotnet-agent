@@ -16,6 +16,7 @@ using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Parsing;
@@ -866,6 +867,8 @@ namespace NewRelic.Agent.Core.Transactions
             return this;
         }
 
+        private readonly ConcurrentList<LogEventWireModel> _logEvents = new ConcurrentList<LogEventWireModel>();
+        public IList<LogEventWireModel> LogEvents { get => _logEvents; }
 
         private readonly ConcurrentList<Segment> _segments = new ConcurrentList<Segment>();
         public IList<Segment> Segments { get => _segments; }
@@ -944,6 +947,14 @@ namespace NewRelic.Agent.Core.Transactions
                 return _segments.AddAndReturnIndex(segment);
             }
             return -1;
+        }
+
+        public void RecordLogMessage(DateTime timestamp, string logLevel, string logMessage, string spanId, string traceId)
+        {
+            if (!string.IsNullOrWhiteSpace(logLevel) && _configuration.LogEventCollectorEnabled)
+            {
+                _logEvents.Add(new LogEventWireModel(timestamp.ToUnixTimeMilliseconds(), logMessage, logLevel, spanId, traceId));
+            }
         }
 
         public ImmutableTransaction ConvertToImmutableTransaction()
