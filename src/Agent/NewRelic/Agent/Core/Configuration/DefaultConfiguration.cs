@@ -1788,6 +1788,30 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public virtual bool LogEventCollectorEnabled
+        {
+            get
+            {
+                return _localConfiguration.logSending.forwarding.enabled;
+            }
+        }
+
+        public TimeSpan LogEventsHarvestCycle
+        {
+            get
+            {
+                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.LogEventHarvestCycle(), TimeSpan.FromSeconds(5));
+            }
+        }
+
+        public virtual int LogEventsMaximumPerPeriod
+        {
+            get
+            {
+                return _localConfiguration.logSending.forwarding.maxSamplesStored;
+            }
+        }
+
         #endregion
 
         private bool? _diagnosticsCaptureAgentTiming;

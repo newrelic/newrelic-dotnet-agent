@@ -4907,11 +4907,14 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationLogSendingMetrics metricsField;
         
+        private configurationLogSendingForwarding forwardingField;
+        
         /// <summary>
         /// configurationLogSending class constructor
         /// </summary>
         public configurationLogSending()
         {
+            this.forwardingField = new configurationLogSendingForwarding();
             this.metricsField = new configurationLogSendingMetrics();
         }
         
@@ -4924,6 +4927,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.metricsField = value;
+            }
+        }
+        
+        public configurationLogSendingForwarding forwarding
+        {
+            get
+            {
+                return this.forwardingField;
+            }
+            set
+            {
+                this.forwardingField = value;
             }
         }
         
@@ -4976,6 +4991,65 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationLogSendingMetrics Clone()
         {
             return ((configurationLogSendingMetrics)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationLogSendingForwarding
+    {
+        
+        private bool enabledField;
+        
+        private int maxSamplesStoredField;
+        
+        /// <summary>
+        /// configurationLogSendingForwarding class constructor
+        /// </summary>
+        public configurationLogSendingForwarding()
+        {
+            this.enabledField = true;
+            this.maxSamplesStoredField = 50000;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(50000)]
+        public int maxSamplesStored
+        {
+            get
+            {
+                return this.maxSamplesStoredField;
+            }
+            set
+            {
+                this.maxSamplesStoredField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationLogSendingForwarding object
+        /// </summary>
+        public virtual configurationLogSendingForwarding Clone()
+        {
+            return ((configurationLogSendingForwarding)(this.MemberwiseClone()));
         }
         #endregion
     }
