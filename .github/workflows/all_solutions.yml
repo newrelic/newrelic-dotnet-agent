@@ -2,15 +2,10 @@ name: .NET Agent All Solutions Build
 
 # Does not run on PUSH since we have already ran all the test
 on:
-  push:
-    branches:
-    # Forgive me, fellow engineers
-      - jcoleman/**
   pull_request:
     branches: 
     - main
-    # TODO: Trim everything below this when appropriate
-    - nservicebus7-feature-branch
+    - '**-feature-branch'
   release:
     types: [ published ]
   workflow_dispatch:
