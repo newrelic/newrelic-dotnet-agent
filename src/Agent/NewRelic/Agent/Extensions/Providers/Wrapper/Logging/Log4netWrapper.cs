@@ -12,6 +12,8 @@ namespace NewRelic.Providers.Wrapper.Logging
     public class Log4netWrapper : IWrapper
     {
         private static Func<object, object> _getLogLevel;
+        private static Func<object, string> _getRenderedMessage;
+        private static Func<object, DateTime> _getTimestamp;
 
         public bool IsTransactionRequired => false;
 
@@ -31,6 +33,26 @@ namespace NewRelic.Providers.Wrapper.Logging
 
             var xapi = agent.GetExperimentalApi();
             xapi.IncrementLogLinesCount(logLevel);
+
+            if (!agent.CurrentTransaction.IsValid)
+            {
+                return Delegates.NoOp;
+            }
+
+            // RenderedMessage is get only
+            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(loggingEvent.GetType(), "RenderedMessage");
+            var renderedMessage = getRenderedMessageFunc(loggingEvent);
+
+            if (string.IsNullOrWhiteSpace(renderedMessage))
+            {
+                return Delegates.NoOp;
+            }
+
+            // We can either get this in Local or UTC
+            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(loggingEvent.GetType(), "TimeStampUtc");
+            var timestamp = getTimestampFunc(loggingEvent);
+
+            ((ITransactionExperimental)agent.CurrentTransaction).RecordLogMessage(timestamp, logLevel, renderedMessage, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
 
             return Delegates.NoOp;
         }
