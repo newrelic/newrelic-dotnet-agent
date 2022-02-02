@@ -20,9 +20,41 @@ using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
-    [TestFixture]
-    public class DataTransportServiceTests
+    
+    public class SendTransactionEventDataTransportServiceTests : DataTransportServiceTestBase
     {
+        public override DataTransportResponseStatus ExecuteRequest(DataTransportService service)
+        {
+            return service.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+        }
+
+        public override string GetExpectedDestinationAreaName()
+        {
+            return "analytic_event_data";
+        }
+    }
+
+    public class SendLogEventDataTransportServiceTests : DataTransportServiceTestBase
+    {
+        public override DataTransportResponseStatus ExecuteRequest(DataTransportService service)
+        {
+            return service.Send(Arg.IsAny<LogEventWireModelCollection>());
+        }
+
+        public override string GetExpectedDestinationAreaName()
+        {
+            return "log_event_data";
+        }
+    }
+
+    // TODO: Add coverage for more send methods
+
+    [TestFixture]
+    public abstract class DataTransportServiceTestBase
+    {
+        public abstract DataTransportResponseStatus ExecuteRequest(DataTransportService service);
+        public abstract string GetExpectedDestinationAreaName();
+
         private DataTransportService _dataTransportService;
         private IConnectionManager _connectionManager;
         private IConfiguration _configuration;
@@ -32,7 +64,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private IScheduler _scheduler;
         private IDateTimeStatic _dateTimeStatic;
 
-        private static readonly Exception[] ExceptionsThatShouldTriggerSupportabilityMetrics =
+        public static readonly Exception[] ExceptionsThatShouldTriggerSupportabilityMetrics =
         {
             new Exception("plain exception"),
             new SocketException(-1),
@@ -62,15 +94,13 @@ namespace NewRelic.Agent.Core.DataTransport
             _disposableCollection.Dispose();
         }
 
-        // Technically these tests should be run against every public API method instead of just SendTransactionEventWireModels, but writing all those tests would be a pain
-
         [Test]
         public void SendXyz_ReturnsSuccessful_IfRequestSuccessful()
         {
             Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Returns<string, object[]>(null);
 
-            var result = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+            var result = ExecuteRequest(_dataTransportService);
 
             Assert.AreEqual(DataTransportResponseStatus.RequestSuccessful, result);
         }
@@ -101,7 +131,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new HttpException(statusCode, null));
 
-            var actual = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+            var actual = ExecuteRequest(_dataTransportService);
 
             Assert.AreEqual(expected, actual);
         }
@@ -112,7 +142,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new SocketException(-1));
 
-            var result = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+            var result = ExecuteRequest(_dataTransportService);
 
             Assert.AreEqual(DataTransportResponseStatus.Retain, result);
         }
@@ -123,7 +153,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new WebException());
 
-            var result = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+            var result = ExecuteRequest(_dataTransportService);
 
             Assert.AreEqual(DataTransportResponseStatus.Retain, result);
         }
@@ -134,7 +164,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new OperationCanceledException());
 
-            var result = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+            var result = ExecuteRequest(_dataTransportService);
 
             Assert.AreEqual(DataTransportResponseStatus.Retain, result);
         }
@@ -145,7 +175,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new Exception());
 
-            var result = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+            var result = ExecuteRequest(_dataTransportService);
 
             Assert.AreEqual(DataTransportResponseStatus.Discard, result);
         }
@@ -159,7 +189,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             using (new EventExpectation<RestartAgentEvent>())
             {
-                _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+                ExecuteRequest(_dataTransportService);
             }
         }
 
@@ -173,7 +203,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _connectionHandler.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new HttpException(statusCode, null));
 
-            _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+            ExecuteRequest(_dataTransportService);
 
             Mock.Assert(() => _connectionHandler.Disconnect(), Occurs.Once());
             Mock.Assert(() => _connectionHandler.Connect(), Occurs.Once());
@@ -187,7 +217,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             using (new EventExpectation<KillAgentEvent>())
             {
-                _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+                ExecuteRequest(_dataTransportService);
             }
         }
 
@@ -199,9 +229,9 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(exception);
 
-            _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+            ExecuteRequest(_dataTransportService);
 
-            Mock.Assert(() => _agentHealthReporter.ReportSupportabilityCollectorErrorException(Arg.Is("analytic_event_data"), Arg.IsAny<TimeSpan>(), Arg.Is(exception.StatusCode)));
+            Mock.Assert(() => _agentHealthReporter.ReportSupportabilityCollectorErrorException(Arg.Is(GetExpectedDestinationAreaName()), Arg.IsAny<TimeSpan>(), Arg.Is(exception.StatusCode)));
         }
 
         [Test, TestCaseSource(nameof(ExceptionsThatShouldTriggerSupportabilityMetrics))]
@@ -210,9 +240,9 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(exception);
 
-            _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+            ExecuteRequest(_dataTransportService);
 
-            Mock.Assert(() => _agentHealthReporter.ReportSupportabilityCollectorErrorException(Arg.Is("analytic_event_data"), Arg.IsAny<TimeSpan>(), Arg.IsNull<HttpStatusCode?>()));
+            Mock.Assert(() => _agentHealthReporter.ReportSupportabilityCollectorErrorException(Arg.Is(GetExpectedDestinationAreaName()), Arg.IsAny<TimeSpan>(), Arg.IsNull<HttpStatusCode?>()));
         }
     }
 }
