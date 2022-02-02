@@ -562,8 +562,6 @@ namespace NewRelic.Agent.Core.Metric
         public const string SupportabilityEventHarvestCustomEventHarvestLimit = SupportabilityEventHarvestPs + "CustomEventData" + SupportabilityEventHarvestHarvestLimit;
         public const string SupportabilityEventHarvestTransactionEventHarvestLimit = SupportabilityEventHarvestPs + "AnalyticEventData" + SupportabilityEventHarvestHarvestLimit;
 
-
-        // TODO: stop generating new string
         public static string GetSupportabilityCATConditionMetricName(CATSupportabilityCondition condition)
         {
             if (_catMetricNames.TryGetValue(condition, out var metricName))
@@ -574,19 +572,16 @@ namespace NewRelic.Agent.Core.Metric
             return SupportabilityCAT + EnumNameCache<CATSupportabilityCondition>.GetName(condition);
         }
 
-        // TODO: stop generating new string
         public static string GetSupportabilityName(string metricName)
         {
             return Supportability + PathSeparator + metricName;
         }
 
-        // TODO: stop generating new string
         public static string GetSupportabilityDotnetFrameworkVersion(DotnetFrameworkVersion version)
         {
             return SupportabilityNetFrameworkVersionPs + version;
         }
 
-        // TODO: stop generating new string
         public static string GetSupportabilityDotnetCoreVersion(DotnetCoreVersion version)
         {
             return SupportabilityNetCoreVersionPs + version;
@@ -594,13 +589,11 @@ namespace NewRelic.Agent.Core.Metric
 
         private const string SupportabilityAgentVersionPs = SupportabilityPs + "AgentVersion" + PathSeparator;
 
-        // TODO: stop generating new string
         public static string GetSupportabilityAgentVersion(string version)
         {
             return SupportabilityAgentVersionPs + version;
         }
 
-        // TODO: stop generating new string
         public static string GetSupportabilityAgentVersionByHost(string host, string version)
         {
             return SupportabilityAgentVersionPs + host + PathSeparator + version;
@@ -608,7 +601,6 @@ namespace NewRelic.Agent.Core.Metric
 
         private const string SupportabilityLibraryVersionPs = SupportabilityPs + "Library" + PathSeparator;
 
-        // TODO: stop generating new string
         public static string GetSupportabilityLibraryVersion(string assemblyName, string assemblyVersion)
         {
             return SupportabilityLibraryVersionPs + assemblyName + PathSeparator + assemblyVersion;
@@ -637,14 +629,12 @@ namespace NewRelic.Agent.Core.Metric
 
         public static string GetSupportabilityPcfUsabilityError() => SupportabilityUtilizationPcfError;
 
-        // TODO: stop generating new string
         public static string GetSupportabilityPayloadsDroppedDueToMaxPayloadLimit(string endpoint)
         {
             return SupportabilityPayloadsDroppedDueToMaxPayloadLimitPrefix + PathSeparator + endpoint;
         }
 
         // Agent health events
-        // TODO: stop generating new string
         public static string GetSupportabilityAgentHealthEvent(AgentHealthEvent agentHealthEvent,
             string additionalData = null)
         {
@@ -655,7 +645,6 @@ namespace NewRelic.Agent.Core.Metric
         // Agent features
         private const string SupportabilityFeatureEnabledPs = SupportabilityPs + "FeatureEnabled" + PathSeparator;
 
-        // TODO: stop generating new string
         public static string GetSupportabilityFeatureEnabled(string featureName)
         {
             return SupportabilityFeatureEnabledPs + featureName;
@@ -664,7 +653,6 @@ namespace NewRelic.Agent.Core.Metric
         // Agent API
         private const string SupportabilityAgentApiPs = SupportabilityPs + "ApiInvocation" + PathSeparator;
 
-        // TODO: stop generating new string
         public static string GetSupportabilityAgentApi(string methodName)
         {
             return SupportabilityAgentApiPs + methodName;
@@ -684,7 +672,7 @@ namespace NewRelic.Agent.Core.Metric
             { CATSupportabilityCondition.Request_Create_Success,   SupportabilityCATRequestCreate + "Success" },
             { CATSupportabilityCondition.Request_Create_Failure,   SupportabilityCATRequestCreate + "Exception" },
             { CATSupportabilityCondition.Request_Create_Failure_XProcID, SupportabilityCATRequestCreate + "Exception/CrossProcessID" },
-             { CATSupportabilityCondition.Request_Accept_Success,   SupportabilityCATRequestAccept + "Success" },
+            { CATSupportabilityCondition.Request_Accept_Success,   SupportabilityCATRequestAccept + "Success" },
             { CATSupportabilityCondition.Request_Accept_Failure,   SupportabilityCATRequestAccept + "Exception" },
             { CATSupportabilityCondition.Request_Accept_Failure_NotTrusted,   SupportabilityCATRequestAccept + "Ignored/NotTrusted" },
             { CATSupportabilityCondition.Request_Accept_Failure_Decode, SupportabilityCATRequestAccept + "Ignored/UnableToDecode" },
@@ -795,19 +783,16 @@ namespace NewRelic.Agent.Core.Metric
         //In addition to these metrics agents are encouraged to add more specific metrics to assist in debugging issues parsing the payload. 
         //More detailed parse exception metrics SHOULD start with 'Supportability/TraceContext/Parse/Exception'
 
-        // TODO: stop generating new string
         public static string GetSupportabilityErrorHttpStatusCodeFromCollector(HttpStatusCode statusCode)
         {
             return Supportability + PathSeparator + "Agent/Collector/HTTPError" + PathSeparator + (int)statusCode;
         }
 
-        // TODO: stop generating new string
         public static string GetSupportabilityEndpointMethodErrorAttempts(string enpointMethod)
         {
             return Supportability + PathSeparator + "Agent/Collector" + PathSeparator + enpointMethod + PathSeparator + "Attempts";
         }
 
-        // TODO: stop generating new string
         public static string GetSupportabilityEndpointMethodErrorDuration(string enpointMethod)
         {
             return Supportability + PathSeparator + "Agent/Collector" + PathSeparator + enpointMethod + PathSeparator + "Duration";
@@ -818,7 +803,6 @@ namespace NewRelic.Agent.Core.Metric
         // Install Type
         private const string SupportabilityInstallTypePs = SupportabilityPs + "Dotnet/InstallType" + PathSeparator;
 
-        // TODO: stop generating new string
         public static string GetSupportabilityInstallType(string installType)
         {
             return SupportabilityInstallTypePs + installType;
@@ -849,8 +833,6 @@ namespace NewRelic.Agent.Core.Metric
         /// <param name="transport">e.g. http, grpc</param>
         /// <returns>A metric prefix: e.g. DurationByCaller/{parent.type}/{parent.accountId}/{parent.appId}/{transport}/
         /// </returns>
-        ///
-        // TODO: stop generating new string
         private static string GetDistributedTraceMetricPrefix(
             string metricTag,
             string type,
@@ -969,7 +951,6 @@ namespace NewRelic.Agent.Core.Metric
         public const string SupportabilityInfiniteTracingSpanDropped = SupportabilityInfiniteTracingSpan + "Dropped";
         public const string SupportabilityInfiniteTracingSpanGrpcTimeout = SupportabilityInfiniteTracingSpan + "gRPC" + PathSeparator + "Timeout";
 
-        // TODO: stop generating new string
         public static string SupportabilityInfiniteTracingSpanGrpcError(string error)
         {
             return SupportabilityInfiniteTracingSpan + "gRPC" + PathSeparator + error;
@@ -988,13 +969,11 @@ namespace NewRelic.Agent.Core.Metric
         public const string DotNetPerfThreadpool = "Threadpool" + PathSeparator;
         public const string DotNetPerfThreadpoolThroughput = DotNetPerfThreadpool + "Throughput" + PathSeparator;
 
-        // TODO: stop generating new string
         public static string GetThreadpoolUsageStatsName(ThreadType type, ThreadStatus status)
         {
             return DotNetPerfThreadpool + EnumNameCache<ThreadType>.GetName(type) + PathSeparator + EnumNameCache<ThreadStatus>.GetName(status);
         }
 
-        // TODO: stop generating new string
         public static string GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType type)
         {
             return DotNetPerfThreadpoolThroughput + EnumNameCache<ThreadpoolThroughputStatsType>.GetName(type);
@@ -1031,34 +1010,17 @@ namespace NewRelic.Agent.Core.Metric
 
         #region Data Usage Metrics
 
-        private static readonly ConcurrentDictionary<string, string> _perDestinationDataUsageMetricNames = new ConcurrentDictionary<string, string>();
+        private const string dataUsageRoot = "Supportability/DotNET/";
+        private const string outputBytesDecorator = "/Output/Bytes";
+
         public static string GetPerDestinationDataUsageMetricName(string destination)
         {
-            if(!_perDestinationDataUsageMetricNames.TryGetValue(destination, out var value))
-            {
-                value = $"Supportability/DotNET/{destination}/Output/Bytes";
-                _perDestinationDataUsageMetricNames.TryAdd(destination, value);
-            }
-
-            return value;
+            return dataUsageRoot + destination + outputBytesDecorator;
         }
 
-        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> _perDestinationAreaDataUsageMetricNames = new ConcurrentDictionary<string, ConcurrentDictionary<string, string>>();
         public static string GetPerDestinationAreaDataUsageMetricName(string destination, string destinationArea)
         {
-            if(!_perDestinationAreaDataUsageMetricNames.TryGetValue(destination, out var subMap))
-            {
-                _perDestinationAreaDataUsageMetricNames.TryAdd(destination, new ConcurrentDictionary<string, string>());
-                subMap = _perDestinationAreaDataUsageMetricNames[destination];
-            }
-
-            if(!subMap.TryGetValue(destinationArea, out var value))
-            {
-                value = $"Supportability/DotNET/{destination}/Output/Bytes/{destinationArea}";
-                subMap.TryAdd(destinationArea, value);
-            }
-
-            return value;
+            return dataUsageRoot + destination + PathSeparator + destinationArea + outputBytesDecorator;
         }
 
         #endregion Data Usage Metrics
