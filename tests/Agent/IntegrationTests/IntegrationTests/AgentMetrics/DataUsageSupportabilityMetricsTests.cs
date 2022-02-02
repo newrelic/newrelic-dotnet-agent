@@ -79,7 +79,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         {
             const string expectedMetricName = "Supportability/DotNET/Collector/Output/Bytes";
             var metrics = Fixture.AgentLog.GetMetrics().ToList();
-            var metricNames = metrics.Select(x => x.MetricSpec.Name).OrderBy(x => x).ToArray();
 
             var collectorGlobalMetric = metrics.FirstOrDefault(x => x.MetricSpec.Name == expectedMetricName);
             Assert.NotNull(collectorGlobalMetric);
@@ -92,9 +91,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         [Fact]
         public void ExpectedMetric_CollectorConnectMetric()
         {
-            const string expectedMetricName = "Supportability/DotNET/Collector/Output/Bytes/connect";
+            const string expectedMetricName = "Supportability/DotNET/Collector/connect/Output/Bytes";
             var metrics = Fixture.AgentLog.GetMetrics().ToList();
-            var metricNames = metrics.Select(x => x.MetricSpec.Name).OrderBy(x => x).ToArray();
 
             var collectorConnectMetric = metrics.FirstOrDefault(x => x.MetricSpec.Name == expectedMetricName);
             Assert.NotNull(collectorConnectMetric);

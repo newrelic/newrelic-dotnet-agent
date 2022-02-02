@@ -172,7 +172,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             Assert.AreEqual(100, perDestinationUnspecifiedMetric[0].Data.Value2); // bytes received
 
             // Verify that subarea metric exists for Collector data with unspecified api area
-            var unspecifiedDestinationAndAreaMetric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/UnspecifiedDestination/Output/Bytes/UnspecifiedDestinationArea").ToArray();
+            var unspecifiedDestinationAndAreaMetric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/UnspecifiedDestination/Output/Bytes").ToArray();
             Assert.AreEqual(1, unspecifiedDestinationAndAreaMetric.Length);
             Assert.AreEqual(1, unspecifiedDestinationAndAreaMetric[0].Data.Value0); // call count
             Assert.AreEqual(100, unspecifiedDestinationAndAreaMetric[0].Data.Value1); // bytes sent
@@ -186,28 +186,28 @@ namespace NewRelic.Agent.Core.AgentHealth
             Assert.AreEqual(1500, perDestinationCollectorMetric[0].Data.Value2); // bytes received
 
             // Verify that subarea metric exists for Collector 'connect'
-            var connectMetric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/Output/Bytes/connect").ToArray();
+            var connectMetric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/connect/Output/Bytes").ToArray();
             Assert.AreEqual(1, connectMetric.Length);
             Assert.AreEqual(1, connectMetric[0].Data.Value0, 1); // call count
             Assert.AreEqual(100, connectMetric[0].Data.Value1, 100); // bytes sent
             Assert.AreEqual(200, connectMetric[0].Data.Value2, 200); // bytes received
 
             // Verify that subarea metric exists for Collector 'doSomething1'
-            var doSomething1Metric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/Output/Bytes/doSomething1").ToArray();
+            var doSomething1Metric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/doSomething1/Output/Bytes").ToArray();
             Assert.AreEqual(1, doSomething1Metric.Length);
             Assert.AreEqual(2, doSomething1Metric[0].Data.Value0); // call count
             Assert.AreEqual(500, doSomething1Metric[0].Data.Value1); // bytes sent
             Assert.AreEqual(700, doSomething1Metric[0].Data.Value2); // bytes received
 
             // Verify that subarea metric exists for Collector 'doSomething2'
-            var doSomething2Metric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/Output/Bytes/doSomething2").ToArray();
+            var doSomething2Metric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/doSomething2/Output/Bytes").ToArray();
             Assert.AreEqual(1, doSomething2Metric.Length);
             Assert.AreEqual(1, doSomething2Metric[0].Data.Value0); // call count
             Assert.AreEqual(400, doSomething2Metric[0].Data.Value1); // bytes sent
             Assert.AreEqual(500, doSomething2Metric[0].Data.Value2); // bytes received
 
             // Verify that subarea metric exists for Collector data with unspecified api area
-            var collectorUnspecifiedMetric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/Output/Bytes/UnspecifiedDestinationArea").ToArray();
+            var collectorUnspecifiedMetric = _publishedMetrics.Where(x => x.MetricName.Name == "Supportability/DotNET/Collector/UnspecifiedDestinationArea/Output/Bytes").ToArray();
             Assert.AreEqual(1, collectorUnspecifiedMetric.Length);
             Assert.AreEqual(1, collectorUnspecifiedMetric[0].Data.Value0); // call count
             Assert.AreEqual(100, collectorUnspecifiedMetric[0].Data.Value1); // bytes sent
