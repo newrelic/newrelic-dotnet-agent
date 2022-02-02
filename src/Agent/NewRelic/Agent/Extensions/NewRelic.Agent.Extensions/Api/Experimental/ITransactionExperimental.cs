@@ -39,5 +39,15 @@ namespace NewRelic.Agent.Api.Experimental
         /// <param name="method">The method of the request, such as an HTTP verb (e.g. GET or POST).</param>
         /// <returns>An object that can be used to manage all of the data we support for external requests.</returns>
         IExternalSegmentData CreateExternalSegmentData(Uri destinationUri, string method);
+
+        /// <summary>
+        /// Records the log message in the transaction to later be forwarded if log forwarding is enabled.
+        /// </summary>
+        /// <param name="timestamp">Timestamp from the log message.</param>
+        /// <param name="logLevel">Severity or level of the log message.</param>
+        /// <param name="logMessage">The log message.</param>
+        /// <param name="spanId">The span ID of the segment the log message occured within.</param>
+        /// <param name="traceId">The trace ID of the transaction the log message occured within.</param>
+        void RecordLogMessage(DateTime timestamp, string logLevel, string logMessage, string spanId, string traceId);
     }
 }
