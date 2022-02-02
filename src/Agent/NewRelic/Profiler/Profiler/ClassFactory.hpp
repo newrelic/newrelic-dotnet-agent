@@ -3,10 +3,7 @@
 #include "stdafx.h"
 #include <atomic>
 
-#include "CoreCLRCorProfilerCallbackImpl.h"
-#ifndef PAL_STDCPP_COMPAT
-#include "FrameworkCorProfilerCallbackImpl.h"
-#endif
+#include "CorProfilerCallbackImpl.h"
 
 namespace NewRelic { namespace Profiler {
 
@@ -17,11 +14,11 @@ namespace NewRelic { namespace Profiler {
     class ClassFactory : public IClassFactory
     {
     public:
-        ClassFactory(bool coreCLRProfiler) : _referenceCount(1)
+        ClassFactory() : _referenceCount(1)
         {
-            _coreCLRProfiler = coreCLRProfiler;
         }
-        ~ClassFactory() {
+        ~ClassFactory()
+        {
         }
 
         HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject) override
@@ -37,10 +34,12 @@ namespace NewRelic { namespace Profiler {
             *ppvObject = nullptr;
             return E_NOINTERFACE;
         }
+
         virtual ULONG STDMETHODCALLTYPE AddRef() override
         {
             return std::atomic_fetch_add(&this->_referenceCount, 1) + 1;
         }
+
         virtual ULONG STDMETHODCALLTYPE Release() override
         {
             int count = std::atomic_fetch_sub(&this->_referenceCount, 1) - 1;
@@ -52,6 +51,7 @@ namespace NewRelic { namespace Profiler {
 
             return count;
         }
+
         virtual HRESULT STDMETHODCALLTYPE CreateInstance(IUnknown* pUnkOuter, REFIID riid, void** ppvObject) override
         {
             if (pUnkOuter != nullptr) {
@@ -59,23 +59,15 @@ namespace NewRelic { namespace Profiler {
                 return CLASS_E_NOAGGREGATION;
             }
 
-            std::unique_ptr<ICorProfilerCallbackBase> profiler;
+            auto profiler = std::make_unique<NewRelic::Profiler::CorProfilerCallbackImpl>();
 
-#ifdef PAL_STDCPP_COMPAT
-            profiler = std::make_unique<NewRelic::Profiler::CoreCLRCorProfilerCallbackImpl>();
-#else
-            if (_coreCLRProfiler) {
-                profiler = std::make_unique<NewRelic::Profiler::CoreCLRCorProfilerCallbackImpl>();
-            } else {
-                profiler = std::make_unique<NewRelic::Profiler::FrameworkCorProfilerCallbackImpl>();
-            }
-#endif
             if (!profiler) {
                 return E_FAIL;
             }
 
             return profiler.release()->QueryInterface(riid, ppvObject);
         }
+
         virtual HRESULT STDMETHODCALLTYPE LockServer(BOOL fLock) override
         {
             (void)fLock;
@@ -84,6 +76,5 @@ namespace NewRelic { namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
-        bool _coreCLRProfiler;
     };
 }}

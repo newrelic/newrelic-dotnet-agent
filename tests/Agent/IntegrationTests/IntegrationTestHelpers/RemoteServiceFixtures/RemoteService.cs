@@ -24,6 +24,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         private readonly bool _createsPidFile;
         private readonly string _targetFramework;
 
+        public virtual string ProfilerGuidOverride { get; set; }
+
         /// <summary>
         /// Determines whether this service/application uses a port setting as an input parameter into the
         /// process.
@@ -226,7 +228,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             else if (IsCoreApp)
             {
                 startInfo.EnvironmentVariables.Add("CORECLR_ENABLE_PROFILING", "1");
-                startInfo.EnvironmentVariables.Add("CORECLR_PROFILER", "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}");
+                startInfo.EnvironmentVariables.Add("CORECLR_PROFILER", this.ProfilerGuidOverride ?? "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}");
                 startInfo.EnvironmentVariables.Add("CORECLR_PROFILER_PATH", profilerFilePath);
                 startInfo.EnvironmentVariables.Add("CORECLR_NEWRELIC_HOME", newRelicHomeDirectoryPath);
 
@@ -238,7 +240,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             else
             {
                 startInfo.EnvironmentVariables.Add("COR_ENABLE_PROFILING", "1");
-                startInfo.EnvironmentVariables.Add("COR_PROFILER", "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}");
+                startInfo.EnvironmentVariables.Add("COR_PROFILER", this.ProfilerGuidOverride ?? "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}");
                 startInfo.EnvironmentVariables.Add("COR_PROFILER_PATH", profilerFilePath);
                 startInfo.EnvironmentVariables.Add("NEWRELIC_HOME", newRelicHomeDirectoryPath);
             }

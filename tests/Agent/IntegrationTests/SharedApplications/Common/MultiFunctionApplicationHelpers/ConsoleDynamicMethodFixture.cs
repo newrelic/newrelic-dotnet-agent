@@ -122,13 +122,13 @@ namespace MultiFunctionApplicationHelpers
 
         private List<string> _commands = new List<string>();
 
-        protected RemoteConsoleApplication _remoteConsoleApplication => RemoteApplication as RemoteConsoleApplication;
+        public new RemoteConsoleApplication RemoteApplication => base.RemoteApplication as RemoteConsoleApplication;
 
         public string IntegrationTestAppPath => RemoteApplication.SourceApplicationsDirectoryPath;
 
         public ConsoleDynamicMethodFixture SetTimeout(TimeSpan span)
         {
-            _remoteConsoleApplication.SetTimeout(span);
+            RemoteApplication.SetTimeout(span);
             return this;
         }
 

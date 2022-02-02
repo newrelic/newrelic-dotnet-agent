@@ -11,21 +11,20 @@ Refer to our [development documentation](../../../../docs/development.md#profile
 These steps are all executed by the CLR as defined by the Microsoft profiling spec.
 
 1. If `COR_ENABLE_PROFILING`/`CORECLR_ENABLE_PROFILING` environment variable is missing or set to something other than 1 then no profiler is attached.
-1. Get the GUID of the profiler from the `COR_PROFILER`/`CORECLR_PROFILER` environment variable.
- * .NET Framework New Relic profiler GUID: `{71DA0A04-7777-4EC6-9643-7D28B46A8A41}`
- * .NET Core New Relic profiler GUID: `{36032161-FFC0-4B61-B559-F6C5D41BAE5A}`
+1. If `COR_PROFILER`/`CORECLR_PROFILER` environment variable is missing or set to something other than a GUID (any) then no profiler is attached.
 1. Find path to profiler DLL.
- 1. If the `COR_PROFILER_PATH`/`CORECLR_PROFILER_PATH` environment variable is set then use that.
- 1. Else lookup the GUID found in `COR_PROFILER` in the registry under `HKEY_CLASSES_ROOT\CLSID` (.NET Framework only).
+    1. If the `COR_PROFILER_PATH`/`CORECLR_PROFILER_PATH` environment variable is set then use that.
+    1. Else lookup the GUID found in `COR_PROFILER` in the registry under `HKEY_CLASSES_ROOT\CLSID` (.NET Framework only).
+        - .NET Framework New Relic profiler GUID: `{71DA0A04-7777-4EC6-9643-7D28B46A8A41}`
 1. Load the profiler DLL (`NewRelic.Profiler.dll`) off disk and into memory.
 1. Read the profiler DLL as a COM library.
-1. Instantiate the registered `ICorProfilerCallback`.
-1. Call `ICorProfilerCallback.Initialize`.
- 1. If `Initialize` returns anything other than `S_OK` detach the profiler.
+1. Instantiate the provided `CorProfilerCallbackImpl`.
+1. Call `CorProfilerCallbackImpl.Initialize`.
+    - If `Initialize` returns anything other than `S_OK` detach the profiler.
 
 ### How the Profiler Receives Notifications
 
-When the `ICorProfilerCallback.Initialize` is called, the profiler has an opportunity to set a [number of flags](https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/cor-prf-monitor-enumeration) indicating the types of events it wants to monitor.  The most interesting one is `COR_PRF_MONITOR_JIT_COMPILATION` which will result in `ICorProfilerCallback.JITCompilationStarted` being called every time a method is JIT compiled.
+When the `CorProfilerCallbackImpl.Initialize` is called, the profiler has an opportunity to set a [number of flags](https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/cor-prf-monitor-enumeration) indicating the types of events it wants to monitor.  The most interesting one is `COR_PRF_MONITOR_JIT_COMPILATION` which will result in `CorProfilerCallbackImpl.JITCompilationStarted` being called every time a method is JIT compiled.
 
 Other flags the profiler sets:
 * COR_PRF_MONITOR_JIT_COMPILATION
@@ -39,7 +38,7 @@ Other flags the profiler sets:
 
 ### How the Profiler Injects Code
 
-When `ICorProfilerCallback.JITCompilationStarted` is called, the profiler has an opportunity to change the about-to-be-JIT-compiled-method's byte code.  We first lookup the method to see if we want to inject into it (in most cases we don't and bail out as soon as we've determined that to reduce overhead).  Once we have identified the method as 'interesting enough to be instrumented' we ask for a reJIT because if we modify the bytecode in this initial JIT event later calls to `Revert` won't work correctly.  When the reJIT starts the `ICorProfilerCallback.ReJITCompilationStarted` event will fire.  If it is for a function we want to instrument we grab the original bytecode that makes up the method's body wrap it with our own logic.  We then take the resulting bytecode and give it back to the CLR, telling the CLR that this new bytecode is
+When `CorProfilerCallbackImpl.JITCompilationStarted` is called, the profiler has an opportunity to change the about-to-be-JIT-compiled-method's byte code.  We first lookup the method to see if we want to inject into it (in most cases we don't and bail out as soon as we've determined that to reduce overhead).  Once we have identified the method as 'interesting enough to be instrumented' we ask for a reJIT because if we modify the bytecode in this initial JIT event later calls to `Revert` won't work correctly.  When the reJIT starts the `CorProfilerCallbackImpl.ReJITCompilationStarted` event will fire.  If it is for a function we want to instrument we grab the original bytecode that makes up the method's body wrap it with our own logic.  We then take the resulting bytecode and give it back to the CLR, telling the CLR that this new bytecode is
 what should be JIT compiled (the old bytecode is no longer referenced/used).
 
 ### Keeping track of the original bytecode for ReJIT
@@ -104,7 +103,7 @@ After the profiler attaches it uses custom environment variables to determine th
 
 ### What's a good starting point to check out in the code?
 
-The main entry point for the profiler is the `Initialize` method in [ICorProfilerCallbackBase.h](Profiler/ICorProfilerCallbackBase.h).  If you want to see what we do when we modify methods check out [InstrumentFunctionManipulator.h](MethodRewriter/InstrumentFunctionManipulator.h).
+The main entry point for the profiler is the `Initialize` method in [CorProfilerCallbackImpl.h](Profiler/CorProfilerCallbackImpl.h).  If you want to see what we do when we modify methods check out [InstrumentFunctionManipulator.h](MethodRewriter/InstrumentFunctionManipulator.h).
 
 ### Why did the profiler detach without providing meaningful feedback?
 
