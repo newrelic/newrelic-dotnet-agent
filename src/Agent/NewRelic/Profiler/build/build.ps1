@@ -65,5 +65,5 @@ if ($buildLinux) {
     ExitIfFailLastExitCode
 
     if (!(Test-Path $linuxamd64OutputPath)) { New-Item $linuxamd64OutputPath -ItemType Directory }
-    Move-Item "$profilerRoot\libNewRelicProfiler.so" "$linuxamd64OutputPath"
+    Move-Item -Force "$profilerRoot\libNewRelicProfiler.so" "$linuxamd64OutputPath"
 }
