@@ -1013,6 +1013,10 @@ namespace NewRelic.Agent.Core.Metric
 
         private const string LoggingMetrics = "Logging";
         private const string LoggingMetricsDotnetLines = LoggingMetrics + PathSeparator + "lines";
+        private const string SupportabilityLoggingEventsPs = SupportabilityPs + "LoggingEvents" + PathSeparator;
+        public const string SupportabilityLoggingEventsSent = SupportabilityLoggingEventsPs + "TotalLoggingEventsSent";
+        public const string SupportabilityLoggingEventsCollected = SupportabilityLoggingEventsPs + "TotalLoggingEventsCollected";
+        public const string SupportabilityLoggingEventsRecollected = SupportabilityLoggingEventsPs + "TotalLoggingEventsRecollected";
 
         public static string GetLoggingMetricsLinesBySeverityName(string logLevel)
         {

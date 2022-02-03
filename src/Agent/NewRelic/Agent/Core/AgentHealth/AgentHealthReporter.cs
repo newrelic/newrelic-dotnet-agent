@@ -554,6 +554,12 @@ namespace NewRelic.Agent.Core.AgentHealth
             _logLinesCountByLevel[normalizedLevel].Increment();
         }
 
+        public void ReportLoggingEventCollected() => TrySend(_metricBuilder.TryBuildSupportabilitLoggingEventsCollectedMetric());
+
+        public void ReportLoggingEventsRecollected(int count) => TrySend(_metricBuilder.TryBuildSupportabilitLoggingEventsRecollectedMetric(count));
+
+        public void ReportLoggingEventsSent(int count) => TrySend(_metricBuilder.TryBuildSupportabilitLoggingEventsSentMetric(count));
+
         #endregion
 
         public void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint)

@@ -196,5 +196,24 @@ namespace NewRelic.Agent.Core.AgentHealth
                 () => Assert.AreEqual(3, allLines.Data.Value0)
                 );
         }
+
+        [Test]
+        public void ReportLoggingSupportabilityMetrics()
+        {
+            _agentHealthReporter.ReportLoggingEventCollected();
+            _agentHealthReporter.ReportLoggingEventsRecollected(1);
+            _agentHealthReporter.ReportLoggingEventsSent(2);
+            _agentHealthReporter.CollectMetrics();
+
+            var expectedMetricNamesAndValues = new Dictionary<string, long>
+            {
+                { "Supportability/LoggingEvents/TotalLoggingEventsCollected", 1 },
+                { "Supportability/LoggingEvents/TotalLoggingEventsRecollected", 1 },
+                { "Supportability/LoggingEvents/TotalLoggingEventsSent", 2 },
+            };
+            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+
+            CollectionAssert.IsSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
+        }
     }
 }
