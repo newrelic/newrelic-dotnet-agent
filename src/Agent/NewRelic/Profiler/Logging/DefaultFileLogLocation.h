@@ -21,10 +21,11 @@ namespace NewRelic { namespace Profiler { namespace Logger
         virtual void DirectoryCreate(const xstring_t& logFilePath) = 0;
         // can throw on failure
         virtual xstring_t GetCommonAppDataFolderPath() = 0;
-        virtual xstring_t GetNewRelicHomePath() = 0;
-        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectoryEnvironment() = 0;
-        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectoryEnvironment() = 0;
-        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevelEnvironment() = 0;
+
+        virtual std::unique_ptr<xstring_t> GetNewRelicHomePath() = 0;
+        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectory() = 0;
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectory() = 0;
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevel() = 0;
     };
     typedef std::shared_ptr<IFileDestinationSystemCalls> IFileDestinationSystemCallsPtr;
 
@@ -53,14 +54,14 @@ namespace NewRelic { namespace Profiler { namespace Logger
         xstring_t GetLogFilePath()
         {
             // use the profiler environment variable if it is set
-            auto logDirectory = _system->GetNewRelicProfilerLogDirectoryEnvironment();
+            auto logDirectory = _system->GetNewRelicProfilerLogDirectory();
             if (logDirectory)
             {
                 return *logDirectory;
             }
 
             // use the general environment variable if it is set
-            logDirectory = _system->GetNewRelicLogDirectoryEnvironment();
+            logDirectory = _system->GetNewRelicLogDirectory();
             if (logDirectory)
             {
                 return *logDirectory;
@@ -73,7 +74,7 @@ namespace NewRelic { namespace Profiler { namespace Logger
             }
 
             // if there is a NEWRELIC_HOME environment variable log relative to it
-            logDirectory = _system->TryGetEnvironmentVariable(_system->GetNewRelicHomePath());
+            logDirectory = _system->GetNewRelicHomePath();
             if (logDirectory)
             {
                 return *logDirectory + 
