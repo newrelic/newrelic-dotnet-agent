@@ -1783,8 +1783,8 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual bool LogMetricsCollectorEnabled
         {
             get
-            {
-                return _localConfiguration.logSending.metrics.enabled;
+            { 
+                return EnvironmentOverrides(_localConfiguration.logSending.metrics.enabled, "NEW_RELIC_LOG_SENDING_METRICS_ENABLED");
             }
         }
 
@@ -1792,7 +1792,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return _localConfiguration.logSending.forwarding.enabled;
+                return EnvironmentOverrides(_localConfiguration.logSending.forwarding.enabled, "NEW_RELIC_LOG_SENDING_FORWARDING_ENABLED");
             }
         }
 
@@ -1808,7 +1808,8 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return _localConfiguration.logSending.forwarding.maxSamplesStored;
+                return EnvironmentOverrides(_localConfiguration.logSending.forwarding.maxSamplesStored, "NEW_RELIC_LOG_SENDING_MAX_SAMPLES_STORED")
+                    ?? _localConfiguration.logSending.forwarding.maxSamplesStored;
             }
         }
 
