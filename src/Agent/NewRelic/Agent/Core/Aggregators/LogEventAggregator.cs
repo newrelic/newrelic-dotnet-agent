@@ -32,7 +32,6 @@ namespace NewRelic.Agent.Core.Aggregators
         private const double ReservoirReductionSizeMultiplier = 0.5;
 
         private readonly IAgentHealthReporter _agentHealthReporter;
-        private readonly ReaderWriterLockSlim _readerWriterLock = new ReaderWriterLockSlim();
 
         private ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>> _logEvents = new ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>(0);
 
@@ -54,16 +53,7 @@ namespace NewRelic.Agent.Core.Aggregators
         public override void Collect(LogEventWireModel loggingEventWireModel)
         {
             _agentHealthReporter.ReportLoggingEventCollected();
-
-            _readerWriterLock.EnterReadLock();
-            try
-            {
-                AddEventToCollection(loggingEventWireModel);
-            }
-            finally
-            {
-                _readerWriterLock.ExitReadLock();
-            }
+            AddEventToCollection(loggingEventWireModel);
         }
 
         public void CollectWithPriority(IList<LogEventWireModel> logEventWireModels, float priority)
@@ -72,33 +62,13 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 _agentHealthReporter.ReportLoggingEventCollected();
                 logEventWireModels[i].Priority = priority;
-
-                _readerWriterLock.EnterReadLock();
-                try
-                {
-                    AddEventToCollection(logEventWireModels[i]);
-                }
-                finally
-                {
-                    _readerWriterLock.ExitReadLock();
-                }
+                AddEventToCollection(logEventWireModels[i]);
             }
         }
 
         protected override void Harvest()
         {
-            ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>> originalLogEvents;
-
-            _readerWriterLock.EnterWriteLock();
-            try
-            {
-                originalLogEvents = GetAndResetLogEvents(GetReservoirSize());
-            }
-            finally
-            {
-                _readerWriterLock.ExitWriteLock();
-            }
-
+            var originalLogEvents = GetAndResetLogEvents(GetReservoirSize());
             var aggregatedEvents = originalLogEvents.Where(node => node != null).Select(node => node.Data).ToList();
 
             // Retrieve the number of add attempts before resetting the collection.
