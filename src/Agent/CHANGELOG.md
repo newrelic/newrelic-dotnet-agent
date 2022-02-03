@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] changes
 ### New Features
 ### Fixes
+* Fixes [application crashes on Alpine Linux](https://github.com/newrelic/newrelic-dotnet-agent/issues/918) introduced in 9.5.0. ([#929]https://github.com/newrelic/newrelic-dotnet-agent/pull/929)
 
 ## [9.5.0] - 2022-02-01
 ### New Features
