@@ -39,7 +39,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     var expectedOSName = File.ReadAllLines("/etc/os-release")
                         .First(line => line.StartsWith("ID=", StringComparison.OrdinalIgnoreCase))
                         .Substring("ID=".Length)
-                        .Trim('\"', '\'');
+                        .Trim('\"', '\'')
+                        .ToLower();
                     return expectedOSName == "alpine";
                 }
                 return false;
