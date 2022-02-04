@@ -422,6 +422,11 @@ namespace NewRelic.Agent.Core
                 return;
             }
 
+            if(string.IsNullOrWhiteSpace(logLevel) || string.IsNullOrWhiteSpace(logMessage))
+            {
+                return;
+            }
+
             var transaction = _transactionService.GetCurrentInternalTransaction();
             if (transaction != null && transaction.IsValid)
             {

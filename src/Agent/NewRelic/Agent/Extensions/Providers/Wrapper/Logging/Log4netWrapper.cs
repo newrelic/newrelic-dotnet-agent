@@ -38,11 +38,6 @@ namespace NewRelic.Providers.Wrapper.Logging
             var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(loggingEvent.GetType(), "RenderedMessage");
             var renderedMessage = getRenderedMessageFunc(loggingEvent);
 
-            if (string.IsNullOrWhiteSpace(renderedMessage) || string.IsNullOrWhiteSpace(logLevel))
-            {
-                return Delegates.NoOp;
-            }
-
             // We can either get this in Local or UTC
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(loggingEvent.GetType(), "TimeStampUtc");
             var timestamp = getTimestampFunc(loggingEvent);
