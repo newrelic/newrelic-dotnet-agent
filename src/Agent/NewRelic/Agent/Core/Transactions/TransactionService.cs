@@ -50,6 +50,8 @@ namespace NewRelic.Agent.Core.Transactions
         bool SetTransactionOnAsyncContext(IInternalTransaction transaction);
 
         bool IsAttachedToAsyncStorage { get; }
+
+        float CreatePriority();
     }
 
     public class TransactionService : ConfigurationBasedService, ITransactionService
@@ -83,6 +85,10 @@ namespace NewRelic.Agent.Core.Transactions
 
         public bool IsAttachedToAsyncStorage => TryGetInternalTransaction(_asyncContext) != null;
 
+        public float CreatePriority()
+        {
+            return _tracePriorityManager.Create();
+        }
 
         #region Private Helpers
 

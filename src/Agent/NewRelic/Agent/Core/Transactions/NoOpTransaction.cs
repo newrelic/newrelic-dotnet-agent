@@ -277,10 +277,5 @@ namespace NewRelic.Agent.Core.Transactions
         {
             return this;
         }
-
-        public void RecordLogMessage(DateTime timestamp, string logLevel, string logMessage, string spanId, string traceId)
-        {
-
-        }
     }
 }

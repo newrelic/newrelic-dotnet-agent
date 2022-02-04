@@ -34,16 +34,11 @@ namespace NewRelic.Providers.Wrapper.Logging
             var xapi = agent.GetExperimentalApi();
             xapi.IncrementLogLinesCount(logLevel);
 
-            if (!agent.CurrentTransaction.IsValid)
-            {
-                return Delegates.NoOp;
-            }
-
             // RenderedMessage is get only
             var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(loggingEvent.GetType(), "RenderedMessage");
             var renderedMessage = getRenderedMessageFunc(loggingEvent);
 
-            if (string.IsNullOrWhiteSpace(renderedMessage))
+            if (string.IsNullOrWhiteSpace(renderedMessage) || string.IsNullOrWhiteSpace(logLevel))
             {
                 return Delegates.NoOp;
             }
@@ -52,8 +47,8 @@ namespace NewRelic.Providers.Wrapper.Logging
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(loggingEvent.GetType(), "TimeStampUtc");
             var timestamp = getTimestampFunc(loggingEvent);
 
-            ((ITransactionExperimental)agent.CurrentTransaction).RecordLogMessage(timestamp, logLevel, renderedMessage, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
-
+            // This will either add the log message to the transaction or directly to the aggregator
+            xapi.RecordLogMessage(timestamp, logLevel, renderedMessage, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
             return Delegates.NoOp;
         }
     }
