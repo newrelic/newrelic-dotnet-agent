@@ -14,6 +14,7 @@ using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 
@@ -82,6 +83,12 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportSupportabilityCountMetric(string metricName, long count = 1)
         {
             var metric = _metricBuilder.TryBuildSupportabilityCountMetric(metricName, count);
+            TrySend(metric);
+        }
+
+        public void ReportSupportabilityDataUsageMetric(string metricName, long callCount, float bytesSent, float bytesReceived)
+        {
+            var metric = _metricBuilder.TryBuildSupportabilityDataUsageMetric(metricName, callCount, bytesSent, bytesReceived);
             TrySend(metric);
         }
 
@@ -577,6 +584,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportAgentInfo();
             CollectInfiniteTracingMetrics();
             CollectLoggingMetrics();
+			CollectSupportabilityDataUsageMetrics();
         }
 
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)
@@ -635,6 +643,60 @@ namespace NewRelic.Agent.Core.AgentHealth
             return false;
         }
 
+        private ConcurrentBag<DestinationInteractionSample> _externalApiDataUsageSamples = new ConcurrentBag<DestinationInteractionSample>();
+
+        public void ReportSupportabilityDataUsage(string api, string apiArea, long dataSent, long dataReceived)
+        {
+            _externalApiDataUsageSamples.Add(new DestinationInteractionSample(api, apiArea, dataSent, dataReceived));
+        }
+
+        private void CollectSupportabilityDataUsageMetrics()
+        {
+            var currentHarvest = Interlocked.Exchange(ref _externalApiDataUsageSamples, new ConcurrentBag<DestinationInteractionSample>());
+
+            foreach (var destination in currentHarvest.GroupBy(x => x.Api))
+            {
+                // Setup top level metrics to aggregate
+                var destinationName = string.IsNullOrWhiteSpace(destination.Key) ? "UnspecifiedDestination" : destination.Key;
+                var destinationCallCount = 0L;
+                var destinationBytesSent = 0L;
+                var destinationBytesReceived = 0L;
+
+                // inspect and report sub-metrics
+                foreach (var destinationArea in destination.GroupBy(x => x.ApiArea))
+                {
+                    var destinationAreaName = string.IsNullOrWhiteSpace(destinationArea.Key) ? "UnspecifiedDestinationArea" : destinationArea.Key;
+                    var destinationAreaCallCount = 0L;
+                    var destinationAreaBytesSent = 0L;
+                    var destinationAreaBytesReceived = 0L;
+
+                    // accumulate values for this destination sub-area 
+                    foreach (var dataSample in destinationArea)
+                    {
+                        destinationAreaCallCount++;
+                        destinationAreaBytesSent += dataSample.BytesSent;
+                        destinationAreaBytesReceived += dataSample.BytesReceived;
+                    }
+
+                    // increment top level metrics
+                    destinationCallCount += destinationAreaCallCount;
+                    destinationBytesSent += destinationAreaBytesSent;
+                    destinationBytesReceived += destinationAreaBytesReceived;
+
+                    ReportSupportabilityDataUsageMetric(
+                        MetricNames.GetPerDestinationAreaDataUsageMetricName(destinationName, destinationAreaName),
+                        destinationAreaCallCount,
+                        destinationAreaBytesSent,
+                        destinationAreaBytesReceived);
+                }
+
+                ReportSupportabilityDataUsageMetric(
+                    MetricNames.GetPerDestinationDataUsageMetricName(destinationName),
+                    destinationCallCount,
+                    destinationBytesSent,
+                    destinationBytesReceived);
+            }
+        }
 
         private class RecurringLogData
         {

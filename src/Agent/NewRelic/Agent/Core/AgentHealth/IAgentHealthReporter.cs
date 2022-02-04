@@ -138,6 +138,8 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportInfiniteTracingSpanGrpcError(string status);
         void ReportInfiniteTracingSpanGrpcTimeout();
         void ReportInfiniteTracingSpanQueueSize(int queueSize);
+		
+        void ReportSupportabilityDataUsage(string api, string apiArea, long dataSent, long dataReceived);
 
         void IncrementLogLinesCount(string logLevel);
         void ReportLoggingEventCollected();

@@ -9,6 +9,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Parsing;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -561,7 +562,6 @@ namespace NewRelic.Agent.Core.Metric
         public const string SupportabilityEventHarvestCustomEventHarvestLimit = SupportabilityEventHarvestPs + "CustomEventData" + SupportabilityEventHarvestHarvestLimit;
         public const string SupportabilityEventHarvestTransactionEventHarvestLimit = SupportabilityEventHarvestPs + "AnalyticEventData" + SupportabilityEventHarvestHarvestLimit;
 
-
         public static string GetSupportabilityCATConditionMetricName(CATSupportabilityCondition condition)
         {
             if (_catMetricNames.TryGetValue(condition, out var metricName))
@@ -672,7 +672,7 @@ namespace NewRelic.Agent.Core.Metric
             { CATSupportabilityCondition.Request_Create_Success,   SupportabilityCATRequestCreate + "Success" },
             { CATSupportabilityCondition.Request_Create_Failure,   SupportabilityCATRequestCreate + "Exception" },
             { CATSupportabilityCondition.Request_Create_Failure_XProcID, SupportabilityCATRequestCreate + "Exception/CrossProcessID" },
-             { CATSupportabilityCondition.Request_Accept_Success,   SupportabilityCATRequestAccept + "Success" },
+            { CATSupportabilityCondition.Request_Accept_Success,   SupportabilityCATRequestAccept + "Success" },
             { CATSupportabilityCondition.Request_Accept_Failure,   SupportabilityCATRequestAccept + "Exception" },
             { CATSupportabilityCondition.Request_Accept_Failure_NotTrusted,   SupportabilityCATRequestAccept + "Ignored/NotTrusted" },
             { CATSupportabilityCondition.Request_Accept_Failure_Decode, SupportabilityCATRequestAccept + "Ignored/UnableToDecode" },
@@ -782,7 +782,6 @@ namespace NewRelic.Agent.Core.Metric
         //Note the following words from https://source.datanerd.us/agents/agent-specs/blob/master/distributed_tracing/Trace-Context-Payload.md
         //In addition to these metrics agents are encouraged to add more specific metrics to assist in debugging issues parsing the payload. 
         //More detailed parse exception metrics SHOULD start with 'Supportability/TraceContext/Parse/Exception'
-
 
         public static string GetSupportabilityErrorHttpStatusCodeFromCollector(HttpStatusCode statusCode)
         {
@@ -1008,6 +1007,23 @@ namespace NewRelic.Agent.Core.Metric
         }
 
         #endregion Performance Metrics
+
+        #region Data Usage Metrics
+
+        private const string dataUsageRoot = "Supportability/DotNET/";
+        private const string outputBytesDecorator = "/Output/Bytes";
+
+        public static string GetPerDestinationDataUsageMetricName(string destination)
+        {
+            return dataUsageRoot + destination + outputBytesDecorator;
+        }
+
+        public static string GetPerDestinationAreaDataUsageMetricName(string destination, string destinationArea)
+        {
+            return dataUsageRoot + destination + PathSeparator + destinationArea + outputBytesDecorator;
+        }
+
+        #endregion Data Usage Metrics
 
         #region Log Metrics
 
