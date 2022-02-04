@@ -363,6 +363,22 @@ namespace NewRelic.Agent.Core.WireModels
             );
         }
 
+        [Test]
+        public void BuildDataUsageMetric()
+        {
+            const int callCount = 1;
+            const int dataSent = 20;
+            const int dataReceived = 10;
+
+            var metricData = MetricDataWireModel.BuildDataUsageValue(callCount, dataSent, dataReceived);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual(callCount, metricData.Value0),
+                () => Assert.AreEqual(dataSent, metricData.Value1),
+                () => Assert.AreEqual(dataReceived, metricData.Value2)
+            );
+        }
+
         #endregion
 
         #region DistributedTracing
@@ -455,5 +471,23 @@ namespace NewRelic.Agent.Core.WireModels
         }
 
         #endregion DistributedTracing
+
+        #region DataUsageMetrics
+
+        [Test]
+        public void MetricWireModelTests_MetricBuilder_SupportabilityDataUsage_TryBuildSupportabilityDataUsageMetric()
+        {
+            var name = "Supportability/DotNET/Collector/Output/Bytes";
+
+            var wireModel = _metricBuilder.TryBuildSupportabilityDataUsageMetric(name, 1, 2, 3);
+            Assert.That(wireModel, Is.Not.Null);
+
+            Assert.That(wireModel.MetricName.Name, Is.EqualTo(name));
+            Assert.That(wireModel.Data.Value0, Is.EqualTo(1));
+            Assert.That(wireModel.Data.Value1, Is.EqualTo(2));
+            Assert.That(wireModel.Data.Value2, Is.EqualTo(3));
+        }
+
+        #endregion DataUsageMetrics
     }
 }

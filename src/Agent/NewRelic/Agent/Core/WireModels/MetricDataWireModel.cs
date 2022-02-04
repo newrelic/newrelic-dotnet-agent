@@ -120,6 +120,26 @@ namespace NewRelic.Agent.Core.WireModels
             return new MetricDataWireModel(callCount, 0, 0, 0, 0, 0);
         }
 
+        public static MetricDataWireModel BuildDataUsageValue(long callCount, float dataSent, float dataReceived)
+        {
+            if (callCount < 0)
+            {
+                throw new ArgumentException(CannotBeNegative, nameof(callCount));
+            }
+
+            if (dataSent < 0)
+            {
+                throw new ArgumentException(CannotBeNegative, nameof(dataSent));
+            }
+
+            if (dataReceived < 0)
+            {
+                throw new ArgumentException(CannotBeNegative, nameof(dataReceived));
+            }
+
+            return new MetricDataWireModel(callCount, dataSent, dataReceived, 0, 0, 0);
+        }
+
         /// <summary>
         /// Allows recording of a metric based on a single observed value at point in time.
         /// </summary>
