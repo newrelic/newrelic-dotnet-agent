@@ -406,14 +406,6 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
         }
 
-        public void IncrementLogLinesCount(string logLevel)
-        {
-            if (_configurationService.Configuration.LogMetricsCollectorEnabled)
-            {
-                _agentHealthReporter.IncrementLogLinesCount(logLevel);
-            }
-        }
-
         public void RecordLogMessage(DateTime timestamp, string logLevel, string logMessage, string spanId, string traceId)
         {
             // IOC container defaults to singleton so this will access the same aggregator
@@ -422,22 +414,28 @@ namespace NewRelic.Agent.Core
                 return;
             }
 
-            if(string.IsNullOrWhiteSpace(logLevel) || string.IsNullOrWhiteSpace(logMessage))
+            if (string.IsNullOrWhiteSpace(logMessage))
             {
                 return;
+            }
+
+            var normalizedLevel = string.IsNullOrWhiteSpace(logLevel) ? "MISSING_LEVEL" : logLevel.ToUpper();
+            if (_configurationService.Configuration.LogMetricsCollectorEnabled)
+            {
+                _agentHealthReporter.IncrementLogLinesCount(normalizedLevel);
             }
 
             var transaction = _transactionService.GetCurrentInternalTransaction();
             if (transaction != null && transaction.IsValid)
             {
                 // use transaction batching for messages in transactions
-                transaction.LogEvents.Add(new LogEventWireModel(timestamp.ToUnixTimeMilliseconds(), logMessage, logLevel, spanId, traceId));
+                transaction.LogEvents.Add(new LogEventWireModel(timestamp.ToUnixTimeMilliseconds(), logMessage, normalizedLevel, spanId, traceId));
                 return;
             }
 
             // non-transaction messages with proper sanitized priority value
             _logEventAggregator.Collect(new LogEventWireModel(timestamp.ToUnixTimeMilliseconds(),
-                logMessage, logLevel, spanId, traceId, _transactionService.CreatePriority()));
+                logMessage, normalizedLevel, spanId, traceId, _transactionService.CreatePriority()));
         }
 
         #endregion

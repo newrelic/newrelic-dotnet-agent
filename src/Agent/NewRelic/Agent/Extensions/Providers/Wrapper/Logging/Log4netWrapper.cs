@@ -28,11 +28,8 @@ namespace NewRelic.Providers.Wrapper.Logging
         {
             var loggingEvent = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
-            var getLogLvelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(loggingEvent.GetType(), "Level");
-            var logLevel = getLogLvelFunc(loggingEvent).ToString(); // Level class has a ToString override we can use.
-
-            var xapi = agent.GetExperimentalApi();
-            xapi.IncrementLogLinesCount(logLevel);
+            var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(loggingEvent.GetType(), "Level");
+            var logLevel = getLogLevelFunc(loggingEvent).ToString(); // Level class has a ToString override we can use.
 
             // RenderedMessage is get only
             var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(loggingEvent.GetType(), "RenderedMessage");
@@ -43,6 +40,7 @@ namespace NewRelic.Providers.Wrapper.Logging
             var timestamp = getTimestampFunc(loggingEvent);
 
             // This will either add the log message to the transaction or directly to the aggregator
+            var xapi = agent.GetExperimentalApi();
             xapi.RecordLogMessage(timestamp, logLevel, renderedMessage, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
             return Delegates.NoOp;
         }

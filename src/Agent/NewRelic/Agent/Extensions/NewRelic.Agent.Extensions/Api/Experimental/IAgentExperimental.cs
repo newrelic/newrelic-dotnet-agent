@@ -18,8 +18,6 @@ namespace NewRelic.Agent.Api.Experimental
         /// <param name="count">Defaults to 1.0f</param>
         void RecordSupportabilityMetric(string metricName, int count = 1);
 
-        void IncrementLogLinesCount(string logLevel);
-
         /// <summary>
         /// Records the log message in the transaction to later be forwarded if log forwarding is enabled.
         /// </summary>

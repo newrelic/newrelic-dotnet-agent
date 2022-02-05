@@ -556,9 +556,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void IncrementLogLinesCount(string logLevel)
         {
-            var normalizedLevel = logLevel.ToUpper();
-            _logLinesCountByLevel.TryAdd(normalizedLevel, new InterlockedCounter());
-            _logLinesCountByLevel[normalizedLevel].Increment();
+            _logLinesCountByLevel.TryAdd(logLevel, new InterlockedCounter());
+            _logLinesCountByLevel[logLevel].Increment();
         }
 
         public void ReportLoggingEventCollected() => TrySend(_metricBuilder.TryBuildSupportabilitLoggingEventsCollectedMetric());
