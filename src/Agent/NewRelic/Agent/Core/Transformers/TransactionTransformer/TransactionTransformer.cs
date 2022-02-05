@@ -482,7 +482,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 priority += 10F;
             }
 
-            if ((bool)transaction.Sampled)
+            if (transaction.Sampled != null && (bool)transaction.Sampled)
             {
                 priority += 100F;
             }
