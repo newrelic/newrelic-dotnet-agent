@@ -215,46 +215,32 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         [Test]
-        public void IncrementLogLinesCount_LevelIsNormalized()
-        {
-            _agentHealthReporter.IncrementLogLinesCount("info");
-            _agentHealthReporter.IncrementLogLinesCount("Info");
-            _agentHealthReporter.IncrementLogLinesCount("InFO");
-            _agentHealthReporter.CollectLoggingMetrics();
-
-            var infoLevelLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines/INFO");
-            var allLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines");
-
-            NrAssert.Multiple(
-                () => Assert.AreEqual(2, _publishedMetrics.Count),
-                () => Assert.AreEqual($"Logging/lines/INFO", infoLevelLines.MetricName.Name),
-                () => Assert.AreEqual($"Logging/lines", allLines.MetricName.Name)
-                );
-        }
-
-        [Test]
         public void IncrementLogLinesCount_CheckLevelsAndCounts()
         {
-            _agentHealthReporter.IncrementLogLinesCount("info");
-            _agentHealthReporter.IncrementLogLinesCount("debug");
-            _agentHealthReporter.IncrementLogLinesCount("finest");
+            _agentHealthReporter.IncrementLogLinesCount("INFO");
+            _agentHealthReporter.IncrementLogLinesCount("DEBUG");
+            _agentHealthReporter.IncrementLogLinesCount("FINEST");
+            _agentHealthReporter.IncrementLogLinesCount("MISSING_LEVEL");
             _agentHealthReporter.CollectLoggingMetrics();
 
             var infoLevelLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines/INFO");
             var debugLevelLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines/DEBUG");
             var finestLevelLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines/FINEST");
+            var missingLevelLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines/MISSING_LEVEL");
             var allLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines");
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(4, _publishedMetrics.Count),
+                () => Assert.AreEqual(5, _publishedMetrics.Count),
                 () => Assert.AreEqual($"Logging/lines/INFO", infoLevelLines.MetricName.Name),
                 () => Assert.AreEqual(1, infoLevelLines.Data.Value0),
                 () => Assert.AreEqual($"Logging/lines/DEBUG", debugLevelLines.MetricName.Name),
                 () => Assert.AreEqual(1, debugLevelLines.Data.Value0),
                 () => Assert.AreEqual($"Logging/lines/FINEST", finestLevelLines.MetricName.Name),
                 () => Assert.AreEqual(1, finestLevelLines.Data.Value0),
+                () => Assert.AreEqual($"Logging/lines/MISSING_LEVEL", missingLevelLines.MetricName.Name),
+                () => Assert.AreEqual(1, missingLevelLines.Data.Value0),
                 () => Assert.AreEqual($"Logging/lines", allLines.MetricName.Name),
-                () => Assert.AreEqual(3, allLines.Data.Value0)
+                () => Assert.AreEqual(4, allLines.Data.Value0)
                 );
         }
 

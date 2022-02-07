@@ -57,5 +57,15 @@ namespace NewRelic.Agent.Core.WireModels
             SpanId = spanId;
             TraceId = traceId;
         }
+
+        public LogEventWireModel(long unixTimestampMS, string message, string level, string spanId, string traceId, float priority)
+        {
+            TimeStamp = unixTimestampMS;
+            Message = message;
+            Level = level;
+            SpanId = spanId;
+            TraceId = traceId;
+            Priority = priority;
+        }
     }
 }

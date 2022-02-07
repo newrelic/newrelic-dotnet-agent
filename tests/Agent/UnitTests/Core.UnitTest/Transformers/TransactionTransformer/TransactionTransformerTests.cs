@@ -26,6 +26,11 @@ using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Segments.Tests;
 using System.Threading;
 using System.IO;
+using NewRelic.Collections;
+using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.Time;
+using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -85,6 +90,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
 
+        private ILogEventAggregator _logEventAggregator;
+
+        private Action _harvestAction;
+        private TimeSpan? _harvestCycle;
 
         [SetUp]
         public void SetUp()
@@ -129,7 +138,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
-            _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService, _spanEventAggregatorInfiniteTracing);
+            var scheduler = Mock.Create<IScheduler>();
+            Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+                .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
+            _logEventAggregator = new LogEventAggregator(Mock.Create<IDataTransportService>(), scheduler, Mock.Create<IProcessStatic>(), Mock.Create<IAgentHealthReporter>());
+
+
+            _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService, _spanEventAggregatorInfiniteTracing, _logEventAggregator);
         }
 
         public IMetricBuilder GetSimpleMetricBuilder()
@@ -1384,6 +1399,73 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         }
 
         #endregion Error Events
+
+        #region Log Events
+
+        [Test]
+        public void PrioritizeAndCollectLogEvents_PriorityAdjusted_WithTransaction()
+        {
+            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid");
+
+            var transaction = TestTransactions.CreateDefaultTransaction();
+            var priority = transaction.Priority;
+            transaction.LogEvents.Add(logEvent);
+
+            _transactionTransformer.Transform(transaction);
+
+            // Access the private collection of events to get the number of add attempts.
+            var privateAccessorL = new PrivateAccessor(_logEventAggregator);
+            var logEvents = privateAccessorL.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
+
+            var handledLogEvent = logEvents?.FirstOrDefault()?.Data;
+            Assert.AreEqual(1, logEvents.Count);
+            Assert.IsNotNull(handledLogEvent);
+            Assert.AreEqual(priority + 10, handledLogEvent.Priority, $"{priority} vs {handledLogEvent.Priority}"); // In a transaction +10
+        }
+
+        [Test]
+        public void PrioritizeAndCollectLogEvents_PriorityAdjusted_WithTransactionAndSampled()
+        {
+            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid");
+
+            var transaction = TestTransactions.CreateDefaultTransaction(sampled: true);
+            var priority = transaction.Priority;
+            transaction.LogEvents.Add(logEvent);
+
+            _transactionTransformer.Transform(transaction);
+
+            // Access the private collection of events to get the number of add attempts.
+            var privateAccessorL = new PrivateAccessor(_logEventAggregator);
+            var logEvents = privateAccessorL.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
+
+            var handledLogEvent = logEvents?.FirstOrDefault()?.Data;
+            Assert.AreEqual(1, logEvents.Count);
+            Assert.IsNotNull(handledLogEvent);
+            Assert.AreEqual(priority + 110F, handledLogEvent.Priority, $"{priority} vs {handledLogEvent.Priority}"); // In a transaction +10, +100 sampled
+        }
+
+        [Test]
+        public void PrioritizeAndCollectLogEvents_PriorityAdjusted_WithTransactionAndSampledAndError()
+        {
+            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid");
+
+            var transaction = TestTransactions.CreateDefaultTransaction(sampled: true, exception: new ArgumentException("broken thing"));
+            var priority = transaction.Priority;
+            transaction.LogEvents.Add(logEvent);
+
+            _transactionTransformer.Transform(transaction);
+
+            // Access the private collection of events to get the number of add attempts.
+            var privateAccessorL = new PrivateAccessor(_logEventAggregator);
+            var logEvents = privateAccessorL.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
+
+            var handledLogEvent = logEvents?.FirstOrDefault()?.Data;
+            Assert.AreEqual(1, logEvents.Count);
+            Assert.IsNotNull(handledLogEvent);
+            Assert.AreEqual(priority + 120F, handledLogEvent.Priority, $"{priority} vs {handledLogEvent.Priority}"); // In a transaction +10, +100 sampled, +10 erro
+        }
+
+        #endregion
 
         #region Helpers
 

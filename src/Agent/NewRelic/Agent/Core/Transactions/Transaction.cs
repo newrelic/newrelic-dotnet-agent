@@ -949,14 +949,6 @@ namespace NewRelic.Agent.Core.Transactions
             return -1;
         }
 
-        public void RecordLogMessage(DateTime timestamp, string logLevel, string logMessage, string spanId, string traceId)
-        {
-            if (!string.IsNullOrWhiteSpace(logLevel) && _configuration.LogEventCollectorEnabled)
-            {
-                _logEvents.Add(new LogEventWireModel(timestamp.ToUnixTimeMilliseconds(), logMessage, logLevel, spanId, traceId));
-            }
-        }
-
         public ImmutableTransaction ConvertToImmutableTransaction()
         {
             var transactionName = CandidateTransactionName.CurrentTransactionName;
