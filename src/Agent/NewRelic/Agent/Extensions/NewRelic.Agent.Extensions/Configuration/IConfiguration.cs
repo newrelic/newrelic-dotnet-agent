@@ -186,5 +186,6 @@ namespace NewRelic.Agent.Configuration
         bool LogEventCollectorEnabled { get; }
         int LogEventsMaximumPerPeriod { get; }
         TimeSpan LogEventsHarvestCycle { get; }
+        bool LogDecoratorEnabled { get; }
     }
 }
