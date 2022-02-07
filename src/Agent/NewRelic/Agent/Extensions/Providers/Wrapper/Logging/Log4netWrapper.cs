@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -14,6 +15,7 @@ namespace NewRelic.Providers.Wrapper.Logging
         private static Func<object, object> _getLogLevel;
         private static Func<object, string> _getRenderedMessage;
         private static Func<object, DateTime> _getTimestamp;
+        private static Func<object, IDictionary> _getProperties;
 
         public bool IsTransactionRequired => false;
 
@@ -26,23 +28,54 @@ namespace NewRelic.Providers.Wrapper.Logging
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var loggingEvent = instrumentedMethodCall.MethodCall.MethodArguments[0];
+            var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
-            var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(loggingEvent.GetType(), "Level");
-            var logLevel = getLogLevelFunc(loggingEvent).ToString(); // Level class has a ToString override we can use.
+            RecordLogMessage(logEvent, agent);
+
+            DecorateLogMessage(logEvent, agent);
+
+            return Delegates.NoOp;
+        }
+
+        private void RecordLogMessage(object logEvent, IAgent agent)
+        {
+            var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEvent.GetType(), "Level");
+            var logLevel = getLogLevelFunc(logEvent).ToString(); // Level class has a ToString override we can use.
 
             // RenderedMessage is get only
-            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(loggingEvent.GetType(), "RenderedMessage");
-            var renderedMessage = getRenderedMessageFunc(loggingEvent);
+            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEvent.GetType(), "RenderedMessage");
+            var renderedMessage = getRenderedMessageFunc(logEvent);
 
             // We can either get this in Local or UTC
-            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(loggingEvent.GetType(), "TimeStampUtc");
-            var timestamp = getTimestampFunc(loggingEvent);
+            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEvent.GetType(), "TimeStampUtc");
+            var timestamp = getTimestampFunc(logEvent);
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
             xapi.RecordLogMessage(timestamp, logLevel, renderedMessage, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
-            return Delegates.NoOp;
+        }
+
+        private void DecorateLogMessage(object logEvent, IAgent agent)
+        {
+            if (!agent.Configuration.LogDecoratorEnabled)
+            {
+                return;
+            }
+
+            var getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEvent.GetType(), "Properties");
+            var propertiesDictionary = getProperties(logEvent);
+
+            if (propertiesDictionary == null)
+            {
+                return;
+            }
+
+            // the keys in the metadata match the ones used for decorating
+            var metadata = agent.GetLinkingMetadata();
+            foreach (var entry in metadata)
+            {
+                propertiesDictionary[entry.Key] = entry.Value ?? string.Empty;
+            }
         }
     }
 }

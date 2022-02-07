@@ -1623,6 +1623,23 @@
                               </xs:attribute>
                           </xs:complexType>
                       </xs:element>
+                      <xs:element name="decorating" minOccurs="0" maxOccurs="1">
+                          <xs:annotation>
+                              <xs:documentation>
+                                  When enabled, local log messages will be decorated with logs-in-context data as they are written.
+                                  The method used to decorate the messages depends on the logging framework and may require additional configuration.
+                              </xs:documentation>
+                          </xs:annotation>
+                          <xs:complexType>
+                              <xs:attribute name="enabled" type="xs:boolean" default="true">
+                                  <xs:annotation>
+                                      <xs:documentation>
+                                          Controls whether or not local log messages are decorated with logs-in-context data. Defaults to true.
+                                      </xs:documentation>
+                                  </xs:annotation>
+                              </xs:attribute>
+                          </xs:complexType>
+                      </xs:element>
                   </xs:sequence>
               </xs:complexType>
           </xs:element>

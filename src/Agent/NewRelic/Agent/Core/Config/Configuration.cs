@@ -4909,11 +4909,14 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationLogSendingForwarding forwardingField;
         
+        private configurationLogSendingDecorating decoratingField;
+        
         /// <summary>
         /// configurationLogSending class constructor
         /// </summary>
         public configurationLogSending()
         {
+            this.decoratingField = new configurationLogSendingDecorating();
             this.forwardingField = new configurationLogSendingForwarding();
             this.metricsField = new configurationLogSendingMetrics();
         }
@@ -4939,6 +4942,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.forwardingField = value;
+            }
+        }
+        
+        public configurationLogSendingDecorating decorating
+        {
+            get
+            {
+                return this.decoratingField;
+            }
+            set
+            {
+                this.decoratingField = value;
             }
         }
         
@@ -5050,6 +5065,48 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationLogSendingForwarding Clone()
         {
             return ((configurationLogSendingForwarding)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationLogSendingDecorating
+    {
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationLogSendingDecorating class constructor
+        /// </summary>
+        public configurationLogSendingDecorating()
+        {
+            this.enabledField = true;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationLogSendingDecorating object
+        /// </summary>
+        public virtual configurationLogSendingDecorating Clone()
+        {
+            return ((configurationLogSendingDecorating)(this.MemberwiseClone()));
         }
         #endregion
     }

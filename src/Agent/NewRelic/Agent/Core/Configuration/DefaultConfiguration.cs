@@ -1813,6 +1813,14 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public virtual bool LogDecoratorEnabled
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.logSending.decorating.enabled, "NEW_RELIC_LOG_SENDING_DECORATING_ENABLED");
+            }
+        }
+
         #endregion
 
         private bool? _diagnosticsCaptureAgentTiming;
