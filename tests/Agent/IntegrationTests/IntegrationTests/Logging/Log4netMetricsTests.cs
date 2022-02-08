@@ -72,7 +72,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         }
     }
 
-
     [NetFrameworkTest]
     public class Log4netMetricsTestsFW471Tests : Log4netMetricsTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
@@ -127,4 +126,3 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         }
     }
 }
-

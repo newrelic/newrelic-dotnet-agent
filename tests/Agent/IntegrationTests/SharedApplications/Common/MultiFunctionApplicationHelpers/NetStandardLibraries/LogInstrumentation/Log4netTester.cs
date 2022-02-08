@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System.Runtime.CompilerServices;
 using log4net;
 using log4net.Config;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
+using NewRelic.Api.Agent;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
 {
@@ -40,6 +42,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     log.Info(message);
                     break;
             }
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void CreateSingleLogMessageInTransaction(string message, string level)
+        {
+            CreateSingleLogMessage(message, level);
         }
     }
 }
