@@ -15,8 +15,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public abstract class Log4netMetricsTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
-        private const string InfoMessage = "testing123";
-        private const string DebugMessage = "testing456";
         private readonly TFixture _fixture;
 
         public Log4netMetricsTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
@@ -26,8 +24,12 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"Log4netTester Configure");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {InfoMessage} info");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {DebugMessage} debug");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage LogMakerLogMakerMakeMeALog DEBUG");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage FindMeALog INFO");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage CatchMeALog WARN");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage LogMakerLogMakerLookThroughYourLogBook ERROR");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage MakeMeAPerfectLog FATAL");
+
             _fixture.AddCommand($"RootCommands DelaySeconds 90");
 
             _fixture.Actions
@@ -48,16 +50,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         [Fact]
         public void LogLinesPerLevelMetricsExist()
         {
-            // Sending 1 info and 1 debug message, total 2 messages
-            var expectedInfoMessages = 1;
-            var expectedDebugMessages = 1;
-            var expectedTotalMessages = 2;
-
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/INFO", callCount = expectedInfoMessages },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/DEBUG", callCount = expectedDebugMessages },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = expectedTotalMessages },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/DEBUG", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/INFO", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/WARN", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/ERROR", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/FATAL", callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 5 },
             };
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();

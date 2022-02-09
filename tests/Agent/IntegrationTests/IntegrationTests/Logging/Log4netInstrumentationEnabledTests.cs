@@ -133,63 +133,63 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     }
 
     [NetFrameworkTest]
-    public class Log4netInstrumentationTestsFWLatestTests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureFWLatest>
+    public class Log4netInstrumentationEnabledTestsFWLatestTests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public Log4netInstrumentationTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public Log4netInstrumentationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4netInstrumentationTestsFW471Tests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureFW471>
+    public class Log4netInstrumentationEnabledTestsFW471Tests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureFW471>
     {
-        public Log4netInstrumentationTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public Log4netInstrumentationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4netInstrumentationTestsFW462Tests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureFW462>
+    public class Log4netInstrumentationEnabledTestsFW462Tests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureFW462>
     {
-        public Log4netInstrumentationTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public Log4netInstrumentationEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netInstrumentationTestsNetCoreLatestTests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureCoreLatest>
+    public class Log4netInstrumentationEnabledTestsNetCoreLatestTests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public Log4netInstrumentationTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public Log4netInstrumentationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netInstrumentationTestsNetCore50Tests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureCore50>
+    public class Log4netInstrumentationEnabledTestsNetCore50Tests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureCore50>
     {
-        public Log4netInstrumentationTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+        public Log4netInstrumentationEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netInstrumentationTestsNetCore31Tests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureCore31>
+    public class Log4netInstrumentationEnabledTestsNetCore31Tests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureCore31>
     {
-        public Log4netInstrumentationTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public Log4netInstrumentationEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netInstrumentationTestsNetCore21Tests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureCore21>
+    public class Log4netInstrumentationEnabledTestsNetCore21Tests : Log4netInstrumentationEnabledTests<ConsoleDynamicMethodFixtureCore21>
     {
-        public Log4netInstrumentationTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+        public Log4netInstrumentationEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
