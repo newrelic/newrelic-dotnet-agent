@@ -24,18 +24,22 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         [LibraryMethod]
         public static void CreateSingleLogMessage(string message, string level)
         {
-            switch (level)
+            switch (level.ToUpper())
             {
-                case "info":
-                    log.Info(message);
-                    break;
-                case "debug":
+                case "DEBUG":
                     log.Debug(message);
                     break;
-                case "error":
+                case "INFO":
+                    log.Info(message);
+                    break;
+                case "WARN":
+                case "WARNING":
+                    log.Warn(message);
+                    break;
+                case "ERROR":
                     log.Error(message);
                     break;
-                case "fatal":
+                case "FATAL":
                     log.Fatal(message);
                     break;
                 default:

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -21,12 +22,13 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         public Log4netMetricsTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(3));
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"Log4netTester Configure");
             _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {InfoMessage} info");
             _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {DebugMessage} debug");
+            _fixture.AddCommand($"RootCommands DelaySeconds 90");
 
             _fixture.Actions
             (
@@ -44,22 +46,42 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         }
 
         [Fact]
-        public void Test()
+        public void LogLinesPerLevelMetricsExist()
         {
             // Sending 1 info and 1 debug message, total 2 messages
             var expectedInfoMessages = 1;
             var expectedDebugMessages = 1;
             var expectedTotalMessages = 2;
 
-            var actualMetrics = new List<Assertions.ExpectedMetric>
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Logging/lines/INFO", callCount = expectedInfoMessages },
-                new Assertions.ExpectedMetric { metricName = @"Logging/lines/DEBUG", callCount = expectedDebugMessages },
-                new Assertions.ExpectedMetric { metricName = @"Logging/lines", callCount = expectedTotalMessages },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/INFO", callCount = expectedInfoMessages },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/DEBUG", callCount = expectedDebugMessages },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = expectedTotalMessages },
             };
 
-            var metrics = _fixture.AgentLog.GetMetrics();
-            Assertions.MetricsExist(actualMetrics, metrics);
+            var actualMetrics = _fixture.AgentLog.GetMetrics();
+            Assertions.MetricsExist(expectedMetrics, actualMetrics);
+        }
+
+        [Fact]
+        public void SupportabilityDataUsageMetricsExist()
+        {
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = "Supportability/DotNET/Collector/Output/Bytes"},
+                new Assertions.ExpectedMetric { metricName = "Supportability/DotNET/Collector/log_event_data/Output/Bytes"}
+            };
+
+            var actualMetrics = _fixture.AgentLog.GetMetrics();
+            Assertions.MetricsExist(expectedMetrics, actualMetrics);
+
+            var logEventDataMetrics = actualMetrics.Where(x => x.MetricSpec.Name == "Supportability/DotNET/Collector/log_event_data/Output/Bytes");
+            foreach (var metric in logEventDataMetrics)
+            {
+                Assert.NotEqual(0UL, metric.Values.CallCount);
+                Assert.NotEqual(0, metric.Values.Total);
+            }
         }
     }
 

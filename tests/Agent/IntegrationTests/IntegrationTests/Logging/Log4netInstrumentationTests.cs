@@ -17,13 +17,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public abstract class Log4netInstrumentationEnabledTests<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
-        private const string OutsideTransactionInfoMessage = "OutsideTransactionInfoLogMessage";
         private const string OutsideTransactionDebugMessage = "OutsideTransactionDebugLogMessage";
+        private const string OutsideTransactionInfoMessage = "OutsideTransactionInfoLogMessage";
+        private const string OutsideTransactionWarningMessage = "OutsideTransactionWarningLogMessage";
         private const string OutsideTransactionErrorMessage = "OutsideTransactionErrorLogMessage";
         private const string OutsideTransactionFatalMessage = "OutsideTransactionFatalLogMessage";
 
-        private const string InTransactionInfoMessage = "InTransactionInfoLogMessage";
         private const string InTransactionDebugMessage = "InTransactionDebugLogMessage";
+        private const string InTransactionInfoMessage = "InTransactionInfoLogMessage";
+        private const string InTransactionWarningMessage = "InTransactionWarningLogMessage";
         private const string InTransactionErrorMessage = "InTransactionErrorLogMessage";
         private const string InTransactionFatalMessage = "InTransactionFatalLogMessage";
 
@@ -36,15 +38,17 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"Log4netTester Configure");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionInfoMessage} info");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionDebugMessage} debug");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionErrorMessage} error");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionFatalMessage} fatal");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionDebugMessage} DEBUG");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionInfoMessage} INFO");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionWarningMessage} WARN");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionErrorMessage} ERROR");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionFatalMessage} FATAL");
 
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionInfoMessage} info");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionDebugMessage} debug");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionErrorMessage} error");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionFatalMessage} fatal");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionDebugMessage} DEBUG");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionInfoMessage} INFO");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionWarningMessage} WARN");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionErrorMessage} ERROR");
+            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionFatalMessage} FATAL");
 
             _fixture.Actions
             (
@@ -79,9 +83,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             }
 
             var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
-            Assert.Equal(8, logLines.Length);
+            Assert.Equal(10, logLines.Length);
 
-            foreach(var logLine in logLines)
+            foreach (var logLine in logLines)
             {
                 Assert.False(string.IsNullOrWhiteSpace(logLine.Message));
                 Assert.False(string.IsNullOrWhiteSpace(logLine.Level));
@@ -94,8 +98,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         {
             var expectedLogLines = new Assertions.ExpectedLogLine[]
             {
-                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = InTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
                 new Assertions.ExpectedLogLine { LogLevel = "DEBUG", LogMessage = InTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = InTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { LogLevel = "WARN", LogMessage = InTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
                 new Assertions.ExpectedLogLine { LogLevel = "ERROR", LogMessage = InTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
                 new Assertions.ExpectedLogLine { LogLevel = "FATAL", LogMessage = InTransactionFatalMessage, HasTraceId = true, HasSpanId = true }
             };
@@ -104,7 +109,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
 
             Assertions.LogLinesExist(expectedLogLines, logLines);
 
-            Assert.Equal(4, logLines.Where(x => x.Message.StartsWith("InTransaction")).Count());
+            Assert.Equal(expectedLogLines.Length, logLines.Where(x => x.Message.StartsWith("InTransaction")).Count());
         }
 
         [Fact]
@@ -112,17 +117,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         {
             var expectedLogLines = new Assertions.ExpectedLogLine[]
             {
-                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = OutsideTransactionInfoMessage},
                 new Assertions.ExpectedLogLine { LogLevel = "DEBUG", LogMessage = OutsideTransactionDebugMessage},
+                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = OutsideTransactionInfoMessage},
+                new Assertions.ExpectedLogLine { LogLevel = "WARN", LogMessage = OutsideTransactionWarningMessage},
                 new Assertions.ExpectedLogLine { LogLevel = "ERROR", LogMessage = OutsideTransactionErrorMessage},
                 new Assertions.ExpectedLogLine { LogLevel = "FATAL", LogMessage = OutsideTransactionFatalMessage},
             };
 
-            var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
+            var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
 
             Assertions.LogLinesExist(expectedLogLines, logLines);
 
-            Assert.Equal(4, logLines.Where(x => x.Message.StartsWith("OutsideTransaction")).Count());
+            Assert.Equal(expectedLogLines.Length, logLines.Where(x => x.Message.StartsWith("OutsideTransaction")).Count());
         }
     }
 
