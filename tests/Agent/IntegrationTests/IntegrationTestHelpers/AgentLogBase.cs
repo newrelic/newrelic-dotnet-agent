@@ -34,7 +34,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Received : {""return_value"":{""agent_run_id""(.*)";
         public const string TransactionSampleLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""transaction_sample_data"" with : (.*)";
         public const string MetricDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""metric_data"" with : (.*)";
-        public const string LogDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""log_event_data"" with : \[(.*)\]";
+        public const string LogDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""log_event_data"" with : (.*)";
         public const string ErrorTraceDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""error_data"" with : (.*)";
         public const string SqlTraceDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""sql_trace_data"" with : (.*)";
         public const string AnalyticsEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""analytic_event_data"" with : (.*)";
@@ -463,13 +463,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region LogData
 
-        public IEnumerable<JObject> GetLogData()
+        public IEnumerable<LogEventData> GetLogEventData()
         {
             return TryGetLogLines(LogDataLogLineRegex)
                 .Select(match => TryExtractJson(match, 1))
                 .Where(json => json != null)
-                .Select(json => JsonConvert.DeserializeObject(json))
-                .Select(deserialized => deserialized["logs"]);
+                .SelectMany(json => LogEventData.FromJson(json));
+        }
+
+        public IEnumerable<LogLine> GetLogEventDataLogLines()
+        {
+            return GetLogEventData()
+                .SelectMany(x => x.Logs);
         }
 
         #endregion LogData
