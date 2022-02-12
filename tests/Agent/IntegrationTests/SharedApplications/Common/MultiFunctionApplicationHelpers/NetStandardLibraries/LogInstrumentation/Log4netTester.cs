@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using log4net;
 using log4net.Config;
@@ -18,7 +19,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         [LibraryMethod]
         public static void Configure()
         {
-            BasicConfigurator.Configure();
+            BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()));
         }
 
         [LibraryMethod]

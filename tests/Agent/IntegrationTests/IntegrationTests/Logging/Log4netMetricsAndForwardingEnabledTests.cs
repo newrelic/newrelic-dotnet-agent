@@ -12,12 +12,12 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Logging
 {
-    public abstract class Log4netMetricsTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class Log4NetMetricsAndForwardingEnabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
 
-        public Log4netMetricsTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        public Log4NetMetricsAndForwardingEnabledTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(3));
@@ -38,7 +38,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
-                    configModifier.EnableLogMetrics(true)
+                    configModifier.EnableLogMetrics()
+                    .EnableLogForwarding()
                     .EnableDistributedTrace()
                     .SetLogLevel("debug");
                 }
@@ -87,63 +88,63 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     }
 
     [NetFrameworkTest]
-    public class Log4netMetricsTestsFWLatestTests : Log4netMetricsTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class Log4NetMetricsAndForwardingEnabledTestsFWLatestTests : Log4NetMetricsAndForwardingEnabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public Log4netMetricsTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public Log4NetMetricsAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4netMetricsTestsFW471Tests : Log4netMetricsTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class Log4NetMetricsAndForwardingEnabledTestsFW471Tests : Log4NetMetricsAndForwardingEnabledTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public Log4netMetricsTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public Log4NetMetricsAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4netMetricsTestsFW462Tests : Log4netMetricsTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class Log4NetMetricsAndForwardingEnabledTestsFW462Tests : Log4NetMetricsAndForwardingEnabledTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public Log4netMetricsTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public Log4NetMetricsAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netMetricsTestsNetCoreLatestTests : Log4netMetricsTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class Log4NetMetricsAndForwardingEnabledTestsNetCoreLatestTests : Log4NetMetricsAndForwardingEnabledTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public Log4netMetricsTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public Log4NetMetricsAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netMetricsTestsNetCore50Tests : Log4netMetricsTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class Log4NetMetricsAndForwardingEnabledTestsNetCore50Tests : Log4NetMetricsAndForwardingEnabledTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public Log4netMetricsTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+        public Log4NetMetricsAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netMetricsTestsNetCore31Tests : Log4netMetricsTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class Log4NetMetricsAndForwardingEnabledTestsNetCore31Tests : Log4NetMetricsAndForwardingEnabledTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public Log4netMetricsTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public Log4NetMetricsAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netMetricsTestsNetCore21Tests : Log4netMetricsTestsBase<ConsoleDynamicMethodFixtureCore21>
+    public class Log4NetMetricsAndForwardingEnabledTestsNetCore21Tests : Log4NetMetricsAndForwardingEnabledTestsBase<ConsoleDynamicMethodFixtureCore21>
     {
-        public Log4netMetricsTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+        public Log4NetMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

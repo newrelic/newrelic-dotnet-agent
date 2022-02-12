@@ -11,6 +11,7 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -104,6 +105,9 @@ namespace NewRelic.Agent.Core.Aggregators
             // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
             // limits are per 60 seconds, so we need to prorate the value to the faster-event-harvest.
+
+            // TODO: This is causing a configured value of 1-5 to be reduced to 0...
+
             ResetCollections(Convert.ToInt32(_configuration.LogEventsMaximumPerPeriod / (60 / HarvestCycle.TotalSeconds)));
         }
 
@@ -116,6 +120,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         private ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>> GetAndResetLogEvents(int logEventCollectionCapacity)
         {
+            // TODO: remove this log after we've fixed the defect here
+            Log.Info($"Resetting Log Collection to capacity: {logEventCollectionCapacity}");
             return Interlocked.Exchange(ref _logEvents, new ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>(logEventCollectionCapacity));
         }
 
