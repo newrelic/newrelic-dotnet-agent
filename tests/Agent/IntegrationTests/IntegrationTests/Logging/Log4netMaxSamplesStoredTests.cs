@@ -46,31 +46,26 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         }
 
         [Fact]
-        public void CountsAndValuesAreAsExpected()
+        public void OnlyOneLogLineIsSent()
         {
-            var logs = _fixture.AgentLog.GetLogEventData().ToArray();
-            Assert.NotEmpty(logs);
+            var logData = _fixture.AgentLog.GetLogEventData().FirstOrDefault();
+            Assert.NotNull(logData);
 
-            foreach (var log in logs)
-            {
-                Assert.NotNull(log.Common);
-                Assert.NotNull(log.Common.Attributes);
-                Assert.False(string.IsNullOrWhiteSpace(log.Common.Attributes.EntityGuid));
-                Assert.False(string.IsNullOrWhiteSpace(log.Common.Attributes.EntityName));
-                Assert.False(string.IsNullOrWhiteSpace(log.Common.Attributes.EntityType));
-                Assert.False(string.IsNullOrWhiteSpace(log.Common.Attributes.Hostname));
-                Assert.Equal("nr-dotnet-agent", log.Common.Attributes.PluginType);
-            }
+            Assert.NotNull(logData.Common);
+            Assert.NotNull(logData.Common.Attributes);
+            Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.EntityGuid));
+            Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.EntityName));
+            Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.EntityType));
+            Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.Hostname));
+            Assert.Equal("nr-dotnet-agent", logData.Common.Attributes.PluginType);
 
-            var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
-            Assert.Single(logLines);
+            // Since we set the maximum number of log lines stored to 1 in setupConfiguration, there should only be one log line
+            Assert.Single(logData.Logs);
+            var logLine = logData.Logs[0];
+            Assert.False(string.IsNullOrWhiteSpace(logLine.Message));
+            Assert.False(string.IsNullOrWhiteSpace(logLine.Level));
+            Assert.NotEqual(0, logLine.Timestamp);
 
-            foreach (var logLine in logLines)
-            {
-                Assert.False(string.IsNullOrWhiteSpace(logLine.Message));
-                Assert.False(string.IsNullOrWhiteSpace(logLine.Level));
-                Assert.NotEqual(0, logLine.Timestamp);
-            }
         }
     }
 
