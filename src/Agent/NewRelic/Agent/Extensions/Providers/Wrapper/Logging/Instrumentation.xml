@@ -12,5 +12,17 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
+    <tracerFactory name="serilog">
+      <!-- For Serilog 1.x -->
+      <match assemblyName="Serilog" className="Serilog.Core.Pipeline.Logger">
+        <exactMethodMatcher methodName="Dispatch" />
+      </match>
+
+      <!-- For Serilog 2.x and above -->
+      <match assemblyName="Serilog" className="Serilog.Core.Logger">
+        <exactMethodMatcher methodName="Dispatch" />
+      </match>
+    </tracerFactory>
+
   </instrumentation>
 </extension>
