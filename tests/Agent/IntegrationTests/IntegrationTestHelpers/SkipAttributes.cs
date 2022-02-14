@@ -30,4 +30,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
         }
     }
+    public sealed class SkipOnAlpineFactAttribute : FactAttribute
+    {
+        public SkipOnAlpineFactAttribute(string reason)
+        {
+            if (Utilities.IsAlpine)
+            {
+                Skip = $"Skipping test on Alpine Linux. Reason = {reason}";
+            }
+        }
+    }
 }
