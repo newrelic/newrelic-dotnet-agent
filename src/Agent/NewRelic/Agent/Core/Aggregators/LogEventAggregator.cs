@@ -104,11 +104,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
             // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-            // limits are per 60 seconds, so we need to prorate the value to the faster-event-harvest.
-
-            // TODO: This is causing a configured value of 1-5 to be reduced to 0...
-
-            ResetCollections(Convert.ToInt32(_configuration.LogEventsMaximumPerPeriod / (60 / HarvestCycle.TotalSeconds)));
+            ResetCollections(_configuration.LogEventsMaximumPerPeriod);
         }
 
         #region Private Helpers
@@ -120,8 +116,6 @@ namespace NewRelic.Agent.Core.Aggregators
 
         private ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>> GetAndResetLogEvents(int logEventCollectionCapacity)
         {
-            // TODO: remove this log after we've fixed the defect here
-            Log.Info($"Resetting Log Collection to capacity: {logEventCollectionCapacity}");
             return Interlocked.Exchange(ref _logEvents, new ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>(logEventCollectionCapacity));
         }
 
