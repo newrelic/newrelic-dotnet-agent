@@ -15,9 +15,9 @@
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
     <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="1.0.205" />
-    <PackageReference Include="log4net" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'" />
-    <PackageReference Include="log4net" Version="2.0.5" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="log4net" Version="2.0.6" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="log4net" Version="2.0.6" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="log4net" Version="2.0.10" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="log4net" Version="2.0.6 " Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="log4net" Version="2.0.8" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
     <PackageReference Include="log4net" Version="2.0.10" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
