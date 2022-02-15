@@ -261,11 +261,37 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     "displayName", customHostName);
         }
 
-        public NewRelicConfigModifier EnableLogMetrics(bool enable)
+        public NewRelicConfigModifier DisableLogMetrics()
         {
-            CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending" }, "metrics", string.Empty);
+            return EnableLogMetrics(false);
+        }
+
+        public NewRelicConfigModifier EnableLogMetrics(bool enable = true)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending" }, "metrics", string.Empty);
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending", "metrics" }, "enabled", enable.ToString().ToLower());
             return this;
         }
+
+        public NewRelicConfigModifier DisableLogForwarding()
+        {
+            return EnableLogForwarding(false);
+        }
+
+        public NewRelicConfigModifier EnableLogForwarding(bool enable = true)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending" }, "forwarding", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending", "forwarding" }, "enabled", enable.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier SetLogForwardingMaxSamplesStored(int samples)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending" }, "forwarding", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending", "forwarding" }, "maxSamplesStored", samples.ToString());
+            return this;
+        }
+
+        
     }
 }

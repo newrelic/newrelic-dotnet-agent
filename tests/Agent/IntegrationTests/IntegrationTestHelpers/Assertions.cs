@@ -557,6 +557,71 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #endregion Metrics
 
+        #region Log Lines
+
+        public static void LogLineExists(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines) => LogLinesExist(new[] { expectedLogLine }, actualLogLines);
+
+        public static void LogLinesExist(IEnumerable<ExpectedLogLine> expectedLogLines, IEnumerable<LogLine> actualLogLines)
+        {
+            actualLogLines = actualLogLines.ToList();
+
+            var succeeded = true;
+            var builder = new StringBuilder();
+
+            if (!actualLogLines.Any() && actualLogLines.Any())
+            {
+                builder.AppendLine("Unable to validate expected Log Lines because actualLogLines has no items.");
+                succeeded = false;
+            }
+            else
+            {
+                foreach (var expectedLogLine in expectedLogLines)
+                {
+                    var matchedLogLine = TryFindLogLine(expectedLogLine, actualLogLines);
+                    if (matchedLogLine == null)
+                    {
+                        builder.Append($"LogLine `{expectedLogLine}` was not found in the Log payload.");
+                        builder.AppendLine();
+                        builder.AppendLine();
+
+                        succeeded = false;
+                        continue;
+                    }
+                }
+            }
+
+
+            Assert.True(succeeded, builder.ToString());
+        }
+
+        private static LogLine TryFindLogLine(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines)
+        {
+            foreach (var actualLogLine in actualLogLines)
+            {
+                if (expectedLogLine.LogLevel != actualLogLine.Level)
+                    continue;
+                if (expectedLogLine.LogMessage != actualLogLine.Message)
+                    continue;
+                if (expectedLogLine.HasSpanId && string.IsNullOrWhiteSpace(actualLogLine.Attributes.Spanid))
+                    continue;
+                if (!expectedLogLine.HasSpanId && !string.IsNullOrWhiteSpace(actualLogLine.Attributes.Spanid))
+                    continue;
+                if (expectedLogLine.HasTraceId && string.IsNullOrWhiteSpace(actualLogLine.Attributes.Traceid))
+                    continue;
+                if (!expectedLogLine.HasTraceId && !string.IsNullOrWhiteSpace(actualLogLine.Attributes.Traceid))
+                    continue;
+
+                return actualLogLine;
+            }
+
+            return null;
+        }
+
+
+
+
+        #endregion
+
         #region Transaction Events
 
         public static void TransactionEventHasAttributes(IEnumerable<KeyValuePair<string, string>> expectedAttributes, TransactionEventAttributeType attributeType, TransactionEvent transactionEvent)
@@ -937,6 +1002,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             public override string ToString()
             {
                 return $"{{ metricName: {metricName} metricScope: {metricScope}, IsRegexName: {IsRegexName}, callCount: {callCount}, CallCountAllHarvests: {CallCountAllHarvests} }}";
+            }
+        }
+
+        public class ExpectedLogLine
+        {
+            public string LogMessage = null;
+            public string LogLevel = null;
+            public bool HasSpanId = false;
+            public bool HasTraceId = false;
+
+            public override string ToString()
+            {
+                return $"{{ LogLevel: {LogLevel}, LogMessage: {LogMessage}, HasSpanId: {HasSpanId}, HasTraceId: {HasTraceId} }}";
             }
         }
 

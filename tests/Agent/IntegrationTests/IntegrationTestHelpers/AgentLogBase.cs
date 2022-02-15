@@ -6,11 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Dynamic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
@@ -32,6 +34,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Received : {""return_value"":{""agent_run_id""(.*)";
         public const string TransactionSampleLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""transaction_sample_data"" with : (.*)";
         public const string MetricDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""metric_data"" with : (.*)";
+        public const string LogDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""log_event_data"" with : (.*)";
         public const string ErrorTraceDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""error_data"" with : (.*)";
         public const string SqlTraceDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""sql_trace_data"" with : (.*)";
         public const string AnalyticsEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""analytic_event_data"" with : (.*)";
@@ -457,5 +460,23 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         }
 
         #endregion Metrics
+
+        #region LogData
+
+        public IEnumerable<LogEventData> GetLogEventData()
+        {
+            return TryGetLogLines(LogDataLogLineRegex)
+                .Select(match => TryExtractJson(match, 1))
+                .Where(json => json != null)
+                .SelectMany(json => LogEventData.FromJson(json));
+        }
+
+        public IEnumerable<LogLine> GetLogEventDataLogLines()
+        {
+            return GetLogEventData()
+                .SelectMany(x => x.Logs);
+        }
+
+        #endregion LogData
     }
 }
