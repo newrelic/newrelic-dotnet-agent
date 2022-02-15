@@ -53,8 +53,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionErrorMessage} ERROR");
             _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionFatalMessage} FATAL");
 
-            // This is necessary for the data usage metric assertions to work
-            _fixture.AddCommand($"RootCommands DelaySeconds 60");
+            // This is necessary for the data usage metric assertions to work.  Only need to do it if forwarding is enabled.
+            if (_forwardingEnabled)
+            {
+                _fixture.AddCommand($"RootCommands DelaySeconds 60");
+            }
 
             _fixture.Actions
             (
