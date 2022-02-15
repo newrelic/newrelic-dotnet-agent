@@ -16,6 +16,29 @@ namespace MultiFunctionApplicationHelpers
         }
     }
 
+
+    /// <summary>
+    /// Use this fixture for High Security Mode tests
+    /// </summary>
+    public class ConsoleDynamicMethodFixtureFWLatestHSM : ConsoleDynamicMethodFixtureFW48
+    {
+        public override string TestSettingCategory { get { return "HSM"; } }
+        public ConsoleDynamicMethodFixtureFWLatestHSM()
+        {
+        }
+    }
+
+    /// <summary>
+    /// Use this fixture for Configurable Security Policy tests
+    /// </summary>
+    public class ConsoleDynamicMethodFixtureFWLatestCSP : ConsoleDynamicMethodFixtureFW48
+    {
+        public override string TestSettingCategory { get { return "CSP"; } }
+        public ConsoleDynamicMethodFixtureFWLatestCSP()
+        {
+        }
+    }
+
     public class ConsoleDynamicMethodFixtureFW48 : ConsoleDynamicMethodFixtureFWSpecificVersion
     {
         public ConsoleDynamicMethodFixtureFW48() : base("net48")
@@ -98,6 +121,30 @@ namespace MultiFunctionApplicationHelpers
         public ConsoleDynamicMethodFixtureCoreLatest()
         {
         }
+    }
+
+    /// <summary>
+    /// Use this fixture for High Security Mode tests
+    /// </summary>
+    public class ConsoleDynamicMethodFixtureCoreLatestHSM : ConsoleDynamicMethodFixtureCore60
+    {
+        public override string TestSettingCategory { get { return "HSM"; } }
+        public ConsoleDynamicMethodFixtureCoreLatestHSM()
+        {
+        }
+
+    }
+
+    /// <summary>
+    /// Use this fixture for Configurable Security Policy tests
+    /// </summary>
+    public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCore60
+    {
+        public override string TestSettingCategory { get { return "CSP"; } }
+        public ConsoleDynamicMethodFixtureCoreLatestCSP()
+        {
+        }
+
     }
 
     public abstract class ConsoleDynamicMethodFixtureCoreSpecificVersion : ConsoleDynamicMethodFixture
