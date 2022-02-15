@@ -1784,7 +1784,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             { 
-                return EnvironmentOverrides(_localConfiguration.logSending.metrics.enabled, "NEW_RELIC_LOG_SENDING_METRICS_ENABLED");
+                return EnvironmentOverrides(_localConfiguration.applicationLogging.metrics.enabled, "NEW_RELIC_APPLICATION_LOGGING_METRICS_ENABLED");
             }
         }
 
@@ -1792,7 +1792,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return EnvironmentOverrides(_localConfiguration.logSending.forwarding.enabled, "NEW_RELIC_LOG_SENDING_FORWARDING_ENABLED");
+                return EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED");
             }
         }
 
@@ -1808,8 +1808,8 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return EnvironmentOverrides(_localConfiguration.logSending.forwarding.maxSamplesStored, "NEW_RELIC_LOG_SENDING_MAX_SAMPLES_STORED")
-                    ?? _localConfiguration.logSending.forwarding.maxSamplesStored;
+                return EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.maxSamplesStored, "NEW_RELIC_APPLICATION_LOGGING_MAX_SAMPLES_STORED")
+                    ?? _localConfiguration.applicationLogging.forwarding.maxSamplesStored;
             }
         }
 
@@ -1817,7 +1817,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return EnvironmentOverrides(_localConfiguration.logSending.decorating.enabled, "NEW_RELIC_LOG_SENDING_DECORATING_ENABLED");
+                return EnvironmentOverrides(_localConfiguration.applicationLogging.localDecorating.enabled, "NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED");
             }
         }
 

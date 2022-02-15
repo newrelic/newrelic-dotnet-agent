@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             Mock.Arrange(() => configuration.TransactionTracerEnabled).Returns(true);
             Mock.Arrange(() => configuration.LogMetricsCollectorEnabled).Returns(true);
             Mock.Arrange(() => configuration.LogEventCollectorEnabled).Returns(true);
-            Mock.Arrange(() => configuration.LogEventsMaximumPerPeriod).Returns(50000);
+            Mock.Arrange(() => configuration.LogEventsMaximumPerPeriod).Returns(2000);
             Mock.Arrange(() => configuration.LogEventsHarvestCycle).Returns(TimeSpan.FromSeconds(5));
             return configuration;
         }
