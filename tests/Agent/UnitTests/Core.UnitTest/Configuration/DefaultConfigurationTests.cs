@@ -2418,21 +2418,27 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         #region Log Metrics and Events
 
         [Test]
-        public void LogMetricsCollectorEnabledIsTrueInLocalConfigByDefault()
+        public void ApplicationLogging_MetricsEnabled_IsFalseInLocalConfigByDefault()
         {
-            Assert.IsTrue(_defaultConfig.LogMetricsCollectorEnabled);
+            Assert.IsFalse(_defaultConfig.LogMetricsCollectorEnabled);
         }
 
         [Test]
-        public void LogEventsCollectorEnabledIsTrueInLocalConfigByDefault()
+        public void ApplicationLogging_ForwardingEnabled_IsFalseInLocalConfigByDefault()
         {
-            Assert.IsTrue(_defaultConfig.LogEventCollectorEnabled);
+            Assert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
         }
 
         [Test]
-        public void LogEventsMaximumPerPeriodHasCorrectValue()
+        public void ApplicationLogging_LocalDecordingEnabled_IsFalseInLocalConfigByDefault()
         {
-            _localConfig.logSending.forwarding.maxSamplesStored = 1;
+            Assert.IsFalse(_defaultConfig.LogDecoratorEnabled);
+        }
+
+        [Test]
+        public void ApplicationLogging_ForwardingMaxSamplesStored_HasCorrectValue()
+        {
+            _localConfig.applicationLogging.forwarding.maxSamplesStored = 1;
             Assert.AreEqual(1, _defaultConfig.LogEventsMaximumPerPeriod);
         }
 
@@ -2449,7 +2455,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.EventHarvestConfig.HarvestLimits = new Dictionary<string, int>();
             _serverConfig.EventHarvestConfig.HarvestLimits.Add(LogEventHarvestLimitKey, 100); // limit does not matter here
 
-            // COnfirm value is set to provided value not default
+            // Confirm value is set to provided value not default
             Assert.AreEqual(10, _defaultConfig.LogEventsHarvestCycle.Seconds);
         }
 

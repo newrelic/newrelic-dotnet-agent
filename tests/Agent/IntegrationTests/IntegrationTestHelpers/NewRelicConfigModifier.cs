@@ -268,8 +268,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public NewRelicConfigModifier EnableLogMetrics(bool enable = true)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending" }, "metrics", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending", "metrics" }, "enabled", enable.ToString().ToLower());
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "metrics" }, "enabled", enable.ToString().ToLower());
             return this;
         }
 
@@ -280,15 +280,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public NewRelicConfigModifier EnableLogForwarding(bool enable = true)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending" }, "forwarding", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending", "forwarding" }, "enabled", enable.ToString().ToLower());
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "forwarding", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding" }, "enabled", enable.ToString().ToLower());
             return this;
         }
 
         public NewRelicConfigModifier SetLogForwardingMaxSamplesStored(int samples)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending" }, "forwarding", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "logSending", "forwarding" }, "maxSamplesStored", samples.ToString());
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "forwarding", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding" }, "maxSamplesStored", samples.ToString());
             return this;
         }
 
