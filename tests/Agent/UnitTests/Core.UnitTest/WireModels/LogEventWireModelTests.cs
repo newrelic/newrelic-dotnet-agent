@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Text;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Collections;
 using NUnit.Framework;
@@ -61,6 +62,20 @@ namespace NewRelic.Agent.Core.WireModels
 
             Assert.Throws<ArgumentException>(() => { objectUnderTest.Priority = priority; });
             Assert.AreEqual(startingPriority, objectUnderTest.Priority);
+        }
+
+        [Test]
+        public void MessageIsTruncatedTo32Kb()
+        {
+            var maxLogMessageLengthInBytes = 32 * 1000;
+            var reallyLongMessageString = new string('a', maxLogMessageLengthInBytes);
+            var tooLongMessageString = reallyLongMessageString + "a few too many chars";
+
+            var logEvent = new LogEventWireModel(0, tooLongMessageString, "INFO", "", "");
+
+            var messageStringFromLogEvent = logEvent.Message;
+
+            Assert.AreEqual(Encoding.UTF8.GetByteCount(messageStringFromLogEvent), maxLogMessageLengthInBytes);
         }
     }
 }
