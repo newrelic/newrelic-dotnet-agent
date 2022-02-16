@@ -41,7 +41,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
             _fixture.Initialize();
         }
 
-        [Fact]
+        [SkipOnAlpineFact("See https://github.com/newrelic/newrelic-dotnet-agent/issues/289")]
         public void Test()
         {
             //1 span count for the Make8TSpan method, another span count for the root span.

@@ -3,6 +3,8 @@
 
 
 using System;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
@@ -28,8 +30,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
         }
 
+        public static bool IsAlpine
+        {
+            get
+            {
+                if (IsLinux)
+                {
+                    var expectedOSName = File.ReadAllLines("/etc/os-release")
+                        .First(line => line.StartsWith("ID=", StringComparison.OrdinalIgnoreCase))
+                        .Substring("ID=".Length)
+                        .Trim('\"', '\'')
+                        .ToLower();
+                    return expectedOSName == "alpine";
+                }
+                return false;
+            }
+        }
+
         public static string Arch => RuntimeInformation.OSArchitecture.ToString().ToLower();
-        public static string CurrentRuntime => $"{(IsLinux ? "linux" : "win")}-{Arch}";
+        public static string CurrentRuntime => $"{(IsLinux ? "linux" : "win")}-{(IsAlpine ? "musl-" : "")}{Arch}";
         public static string RuntimeHomeDirName => $"newrelichome_{Arch}_coreclr{(IsLinux ? "_linux" : "")}";
 
         public static T ThrowIfNull<T>(T value, string valueName)
