@@ -1299,9 +1299,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var message = "message";
             var spanId = "spanid";
             var traceId = "traceid";
+            var loggingFramework = "testFramework";
 
             var xapi = _agent as IAgentExperimental;
-            xapi.RecordLogMessage(timestamp, level, message, spanId, traceId);
+            xapi.RecordLogMessage(loggingFramework, timestamp, level, message, spanId, traceId);
 
             // Access the private collection of events to get the number of add attempts.
             var privateAccessor = new PrivateAccessor(_logEventAggregator);
@@ -1324,9 +1325,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var message = "message";
             var spanId = "spanid";
             var traceId = "traceid";
+            var loggingFramework = "testFramework";
 
             var xapi = _agent as IAgentExperimental;
-            xapi.RecordLogMessage(timestamp, level, message, spanId, traceId);
+            xapi.RecordLogMessage(loggingFramework, timestamp, level, message, spanId, traceId);
 
             // Access the private collection of events to get the number of add attempts.
             var privateAccessor = new PrivateAccessor(_logEventAggregator);
@@ -1355,13 +1357,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var message = "message";
             var spanId = "spanid";
             var traceId = "traceid";
+            var loggingFramework = "testFramework";
 
             SetupTransaction();
             var transaction = _transactionService.GetCurrentInternalTransaction();
             var priority = transaction.Priority;
 
             var xapi = _agent as IAgentExperimental;
-            xapi.RecordLogMessage(timestamp, level, message, spanId, traceId);
+            xapi.RecordLogMessage(loggingFramework, timestamp, level, message, spanId, traceId);
 
             var logEvent = transaction.LogEvents?.FirstOrDefault();
             Assert.AreEqual(1, transaction.LogEvents.Count);

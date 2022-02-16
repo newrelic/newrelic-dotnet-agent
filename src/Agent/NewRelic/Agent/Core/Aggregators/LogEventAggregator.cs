@@ -158,8 +158,6 @@ namespace NewRelic.Agent.Core.Aggregators
 
         private void RetainEvents(IEnumerable<LogEventWireModel> logEvents)
         {
-            _agentHealthReporter.ReportLoggingEventsRecollected(logEvents.Count());
-
             logEvents = logEvents.ToList();
 
             foreach (var logEvent in logEvents)

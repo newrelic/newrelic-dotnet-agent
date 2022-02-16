@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void SetUp()
         {
             var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
-            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IDnsStatic>());
+            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>());
             _publishedMetrics = new List<MetricWireModel>();
             _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
         }
@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportPreHarvest_SendsExpectedMetrics()
         {
-            _agentHealthReporter.ReportAgentVersion("1.0", "foo");
+            _agentHealthReporter.ReportAgentVersion("1.0");
             Assert.AreEqual(1, _publishedMetrics.Count);
             var metric1 = _publishedMetrics.ElementAt(0);
             NrAssert.Multiple(
@@ -248,15 +248,13 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportLoggingSupportabilityMetrics()
         {
             _agentHealthReporter.ReportLoggingEventCollected();
-            _agentHealthReporter.ReportLoggingEventsRecollected(1);
             _agentHealthReporter.ReportLoggingEventsSent(2);
             _agentHealthReporter.CollectMetrics();
 
             var expectedMetricNamesAndValues = new Dictionary<string, long>
             {
-                { "Supportability/LoggingEvents/TotalLoggingEventsCollected", 1 },
-                { "Supportability/LoggingEvents/TotalLoggingEventsRecollected", 1 },
-                { "Supportability/LoggingEvents/TotalLoggingEventsSent", 2 },
+                { "Supportability/LoggingEvents/Seen", 1 },
+                { "Supportability/LoggingEvents/Sent", 2 }
             };
             var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
 

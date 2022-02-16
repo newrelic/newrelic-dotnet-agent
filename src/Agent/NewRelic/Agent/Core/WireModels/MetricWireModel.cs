@@ -983,13 +983,6 @@ namespace NewRelic.Agent.Core.WireModels
                 return BuildMetric(_metricNameService, proposedName, null, data);
             }
 
-            public MetricWireModel TryBuildSupportabilitLoggingEventsRecollectedMetric(int loggingEventsRecollected)
-            {
-                const string proposedName = MetricNames.SupportabilityLoggingEventsRecollected;
-                var data = MetricDataWireModel.BuildCountData(loggingEventsRecollected);
-                return BuildMetric(_metricNameService, proposedName, null, data);
-            }
-
             public MetricWireModel TryBuildSupportabilitLoggingEventsSentMetric(int loggingEventCount)
             {
                 const string proposedName = MetricNames.SupportabilityLoggingEventsSent;
