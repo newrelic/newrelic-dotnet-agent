@@ -583,7 +583,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportAgentInfo();
             CollectInfiniteTracingMetrics();
             CollectLoggingMetrics();
-			CollectSupportabilityDataUsageMetrics();
+            CollectSupportabilityDataUsageMetrics();
         }
 
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)

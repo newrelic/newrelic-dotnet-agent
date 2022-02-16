@@ -2430,6 +2430,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
+        public void ApplicationLogging_ForwardingEnabled_IsOverriddenByHighSecurityMode()
+        {
+            _localConfig.applicationLogging.forwarding.enabled = true;
+            _localConfig.highSecurity.enabled = true;
+
+            Assert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
+        }
+
+        [Test]
         public void ApplicationLogging_LocalDecordingEnabled_IsFalseInLocalConfigByDefault()
         {
             Assert.IsFalse(_defaultConfig.LogDecoratorEnabled);
