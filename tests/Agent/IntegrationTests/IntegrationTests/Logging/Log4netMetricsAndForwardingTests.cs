@@ -101,6 +101,41 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         }
 
         [Fact]
+        public void SupportabilityForwardingConfigurationMetricExists()
+        {
+            var actualMetrics = _fixture.AgentLog.GetMetrics();
+            if (_forwardingEnabled)
+            {
+                Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/Forwarding/DotNET/enabled");
+            }
+            else
+            {
+                Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/Forwarding/DotNET/disabled");
+            }
+        }
+
+        [Fact]
+        public void SupportabilityMetricsConfigurationMetricExists()
+        {
+            var actualMetrics = _fixture.AgentLog.GetMetrics();
+            if (_metricsEnabled)
+            {
+                Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/Metrics/DotNET/enabled");
+            }
+            else
+            {
+                Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/Metrics/DotNET/disabled");
+            }
+        }
+
+        [Fact]
+        public void SupportabilityLoggingFrameworkMetricExists()
+        {
+            var actualMetrics = _fixture.AgentLog.GetMetrics();
+            Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/enabled/DotNET/log4net");
+        }
+
+        [Fact]
         public void SupportabilityDataUsageMetricsExist()
         {
             var logEventDataUsageMetricName = "Supportability/DotNET/Collector/log_event_data/Output/Bytes";
