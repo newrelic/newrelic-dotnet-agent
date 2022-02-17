@@ -1792,7 +1792,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED");
+                return !SecurityPoliciesTokenExists && HighSecurityModeOverrides(false, EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED"));
             }
         }
 

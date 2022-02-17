@@ -3,11 +3,16 @@
 
 using System;
 using NewRelic.Collections;
+using NewRelic.SystemExtensions;
 
 namespace NewRelic.Agent.Core.WireModels
 {
     public class LogEventWireModel : IHasPriority
     {
+        // Not sure yet if we want 32 kilobytes (32 * 1000) or 32 kibibytes (32 * 1024).
+        // Going with the more conservative option for now.
+        private const uint MaxMessageLengthInBytes = 32 * 1000;
+
         /// <summary>
         /// The UTC timestamp in unix milliseconds. 
         /// </summary>
@@ -52,7 +57,7 @@ namespace NewRelic.Agent.Core.WireModels
         public LogEventWireModel(long unixTimestampMS, string message, string level, string spanId, string traceId)
         {
             TimeStamp = unixTimestampMS;
-            Message = message;
+            Message = message.TruncateUnicodeStringByBytes(MaxMessageLengthInBytes);
             Level = level;
             SpanId = spanId;
             TraceId = traceId;
@@ -61,7 +66,7 @@ namespace NewRelic.Agent.Core.WireModels
         public LogEventWireModel(long unixTimestampMS, string message, string level, string spanId, string traceId, float priority)
         {
             TimeStamp = unixTimestampMS;
-            Message = message;
+            Message = message.TruncateUnicodeStringByBytes(MaxMessageLengthInBytes);
             Level = level;
             SpanId = spanId;
             TraceId = traceId;

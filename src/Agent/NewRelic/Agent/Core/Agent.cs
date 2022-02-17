@@ -420,7 +420,7 @@ namespace NewRelic.Agent.Core
             if (!_configurationService.Configuration.LogEventCollectorEnabled || string.IsNullOrWhiteSpace(logMessage))
             {
                 return;
-            }           
+            }
 
             var transaction = _transactionService.GetCurrentInternalTransaction();
             if (transaction != null && transaction.IsValid)
