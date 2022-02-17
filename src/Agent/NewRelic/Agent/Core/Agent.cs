@@ -410,7 +410,7 @@ namespace NewRelic.Agent.Core
         {
             _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
 
-            var normalizedLevel = string.IsNullOrWhiteSpace(logLevel) ? "MISSING_LEVEL" : logLevel.ToUpper();
+            var normalizedLevel = string.IsNullOrWhiteSpace(logLevel) ? "UNKNOWN" : logLevel.ToUpper();
             if (_configurationService.Configuration.LogMetricsCollectorEnabled)
             {
                 _agentHealthReporter.IncrementLogLinesCount(normalizedLevel);
