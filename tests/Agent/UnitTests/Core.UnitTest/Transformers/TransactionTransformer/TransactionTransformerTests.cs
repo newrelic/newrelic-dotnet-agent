@@ -1403,12 +1403,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         #region Log Events
 
         [Test]
-        public void PrioritizeAndCollectLogEvents_PriorityAdjusted_WithTransaction()
+        public void PrioritizeAndCollectLogEvents_PriorityMatchesTransaction()
         {
             var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid");
 
             var transaction = TestTransactions.CreateDefaultTransaction();
-            var priority = transaction.Priority;
             transaction.LogEvents.Add(logEvent);
 
             _transactionTransformer.Transform(transaction);
@@ -1420,49 +1419,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var handledLogEvent = logEvents?.FirstOrDefault()?.Data;
             Assert.AreEqual(1, logEvents.Count);
             Assert.IsNotNull(handledLogEvent);
-            Assert.AreEqual(priority + 10, handledLogEvent.Priority, $"{priority} vs {handledLogEvent.Priority}"); // In a transaction +10
-        }
-
-        [Test]
-        public void PrioritizeAndCollectLogEvents_PriorityAdjusted_WithTransactionAndSampled()
-        {
-            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid");
-
-            var transaction = TestTransactions.CreateDefaultTransaction(sampled: true);
-            var priority = transaction.Priority;
-            transaction.LogEvents.Add(logEvent);
-
-            _transactionTransformer.Transform(transaction);
-
-            // Access the private collection of events to get the number of add attempts.
-            var privateAccessorL = new PrivateAccessor(_logEventAggregator);
-            var logEvents = privateAccessorL.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
-
-            var handledLogEvent = logEvents?.FirstOrDefault()?.Data;
-            Assert.AreEqual(1, logEvents.Count);
-            Assert.IsNotNull(handledLogEvent);
-            Assert.AreEqual(priority + 110F, handledLogEvent.Priority, $"{priority} vs {handledLogEvent.Priority}"); // In a transaction +10, +100 sampled
-        }
-
-        [Test]
-        public void PrioritizeAndCollectLogEvents_PriorityAdjusted_WithTransactionAndSampledAndError()
-        {
-            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid");
-
-            var transaction = TestTransactions.CreateDefaultTransaction(sampled: true, exception: new ArgumentException("broken thing"));
-            var priority = transaction.Priority;
-            transaction.LogEvents.Add(logEvent);
-
-            _transactionTransformer.Transform(transaction);
-
-            // Access the private collection of events to get the number of add attempts.
-            var privateAccessorL = new PrivateAccessor(_logEventAggregator);
-            var logEvents = privateAccessorL.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
-
-            var handledLogEvent = logEvents?.FirstOrDefault()?.Data;
-            Assert.AreEqual(1, logEvents.Count);
-            Assert.IsNotNull(handledLogEvent);
-            Assert.AreEqual(priority + 120F, handledLogEvent.Priority, $"{priority} vs {handledLogEvent.Priority}"); // In a transaction +10, +100 sampled, +10 erro
+            Assert.AreEqual(transaction.Priority, handledLogEvent.Priority, $"{transaction.Priority} vs {handledLogEvent.Priority}");
         }
 
         #endregion
