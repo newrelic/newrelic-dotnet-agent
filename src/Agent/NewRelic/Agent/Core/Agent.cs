@@ -406,8 +406,10 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
         }
 
-        public void RecordLogMessage(DateTime timestamp, string logLevel, string logMessage, string spanId, string traceId)
+        public void RecordLogMessage(string frameworkName, DateTime timestamp, string logLevel, string logMessage, string spanId, string traceId)
         {
+            _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
+
             var normalizedLevel = string.IsNullOrWhiteSpace(logLevel) ? "UNKNOWN" : logLevel.ToUpper();
             if (_configurationService.Configuration.LogMetricsCollectorEnabled)
             {

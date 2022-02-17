@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using Grpc.Core;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemInterfaces;
@@ -21,20 +25,39 @@ namespace NewRelic.Agent.Core.AgentHealth
     {
         private AgentHealthReporter _agentHealthReporter;
         private List<MetricWireModel> _publishedMetrics;
+        private ConfigurationAutoResponder _configurationAutoResponder;
 
         [SetUp]
         public void SetUp()
         {
+            var configuration = GetDefaultConfiguration();
+            _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+
             var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
-            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IDnsStatic>());
+            _agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>());
             _publishedMetrics = new List<MetricWireModel>();
             _agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _configurationAutoResponder.Dispose();
+        }
+
+        private static IConfiguration GetDefaultConfiguration()
+        {
+            var configuration = Mock.Create<IConfiguration>();
+            Mock.Arrange(() => configuration.LogEventCollectorEnabled).Returns(true);
+            Mock.Arrange(() => configuration.LogDecoratorEnabled).Returns(true);
+            Mock.Arrange(() => configuration.LogMetricsCollectorEnabled).Returns(true);
+            return configuration;
         }
 
         [Test]
         public void ReportPreHarvest_SendsExpectedMetrics()
         {
-            _agentHealthReporter.ReportAgentVersion("1.0", "foo");
+            _agentHealthReporter.ReportAgentVersion("1.0");
             Assert.AreEqual(1, _publishedMetrics.Count);
             var metric1 = _publishedMetrics.ElementAt(0);
             NrAssert.Multiple(
@@ -248,19 +271,65 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportLoggingSupportabilityMetrics()
         {
             _agentHealthReporter.ReportLoggingEventCollected();
-            _agentHealthReporter.ReportLoggingEventsRecollected(1);
             _agentHealthReporter.ReportLoggingEventsSent(2);
+            _agentHealthReporter.ReportLogForwardingFramework("log4net");
             _agentHealthReporter.CollectMetrics();
+
 
             var expectedMetricNamesAndValues = new Dictionary<string, long>
             {
-                { "Supportability/LoggingEvents/TotalLoggingEventsCollected", 1 },
-                { "Supportability/LoggingEvents/TotalLoggingEventsRecollected", 1 },
-                { "Supportability/LoggingEvents/TotalLoggingEventsSent", 2 },
+                { "Supportability/Logging/Forwarding/Seen", 1 },
+                { "Supportability/Logging/Forwarding/Sent", 2 },
+                { "Supportability/Logging/Metrics/DotNET/enabled", 1 },
+                { "Supportability/Logging/Forwarding/DotNET/enabled", 1 },
+                { "Supportability/Logging/LocalDecorating/DotNET/enabled", 1 },
+                { "Supportability/Logging/enabled/DotNET/log4net", 1 }
             };
             var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
 
             CollectionAssert.IsSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
+        }
+
+        [Test]
+        public void LoggingFrameworkOnlyReportedOnce()
+        {
+            _agentHealthReporter.ReportLogForwardingFramework("log4net");
+            _agentHealthReporter.CollectMetrics();
+
+            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/enabled/DotNET/log4net"));
+
+            // Clear out captured metrics, and recollect
+            _publishedMetrics = new List<MetricWireModel>();
+            _agentHealthReporter.ReportLogForwardingFramework("log4net");
+            _agentHealthReporter.ReportLogForwardingFramework("serilog");
+            _agentHealthReporter.CollectMetrics();
+
+            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/enabled/DotNET/serilog"));
+            Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/enabled/DotNET/log4net"));
+        }
+
+        [Test]
+        public void LoggingConfigurationSupportabilityMetricsOnlyReportedOnce()
+        {
+            _agentHealthReporter.CollectMetrics();
+
+            var expectedMetricNamesAndValues = new Dictionary<string, long>
+            {
+                { "Supportability/Logging/Metrics/DotNET/enabled", 1 },
+                { "Supportability/Logging/Forwarding/DotNET/enabled", 1 },
+                { "Supportability/Logging/LocalDecorating/DotNET/enabled", 1 },
+            };
+
+            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+
+            CollectionAssert.IsSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
+
+            // Clear out captured metrics, and recollect
+            _publishedMetrics = new List<MetricWireModel>();
+            _agentHealthReporter.CollectMetrics();
+
+            actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+            CollectionAssert.IsNotSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
         }
     }
 }
