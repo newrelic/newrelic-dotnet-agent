@@ -11,6 +11,9 @@ namespace NewRelic.Providers.Wrapper.Logging
         public static string GetFormattedLinkingMetadata(IAgent agent)
         {
             var metadata = agent.GetLinkingMetadata();
+            metadata.Remove("entity.name");
+            metadata.Remove("entity.type");
+
             var entries = new string[metadata.Count]; // keeps the array small and light
             for (int i = 0; i < metadata.Count; i++)
             {

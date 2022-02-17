@@ -16,25 +16,19 @@ namespace NewRelic.Agent.Core.WireModels
         [Test]
         public void ConstructorTest()
         {
-            var entityName = "TestEntityName";
-            var entityType = "TestEntityType";
             var entityGuid = Guid.NewGuid().ToString();
             var hostname = "TestHostname";
-            var pluginType = "testPluginType";
 
             var loggingEvents = new List<LogEventWireModel>
             {
                 new LogEventWireModel(1, "TestMessage", "TestLevel", "TestSpanId", "TestTraceId")
             };
 
-            var objectUnderTest = new LogEventWireModelCollection(entityName, entityType, entityGuid, hostname, pluginType, loggingEvents);
+            var objectUnderTest = new LogEventWireModelCollection(entityGuid, hostname, loggingEvents);
 
             Assert.NotNull(objectUnderTest);
-            Assert.AreEqual(entityName, objectUnderTest.EntityName);
-            Assert.AreEqual(entityType, objectUnderTest.EntityType);
             Assert.AreEqual(entityGuid, objectUnderTest.EntityGuid);
             Assert.AreEqual(hostname, objectUnderTest.Hostname);
-            Assert.AreEqual(pluginType, objectUnderTest.PluginType);
             Assert.AreEqual(1, objectUnderTest.LoggingEvents.Count);
 
             var loggingEvent = objectUnderTest.LoggingEvents[0];

@@ -54,10 +54,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             Assert.NotNull(logData.Common);
             Assert.NotNull(logData.Common.Attributes);
             Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.EntityGuid));
-            Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.EntityName));
-            Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.EntityType));
             Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.Hostname));
-            Assert.Equal("nr-dotnet-agent", logData.Common.Attributes.PluginType);
 
             // Since we set the maximum number of log lines stored to 1 in setupConfiguration, there should only be one log line
             Assert.Single(logData.Logs);
