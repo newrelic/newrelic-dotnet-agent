@@ -39,20 +39,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
     public class LogEventDataCommonAttributes
     {
-        [JsonProperty("entity.name")]
-        public string EntityName { get; set; }
-
-        [JsonProperty("entity.type")]
-        public string EntityType { get; set; }
-
         [JsonProperty("entity.guid")]
         public string EntityGuid { get; set; }
 
         [JsonProperty("hostname")]
         public string Hostname { get; set; }
-
-        [JsonProperty("plugin.type")]
-        public string PluginType { get; set; }
     }
 
     public class LogLine
