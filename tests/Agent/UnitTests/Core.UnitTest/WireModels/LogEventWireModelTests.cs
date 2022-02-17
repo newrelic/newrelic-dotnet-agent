@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Core.WireModels
         [Test]
         public void MessageIsTruncatedTo32Kb()
         {
-            var maxLogMessageLengthInBytes = 32 * 1000;
+            var maxLogMessageLengthInBytes = 32 * 1024;
             var reallyLongMessageString = new string('a', maxLogMessageLengthInBytes);
             var tooLongMessageString = reallyLongMessageString + "a few too many chars";
 
