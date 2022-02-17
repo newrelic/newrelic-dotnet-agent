@@ -9,9 +9,7 @@ namespace NewRelic.Agent.Core.WireModels
 {
     public class LogEventWireModel : IHasPriority
     {
-        // Not sure yet if we want 32 kilobytes (32 * 1000) or 32 kibibytes (32 * 1024).
-        // Going with the more conservative option for now.
-        private const uint MaxMessageLengthInBytes = 32 * 1000;
+        private const uint MaxMessageLengthInBytes = 32 * 1024;
 
         /// <summary>
         /// The UTC timestamp in unix milliseconds. 
