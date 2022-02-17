@@ -531,10 +531,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #region Log Events and Metrics
 
-        private ConcurrentDictionary<string, bool> loggingFrameworksReported = new ConcurrentDictionary<string, bool>();
+        private ConcurrentDictionary<string, bool> _loggingFrameworksReported = new ConcurrentDictionary<string, bool>();
         public void ReportLogForwardingFramework(string logFramework)
         {
-            loggingFrameworksReported.TryAdd(logFramework, false);
+            _loggingFrameworksReported.TryAdd(logFramework, false);
         }
 
         public void CollectLoggingMetrics()
@@ -554,12 +554,12 @@ namespace NewRelic.Agent.Core.AgentHealth
                 TrySend(_metricBuilder.TryBuildLoggingMetricsLinesCountMetric(totalCount));
             }
 
-            foreach (var kvp in loggingFrameworksReported)
+            foreach (var kvp in _loggingFrameworksReported)
             {
                 if (kvp.Value == false)
                 {
                     ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogFrameworkName(kvp.Key));
-                    loggingFrameworksReported[kvp.Key] = true;
+                    _loggingFrameworksReported[kvp.Key] = true;
                 }
             }
         }
@@ -589,11 +589,11 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         // Only one metric harvest happens at a time, so locking around this bool is not important
-        private bool OneTimeMetricsCollected;
+        private bool _oneTimeMetricsCollected;
         private void CollectOneTimeMetrics()
         {
-            if (OneTimeMetricsCollected) return;
-            OneTimeMetricsCollected = true;
+            if (_oneTimeMetricsCollected) return;
+            _oneTimeMetricsCollected = true;
 
             ReportLogForwardingConfiguredValues();
         }
@@ -729,7 +729,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
         {
             // Some one time metrics are reporting configured values, so we want to re-report them if the configuration changed
-            OneTimeMetricsCollected = false;
+            _oneTimeMetricsCollected = false;
         }
 
         private class RecurringLogData
