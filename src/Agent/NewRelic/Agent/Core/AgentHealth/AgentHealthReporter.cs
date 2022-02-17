@@ -600,7 +600,11 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void CollectMetrics()
         {
-            CollectOneTimeMetrics();
+            CollectDistributedTraceSuccessMetrics();
+            CollectTraceContextSuccessMetrics();
+            CollectInfiniteTracingMetrics();
+            CollectLoggingMetrics();
+            CollectSupportabilityDataUsageMetrics();
 
             // TODO: Should these be moved to 'one time' metrics?
             ReportAgentVersion(AgentInstallConfiguration.AgentVersion);
@@ -608,11 +612,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportDotnetVersion();
             ReportAgentInfo();
 
-            CollectDistributedTraceSuccessMetrics();
-            CollectTraceContextSuccessMetrics();
-            CollectInfiniteTracingMetrics();
-            CollectLoggingMetrics();
-            CollectSupportabilityDataUsageMetrics();
+            CollectOneTimeMetrics();
         }
 
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)

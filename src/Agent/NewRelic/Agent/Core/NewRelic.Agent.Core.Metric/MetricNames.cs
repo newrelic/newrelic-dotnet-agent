@@ -574,6 +574,11 @@ namespace NewRelic.Agent.Core.Metric
 
         public static string GetSupportabilityName(string metricName)
         {
+            if (metricName.StartsWith(Supportability + PathSeparator))
+            {
+                return metricName;
+            }
+
             return Supportability + PathSeparator + metricName;
         }
 
@@ -1030,9 +1035,8 @@ namespace NewRelic.Agent.Core.Metric
         private const string LoggingMetrics = "Logging";
         private const string LoggingMetricsDotnetLines = LoggingMetrics + PathSeparator + "lines";
         private const string SupportabilityLoggingEventsPs = SupportabilityPs + "Logging" + PathSeparator;
-        public const string SupportabilityLoggingEventsSent = SupportabilityLoggingEventsPs + "Sent";
-        public const string SupportabilityLoggingEventsCollected = SupportabilityLoggingEventsPs + "Seen";
-        public const string SupportabilityLoggingEventsRecollected = SupportabilityLoggingEventsPs + "TotalLoggingEventsRecollected";
+        public const string SupportabilityLoggingEventsSent = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Sent";
+        public const string SupportabilityLoggingEventsCollected = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Seen";
 
         public static string GetLoggingMetricsLinesBySeverityName(string logLevel)
         {
