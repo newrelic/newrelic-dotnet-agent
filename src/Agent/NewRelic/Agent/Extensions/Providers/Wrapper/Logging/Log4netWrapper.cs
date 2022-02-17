@@ -46,7 +46,7 @@ namespace NewRelic.Providers.Wrapper.Logging
             var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEvent.GetType(), "RenderedMessage");
             var renderedMessage = getRenderedMessageFunc(logEvent);
 
-            // We can either get this in Local or UTC
+            // Older versions of log4net only allow access to a timestamp in local time
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEvent.GetType(), "TimeStamp");
             var timestamp = getTimestampFunc(logEvent).ToUniversalTime();
 
