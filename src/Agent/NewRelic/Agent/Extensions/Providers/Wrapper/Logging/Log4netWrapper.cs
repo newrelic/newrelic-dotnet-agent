@@ -47,8 +47,8 @@ namespace NewRelic.Providers.Wrapper.Logging
             var renderedMessage = getRenderedMessageFunc(logEvent);
 
             // We can either get this in Local or UTC
-            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEvent.GetType(), "TimeStampUtc");
-            var timestamp = getTimestampFunc(logEvent);
+            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEvent.GetType(), "TimeStamp");
+            var timestamp = getTimestampFunc(logEvent).ToUniversalTime();
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
