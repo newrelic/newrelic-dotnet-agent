@@ -46,9 +46,9 @@ namespace NewRelic.Providers.Wrapper.Logging
             var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEvent.GetType(), "RenderedMessage");
             var renderedMessage = getRenderedMessageFunc(logEvent);
 
-            // We can either get this in Local or UTC
-            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEvent.GetType(), "TimeStampUtc");
-            var timestamp = getTimestampFunc(logEvent);
+            // Older versions of log4net only allow access to a timestamp in local time
+            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEvent.GetType(), "TimeStamp");
+            var timestamp = getTimestampFunc(logEvent).ToUniversalTime();
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
