@@ -26,6 +26,7 @@ namespace NewRelic.Agent.Api.Experimental
         /// <param name="logMessage">The log message.</param>
         /// <param name="spanId">The span ID of the segment the log message occured within.</param>
         /// <param name="traceId">The trace ID of the transaction the log message occured within.</param>
-        void RecordLogMessage(DateTime timestamp, string logLevel, string logMessage, string spanId, string traceId);
+        /// <param name="frameworkName">The name of the logging framework</param>
+        void RecordLogMessage(string frameworkName, DateTime timestamp, string logLevel, string logMessage, string spanId, string traceId);
     }
 }

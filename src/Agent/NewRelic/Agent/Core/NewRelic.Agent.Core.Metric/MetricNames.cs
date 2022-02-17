@@ -574,6 +574,11 @@ namespace NewRelic.Agent.Core.Metric
 
         public static string GetSupportabilityName(string metricName)
         {
+            if (metricName.StartsWith(Supportability + PathSeparator))
+            {
+                return metricName;
+            }
+
             return Supportability + PathSeparator + metricName;
         }
 
@@ -1029,10 +1034,9 @@ namespace NewRelic.Agent.Core.Metric
 
         private const string LoggingMetrics = "Logging";
         private const string LoggingMetricsDotnetLines = LoggingMetrics + PathSeparator + "lines";
-        private const string SupportabilityLoggingEventsPs = SupportabilityPs + "LoggingEvents" + PathSeparator;
-        public const string SupportabilityLoggingEventsSent = SupportabilityLoggingEventsPs + "TotalLoggingEventsSent";
-        public const string SupportabilityLoggingEventsCollected = SupportabilityLoggingEventsPs + "TotalLoggingEventsCollected";
-        public const string SupportabilityLoggingEventsRecollected = SupportabilityLoggingEventsPs + "TotalLoggingEventsRecollected";
+        private const string SupportabilityLoggingEventsPs = SupportabilityPs + "Logging" + PathSeparator;
+        public const string SupportabilityLoggingEventsSent = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Sent";
+        public const string SupportabilityLoggingEventsCollected = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Seen";
 
         public static string GetLoggingMetricsLinesBySeverityName(string logLevel)
         {
@@ -1042,6 +1046,39 @@ namespace NewRelic.Agent.Core.Metric
         public static string GetLoggingMetricsLinesName()
         {
             return LoggingMetricsDotnetLines;
+        }
+
+        private const string Enabled = "enabled";
+        private const string Disabled = "disabled";
+        private const string Metrics = "Metrics";
+        private const string Forwarding = "Forwarding";
+        private const string LocalDecorating = "LocalDecorating";
+        private const string DotNet = "DotNET";
+
+        private const string SupportabilityLogMetricsConfigPs = SupportabilityLoggingEventsPs + Metrics + PathSeparator + DotNet + PathSeparator;
+        private const string SupportabilityLogForwardingConfigPs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNet + PathSeparator;
+        private const string SupportabilityLogDecoratingConfigPs = SupportabilityLoggingEventsPs + LocalDecorating + PathSeparator + DotNet + PathSeparator;
+
+        public static string GetSupportabilityLogMetricsConfiguredName(bool enabled)
+        {
+            return SupportabilityLogMetricsConfigPs + (enabled ? Enabled : Disabled);
+        }
+
+        public static string GetSupportabilityLogForwardingConfiguredName(bool enabled)
+        {
+            return SupportabilityLogForwardingConfigPs + (enabled ? Enabled : Disabled);
+        }
+
+        public static string GetSupportabilityLogDecoratingConfiguredName(bool enabled)
+        {
+            return SupportabilityLogDecoratingConfigPs + (enabled ? Enabled : Disabled);
+        }
+
+        private const string SupportabilityLogFrameworkPs = SupportabilityLoggingEventsPs + Enabled + PathSeparator + DotNet + PathSeparator;
+
+        public static string GetSupportabilityLogFrameworkName(string loggingFramework)
+        {
+            return SupportabilityLogFrameworkPs + loggingFramework;
         }
 
         #endregion

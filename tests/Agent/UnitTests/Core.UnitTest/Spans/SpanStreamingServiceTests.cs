@@ -1014,7 +1014,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                  
                 });
 
-            var agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IDnsStatic>());
+            var agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>());
 
             agentHealthReporter.RegisterPublishMetricHandler(metric => { });
 

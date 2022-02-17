@@ -14,7 +14,7 @@ namespace NewRelic.Agent.Core.AgentHealth
     {
         void ReportDotnetVersion();
 
-        void ReportAgentVersion(string agentVersion, string hostName);
+        void ReportAgentVersion(string agentVersion);
 
         void ReportLibraryVersion(string assemblyName, string assemblyVersion);
 
@@ -143,7 +143,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         void IncrementLogLinesCount(string logLevel);
         void ReportLoggingEventCollected();
-        void ReportLoggingEventsRecollected(int count);
         void ReportLoggingEventsSent(int count);
+        void ReportLogForwardingFramework(string logFramework);
     }
 }

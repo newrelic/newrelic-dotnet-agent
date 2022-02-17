@@ -204,8 +204,7 @@ namespace NewRelic.Agent.Core.WireModels
 
         MetricWireModel TryBuildSupportabilitLoggingEventsCollectedMetric();
 
-        MetricWireModel TryBuildSupportabilitLoggingEventsRecollectedMetric(int loggingEventsRecollected);
-
         MetricWireModel TryBuildSupportabilitLoggingEventsSentMetric(int loggingEventCount);
+
     }
 }
