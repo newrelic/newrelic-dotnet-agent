@@ -51,6 +51,11 @@ namespace NewRelic.Agent.Core.Configuration
             return GetEventHarvestCycleFor(TransactionEventHarvestLimitKey);
         }
 
+        public int? LogEventHarvestLimit()
+        {
+            return GetEventHarvestLimitFor(LogEventHarvestLimitKey);
+        }
+
         public TimeSpan? LogEventHarvestCycle()
         {
             return GetEventHarvestCycleFor(LogEventHarvestLimitKey);
