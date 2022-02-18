@@ -17,7 +17,7 @@ namespace NewRelic.Agent.Core.Utilization
             using (var logging = new TestUtilities.Logging())
             {
                 var requestor = new VendorHttpApiRequestor();
-                var response = requestor.CallVendorApi(BogusUri, "bogus");
+                var response = requestor.CallVendorApi(BogusUri, "GET", "bogus");
 
                 Assert.That(response, Is.Null);
                 Assert.True(logging.HasMessageThatContains("CallVendorApi"));
