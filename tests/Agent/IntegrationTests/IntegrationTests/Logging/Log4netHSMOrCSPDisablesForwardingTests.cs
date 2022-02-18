@@ -35,6 +35,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
                     configModifier
+                    .EnableApplicationLogging()
                     .EnableLogForwarding()
                     .EnableLogMetrics()
                     .EnableDistributedTrace()

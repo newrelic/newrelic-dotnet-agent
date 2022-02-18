@@ -1780,11 +1780,20 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Log Events and Metrics
 
+        public virtual bool ApplicationLoggingEnabled
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.applicationLogging.enabled, "NEW_RELIC_APPLICATION_LOGGING_ENABLED");
+            }
+        }
+
         public virtual bool LogMetricsCollectorEnabled
         {
             get
             { 
-                return EnvironmentOverrides(_localConfiguration.applicationLogging.metrics.enabled, "NEW_RELIC_APPLICATION_LOGGING_METRICS_ENABLED");
+                return ApplicationLoggingEnabled &&
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.metrics.enabled, "NEW_RELIC_APPLICATION_LOGGING_METRICS_ENABLED");
             }
         }
 
@@ -1792,7 +1801,10 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return !SecurityPoliciesTokenExists && HighSecurityModeOverrides(false, EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED"));
+                return ApplicationLoggingEnabled &&
+                    !SecurityPoliciesTokenExists &&
+                    HighSecurityModeOverrides(false,
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED"));
             }
         }
 
@@ -1817,7 +1829,8 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return EnvironmentOverrides(_localConfiguration.applicationLogging.localDecorating.enabled, "NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED");
+                return ApplicationLoggingEnabled &&
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.localDecorating.enabled, "NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED");
             }
         }
 

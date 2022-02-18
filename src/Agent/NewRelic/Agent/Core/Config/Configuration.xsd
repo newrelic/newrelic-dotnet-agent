@@ -1641,6 +1641,17 @@
                           </xs:complexType>
                       </xs:element>
                   </xs:sequence>
+
+                  <xs:attribute name="enabled" type="xs:boolean" default="false">
+                      <xs:annotation>
+                          <xs:documentation>
+                              Controls whether any logging features are enabled.
+                              When set to 'false', all logging sub-features are disabled.
+                              Defaults to 'false'.
+                          </xs:documentation>
+                      </xs:annotation>
+                  </xs:attribute>
+
               </xs:complexType>
           </xs:element>
 

@@ -2424,6 +2424,37 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
+        public void ApplicationLogging_Enabled_IsFalseInLocalConfigByDefault()
+        {
+            Assert.IsFalse(_defaultConfig.ApplicationLoggingEnabled);
+        }
+
+        [TestCase(false, false, false, false, false, false, false)]
+        [TestCase(false, true, false, false, false, false, false)]
+        [TestCase(false, false, true, false, false, false, false)]
+        [TestCase(false, false, false, true, false, false, false)]
+        [TestCase(false, true, true, true, false, false, false)]
+        [TestCase(true, false, false, false, false, false, false)]
+        [TestCase(true, true, false, false, true, false, false)]
+        [TestCase(true, false, true, false, false, true, false)]
+        [TestCase(true, false, false, true, false, false, true)]
+        [TestCase(true, true, true, true, true, true, true)]
+        public void ApplicationLogging_Enabled_OverridesIndividualLoggingFeatures(bool applicationLoggingEnabledInConfig,
+            bool forwardingEnabledInConfig, bool metricsEnabledInConfig, bool localDecoratingEnabledInConfig,
+            bool forwardingActuallyEnabled, bool metricsActuallyEnabled, bool localDecoratingActuallyEnabled)
+        {
+            _localConfig.applicationLogging.enabled = applicationLoggingEnabledInConfig;
+            _localConfig.applicationLogging.forwarding.enabled = forwardingEnabledInConfig;
+            _localConfig.applicationLogging.metrics.enabled = metricsEnabledInConfig;
+            _localConfig.applicationLogging.localDecorating.enabled = localDecoratingEnabledInConfig;
+
+            Assert.AreEqual(_defaultConfig.ApplicationLoggingEnabled, applicationLoggingEnabledInConfig);
+            Assert.AreEqual(_defaultConfig.LogEventCollectorEnabled, forwardingActuallyEnabled);
+            Assert.AreEqual(_defaultConfig.LogMetricsCollectorEnabled, metricsActuallyEnabled);
+            Assert.AreEqual(_defaultConfig.LogDecoratorEnabled, localDecoratingActuallyEnabled);
+        }
+
+        [Test]
         public void ApplicationLogging_ForwardingEnabled_IsFalseInLocalConfigByDefault()
         {
             Assert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
