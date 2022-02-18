@@ -51,6 +51,9 @@ namespace NewRelic.Agent.Core.Utilization
         private readonly IEnvironment _environment;
         private readonly VendorHttpApiRequestor _vendorHttpApiRequestor;
 
+        private const string GetMethod = "GET";
+        private const string PutMethod = "PUT";
+
         public VendorInfo(IConfiguration configuration, IAgentHealthReporter agentHealthReporter, IEnvironment environment, VendorHttpApiRequestor vendorHttpApiRequestor)
         {
             _configuration = configuration;
@@ -111,7 +114,7 @@ namespace NewRelic.Agent.Core.Utilization
 
         private IVendorModel GetAwsVendorInfo()
         {
-            var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AwsUri), AwsName);
+            var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AwsUri), GetMethod, AwsName);
             if (responseString != null)
             {
                 return ParseAwsVendorInfo(responseString);
@@ -149,7 +152,7 @@ namespace NewRelic.Agent.Core.Utilization
 
         private IVendorModel GetAzureVendorInfo()
         {
-            var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AzureUri), AzureName, new List<string> { AzureHeader });
+            var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AzureUri), GetMethod, AzureName, new List<string> { AzureHeader });
             if (responseString != null)
             {
                 return ParseAzureVendorInfo(responseString);
@@ -189,7 +192,7 @@ namespace NewRelic.Agent.Core.Utilization
 
         private IVendorModel GetGcpVendorInfo()
         {
-            var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(GcpUri), GcpName, new List<string> { GcpHeader });
+            var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(GcpUri), GetMethod, GcpName, new List<string> { GcpHeader });
             if (responseString != null)
             {
                 return ParseGcpVendorInfo(responseString);
