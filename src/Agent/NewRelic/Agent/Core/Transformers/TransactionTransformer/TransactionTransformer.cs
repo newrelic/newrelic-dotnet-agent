@@ -475,19 +475,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private void PrioritizeAndCollectLogEvents(IInternalTransaction transaction)
         {
-            var priority = transaction.Priority;
-            priority += 10F; // in a transaction
-            if (transaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
-            {
-                priority += 10F;
-            }
-
-            if (transaction.Sampled != null && (bool)transaction.Sampled)
-            {
-                priority += 100F;
-            }
-
-            _logEventAggregator.CollectWithPriority(transaction.LogEvents, priority);
+            _logEventAggregator.CollectWithPriority(transaction.LogEvents, transaction.Priority);
         }
     }
 }
