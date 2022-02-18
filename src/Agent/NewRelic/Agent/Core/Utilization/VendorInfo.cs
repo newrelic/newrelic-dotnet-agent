@@ -34,7 +34,9 @@ namespace NewRelic.Agent.Core.Utilization
         private const string DockerName = @"docker";
         private const string KubernetesName = @"kubernetes";
 
-        private readonly string AwsUri = @"http://169.254.169.254/2016-09-02/dynamic/instance-identity/document";
+        private readonly string AwsTokenUri = @"http://169.254.169.254/latest/api/token";
+        private readonly string AwsMetadataUri = @"http://169.254.169.254/latest/dynamic/instance-identity/document";
+        private const string AwsTokenDurationHeader = "X-aws-ec2-metadata-token-ttl-seconds: 10";
 
         private readonly string AzureUri = @"http://169.254.169.254/metadata/instance/compute?api-version=2017-03-01";
         private const string AzureHeader = @"Metadata: true";
@@ -114,13 +116,19 @@ namespace NewRelic.Agent.Core.Utilization
 
         private IVendorModel GetAwsVendorInfo()
         {
-            var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AwsUri), GetMethod, AwsName);
-            if (responseString != null)
+            var token = _vendorHttpApiRequestor.CallVendorApi(new Uri(AwsTokenUri), PutMethod, AwsName, new List<string> { AwsTokenDurationHeader });
+            if (string.IsNullOrWhiteSpace(token))
             {
-                return ParseAwsVendorInfo(responseString);
+                return null;
             }
 
-            return null;
+            var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AwsMetadataUri), GetMethod, AwsName, new List<string> { "X-aws-ec2-metadata-token: " + token });
+            if (string.IsNullOrWhiteSpace(responseString))
+            {
+                return null;
+            }
+
+            return ParseAwsVendorInfo(responseString);
         }
 
         public IVendorModel ParseAwsVendorInfo(string json)
