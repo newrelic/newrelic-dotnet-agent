@@ -261,6 +261,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     "displayName", customHostName);
         }
 
+        public NewRelicConfigModifier DisableApplicationLogging()
+        {
+            return EnableApplicationLogging(false);
+        }
+
+        public NewRelicConfigModifier EnableApplicationLogging(bool enable = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "enabled", enable.ToString().ToLower());
+            return this;
+        }
+
         public NewRelicConfigModifier DisableLogMetrics()
         {
             return EnableLogMetrics(false);
