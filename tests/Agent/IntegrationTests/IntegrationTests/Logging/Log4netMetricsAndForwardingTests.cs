@@ -172,10 +172,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 Assert.NotNull(logEventData.Common);
                 Assert.NotNull(logEventData.Common.Attributes);
                 Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.EntityGuid));
-                Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.EntityName));
-                Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.EntityType));
                 Assert.False(string.IsNullOrWhiteSpace(logEventData.Common.Attributes.Hostname));
-                Assert.Equal("nr-dotnet-agent", logEventData.Common.Attributes.PluginType);
             }
             else
             {

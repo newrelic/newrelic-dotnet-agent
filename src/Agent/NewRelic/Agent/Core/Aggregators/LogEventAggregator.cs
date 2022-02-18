@@ -27,8 +27,6 @@ namespace NewRelic.Agent.Core.Aggregators
     /// </summary>
     public class LogEventAggregator : AbstractAggregator<LogEventWireModel>, ILogEventAggregator
     {
-        private const String EntityType = "SERVICE";
-        private const String PluginType = "nr-dotnet-agent";
         private const double ReservoirReductionSizeMultiplier = 0.5;
 
         private readonly IAgentHealthReporter _agentHealthReporter;
@@ -86,11 +84,8 @@ namespace NewRelic.Agent.Core.Aggregators
                 : _configuration.UtilizationHostName;
 
             var modelsCollection = new LogEventWireModelCollection(
-                _configuration.ApplicationNames.ElementAt(0),
-                EntityType,
                 _configuration.EntityGuid,
                 hostname,
-                PluginType,
                 aggregatedEvents); ;
 
             var responseStatus = DataTransportService.Send(modelsCollection);
