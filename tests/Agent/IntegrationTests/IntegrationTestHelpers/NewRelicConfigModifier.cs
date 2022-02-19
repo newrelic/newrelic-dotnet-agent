@@ -296,6 +296,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
+        public NewRelicConfigModifier DisableLogDecoration()
+        {
+            return EnableLogDecoration(false);
+        }
+
+        public NewRelicConfigModifier EnableLogDecoration(bool enable = true)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "localDecorating", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "localDecorating" }, "enabled", enable.ToString().ToLower());
+            return this;
+        }
+
         public NewRelicConfigModifier SetLogForwardingMaxSamplesStored(int samples)
         {
             CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "forwarding", string.Empty);

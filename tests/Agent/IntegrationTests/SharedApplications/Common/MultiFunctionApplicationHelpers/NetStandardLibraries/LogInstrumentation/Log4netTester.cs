@@ -5,7 +5,9 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using log4net;
+using log4net.Appender;
 using log4net.Config;
+using log4net.Layout;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
@@ -20,6 +22,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public static void Configure()
         {
             BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()));
+        }
+
+        [LibraryMethod]
+        public static void ConfigurePatternLayoutAppenderForDecoration()
+        {
+            PatternLayout patternLayout = new PatternLayout();
+            patternLayout.ConversionPattern = "%timestamp [%thread] %level %logger %ndc - %message %property{NR_LINKING_METADATA}%newline";
+            patternLayout.ActivateOptions();
+
+            ConsoleAppender consoleAppender = new ConsoleAppender();
+            consoleAppender.Layout = patternLayout;
+            consoleAppender.ActivateOptions();
+
+            BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()), consoleAppender);
         }
 
         [LibraryMethod]
