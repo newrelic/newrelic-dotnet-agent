@@ -1822,7 +1822,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 return (int)EnvironmentOverrides(
                     ServerOverrides(_serverConfiguration.EventHarvestConfig?.LogEventHarvestLimit(), _localConfiguration.applicationLogging.forwarding.maxSamplesStored),
-                    "NEW_RELIC_APPLICATION_LOGGING_MAX_SAMPLES_STORED");
+                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_MAX_SAMPLES_STORED");
             }
         }
 
