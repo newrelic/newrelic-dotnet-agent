@@ -13,12 +13,12 @@ namespace NewRelic.Agent.Core.Utilization
     {
         private const int WebReqeustTimeout = 1000;
 
-        public virtual string CallVendorApi(Uri uri, string vendorName, IEnumerable<string> headers = null)
+        public virtual string CallVendorApi(Uri uri, string method, string vendorName, IEnumerable<string> headers = null)
         {
             try
             {
                 var request = WebRequest.Create(uri);
-                request.Method = "GET";
+                request.Method = method;
                 request.Timeout = WebReqeustTimeout;
 
                 if (headers != null)
