@@ -24,6 +24,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()));
         }
 
+
         [LibraryMethod]
         public static void ConfigurePatternLayoutAppenderForDecoration()
         {
@@ -37,6 +38,22 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
             BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()), consoleAppender);
         }
+
+#if LOG4NET_JSON_FORMATTER_SUPPORTED
+        [LibraryMethod]
+        public static void ConfigureJsonLayoutAppenderForDecoration()
+        {
+            SerializedLayout serializedLayout = new SerializedLayout();
+            serializedLayout.AddMember("NR_LINKING_METADATA");
+            serializedLayout.ActivateOptions();
+
+            ConsoleAppender consoleAppender = new ConsoleAppender();
+            consoleAppender.Layout = serializedLayout;
+            consoleAppender.ActivateOptions();
+
+            BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()), consoleAppender);
+        }
+#endif
 
         [LibraryMethod]
         public static void CreateSingleLogMessage(string message, string level)
