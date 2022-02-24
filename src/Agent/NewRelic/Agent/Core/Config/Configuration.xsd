@@ -1614,10 +1614,10 @@
                                       </xs:documentation>
                                   </xs:annotation>
                               </xs:attribute>
-                              <xs:attribute name="maxSamplesStored" type="xs:int" default="2000">
+                              <xs:attribute name="maxSamplesStored" type="xs:int" default="10000">
                                   <xs:annotation>
                                       <xs:documentation>
-                                          The maximum number of log messages captured per minute. Default is 2000 messages.
+                                          The maximum number of log messages captured per minute. Default is 10000 messages.
                                       </xs:documentation>
                                   </xs:annotation>
                               </xs:attribute>

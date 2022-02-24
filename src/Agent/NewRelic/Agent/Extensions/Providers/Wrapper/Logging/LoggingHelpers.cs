@@ -1,27 +1,49 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Linq;
 using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.Logging
 {
     public static class LoggingHelpers
     {
+        private const string EntityGuid = "entity.guid";
+        private const string Hostname = "hostname";
+        private const string TraceId = "trace.id";
+        private const string SpanId = "span.id";
+
         public static string GetFormattedLinkingMetadata(IAgent agent)
         {
+            // we don't use entity.name or entity.type
             var metadata = agent.GetLinkingMetadata();
-            metadata.Remove("entity.name");
-            metadata.Remove("entity.type");
 
-            var entries = new string[metadata.Count]; // keeps the array small and light
-            for (int i = 0; i < metadata.Count; i++)
+            string entityGuid = string.Empty;
+            if (metadata.ContainsKey(EntityGuid))
             {
-                var pair = metadata.ElementAt(i);
-                entries[i] = pair.Key + "=" + pair.Value; // faster than string.format or interpolation
+                entityGuid = metadata[EntityGuid];
             }
 
-            return "NR-LINKING-METADATA: {" + string.Join(", ", entries) + "}";
+            string hostname = string.Empty;
+            if (metadata.ContainsKey(Hostname))
+            {
+                hostname = metadata[Hostname];
+            }
+
+            string traceId = string.Empty;
+            if (metadata.ContainsKey(TraceId))
+            {
+                traceId = metadata[TraceId];
+            }
+
+            string spanId = string.Empty;
+            if (metadata.ContainsKey(SpanId))
+            {
+                spanId = metadata[SpanId];
+            }
+
+            // This is a positional blob so we want the delimiters left in when no data is  present.
+            // NR-LINKING|{entity.guid}|{hostname}|{trace.id}|{span.id}|
+            return "NR-LINKING|" + entityGuid + "|" + hostname + "|" + traceId + "|" + spanId + "|";
         }
     }
 }
