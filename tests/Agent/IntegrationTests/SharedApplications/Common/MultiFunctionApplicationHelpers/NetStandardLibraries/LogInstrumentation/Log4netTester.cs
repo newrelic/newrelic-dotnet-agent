@@ -125,11 +125,27 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-
         public static async Task CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay(string message, string level)
         {
             _ = Task.Run(() => CreateSingleLogMessage(message, level));
             await Task.Delay(1000);
+        }
+
+        [LibraryMethod]
+        [Trace]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void CreateSingleLogMessageWithTraceAttribute(string message, string level)
+        {
+            CreateSingleLogMessage(message, level);
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void CreateTwoLogMessagesInTransactionWithDifferentTraceAttributes(string message, string level)
+        {
+            CreateSingleLogMessage(message, level);
+            CreateSingleLogMessageWithTraceAttribute(message, level);
         }
     }
 }
