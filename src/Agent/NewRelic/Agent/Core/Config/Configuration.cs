@@ -4921,7 +4921,7 @@ namespace NewRelic.Agent.Core.Config
             this.localDecoratingField = new configurationApplicationLoggingLocalDecorating();
             this.forwardingField = new configurationApplicationLoggingForwarding();
             this.metricsField = new configurationApplicationLoggingMetrics();
-            this.enabledField = false;
+            this.enabledField = true;
         }
         
         public configurationApplicationLoggingMetrics metrics
@@ -4961,7 +4961,7 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(false)]
+        [System.ComponentModel.DefaultValueAttribute(true)]
         public bool enabled
         {
             get
@@ -4999,11 +4999,11 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configurationApplicationLoggingMetrics()
         {
-            this.enabledField = false;
+            this.enabledField = true;
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(false)]
+        [System.ComponentModel.DefaultValueAttribute(true)]
         public bool enabled
         {
             get
