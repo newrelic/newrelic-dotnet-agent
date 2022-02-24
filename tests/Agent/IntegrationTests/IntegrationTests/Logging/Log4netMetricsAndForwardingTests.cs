@@ -61,7 +61,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         private const string AsyncNoAwaitWithDelayInTransactionErrorMessage = "AsyncNoAwaitWithDelayInTransactionErrorLogMessage";
         private const string AsyncNoAwaitWithDelayInTransactionFatalMessage = "AsyncNoAwaitWithDelayInTransactionFatalLogMessage";
 
-
         public Log4NetMetricsAndForwardingTestsBase(TFixture fixture, ITestOutputHelper output, bool metricsEnabled, bool forwardingEnabled) : base(fixture)
         {
             _fixture = fixture;
@@ -71,8 +70,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"Log4netTester Configure");
-
-
 
             _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionDebugMessage} DEBUG");
             _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionInfoMessage} INFO");
