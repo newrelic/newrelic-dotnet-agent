@@ -30,10 +30,10 @@ namespace NsbTests
 
         private void StartNServiceBusInternal(Type handlerToAllow = null)
         {
-            Logger.Info($"Starting NServiceBus");
+            ConsoleMFLogger.Info($"Starting NServiceBus");
             if (handlerToAllow != null)
             {
-                Logger.Info($"Enabling handler: {handlerToAllow.Name}");
+                ConsoleMFLogger.Info($"Enabling handler: {handlerToAllow.Name}");
             }
 
             var endpointConfiguration = new EndpointConfiguration("NRSubscriber");
@@ -105,7 +105,7 @@ namespace NsbTests
         [LibraryMethod]
         public void StopNServiceBus()
         {
-            Logger.Info($"Stopping NServiceBus");
+            ConsoleMFLogger.Info($"Stopping NServiceBus");
             _endpoint?.Stop().Wait();
         }
 
@@ -121,7 +121,7 @@ namespace NsbTests
         public void PublishEvent()
         {
             var @event = new Event();
-            Logger.Info($"Sending NServiceBus Event with Id: {@event.Id}");
+            ConsoleMFLogger.Info($"Sending NServiceBus Event with Id: {@event.Id}");
             _endpoint.Publish(@event).Wait();
             Task.Delay(TimeSpan.FromSeconds(2)).Wait();
         }
@@ -138,7 +138,7 @@ namespace NsbTests
         public void SendCommand()
         {
             var command = new Command();
-            Logger.Info($"Sending NServiceBus Command with Id: {command.Id}");
+            ConsoleMFLogger.Info($"Sending NServiceBus Command with Id: {command.Id}");
             _endpoint.SendLocal(command).Wait();
             Task.Delay(TimeSpan.FromSeconds(2)).Wait();
         }

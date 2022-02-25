@@ -35,7 +35,7 @@ namespace MultiFunctionApplicationHelpers.Libraries
         {
             var traceMetadata = TraceMetadata();
 
-            Logger.Info($"TraceId: {traceMetadata.TraceId}, SpanId:{traceMetadata.SpanId}, IsSampled:{traceMetadata.IsSampled.ToString()}");
+            ConsoleMFLogger.Info($"TraceId: {traceMetadata.TraceId}, SpanId:{traceMetadata.SpanId}, IsSampled:{traceMetadata.IsSampled.ToString()}");
         }
 
         [LibraryMethod]
@@ -45,7 +45,7 @@ namespace MultiFunctionApplicationHelpers.Libraries
 
             foreach (KeyValuePair<string, string> item in getLinkingMetadata)
             {
-                Logger.Info($"key: {item.Key}, value:{item.Value}");
+                ConsoleMFLogger.Info($"key: {item.Key}, value:{item.Value}");
             }
         }
     }

@@ -24,7 +24,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.W3C
             var value = Request.Content.ReadAsStringAsync().Result;
             if (string.IsNullOrEmpty(value))
             {
-                Logger.Error("POST body is null.");
+                ConsoleMFLogger.Error("POST body is null.");
                 throw new NullReferenceException("POST body is null.");
             }
 
@@ -42,7 +42,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.W3C
 
             if (string.IsNullOrEmpty(value))
             {
-                Logger.Error("POST body is null.");
+                ConsoleMFLogger.Error("POST body is null.");
                 throw new NullReferenceException("POST body is null.");
             }
 

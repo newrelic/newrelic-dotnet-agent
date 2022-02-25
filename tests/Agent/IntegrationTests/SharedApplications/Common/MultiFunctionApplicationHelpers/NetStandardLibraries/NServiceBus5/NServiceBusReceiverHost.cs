@@ -18,7 +18,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
         [LibraryMethod]
         public void Start()
         {
-            Logger.Info($"Starting NServiceBusReceiverHost");
+            ConsoleMFLogger.Info($"Starting NServiceBusReceiverHost");
             var busConfig = new BusConfiguration();
             busConfig.UsePersistence<InMemoryPersistence>();
             busConfig.UseTransport<MsmqTransport>();
@@ -27,15 +27,15 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
             busConfig.EndpointName(_endpointName);
             var startableBus = Bus.Create(busConfig);
             _bus = startableBus.Start();
-            Logger.Info($"NServiceBusReceiverHost Started");
+            ConsoleMFLogger.Info($"NServiceBusReceiverHost Started");
         }
 
         [LibraryMethod]
         public void Stop()
         {
-            Logger.Info($"Stopping NServiceBusReceiverHost");
+            ConsoleMFLogger.Info($"Stopping NServiceBusReceiverHost");
             _bus.Dispose();
-            Logger.Info($"NServiceBusReceiverHost Stopped");
+            ConsoleMFLogger.Info($"NServiceBusReceiverHost Stopped");
         }
     }
 }
