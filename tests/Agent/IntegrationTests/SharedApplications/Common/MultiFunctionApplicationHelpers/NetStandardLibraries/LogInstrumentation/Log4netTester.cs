@@ -4,6 +4,7 @@
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using log4net;
 using log4net.Appender;
 using log4net.Config;
@@ -88,6 +89,63 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public static void CreateSingleLogMessageInTransaction(string message, string level)
         {
             CreateSingleLogMessage(message, level);
+        }
+
+        [LibraryMethod]
+        public static async Task CreateSingleLogMessageAsync(string message, string level)
+        {
+            await Task.Run(() => CreateSingleLogMessage(message, level));
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static async Task CreateSingleLogMessageInTransactionAsync(string message, string level)
+        {
+            await Task.Run(() => CreateSingleLogMessage(message, level));
+        }
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        [LibraryMethod]
+        public static async Task CreateSingleLogMessageAsyncNoAwait(string message, string level)
+        {
+            _ = Task.Run(() => CreateSingleLogMessage(message, level));
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+
+        public static async Task CreateSingleLogMessageInTransactionAsyncNoAwait(string message, string level)
+        {
+            _ = Task.Run(() => CreateSingleLogMessage(message, level));
+        }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static async Task CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay(string message, string level)
+        {
+            _ = Task.Run(() => CreateSingleLogMessage(message, level));
+            await Task.Delay(1000);
+        }
+
+        [LibraryMethod]
+        [Trace]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void CreateSingleLogMessageWithTraceAttribute(string message, string level)
+        {
+            CreateSingleLogMessage(message, level);
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void CreateTwoLogMessagesInTransactionWithDifferentTraceAttributes(string message, string level)
+        {
+            CreateSingleLogMessage(message, level);
+            CreateSingleLogMessageWithTraceAttribute(message, level);
         }
     }
 }

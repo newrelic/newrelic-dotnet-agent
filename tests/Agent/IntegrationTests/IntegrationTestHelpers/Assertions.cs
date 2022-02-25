@@ -602,13 +602,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     continue;
                 if (expectedLogLine.LogMessage != actualLogLine.Message)
                     continue;
-                if (expectedLogLine.HasSpanId && string.IsNullOrWhiteSpace(actualLogLine.Attributes.Spanid))
+                if (expectedLogLine.HasSpanId.HasValue && expectedLogLine.HasSpanId.Value && string.IsNullOrWhiteSpace(actualLogLine.Attributes.Spanid))
                     continue;
-                if (!expectedLogLine.HasSpanId && !string.IsNullOrWhiteSpace(actualLogLine.Attributes.Spanid))
+                if (expectedLogLine.HasSpanId.HasValue && !expectedLogLine.HasSpanId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Attributes.Spanid))
                     continue;
-                if (expectedLogLine.HasTraceId && string.IsNullOrWhiteSpace(actualLogLine.Attributes.Traceid))
+                if (expectedLogLine.HasTraceId.HasValue && expectedLogLine.HasTraceId.Value && string.IsNullOrWhiteSpace(actualLogLine.Attributes.Traceid))
                     continue;
-                if (!expectedLogLine.HasTraceId && !string.IsNullOrWhiteSpace(actualLogLine.Attributes.Traceid))
+                if (expectedLogLine.HasTraceId.HasValue && !expectedLogLine.HasTraceId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Attributes.Traceid))
                     continue;
 
                 return actualLogLine;
@@ -1009,8 +1009,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             public string LogMessage = null;
             public string LogLevel = null;
-            public bool HasSpanId = false;
-            public bool HasTraceId = false;
+            public bool? HasSpanId = null;
+            public bool? HasTraceId = null;
 
             public override string ToString()
             {
