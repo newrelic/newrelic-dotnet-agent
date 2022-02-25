@@ -44,6 +44,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             var loggerConfig = new LoggerConfiguration();
 
             loggerConfig
+                .MinimumLevel.Debug()
                 .WriteTo.Console();
 
             _log = loggerConfig.CreateLogger();
