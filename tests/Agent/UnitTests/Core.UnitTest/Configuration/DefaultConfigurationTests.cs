@@ -2418,15 +2418,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         #region Log Metrics and Events
 
         [Test]
-        public void ApplicationLogging_MetricsEnabled_IsFalseInLocalConfigByDefault()
+        public void ApplicationLogging_MetricsEnabled_IsTrueInLocalConfigByDefault()
         {
-            Assert.IsFalse(_defaultConfig.LogMetricsCollectorEnabled);
+            Assert.IsTrue(_defaultConfig.LogMetricsCollectorEnabled);
         }
 
         [Test]
-        public void ApplicationLogging_Enabled_IsFalseInLocalConfigByDefault()
+        public void ApplicationLogging_Enabled_IsTrueInLocalConfigByDefault()
         {
-            Assert.IsFalse(_defaultConfig.ApplicationLoggingEnabled);
+            Assert.IsTrue(_defaultConfig.ApplicationLoggingEnabled);
         }
 
         [TestCase(false, false, false, false, false, false, false)]

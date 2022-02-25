@@ -1591,10 +1591,10 @@
                               </xs:documentation>
                           </xs:annotation>
                           <xs:complexType>
-                              <xs:attribute name="enabled" type="xs:boolean" default="false">
+                              <xs:attribute name="enabled" type="xs:boolean" default="true">
                                   <xs:annotation>
                                       <xs:documentation>
-                                          Controls whether or not logging metrics are captured. Defaults to false.
+                                          Controls whether or not logging metrics are captured. Defaults to true.
                                       </xs:documentation>
                                   </xs:annotation>
                               </xs:attribute>
@@ -1614,10 +1614,10 @@
                                       </xs:documentation>
                                   </xs:annotation>
                               </xs:attribute>
-                              <xs:attribute name="maxSamplesStored" type="xs:int" default="2000">
+                              <xs:attribute name="maxSamplesStored" type="xs:int" default="10000">
                                   <xs:annotation>
                                       <xs:documentation>
-                                          The maximum number of log messages captured per minute. Default is 2000 messages.
+                                          The maximum number of log messages captured per minute. Default is 10000 messages.
                                       </xs:documentation>
                                   </xs:annotation>
                               </xs:attribute>
@@ -1642,12 +1642,12 @@
                       </xs:element>
                   </xs:sequence>
 
-                  <xs:attribute name="enabled" type="xs:boolean" default="false">
+                  <xs:attribute name="enabled" type="xs:boolean" default="true">
                       <xs:annotation>
                           <xs:documentation>
                               Controls whether any logging features are enabled.
                               When set to 'false', all logging sub-features are disabled.
-                              Defaults to 'false'.
+                              Defaults to 'true'.
                           </xs:documentation>
                       </xs:annotation>
                   </xs:attribute>

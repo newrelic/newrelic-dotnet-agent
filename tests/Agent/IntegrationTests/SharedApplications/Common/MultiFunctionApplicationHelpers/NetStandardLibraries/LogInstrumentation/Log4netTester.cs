@@ -30,7 +30,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public static void ConfigurePatternLayoutAppenderForDecoration()
         {
             PatternLayout patternLayout = new PatternLayout();
-            patternLayout.ConversionPattern = "%timestamp [%thread] %level %logger %ndc - %message %property{NR_LINKING_METADATA}%newline";
+            patternLayout.ConversionPattern = "%timestamp [%thread] %level %logger %ndc - %message %property{NR_LINKING}%newline";
             patternLayout.ActivateOptions();
 
             ConsoleAppender consoleAppender = new ConsoleAppender();
@@ -45,7 +45,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public static void ConfigureJsonLayoutAppenderForDecoration()
         {
             SerializedLayout serializedLayout = new SerializedLayout();
-            serializedLayout.AddMember("NR_LINKING_METADATA");
+            serializedLayout.AddMember("NR_LINKING");
             serializedLayout.ActivateOptions();
 
             ConsoleAppender consoleAppender = new ConsoleAppender();
