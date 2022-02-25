@@ -21,12 +21,13 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"Log4netTester Configure");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage One DEBUG");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage Two INFO");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage Three WARN");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage Four ERROR");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage GetYourLogsOnTheDanceFloor FATAL");
+            _fixture.AddCommand($"LoggingTester SetFramework log4net");
+            _fixture.AddCommand($"LoggingTester Configure");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage One DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage Two INFO");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage Three WARN");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage Four ERROR");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage GetYourLogsOnTheDanceFloor FATAL");
 
             _fixture.Actions
             (

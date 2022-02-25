@@ -72,53 +72,54 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             _fixture.SetTimeout(TimeSpan.FromMinutes(3));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"Log4netTester Configure");
+            _fixture.AddCommand($"LoggingTester SetFramework log4net");
+            _fixture.AddCommand($"LoggingTester Configure");
 
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionDebugMessage} DEBUG");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionInfoMessage} INFO");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionWarningMessage} WARN");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage {OutsideTransactionFatalMessage} FATAL");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionDebugMessage} DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionInfoMessage} INFO");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionWarningMessage} WARN");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionErrorMessage} ERROR");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionFatalMessage} FATAL");
 
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageAsync {AsyncOutsideTransactionDebugMessage} DEBUG");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageAsync {AsyncOutsideTransactionInfoMessage} INFO");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageAsync {AsyncOutsideTransactionWarningMessage} WARN");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageAsync {AsyncOutsideTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageAsync {AsyncOutsideTransactionFatalMessage} FATAL");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsync {AsyncOutsideTransactionDebugMessage} DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsync {AsyncOutsideTransactionInfoMessage} INFO");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsync {AsyncOutsideTransactionWarningMessage} WARN");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsync {AsyncOutsideTransactionErrorMessage} ERROR");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsync {AsyncOutsideTransactionFatalMessage} FATAL");
 
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionDebugMessage} DEBUG");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionInfoMessage} INFO");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionWarningMessage} WARN");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionFatalMessage} FATAL");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionDebugMessage} DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionInfoMessage} INFO");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionWarningMessage} WARN");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionErrorMessage} ERROR");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionFatalMessage} FATAL");
 
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionDebugMessage} DEBUG");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionInfoMessage} INFO");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionWarningMessage} WARN");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransaction {InTransactionFatalMessage} FATAL");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {InTransactionDebugMessage} DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {InTransactionInfoMessage} INFO");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {InTransactionWarningMessage} WARN");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {InTransactionErrorMessage} ERROR");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {InTransactionFatalMessage} FATAL");
 
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionDebugMessage} DEBUG");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionInfoMessage} INFO");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionWarningMessage} WARN");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionFatalMessage} FATAL");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionDebugMessage} DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionInfoMessage} INFO");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionWarningMessage} WARN");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionErrorMessage} ERROR");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionFatalMessage} FATAL");
 
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionDebugMessage} DEBUG");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionInfoMessage} INFO");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionWarningMessage} WARN");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionFatalMessage} FATAL");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionDebugMessage} DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionInfoMessage} INFO");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionWarningMessage} WARN");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionErrorMessage} ERROR");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionFatalMessage} FATAL");
 
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionDebugMessage} DEBUG");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionInfoMessage} INFO");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionWarningMessage} WARN");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionFatalMessage} FATAL");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionDebugMessage} DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionInfoMessage} INFO");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionWarningMessage} WARN");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionErrorMessage} ERROR");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionFatalMessage} FATAL");
 
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessageWithTraceAttribute {TraceAttributeOutsideTransactionLogMessage} INFO");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageWithTraceAttribute {TraceAttributeOutsideTransactionLogMessage} INFO");
 
-            _fixture.AddCommand($"Log4netTester CreateTwoLogMessagesInTransactionWithDifferentTraceAttributes {DifferentTraceAttributesInsideTransactionLogMessage} INFO");
+            _fixture.AddCommand($"LoggingTester CreateTwoLogMessagesInTransactionWithDifferentTraceAttributes {DifferentTraceAttributesInsideTransactionLogMessage} INFO");
 
             // Give the unawaited async logs some time to catch up
             _fixture.AddCommand($"RootCommands DelaySeconds 5");
