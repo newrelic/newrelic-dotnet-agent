@@ -73,13 +73,11 @@ namespace NewRelic.Providers.Wrapper.Logging
             // capture the constructor of the ScalarValue class.
             var createScalarValue = _createScalarValue ??= VisibilityBypasser.Instance.GenerateTypeFactory<string>(AssemblyName, TypeName);
 
-            // the keys in the metadata match the ones used for decorating
-            var metadata = agent.GetLinkingMetadata();
-            foreach (var entry in metadata)
-            {
-                // Serilog does not support '.' in names, but does support underscore.
-                propertiesDictionary[entry.Key.Replace('.','.')] = createScalarValue(entry.Value);
-            }
+            // uses the foratted metadata to make a single entry
+            var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
+
+            // uses underscores to support other frameworks that do not allow hyphens (Serilog)
+            propertiesDictionary["NR_LINKING"] = createScalarValue(formattedMetadata);
         }
     }
 }
