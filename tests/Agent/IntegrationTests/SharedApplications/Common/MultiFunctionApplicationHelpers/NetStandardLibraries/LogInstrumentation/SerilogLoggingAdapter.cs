@@ -3,6 +3,7 @@
 
 using Serilog;
 using Serilog.Core;
+using Serilog.Formatting.Json;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
 {
@@ -52,12 +53,26 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
-            throw new System.NotImplementedException();
+            var loggerConfig = new LoggerConfiguration();
+
+            loggerConfig
+                .MinimumLevel.Debug()
+                .WriteTo.Console(
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {NR_LINKING} {NewLine}{Exception}"
+                );
+
+            _log = loggerConfig.CreateLogger();
         }
 
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
-            throw new System.NotImplementedException();
+            var loggerConfig = new LoggerConfiguration();
+
+            loggerConfig
+                .MinimumLevel.Debug()
+                .WriteTo.Console(new JsonFormatter());
+
+            _log = loggerConfig.CreateLogger();
         }
     }
 }
