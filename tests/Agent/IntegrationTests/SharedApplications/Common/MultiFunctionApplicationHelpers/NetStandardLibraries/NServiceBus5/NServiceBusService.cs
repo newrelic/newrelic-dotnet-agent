@@ -23,7 +23,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
         [LibraryMethod]
         public void Start()
         {
-            Logger.Info($"Starting NServiceBusService");
+            ConsoleMFLogger.Info($"Starting NServiceBusService");
             var busConfig = new BusConfiguration();
             busConfig.UsePersistence<InMemoryPersistence>();
             var typeToScan = new List<Type>
@@ -35,15 +35,15 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
             busConfig.CustomConfigurationSource(new ConfigurationSource());
             _bus = NServiceBus.Bus.Create(busConfig);
             _random = new Random();
-            Logger.Info($"NServiceBusService Started");
+            ConsoleMFLogger.Info($"NServiceBusService Started");
         }
 
         [LibraryMethod]
         public void Stop()
         {
-            Logger.Info($"Stopping NServiceBusService");
+            ConsoleMFLogger.Info($"Stopping NServiceBusService");
             _bus.Dispose();
-            Logger.Info($"NServiceBusService Stopped");
+            ConsoleMFLogger.Info($"NServiceBusService Stopped");
         }
 
         [LibraryMethod]
@@ -53,7 +53,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
         {
             var message = new SampleNServiceBusMessage(_random.Next(), "Foo bar");
             _bus.Send(DestinationReceiverHost, message);
-            Logger.Info($"Message with ID={message.Id} sent via NServiceBus" );
+            ConsoleMFLogger.Info($"Message with ID={message.Id} sent via NServiceBus" );
         }
 
         [LibraryMethod]
@@ -61,7 +61,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
         {
             var message = new SampleNServiceBusMessage2(_random.Next(), "Valid");
             _bus.Send(DestinationReceiverHost, message);
-            Logger.Info($"Message with ID={message.Id} sent via NServiceBus");
+            ConsoleMFLogger.Info($"Message with ID={message.Id} sent via NServiceBus");
         }
 
         [LibraryMethod]
@@ -69,7 +69,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
         {
             var message = new SampleNServiceBusMessage2(_random.Next(), "Invalid", false);
             _bus.Send(DestinationReceiverHost, message);
-            Logger.Info($"Message with ID={message.Id} sent via NServiceBus");
+            ConsoleMFLogger.Info($"Message with ID={message.Id} sent via NServiceBus");
         }
     }
 }

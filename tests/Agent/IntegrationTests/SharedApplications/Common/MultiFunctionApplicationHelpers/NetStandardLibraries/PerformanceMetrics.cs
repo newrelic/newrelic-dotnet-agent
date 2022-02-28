@@ -15,7 +15,7 @@ namespace MultiFunctionApplicationHelpers.Libraries
         [LibraryMethod]
         public static void Test(int countMaxWorkerThreads, int countMaxCompletionThreads)
         {
-            Logger.Info($"Setting Threadpool Max Threads: {countMaxWorkerThreads} worker/{countMaxCompletionThreads} completion.");
+            ConsoleMFLogger.Info($"Setting Threadpool Max Threads: {countMaxWorkerThreads} worker/{countMaxCompletionThreads} completion.");
 
             ThreadPool.SetMaxThreads(countMaxWorkerThreads, countMaxCompletionThreads);
 
@@ -30,7 +30,7 @@ namespace MultiFunctionApplicationHelpers.Libraries
         [Transaction]
         private static void StartAgent()
         {
-            Logger.Info("Instrumented Method to start the Agent");
+            ConsoleMFLogger.Info("Instrumented Method to start the Agent");
 
             // We need atleast one known GC invocation to verify our GC metrics.
             GC.Collect();

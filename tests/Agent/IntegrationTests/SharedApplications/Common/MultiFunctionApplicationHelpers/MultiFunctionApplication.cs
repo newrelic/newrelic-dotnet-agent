@@ -67,13 +67,13 @@ namespace MultiFunctionApplicationHelpers
 
         static void ExecuteCommand(DynamicMethodExecutor methodExecutor, bool keepAliveOnError, string commandText)
         {
-            Logger.Info($"EXECUTING: '{commandText}'");
+            ConsoleMFLogger.Info($"EXECUTING: '{commandText}'");
 
             var args = commandText.Split(' ');
             
             if (args.Count() < 2)
             {
-                Logger.Error($"INVALID FORMAT: '{commandText}'");
+                ConsoleMFLogger.Error($"INVALID FORMAT: '{commandText}'");
                 PrintUsage();
 
                 if (!keepAliveOnError)
@@ -95,7 +95,7 @@ namespace MultiFunctionApplicationHelpers
 
             if (matchedMethods.Length == 0)
             {
-                Logger.Error($"\tMETHOD MISMATCH: Unable to find method {libraryName}.{methodName} that accepts {countMethodParams} parameters.");
+                ConsoleMFLogger.Error($"\tMETHOD MISMATCH: Unable to find method {libraryName}.{methodName} that accepts {countMethodParams} parameters.");
                 PrintUsage();
 
                 if (!keepAliveOnError)
@@ -107,7 +107,7 @@ namespace MultiFunctionApplicationHelpers
 
             if (matchedMethods.Length > 1)
             {
-                Logger.Error($"\tMETHOD MISMATCH: Ambiguous Match on {libraryName}.{methodName} with {countMethodParams} parameters");
+                ConsoleMFLogger.Error($"\tMETHOD MISMATCH: Ambiguous Match on {libraryName}.{methodName} with {countMethodParams} parameters");
                 PrintUsage();
 
                 if (!keepAliveOnError)
@@ -123,7 +123,7 @@ namespace MultiFunctionApplicationHelpers
             }
             catch (Exception ex)
             {
-                Logger.Error($"\tEXECUTION ERROR: {ex}");
+                ConsoleMFLogger.Error($"\tEXECUTION ERROR: {ex}");
 
                 if (!keepAliveOnError)
                 {
@@ -135,9 +135,9 @@ namespace MultiFunctionApplicationHelpers
 
         private static void PrintUsage()
         {
-            Logger.Info("USAGE:");
-            Logger.Info("");
-            Logger.Info("Here's a list of registered Library Methods:");
+            ConsoleMFLogger.Info("USAGE:");
+            ConsoleMFLogger.Info("");
+            ConsoleMFLogger.Info("Here's a list of registered Library Methods:");
 
             var libraries = ReflectionUtil.FindTypesWithAttribute<LibraryAttribute>()
                 .OrderBy(t => t.Name)
@@ -145,9 +145,9 @@ namespace MultiFunctionApplicationHelpers
 
             foreach (var library in libraries)
             {
-                Logger.Info();
-                Logger.Info($"\t{library.Name.ToUpper()}");
-                Logger.Info();
+                ConsoleMFLogger.Info();
+                ConsoleMFLogger.Info($"\t{library.Name.ToUpper()}");
+                ConsoleMFLogger.Info();
 
                 var methods = ReflectionUtil.FindMethodsWithAttribute<LibraryMethodAttribute>(library)
                     .OrderBy(m => m.Name)
@@ -164,11 +164,11 @@ namespace MultiFunctionApplicationHelpers
                         .Select(p => $"{{{p.Name}:{p.ParameterType.Name}}}")
                         .ToList();
 
-                    Logger.Info($"\t\t{library.Name} {method.Name} {string.Join(" ", paramInfos)}");
+                    ConsoleMFLogger.Info($"\t\t{library.Name} {method.Name} {string.Join(" ", paramInfos)}");
                 }
             }
 
-            Logger.Info();
+            ConsoleMFLogger.Info();
         }
 
 

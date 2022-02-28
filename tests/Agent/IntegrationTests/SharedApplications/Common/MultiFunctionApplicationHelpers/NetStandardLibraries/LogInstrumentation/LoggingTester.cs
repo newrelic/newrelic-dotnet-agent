@@ -2,59 +2,52 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using log4net;
-using log4net.Appender;
-using log4net.Config;
-using log4net.Layout;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
 {
     [Library]
-    public static class Log4netTester
+    public static class LoggingTester
     {
-        private static readonly ILog log = LogManager.GetLogger(typeof(Log4netTester));
+        private static ILoggingAdapter _log;
+
+        [LibraryMethod]
+        public static void SetFramework(string loggingFramework)
+        {
+            switch (loggingFramework.ToUpper())
+            {
+                case "LOG4NET":
+                    _log = new Log4NetLoggingAdapter();
+                    break;
+                case "SERILOG":
+                    _log = new SerilogLoggingAdapter();
+                    break;
+                default:
+                    throw new System.ArgumentNullException(nameof(loggingFramework));
+            }
+        }
+
 
         [LibraryMethod]
         public static void Configure()
         {
-            BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()));
+            _log.Configure();
         }
-
 
         [LibraryMethod]
         public static void ConfigurePatternLayoutAppenderForDecoration()
         {
-            PatternLayout patternLayout = new PatternLayout();
-            patternLayout.ConversionPattern = "%timestamp [%thread] %level %logger %ndc - %message %property{NR_LINKING}%newline";
-            patternLayout.ActivateOptions();
-
-            ConsoleAppender consoleAppender = new ConsoleAppender();
-            consoleAppender.Layout = patternLayout;
-            consoleAppender.ActivateOptions();
-
-            BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()), consoleAppender);
+            _log.ConfigurePatternLayoutAppenderForDecoration();
         }
 
-#if LOG4NET_JSON_FORMATTER_SUPPORTED
         [LibraryMethod]
         public static void ConfigureJsonLayoutAppenderForDecoration()
         {
-            SerializedLayout serializedLayout = new SerializedLayout();
-            serializedLayout.AddMember("NR_LINKING");
-            serializedLayout.ActivateOptions();
-
-            ConsoleAppender consoleAppender = new ConsoleAppender();
-            consoleAppender.Layout = serializedLayout;
-            consoleAppender.ActivateOptions();
-
-            BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()), consoleAppender);
+            _log.ConfigureJsonLayoutAppenderForDecoration();
         }
-#endif
 
         [LibraryMethod]
         public static void CreateSingleLogMessage(string message, string level)
@@ -62,23 +55,23 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             switch (level.ToUpper())
             {
                 case "DEBUG":
-                    log.Debug(message);
+                    _log.Debug(message);
                     break;
                 case "INFO":
-                    log.Info(message);
+                    _log.Info(message);
                     break;
                 case "WARN":
                 case "WARNING":
-                    log.Warn(message);
+                    _log.Warn(message);
                     break;
                 case "ERROR":
-                    log.Error(message);
+                    _log.Error(message);
                     break;
                 case "FATAL":
-                    log.Fatal(message);
+                    _log.Fatal(message);
                     break;
                 default:
-                    log.Info(message);
+                    _log.Info(message);
                     break;
             }
         }
@@ -147,5 +140,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             CreateSingleLogMessage(message, level);
             CreateSingleLogMessageWithTraceAttribute(message, level);
         }
+
     }
 }

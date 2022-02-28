@@ -34,7 +34,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
             WCFLibraryHelpers.StartAgentWithExternalCall();
             var bindingTypeEnum = (WCFBindingType)Enum.Parse(typeof(WCFBindingType), bindingType, true);
             var baseAddress = WCFLibraryHelpers.GetEndpointAddress(bindingTypeEnum, port, relativePath);
-            Logger.Info($"Starting WCF Service using {bindingTypeEnum} binding at endpoint {baseAddress}");
+            ConsoleMFLogger.Info($"Starting WCF Service using {bindingTypeEnum} binding at endpoint {baseAddress}");
             _wcfService_SelfHosted = new ServiceHost(typeof(WcfService), baseAddress);
             if (bindingTypeEnum != WCFBindingType.NetTcp)
             {

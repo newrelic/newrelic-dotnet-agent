@@ -14,9 +14,9 @@ namespace NsbTests
     {
         public async Task Handle(Command command, IMessageHandlerContext context)
         {
-            Logger.Info($"Async Command handler received message with Id {command.Id}.");
+            ConsoleMFLogger.Info($"Async Command handler received message with Id {command.Id}.");
             await Task.Delay(500);
-            Logger.Info($"Async Command handler done delaying message with Id {command.Id}.");
+            ConsoleMFLogger.Info($"Async Command handler done delaying message with Id {command.Id}.");
             // Make sure segment/transaction ends
         }
     }

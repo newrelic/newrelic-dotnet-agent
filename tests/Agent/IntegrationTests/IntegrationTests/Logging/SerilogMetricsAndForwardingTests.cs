@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Logging
 {
-    public abstract class Log4NetMetricsAndForwardingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class SerilogMetricsAndForwardingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
@@ -64,7 +64,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         private const string TraceAttributeOutsideTransactionLogMessage = "TraceAttributeOutsideTransactionLogMessage";
         private const string DifferentTraceAttributesInsideTransactionLogMessage = "DifferentTraceAttributesInsideTransactionLogMessage";
 
-        public Log4NetMetricsAndForwardingTestsBase(TFixture fixture, ITestOutputHelper output, bool metricsEnabled, bool forwardingEnabled) : base(fixture)
+        public SerilogMetricsAndForwardingTestsBase(TFixture fixture, ITestOutputHelper output, bool metricsEnabled, bool forwardingEnabled) : base(fixture)
         {
             _fixture = fixture;
             _metricsEnabled = metricsEnabled;
@@ -72,7 +72,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             _fixture.SetTimeout(TimeSpan.FromMinutes(3));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"LoggingTester SetFramework log4net");
+            _fixture.AddCommand($"LoggingTester SetFramework Serilog");
             _fixture.AddCommand($"LoggingTester Configure");
 
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionDebugMessage} DEBUG");
@@ -153,8 +153,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             var loggingMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = "Logging/lines/DEBUG", callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/INFO", callCount = 10 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/WARN", callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/INFORMATION", callCount = 10 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/WARNING", callCount = 7 },
                 new Assertions.ExpectedMetric { metricName = "Logging/lines/ERROR", callCount = 7 },
                 new Assertions.ExpectedMetric { metricName = "Logging/lines/FATAL", callCount = 7 },
 
@@ -204,7 +204,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         public void SupportabilityLoggingFrameworkMetricExists()
         {
             var actualMetrics = _fixture.AgentLog.GetMetrics();
-            Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/enabled/DotNET/log4net");
+            Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/enabled/DotNET/serilog");
         }
 
         [Fact]
@@ -276,7 +276,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = TraceAttributeOutsideTransactionLogMessage, HasTraceId = false, HasSpanId = false }
+                new Assertions.ExpectedLogLine { LogLevel = "INFORMATION", LogMessage = TraceAttributeOutsideTransactionLogMessage, HasTraceId = false, HasSpanId = false }
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -294,7 +294,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = DifferentTraceAttributesInsideTransactionLogMessage, HasTraceId = true, HasSpanId = true }
+                new Assertions.ExpectedLogLine { LogLevel = "INFORMATION", LogMessage = DifferentTraceAttributesInsideTransactionLogMessage, HasTraceId = true, HasSpanId = true }
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -316,8 +316,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
                 new Assertions.ExpectedLogLine { LogLevel = "DEBUG", LogMessage = InTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = InTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = "WARN", LogMessage = InTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { LogLevel = "INFORMATION", LogMessage = InTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { LogLevel = "WARNING", LogMessage = InTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
                 new Assertions.ExpectedLogLine { LogLevel = "ERROR", LogMessage = InTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
                 new Assertions.ExpectedLogLine { LogLevel = "FATAL", LogMessage = InTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
                 };
@@ -338,8 +338,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
                 new Assertions.ExpectedLogLine { LogLevel = "DEBUG", LogMessage = AsyncInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = AsyncInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = "WARN", LogMessage = AsyncInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { LogLevel = "INFORMATION", LogMessage = AsyncInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { LogLevel = "WARNING", LogMessage = AsyncInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
                 new Assertions.ExpectedLogLine { LogLevel = "ERROR", LogMessage = AsyncInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
                 new Assertions.ExpectedLogLine { LogLevel = "FATAL", LogMessage = AsyncInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
                 };
@@ -362,8 +362,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
                 new Assertions.ExpectedLogLine { LogLevel = "DEBUG", LogMessage = AsyncNoAwaitInTransactionDebugMessage},
-                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = AsyncNoAwaitInTransactionInfoMessage},
-                new Assertions.ExpectedLogLine { LogLevel = "WARN", LogMessage = AsyncNoAwaitInTransactionWarningMessage},
+                new Assertions.ExpectedLogLine { LogLevel = "INFORMATION", LogMessage = AsyncNoAwaitInTransactionInfoMessage},
+                new Assertions.ExpectedLogLine { LogLevel = "WARNING", LogMessage = AsyncNoAwaitInTransactionWarningMessage},
                 new Assertions.ExpectedLogLine { LogLevel = "ERROR", LogMessage = AsyncNoAwaitInTransactionErrorMessage},
                 new Assertions.ExpectedLogLine { LogLevel = "FATAL", LogMessage = AsyncNoAwaitInTransactionFatalMessage},
                 };
@@ -384,8 +384,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
                 new Assertions.ExpectedLogLine { LogLevel = "DEBUG", LogMessage = OutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = OutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = "WARN", LogMessage = OutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { LogLevel = "INFORMATION", LogMessage = OutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { LogLevel = "WARNING", LogMessage = OutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
                 new Assertions.ExpectedLogLine { LogLevel = "ERROR", LogMessage = OutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
                 new Assertions.ExpectedLogLine { LogLevel = "FATAL", LogMessage = OutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
                 };
@@ -406,8 +406,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
                 new Assertions.ExpectedLogLine { LogLevel = "DEBUG", LogMessage = AsyncOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = AsyncOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = "WARN", LogMessage = AsyncOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { LogLevel = "INFORMATION", LogMessage = AsyncOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { LogLevel = "WARNING", LogMessage = AsyncOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
                 new Assertions.ExpectedLogLine { LogLevel = "ERROR", LogMessage = AsyncOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
                 new Assertions.ExpectedLogLine { LogLevel = "FATAL", LogMessage = AsyncOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
                 };
@@ -428,8 +428,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
                 new Assertions.ExpectedLogLine { LogLevel = "DEBUG", LogMessage = AsyncNoAwaitOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = AsyncNoAwaitOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = "WARN", LogMessage = AsyncNoAwaitOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { LogLevel = "INFORMATION", LogMessage = AsyncNoAwaitOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { LogLevel = "WARNING", LogMessage = AsyncNoAwaitOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
                 new Assertions.ExpectedLogLine { LogLevel = "ERROR", LogMessage = AsyncNoAwaitOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
                 new Assertions.ExpectedLogLine { LogLevel = "FATAL", LogMessage = AsyncNoAwaitOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
                 };
@@ -450,8 +450,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
                 new Assertions.ExpectedLogLine { LogLevel = "DEBUG", LogMessage = AsyncNoAwaitWithDelayInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = "INFO", LogMessage = AsyncNoAwaitWithDelayInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = "WARN", LogMessage = AsyncNoAwaitWithDelayInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { LogLevel = "INFORMATION", LogMessage = AsyncNoAwaitWithDelayInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { LogLevel = "WARNING", LogMessage = AsyncNoAwaitWithDelayInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
                 new Assertions.ExpectedLogLine { LogLevel = "ERROR", LogMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
                 new Assertions.ExpectedLogLine { LogLevel = "FATAL", LogMessage = AsyncNoAwaitWithDelayInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
                 };
@@ -468,63 +468,63 @@ namespace NewRelic.Agent.IntegrationTests.Logging
 
     #region Metrics and Forwarding Enabled
     [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsFWLatestTests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class SerilogMetricsAndForwardingEnabledTestsFWLatestTests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public Log4NetMetricsAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, true, true)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsFW471Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class SerilogMetricsAndForwardingEnabledTestsFW471Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public Log4NetMetricsAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output, true, true)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsFW462Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class SerilogMetricsAndForwardingEnabledTestsFW462Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public Log4NetMetricsAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output, true, true)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsNetCoreLatestTests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class SerilogMetricsAndForwardingEnabledTestsNetCoreLatestTests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public Log4NetMetricsAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, true, true)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsNetCore50Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class SerilogMetricsAndForwardingEnabledTestsNetCore50Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public Log4NetMetricsAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output, true, true)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsNetCore31Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class SerilogMetricsAndForwardingEnabledTestsNetCore31Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public Log4NetMetricsAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output, true, true)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsNetCore21Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
+    public class SerilogMetricsAndForwardingEnabledTestsNetCore21Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
     {
-        public Log4NetMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output, true, true)
         {
         }
@@ -533,63 +533,63 @@ namespace NewRelic.Agent.IntegrationTests.Logging
 
     #region Metrics and Forwarding Disabled
     [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsFWLatestTests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class SerilogMetricsAndForwardingDisabledTestsFWLatestTests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public Log4NetMetricsAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, false, false)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsFW471Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class SerilogMetricsAndForwardingDisabledTestsFW471Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public Log4NetMetricsAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output, false, false)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsFW462Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class SerilogMetricsAndForwardingDisabledTestsFW462Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public Log4NetMetricsAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output, false, false)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsNetCoreLatestTests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class SerilogMetricsAndForwardingDisabledTestsNetCoreLatestTests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public Log4NetMetricsAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, false, false)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsNetCore50Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class SerilogMetricsAndForwardingDisabledTestsNetCore50Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public Log4NetMetricsAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output, false, false)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsNetCore31Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class SerilogMetricsAndForwardingDisabledTestsNetCore31Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public Log4NetMetricsAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output, false, false)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsNetCore21Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
+    public class SerilogMetricsAndForwardingDisabledTestsNetCore21Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
     {
-        public Log4NetMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+        public SerilogMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output, false, false)
         {
         }
@@ -599,63 +599,63 @@ namespace NewRelic.Agent.IntegrationTests.Logging
 
     #region Metrics Enabled, Forwarding Disabled
     [NetFrameworkTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsFWLatestTests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class SerilogMetricsEnabledAndForwardingDisabledTestsFWLatestTests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public SerilogMetricsEnabledAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, true, false)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsFW471Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class SerilogMetricsEnabledAndForwardingDisabledTestsFW471Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public SerilogMetricsEnabledAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output, true, false)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsFW462Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class SerilogMetricsEnabledAndForwardingDisabledTestsFW462Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public SerilogMetricsEnabledAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output, true, false)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class SerilogMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public SerilogMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, true, false)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class SerilogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+        public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output, true, false)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore31Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class SerilogMetricsEnabledAndForwardingDisabledTestsNetCore31Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output, true, false)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
+    public class SerilogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
     {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+        public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output, true, false)
         {
         }
@@ -665,72 +665,72 @@ namespace NewRelic.Agent.IntegrationTests.Logging
 
     #region Metrics Disabled, Forwarding Enabled
     [NetFrameworkTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsFWLatestTests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class SerilogMetricsDisabledAndForwardingEnabledTestsFWLatestTests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public SerilogMetricsDisabledAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, false, true)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsFW471Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class SerilogMetricsDisabledAndForwardingEnabledTestsFW471Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public SerilogMetricsDisabledAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output, false, true)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsFW462Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class SerilogMetricsDisabledAndForwardingEnabledTestsFW462Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public SerilogMetricsDisabledAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output, false, true)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class SerilogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public SerilogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, false, true)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class SerilogMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+        public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output, false, true)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore31Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class SerilogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output, false, true)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore22>
+    public class SerilogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore22>
     {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+        public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
             : base(fixture, output, false, true)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : Log4NetMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
+    public class SerilogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : SerilogMetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
     {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+        public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output, false, true)
         {
         }

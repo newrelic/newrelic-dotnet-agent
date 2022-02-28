@@ -6,7 +6,7 @@ using System;
 
 namespace MultiFunctionApplicationHelpers
 {
-    public static class Logger
+    public static class ConsoleMFLogger
     {
 
         public static void Info()
