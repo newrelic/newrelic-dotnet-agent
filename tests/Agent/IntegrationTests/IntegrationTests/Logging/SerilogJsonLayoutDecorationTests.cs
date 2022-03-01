@@ -48,7 +48,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         {
             // Sample decorated data we are looking for:
             // "NR-LINKING|MjczMDcwfEFQTXxBUFBMSUNBVElPTnwxODQyMg|blah.hsd1.ca.comcast.net|45f120972d61834b96fb890d2a8f97e7|840d9a82e8bc18a8|"
-            var regex = new Regex(@"NR_LINKING\|[a-zA-Z0-9]*\|[a-zA-Z0-9._-]*\|[a-zA-Z0-9]*\|[a-zA-Z0-9]*\|");
+            var regex = new Regex(@"NR-LINKING\|[a-zA-Z0-9]*\|[a-zA-Z0-9._-]*\|[a-zA-Z0-9]*\|[a-zA-Z0-9]*\|");
             if (_decorationEnabled)
             {
                 Assert.Matches(regex, _fixture.RemoteApplication.CapturedOutput.StandardOutput);
