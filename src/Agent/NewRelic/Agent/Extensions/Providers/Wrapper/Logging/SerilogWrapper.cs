@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -26,7 +27,12 @@ namespace NewRelic.Providers.Wrapper.Logging
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+            if (!LogProviders.RegisteredLogProvider[(int)LogProvider.Serilog])
+            {
+                return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+            }
+
+            return new CanWrapResponse(false);
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
