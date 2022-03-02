@@ -447,7 +447,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.LogEventCollectorEnabled).Returns(true);
-            Mock.Arrange(() => configuration.LogEventsMaximumPerPeriod).Returns(100);
+            Mock.Arrange(() => configuration.LogEventsMaxSamplesStored).Returns(100);
             Mock.Arrange(() => configuration.ApplicationNames).Returns(new List<string> { "appname1" });
             if (versionNumber.HasValue)
                 Mock.Arrange(() => configuration.ConfigurationVersion).Returns(versionNumber.Value);

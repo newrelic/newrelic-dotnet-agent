@@ -176,6 +176,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 { "custom_event_data", configuration.CustomEventsMaximumSamplesStored },
                 { "error_event_data", configuration.ErrorCollectorMaxEventSamplesStored },
                 { "span_event_data", configuration.SpanEventsMaxSamplesStored },
+                { "log_event_data", configuration.LogEventsMaxSamplesStored },
             };
         }
     }
