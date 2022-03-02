@@ -43,11 +43,9 @@ namespace NewRelic.Providers.Wrapper.Logging
         private void RecordLogMessage(object logEvent, IAgent agent)
         {
             var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEvent.GetType(), "Level");
-            //var logLevel = getLogLevelFunc(logEvent).ToString(); // Level is an enum so ToString() works.
 
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTimeOffset>(logEvent.GetType(), "Timestamp");
             Func<object, DateTime> getDateTimeFunc = (logEvent) => getTimestampFunc(logEvent).UtcDateTime;
-            //var timestamp = getTimestampFunc(logEvent);
 
             Func<object, string> getMessageFunc = (logEvent) => ((dynamic)logEvent).RenderMessage();
 
