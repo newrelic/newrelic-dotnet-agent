@@ -1294,15 +1294,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 .Returns(false);
 
             var timestamp = DateTime.Now;
-            var timpstampUnix = timestamp.ToUnixTimeMilliseconds();
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
             var level = "DEBUG";
             var message = "message";
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+
             var spanId = "spanid";
             var traceId = "traceid";
             var loggingFramework = "testFramework";
 
             var xapi = _agent as IAgentExperimental;
-            xapi.RecordLogMessage(loggingFramework, timestamp, level, message, spanId, traceId);
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, spanId, traceId);
 
             // Access the private collection of events to get the number of add attempts.
             var privateAccessor = new PrivateAccessor(_logEventAggregator);
@@ -1323,12 +1328,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var timpstampUnix = timestamp.ToUnixTimeMilliseconds();
             var level = "DEBUG";
             var message = "message";
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+
             var spanId = "spanid";
             var traceId = "traceid";
             var loggingFramework = "testFramework";
 
             var xapi = _agent as IAgentExperimental;
-            xapi.RecordLogMessage(loggingFramework, timestamp, level, message, spanId, traceId);
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, spanId, traceId);
 
             // Access the private collection of events to get the number of add attempts.
             var privateAccessor = new PrivateAccessor(_logEventAggregator);
@@ -1352,9 +1362,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 .Returns(true);
 
             var timestamp = DateTime.Now;
-            var timpstampUnix = timestamp.ToUnixTimeMilliseconds();
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
             var level = "DEBUG";
             var message = "message";
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+
             var spanId = "spanid";
             var traceId = "traceid";
             var loggingFramework = "testFramework";
@@ -1364,12 +1379,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var priority = transaction.Priority;
 
             var xapi = _agent as IAgentExperimental;
-            xapi.RecordLogMessage(loggingFramework, timestamp, level, message, spanId, traceId);
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, spanId, traceId);
 
             var logEvent = transaction.LogEvents?.FirstOrDefault();
             Assert.AreEqual(1, transaction.LogEvents.Count);
             Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timpstampUnix, logEvent.TimeStamp);
+            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
             Assert.AreEqual(level, logEvent.Level);
             Assert.AreEqual(message, logEvent.Message);
             Assert.AreEqual(spanId, logEvent.SpanId);
