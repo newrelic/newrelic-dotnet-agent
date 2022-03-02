@@ -431,18 +431,18 @@ namespace NewRelic.Agent.Core
                 {
                     return;
                 }
-                var timestamp = getTimestamp(logEvent).ToUniversalTime();
+                var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
 
                 var transaction = _transactionService.GetCurrentInternalTransaction();
                 if (transaction != null && transaction.IsValid)
                 {
                     // use transaction batching for messages in transactions
-                    transaction.LogEvents.Add(new LogEventWireModel(timestamp.ToUnixTimeMilliseconds(), logMessage, normalizedLevel, spanId, traceId));
+                    transaction.LogEvents.Add(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId));
                     return;
                 }
 
                 // non-transaction messages with proper sanitized priority value
-                _logEventAggregator.Collect(new LogEventWireModel(timestamp.ToUnixTimeMilliseconds(),
+                _logEventAggregator.Collect(new LogEventWireModel(timestamp,
                     logMessage, normalizedLevel, spanId, traceId, _transactionService.CreatePriority()));
             }
 
