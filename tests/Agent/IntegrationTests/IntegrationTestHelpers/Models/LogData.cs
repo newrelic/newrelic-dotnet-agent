@@ -63,10 +63,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
     public class LogAttributes
     {
-        [JsonProperty("spanid", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty("span.id", NullValueHandling = NullValueHandling.Ignore)]
         public string Spanid { get; set; }
 
-        [JsonProperty("traceid", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty("trace.id", NullValueHandling = NullValueHandling.Ignore)]
         public string Traceid { get; set; }
     }
 }
