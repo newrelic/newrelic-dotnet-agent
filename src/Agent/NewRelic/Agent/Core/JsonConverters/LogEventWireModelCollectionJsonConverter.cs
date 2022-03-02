@@ -18,8 +18,8 @@ namespace NewRelic.Agent.Core.JsonConverters
         private const string TimeStamp = "timestamp";
         private const string Message = "message";
         private const string Level = "level";
-        private const string SpanId = "spanid";
-        private const string TraceId = "traceid";
+        private const string SpanId = "span.id";
+        private const string TraceId = "trace.id";
 
         public override LogEventWireModelCollection ReadJson(JsonReader reader, Type objectType, LogEventWireModelCollection existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
