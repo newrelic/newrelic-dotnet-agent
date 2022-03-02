@@ -1325,7 +1325,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 .Returns(true);
 
             var timestamp = DateTime.Now;
-            var timpstampUnix = timestamp.ToUnixTimeMilliseconds();
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
             var level = "DEBUG";
             var message = "message";
 
@@ -1347,7 +1347,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var logEvent = logEvents?.FirstOrDefault()?.Data;
             Assert.AreEqual(1, logEvents.Count);
             Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timpstampUnix, logEvent.TimeStamp);
+            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
             Assert.AreEqual(level, logEvent.Level);
             Assert.AreEqual(message, logEvent.Message);
             Assert.AreEqual(spanId, logEvent.SpanId);
