@@ -2479,7 +2479,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void ApplicationLogging_ForwardingMaxSamplesStored_HasCorrectValue()
         {
             _localConfig.applicationLogging.forwarding.maxSamplesStored = 1;
-            Assert.AreEqual(1, _defaultConfig.LogEventsMaximumPerPeriod);
+            Assert.AreEqual(1, _defaultConfig.LogEventsMaxSamplesStored);
         }
 
         [Test]
