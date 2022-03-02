@@ -40,15 +40,12 @@ namespace NewRelic.Providers.Wrapper.Logging
         private void RecordLogMessage(object logEvent, IAgent agent)
         {
             var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEvent.GetType(), "Level");
-            //var logLevel = getLogLevelFunc(logEvent).ToString(); // Level class has a ToString override we can use.
 
             // RenderedMessage is get only
             var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEvent.GetType(), "RenderedMessage");
-            //var renderedMessage = getRenderedMessageFunc(logEvent);
 
             // Older versions of log4net only allow access to a timestamp in local time
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEvent.GetType(), "TimeStamp");
-            //var timestamp = getTimestampFunc(logEvent).ToUniversalTime();
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
