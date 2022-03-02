@@ -406,33 +406,46 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
         }
 
-        public void RecordLogMessage(string frameworkName, DateTime timestamp, string logLevel, string logMessage, string spanId, string traceId)
+        public void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLogLevel, Func<object,string> getLogMessage, string spanId, string traceId)
         {
             _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
 
-            var normalizedLevel = string.IsNullOrWhiteSpace(logLevel) ? "UNKNOWN" : logLevel.ToUpper();
+            var normalizedLevel = string.Empty;
+            if (_configurationService.Configuration.LogMetricsCollectorEnabled ||
+                _configurationService.Configuration.LogEventCollectorEnabled)
+            {
+                var logLevel = getLogLevel(logEvent).ToString();
+                normalizedLevel = string.IsNullOrWhiteSpace(logLevel) ? "UNKNOWN" : logLevel.ToUpper();
+            }
+
             if (_configurationService.Configuration.LogMetricsCollectorEnabled)
             {
                 _agentHealthReporter.IncrementLogLinesCount(normalizedLevel);
             }
 
             // IOC container defaults to singleton so this will access the same aggregator
-            if (!_configurationService.Configuration.LogEventCollectorEnabled || string.IsNullOrWhiteSpace(logMessage))
+            if (_configurationService.Configuration.LogEventCollectorEnabled) 
             {
-                return;
+                var logMessage = getLogMessage(logEvent);
+                if (string.IsNullOrWhiteSpace(logMessage))
+                {
+                    return;
+                }
+                var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
+
+                var transaction = _transactionService.GetCurrentInternalTransaction();
+                if (transaction != null && transaction.IsValid)
+                {
+                    // use transaction batching for messages in transactions
+                    transaction.LogEvents.Add(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId));
+                    return;
+                }
+
+                // non-transaction messages with proper sanitized priority value
+                _logEventAggregator.Collect(new LogEventWireModel(timestamp,
+                    logMessage, normalizedLevel, spanId, traceId, _transactionService.CreatePriority()));
             }
 
-            var transaction = _transactionService.GetCurrentInternalTransaction();
-            if (transaction != null && transaction.IsValid)
-            {
-                // use transaction batching for messages in transactions
-                transaction.LogEvents.Add(new LogEventWireModel(timestamp.ToUnixTimeMilliseconds(), logMessage, normalizedLevel, spanId, traceId));
-                return;
-            }
-
-            // non-transaction messages with proper sanitized priority value
-            _logEventAggregator.Collect(new LogEventWireModel(timestamp.ToUnixTimeMilliseconds(),
-                logMessage, normalizedLevel, spanId, traceId, _transactionService.CreatePriority()));
         }
 
         #endregion
