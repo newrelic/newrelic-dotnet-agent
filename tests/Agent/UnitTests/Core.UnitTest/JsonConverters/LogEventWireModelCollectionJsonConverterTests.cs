@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Core.Utilities
             Assert.AreEqual(
                 "{\"common\":{\"attributes\":{\"entity.guid\":\"guid\",\"hostname\":\"hostname\"}}," +
                 "\"logs\":[{\"timestamp\":1,\"message\":\"message\",\"level\":\"level\"," +
-                "\"attributes\":{\"spanid\":\"spanId\",\"traceid\":\"traceId\"}}]}",
+                "\"attributes\":{\"span.id\":\"spanId\",\"trace.id\":\"traceId\"}}]}",
                 serialized);
         }
     }
