@@ -1074,7 +1074,7 @@ namespace NewRelic.Agent.Core.Metric
             return SupportabilityLogDecoratingConfigPs + (enabled ? Enabled : Disabled);
         }
 
-        private const string SupportabilityLogFrameworkPs = SupportabilityLoggingEventsPs + PathSeparator + DotNet + PathSeparator;
+        private const string SupportabilityLogFrameworkPs = SupportabilityLoggingEventsPs + DotNet + PathSeparator;
 
         public static string GetSupportabilityLogFrameworkName(string loggingFramework)
         {
