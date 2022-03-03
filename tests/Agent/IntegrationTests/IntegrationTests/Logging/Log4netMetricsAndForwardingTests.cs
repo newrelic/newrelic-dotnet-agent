@@ -198,7 +198,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         public void SupportabilityLoggingFrameworkMetricExists()
         {
             var actualMetrics = _fixture.AgentLog.GetMetrics();
-            Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/enabled/DotNET/log4net");
+            Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/DotNET/log4net/enabled");
         }
 
         [Fact]

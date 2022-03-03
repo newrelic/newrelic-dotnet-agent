@@ -198,7 +198,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         public void SupportabilityLoggingFrameworkMetricExists()
         {
             var actualMetrics = _fixture.AgentLog.GetMetrics();
-            Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/enabled/DotNET/serilog");
+            Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/DotNET/serilog/enabled");
         }
 
         [Fact]
