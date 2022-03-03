@@ -43,16 +43,15 @@ namespace NewRelic.Providers.Wrapper.Logging
         private void RecordLogMessage(object logEvent, IAgent agent)
         {
             var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEvent.GetType(), "Level");
-            var logLevel = getLogLevelFunc(logEvent).ToString(); // Level is an enum so ToString() works.
 
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTimeOffset>(logEvent.GetType(), "Timestamp");
-            var timestamp = getTimestampFunc(logEvent);
+            Func<object, DateTime> getDateTimeFunc = (logEvent) => getTimestampFunc(logEvent).UtcDateTime;
 
-            var renderedMessage = ((dynamic)logEvent).RenderMessage();
+            Func<object, string> getMessageFunc = (logEvent) => ((dynamic)logEvent).RenderMessage();
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
-            xapi.RecordLogMessage(WrapperName, timestamp.DateTime, logLevel, (string)renderedMessage, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+            xapi.RecordLogMessage(WrapperName, logEvent, getDateTimeFunc, getLogLevelFunc, getMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
         private void DecorateLogMessage(object logEvent, IAgent agent)
