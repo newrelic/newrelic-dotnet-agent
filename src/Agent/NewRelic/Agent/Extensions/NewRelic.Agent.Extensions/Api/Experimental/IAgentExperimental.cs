@@ -21,12 +21,13 @@ namespace NewRelic.Agent.Api.Experimental
         /// <summary>
         /// Records the log message in the transaction to later be forwarded if log forwarding is enabled.
         /// </summary>
-        /// <param name="timestamp">Timestamp from the log message.</param>
-        /// <param name="logLevel">Severity or level of the log message.</param>
-        /// <param name="logMessage">The log message.</param>
+        /// <param name="frameworkName">The name of the logging framework.</param>
+        /// <param name="logEvent">The logging event object.</param>
+        /// <param name="getTimestamp">A Func<object,DateTime> that knows how to get the timestamp from the logEvent.</param>
+        /// <param name="getLogLevel">A Func<object,object> that knows how to get the log level from the logEvent.</param>
+        /// <param name="getLogMessage">A Func<object,string> that knows how to get the log message from the logEvent</param>
         /// <param name="spanId">The span ID of the segment the log message occured within.</param>
         /// <param name="traceId">The trace ID of the transaction the log message occured within.</param>
-        /// <param name="frameworkName">The name of the logging framework</param>
-        void RecordLogMessage(string frameworkName, DateTime timestamp, string logLevel, string logMessage, string spanId, string traceId);
+        void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLogLevel, Func<object,string> getLogMessage, string spanId, string traceId);
     }
 }
