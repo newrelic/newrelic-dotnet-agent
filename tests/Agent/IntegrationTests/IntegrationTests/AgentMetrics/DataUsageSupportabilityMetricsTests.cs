@@ -5,6 +5,8 @@
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -57,49 +59,48 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         {
             Fixture = fixture;
             Fixture.TestLogger = output;
+            Fixture.SetTimeout(TimeSpan.FromMinutes(2));
 
-            // Note: I am re-using another test harness here to exercise the agent and gather unrelated metrics
-            Fixture.AddCommand($"PerformanceMetrics Test 275 328");
+            // Logging commands
+            Fixture.AddCommand($"LoggingTester SetFramework log4net");
+            Fixture.AddCommand($"LoggingTester Configure");
+
+            Fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction ThisIsADebugLogMessage DEBUG");
+
+            // This is necessary to cause one harvest cycle to happen and cause the logging data endpoint to be called
+            Fixture.AddCommand($"RootCommands DelaySeconds 60");
+
+
 
             Fixture.Actions
             (
                 setupConfiguration: () =>
                 {
-                    Fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
-                    // NOTE: not sure I need this app setting...
-                    Fixture.RemoteApplication.AddAppSetting("NewRelic.EventListenerSamplersEnabled", "true");
+                    var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+
+                    configModifier.EnableLogForwarding()
+                    .SetLogLevel("debug");
                 }
             );
 
             Fixture.Initialize();
         }
 
-        [Fact]
-        public void ExpectedMetric_CollectorGlobalMetric()
+        [Theory]
+        [InlineData("Supportability/DotNET/Collector/Output/Bytes")]
+        [InlineData("Supportability/DotNET/Collector/connect/Output/Bytes")]
+        [InlineData("Supportability/DotNET/Collector/log_event_data/Output/Bytes")]
+        public void ExpectedDataUsageMetric(string expectedMetricName)
         {
-            const string expectedMetricName = "Supportability/DotNET/Collector/Output/Bytes";
             var metrics = Fixture.AgentLog.GetMetrics().ToList();
 
-            var collectorGlobalMetric = metrics.FirstOrDefault(x => x.MetricSpec.Name == expectedMetricName);
-            Assert.NotNull(collectorGlobalMetric);
+            var dataUsageMetric = metrics.FirstOrDefault(x => x.MetricSpec.Name == expectedMetricName);
+            Assert.NotNull(dataUsageMetric);
 
-            Assert.NotEqual(0UL, collectorGlobalMetric.Values.CallCount);
-            Assert.NotEqual(0, collectorGlobalMetric.Values.Total);
-            Assert.NotEqual(0, collectorGlobalMetric.Values.TotalExclusive);
+            Assert.NotEqual(0UL, dataUsageMetric.Values.CallCount);
+            Assert.NotEqual(0, dataUsageMetric.Values.Total);
+            Assert.NotEqual(0, dataUsageMetric.Values.TotalExclusive);
         }
 
-        [Fact]
-        public void ExpectedMetric_CollectorConnectMetric()
-        {
-            const string expectedMetricName = "Supportability/DotNET/Collector/connect/Output/Bytes";
-            var metrics = Fixture.AgentLog.GetMetrics().ToList();
-
-            var collectorConnectMetric = metrics.FirstOrDefault(x => x.MetricSpec.Name == expectedMetricName);
-            Assert.NotNull(collectorConnectMetric);
-
-            Assert.NotEqual(0UL, collectorConnectMetric.Values.CallCount);
-            Assert.NotEqual(0, collectorConnectMetric.Values.Total);
-            Assert.NotEqual(0, collectorConnectMetric.Values.TotalExclusive);
-        }
     }
 }
