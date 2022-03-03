@@ -283,7 +283,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 { "Supportability/Logging/Metrics/DotNET/enabled", 1 },
                 { "Supportability/Logging/Forwarding/DotNET/enabled", 1 },
                 { "Supportability/Logging/LocalDecorating/DotNET/enabled", 1 },
-                { "Supportability/Logging/enabled/DotNET/log4net", 1 }
+                { "Supportability/Logging/DotNET/log4net/enabled", 1 }
             };
             var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
 
@@ -296,7 +296,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportLogForwardingFramework("log4net");
             _agentHealthReporter.CollectMetrics();
 
-            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/enabled/DotNET/log4net"));
+            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/DotNET/log4net/enabled"));
 
             // Clear out captured metrics, and recollect
             _publishedMetrics = new List<MetricWireModel>();
@@ -304,8 +304,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportLogForwardingFramework("serilog");
             _agentHealthReporter.CollectMetrics();
 
-            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/enabled/DotNET/serilog"));
-            Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/enabled/DotNET/log4net"));
+            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/DotNET/serilog/enabled"));
+            Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/DotNET/log4net/enabled"));
         }
 
         [Test]
