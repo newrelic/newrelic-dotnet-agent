@@ -16,7 +16,7 @@ namespace NsbTests
     {
         public Task Handle(Event message, IMessageHandlerContext context)
         {
-            Logger.Info($"Event handler received message with Id {message.Id}.");
+            ConsoleMFLogger.Info($"Event handler received message with Id {message.Id}.");
             return Task.CompletedTask;
         }
     }

@@ -44,15 +44,15 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries
         {
             var srcDir = new DirectoryInfo(sourcePath);
 
-            Logger.Info("Staging Compiled Web Application");
-            Logger.Info($"Source      > {srcDir.ToString()}");
-            Logger.Info($"Destination > {HostedApplicationFolder}");
-            Logger.Info();
+            ConsoleMFLogger.Info("Staging Compiled Web Application");
+            ConsoleMFLogger.Info($"Source      > {srcDir.ToString()}");
+            ConsoleMFLogger.Info($"Destination > {HostedApplicationFolder}");
+            ConsoleMFLogger.Info();
             DirectoryCopy(sourcePath, HostedApplicationFolder);
 
-            Logger.Info("Configuring applicationHost.config");
-            Logger.Info($"Port         > {port}");
-            Logger.Info();
+            ConsoleMFLogger.Info("Configuring applicationHost.config");
+            ConsoleMFLogger.Info($"Port         > {port}");
+            ConsoleMFLogger.Info();
             ConfigureAppHostConfig(port);
         }
 
@@ -67,9 +67,9 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries
         {
             var instanceName = $"New Relic HWC Testing {_hostedApplicationVirtualDirectory}";
 
-            Logger.Info("Starting Hosted Web Core");
-            Logger.Info($"Instance     > {instanceName}");
-            Logger.Info();
+            ConsoleMFLogger.Info("Starting Hosted Web Core");
+            ConsoleMFLogger.Info($"Instance     > {instanceName}");
+            ConsoleMFLogger.Info();
 
             HWC.Activate(_applicationHostConfigFilePath, null, instanceName);
         }
@@ -80,7 +80,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries
         [LibraryMethod]
         public void Stop()
         {
-            Logger.Info("Stopping Hosted Web Core");
+            ConsoleMFLogger.Info("Stopping Hosted Web Core");
             HWC.Shutdown(true);
         }
 

@@ -10,18 +10,18 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Logging
 {
-    public abstract class Log4netHSMOrCSPDisablesForwardingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class SerilogHSMOrCSPDisablesForwardingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
 
-        public Log4netHSMOrCSPDisablesForwardingTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        public SerilogHSMOrCSPDisablesForwardingTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"LoggingTester SetFramework log4net");
+            _fixture.AddCommand($"LoggingTester SetFramework Serilog");
             _fixture.AddCommand($"LoggingTester Configure");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage One DEBUG");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage Two INFO");
@@ -72,35 +72,35 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     }
 
     [NetFrameworkTest]
-    public class Log4netHSMDisablesForwardingTestsFWLatestTests : Log4netHSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
+    public class SerilogHSMDisablesForwardingTestsFWLatestTests : SerilogHSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
     {
-        public Log4netHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
+        public SerilogHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4netCSPDisablesForwardingTestsFWLatestTests : Log4netHSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestCSP>
+    public class SerilogCSPDisablesForwardingTestsFWLatestTests : SerilogHSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestCSP>
     {
-        public Log4netCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestCSP fixture, ITestOutputHelper output)
+        public SerilogCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestCSP fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4netHSMDisablesForwardingTestsNetCoreLatestTests : Log4netHSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
+    public class SerilogHSMDisablesForwardingTestsNetCoreLatestTests : SerilogHSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
     {
-        public Log4netHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
+        public SerilogHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
     [NetCoreTest]
-    public class Log4netCSPDisablesForwardingTestsNetCoreLatestTests : Log4netHSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
+    public class SerilogCSPDisablesForwardingTestsNetCoreLatestTests : SerilogHSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
-        public Log4netCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
+        public SerilogCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

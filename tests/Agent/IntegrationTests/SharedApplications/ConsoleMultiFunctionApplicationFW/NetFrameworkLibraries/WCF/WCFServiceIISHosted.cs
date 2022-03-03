@@ -109,7 +109,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
         public void StopService()
         {
             _hostedWebCore?.Stop();
-            Logger.Info("Delay on stop of Hosted Web Core (to allow time for logging)");
+            ConsoleMFLogger.Info("Delay on stop of Hosted Web Core (to allow time for logging)");
             Thread.Sleep(TimeSpan.FromSeconds(5));
         }
     }

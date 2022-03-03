@@ -83,7 +83,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
 
         private void PauseForWarmup()
         {
-            Logger.Info($"Pausing on first connection to Hosted Web Core Instance");
+            ConsoleMFLogger.Info($"Pausing on first connection to Hosted Web Core Instance");
             Thread.Sleep(TimeSpan.FromSeconds(5));
             _needToPauseForWarmup = false;
         }
@@ -200,7 +200,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
                     throw new NotImplementedException($"Client Invocation Method {clientInvocationMethod} Not supported");
             }
 
-            Logger.Info($"Result: {result ?? "<NULL>"}");
+            ConsoleMFLogger.Info($"Result: {result ?? "<NULL>"}");
         }
 
         [LibraryMethod]
@@ -231,7 +231,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
 
                 var result = _wcfClient.Sync_SyncGetData(2000);
 
-                Logger.Info($"Result: {result ?? "<NULL>"}");
+                ConsoleMFLogger.Info($"Result: {result ?? "<NULL>"}");
             }
         }
 
@@ -367,12 +367,12 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
                         throw new NotImplementedException($"Client Invocation Method {clientInvocationMethod} Not supported");
                 }
 
-                Logger.Info($"Result: {result ?? "<NULL>"}");
+                ConsoleMFLogger.Info($"Result: {result ?? "<NULL>"}");
             }
             catch (FaultException)
 
             {
-                Logger.Info("Ignoring WCF Fault Exception!");
+                ConsoleMFLogger.Info("Ignoring WCF Fault Exception!");
             }
             catch (AggregateException aggEx)
             {
@@ -381,7 +381,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
                     throw;
                 }
 
-                Logger.Info($"Ignoring AggregateException -> WCF {aggEx.InnerException.GetType()} Exception!");
+                ConsoleMFLogger.Info($"Ignoring AggregateException -> WCF {aggEx.InnerException.GetType()} Exception!");
             }
             catch (TargetInvocationException tgtEx)
             {
@@ -391,15 +391,15 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
                 }
 
 
-                Logger.Info("Ignoring TergetInvocationException -> WCF Fault Exception<ExceptionDetail>!");
+                ConsoleMFLogger.Info("Ignoring TergetInvocationException -> WCF Fault Exception<ExceptionDetail>!");
             }
             catch (ProtocolException)
             {
-                Logger.Info("Ignoring ProtocolException");
+                ConsoleMFLogger.Info("Ignoring ProtocolException");
             }
             catch (Exception ex)
             {
-                Logger.Error(ex);
+                ConsoleMFLogger.Error(ex);
             }
         }
 

@@ -1,7 +1,6 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Linq;
 using System.Text.RegularExpressions;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -23,8 +22,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"Log4netTester ConfigurePatternLayoutAppenderForDecoration");
-            _fixture.AddCommand($"Log4netTester CreateSingleLogMessage DecorateMe DEBUG");
+            _fixture.AddCommand($"LoggingTester SetFramework log4net");
+            _fixture.AddCommand($"LoggingTester ConfigurePatternLayoutAppenderForDecoration");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage DecorateMe DEBUG");
 
             _fixture.Actions
             (

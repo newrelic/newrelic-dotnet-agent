@@ -201,7 +201,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Home", "src\Agent\NewRelic\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmosDb", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\CosmosDb\CosmosDb.csproj", "{E10BF2F9-D5CA-4330-8169-ED30D861697E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logging", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Logging\Logging.csproj", "{E696F7DF-D99F-4BD4-B757-531B5F5ECB36}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Logging", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Logging\Logging.csproj", "{E696F7DF-D99F-4BD4-B757-531B5F5ECB36}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicrosoftExtensionsLogging", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\MicrosoftExtensionsLogging\MicrosoftExtensionsLogging.csproj", "{710C7C7A-CD27-4F94-B2D3-9804BD848D57}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -421,6 +423,10 @@ Global
 		{E696F7DF-D99F-4BD4-B757-531B5F5ECB36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E696F7DF-D99F-4BD4-B757-531B5F5ECB36}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E696F7DF-D99F-4BD4-B757-531B5F5ECB36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{710C7C7A-CD27-4F94-B2D3-9804BD848D57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{710C7C7A-CD27-4F94-B2D3-9804BD848D57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{710C7C7A-CD27-4F94-B2D3-9804BD848D57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{710C7C7A-CD27-4F94-B2D3-9804BD848D57}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -487,10 +493,11 @@ Global
 		{5CF47B2E-9370-4FD8-B9BD-0D95D3EA167C} = {E3DAC9C6-AE41-4B37-A253-C621E568590E}
 		{E10BF2F9-D5CA-4330-8169-ED30D861697E} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{E696F7DF-D99F-4BD4-B757-531B5F5ECB36} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
+		{710C7C7A-CD27-4F94-B2D3-9804BD848D57} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {D8B98070-6B8E-403C-A07F-A3F2E4A3A3D0}
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
+		SolutionGuid = {D8B98070-6B8E-403C-A07F-A3F2E4A3A3D0}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = FullAgent.vsmdi

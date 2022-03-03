@@ -14,11 +14,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.NServiceBus5
         public void Handle(SampleNServiceBusMessage2 message)
         {
             var valid = message.IsValid ? "Valid" : "Invalid";
-            Logger.Info($"Received {valid} message with contents={message.FooBar}");
+            ConsoleMFLogger.Info($"Received {valid} message with contents={message.FooBar}");
 
             if (!message.IsValid)
             {
-                Logger.Info("Message was invalid, throwing an exception!");
+                ConsoleMFLogger.Info("Message was invalid, throwing an exception!");
                 throw new Exception("An exception was thrown inside the NServiceBus Receive Handler!!!!");
             }
         }

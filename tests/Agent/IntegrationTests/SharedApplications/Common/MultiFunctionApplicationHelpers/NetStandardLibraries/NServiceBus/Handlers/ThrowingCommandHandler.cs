@@ -14,7 +14,7 @@ namespace NsbTests
     {
         public Task Handle(Command command, IMessageHandlerContext context)
         {
-            Logger.Info($"Throwing Command handler received message with Id {command.Id}.");
+            ConsoleMFLogger.Info($"Throwing Command handler received message with Id {command.Id}.");
             throw new System.Exception("Oh noez! Invalid message");
         }
     }

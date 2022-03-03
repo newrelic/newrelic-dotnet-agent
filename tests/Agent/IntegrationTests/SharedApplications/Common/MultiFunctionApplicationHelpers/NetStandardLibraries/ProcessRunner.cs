@@ -45,15 +45,15 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         [LibraryMethod]
         public ProcessRunner Build()
         {
-            Logger.Info("Preparing to build process");
+            ConsoleMFLogger.Info("Preparing to build process");
             if (_process != null)
             {
-                Logger.Error("ProcessRunner has already built the process.  Did you mean Start()?");
+                ConsoleMFLogger.Error("ProcessRunner has already built the process.  Did you mean Start()?");
                 return this;
             }
 
             // Build the Process, but not start it
-            Logger.Info("Initializing Process object");
+            ConsoleMFLogger.Info("Initializing Process object");
             _process = new Process
             {
                 StartInfo = _processStartInfo
@@ -74,7 +74,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
                 }
             };
 
-            Logger.Info("Process was initialized successfully and should be ready to start");
+            ConsoleMFLogger.Info("Process was initialized successfully and should be ready to start");
             return this;
         }
 
@@ -85,20 +85,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         [LibraryMethod]
         public ProcessRunner Start()
         {
-            Logger.Info("Preparing to start process");
+            ConsoleMFLogger.Info("Preparing to start process");
             if (_process == null)
             {
-                Logger.Info("Process was null so attempting to build it");
+                ConsoleMFLogger.Info("Process was null so attempting to build it");
                 Build();
             }
 
             if (_isStarted)
             {
-                Logger.Info("Process is already started.");
+                ConsoleMFLogger.Info("Process is already started.");
                 return this;
             }
 
-            Logger.Info("Starting process");
+            ConsoleMFLogger.Info("Starting process");
             _isStarted = _process.Start();
 
             _process.BeginOutputReadLine();
@@ -106,11 +106,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 
             if (_isStarted)
             {
-                Logger.Info("Process started");
+                ConsoleMFLogger.Info("Process started");
             }
             else
             {
-                Logger.Error("WARNING: Process did not report that it started.");
+                ConsoleMFLogger.Error("WARNING: Process did not report that it started.");
             }
 
             return this;
@@ -122,12 +122,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         [LibraryMethod]
         public void Stop()
         {
-            Logger.Info("Received request to stop the process");
+            ConsoleMFLogger.Info("Received request to stop the process");
             if (_process != null && _isStarted && !_process.HasExited)
             {
-                Logger.Info("Process was start and apprears to be running, attempting to kill it");
+                ConsoleMFLogger.Info("Process was start and apprears to be running, attempting to kill it");
                 _process.Kill();
-                Logger.Info("Process should be stopped now");
+                ConsoleMFLogger.Info("Process should be stopped now");
             }
         }
 
@@ -139,17 +139,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         {
             if (_process == null)
             {
-                Logger.Error(new NullReferenceException("Process is null."));
+                ConsoleMFLogger.Error(new NullReferenceException("Process is null."));
                 return;
             }
 
             if (_process.HasExited)
             {
-                Logger.Info("Process has exited.");
+                ConsoleMFLogger.Info("Process has exited.");
             }
             else
             {
-                Logger.Info("Process has not exited.");
+                ConsoleMFLogger.Info("Process has not exited.");
             }
         }
 
@@ -164,14 +164,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         {
             if (_process == null)
             {
-                Logger.Error(new NullReferenceException("Process is null."));
+                ConsoleMFLogger.Error(new NullReferenceException("Process is null."));
                 return;
             }
 
-            Logger.Info($"Waiting for {milliseconds} milliseconds.");
+            ConsoleMFLogger.Info($"Waiting for {milliseconds} milliseconds.");
             var timedOut = _process.WaitForExit(milliseconds);
             var logMessage = timedOut ? "exited normally" : "timed out";
-            Logger.Info($"Finished waiting. Process {logMessage}.");
+            ConsoleMFLogger.Info($"Finished waiting. Process {logMessage}.");
         }
 
         /// <summary>
@@ -182,17 +182,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         {
             if (_process == null)
             {
-                Logger.Error(new NullReferenceException("Process is null."));
+                ConsoleMFLogger.Error(new NullReferenceException("Process is null."));
                 return;
             }
 
             if (_process.HasExited)
             {
-                Logger.Info($"LASTEXITCODE = {_process.ExitCode}");
+                ConsoleMFLogger.Info($"LASTEXITCODE = {_process.ExitCode}");
             }
             else
             {
-                Logger.Info("Process is still running, cannot get exit code.");
+                ConsoleMFLogger.Info("Process is still running, cannot get exit code.");
             }
         }
 
@@ -201,11 +201,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         {
             if (_process == null)
             {
-                Logger.Error(new NullReferenceException("Process is null."));
+                ConsoleMFLogger.Error(new NullReferenceException("Process is null."));
                 return;
             }
 
-            Logger.Info(_stdOutput.ToString());
+            ConsoleMFLogger.Info(_stdOutput.ToString());
         }
 
         [LibraryMethod]
@@ -213,11 +213,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         {
             if (_process == null)
             {
-                Logger.Error(new NullReferenceException("Process is null."));
+                ConsoleMFLogger.Error(new NullReferenceException("Process is null."));
                 return;
             }
 
-            Logger.Error(_stdError.ToString());
+            ConsoleMFLogger.Error(_stdError.ToString());
         }
 
         [LibraryMethod]
