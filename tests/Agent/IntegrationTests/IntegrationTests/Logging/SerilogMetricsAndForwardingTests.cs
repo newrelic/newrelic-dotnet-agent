@@ -69,7 +69,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             _fixture = fixture;
             _metricsEnabled = metricsEnabled;
             _forwardingEnabled = forwardingEnabled;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(3));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"LoggingTester SetFramework Serilog");
@@ -122,13 +122,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             _fixture.AddCommand($"LoggingTester CreateTwoLogMessagesInTransactionWithDifferentTraceAttributes {DifferentTraceAttributesInsideTransactionLogMessage} INFO");
 
             // Give the unawaited async logs some time to catch up
-            _fixture.AddCommand($"RootCommands DelaySeconds 5");
-
-            // This is necessary for the data usage metric assertions to work.  Only need to do it if forwarding is enabled.
-            if (_forwardingEnabled)
-            {
-                _fixture.AddCommand($"RootCommands DelaySeconds 55");
-            }
+            _fixture.AddCommand($"RootCommands DelaySeconds 10");
 
             _fixture.Actions
             (
@@ -205,33 +199,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         {
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             Assert.Contains(actualMetrics, x => x.MetricSpec.Name == "Supportability/Logging/DotNET/serilog/enabled");
-        }
-
-        [Fact]
-        public void SupportabilityDataUsageMetricsExist()
-        {
-            var logEventDataUsageMetricName = "Supportability/DotNET/Collector/log_event_data/Output/Bytes";
-
-            var logEventDataUsageMetrics = new List<Assertions.ExpectedMetric>
-            {
-                new Assertions.ExpectedMetric { metricName = logEventDataUsageMetricName}
-            };
-
-            var actualMetrics = _fixture.AgentLog.GetMetrics();
-            if (_forwardingEnabled)
-            {
-                Assertions.MetricsExist(logEventDataUsageMetrics, actualMetrics);
-                var logEventDataMetrics = actualMetrics.Where(x => x.MetricSpec.Name == logEventDataUsageMetricName);
-                foreach (var metric in logEventDataMetrics)
-                {
-                    Assert.NotEqual(0UL, metric.Values.CallCount);
-                    Assert.NotEqual(0, metric.Values.Total);
-                }
-            }
-            else
-            {
-                Assertions.MetricsDoNotExist(logEventDataUsageMetrics, actualMetrics);
-            }
         }
 
         [Fact]
