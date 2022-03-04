@@ -1820,9 +1820,11 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
+                // This is different from the other faster event harvest settings since we want to ensure that local values are properly distributed across the harvest.
+                // Using the GetValueOrDefault to ensure that a value is provided if all other values are remvoed.
                 return ServerOverrides(_serverConfiguration.EventHarvestConfig?.LogEventHarvestLimit(),
                     EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.maxSamplesStored,
-                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_MAX_SAMPLES_STORED").GetValueOrDefault());
+                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_MAX_SAMPLES_STORED").GetValueOrDefault(10000));
             }
         }
 
