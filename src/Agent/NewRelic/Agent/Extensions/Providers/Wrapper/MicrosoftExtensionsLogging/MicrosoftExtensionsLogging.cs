@@ -32,7 +32,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
             // MSE Logging doesn't have a timestamp for us to pull so we fudge it here.
             Func<object, DateTime> getTimestampFunc = mc => DateTime.UtcNow;
 
-            Func<object, object> getLogLevelFunc = mc => ((MethodCall)mc).MethodArguments[0];
+            Func<object, string> getLogLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
 
             Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
 
