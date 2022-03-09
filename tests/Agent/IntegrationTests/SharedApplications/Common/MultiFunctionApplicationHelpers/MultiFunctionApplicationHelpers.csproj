@@ -18,6 +18,9 @@
     <DefineConstants Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">LOG4NET_JSON_FORMATTER_SUPPORTED</DefineConstants>
     <DefineConstants Condition=" '$(TargetFramework)' == 'net5.0' ">LOG4NET_JSON_FORMATTER_SUPPORTED</DefineConstants>
     <DefineConstants Condition=" '$(TargetFramework)' == 'net6.0' ">LOG4NET_JSON_FORMATTER_SUPPORTED</DefineConstants>
+    <!-- Differnt versions are supported in odd ways so this calls out the small number that are old and different -->
+    <DefineConstants Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">MS_EXTENSIONS_LOGGING_LEGACY</DefineConstants>
+    <DefineConstants Condition=" '$(TargetFramework)' == 'netcoreapp2.2' ">MS_EXTENSIONS_LOGGING_LEGACY</DefineConstants>
   </PropertyGroup>
   
   <ItemGroup>
@@ -99,6 +102,34 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" />
+  </ItemGroup>
+
+  <!-- Microsoft.Extensions.Logging supports netstandard 2.0 and up only -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.2.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.2.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
+
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.0.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.0.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.22" Condition="'$(TargetFramework)' == 'net5.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.1.22" Condition="'$(TargetFramework)' == 'net5.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.22" Condition="'$(TargetFramework)' == 'net5.0'" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net5.0'" />
+
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
   </ItemGroup>
 
   <ItemGroup>

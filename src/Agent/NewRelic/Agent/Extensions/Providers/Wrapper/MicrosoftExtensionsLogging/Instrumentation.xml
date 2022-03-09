@@ -10,5 +10,11 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName=".ctor" parameters="System.Collections.Generic.IEnumerable`1[Microsoft.Extensions.Logging.ILoggerProvider],Microsoft.Extensions.Options.IOptionsMonitor`1[Microsoft.Extensions.Logging.LoggerFilterOptions],Microsoft.Extensions.Options.IOptions`1[Microsoft.Extensions.Logging.LoggerFactoryOptions]"/>
       </match>
     </tracerFactory>
+
+    <tracerFactory name="MicrosoftLoggingWrapper">
+      <match assemblyName="Microsoft.Extensions.Logging" className="Microsoft.Extensions.Logging.Logger">
+        <exactMethodMatcher methodName="Log" parameters="Microsoft.Extensions.Logging.LogLevel,Microsoft.Extensions.Logging.EventId,!!0,System.Exception,System.Func`3[!!0,System.Exception,System.String]"/>
+      </match>
+    </tracerFactory>
   </instrumentation>
 </extension>
