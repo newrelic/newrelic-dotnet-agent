@@ -64,7 +64,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
-#if LOG4NET_JSON_FORMATTER_SUPPORTED
+#if NETCOREAPP2_2_OR_GREATER || NET471_OR_GREATER // Only supported in newer verisons of .NET
             SerializedLayout serializedLayout = new SerializedLayout();
             serializedLayout.AddMember("NR_LINKING");
             serializedLayout.ActivateOptions();

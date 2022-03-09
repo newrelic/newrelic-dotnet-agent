@@ -12,7 +12,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
     {
         public bool IsTransactionRequired => false;
 
-        private const string WrapperName = "MicrosoftLoggingWrapper";
+        private const string WrapperName = "MicrosoftLogging";
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {

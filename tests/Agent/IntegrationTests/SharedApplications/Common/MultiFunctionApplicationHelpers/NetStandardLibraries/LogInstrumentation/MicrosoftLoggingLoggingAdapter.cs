@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-#if NETCOREAPP2_1_OR_GREATER
+#if NETCOREAPP2_1_OR_GREATER // This is only applicable to the .net core agent
 
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -77,9 +77,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         private void CreateLogger(Serilog.Core.Logger serilogLogger)
         {
-#if MS_EXTENSIONS_LOGGING_LEGACY
+#if NETCOREAPP2_1 || NETCOREAPP2_2 // .NET Core 2.1 & 2.2 don;t support LoggerFactory.Create
             var loggerFactory = new LoggerFactory()
-                .AddConsole(LogLevel.Warning);
+                .AddConsole(LogLevel.Warning)
+                .AddSerilog(serilogLogger);
 
 #else
             using var loggerFactory = LoggerFactory.Create(builder =>
@@ -88,10 +89,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     .AddFilter("Microsoft", LogLevel.Warning)
                     .AddFilter("System", LogLevel.Warning)
                     .AddFilter("NonHostConsoleApp.Program", LogLevel.Debug)
-                    .AddConsole();
+                    .AddConsole()
+                    .AddSerilog(serilogLogger);
             });
 #endif
-            loggerFactory.AddSerilog(serilogLogger);
             logger = loggerFactory.CreateLogger<LoggingTester>();
         }
 

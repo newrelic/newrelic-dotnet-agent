@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
-    <tracerFactory name="MicrosoftLoggingWrapper">
+    <tracerFactory name="MicrosoftLogging">
       <match assemblyName="Microsoft.Extensions.Logging" className="Microsoft.Extensions.Logging.Logger">
         <exactMethodMatcher methodName="Log" parameters="Microsoft.Extensions.Logging.LogLevel,Microsoft.Extensions.Logging.EventId,!!0,System.Exception,System.Func`3[!!0,System.Exception,System.String]"/>
       </match>

@@ -10,19 +10,7 @@
     <LangVersion>default</LangVersion>
   </PropertyGroup>
 
-  <!-- Define constants for supported versions of log4net JSON formatter -->
-  <PropertyGroup>
-    <DefineConstants Condition=" '$(TargetFramework)' == 'net471' ">LOG4NET_JSON_FORMATTER_SUPPORTED</DefineConstants>
-    <DefineConstants Condition=" '$(TargetFramework)' == 'net48' ">LOG4NET_JSON_FORMATTER_SUPPORTED</DefineConstants>
-    <DefineConstants Condition=" '$(TargetFramework)' == 'netcoreapp2.2' ">LOG4NET_JSON_FORMATTER_SUPPORTED</DefineConstants>
-    <DefineConstants Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">LOG4NET_JSON_FORMATTER_SUPPORTED</DefineConstants>
-    <DefineConstants Condition=" '$(TargetFramework)' == 'net5.0' ">LOG4NET_JSON_FORMATTER_SUPPORTED</DefineConstants>
-    <DefineConstants Condition=" '$(TargetFramework)' == 'net6.0' ">LOG4NET_JSON_FORMATTER_SUPPORTED</DefineConstants>
-    <!-- Differnt versions are supported in odd ways so this calls out the small number that are old and different -->
-    <DefineConstants Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">MS_EXTENSIONS_LOGGING_LEGACY</DefineConstants>
-    <DefineConstants Condition=" '$(TargetFramework)' == 'netcoreapp2.2' ">MS_EXTENSIONS_LOGGING_LEGACY</DefineConstants>
-  </PropertyGroup>
-  
+ 
   <ItemGroup>
     <PackageReference Include="LibGit2Sharp" Version="0.24.1">
       <NoWarn>NU1701</NoWarn>

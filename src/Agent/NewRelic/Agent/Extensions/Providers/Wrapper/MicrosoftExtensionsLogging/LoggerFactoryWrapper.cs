@@ -5,7 +5,6 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Microsoft.Extensions.Logging;
 using NewRelic.Agent.Extensions.Logging;
-using NewRelic.Core.Logging;
 
 namespace MicrosoftExtensionsLogging
 {
@@ -29,15 +28,15 @@ namespace MicrosoftExtensionsLogging
                 for (int i = 0; i < providers.Length; i++)
                 {
                     var provider = providers[i].ToString();
-                    if (provider == LogProviders.Log4NetProviderName)
+                    if (LogProviders.Log4NetProviderNames.Contains(provider))
                     {
                         LogProviders.RegisteredLogProvider[(int)LogProvider.Log4Net] = true;
-                        Log.Info("Detected log4net provider in use with Microsoft.Extensions.Logging, disabling log4net instrumentation.");
+                        agent.Logger.Log(Level.Info, "Detected log4net provider in use with Microsoft.Extensions.Logging, disabling log4net instrumentation.");
                     }
-                    else if (provider == LogProviders.SerilogProviderName)
+                    else if (LogProviders.SerilogProviderNames.Contains(provider))
                     {
                         LogProviders.RegisteredLogProvider[(int)LogProvider.Serilog] = true;
-                        Log.Info("Detected Serilog provider in use with Microsoft.Extensions.Logging, disabling Serilog instrumentation.");
+                        agent.Logger.Log(Level.Info, "Detected Serilog provider in use with Microsoft.Extensions.Logging, disabling Serilog instrumentation.");
                     }
                 }
             }
