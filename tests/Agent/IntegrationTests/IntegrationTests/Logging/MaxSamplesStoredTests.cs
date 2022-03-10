@@ -142,6 +142,54 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     }
     #endregion
 
+    #region MicrosoftLogging
+    [NetCoreTest]
+    public class MicrosoftLoggingMaxSamplesStoredTestsNetCoreLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MicrosoftLoggingMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, "microsoftlogging")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftLoggingMaxSamplesStoredTestsNetCore50Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public MicrosoftLoggingMaxSamplesStoredTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output, "microsoftlogging")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftLoggingMaxSamplesStoredTestsNetCore31Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MicrosoftLoggingMaxSamplesStoredTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, "microsoftlogging")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftLoggingMaxSamplesStoredTestsNetCore22Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore22>
+    {
+        public MicrosoftLoggingMaxSamplesStoredTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+            : base(fixture, output, "microsoftlogging")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftLoggingMaxSamplesStoredTestsNetCore21Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore21>
+    {
+        public MicrosoftLoggingMaxSamplesStoredTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+            : base(fixture, output, "microsoftlogging")
+        {
+        }
+    }
+
+    #endregion
+
     #region Serilog
     [NetFrameworkTest]
     public class SerilogMaxSamplesStoredTestsFWLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
@@ -217,51 +265,4 @@ namespace NewRelic.Agent.IntegrationTests.Logging
 
     #endregion
 
-    #region MEL
-    [NetCoreTest]
-    public class MicrosoftLoggingMaxSamplesStoredTestsNetCoreLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public MicrosoftLoggingMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "microsoftlogging")
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MicrosoftLoggingMaxSamplesStoredTestsNetCore50Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MicrosoftLoggingMaxSamplesStoredTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, "microsoftlogging")
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MicrosoftLoggingMaxSamplesStoredTestsNetCore31Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MicrosoftLoggingMaxSamplesStoredTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, "microsoftlogging")
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MicrosoftLoggingMaxSamplesStoredTestsNetCore22Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore22>
-    {
-        public MicrosoftLoggingMaxSamplesStoredTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, "microsoftlogging")
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MicrosoftLoggingMaxSamplesStoredTestsNetCore21Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public MicrosoftLoggingMaxSamplesStoredTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, "microsoftlogging")
-        {
-        }
-    }
-
-    #endregion
 }
