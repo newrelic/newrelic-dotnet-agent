@@ -3,7 +3,7 @@
 
 using NewRelic.Agent.Api;
 
-namespace NewRelic.Providers.Wrapper.Logging
+namespace NewRelic.Agent.Extensions.Logging
 {
     public static class LoggingHelpers
     {

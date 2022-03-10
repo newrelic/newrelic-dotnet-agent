@@ -38,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     .EnableApplicationLogging()
                     .EnableLogForwarding()
                     .EnableLogMetrics()
-                    .SetLogForwardingMaxSamplesStored(1)
+                    .SetLogForwardingMaxSamplesStored(12)
                     .EnableDistributedTrace()
                     .SetLogLevel("debug");
                 }
