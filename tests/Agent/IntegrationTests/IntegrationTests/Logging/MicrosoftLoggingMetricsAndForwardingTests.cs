@@ -147,10 +147,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             var loggingMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = "Logging/lines/DEBUG", callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/INFO", callCount = 10 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/WARN", callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/INFORMATION", callCount = 10 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/WARNING", callCount = 7 },
                 new Assertions.ExpectedMetric { metricName = "Logging/lines/ERROR", callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/FATAL", callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/TRACE", callCount = 7 },
 
                 new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 38 },
             };

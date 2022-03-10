@@ -45,42 +45,42 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void Configure()
         {
-            var serilogLogger = new LoggerConfiguration()
+            Log.Logger = new LoggerConfiguration()
               .Enrich.FromLogContext()
               .WriteTo.Console()
               .CreateLogger();
 
-            CreateLogger(serilogLogger); ;
+            CreateLogger(); ;
         }
 
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
-            var serilogLogger = new LoggerConfiguration()
+            Log.Logger = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .WriteTo.Console(
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {NR_LINKING} {NewLine}{Exception}"
                 )
                 .CreateLogger();
 
-            CreateLogger(serilogLogger);
+            CreateLogger();
         }
 
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
-            var serilogLogger = new LoggerConfiguration()
+            Log.Logger = new LoggerConfiguration()
               .Enrich.FromLogContext()
               .WriteTo.Console(new JsonFormatter())
               .CreateLogger();
 
-            CreateLogger(serilogLogger);
+            CreateLogger();
         }
 
-        private void CreateLogger(Serilog.Core.Logger serilogLogger)
+        private void CreateLogger()
         {
 #if NETCOREAPP2_1 || NETCOREAPP2_2 // .NET Core 2.1 & 2.2 don;t support LoggerFactory.Create
             var loggerFactory = new LoggerFactory()
-                .AddConsole(LogLevel.Warning)
-                .AddSerilog(serilogLogger);
+                .AddSerilog()
+                .AddConsole((s, ll) => ManualFilter(s, ll));
 
 #else
             using var loggerFactory = LoggerFactory.Create(builder =>
@@ -89,11 +89,35 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     .AddFilter("Microsoft", LogLevel.Warning)
                     .AddFilter("System", LogLevel.Warning)
                     .AddFilter("NonHostConsoleApp.Program", LogLevel.Debug)
-                    .AddConsole()
-                    .AddSerilog(serilogLogger);
+                    .AddSerilog()
+                    .AddConsole();
             });
 #endif
             logger = loggerFactory.CreateLogger<LoggingTester>();
+        }
+
+        private bool ManualFilter(string category, LogLevel level)
+        {
+            if (category == "Microsoft" || category == "System")
+            {
+                if (level >= LogLevel.Warning)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            else if (category == "NonHostConsoleApp.Program")
+            {
+                if (level >= LogLevel.Debug)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            return false;
         }
 
     }

@@ -94,9 +94,9 @@
 
   <!-- Microsoft.Extensions.Logging supports netstandard 2.0 and up only -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
 
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
