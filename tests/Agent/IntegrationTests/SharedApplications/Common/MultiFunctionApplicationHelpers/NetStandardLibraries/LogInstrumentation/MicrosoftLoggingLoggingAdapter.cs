@@ -46,6 +46,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void Configure()
         {
             Log.Logger = new LoggerConfiguration()
+              .MinimumLevel.Debug()
               .Enrich.FromLogContext()
               .WriteTo.Console()
               .CreateLogger();
@@ -56,9 +57,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
             Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
                 .WriteTo.Console(
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {NR_LINKING} {NewLine}{Exception}"
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {Scope} {NewLine}{Exception}"
                 )
                 .CreateLogger();
 
@@ -68,6 +70,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
             Log.Logger = new LoggerConfiguration()
+               .MinimumLevel.Debug()
               .Enrich.FromLogContext()
               .WriteTo.Console(new JsonFormatter())
               .CreateLogger();
@@ -80,7 +83,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 #if NETCOREAPP2_1 || NETCOREAPP2_2 // .NET Core 2.1 & 2.2 don;t support LoggerFactory.Create
             var loggerFactory = new LoggerFactory()
                 .AddSerilog()
-                .AddConsole((s, ll) => ManualFilter(s, ll));
+                .AddConsole(LogLevel.Debug);
 
 #else
             using var loggerFactory = LoggerFactory.Create(builder =>
@@ -95,31 +98,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 #endif
             logger = loggerFactory.CreateLogger<LoggingTester>();
         }
-
-        private bool ManualFilter(string category, LogLevel level)
-        {
-            if (category == "Microsoft" || category == "System")
-            {
-                if (level >= LogLevel.Warning)
-                {
-                    return true;
-                }
-
-                return false;
-            }
-            else if (category == "NonHostConsoleApp.Program")
-            {
-                if (level >= LogLevel.Debug)
-                {
-                    return true;
-                }
-
-                return false;
-            }
-
-            return false;
-        }
-
     }
 }
 
