@@ -14,7 +14,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     {
         private readonly TFixture _fixture;
 
-        public MaxSamplesStoredTestsBase(TFixture fixture, ITestOutputHelper output, string loggingFramework) : base(fixture)
+        public MaxSamplesStoredTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework) : base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
@@ -73,7 +73,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netMaxSamplesStoredTestsFWLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public Log4netMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -82,7 +82,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netMaxSamplesStoredTestsFW471Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public Log4netMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -91,7 +91,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netMaxSamplesStoredTestsFW462Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public Log4netMaxSamplesStoredTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -100,7 +100,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netMaxSamplesStoredTestsNetCoreLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public Log4netMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -109,7 +109,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netMaxSamplesStoredTestsNetCore50Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public Log4netMaxSamplesStoredTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -118,7 +118,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netMaxSamplesStoredTestsNetCore31Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public Log4netMaxSamplesStoredTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -127,7 +127,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netMaxSamplesStoredTestsNetCore22Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore22>
     {
         public Log4netMaxSamplesStoredTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -136,7 +136,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netMaxSamplesStoredTestsNetCore21Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore21>
     {
         public Log4netMaxSamplesStoredTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -147,7 +147,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class MicrosoftLoggingMaxSamplesStoredTestsNetCoreLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MicrosoftLoggingMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "microsoftlogging")
+            : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
     }
@@ -156,7 +156,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class MicrosoftLoggingMaxSamplesStoredTestsNetCore50Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public MicrosoftLoggingMaxSamplesStoredTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, "microsoftlogging")
+            : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
     }
@@ -165,7 +165,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class MicrosoftLoggingMaxSamplesStoredTestsNetCore31Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public MicrosoftLoggingMaxSamplesStoredTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, "microsoftlogging")
+            : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
     }
@@ -174,7 +174,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class MicrosoftLoggingMaxSamplesStoredTestsNetCore22Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore22>
     {
         public MicrosoftLoggingMaxSamplesStoredTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, "microsoftlogging")
+            : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
     }
@@ -183,7 +183,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class MicrosoftLoggingMaxSamplesStoredTestsNetCore21Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore21>
     {
         public MicrosoftLoggingMaxSamplesStoredTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, "microsoftlogging")
+            : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
     }
@@ -195,7 +195,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogMaxSamplesStoredTestsFWLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public SerilogMaxSamplesStoredTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
@@ -204,7 +204,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogMaxSamplesStoredTestsFW471Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public SerilogMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
@@ -213,7 +213,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogMaxSamplesStoredTestsFW462Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public SerilogMaxSamplesStoredTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
@@ -222,7 +222,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogMaxSamplesStoredTestsNetCoreLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public SerilogMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
@@ -231,7 +231,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogMaxSamplesStoredTestsNetCore50Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public SerilogMaxSamplesStoredTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
@@ -240,7 +240,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogMaxSamplesStoredTestsNetCore31Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public SerilogMaxSamplesStoredTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
@@ -249,7 +249,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogMaxSamplesStoredTestsNetCore22Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore22>
     {
         public SerilogMaxSamplesStoredTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
@@ -258,7 +258,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogMaxSamplesStoredTestsNetCore21Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore21>
     {
         public SerilogMaxSamplesStoredTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }

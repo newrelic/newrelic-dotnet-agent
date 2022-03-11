@@ -15,7 +15,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     {
         private readonly TFixture _fixture;
 
-        public HSMOrCSPDisablesForwardingTestsBase(TFixture fixture, ITestOutputHelper output, string loggingFramework) : base(fixture)
+        public HSMOrCSPDisablesForwardingTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework) : base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
@@ -76,7 +76,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netHSMDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
     {
         public Log4netHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netCSPDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestCSP>
     {
         public Log4netCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestCSP fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
     {
         public Log4netHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -102,7 +102,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class Log4netCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
         public Log4netCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
-            : base(fixture, output, "log4net")
+            : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
@@ -113,7 +113,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class MicrosoftLoggingHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
     {
         public MicrosoftLoggingHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
-            : base(fixture, output, "MicrosoftLogging")
+            : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
     }
@@ -121,7 +121,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class MicrosoftLoggingCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
         public MicrosoftLoggingCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
-            : base(fixture, output, "MicrosoftLogging")
+            : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
     }
@@ -132,7 +132,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogHSMDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
     {
         public SerilogHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
@@ -141,7 +141,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogCSPDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestCSP>
     {
         public SerilogCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestCSP fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
@@ -150,7 +150,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
     {
         public SerilogHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
@@ -158,7 +158,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     public class SerilogCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
     {
         public SerilogCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
-            : base(fixture, output, "serilog")
+            : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
