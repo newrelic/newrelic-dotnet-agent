@@ -141,7 +141,7 @@ function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath)
 	$xdoc.load($file)
 
 	#Set Agent log location
-	$xdoc.configuration.log.SetAttribute("directory", "c:\Home\LogFiles\NewRelic")
+	$xdoc.configuration.log.SetAttribute("directory", "$env:HOME\LogFiles\NewRelic")
 	$xdoc.Save($file)
 
 	WriteToInstallLog "Copy items from $(Resolve-Path $newRelicNugetContentPath) to $newRelicInstallPath"
@@ -311,7 +311,7 @@ try
 
 	$packageNames = @($nugetPackageForFrameworkApp, $nugetPackageForCoreApp)
 	$stagingFolders = @("NewRelicPackage", "NewRelicCorePackage")
-	$newRelicInstallPaths = @("$env:WEBROOT_PATH\newrelic", "$env:WEBROOT_PATH\newrelic_core")
+	$newRelicInstallPaths = @("$env:HOME\NewRelicAgent\newrelic", "$env:HOME\NewRelicAgent\newrelic_core")
 	$newRelicNugetContentPaths = $(".\content\newrelic", ".\contentFiles\any\netstandard2.0\newrelic")
 
 	#Check to see if the old Agent is currently being used
