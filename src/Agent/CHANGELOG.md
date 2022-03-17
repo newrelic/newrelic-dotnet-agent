@@ -13,11 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [9.6.0] - 2022-02-24
 * Adds new supportability metrics to track agent endpoint data usage. New metrics will be reported under the `Supportability/DotNET/Collector` namespace. ([#899](https://github.com/newrelic/newrelic-dotnet-agent/pull/899))
-* Uses IMDSv2 instead of IMDSv1 to gather utilization details for AWS hosted instances. [965](https://github.com/newrelic/newrelic-dotnet-agent/pull/965)
+* Uses IMDSv2 instead of IMDSv1 to gather utilization details for AWS hosted instances. ([#965](https://github.com/newrelic/newrelic-dotnet-agent/pull/965))
 
 ## [9.5.1] - 2022-02-03
 ### Fixes
-* Fixes [application crashes on Alpine Linux](https://github.com/newrelic/newrelic-dotnet-agent/issues/918) introduced in 9.5.0. ([#929]https://github.com/newrelic/newrelic-dotnet-agent/pull/929)
+* Fixes [application crashes on Alpine Linux](https://github.com/newrelic/newrelic-dotnet-agent/issues/918) introduced in 9.5.0. ([#929](https://github.com/newrelic/newrelic-dotnet-agent/pull/929))
 
 ## [9.5.0] - 2022-02-01
 ### New Features
