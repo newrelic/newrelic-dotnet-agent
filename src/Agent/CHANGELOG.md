@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 
 ## [9.6.1] - 2022-03-15
+### Fixes
 * Fixes [application pool allow/deny listing bug](https://github.com/newrelic/newrelic-dotnet-agent/issues/1014) introduced in 9.5.0 ([#1015](https://github.com/newrelic/newrelic-dotnet-agent/pull/1015))
 
 ## [9.6.0] - 2022-02-24
+### Fixes
 * Adds new supportability metrics to track agent endpoint data usage. New metrics will be reported under the `Supportability/DotNET/Collector` namespace. ([#899](https://github.com/newrelic/newrelic-dotnet-agent/pull/899))
 * Uses IMDSv2 instead of IMDSv1 to gather utilization details for AWS hosted instances. ([#965](https://github.com/newrelic/newrelic-dotnet-agent/pull/965))
 
