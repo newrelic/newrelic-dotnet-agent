@@ -36,6 +36,43 @@
     <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net6.0'" />
 
+    <!-- Serilog .NET framework references -->
+    <PackageReference Include="Serilog" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="Serilog.Sinks.File" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="2.1.0" Condition="'$(TargetFramework)' == 'net462'" />
+
+    <PackageReference Include="Serilog" Version="2.5.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" Condition="'$(TargetFramework)' == 'net471'" />
+
+    <PackageReference Include="Serilog" Version="2.10.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" Condition="'$(TargetFramework)' == 'net48'" />
+
+    <!-- Serilog .NET core references -->
+    <!-- Can't go any earlier than 2.5.0 in .NET core due to minimum version required by
+         Serilog.Extensions.Hosting dependency of Microsoft.Extensions.Logging -->
+    <PackageReference Include="Serilog" Version="2.5.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+
+    <PackageReference Include="Serilog" Version="2.5.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
+
+    <PackageReference Include="Serilog" Version="2.8.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+
+    <PackageReference Include="Serilog" Version="2.8.0" Condition="'$(TargetFramework)' == 'net5.0'" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" Condition="'$(TargetFramework)' == 'net5.0'" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" Condition="'$(TargetFramework)' == 'net5.0'" />
+
+    <PackageReference Include="Serilog" Version="2.10.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" Condition="'$(TargetFramework)' == 'net6.0'" />
+
+
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.7">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
@@ -57,9 +94,6 @@
     <PackageReference Include="Owin" Version="1.0.0">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
-    <PackageReference Include="Serilog" Version="2.10.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
   </ItemGroup>
 
@@ -97,12 +131,12 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="2.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
 
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.2.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.2.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="2.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.2'" />
 
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.0.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
