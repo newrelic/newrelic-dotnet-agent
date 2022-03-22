@@ -84,6 +84,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 : _configuration.UtilizationHostName;
 
             var modelsCollection = new LogEventWireModelCollection(
+                _configuration.ApplicationNames.ElementAt(0),
                 _configuration.EntityGuid,
                 hostname,
                 aggregatedEvents); ;

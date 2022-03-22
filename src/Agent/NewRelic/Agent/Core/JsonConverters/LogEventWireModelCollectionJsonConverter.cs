@@ -12,6 +12,7 @@ namespace NewRelic.Agent.Core.JsonConverters
     {
         private const string Common = "common";
         private const string Attributes = "attributes";
+        private const string EntityName = "entity.name";
         private const string EntityGuid = "entity.guid";
         private const string Hostname = "hostname";
         private const string Logs = "logs";
@@ -39,6 +40,8 @@ namespace NewRelic.Agent.Core.JsonConverters
             jsonWriter.WriteStartObject();
             jsonWriter.WritePropertyName(Attributes);
             jsonWriter.WriteStartObject();
+            jsonWriter.WritePropertyName(EntityName);
+            jsonWriter.WriteValue(value.EntityName);
             jsonWriter.WritePropertyName(EntityGuid);
             jsonWriter.WriteValue(value.EntityGuid);
             jsonWriter.WritePropertyName(Hostname);

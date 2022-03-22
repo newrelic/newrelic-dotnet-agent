@@ -314,7 +314,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding" }, "maxSamplesStored", samples.ToString());
             return this;
         }
+        public NewRelicConfigModifier SetApplicationName(string key)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "application" },
+                "name", key);
+            return this;
+        }
 
-        
+
+
+
     }
 }

@@ -39,6 +39,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
     public class LogEventDataCommonAttributes
     {
+        [JsonProperty("entity.name")]
+        public string EntityName { get; set; }
+
         [JsonProperty("entity.guid")]
         public string EntityGuid { get; set; }
 

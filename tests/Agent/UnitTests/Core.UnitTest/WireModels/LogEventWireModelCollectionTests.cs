@@ -3,10 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using NewRelic.Agent.Core.Metrics;
-using NewRelic.Collections;
 using NUnit.Framework;
-using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -16,6 +13,7 @@ namespace NewRelic.Agent.Core.WireModels
         [Test]
         public void ConstructorTest()
         {
+            var entityName = "MyApplicationName";
             var entityGuid = Guid.NewGuid().ToString();
             var hostname = "TestHostname";
 
@@ -24,10 +22,11 @@ namespace NewRelic.Agent.Core.WireModels
                 new LogEventWireModel(1, "TestMessage", "TestLevel", "TestSpanId", "TestTraceId")
             };
 
-            var objectUnderTest = new LogEventWireModelCollection(entityGuid, hostname, loggingEvents);
+            var objectUnderTest = new LogEventWireModelCollection(entityName, entityGuid, hostname, loggingEvents);
 
             Assert.NotNull(objectUnderTest);
             Assert.AreEqual(entityGuid, objectUnderTest.EntityGuid);
+            Assert.AreEqual(entityName, objectUnderTest.EntityName);
             Assert.AreEqual(hostname, objectUnderTest.Hostname);
             Assert.AreEqual(1, objectUnderTest.LoggingEvents.Count);
 
