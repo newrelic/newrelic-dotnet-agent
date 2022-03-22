@@ -20,6 +20,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     {
         private readonly TFixture _fixture;
         private readonly bool _decorationEnabled;
+        private const string _applicationName = "LocalDecorationTestAppName";
 
         public LocalDecorationTestsBase(TFixture fixture, ITestOutputHelper output, bool decorationEnabled, LayoutType layoutType, LoggingFramework loggingFramework) : base(fixture)
         {
@@ -30,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
 
             _fixture.AddCommand($"LoggingTester SetFramework {loggingFramework}");
             _fixture.AddCommand($"LoggingTester Configure{layoutType}LayoutAppenderForDecoration");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage DecorateMe DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction DecorateMe DEBUG");
 
             _fixture.Actions
             (
@@ -39,6 +40,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
                     configModifier
+                    .SetApplicationName(_applicationName)
                     .EnableApplicationLogging()
                     .EnableLogDecoration(_decorationEnabled)
                     .EnableDistributedTrace()
@@ -53,11 +55,24 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         public void LogIsDecorated()
         {
             // Sample decorated data we are looking for:
-            // "NR-LINKING|MjczMDcwfEFQTXxBUFBMSUNBVElPTnwxODQyMg|blah.hsd1.ca.comcast.net|45f120972d61834b96fb890d2a8f97e7|840d9a82e8bc18a8|"
-            var regex = new Regex(@"NR-LINKING\|[a-zA-Z0-9]*\|[a-zA-Z0-9._-]*\|[a-zA-Z0-9]*\|[a-zA-Z0-9]*\|");
+            // "NR-LINKING|MjczMDcwfEFQTXxBUFBMSUNBVElPTnwxODQyMg|blah.hsd1.ca.comcast.net|45f120972d61834b96fb890d2a8f97e7|840d9a82e8bc18a8|myApplicationName|"
+            var regex = new Regex(@"NR-LINKING\|([a-zA-Z0-9]*)\|([a-zA-Z0-9._-]*)\|([a-zA-Z0-9]*)\|([a-zA-Z0-9]*)\|(.+?)\|");
             if (_decorationEnabled)
             {
-                Assert.Matches(regex, _fixture.RemoteApplication.CapturedOutput.StandardOutput);
+                var match = regex.Match(_fixture.RemoteApplication.CapturedOutput.StandardOutput);
+                Assert.True(match.Success);
+                Assert.NotEmpty(match.Groups);
+                var entityGuid = match.Groups[1].Value;
+                var hostname = match.Groups[2].Value;
+                var traceId = match.Groups[3].Value;
+                var spanId = match.Groups[4].Value;
+                var entityName = match.Groups[5].Value;
+
+                Assert.NotNull(entityGuid);
+                Assert.NotNull(hostname);
+                Assert.NotNull(traceId);
+                Assert.NotNull(spanId);
+                Assert.Equal(entityName, _applicationName);
             }
             else
             {

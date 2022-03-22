@@ -10,14 +10,16 @@ namespace NewRelic.Agent.Core.WireModels
     [JsonConverter(typeof(LogEventWireModelCollectionJsonConverter))]
     public class LogEventWireModelCollection
     {
+        public string EntityName { get; }
         public string EntityGuid { get; }
 
         public string Hostname { get; }
 
         public IList<LogEventWireModel> LoggingEvents { get; }
 
-        public LogEventWireModelCollection(string entityGuid, string hostname, IList<LogEventWireModel> loggingEvents)
+        public LogEventWireModelCollection(string entityName, string entityGuid, string hostname, IList<LogEventWireModel> loggingEvents)
         {
+            EntityName = entityName;
             EntityGuid = entityGuid;
             Hostname = hostname;
             LoggingEvents = loggingEvents;

@@ -15,6 +15,7 @@ namespace NewRelic.Agent.Core.Utilities
         public void LogEventWireModelCollectionIsJsonSerializable()
         {
             var sourceObject = new LogEventWireModelCollection(
+                "myApplicationName",
                 "guid",
                 "hostname",
                 new List<LogEventWireModel>()
@@ -28,7 +29,7 @@ namespace NewRelic.Agent.Core.Utilities
             var serialized = JsonConvert.SerializeObject(sourceObject, Formatting.None);
 
             Assert.AreEqual(
-                "{\"common\":{\"attributes\":{\"entity.guid\":\"guid\",\"hostname\":\"hostname\"}}," +
+                "{\"common\":{\"attributes\":{\"entity.name\":\"myApplicationName\",\"entity.guid\":\"guid\",\"hostname\":\"hostname\"}}," +
                 "\"logs\":[{\"timestamp\":1,\"message\":\"message\",\"level\":\"level\"," +
                 "\"attributes\":{\"span.id\":\"spanId\",\"trace.id\":\"traceId\"}}]}",
                 serialized);

@@ -7,6 +7,7 @@ namespace NewRelic.Agent.Extensions.Logging
 {
     public static class LoggingHelpers
     {
+        private const string EntityName = "entity.name";
         private const string EntityGuid = "entity.guid";
         private const string Hostname = "hostname";
         private const string TraceId = "trace.id";
@@ -14,8 +15,13 @@ namespace NewRelic.Agent.Extensions.Logging
 
         public static string GetFormattedLinkingMetadata(IAgent agent)
         {
-            // we don't use entity.name or entity.type
             var metadata = agent.GetLinkingMetadata();
+
+            string entityName = string.Empty;
+            if (metadata.ContainsKey(EntityName))
+            {
+                entityName = metadata[EntityName];
+            }
 
             string entityGuid = string.Empty;
             if (metadata.ContainsKey(EntityGuid))
@@ -43,7 +49,7 @@ namespace NewRelic.Agent.Extensions.Logging
 
             // This is a positional blob so we want the delimiters left in when no data is  present.
             // NR-LINKING|{entity.guid}|{hostname}|{trace.id}|{span.id}|
-            return "NR-LINKING|" + entityGuid + "|" + hostname + "|" + traceId + "|" + spanId + "|";
+            return "NR-LINKING|" + entityGuid + "|" + hostname + "|" + traceId + "|" + spanId + "|" + entityName + "|";
         }
     }
 }
