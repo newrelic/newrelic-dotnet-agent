@@ -313,7 +313,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // Ideally we would have a configuration singleton, but that isn't a thing. 
         static bool IsCachingDisabled()
         {
-            return SystemCalls::TryGetEnvironmentVariableStatic(_X("NEWRELIC_DISABLE_APPDOMAIN_CACHING")) != nullptr;
+            return SystemCalls::TryGetEnvironmentVariableStatic(_X("NEW_RELIC_DISABLE_APPDOMAIN_CACHING")) != nullptr;
         }
 
         // Load the MethodInfo instance for the given class and method onto the stack.
