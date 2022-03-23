@@ -321,6 +321,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // The function id is used as a tie-breaker for overloaded methods when computing the key name for the app domain cache.
         void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda, bool useCache)
         {
+            // All appdomain caching disabled for experimental build
+            useCache = false;
             if (useCache && !IsCachingDisabled())
             {
                 auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
