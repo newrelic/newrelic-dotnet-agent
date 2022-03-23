@@ -8,6 +8,6 @@ namespace NewRelic.Agent.Core.Aggregators
     /// </summary>
     public interface IAllMetricStatsCollection
     {
-        void AddMetricsToEngine(MetricStatsCollection engine);
+        void AddMetricsToCollection(MetricStatsCollection collection);
     }
 }

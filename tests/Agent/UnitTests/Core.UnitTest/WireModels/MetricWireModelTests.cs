@@ -40,10 +40,10 @@ namespace NewRelic.Agent.Core.WireModels
             Assert.AreEqual(3, data.Value1);
             Assert.AreEqual(2, data.Value2);
 
-            var engine = new MetricStatsCollection();
-            metric1.AddMetricsToEngine(engine);
+            var collection = new MetricStatsCollection();
+            metric1.AddMetricsToCollection(collection);
 
-            var actual = engine.ConvertToJsonForSending(_metricNameService);
+            var actual = collection.ConvertToJsonForSending(_metricNameService);
             var unscopedCount = 0;
             var scopedCount = 0;
             var theScope = string.Empty;
@@ -86,10 +86,10 @@ namespace NewRelic.Agent.Core.WireModels
             Assert.AreEqual(3, data.Value1);
             Assert.AreEqual(2, data.Value2);
 
-            var engine = new MetricStatsCollection();
-            metric1.AddMetricsToEngine(engine);
+            var collection = new MetricStatsCollection();
+            metric1.AddMetricsToCollection(collection);
 
-            var stats = engine.ConvertToJsonForSending(_metricNameService);
+            var stats = collection.ConvertToJsonForSending(_metricNameService);
 
             foreach (var current in stats)
             {
@@ -115,10 +115,10 @@ namespace NewRelic.Agent.Core.WireModels
             Assert.AreEqual(3, data.Value1);
             Assert.AreEqual(2, data.Value2);
 
-            var engine = new MetricStatsCollection();
-            metric1.AddMetricsToEngine(engine);
+            var collection = new MetricStatsCollection();
+            metric1.AddMetricsToCollection(collection);
 
-            var stats = engine.ConvertToJsonForSending(_metricNameService);
+            var stats = collection.ConvertToJsonForSending(_metricNameService);
 
             foreach (var current in stats)
             {
