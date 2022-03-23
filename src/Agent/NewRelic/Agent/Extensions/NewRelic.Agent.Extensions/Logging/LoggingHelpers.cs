@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Api;
+using System.Web;
 
 namespace NewRelic.Agent.Extensions.Logging
 {
@@ -20,7 +21,7 @@ namespace NewRelic.Agent.Extensions.Logging
             string entityName = string.Empty;
             if (metadata.ContainsKey(EntityName))
             {
-                entityName = metadata[EntityName];
+                entityName = HttpUtility.UrlEncode(metadata[EntityName]);
             }
 
             string entityGuid = string.Empty;
