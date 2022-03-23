@@ -74,12 +74,14 @@ namespace NewRelic.Agent.Core.WireModels
             Assert.AreEqual(2, scopedData.Value2);
         }
 
-        [Test]
-        public void AddMetricsToEngine_OneUnscopedMetricNull()
+        [TestCase("")]
+        [TestCase(null)]
+        public void AddMetricsToEngine_OneUnscopedMetricMissingScope(string empty)
         {
-            var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", null,
+            var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", empty,
                 MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
             Assert.That(metric1, Is.Not.Null);
+
             var data = metric1.Data;
             Assert.NotNull(data);
             Assert.AreEqual(1, data.Value0);
@@ -95,35 +97,6 @@ namespace NewRelic.Agent.Core.WireModels
             {
                 Assert.AreEqual("DotNet/name", current.MetricName.Name);
                 Assert.AreEqual(null, current.MetricName.Scope);
-                var myData = current.Data;
-                Assert.AreEqual(1, myData.Value0);
-                Assert.AreEqual(3, myData.Value1);
-                Assert.AreEqual(2, myData.Value2);
-            }
-        }
-
-        [Test]
-        public void AddMetricsToEngine_OneUnscopedMetricEmptyString()
-        {
-            var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "",
-                MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
-            Assert.That(metric1, Is.Not.Null);
-
-            var data = metric1.Data;
-            Assert.NotNull(data);
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(3, data.Value1);
-            Assert.AreEqual(2, data.Value2);
-
-            var collection = new MetricStatsCollection();
-            metric1.AddMetricsToCollection(collection);
-
-            var stats = collection.ConvertToJsonForSending(_metricNameService);
-
-            foreach (var current in stats)
-            {
-                Assert.AreEqual("DotNet/name", current.MetricName.Name);
-                Assert.AreEqual("", current.MetricName.Scope);
                 var myData = current.Data;
                 Assert.AreEqual(1, myData.Value0);
                 Assert.AreEqual(3, myData.Value1);
