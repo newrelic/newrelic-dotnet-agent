@@ -323,7 +323,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         {
             if (useCache && !IsCachingDisabled())
             {
-                LogError(L"Josh, we are doing the caching badness");
                 auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
                 _instructions->AppendString(keyName);
                 _instructions->AppendString(assemblyPath);
@@ -342,7 +341,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             }
             else
             {
-                LogError(L"Josh, we are NOT doing the caching badness");
                 LoadType(assemblyPath, className);
                 LoadMethodInfoFromType(methodName, argumentTypesLambda);
             }
