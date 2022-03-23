@@ -307,7 +307,33 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // Ideally we would have a configuration singleton, but that isn't a thing. 
         static bool IsCachingDisabled()
         {
-            return nullptr != std::getenv("NEWRELIC_DISABLE_APPDOMAIN_CACHING");
+            return TryGetEnvironmentVariable(_X("NEWRELIC_DISABLE_APPDOMAIN_CACHING")) != nullptr;
+        }
+
+        static std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName)
+        {
+#ifdef PAL_STDCPP_COMPAT
+            auto envVal = std::getenv(ToCharString(variableName).c_str());
+
+            if (envVal == nullptr)
+            {
+                return nullptr;
+            }
+            return std::make_unique<xstring_t>(ToWideString(envVal));
+#else
+            // get the size of the buffer required to hold the result
+            auto size = GetEnvironmentVariable(variableName.c_str(), nullptr, 0);
+            if (size == 0) return nullptr;
+
+            // allocate a string big enough to hold the result
+            std::unique_ptr<wchar_t[]> value(new wchar_t[size]);
+
+            // get the environment variable
+            auto result = GetEnvironmentVariable(variableName.c_str(), value.get(), size);
+            if (result == 0) return nullptr;
+
+            return std::unique_ptr<xstring_t>(new xstring_t(value.get()));
+#endif
         }
 
         // Load the MethodInfo instance for the given class and method onto the stack.
@@ -317,6 +343,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         {
             if (useCache && !IsCachingDisabled())
             {
+                LogError(L"Josh, we are doing the caching badness");
                 auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
                 _instructions->AppendString(keyName);
                 _instructions->AppendString(assemblyPath);
@@ -335,6 +362,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             }
             else
             {
+                LogError(L"Josh, we are NOT doing the caching badness");
                 LoadType(assemblyPath, className);
                 LoadMethodInfoFromType(methodName, argumentTypesLambda);
             }
