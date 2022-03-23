@@ -22,6 +22,12 @@
 #include "../SignatureParser/SignatureParser.h"
 #include "IFunctionHeaderInfo.h"
 
+#ifdef PAL_STDCPP_COMPAT
+#include "../Profiler/UnixSystemCalls.h"
+#else
+#include "../Profiler/SystemCalls.h"
+#endif
+
 namespace NewRelic { namespace Profiler { namespace MethodRewriter
 {
 // Test unsafe rethrows exceptions throw while we create and finish tracers so you
@@ -307,33 +313,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // Ideally we would have a configuration singleton, but that isn't a thing. 
         static bool IsCachingDisabled()
         {
-            return TryGetEnvironmentVariable(_X("NEWRELIC_DISABLE_APPDOMAIN_CACHING")) != nullptr;
-        }
-
-        static std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName)
-        {
-#ifdef PAL_STDCPP_COMPAT
-            auto envVal = std::getenv(ToCharString(variableName).c_str());
-
-            if (envVal == nullptr)
-            {
-                return nullptr;
-            }
-            return std::make_unique<xstring_t>(ToWideString(envVal));
-#else
-            // get the size of the buffer required to hold the result
-            auto size = GetEnvironmentVariable(variableName.c_str(), nullptr, 0);
-            if (size == 0) return nullptr;
-
-            // allocate a string big enough to hold the result
-            std::unique_ptr<wchar_t[]> value(new wchar_t[size]);
-
-            // get the environment variable
-            auto result = GetEnvironmentVariable(variableName.c_str(), value.get(), size);
-            if (result == 0) return nullptr;
-
-            return std::unique_ptr<xstring_t>(new xstring_t(value.get()));
-#endif
+            return SystemCalls::TryGetEnvironmentVariableStatic(_X("NEWRELIC_DISABLE_APPDOMAIN_CACHING")) != nullptr;
         }
 
         // Load the MethodInfo instance for the given class and method onto the stack.
