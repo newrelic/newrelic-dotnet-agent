@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Text.RegularExpressions;
+using System.Web;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -20,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     {
         private readonly TFixture _fixture;
         private readonly bool _decorationEnabled;
-        private const string _applicationName = "LocalDecorationTestAppName";
+        private const string _applicationName = "Local Decoration Test App Name";
 
         public LocalDecorationTestsBase(TFixture fixture, ITestOutputHelper output, bool decorationEnabled, LayoutType layoutType, LoggingFramework loggingFramework) : base(fixture)
         {
@@ -66,7 +67,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 var hostname = match.Groups[2].Value;
                 var traceId = match.Groups[3].Value;
                 var spanId = match.Groups[4].Value;
-                var entityName = match.Groups[5].Value;
+                var entityName = HttpUtility.UrlDecode(match.Groups[5].Value);
 
                 Assert.NotNull(entityGuid);
                 Assert.NotNull(hostname);
