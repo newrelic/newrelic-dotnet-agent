@@ -50,12 +50,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         ByteVector _oldCodeBytes;
         ByteVector _newLocalVariablesSignature;
         SignatureParser::MethodSignaturePtr _methodSignature;
+        std::shared_ptr<SystemCalls> _systemCalls;
 
     public:
         FunctionManipulator(IFunctionPtr function) :
             _function(function),
             _newHeader(sizeof(COR_ILMETHOD_FAT)),
-            _methodSignature(SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end()))
+            _methodSignature(SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end())),
+            _systemCalls(std::make_shared<SystemCalls>())
         {
         }
 
@@ -310,18 +312,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_CALLVIRT, _X("instance object [mscorlib]System.Reflection.MethodBase::Invoke(object, object[])"));
         }
 
-        // Ideally we would have a configuration singleton, but that isn't a thing. 
-        static bool IsCachingDisabled()
-        {
-            return SystemCalls::TryGetEnvironmentVariableStatic(_X("NEW_RELIC_DISABLE_APPDOMAIN_CACHING")) != nullptr;
-        }
-
         // Load the MethodInfo instance for the given class and method onto the stack.
         // The MethodInfo will be cached in the AppDomain to improve performance if useCache is true.
         // The function id is used as a tie-breaker for overloaded methods when computing the key name for the app domain cache.
         void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda, bool useCache)
         {
-            if (useCache && !IsCachingDisabled())
+            if (useCache && !_systemCalls->GetIsAppDomainCachingDisabled())
             {
                 auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
                 _instructions->AppendString(keyName);

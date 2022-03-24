@@ -40,7 +40,7 @@ namespace NewRelic { namespace Profiler
             return xstring_t(str.begin(), str.end());
         }
 
-        static std::unique_ptr<xstring_t> TryGetEnvironmentVariableStatic(const xstring_t& variableName)
+        virtual std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName) override
         {
             auto envVal = std::getenv(ToCharString(variableName).c_str());
 
@@ -49,11 +49,6 @@ namespace NewRelic { namespace Profiler
                 return nullptr;
             }
             return std::make_unique<xstring_t>(ToWideString(envVal));
-        }
-
-        virtual std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName) override
-        {
-            return TryGetEnvironmentVariableStatic(variableName);
         }
 
         static std::unique_ptr<xstring_t> TryGetRegistryStringValue(HKEY rootKey, const xstring_t& path, const xstring_t& valueName)
