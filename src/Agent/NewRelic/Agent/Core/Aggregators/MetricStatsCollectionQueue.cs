@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         /// <summary>
         /// This MetricStatsCollectionQueue uses a ConcurrentQueue (allows multiple readers, but only one writer, at a time) to mediate
-        /// between metrics that need to merge into one of the coolections (readers), and the harvest job (writer), which replaces the 
+        /// between metrics that need to merge into one of the collections (readers), and the harvest job (writer), which replaces the 
         /// queue and merges the collections in the old queue to create the harvest payload.
         /// 
         /// </summary>
@@ -75,9 +75,9 @@ namespace NewRelic.Agent.Core.Aggregators
         }
 
         /// <summary>
-        /// Null out the ConcuurentQueue contained in this MetricStatsCollectionQueue so that any subsequent
+        /// Null out the ConcurrentQueue contained in this MetricStatsCollectionQueue so that any subsequent
         /// attempts to read from the queue before this MetricStatsCollectionQueue is replaced will fail.  Combine
-        /// all the MetricStatsCollections in the old ConcuurentQueue according to the merge function, and return the result. 
+        /// all the MetricStatsCollections in the old ConcurrentQueue according to the merge function, and return the result. 
         /// </summary>
         /// <returns></returns>
         public MetricStatsCollection GetStatsCollectionForHarvest()
