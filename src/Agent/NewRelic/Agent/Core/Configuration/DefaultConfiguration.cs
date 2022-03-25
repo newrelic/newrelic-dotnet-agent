@@ -1843,7 +1843,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return EnvironmentOverrides(false, "NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED");
+                return EnvironmentOverrides(false, "NEW_RELIC_DISABLE_APPDOMAIN_CACHING");
             }
         }
 
@@ -1979,7 +1979,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             if (env != null)
             {
-                env = env.Trim().ToLower();
+                env = env.ToLower();
             }
 
             if (bool.TryParse(env, out var parsedValue))
