@@ -127,10 +127,10 @@ namespace NewRelic.Agent.Core.Aggregators
                         TimeSpan.FromSeconds(1), txStats);
             }
 
-            public void AddMetricsToEngine(MetricStatsCollection engine)
+            public void AddMetricsToCollection(MetricStatsCollection collection)
             {
                 Thread.Sleep(5);
-                txStats.AddMetricsToEngine(engine);
+                txStats.AddMetricsToCollection(collection);
             }
         }
 
@@ -177,20 +177,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 threads[i].Join();
             }
 
-            var queueCountBeforeHarvest = _metricAggregator.StatsEngineQueue.StatsEngineCount;
-
-            //Check if the queue got queued up when multiple threads use the queue.
-
-            if (queueCountBeforeHarvest == 1)
-                Assert.Inconclusive();
-            Assert.IsTrue(queueCountBeforeHarvest > 1);
-
             _harvestAction();
-
-            var queueCountAfterHarvest = _metricAggregator.StatsEngineQueue.StatsEngineCount;
-
-            //Check if the queue is empty after harvest.
-            Assert.IsTrue(queueCountAfterHarvest == 0);
 
             //Check the number of metrics being sent up.
             Assert.IsTrue(sentMetrics.Count() == 3, "Count was " + sentMetrics.Count());

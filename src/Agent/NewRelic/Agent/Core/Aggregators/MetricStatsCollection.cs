@@ -12,20 +12,16 @@ namespace NewRelic.Agent.Core.Aggregators
     {
         //stores unscoped stats reported during a transaction 
         private MetricStatsDictionary<string, MetricDataWireModel> _unscopedStats = new MetricStatsDictionary<string, MetricDataWireModel>();
+
         //store scoped stats reported during a transaction
         // The String key is the scope.
         private Dictionary<string, MetricStatsDictionary<string, MetricDataWireModel>> _scopedStats = new Dictionary<string, MetricStatsDictionary<string, MetricDataWireModel>>();
 
-        //stores unscoped stats reported outside a transaction
-        private MetricStatsDictionary<string, MetricWireModel> _preCreatedUnscopedStats = new MetricStatsDictionary<string, MetricWireModel>();
-
         private Func<MetricDataWireModel, MetricDataWireModel, MetricDataWireModel> _mergeFunction = MetricDataWireModel.BuildAggregateData;
-        private Func<MetricWireModel, MetricWireModel, MetricWireModel> _mergeUnscopedFunction = MetricWireModel.Merge;
 
         public void Merge(MetricStatsCollection engine)
         {
             _unscopedStats.Merge(engine._unscopedStats, _mergeFunction);
-            _preCreatedUnscopedStats.Merge(engine._preCreatedUnscopedStats, _mergeUnscopedFunction);
             foreach (KeyValuePair<string, MetricStatsDictionary<string, MetricDataWireModel>> current in engine._scopedStats)
             {
                 MergeScopedStats(current.Key, current.Value);
@@ -35,12 +31,6 @@ namespace NewRelic.Agent.Core.Aggregators
         public void MergeUnscopedStats(IEnumerable<KeyValuePair<string, MetricDataWireModel>> unscoped)
         {
             _unscopedStats.Merge(unscoped, _mergeFunction);
-        }
-
-        // These should have already gone through the prenaming process
-        public void MergeUnscopedStats(MetricWireModel metric)
-        {
-            _preCreatedUnscopedStats.Merge(metric.MetricName.Name, metric, _mergeUnscopedFunction);
         }
 
         public void MergeUnscopedStats(string name, MetricDataWireModel metric)
@@ -86,14 +76,6 @@ namespace NewRelic.Agent.Core.Aggregators
                 {
                     yield return metric;
                 }
-            }
-
-            foreach (MetricWireModel model in _preCreatedUnscopedStats.Values)
-            {
-                //These already when through the rename service in the MetricWireModel
-                //At some point this needs to be cleaned up. This is ugly.
-
-                yield return model;
             }
 
             foreach (KeyValuePair<string, MetricStatsDictionary<string, MetricDataWireModel>> currentScope in _scopedStats)

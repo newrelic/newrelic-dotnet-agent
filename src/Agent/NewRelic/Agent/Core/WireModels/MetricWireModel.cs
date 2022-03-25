@@ -85,15 +85,15 @@ namespace NewRelic.Agent.Core.WireModels
             return MetricName + Data.ToString();
         }
 
-        public void AddMetricsToEngine(MetricStatsCollection engine)
+        public void AddMetricsToCollection(MetricStatsCollection collection)
         {
             if (string.IsNullOrEmpty(MetricName.Scope))
             {
-                engine.MergeUnscopedStats(this);
+                collection.MergeUnscopedStats(MetricName.Name, Data);
             }
             else
             {
-                engine.MergeScopedStats(MetricName.Scope, MetricName.Name, Data);
+                collection.MergeScopedStats(MetricName.Scope, MetricName.Name, Data);
             }
         }
 

@@ -51,10 +51,10 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        public void AddMetricsToEngine(MetricStatsCollection engine)
+        public void AddMetricsToCollection(MetricStatsCollection collection)
         {
-            engine.MergeUnscopedStats(ConvertMetricNames(unscopedStats));
-            engine.MergeScopedStats(transactionName.PrefixedName, ConvertMetricNames(scopedStats));
+            collection.MergeUnscopedStats(ConvertMetricNames(unscopedStats));
+            collection.MergeScopedStats(transactionName.PrefixedName, ConvertMetricNames(scopedStats));
         }
 
         private IEnumerable<KeyValuePair<string, MetricDataWireModel>> ConvertMetricNames(IEnumerable<KeyValuePair<MetricName, MetricDataWireModel>> metricData)
