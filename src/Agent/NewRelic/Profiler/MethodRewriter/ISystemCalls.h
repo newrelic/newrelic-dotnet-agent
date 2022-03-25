@@ -50,7 +50,13 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         virtual bool GetIsAppDomainCachingDisabled()
         {
             auto value = TryGetEnvironmentVariable(_X("NEW_RELIC_DISABLE_APPDOMAIN_CACHING"));
-            if (value != nullptr && (Strings::AreEqualCaseInsensitive(*value, _X("true")) || Strings::AreEqualCaseInsensitive(*value, _X("1"))))
+
+            if (value == nullptr)
+            {
+                return false;
+            }
+
+            if(Strings::AreEqualCaseInsensitive(*value, _X("true")) || Strings::AreEqualCaseInsensitive(*value, _X("1")))
             {
                 return true;
             }
