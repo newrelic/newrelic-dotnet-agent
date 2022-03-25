@@ -24,7 +24,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         [Transaction]
         private static void StartAgent()
         {
-            Logger.Info("Instrumented Method to start the Agent");
+            ConsoleMFLogger.Info("Instrumented Method to start the Agent");
         }
     }
 }

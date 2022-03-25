@@ -38,6 +38,12 @@ using Telerik.JustMock;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.TestUtilities;
+using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.WireModels;
+using NewRelic.Core;
+using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Collections;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
@@ -80,9 +86,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private IAgentTimerService _agentTimerService;
         private IMetricNameService _metricNameService;
         private IErrorService _errorService;
-
+        private ILogEventAggregator _logEventAggregator;
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+
+        private Action _harvestAction;
+        private TimeSpan? _harvestCycle;
 
         private const string DistributedTraceHeaderName = "newrelic";
         private const string ReferrerTripId = "referrerTripId";
@@ -136,7 +145,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _traceMetadataFactory = Mock.Create<ITraceMetadataFactory>();
             _errorService = new ErrorService(_configurationService);
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
-            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics);
+
+            var scheduler = Mock.Create<IScheduler>();
+            Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+                .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
+            _logEventAggregator = new LogEventAggregator(Mock.Create<IDataTransportService>(), scheduler, Mock.Create<IProcessStatic>(), _agentHealthReporter);
+
+            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator);
         }
 
         private class CallStackManagerFactory : ICallStackManagerFactory
@@ -594,7 +609,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         public void AcceptDistributedTraceHeaders__ReportsSupportabilityMetric_NullPayload()
         {
             _distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, new AdaptiveSampler());
-            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics);
+            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator);
             SetupTransaction();
 
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
@@ -1269,6 +1284,115 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         }
 
         #endregion GetLinkingMetadata
+
+        #region Log Events
+
+        [Test]
+        public void RecordLogMessage_LogEventsDisabled_DropsEvent()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(false);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            var message = "message";
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, spanId, traceId);
+
+            // Access the private collection of events to get the number of add attempts.
+            var privateAccessor = new PrivateAccessor(_logEventAggregator);
+            var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
+
+            var logEvent = logEvents?.FirstOrDefault()?.Data;
+            Assert.AreEqual(0, logEvents.Count);
+            Assert.IsNull(logEvent);
+        }
+
+        [Test]
+        public void RecordLogMessage_NoTransaction_Success()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            var message = "message";
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, spanId, traceId);
+
+            // Access the private collection of events to get the number of add attempts.
+            var privateAccessor = new PrivateAccessor(_logEventAggregator);
+            var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
+
+            var logEvent = logEvents?.FirstOrDefault()?.Data;
+            Assert.AreEqual(1, logEvents.Count);
+            Assert.IsNotNull(logEvent);
+            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
+            Assert.AreEqual(level, logEvent.Level);
+            Assert.AreEqual(message, logEvent.Message);
+            Assert.AreEqual(spanId, logEvent.SpanId);
+            Assert.AreEqual(traceId, logEvent.TraceId);
+            Assert.IsNotNull(logEvent.Priority);
+        }
+
+        [Test]
+        public void RecordLogMessage_WithTransaction_Success()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            var message = "message";
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            SetupTransaction();
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            var priority = transaction.Priority;
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, spanId, traceId);
+
+            var logEvent = transaction.LogEvents?.FirstOrDefault();
+            Assert.AreEqual(1, transaction.LogEvents.Count);
+            Assert.IsNotNull(logEvent);
+            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
+            Assert.AreEqual(level, logEvent.Level);
+            Assert.AreEqual(message, logEvent.Message);
+            Assert.AreEqual(spanId, logEvent.SpanId);
+            Assert.AreEqual(traceId, logEvent.TraceId);
+            Assert.AreEqual(priority, logEvent.Priority);
+        }
+
+        #endregion
 
         private void SetupTransaction()
         {

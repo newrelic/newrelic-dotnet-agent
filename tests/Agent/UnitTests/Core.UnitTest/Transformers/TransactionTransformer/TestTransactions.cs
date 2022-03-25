@@ -40,6 +40,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             Mock.Arrange(() => configuration.ErrorCollectorCaptureEvents).Returns(true);
             Mock.Arrange(() => configuration.CaptureErrorCollectorAttributes).Returns(true);
             Mock.Arrange(() => configuration.TransactionTracerEnabled).Returns(true);
+            Mock.Arrange(() => configuration.LogMetricsCollectorEnabled).Returns(true);
+            Mock.Arrange(() => configuration.LogEventCollectorEnabled).Returns(true);
+            Mock.Arrange(() => configuration.LogEventsMaxSamplesStored).Returns(2000);
+            Mock.Arrange(() => configuration.LogEventsHarvestCycle).Returns(TimeSpan.FromSeconds(5));
             return configuration;
         }
 

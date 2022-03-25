@@ -53,9 +53,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         private readonly IAgentTimerService _agentTimerService;
         private readonly IAdaptiveSampler _adaptiveSampler;
         private readonly IErrorService _errorService;
+        private readonly ILogEventAggregator _logEventAggregator;
 
         public TransactionTransformer(ITransactionMetricNameMaker transactionMetricNameMaker, ISegmentTreeMaker segmentTreeMaker, IMetricNameService metricNameService, IMetricAggregator metricAggregator, IConfigurationService configurationService, ITransactionTraceAggregator transactionTraceAggregator, ITransactionTraceMaker transactionTraceMaker, ITransactionEventAggregator transactionEventAggregator, ITransactionEventMaker transactionEventMaker, ITransactionAttributeMaker transactionAttributeMaker, IErrorTraceAggregator errorTraceAggregator, IErrorTraceMaker errorTraceMaker, IErrorEventAggregator errorEventAggregator, IErrorEventMaker errorEventMaker, ISqlTraceAggregator sqlTraceAggregator, ISqlTraceMaker sqlTraceMaker, ISpanEventAggregator spanEventAggregator, ISpanEventMaker spanEventMaker, IAgentTimerService agentTimerService,
-            IAdaptiveSampler adaptiveSampler, IErrorService errorService, ISpanEventAggregatorInfiniteTracing spanEventAggregatorInfiniteTracing)
+            IAdaptiveSampler adaptiveSampler, IErrorService errorService, ISpanEventAggregatorInfiniteTracing spanEventAggregatorInfiniteTracing, ILogEventAggregator logEventAggregator)
         {
             _transactionMetricNameMaker = transactionMetricNameMaker;
             _segmentTreeMaker = segmentTreeMaker;
@@ -79,6 +80,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             _agentTimerService = agentTimerService;
             _adaptiveSampler = adaptiveSampler;
             _errorService = errorService;
+            _logEventAggregator = logEventAggregator;
         }
 
         public void Transform(IInternalTransaction transaction)
@@ -89,6 +91,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             }
 
             ComputeSampled(transaction);
+            PrioritizeAndCollectLogEvents(transaction);
 
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
@@ -468,6 +471,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         private bool ErrorCollectionEnabled()
         {
             return _configurationService.Configuration.ErrorCollectorEnabled;
+        }
+
+        private void PrioritizeAndCollectLogEvents(IInternalTransaction transaction)
+        {
+            _logEventAggregator.CollectWithPriority(transaction.LogEvents, transaction.Priority);
         }
     }
 }

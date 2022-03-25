@@ -1778,6 +1778,67 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
+        #region Log Events and Metrics
+
+        public virtual bool ApplicationLoggingEnabled
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.applicationLogging.enabled, "NEW_RELIC_APPLICATION_LOGGING_ENABLED");
+            }
+        }
+
+        public virtual bool LogMetricsCollectorEnabled
+        {
+            get
+            { 
+                return ApplicationLoggingEnabled &&
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.metrics.enabled, "NEW_RELIC_APPLICATION_LOGGING_METRICS_ENABLED");
+            }
+        }
+
+        public virtual bool LogEventCollectorEnabled
+        {
+            get
+            {
+                return ApplicationLoggingEnabled &&
+                    !SecurityPoliciesTokenExists &&
+                    HighSecurityModeOverrides(false,
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED"));
+            }
+        }
+
+        public TimeSpan LogEventsHarvestCycle
+        {
+            get
+            {
+                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.LogEventHarvestCycle(), TimeSpan.FromSeconds(5));
+            }
+        }
+
+        public virtual int LogEventsMaxSamplesStored
+        {
+            get
+            {
+                // This is different from the other faster event harvest settings since we want to ensure that local values are properly distributed across the harvest.
+                // Using the GetValueOrDefault to ensure that a value is provided if all other values are remvoed.
+                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.LogEventHarvestLimit(),
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.maxSamplesStored,
+                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_MAX_SAMPLES_STORED").GetValueOrDefault(10000));
+            }
+        }
+
+        public virtual bool LogDecoratorEnabled
+        {
+            get
+            {
+                return ApplicationLoggingEnabled &&
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.localDecorating.enabled, "NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED");
+            }
+        }
+
+        #endregion
+
         private bool? _diagnosticsCaptureAgentTiming;
         public bool DiagnosticsCaptureAgentTiming
         {

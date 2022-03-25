@@ -5,6 +5,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Logging;
@@ -14,10 +15,12 @@ using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core;
 using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.SystemInterfaces;
@@ -54,6 +57,7 @@ namespace NewRelic.Agent.Core
         internal readonly IMetricNameService _metricNameService;
         private readonly ICATSupportabilityMetricCounters _catMetricCounters;
         private readonly Api.ITraceMetadataFactory _traceMetadataFactory;
+        private readonly ILogEventAggregator _logEventAggregator;
         private Extensions.Logging.ILogger _logger;
 
         public Agent(ITransactionService transactionService, ITransactionTransformer transactionTransformer,
@@ -62,7 +66,8 @@ namespace NewRelic.Agent.Core
             ISyntheticsHeaderHandler syntheticsHeaderHandler, ITransactionFinalizer transactionFinalizer,
             IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker,
             IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService,
-            IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory, ICATSupportabilityMetricCounters catMetricCounters)
+            IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory, ICATSupportabilityMetricCounters catMetricCounters,
+            ILogEventAggregator logEventAggregator)
         {
             _transactionService = transactionService;
             _transactionTransformer = transactionTransformer;
@@ -81,6 +86,7 @@ namespace NewRelic.Agent.Core
             _metricNameService = metricNameService;
             _traceMetadataFactory = traceMetadataFactory;
             _catMetricCounters = catMetricCounters;
+            _logEventAggregator = logEventAggregator;
 
             Instance = this;
         }
@@ -398,6 +404,48 @@ namespace NewRelic.Agent.Core
         public void RecordSupportabilityMetric(string metricName, int count)
         {
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
+        }
+
+        public void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLogLevel, Func<object,string> getLogMessage, string spanId, string traceId)
+        {
+            _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
+
+            var normalizedLevel = string.Empty;
+            if (_configurationService.Configuration.LogMetricsCollectorEnabled ||
+                _configurationService.Configuration.LogEventCollectorEnabled)
+            {
+                var logLevel = getLogLevel(logEvent).ToString();
+                normalizedLevel = string.IsNullOrWhiteSpace(logLevel) ? "UNKNOWN" : logLevel.ToUpper();
+            }
+
+            if (_configurationService.Configuration.LogMetricsCollectorEnabled)
+            {
+                _agentHealthReporter.IncrementLogLinesCount(normalizedLevel);
+            }
+
+            // IOC container defaults to singleton so this will access the same aggregator
+            if (_configurationService.Configuration.LogEventCollectorEnabled) 
+            {
+                var logMessage = getLogMessage(logEvent);
+                if (string.IsNullOrWhiteSpace(logMessage))
+                {
+                    return;
+                }
+                var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
+
+                var transaction = _transactionService.GetCurrentInternalTransaction();
+                if (transaction != null && transaction.IsValid)
+                {
+                    // use transaction batching for messages in transactions
+                    transaction.LogEvents.Add(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId));
+                    return;
+                }
+
+                // non-transaction messages with proper sanitized priority value
+                _logEventAggregator.Collect(new LogEventWireModel(timestamp,
+                    logMessage, normalizedLevel, spanId, traceId, _transactionService.CreatePriority()));
+            }
+
         }
 
         #endregion

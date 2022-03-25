@@ -2415,6 +2415,93 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         #endregion
 
+        #region Log Metrics and Events
+
+        [Test]
+        public void ApplicationLogging_MetricsEnabled_IsTrueInLocalConfigByDefault()
+        {
+            Assert.IsTrue(_defaultConfig.LogMetricsCollectorEnabled);
+        }
+
+        [Test]
+        public void ApplicationLogging_Enabled_IsTrueInLocalConfigByDefault()
+        {
+            Assert.IsTrue(_defaultConfig.ApplicationLoggingEnabled);
+        }
+
+        [TestCase(false, false, false, false, false, false, false)]
+        [TestCase(false, true, false, false, false, false, false)]
+        [TestCase(false, false, true, false, false, false, false)]
+        [TestCase(false, false, false, true, false, false, false)]
+        [TestCase(false, true, true, true, false, false, false)]
+        [TestCase(true, false, false, false, false, false, false)]
+        [TestCase(true, true, false, false, true, false, false)]
+        [TestCase(true, false, true, false, false, true, false)]
+        [TestCase(true, false, false, true, false, false, true)]
+        [TestCase(true, true, true, true, true, true, true)]
+        public void ApplicationLogging_Enabled_OverridesIndividualLoggingFeatures(bool applicationLoggingEnabledInConfig,
+            bool forwardingEnabledInConfig, bool metricsEnabledInConfig, bool localDecoratingEnabledInConfig,
+            bool forwardingActuallyEnabled, bool metricsActuallyEnabled, bool localDecoratingActuallyEnabled)
+        {
+            _localConfig.applicationLogging.enabled = applicationLoggingEnabledInConfig;
+            _localConfig.applicationLogging.forwarding.enabled = forwardingEnabledInConfig;
+            _localConfig.applicationLogging.metrics.enabled = metricsEnabledInConfig;
+            _localConfig.applicationLogging.localDecorating.enabled = localDecoratingEnabledInConfig;
+
+            Assert.AreEqual(_defaultConfig.ApplicationLoggingEnabled, applicationLoggingEnabledInConfig);
+            Assert.AreEqual(_defaultConfig.LogEventCollectorEnabled, forwardingActuallyEnabled);
+            Assert.AreEqual(_defaultConfig.LogMetricsCollectorEnabled, metricsActuallyEnabled);
+            Assert.AreEqual(_defaultConfig.LogDecoratorEnabled, localDecoratingActuallyEnabled);
+        }
+
+        [Test]
+        public void ApplicationLogging_ForwardingEnabled_IsFalseInLocalConfigByDefault()
+        {
+            Assert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
+        }
+
+        [Test]
+        public void ApplicationLogging_ForwardingEnabled_IsOverriddenByHighSecurityMode()
+        {
+            _localConfig.applicationLogging.forwarding.enabled = true;
+            _localConfig.highSecurity.enabled = true;
+
+            Assert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
+        }
+
+        [Test]
+        public void ApplicationLogging_LocalDecordingEnabled_IsFalseInLocalConfigByDefault()
+        {
+            Assert.IsFalse(_defaultConfig.LogDecoratorEnabled);
+        }
+
+        [Test]
+        public void ApplicationLogging_ForwardingMaxSamplesStored_HasCorrectValue()
+        {
+            _localConfig.applicationLogging.forwarding.maxSamplesStored = 1;
+            Assert.AreEqual(1, _defaultConfig.LogEventsMaxSamplesStored);
+        }
+
+        [Test]
+        public void LogEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
+        {
+            const string LogEventHarvestLimitKey = "log_event_data";
+
+            // Confirm default is 5.
+            Assert.AreEqual(5, _defaultConfig.LogEventsHarvestCycle.Seconds);
+
+            _serverConfig.EventHarvestConfig = new EventHarvestConfig();
+            _serverConfig.EventHarvestConfig.ReportPeriodMs = 10000;
+            _serverConfig.EventHarvestConfig.HarvestLimits = new Dictionary<string, int>();
+            _serverConfig.EventHarvestConfig.HarvestLimits.Add(LogEventHarvestLimitKey, 100); // limit does not matter here
+
+            // Confirm value is set to provided value not default
+            Assert.AreEqual(10, _defaultConfig.LogEventsHarvestCycle.Seconds);
+        }
+
+        #endregion
+
+
         #region Capture Attributes
 
         [TestCase(null, false)]

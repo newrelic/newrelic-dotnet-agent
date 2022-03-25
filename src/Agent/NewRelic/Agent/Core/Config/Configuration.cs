@@ -83,6 +83,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationApplicationPools applicationPoolsField;
         
+        private configurationApplicationLogging applicationLoggingField;
+        
         private List<string> threadProfilingField;
         
         private string labelsField;
@@ -116,6 +118,7 @@ namespace NewRelic.Agent.Core.Config
             this.utilizationField = new configurationUtilization();
             this.appSettingsField = new List<configurationAdd>();
             this.threadProfilingField = new List<string>();
+            this.applicationLoggingField = new configurationApplicationLogging();
             this.applicationPoolsField = new configurationApplicationPools();
             this.browserMonitoringField = new configurationBrowserMonitoring();
             this.errorCollectorField = new configurationErrorCollector();
@@ -485,6 +488,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.applicationPoolsField = value;
+            }
+        }
+        
+        public configurationApplicationLogging applicationLogging
+        {
+            get
+            {
+                return this.applicationLoggingField;
+            }
+            set
+            {
+                this.applicationLoggingField = value;
             }
         }
         
@@ -1412,7 +1427,7 @@ namespace NewRelic.Agent.Core.Config
         public configurationInstrumentation()
         {
             this.applicationsField = new List<configurationInstrumentationApplication>();
-            this.logField = true;
+            this.logField = false;
         }
         
         [System.Xml.Serialization.XmlArrayItemAttribute("application", IsNullable=false)]
@@ -1429,7 +1444,7 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(true)]
+        [System.ComponentModel.DefaultValueAttribute(false)]
         public bool log
         {
             get
@@ -4883,6 +4898,236 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationApplicationPoolsApplicationPool Clone()
         {
             return ((configurationApplicationPoolsApplicationPool)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationApplicationLogging
+    {
+        
+        private configurationApplicationLoggingMetrics metricsField;
+        
+        private configurationApplicationLoggingForwarding forwardingField;
+        
+        private configurationApplicationLoggingLocalDecorating localDecoratingField;
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationApplicationLogging class constructor
+        /// </summary>
+        public configurationApplicationLogging()
+        {
+            this.localDecoratingField = new configurationApplicationLoggingLocalDecorating();
+            this.forwardingField = new configurationApplicationLoggingForwarding();
+            this.metricsField = new configurationApplicationLoggingMetrics();
+            this.enabledField = true;
+        }
+        
+        public configurationApplicationLoggingMetrics metrics
+        {
+            get
+            {
+                return this.metricsField;
+            }
+            set
+            {
+                this.metricsField = value;
+            }
+        }
+        
+        public configurationApplicationLoggingForwarding forwarding
+        {
+            get
+            {
+                return this.forwardingField;
+            }
+            set
+            {
+                this.forwardingField = value;
+            }
+        }
+        
+        public configurationApplicationLoggingLocalDecorating localDecorating
+        {
+            get
+            {
+                return this.localDecoratingField;
+            }
+            set
+            {
+                this.localDecoratingField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationApplicationLogging object
+        /// </summary>
+        public virtual configurationApplicationLogging Clone()
+        {
+            return ((configurationApplicationLogging)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationApplicationLoggingMetrics
+    {
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationApplicationLoggingMetrics class constructor
+        /// </summary>
+        public configurationApplicationLoggingMetrics()
+        {
+            this.enabledField = true;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationApplicationLoggingMetrics object
+        /// </summary>
+        public virtual configurationApplicationLoggingMetrics Clone()
+        {
+            return ((configurationApplicationLoggingMetrics)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationApplicationLoggingForwarding
+    {
+        
+        private bool enabledField;
+        
+        private int maxSamplesStoredField;
+        
+        /// <summary>
+        /// configurationApplicationLoggingForwarding class constructor
+        /// </summary>
+        public configurationApplicationLoggingForwarding()
+        {
+            this.enabledField = false;
+            this.maxSamplesStoredField = 10000;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(10000)]
+        public int maxSamplesStored
+        {
+            get
+            {
+                return this.maxSamplesStoredField;
+            }
+            set
+            {
+                this.maxSamplesStoredField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationApplicationLoggingForwarding object
+        /// </summary>
+        public virtual configurationApplicationLoggingForwarding Clone()
+        {
+            return ((configurationApplicationLoggingForwarding)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationApplicationLoggingLocalDecorating
+    {
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationApplicationLoggingLocalDecorating class constructor
+        /// </summary>
+        public configurationApplicationLoggingLocalDecorating()
+        {
+            this.enabledField = false;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationApplicationLoggingLocalDecorating object
+        /// </summary>
+        public virtual configurationApplicationLoggingLocalDecorating Clone()
+        {
+            return ((configurationApplicationLoggingLocalDecorating)(this.MemberwiseClone()));
         }
         #endregion
     }

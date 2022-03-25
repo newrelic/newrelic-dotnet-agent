@@ -23,7 +23,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.W3C
         {
             try
             {
-                Logger.Info("Starting W3C Test Service.");
+                ConsoleMFLogger.Info("Starting W3C Test Service.");
 
                 // build owin service
                 _owinService = new OwinServiceBuilder()
@@ -35,7 +35,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.W3C
             }
             catch (Exception ex)
             {
-                Logger.Error(ex);
+                ConsoleMFLogger.Error(ex);
             }
         }
 
@@ -45,7 +45,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.W3C
         [LibraryMethod]
         public void StopService()
         {
-            Logger.Info("Stopping W3C Test Service");
+            ConsoleMFLogger.Info("Stopping W3C Test Service");
             _owinService.StopService();
         }
     }

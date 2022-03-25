@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory name="AddProviderRegistrationWrapper">
+      <match assemblyName="Microsoft.Extensions.Logging" className="Microsoft.Extensions.Logging.LoggerFactory">
+        <exactMethodMatcher methodName="AddProviderRegistration" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="MicrosoftLogging">
+      <match assemblyName="Microsoft.Extensions.Logging" className="Microsoft.Extensions.Logging.Logger">
+        <exactMethodMatcher methodName="Log" parameters="Microsoft.Extensions.Logging.LogLevel,Microsoft.Extensions.Logging.EventId,!!0,System.Exception,System.Func`3[!!0,System.Exception,System.String]"/>
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

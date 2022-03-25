@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
@@ -20,15 +21,15 @@ using System.Threading;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
-    public class AgentHealthReporter : DisposableService, IAgentHealthReporter
+    public class AgentHealthReporter : ConfigurationBasedService, IAgentHealthReporter
     {
         private static readonly TimeSpan _timeBetweenExecutions = TimeSpan.FromMinutes(1);
 
         private readonly IMetricBuilder _metricBuilder;
         private readonly IScheduler _scheduler;
-        private readonly IDnsStatic _dnsStatic;
         private readonly IList<RecurringLogData> _recurringLogDatas = new ConcurrentList<RecurringLogData>();
         private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
+        private readonly ConcurrentDictionary<string, InterlockedCounter> _logLinesCountByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
 
         private PublishMetricDelegate _publishMetricDelegate;
         private InterlockedCounter _payloadCreateSuccessCounter;
@@ -37,10 +38,9 @@ namespace NewRelic.Agent.Core.AgentHealth
         private InterlockedCounter _traceContextCreateSuccessCounter;
         private InterlockedCounter _traceContextAcceptSuccessCounter;
 
-        public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler, IDnsStatic dnsStatic)
+        public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler)
         {
             _metricBuilder = metricBuilder;
-            _dnsStatic = dnsStatic;
             _scheduler = scheduler;
             _scheduler.ExecuteEvery(LogRecurringLogs, _timeBetweenExecutions);
             var agentHealthEvents = Enum.GetValues(typeof(AgentHealthEvent)) as AgentHealthEvent[];
@@ -107,20 +107,16 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportDotnetVersion()
         {
 #if NET45
-			var metric = _metricBuilder.TryBuildDotnetFrameworkVersionMetric(AgentInstallConfiguration.DotnetFrameworkVersion);
+            var metric = _metricBuilder.TryBuildDotnetFrameworkVersionMetric(AgentInstallConfiguration.DotnetFrameworkVersion);
 #else
             var metric = _metricBuilder.TryBuildDotnetCoreVersionMetric(AgentInstallConfiguration.DotnetCoreVersion);
 #endif
             TrySend(metric);
         }
 
-        public void ReportAgentVersion(string agentVersion, string hostName)
+        public void ReportAgentVersion(string agentVersion)
         {
             TrySend(_metricBuilder.TryBuildAgentVersionMetric(agentVersion));
-
-            // avoiding call to GetHostName. If this supportability metrics is being used
-            // this can be resurrected. But GetHostName calls can then be cached. 
-            //TrySend(_metricBuilder.TryBuildAgentVersionByHostMetric(hostName, agentVersion));
         }
 
         public void ReportLibraryVersion(string assemblyName, string assemblyVersion)
@@ -428,7 +424,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _infiniteTracingSpanEventsSent.Add(countSpans);
             _infiniteTracingSpanBatchCount.Increment();
 
-            lock(_syncRootMetrics)
+            lock (_syncRootMetrics)
             {
                 _infiniteTracingSpanBatchSizeMin = Math.Min(_infiniteTracingSpanBatchSizeMin, countSpans);
                 _infiniteTracingSpanBatchSizeMax = Math.Max(_infiniteTracingSpanBatchSizeMax, countSpans);
@@ -485,7 +481,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityInfiniteTracingSpanSent, spanEventsSent);
 
-                if(minBatchSize < long.MaxValue && maxBatchSize > long.MinValue)
+                if (minBatchSize < long.MaxValue && maxBatchSize > long.MinValue)
                 {
                     ReportSupportabilitySummaryMetric(MetricNames.SupportabilityInfiniteTracingSpanSentBatchSize, spanEventsSent, spanBatchCount, minBatchSize, maxBatchSize);
                 }
@@ -533,21 +529,89 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #endregion
 
+        #region Log Events and Metrics
+
+        private ConcurrentDictionary<string, bool> _loggingFrameworksReported = new ConcurrentDictionary<string, bool>();
+        public void ReportLogForwardingFramework(string logFramework)
+        {
+            _loggingFrameworksReported.TryAdd(logFramework, false);
+        }
+
+        public void CollectLoggingMetrics()
+        {
+            var totalCount = 0;
+            foreach (var logLinesCounter in _logLinesCountByLevel)
+            {
+                if (TryGetCount(logLinesCounter.Value, out var linesCount))
+                {
+                    totalCount += linesCount;
+                    TrySend(_metricBuilder.TryBuildLoggingMetricsLinesCountBySeverityMetric(logLinesCounter.Key, linesCount));
+                }
+            }
+
+            if (totalCount > 0)
+            {
+                TrySend(_metricBuilder.TryBuildLoggingMetricsLinesCountMetric(totalCount));
+            }
+
+            foreach (var kvp in _loggingFrameworksReported)
+            {
+                if (kvp.Value == false)
+                {
+                    ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogFrameworkName(kvp.Key));
+                    _loggingFrameworksReported[kvp.Key] = true;
+                }
+            }
+        }
+
+        public void IncrementLogLinesCount(string logLevel)
+        {
+            _logLinesCountByLevel.TryAdd(logLevel, new InterlockedCounter());
+            _logLinesCountByLevel[logLevel].Increment();
+        }
+
+        public void ReportLoggingEventCollected() => TrySend(_metricBuilder.TryBuildSupportabilitLoggingEventsCollectedMetric());
+
+        public void ReportLoggingEventsSent(int count) => TrySend(_metricBuilder.TryBuildSupportabilitLoggingEventsSentMetric(count));
+
+        public void ReportLogForwardingConfiguredValues()
+        {
+            ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogMetricsConfiguredName(_configuration.LogMetricsCollectorEnabled));
+            ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogForwardingConfiguredName(_configuration.LogEventCollectorEnabled));
+            ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogDecoratingConfiguredName(_configuration.LogDecoratorEnabled));
+        }
+
+        #endregion
+
         public void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint)
         {
             TrySend(_metricBuilder.TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(endpoint));
+        }
+
+        // Only one metric harvest happens at a time, so locking around this bool is not important
+        private bool _oneTimeMetricsCollected;
+        private void CollectOneTimeMetrics()
+        {
+            if (_oneTimeMetricsCollected) return;
+            _oneTimeMetricsCollected = true;
+
+            ReportLogForwardingConfiguredValues();
         }
 
         public void CollectMetrics()
         {
             CollectDistributedTraceSuccessMetrics();
             CollectTraceContextSuccessMetrics();
-            ReportAgentVersion(AgentInstallConfiguration.AgentVersion, _dnsStatic.GetHostName());
+            CollectInfiniteTracingMetrics();
+            CollectLoggingMetrics();
+            CollectSupportabilityDataUsageMetrics();
+
+            ReportAgentVersion(AgentInstallConfiguration.AgentVersion);
             ReportIfHostIsLinuxOs();
             ReportDotnetVersion();
             ReportAgentInfo();
-            CollectInfiniteTracingMetrics();
-            CollectSupportabilityDataUsageMetrics();
+
+            CollectOneTimeMetrics();
         }
 
         public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)
@@ -659,6 +723,12 @@ namespace NewRelic.Agent.Core.AgentHealth
                     destinationBytesSent,
                     destinationBytesReceived);
             }
+        }
+
+        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+        {
+            // Some one time metrics are reporting configured values, so we want to re-report them if the configuration changed
+            _oneTimeMetricsCollected = false;
         }
 
         private class RecurringLogData

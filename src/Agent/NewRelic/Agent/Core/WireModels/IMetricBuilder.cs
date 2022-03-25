@@ -170,7 +170,6 @@ namespace NewRelic.Agent.Core.WireModels
         /// <summary>The traceparent header exists, and was accepted, but the tracestate header did not contain a trusted New Relic entry.</summary>
         MetricWireModel TryBuildTraceContextTraceStateNoNrEntry { get; }
 
-
         MetricWireModel TryBuildSupportabilityErrorHttpStatusCodeFromCollector(HttpStatusCode statusCode);
 
         MetricWireModel TryBuildSupportabilityEndpointMethodErrorAttempts(string endpointMethod);
@@ -196,6 +195,14 @@ namespace NewRelic.Agent.Core.WireModels
         MetricWireModel TryBuildSupportabilitySummaryMetric(string metricName, float totalValue, int countSamples, float minValue, float maxValue);
 
         MetricWireModel TryBuildSupportabilityGaugeMetric(string metricName, float value);
+
+        MetricWireModel TryBuildLoggingMetricsLinesCountBySeverityMetric(string logLevel, int count);
+
+        MetricWireModel TryBuildLoggingMetricsLinesCountMetric(int count);
+
+        MetricWireModel TryBuildSupportabilitLoggingEventsCollectedMetric();
+
+        MetricWireModel TryBuildSupportabilitLoggingEventsSentMetric(int loggingEventCount);
 
     }
 }

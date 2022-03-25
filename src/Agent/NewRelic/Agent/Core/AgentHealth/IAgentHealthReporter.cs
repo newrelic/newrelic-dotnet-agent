@@ -14,7 +14,7 @@ namespace NewRelic.Agent.Core.AgentHealth
     {
         void ReportDotnetVersion();
 
-        void ReportAgentVersion(string agentVersion, string hostName);
+        void ReportAgentVersion(string agentVersion);
 
         void ReportLibraryVersion(string assemblyName, string assemblyVersion);
 
@@ -138,7 +138,12 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportInfiniteTracingSpanGrpcError(string status);
         void ReportInfiniteTracingSpanGrpcTimeout();
         void ReportInfiniteTracingSpanQueueSize(int queueSize);
-
+		
         void ReportSupportabilityDataUsage(string api, string apiArea, long dataSent, long dataReceived);
+
+        void IncrementLogLinesCount(string logLevel);
+        void ReportLoggingEventCollected();
+        void ReportLoggingEventsSent(int count);
+        void ReportLogForwardingFramework(string logFramework);
     }
 }

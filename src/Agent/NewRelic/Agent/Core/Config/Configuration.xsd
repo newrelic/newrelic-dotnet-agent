@@ -1576,6 +1576,85 @@
           </xs:complexType>
         </xs:element>
 
+          <xs:element name="applicationLogging" minOccurs="0" maxOccurs="1">
+              <xs:annotation>
+                  <xs:documentation>
+                      Allows configuration of application logging instrumentation.
+                  </xs:documentation>
+              </xs:annotation>
+              <xs:complexType>
+                  <xs:sequence>
+                      <xs:element name="metrics" minOccurs="0" maxOccurs="1">
+                          <xs:annotation>
+                              <xs:documentation>
+                                  When enabled, sends up metrics on the number of log lines being created in total and at different severity levels.
+                              </xs:documentation>
+                          </xs:annotation>
+                          <xs:complexType>
+                              <xs:attribute name="enabled" type="xs:boolean" default="true">
+                                  <xs:annotation>
+                                      <xs:documentation>
+                                          Controls whether or not logging metrics are captured. Defaults to true.
+                                      </xs:documentation>
+                                  </xs:annotation>
+                              </xs:attribute>
+                          </xs:complexType>
+                      </xs:element>
+                      <xs:element name="forwarding" minOccurs="0" maxOccurs="1">
+                          <xs:annotation>
+                              <xs:documentation>
+                                  When enabled, capture and send up log messages with logs-in-context data.
+                              </xs:documentation>
+                          </xs:annotation>
+                          <xs:complexType>
+                              <xs:attribute name="enabled" type="xs:boolean" default="false">
+                                  <xs:annotation>
+                                      <xs:documentation>
+                                          Controls whether or not log forwarding occurs. Defaults to false.
+                                      </xs:documentation>
+                                  </xs:annotation>
+                              </xs:attribute>
+                              <xs:attribute name="maxSamplesStored" type="xs:int" default="10000">
+                                  <xs:annotation>
+                                      <xs:documentation>
+                                          The maximum number of log messages captured per minute. Default is 10000 messages.
+                                      </xs:documentation>
+                                  </xs:annotation>
+                              </xs:attribute>
+                          </xs:complexType>
+                      </xs:element>
+                      <xs:element name="localDecorating" minOccurs="0" maxOccurs="1">
+                          <xs:annotation>
+                              <xs:documentation>
+                                  When enabled, local log messages will be decorated with logs-in-context data as they are written.
+                                  The method used to decorate the messages depends on the logging framework and may require additional configuration.
+                              </xs:documentation>
+                          </xs:annotation>
+                          <xs:complexType>
+                              <xs:attribute name="enabled" type="xs:boolean" default="false">
+                                  <xs:annotation>
+                                      <xs:documentation>
+                                          Controls whether or not local log messages are decorated with logs-in-context data. Defaults to false.
+                                      </xs:documentation>
+                                  </xs:annotation>
+                              </xs:attribute>
+                          </xs:complexType>
+                      </xs:element>
+                  </xs:sequence>
+
+                  <xs:attribute name="enabled" type="xs:boolean" default="true">
+                      <xs:annotation>
+                          <xs:documentation>
+                              Controls whether any logging features are enabled.
+                              When set to 'false', all logging sub-features are disabled.
+                              Defaults to 'true'.
+                          </xs:documentation>
+                      </xs:annotation>
+                  </xs:attribute>
+
+              </xs:complexType>
+          </xs:element>
+
         <xs:element name="threadProfiling" minOccurs="0" maxOccurs="1">
           <xs:complexType>
             <xs:sequence>

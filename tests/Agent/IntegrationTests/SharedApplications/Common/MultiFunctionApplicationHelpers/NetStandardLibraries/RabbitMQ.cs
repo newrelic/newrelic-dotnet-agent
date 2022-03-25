@@ -58,7 +58,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
             // This sleep ensures that this transaction method is the one sampled for transaction trace data
             Thread.Sleep(1000);
 
-            Logger.Info(string.Format("method=SendReceive,sent message={0},received message={1}, queueName={2}", message, receiveMessage, queueName));
+            ConsoleMFLogger.Info(string.Format("method=SendReceive,sent message={0},received message={1}, queueName={2}", message, receiveMessage, queueName));
         }
 
         [LibraryMethod]
@@ -76,7 +76,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 
             DeleteQueue(queueName);
 
-            Logger.Info(string.Format("method=SendReceiveWithEventingConsumer,sent message={0},received message={1}, queueName={2}", message, receiveMessage, queueName));
+            ConsoleMFLogger.Info(string.Format("method=SendReceiveWithEventingConsumer,sent message={0},received message={1}, queueName={2}", message, receiveMessage, queueName));
         }
 
 
@@ -108,7 +108,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
             DeleteExchange(exchangeName);
             DeleteQueue(queueName);
 
-            Logger.Info($"method=SendReceiveTopic,exchangeName={exchangeName},queueName={queueName},topicName={topicName},message={message},basicGetResult={basicGetResult}");
+            ConsoleMFLogger.Info($"method=SendReceiveTopic,exchangeName={exchangeName},queueName={queueName},topicName={topicName},message={message},basicGetResult={basicGetResult}");
         }
 
         [LibraryMethod]
@@ -122,7 +122,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 
             var resultMessage = BasicGetMessage(queueName);
 
-            Logger.Info($"method=SendReceiveTempQueue,queueName={queueName},sent message={message},received message={resultMessage}");
+            ConsoleMFLogger.Info($"method=SendReceiveTempQueue,queueName={queueName},sent message={message},received message={resultMessage}");
         }
 
         [LibraryMethod]
@@ -156,7 +156,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         {
             Channel.Close();
             Connection.Close();
-            Logger.Info("RabbitMQ channel and connection closed.");
+            ConsoleMFLogger.Info("RabbitMQ channel and connection closed.");
         }
 
         [LibraryMethod]
@@ -166,7 +166,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
             var assemblyPath = rabbitAssembly.Location;
             var rabbitClientVersion = FileVersionInfo.GetVersionInfo(assemblyPath).FileVersion;
 
-            Logger.Info($"RabbitMQ client assembly path={assemblyPath}, version={rabbitClientVersion}");
+            ConsoleMFLogger.Info($"RabbitMQ client assembly path={assemblyPath}, version={rabbitClientVersion}");
         }
 
         private void DeclareQueue(string queueName)

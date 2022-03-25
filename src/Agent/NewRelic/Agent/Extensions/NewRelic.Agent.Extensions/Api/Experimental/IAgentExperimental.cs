@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+
 namespace NewRelic.Agent.Api.Experimental
 {
     /// <summary>
@@ -16,5 +18,16 @@ namespace NewRelic.Agent.Api.Experimental
         /// <param name="count">Defaults to 1.0f</param>
         void RecordSupportabilityMetric(string metricName, int count = 1);
 
+        /// <summary>
+        /// Records the log message in the transaction to later be forwarded if log forwarding is enabled.
+        /// </summary>
+        /// <param name="frameworkName">The name of the logging framework.</param>
+        /// <param name="logEvent">The logging event object.</param>
+        /// <param name="getTimestamp">A Func<object,DateTime> that knows how to get the timestamp from the logEvent.</param>
+        /// <param name="getLogLevel">A Func<object,object> that knows how to get the log level from the logEvent.</param>
+        /// <param name="getLogMessage">A Func<object,string> that knows how to get the log message from the logEvent</param>
+        /// <param name="spanId">The span ID of the segment the log message occured within.</param>
+        /// <param name="traceId">The trace ID of the transaction the log message occured within.</param>
+        void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLogLevel, Func<object,string> getLogMessage, string spanId, string traceId);
     }
 }

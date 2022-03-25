@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 ### New Features
+* Adds support for logging metrics which shows the rate of log message by severity in the Logs chart in the APM Summary view for Log4net, Serilog, and Microsoft.Extensions.Logging. This is enabled by default in this release. ([#1034](https://github.com/newrelic/newrelic-dotnet-agent/pull/1034))
+* Adds support for forwarding application logs to New Relic. This automatically sends enriched application logs for Log4net, Serilog, and Microsoft.Extensions.Logging. This is disabled by default in this release. ([#1034](https://github.com/newrelic/newrelic-dotnet-agent/pull/1034))
+* Adds support for enriching application logs written to disk or standard out for Log4net, Serilog, Microsoft.Extensions.Logging. This can be used with another log forwarder if in-agent log forwarding is not desired. We recommend enabling either log forwarding or local log decorating, but not both features. This is disabled by default in this release. ([#1034](https://github.com/newrelic/newrelic-dotnet-agent/pull/1034))
+
 ### Fixes
 
 ## [9.6.1] - 2022-03-15

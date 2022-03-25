@@ -260,5 +260,69 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "processHost" },
                     "displayName", customHostName);
         }
+
+        public NewRelicConfigModifier DisableApplicationLogging()
+        {
+            return EnableApplicationLogging(false);
+        }
+
+        public NewRelicConfigModifier EnableApplicationLogging(bool enable = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "enabled", enable.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier DisableLogMetrics()
+        {
+            return EnableLogMetrics(false);
+        }
+
+        public NewRelicConfigModifier EnableLogMetrics(bool enable = true)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "metrics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "metrics" }, "enabled", enable.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier DisableLogForwarding()
+        {
+            return EnableLogForwarding(false);
+        }
+
+        public NewRelicConfigModifier EnableLogForwarding(bool enable = true)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "forwarding", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding" }, "enabled", enable.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier DisableLogDecoration()
+        {
+            return EnableLogDecoration(false);
+        }
+
+        public NewRelicConfigModifier EnableLogDecoration(bool enable = true)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "localDecorating", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "localDecorating" }, "enabled", enable.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier SetLogForwardingMaxSamplesStored(int samples)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "forwarding", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding" }, "maxSamplesStored", samples.ToString());
+            return this;
+        }
+        public NewRelicConfigModifier SetApplicationName(string key)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "application" },
+                "name", key);
+            return this;
+        }
+
+
+
+
     }
 }
