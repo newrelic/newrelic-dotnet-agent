@@ -47,8 +47,6 @@ namespace NewRelic.Agent.Core.DataTransport
         }
     }
 
-    // TODO: Add coverage for more send methods
-
     [TestFixture]
     public abstract class DataTransportServiceTestBase
     {
