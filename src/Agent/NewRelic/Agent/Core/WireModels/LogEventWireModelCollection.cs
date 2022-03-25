@@ -12,7 +12,6 @@ namespace NewRelic.Agent.Core.WireModels
     {
         public string EntityName { get; }
         public string EntityGuid { get; }
-
         public string Hostname { get; }
 
         public IList<LogEventWireModel> LoggingEvents { get; }
