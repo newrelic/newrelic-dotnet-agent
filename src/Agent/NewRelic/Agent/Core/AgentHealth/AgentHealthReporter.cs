@@ -606,7 +606,6 @@ namespace NewRelic.Agent.Core.AgentHealth
             CollectLoggingMetrics();
             CollectSupportabilityDataUsageMetrics();
 
-            // TODO: Should these be moved to 'one time' metrics?
             ReportAgentVersion(AgentInstallConfiguration.AgentVersion);
             ReportIfHostIsLinuxOs();
             ReportDotnetVersion();
