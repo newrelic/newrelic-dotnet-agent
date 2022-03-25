@@ -616,10 +616,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             return null;
         }
-
-
-
-
+        
         #endregion
 
         #region Transaction Events
