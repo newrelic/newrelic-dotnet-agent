@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 _configuration.ApplicationNames.ElementAt(0),
                 _configuration.EntityGuid,
                 hostname,
-                aggregatedEvents); ;
+                aggregatedEvents);
 
             var responseStatus = DataTransportService.Send(modelsCollection);
 
