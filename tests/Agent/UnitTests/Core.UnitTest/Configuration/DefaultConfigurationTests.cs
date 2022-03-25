@@ -1275,6 +1275,21 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.DistributedTracingEnabled;
         }
 
+        [TestCase(null, ExpectedResult = false)]
+        [TestCase("invalidValue", ExpectedResult = false)]
+        [TestCase("False", ExpectedResult = false)]
+        [TestCase("false", ExpectedResult = false)]
+        [TestCase("0", ExpectedResult = false)]
+        [TestCase("1", ExpectedResult = true)]
+        [TestCase("True", ExpectedResult = true)]
+        [TestCase("true", ExpectedResult = true)]
+        public bool AppDomainCachingDisabledWorksAsExpected(string environmentAppDomainCachingDisabled)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_APPDOMAIN_CACHING")).Returns(environmentAppDomainCachingDisabled);
+
+            return _defaultConfig.AppDomainCachingDisabled;
+        }
+
         [TestCase(true, null, ExpectedResult = true)]
         [TestCase(false, null, ExpectedResult = false)]
         [TestCase(true, "true", ExpectedResult = true)]
