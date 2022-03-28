@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Adds support for enriching application logs written to disk or standard out for Log4net, Serilog, Microsoft.Extensions.Logging. This can be used with another log forwarder if in-agent log forwarding is not desired. We recommend enabling either log forwarding or local log decorating, but not both features. This is disabled by default in this release. ([#1034](https://github.com/newrelic/newrelic-dotnet-agent/pull/1034))
 
 ### Fixes
+* Adds a new environment variable `NEW_RELIC_DISABLE_APPDOMAIN_CACHING` for customers to try when experiencing [#533 high lock contention related to AppDomain.GetData()](https://github.com/newrelic/newrelic-dotnet-agent/issues/533) usage by the agent when profiling .NET Framework applications. ([#1033](https://github.com/newrelic/newrelic-dotnet-agent/pull/1033))
 
 ## [9.6.1] - 2022-03-15
 ### Fixes
