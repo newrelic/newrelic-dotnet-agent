@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 * Adds a new environment variable `NEW_RELIC_DISABLE_APPDOMAIN_CACHING` for customers to try when experiencing [#533 high lock contention related to AppDomain.GetData()](https://github.com/newrelic/newrelic-dotnet-agent/issues/533) usage by the agent when profiling .NET Framework applications. ([#1033](https://github.com/newrelic/newrelic-dotnet-agent/pull/1033))
 
+### Deprecations
+* The scriptable installers are now deprecated and will be removed from the download site in a future major release. (Issue: [#571](https://github.com/newrelic/newrelic-dotnet-agent/issues/571))
+* The established release installers are now deprecated and will be removed from the download site in a future major release. (Issue: [#578](https://github.com/newrelic/newrelic-dotnet-agent/issues/578))
+
 ## [9.6.1] - 2022-03-15
 ### Fixes
 * Fixes [application pool allow/deny listing bug](https://github.com/newrelic/newrelic-dotnet-agent/issues/1014) introduced in 9.5.0 ([#1015](https://github.com/newrelic/newrelic-dotnet-agent/pull/1015))
