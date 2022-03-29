@@ -169,7 +169,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected Process RemoteProcess { get; set; }
 
-        public const string AppName = "IntegrationTestAppName";
+        public string AppName = "IntegrationTestAppName";
 
         private string _uniqueFolderName;
         public string UniqueFolderName
