@@ -21,7 +21,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     {
         private readonly TFixture _fixture;
         private readonly bool _decorationEnabled;
-        private const string _applicationName = "Local Decoration Test App Name";
+        private const string _primaryApplicationName = "Local Decoration Test App Name";
+        private const string _secondaryApplicationName = "Some other testing application name";
+        private const string _compositeApplicationName = _primaryApplicationName + ", " + _secondaryApplicationName;
 
         public LocalDecorationTestsBase(TFixture fixture, ITestOutputHelper output, bool decorationEnabled, LayoutType layoutType, LoggingFramework loggingFramework) : base(fixture)
         {
@@ -34,6 +36,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             _fixture.AddCommand($"LoggingTester Configure{layoutType}LayoutAppenderForDecoration");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction DecorateMe DEBUG");
 
+            _fixture.RemoteApplication.AppName = _compositeApplicationName;
+
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -41,7 +45,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
                     configModifier
-                    .SetApplicationName(_applicationName)
                     .EnableApplicationLogging()
                     .EnableLogDecoration(_decorationEnabled)
                     .EnableDistributedTrace()
@@ -73,7 +76,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 Assert.NotNull(hostname);
                 Assert.NotNull(traceId);
                 Assert.NotNull(spanId);
-                Assert.Equal(entityName, _applicationName);
+                Assert.Equal(_primaryApplicationName, entityName);
             }
             else
             {

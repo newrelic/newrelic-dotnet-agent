@@ -42,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
             };
             var unexpectedLogLineRegexes = new[]
             {
-                @".+ Your New Relic Application Name\(s\): " + RemoteApplication.AppName
+                @".+ Your New Relic Application Name\(s\): " + _fixture.RemoteApplication.AppName
             };
 
             var actualLogLines = _fixture.AgentLog.GetFileLines();

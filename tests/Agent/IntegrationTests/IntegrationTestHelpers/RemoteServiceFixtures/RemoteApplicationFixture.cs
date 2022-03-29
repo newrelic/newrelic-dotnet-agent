@@ -201,7 +201,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 _initialized = true;
 
-                TestLogger?.WriteLine(RemoteServiceFixtures.RemoteApplication.AppName);
+                TestLogger?.WriteLine(RemoteApplication.AppName);
 
 
                 var numberOfTries = 0;
