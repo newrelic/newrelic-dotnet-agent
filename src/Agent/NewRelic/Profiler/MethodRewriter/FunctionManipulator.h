@@ -22,6 +22,12 @@
 #include "../SignatureParser/SignatureParser.h"
 #include "IFunctionHeaderInfo.h"
 
+#ifdef PAL_STDCPP_COMPAT
+#include "../Profiler/UnixSystemCalls.h"
+#else
+#include "../Profiler/SystemCalls.h"
+#endif
+
 namespace NewRelic { namespace Profiler { namespace MethodRewriter
 {
 // Test unsafe rethrows exceptions throw while we create and finish tracers so you
@@ -44,12 +50,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         ByteVector _oldCodeBytes;
         ByteVector _newLocalVariablesSignature;
         SignatureParser::MethodSignaturePtr _methodSignature;
+        std::shared_ptr<SystemCalls> _systemCalls;
 
     public:
         FunctionManipulator(IFunctionPtr function) :
             _function(function),
             _newHeader(sizeof(COR_ILMETHOD_FAT)),
-            _methodSignature(SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end()))
+            _methodSignature(SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end())),
+            _systemCalls(std::make_shared<SystemCalls>())
         {
         }
 
@@ -309,7 +317,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // The function id is used as a tie-breaker for overloaded methods when computing the key name for the app domain cache.
         void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda, bool useCache)
         {
-            if (useCache)
+            if (useCache && !_systemCalls->GetIsAppDomainCachingDisabled())
             {
                 auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
                 _instructions->AppendString(keyName);

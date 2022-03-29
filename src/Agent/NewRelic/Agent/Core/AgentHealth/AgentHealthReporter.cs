@@ -574,6 +574,14 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void ReportLoggingEventsSent(int count) => TrySend(_metricBuilder.TryBuildSupportabilitLoggingEventsSentMetric(count));
 
+        public void ReportIfAppDomainCachingDisabled()
+        {
+            if (_configuration.AppDomainCachingDisabled)
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityAppDomainCachingDisabled);
+            }
+        }
+
         public void ReportLogForwardingConfiguredValues()
         {
             ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogMetricsConfiguredName(_configuration.LogMetricsCollectorEnabled));
@@ -581,7 +589,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogDecoratingConfiguredName(_configuration.LogDecoratorEnabled));
         }
 
-        #endregion
+#endregion
 
         public void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint)
         {
@@ -596,6 +604,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _oneTimeMetricsCollected = true;
 
             ReportLogForwardingConfiguredValues();
+            ReportIfAppDomainCachingDisabled();
         }
 
         public void CollectMetrics()

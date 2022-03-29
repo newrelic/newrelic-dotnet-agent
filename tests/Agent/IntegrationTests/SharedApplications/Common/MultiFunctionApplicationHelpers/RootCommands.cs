@@ -6,6 +6,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
+using NewRelic.Api.Agent;
 
 namespace MultiFunctionApplicationHelpers
 {
@@ -22,6 +23,13 @@ namespace MultiFunctionApplicationHelpers
         public static void LaunchDebugger()
         {
             Debugger.Launch();
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        public static void InstrumentedMethodToStartAgent()
+        {
+            // Mission accomplished
         }
     }
 }

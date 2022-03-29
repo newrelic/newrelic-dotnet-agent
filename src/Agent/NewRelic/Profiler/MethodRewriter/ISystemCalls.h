@@ -47,6 +47,23 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             return TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
         }
 
+        virtual bool GetIsAppDomainCachingDisabled()
+        {
+            auto value = TryGetEnvironmentVariable(_X("NEW_RELIC_DISABLE_APPDOMAIN_CACHING"));
+
+            if (value == nullptr)
+            {
+                return false;
+            }
+
+            if(Strings::AreEqualCaseInsensitive(*value, _X("true")) || Strings::AreEqualCaseInsensitive(*value, _X("1")))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         virtual std::unique_ptr<xstring_t> GetProfilerDelay()
         {
             return TryGetEnvironmentVariable(_X("NEWRELIC_PROFILER_DELAY_IN_SEC"));

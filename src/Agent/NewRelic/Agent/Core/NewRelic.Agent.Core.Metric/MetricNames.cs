@@ -813,6 +813,9 @@ namespace NewRelic.Agent.Core.Metric
             return SupportabilityInstallTypePs + installType;
         }
 
+        // AppDomain caching disabled
+        public const string SupportabilityAppDomainCachingDisabled = "Supportability/DotNET/AppDomainCaching/Disabled";
+
         #endregion Supportability
 
         #region Distributed Trace Metrics
@@ -1014,7 +1017,7 @@ namespace NewRelic.Agent.Core.Metric
         #endregion Performance Metrics
 
         #region Data Usage Metrics
-
+ 
         private const string dataUsageRoot = "Supportability/DotNET/";
         private const string outputBytesDecorator = "/Output/Bytes";
 

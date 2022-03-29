@@ -1839,6 +1839,14 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
+        public virtual bool AppDomainCachingDisabled
+        {
+            get
+            {
+                return EnvironmentOverrides(false, "NEW_RELIC_DISABLE_APPDOMAIN_CACHING");
+            }
+        }
+
         private bool? _diagnosticsCaptureAgentTiming;
         public bool DiagnosticsCaptureAgentTiming
         {
@@ -1969,8 +1977,27 @@ namespace NewRelic.Agent.Core.Configuration
                 .Select(_environment.GetEnvironmentVariable)
                 .FirstOrDefault(value => value != null);
 
-            return bool.TryParse(env, out var parsedValue) ? parsedValue : local;
+            if (env != null)
+            {
+                env = env.ToLower();
+            }
 
+            if (bool.TryParse(env, out var parsedValue))
+            {
+                return parsedValue;
+            }
+
+            if ("0" == env)
+            {
+                return false;
+            }
+
+            if ("1" == env)
+            {
+                return true;
+            }
+
+            return local;
         }
 
         private IList<Regex> ReadUrlBlacklist(configuration config)

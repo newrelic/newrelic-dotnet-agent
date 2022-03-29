@@ -250,6 +250,8 @@ namespace NewRelic { namespace Profiler {
 
                 LogRuntimeInfo(runtimeInfo);
 
+                LogMessageIfAppDomainCachingIsDisabled();
+
                 LogInfo(L"Profiler initialized");
                 return S_OK;
             }
@@ -1118,6 +1120,14 @@ namespace NewRelic { namespace Profiler {
             _agentCoreDllPath = *agentCoreDllPath;
 
             return S_OK;
+        }
+
+        void LogMessageIfAppDomainCachingIsDisabled()
+        {
+            if (_systemCalls->GetIsAppDomainCachingDisabled())
+            {
+                LogInfo("The use of AppDomain for method information caching is disabled via the 'NEW_RELIC_DISABLE_APPDOMAIN_CACHING' environment variable.");
+            }
         }
 
         std::unique_ptr<xstring_t> GetAgentCoreDllPath()
