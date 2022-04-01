@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core.WireModels
         /// <summary>
         /// The log level.
         /// </summary>
-        public string Level { get; }
+        public string LogLevel { get; }
 
         /// <summary>
         /// The span id of the segment.
@@ -52,20 +52,20 @@ namespace NewRelic.Agent.Core.WireModels
             }
         }
 
-        public LogEventWireModel(long unixTimestampMS, string message, string level, string spanId, string traceId)
+        public LogEventWireModel(long unixTimestampMS, string message, string logLevel, string spanId, string traceId)
         {
             TimeStamp = unixTimestampMS;
             Message = message.TruncateUnicodeStringByBytes(MaxMessageLengthInBytes);
-            Level = level;
+            LogLevel = logLevel;
             SpanId = spanId;
             TraceId = traceId;
         }
 
-        public LogEventWireModel(long unixTimestampMS, string message, string level, string spanId, string traceId, float priority)
+        public LogEventWireModel(long unixTimestampMS, string message, string logLevel, string spanId, string traceId, float priority)
         {
             TimeStamp = unixTimestampMS;
             Message = message.TruncateUnicodeStringByBytes(MaxMessageLengthInBytes);
-            Level = level;
+            LogLevel = logLevel;
             SpanId = spanId;
             TraceId = traceId;
             Priority = priority;

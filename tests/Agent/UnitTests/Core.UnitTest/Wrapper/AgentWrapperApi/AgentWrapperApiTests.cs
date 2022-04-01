@@ -1348,7 +1348,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Assert.AreEqual(1, logEvents.Count);
             Assert.IsNotNull(logEvent);
             Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
+            Assert.AreEqual(level, logEvent.LogLevel);
             Assert.AreEqual(message, logEvent.Message);
             Assert.AreEqual(spanId, logEvent.SpanId);
             Assert.AreEqual(traceId, logEvent.TraceId);
@@ -1385,7 +1385,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Assert.AreEqual(1, transaction.LogEvents.Count);
             Assert.IsNotNull(logEvent);
             Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
+            Assert.AreEqual(level, logEvent.LogLevel);
             Assert.AreEqual(message, logEvent.Message);
             Assert.AreEqual(spanId, logEvent.SpanId);
             Assert.AreEqual(traceId, logEvent.TraceId);

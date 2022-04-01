@@ -410,17 +410,17 @@ namespace NewRelic.Agent.Core
         {
             _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
 
-            var normalizedLevel = string.Empty;
+            var normalizedLogLevel = string.Empty;
             if (_configurationService.Configuration.LogMetricsCollectorEnabled ||
                 _configurationService.Configuration.LogEventCollectorEnabled)
             {
                 var logLevel = getLogLevel(logEvent).ToString();
-                normalizedLevel = string.IsNullOrWhiteSpace(logLevel) ? "UNKNOWN" : logLevel.ToUpper();
+                normalizedLogLevel = string.IsNullOrWhiteSpace(logLevel) ? "UNKNOWN" : logLevel.ToUpper();
             }
 
             if (_configurationService.Configuration.LogMetricsCollectorEnabled)
             {
-                _agentHealthReporter.IncrementLogLinesCount(normalizedLevel);
+                _agentHealthReporter.IncrementLogLinesCount(normalizedLogLevel);
             }
 
             // IOC container defaults to singleton so this will access the same aggregator
@@ -437,13 +437,13 @@ namespace NewRelic.Agent.Core
                 if (transaction != null && transaction.IsValid)
                 {
                     // use transaction batching for messages in transactions
-                    transaction.LogEvents.Add(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId));
+                    transaction.LogEvents.Add(new LogEventWireModel(timestamp, logMessage, normalizedLogLevel, spanId, traceId));
                     return;
                 }
 
                 // non-transaction messages with proper sanitized priority value
                 _logEventAggregator.Collect(new LogEventWireModel(timestamp,
-                    logMessage, normalizedLevel, spanId, traceId, _transactionService.CreatePriority()));
+                    logMessage, normalizedLogLevel, spanId, traceId, _transactionService.CreatePriority()));
             }
 
         }

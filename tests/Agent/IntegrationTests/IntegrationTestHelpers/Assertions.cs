@@ -598,7 +598,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             foreach (var actualLogLine in actualLogLines)
             {
-                if (expectedLogLine.LogLevel != actualLogLine.Level)
+                if (expectedLogLine.LogLevel != actualLogLine.LogLevel)
                     continue;
                 if (expectedLogLine.LogMessage != actualLogLine.Message)
                     continue;

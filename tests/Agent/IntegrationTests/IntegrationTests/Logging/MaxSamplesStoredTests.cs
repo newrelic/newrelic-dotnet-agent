@@ -62,7 +62,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             Assert.Single(logData.Logs);
             var logLine = logData.Logs[0];
             Assert.False(string.IsNullOrWhiteSpace(logLine.Message));
-            Assert.False(string.IsNullOrWhiteSpace(logLine.Level));
+            Assert.False(string.IsNullOrWhiteSpace(logLine.LogLevel));
             Assert.NotEqual(0, logLine.Timestamp);
 
         }

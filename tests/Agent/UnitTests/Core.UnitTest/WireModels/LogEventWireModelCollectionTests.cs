@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.WireModels
             var loggingEvent = objectUnderTest.LoggingEvents[0];
             Assert.AreEqual(1, loggingEvent.TimeStamp);
             Assert.AreEqual("TestMessage", loggingEvent.Message);
-            Assert.AreEqual("TestLevel", loggingEvent.Level);
+            Assert.AreEqual("TestLevel", loggingEvent.LogLevel);
             Assert.AreEqual("TestSpanId", loggingEvent.SpanId);
             Assert.AreEqual("TestTraceId", loggingEvent.TraceId);
         }

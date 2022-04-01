@@ -18,17 +18,17 @@ namespace NewRelic.Agent.Core.WireModels
         {
             var expectedTimestamp = 1234L;
             var expectedMessage = "Log Message FTW!";
-            var expectedLevel = "TestLogLevel";
+            var expectedLogLevel = "TestLogLevel";
             var expectedSpanId = "TestSpanId";
             var expectedTraceId = "ExpectedTraceId";
             float expectedPriority = 0;
 
-            var objectUnderTest = new LogEventWireModel(expectedTimestamp, expectedMessage, expectedLevel, expectedSpanId, expectedTraceId);
+            var objectUnderTest = new LogEventWireModel(expectedTimestamp, expectedMessage, expectedLogLevel, expectedSpanId, expectedTraceId);
 
             Assert.NotNull(objectUnderTest);
             Assert.AreEqual(expectedTimestamp, objectUnderTest.TimeStamp);
             Assert.AreEqual(expectedMessage, objectUnderTest.Message);
-            Assert.AreEqual(expectedLevel, objectUnderTest.Level);
+            Assert.AreEqual(expectedLogLevel, objectUnderTest.LogLevel);
             Assert.AreEqual(expectedSpanId, objectUnderTest.SpanId);
             Assert.AreEqual(expectedTraceId, objectUnderTest.TraceId);
             Assert.AreEqual(expectedPriority, objectUnderTest.Priority);
