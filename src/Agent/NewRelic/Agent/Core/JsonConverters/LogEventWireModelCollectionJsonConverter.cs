@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.JsonConverters
         private const string Logs = "logs";
         private const string TimeStamp = "timestamp";
         private const string Message = "message";
-        private const string Level = "level";
+        private const string LogLevel = "log.level";
         private const string SpanId = "span.id";
         private const string TraceId = "trace.id";
 
@@ -59,8 +59,8 @@ namespace NewRelic.Agent.Core.JsonConverters
                 jsonWriter.WriteValue(logEvent.TimeStamp);
                 jsonWriter.WritePropertyName(Message);
                 jsonWriter.WriteValue(logEvent.Message);
-                jsonWriter.WritePropertyName(Level);
-                jsonWriter.WriteValue(logEvent.Level);
+                jsonWriter.WritePropertyName(LogLevel);
+                jsonWriter.WriteValue(logEvent.LogLevel);
 
                 jsonWriter.WritePropertyName(Attributes);
                 jsonWriter.WriteStartObject();

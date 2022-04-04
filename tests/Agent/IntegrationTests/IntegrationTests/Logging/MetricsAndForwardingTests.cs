@@ -230,7 +230,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 foreach (var logLine in logLines)
                 {
                     Assert.False(string.IsNullOrWhiteSpace(logLine.Message));
-                    Assert.False(string.IsNullOrWhiteSpace(logLine.Level));
+                    Assert.False(string.IsNullOrWhiteSpace(logLine.LogLevel));
                     Assert.NotEqual(0, logLine.Timestamp);
                 }
             }
