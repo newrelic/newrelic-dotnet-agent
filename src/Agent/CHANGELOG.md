@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 ### New Features
+### Fixes
+
+## [9.7.0] - 2022-04-04
+### New Features
 * Adds support for logging metrics which shows the rate of log message by severity in the Logs chart in the APM Summary view for Log4net, Serilog, and Microsoft.Extensions.Logging. This is enabled by default in this release. ([#1034](https://github.com/newrelic/newrelic-dotnet-agent/pull/1034))
 * Adds support for forwarding application logs to New Relic. This automatically sends enriched application logs for Log4net, Serilog, and Microsoft.Extensions.Logging. This is disabled by default in this release. ([#1034](https://github.com/newrelic/newrelic-dotnet-agent/pull/1034))
 * Adds support for enriching application logs written to disk or standard out for Log4net, Serilog, Microsoft.Extensions.Logging. This can be used with another log forwarder if in-agent log forwarding is not desired. We recommend enabling either log forwarding or local log decorating, but not both features. This is disabled by default in this release. ([#1034](https://github.com/newrelic/newrelic-dotnet-agent/pull/1034))
@@ -394,7 +398,8 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.6.1...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.7.0...HEAD
+[9.7.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.6.1...v9.7.0
 [9.6.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.6.0...v9.6.1
 [9.6.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.5.1...v9.6.0
 [9.5.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.5.0...v9.5.1
