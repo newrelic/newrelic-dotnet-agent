@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Core.Utilities
                 "hostname",
                 new List<LogEventWireModel>()
                 {
-                    new LogEventWireModel(1, "message", "level", "spanId", "traceId")
+                    new LogEventWireModel(1, "message", "log.level", "spanId", "traceId")
                     {
                         Priority = 33.3f
                     }
@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             Assert.AreEqual(
                 "{\"common\":{\"attributes\":{\"entity.name\":\"myApplicationName\",\"entity.guid\":\"guid\",\"hostname\":\"hostname\"}}," +
-                "\"logs\":[{\"timestamp\":1,\"message\":\"message\",\"level\":\"level\"," +
+                "\"logs\":[{\"timestamp\":1,\"message\":\"message\",\"log.level\":\"log.level\"," +
                 "\"attributes\":{\"span.id\":\"spanId\",\"trace.id\":\"traceId\"}}]}",
                 serialized);
         }
