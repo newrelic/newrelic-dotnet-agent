@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <dirent.h>
+#include <libgen.h>
 
 namespace NewRelic { namespace Profiler
 {
@@ -166,7 +167,19 @@ namespace NewRelic { namespace Profiler
         // throws on failure
         virtual void DirectoryCreate(const xstring_t& directoryName) override
         {
-            mkdir(ToCharString(directoryName).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            MakePath(ToCharString(directoryName));
+        }
+
+        void MakePath(std::string pathToCreate)
+        {
+            std::string tmp = pathToCreate; // have to make a copy of pathToCreate because dirname modifies its argument
+            char* parent_path = dirname(const_cast<char*>(tmp.c_str()));
+
+            if (!DirectoryExists(ToWideString(parent_path)))
+            {
+                MakePath(std::string(parent_path));
+            }
+            mkdir(pathToCreate.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         }
 
         // throws on failure
