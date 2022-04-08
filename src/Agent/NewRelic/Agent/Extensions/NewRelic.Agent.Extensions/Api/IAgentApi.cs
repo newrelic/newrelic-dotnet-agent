@@ -60,6 +60,19 @@ namespace NewRelic.Agent.Api
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
         void NoticeError(Exception exception, IDictionary<string, string>? customAttributes);
 
+        /// <summary> Notice an error identified by an exception report it to the New Relic service. If
+        /// this method is called within a transaction, the exception will be reported with the
+        /// transaction when it finishes. If it is invoked outside of a transaction, a traced error will
+        /// be created and reported to the New Relic service. Only the exception/parameter pair for the
+        /// first call to NoticeError during the course of a transaction is retained. Supports web
+        /// applications only. </summary>
+        ///
+        /// <exception cref="ArgumentNullException"> Thrown when <paramref name="exception"/> is null. </exception>
+        ///
+        /// <param name="exception">	    The exception to be reported. Only part of the exception's
+        /// information may be retained to prevent the report from being too large. </param>
+        /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
+        /// null. Only 10,000 characters of combined key/value data is retained. </param>
         void NoticeError(Exception exception, IDictionary<string, object>? customAttributes);
 
         /// <summary> Notice an error identified by an exception report it to the New Relic service. If
@@ -84,12 +97,27 @@ namespace NewRelic.Agent.Api
         ///
         /// <exception cref="ArgumentNullException"> Thrown when <paramref name="message"/> is null. </exception>
         ///
-        /// <param name="message">		    The message to be displayed in the traced error. Only the
-        /// first 1000 characters are retained. </param>
+        /// <param name="message">		    The message to be displayed in the traced error. 
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message.</param>
         /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
         void NoticeError(string message, IDictionary<string, string>? customAttributes);
 
+        /// <summary> Notice an error identified by a simple message and report it to the New Relic
+        /// service. If this method is called within a transaction, the exception will be reported with
+        /// the transaction when it finishes. If it is invoked outside of a transaction, a traced error
+        /// will be created and reported to the New Relic service. Only the string/parameter pair for the
+        /// first call to NoticeError during the course of a transaction is retained. Supports web
+        /// applications only. </summary>
+        ///
+        /// <exception cref="ArgumentNullException"> Thrown when <paramref name="message"/> is null. </exception>
+        ///
+        /// <param name="message">		    The message to be displayed in the traced error. 
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message.</param>
+        /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
+        /// null. Only 10,000 characters of combined key/value data is retained. </param>
         void NoticeError(string message, IDictionary<string, object>? customAttributes);
 
         /// <summary> Notice an error identified by a simple message and report it to the New Relic
@@ -101,14 +129,31 @@ namespace NewRelic.Agent.Api
         ///
         /// <exception cref="ArgumentNullException"> Thrown when <paramref name="message"/> is null. </exception>
         ///
-        /// <param name="message">    The message to be displayed in the traced error. Only the
-        /// first 1000 characters are retained. </param>
+        /// <param name="message">    The message to be displayed in the traced error. 
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message.</param>
         /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
         /// <param name="isExpected"> Marks the error expected.
         /// </param>
         void NoticeError(string message, IDictionary<string, string>? customAttributes, bool isExpected);
 
+        /// <summary> Notice an error identified by a simple message and report it to the New Relic
+        /// service. If this method is called within a transaction, the exception will be reported with
+        /// the transaction when it finishes. If it is invoked outside of a transaction, a traced error
+        /// will be created and reported to the New Relic service. Only the string/parameter pair for the
+        /// first call to NoticeError during the course of a transaction is retained. Supports web
+        /// applications only. </summary>
+        ///
+        /// <exception cref="ArgumentNullException"> Thrown when <paramref name="message"/> is null. </exception>
+        ///
+        /// <param name="message">    The message to be displayed in the traced error. 
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message.</param>
+        /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
+        /// null. Only 10,000 characters of combined key/value data is retained. </param>
+        /// <param name="isExpected"> Marks the error expected.
+        /// </param>
         void NoticeError(string message, IDictionary<string, object>? customAttributes, bool isExpected);
 
         /// <summary> Set the name of the current transaction. Supports web applications only. </summary>
