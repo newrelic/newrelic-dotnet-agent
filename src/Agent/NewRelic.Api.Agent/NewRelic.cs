@@ -290,7 +290,8 @@ namespace NewRelic.Api.Agent
         /// Supports web applications only.
         /// </summary>
         /// <param name="message">The message to be displayed in the traced error.
-        /// Only the first 1000 characters are retained.
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message.
         /// </param>
         /// <param name="parameters">Custom parameters to include in the traced error.
         /// May be null.
@@ -337,7 +338,8 @@ namespace NewRelic.Api.Agent
         /// Supports web applications only.
         /// </summary>
         /// <param name="message">The message to be displayed in the traced error.
-        /// Only the first 1000 characters are retained.
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message.
         /// </param>
         /// <param name="parameters">Custom parameters to include in the traced error.
         /// May be null.
@@ -384,7 +386,8 @@ namespace NewRelic.Api.Agent
         /// Supports web applications only.
         /// </summary>
         /// <param name="message">The message to be displayed in the traced error.
-        /// Only the first 1000 characters are retained.
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message.
         /// </param>
         /// <param name="parameters">Custom parameters to include in the traced error.
         /// May be null.
@@ -434,7 +437,8 @@ namespace NewRelic.Api.Agent
         /// Supports web applications only.
         /// </summary>
         /// <param name="message">The message to be displayed in the traced error.
-        /// Only the first 1000 characters are retained.
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message.
         /// </param>
         /// <param name="parameters">Custom parameters to include in the traced error.
         /// May be null.

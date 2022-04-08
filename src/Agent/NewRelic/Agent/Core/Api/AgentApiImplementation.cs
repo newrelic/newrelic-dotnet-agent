@@ -200,6 +200,19 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
+        /// <summary> Notice an error identified by an exception report it to the New Relic service. If
+        /// this method is called within a transaction, the exception will be reported with the
+        /// transaction when it finishes. If it is invoked outside of a transaction, a traced error will
+        /// be created and reported to the New Relic service. Only the exception/parameter pair for the
+        /// first call to NoticeError during the course of a transaction is retained. Supports web
+        /// applications only. </summary>
+        ///
+        /// <exception cref="ArgumentNullException"> Thrown when <paramref name="exception"/> is null. </exception>
+        ///
+        /// <param name="exception">	    The exception to be reported. Only part of the exception's
+        /// information may be retained to prevent the report from being too large. </param>
+        /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
+        /// null. Only 10,000 characters of combined key/value data is retained. </param>
         public void NoticeError(Exception exception, IDictionary<string, object>? customAttributes)
         {
             exception = exception ?? throw new ArgumentNullException(nameof(exception));
@@ -246,8 +259,9 @@ namespace NewRelic.Agent.Core.Api
         ///
         /// <exception cref="ArgumentNullException"> Thrown when <paramref name="message"/> is null. </exception>
         ///
-        /// <param name="message">		    The message to be displayed in the traced error. Only the
-        /// first 1000 characters are retained. </param>
+        /// <param name="message">		    The message to be displayed in the traced error.
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message. </param>
         /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
         public void NoticeError(string message, IDictionary<string, string>? customAttributes)
@@ -255,6 +269,25 @@ namespace NewRelic.Agent.Core.Api
             NoticeError(message, customAttributes, false);
         }
 
+        /// <summary>
+        /// Notice an error identified by a simple message and report it to the New Relic service.
+        /// If this method is called within a transaction,
+        /// the exception will be reported with the transaction when it finishes.  
+        /// If it is invoked outside of a transaction, a traced error will be created and reported to the New Relic service.
+        /// Only the string/parameter pair for the first call to NoticeError during the course of a transaction is retained.
+        /// Supports web applications only. 
+        /// </summary>
+        ///
+        /// <exception cref="ArgumentNullException"> Thrown when <paramref name="message"/> is null. </exception>
+        /// 
+        /// <param name="message">The message to be displayed in the traced error.
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message. </param>
+        /// <param name="customAttributes">Custom parameters to include in the traced error.
+        /// May be null.
+        /// Only 10,000 characters of combined key/value data is retained.
+        /// </param>
+        /// <param name="isExpected">Mark error as expected so that it won't affect Apdex score and error rate.</param>
         public void NoticeError(string message, IDictionary<string, string>? customAttributes, bool isExpected)
         {
             message = message ?? throw new ArgumentNullException(nameof(message));
@@ -268,11 +301,44 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
+        /// <summary> Notice an error identified by a simple message and report it to the New Relic
+        /// service. If this method is called within a transaction, the exception will be reported with
+        /// the transaction when it finishes. If it is invoked outside of a transaction, a traced error
+        /// will be created and reported to the New Relic service. Only the string/parameter pair for the
+        /// first call to NoticeError during the course of a transaction is retained. Supports web
+        /// applications only. </summary>
+        ///
+        /// <exception cref="ArgumentNullException"> Thrown when <paramref name="message"/> is null. </exception>
+        ///
+        /// <param name="message">		    The message to be displayed in the traced error.
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message. </param>
+        /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
+        /// null. Only 10,000 characters of combined key/value data is retained. </param>
         public void NoticeError(string message, IDictionary<string, object>? customAttributes)
         {
             NoticeError(message, customAttributes, false);
         }
 
+        /// <summary>
+        /// Notice an error identified by a simple message and report it to the New Relic service.
+        /// If this method is called within a transaction,
+        /// the exception will be reported with the transaction when it finishes.  
+        /// If it is invoked outside of a transaction, a traced error will be created and reported to the New Relic service.
+        /// Only the string/parameter pair for the first call to NoticeError during the course of a transaction is retained.
+        /// Supports web applications only. 
+        /// </summary>
+        ///
+        /// <exception cref="ArgumentNullException"> Thrown when <paramref name="message"/> is null. </exception>
+        /// 
+        /// <param name="message">The message to be displayed in the traced error.
+        /// This method creates both Error Events and Error Traces.
+        /// Only the first 255 characters are retained in Error Events while Error Traces will retain the full message. </param>
+        /// <param name="customAttributes">Custom parameters to include in the traced error.
+        /// May be null.
+        /// Only 10,000 characters of combined key/value data is retained.
+        /// </param>
+        /// <param name="isExpected">Mark error as expected so that it won't affect Apdex score and error rate.</param>
         public void NoticeError(string message, IDictionary<string, object>? customAttributes, bool isExpected)
         {
             message = message ?? throw new ArgumentNullException(nameof(message));
