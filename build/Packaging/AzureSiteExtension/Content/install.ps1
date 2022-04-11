@@ -327,7 +327,7 @@ try
 
 	$packageNames = @($nugetPackageForFrameworkApp, $nugetPackageForCoreApp)
 	$stagingFolders = @("NewRelicPackage", "NewRelicCorePackage")
-	$newRelicInstallPaths = @("$env:HOME\NewRelicAgent\newrelic", "$env:HOME\NewRelicAgent\newrelic_core")
+	$newRelicInstallPaths = @("$env:HOME\NewRelicAgent\Framework", "$env:HOME\NewRelicAgent\Core")
 	$newRelicLegacyInstallPaths = @("$env:WEBROOT_PATH\newrelic", "$env:WEBROOT_PATH\newrelic_core")
 	$newRelicNugetContentPaths = $(".\content\newrelic", ".\contentFiles\any\netstandard2.0\newrelic")
 

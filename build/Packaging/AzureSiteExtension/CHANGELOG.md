@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 ### Fixes
+* Fixes Issue [#1005](https://github.com/newrelic/newrelic-dotnet-agent/issues/1005): site extension did not work when the the web app was set to run from a package, and broke after deployment of customer applications in some cases due to the agent being deployed to the site directory. [#1021](https://github.com/newrelic/newrelic-dotnet-agent/pull/1021)
 
 ## [1.5.2] - 2021-03-05
 ### Fixes
