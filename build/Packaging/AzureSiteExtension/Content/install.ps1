@@ -84,19 +84,35 @@ function SaveNewRelicConfigAndCustomInstrumentationFiles($newRelicInstallPath)
 			Copy-Item -Path "$newRelicInstallPath\newrelic.config" -Destination "$newRelicInstallPath\saved_items"
 		}
 
-		WriteToInstallLog "Save the following existing custom instrumemtation files to the $newRelicInstallPath\saved_items folder."
+		WriteToInstallLog "Save the following existing custom instrumentation files to the $newRelicInstallPath\saved_items folder."
 		Get-ChildItem "$newRelicInstallPath\extensions\*.xml" -Exclude "NewRelic.Providers.*" | Out-File -FilePath "$(Split-Path -Parent $PSCommandPath)\install.log" -Append
 		Get-ChildItem "$newRelicInstallPath\extensions\*.xml" -Exclude "NewRelic.Providers.*" | Copy-Item -Destination "$newRelicInstallPath\saved_items"
 	}
 }
 
-function RestoreCustomerRelatedFiles($newRelicInstallPath)
+function RestoreCustomerRelatedFiles($newRelicInstallPath, $newRelicLegacyInstallPath)
 {
 	if (Test-Path -Path "$newRelicInstallPath\saved_items")
 	{
-		WriteToInstallLog "Restore newrelic.config and custom instrumemtation files from the saved_items folder."
+		WriteToInstallLog "Restore newrelic.config and custom instrumentation files from the saved_items folder."
 		Copy-Item -Path "$newRelicInstallPath\saved_items\newrelic.config" -Destination "$newRelicInstallPath\newrelic.config" -Force
 		Get-ChildItem "$newRelicInstallPath\saved_items\*.xml" | Copy-Item -Destination "$newRelicInstallPath\extensions"
+	}
+	# If there aren't any saved_items in the current install path, then this may be an upgrade between versions of the site extension
+	# that changed the storage path for where the new relic agent lives. The uninstall of the site extension removes the legacy storage
+	# locations, so this migration should only ever happen once.
+	elseif (Test-Path -Path $newRelicLegacyInstallPath)
+	{
+		WriteToInstallLog "Migrating newrelic.config and custom instrumentation files from old site extension storage location."
+		if (Test-Path -Path "$newRelicLegacyInstallPath\newrelic.config")
+		{
+			WriteToInstallLog "Migrating $newRelicLegacyInstallPath\newrelic.config to $newRelicInstallPath\newrelic.config."
+			Copy-Item -Path "$newRelicLegacyInstallPath\newrelic.config" -Destination "$newRelicInstallPath\newrelic.config" -Force
+		}
+
+		WriteToInstallLog "Migrating the following custom instrumentation files to the $newRelicInstallPath."
+		Get-ChildItem "$newRelicLegacyInstallPath\extensions\*.xml" -Exclude "NewRelic.Providers.*" | Out-File -FilePath "$(Split-Path -Parent $PSCommandPath)\install.log" -Append
+		Get-ChildItem "$newRelicLegacyInstallPath\extensions\*.xml" -Exclude "NewRelic.Providers.*" | Copy-Item -Destination "$newRelicInstallPath\extensions"
 	}
 }
 
@@ -116,7 +132,7 @@ function RenameExistingFilesAsSaveExtensionFiles($newRelicInstallPath)
 	}
 }
 
-function RemoveExistingSaveExtenstionFiles($newRelicInstallPath)
+function RemoveExistingSaveExtensionFiles($newRelicInstallPath)
 {
 	WriteToInstallLog "Remove existing *.save files from previous upgrade if there are any."
 	if(Test-Path $newRelicInstallPath)
@@ -125,11 +141,11 @@ function RemoveExistingSaveExtenstionFiles($newRelicInstallPath)
 	}
 }
 
-function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath)
+function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath, $newRelicLegacyInstallPath)
 {
 	###Remove existing *.save files from previous upgrade###
-	RemoveExistingSaveExtenstionFiles $newRelicInstallPath
-
+	RemoveExistingSaveExtensionFiles $newRelicInstallPath
+	
 	###Preserve existing newrelic.config and custom instrumemtation xml files###
 	SaveNewRelicConfigAndCustomInstrumentationFiles $newRelicInstallPath
 
@@ -141,14 +157,14 @@ function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath)
 	$xdoc.load($file)
 
 	#Set Agent log location
-	$xdoc.configuration.log.SetAttribute("directory", "c:\Home\LogFiles\NewRelic")
+	$xdoc.configuration.log.SetAttribute("directory", "$env:HOME\LogFiles\NewRelic")
 	$xdoc.Save($file)
 
 	WriteToInstallLog "Copy items from $(Resolve-Path $newRelicNugetContentPath) to $newRelicInstallPath"
 	CopyDirectory $newRelicNugetContentPath $newRelicInstallPath
 
 	###Restore saved newrelic.config and custom instrumemtation files###
-	RestoreCustomerRelatedFiles $newRelicInstallPath
+	RestoreCustomerRelatedFiles $newRelicInstallPath $newRelicLegacyInstallPath
 
 	###Remove Linux Grpc library since it won't be used.
 	$linuxGrpcLib = "$newRelicInstallPath\libgrpc_csharp_ext.x64.so"
@@ -311,7 +327,8 @@ try
 
 	$packageNames = @($nugetPackageForFrameworkApp, $nugetPackageForCoreApp)
 	$stagingFolders = @("NewRelicPackage", "NewRelicCorePackage")
-	$newRelicInstallPaths = @("$env:WEBROOT_PATH\newrelic", "$env:WEBROOT_PATH\newrelic_core")
+	$newRelicInstallPaths = @("$env:HOME\NewRelicAgent\Framework", "$env:HOME\NewRelicAgent\Core")
+	$newRelicLegacyInstallPaths = @("$env:WEBROOT_PATH\newrelic", "$env:WEBROOT_PATH\newrelic_core")
 	$newRelicNugetContentPaths = $(".\content\newrelic", ".\contentFiles\any\netstandard2.0\newrelic")
 
 	#Check to see if the old Agent is currently being used
@@ -321,6 +338,7 @@ try
 		$packageName = $packageNames[$i]
 		$stagingFolder = $stagingFolders[$i]
 		$newRelicInstallPath= $newRelicInstallPaths[$i]
+		$newRelicLegacyInstallPath = $newRelicLegacyInstallPaths[$i]
 		$newRelicNugetContentPath = $newRelicNugetContentPaths[$i]
 
 		if($packageName -eq "NewRelic.Agent" -and [System.Version]$agentVersion -lt [System.Version]"8.17.438")
@@ -344,7 +362,7 @@ try
 
 		cd "$packageName.$agentVersion"
 
-		InstallNewAgent $newRelicNugetContentPath $newRelicInstallPath
+		InstallNewAgent $newRelicNugetContentPath $newRelicInstallPath $newRelicLegacyInstallPath
 
 		CopyAgentInfo $newRelicInstallPath
 
