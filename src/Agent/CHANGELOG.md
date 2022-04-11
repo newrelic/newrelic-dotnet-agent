@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] changes
 ### New Features
 ### Fixes
+* Fixes [issue on Linux](https://github.com/newrelic/newrelic-dotnet-agent/issues/763) when specifying a non-default profiler log directory with non-existent intermediate directories. ([#1051](https://github.com/newrelic/newrelic-dotnet-agent/pull/1051))
 
 ## [9.7.0] - 2022-04-04
 ### New Features
