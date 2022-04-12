@@ -43,7 +43,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
             _fixture.Initialize();
         }
 
-        [SkipOnLinuxFact("See https://github.com/newrelic/newrelic-dotnet-agent/issues/763")]
+        [Fact]
         public void AgentLog()
         {
             var configLocation = new AgentLogFile(_configLogDirectory, throwIfNotFound: false);
@@ -59,7 +59,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
             Assert.DoesNotContain($"{_configLogLevel}: [pid: ", agentLines, StringComparer.OrdinalIgnoreCase);
         }
 
-        [SkipOnLinuxFact("See https://github.com/newrelic/newrelic-dotnet-agent/issues/763")]
+        [Fact]
         public void ProfilerLog()
         {
             var configLocation = new ProfilerLogFile(_configLogDirectory, throwIfNotFound: false);
