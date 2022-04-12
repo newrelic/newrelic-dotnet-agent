@@ -454,6 +454,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="AspNetCoreWrapperComponent" Guid="{383038F5-CC7D-4A78-8B10-0F489FEFEBE1}">
         <File Id="AspNetCoreWrapperFile" Name="NewRelic.Providers.Wrapper.AspNetCore.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AspNetCore.dll"/>
       </Component>
+      <Component Id="LoggingWrapperComponent" Guid="{E45FB955-F2C4-475E-B057-5C4441381AD2}">
+        <File Id="LoggingWrapperFile" Name="NewRelic.Providers.Wrapper.Logging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Logging.dll"/>
+      </Component>
 
       <!-- Reference libraries -->
       <Component Id="NewRelicCoreReferenceComponent" Guid="{C196ED1E-0FBA-4D36-9C34-E969B0C9E8C9}">
@@ -488,6 +491,12 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreRabbitMqWrapperComponent" Guid="{758394DD-AB71-4E58-8E18-BF1135F8B2C2}">
         <File Id="CoreRabbitMqWrapperFile" Name="NewRelic.Providers.Wrapper.RabbitMq.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.RabbitMq.dll"/>
+      </Component>
+      <Component Id="CoreLoggingWrapperComponent" Guid="{882392E9-9403-41EC-9321-9C6E53781744}">
+        <File Id="CoreLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.Logging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Logging.dll"/>
+      </Component>
+      <Component Id="CoreMicrosoftExtensionsLoggingWrapperComponent" Guid="{247CB27D-7F32-4DE3-965F-505A3A5F75ED}">
+        <File Id="CoreMicrosoftExtensionsLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll"/>
       </Component>
 
       <!-- Reference libraries -->
@@ -576,6 +585,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="MiscInstrumentationComponent" Guid="{EE12546C-A328-49A7-84BE-B9A556ADA0A8}">
         <File Id="MiscInstrumentationFile" Name="NewRelic.Providers.Wrapper.Misc.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml"/>
       </Component>
+      <Component Id="LoggingInstrumentationComponent" Guid="{DF1C4FF5-71A3-4C81-912F-0255C6FE231B}">
+        <File Id="LoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.Logging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Logging.Instrumentation.xml"/>
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions.Instrumentation" Directory="CoreExtensionsFolder">
@@ -599,6 +611,12 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreRabbitMqInstrumentationComponent" Guid="{1CDC18CC-992A-4386-BC4D-DE87A85D9568}">
         <File Id="CoreRabbitMqInstrumentationFile" Name="NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreLoggingInstrumentationComponent" Guid="{A40554DF-870C-477C-8910-1113A221820C}">
+        <File Id="CoreLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.Logging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Logging.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreMicrosoftExtensionsLoggingInstrumentationComponent" Guid="{133E2C37-4DD7-462F-B0D1-2BD46A6A5970}">
+        <File Id="CoreMicrosoftExtensionsLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 
