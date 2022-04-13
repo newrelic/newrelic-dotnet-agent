@@ -13,7 +13,8 @@ namespace NewRelic.Agent.Core.Attributes
 {
     public static class AttributeDefinitionBuilder
     {
-        private const int _stringValueMaxLengthBytes = 255;
+        private const int StringValueMaxLengthBytes = 255;
+        private const int ErrorMessageMaxLengthBytes = 1023;
 
         public static AttributeDefinitionBuilder<TInput, TOutput> Create<TInput, TOutput>(string name, AttributeClassification classification)
         {
@@ -29,13 +30,19 @@ namespace NewRelic.Agent.Core.Attributes
         public static AttributeDefinitionBuilder<TInput, string> CreateString<TInput>(string name, AttributeClassification classification)
         {
             return new AttributeDefinitionBuilder<TInput, string>(name, classification)
-                .WithPostProcessing((v) => v.TruncateUnicodeStringByBytes(_stringValueMaxLengthBytes));
+                .WithPostProcessing((v) => v.TruncateUnicodeStringByBytes(StringValueMaxLengthBytes));
         }
 
         public static AttributeDefinitionBuilder<string, string> CreateString(string name, AttributeClassification classification)
         {
             return Create<string>(name, classification)
-                .WithPostProcessing((v) => v.TruncateUnicodeStringByBytes(_stringValueMaxLengthBytes));
+                .WithPostProcessing((v) => v.TruncateUnicodeStringByBytes(StringValueMaxLengthBytes));
+        }
+
+        public static AttributeDefinitionBuilder<string, string> CreateErrorMessage(string name, AttributeClassification classification)
+        {
+            return Create<string>(name, classification)
+                .WithPostProcessing((v) => v.TruncateUnicodeStringByBytes(ErrorMessageMaxLengthBytes));
         }
 
         public static AttributeDefinitionBuilder<TInput, double> CreateDouble<TInput>(string name, AttributeClassification classification)

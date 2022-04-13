@@ -174,9 +174,6 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                 attribDef.TrySetValue(attribVals, 9);
             }
 
-
-
-
             NrAssert.Multiple(
                 () => Assert.IsTrue(testResults[0]),
                 () => Assert.IsFalse(testResults[1]),
@@ -184,6 +181,84 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                 () => Assert.IsFalse(testResults[3]),
                 () => Assert.IsFalse(testResults[4]),
                 () => Assert.AreEqual(1, attribVals.GetAttributeValues(AttributeClassification.UserAttributes).Count())
+            );
+        }
+
+        [Test]
+        public void Attributes_value_size_errors()
+        {
+            var filter = new AttributeFilter(new AttributeFilter.Settings());
+            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+
+            var attributes = new Dictionary<string, string>
+            {
+                { "short" ,new string('a', 255) },
+                { "long", new string('b', 1023) },
+                { "toolong",new string('c', 1024) }
+            };
+
+            var attribDefTestResults = new bool[attributes.Count];
+
+            for (int i = 0; i < attributes.Count; i++)
+            {
+                var pair = attributes.ElementAt(i);
+                var attribDef = AttributeDefinitionBuilder
+                   .CreateErrorMessage(pair.Key, AttributeClassification.AgentAttributes)
+                   .AppliesTo(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace)
+                   .Build(filter);
+                attribDefTestResults[i] = attribDef.IsDefinitionValid;
+                attribDef.TrySetValue(attribVals, pair.Value);
+            }
+
+            var values = attribVals.GetAttributeValues(AttributeClassification.AgentAttributes);
+
+            NrAssert.Multiple(
+                () => Assert.IsTrue(attribDefTestResults[0]),
+                () => Assert.IsTrue(attribDefTestResults[1]),
+                () => Assert.IsTrue(attribDefTestResults[2]),
+                () => Assert.AreEqual(3, values.Count()),
+                () => Assert.AreEqual(255, values.ElementAt(0).Value.ToString().Length),
+                () => Assert.AreEqual(1023, values.ElementAt(1).Value.ToString().Length),
+                () => Assert.AreEqual(1023, values.ElementAt(2).Value.ToString().Length)
+            );
+        }
+
+        [Test]
+        public void Attributes_value_size_other_strings()
+        {
+            var filter = new AttributeFilter(new AttributeFilter.Settings());
+            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+
+            var attributes = new Dictionary<string, string>
+            {
+                { "short" ,new string('a', 255) },
+                { "long", new string('b', 1023) },
+                { "toolong",new string('c', 1024) }
+            };
+
+            var attribDefTestResults = new bool[attributes.Count];
+
+            for (int i = 0; i < attributes.Count; i++)
+            {
+                var pair = attributes.ElementAt(i);
+                var attribDef = AttributeDefinitionBuilder
+                   .CreateString(pair.Key, AttributeClassification.AgentAttributes)
+                   .AppliesTo(AttributeDestinations.All)
+                   .Build(filter);
+                attribDefTestResults[i] = attribDef.IsDefinitionValid;
+                attribDef.TrySetValue(attribVals, pair.Value);
+            }
+
+            var values = attribVals.GetAttributeValues(AttributeClassification.AgentAttributes);
+
+            NrAssert.Multiple(
+                () => Assert.IsTrue(attribDefTestResults[0]),
+                () => Assert.IsTrue(attribDefTestResults[1]),
+                () => Assert.IsTrue(attribDefTestResults[2]),
+                () => Assert.AreEqual(3, values.Count()),
+                () => Assert.AreEqual(255, values.ElementAt(0).Value.ToString().Length),
+                () => Assert.AreEqual(255, values.ElementAt(1).Value.ToString().Length),
+                () => Assert.AreEqual(255, values.ElementAt(2).Value.ToString().Length)
             );
         }
     }
