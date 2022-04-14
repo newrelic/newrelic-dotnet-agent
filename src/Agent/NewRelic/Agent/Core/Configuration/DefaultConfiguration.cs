@@ -393,11 +393,26 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public bool AllowAllRequestHeaders => HighSecurityModeOverrides(false, _localConfiguration.allowAllHeaders.enabled);
+        public bool AllowAllRequestHeaders
+        {
+            get
+            {
+                return HighSecurityModeOverrides(false,
+                    EnvironmentOverrides(_localConfiguration.allowAllHeaders.enabled,
+                    "NEW_RELIC_ALLOW_ALL_HEADERS"));
+            }
+        }
 
         #region Attributes
 
-        public virtual bool CaptureAttributes => _localConfiguration.attributes.enabled;
+        public virtual bool CaptureAttributes
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.attributes.enabled,
+                    "NEW_RELIC_ATTRIBUTES_ENABLED");
+            }
+        }
 
         private BoolConfigurationItem _canUseAttributesIncludes;
 
@@ -451,7 +466,11 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (CanUseAttributesIncludes)
                 {
-                    return Memoizer.Memoize(ref _captureAttributesIncludes, () => new HashSet<string>(_localConfiguration.attributes.include));
+                    return Memoizer.Memoize(ref _captureAttributesIncludes, () =>
+                    {
+                        var includes = EnvironmentOverrides(_localConfiguration.attributes.include, "NEW_RELIC_ATTRIBUTES_INCLUDE");
+                        return new HashSet<string>(includes);
+                    });
                 }
 
                 return Memoizer.Memoize(ref _captureAttributesIncludes, () => new List<string>());
@@ -466,8 +485,8 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 return Memoizer.Memoize(ref _captureAttributesExcludes, () =>
                 {
-                    var configExcludes = _localConfiguration.attributes.exclude;
-                    return new HashSet<string>(configExcludes);
+                    var excludes = EnvironmentOverrides(_localConfiguration.attributes.exclude, "NEW_RELIC_ATTRIBUTES_EXCLUDE");
+                    return new HashSet<string>(excludes);
                 });
             }
         }
@@ -1942,6 +1961,25 @@ namespace NewRelic.Agent.Core.Configuration
         private static T ServerOverrides<T>(T server, T local) where T : class
         {
             return server ?? local;
+        }
+
+        private List<string> EnvironmentOverrides(List<string> local, params string[] environmentVariableNames)
+        {
+            var envValue = (environmentVariableNames ?? Enumerable.Empty<string>())
+                .Select(_environment.GetEnvironmentVariable)
+                .Where(value => value != null)
+                .FirstOrDefault();
+
+            // took this approach to eliminate a null object issue when combining the different calls together. Also a bit easier to read.
+            if (string.IsNullOrWhiteSpace(envValue))
+            {
+                return local;
+            }
+
+            return envValue
+                .Remove(' ')
+                .Split(',')
+                .ToList();
         }
 
         private string EnvironmentOverrides(string local, params string[] environmentVariableNames)
