@@ -493,7 +493,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         private AttributeDefinition<string, string> _spanErrorMessage;
         public AttributeDefinition<string, string> SpanErrorMessage => _spanErrorMessage ?? (_spanErrorMessage =
-            AttributeDefinitionBuilder.CreateString("error.message", AttributeClassification.AgentAttributes)
+            AttributeDefinitionBuilder.CreateErrorMessage("error.message", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
 
@@ -762,7 +762,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         private AttributeDefinition<string, string> _errorDotMessage;
         public AttributeDefinition<string, string> ErrorDotMessage => _errorDotMessage ?? (_errorDotMessage =
-            AttributeDefinitionBuilder.CreateString("error.message", AttributeClassification.Intrinsics)
+            AttributeDefinitionBuilder.CreateErrorMessage("error.message", AttributeClassification.Intrinsics)
                     .AppliesTo(AttributeDestinations.ErrorEvent)
                 .Build(_attribFilter));
 
