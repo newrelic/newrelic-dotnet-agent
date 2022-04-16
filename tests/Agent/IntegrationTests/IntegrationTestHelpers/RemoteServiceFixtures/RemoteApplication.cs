@@ -136,7 +136,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public abstract void CopyToRemote();
 
-        public abstract void Start(string commandLineArguments, bool captureStandardOutput = false, bool doProfile = true);
+        public abstract void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true);
 
         #endregion
 

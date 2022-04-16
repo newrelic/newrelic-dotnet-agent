@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -181,7 +182,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
 
 
-        public override void Start(string commandLineArguments, bool captureStandardOutput = false, bool doProfile = true)
+        public override void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
         {
             var arguments = UsesSpecificPort
                 ? $"--port={Port} {commandLineArguments}"
@@ -220,6 +221,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER");
             startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER_PATH");
             startInfo.EnvironmentVariables.Remove("CORECLR_NEWRELIC_HOME");
+
+            // configure env vars as needed for testing environment overrides
+            foreach (var envVar in environmentVariables)
+            {
+                startInfo.EnvironmentVariables.Add(envVar.Key, envVar.Value);
+            }
 
             if (!doProfile)
             {

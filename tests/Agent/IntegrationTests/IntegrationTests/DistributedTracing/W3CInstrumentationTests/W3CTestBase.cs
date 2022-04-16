@@ -39,8 +39,10 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
                     configModifier.SetOrDeleteSpanEventsEnabled(true);
                     configModifier.SetLogLevel("debug");
 
+                    var environmentVariables = new Dictionary<string, string>();
+
                     _fixture.ReceiverApplication = _fixture.SetupReceiverApplication(isDistributedTracing: true, isWebApplication: _fixture is OwinTracingChainFixture ? false : true);
-                    _fixture.ReceiverApplication.Start(string.Empty, captureStandardOutput: true);
+                    _fixture.ReceiverApplication.Start(string.Empty, environmentVariables, captureStandardOutput: true);
                 });
         }
 

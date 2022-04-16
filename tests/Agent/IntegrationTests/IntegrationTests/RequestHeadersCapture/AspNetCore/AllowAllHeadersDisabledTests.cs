@@ -13,26 +13,17 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
 {
-    [NetCoreTest]
-    public class AllowAllHeadersDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+    public class AspNetCoreAllowAllHeadersDisabledTestsBase : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
 
-        public AllowAllHeadersDisabledTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+        public AspNetCoreAllowAllHeadersDisabledTestsBase(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _fixture.Actions
             (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-
-                    configModifier.SetAllowAllHeaders(false)
-                    .EnableDistributedTrace().ForceTransactionTraces();
-                },
                 exerciseApplication: () =>
                 {
                     var customRequestHeaders = new Dictionary<string, string> { { "foo", "bar" } };
@@ -40,7 +31,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
-            _fixture.Initialize();
         }
 
         [Fact]
@@ -81,6 +71,53 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
             Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
             Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
 
+        }
+    }
+
+    [NetCoreTest]
+    public class AspNetCoreAllowAllHeadersDisabledTests_ConfigFile : AspNetCoreAllowAllHeadersDisabledTestsBase
+    {
+        public AspNetCoreAllowAllHeadersDisabledTests_ConfigFile(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+            fixture.Actions
+            (
+
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+
+                    configModifier.SetAllowAllHeaders(false)
+                        .ForceTransactionTraces()
+                        .EnableSpanEvents(true);
+                }
+            );
+
+            fixture.Initialize();
+        }
+    }
+
+    [NetCoreTest]
+    public class AspNetCoreAllowAllHeadersDisabledTests_EnvVar : AspNetCoreAllowAllHeadersDisabledTestsBase
+    {
+        public AspNetCoreAllowAllHeadersDisabledTests_EnvVar(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+            fixture.Actions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+
+                    configModifier.SetAllowAllHeaders(true)
+                        .ForceTransactionTraces()
+                        .EnableSpanEvents(true);
+
+                    fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "false");
+                }
+            );
+
+            fixture.Initialize();
         }
     }
 }

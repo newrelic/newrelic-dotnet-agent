@@ -21,7 +21,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private Action _setupConfiguration;
         private Action _exerciseApplication;
-        
+
+        public Dictionary<string, string> EnvironmentVariables;
 
         private bool _initialized;
 
@@ -121,6 +122,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected RemoteApplicationFixture(RemoteApplication remoteApplication)
         {
+            EnvironmentVariables = new Dictionary<string, string>();
             RemoteApplication = remoteApplication;
         }
 
@@ -232,7 +234,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                         var captureStandardOutput = RemoteApplication.CaptureStandardOutput;
 
-                        RemoteApplication.Start(CommandLineArguments, captureStandardOutput);
+                        RemoteApplication.Start(CommandLineArguments, EnvironmentVariables, captureStandardOutput);
 
                         try
                         {

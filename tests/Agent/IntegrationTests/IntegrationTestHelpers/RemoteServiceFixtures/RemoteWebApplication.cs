@@ -17,7 +17,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private const string HostedWebCoreProcessName = @"HostedWebCore.exe";
 
-
         protected override string SourceApplicationDirectoryPath { get { return Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName, "Deploy"); } }
 
         private static readonly string SourceHostedWebCoreProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "HostedWebCore");
@@ -41,7 +40,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             ValidateHostedWebCoreOutput = true;
         }
 
-
         public override void CopyToRemote()
         {
             CopyNewRelicHomeDirectoryToRemote();
@@ -54,7 +52,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "instrumentation", "applications", "application" }, "name", HostedWebCoreProcessName);
         }
 
-        public override void Start(string commandLineArguments, bool captureStandardOutput = false, bool doProfile = true)
+        public override void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
         {
             var arguments = $"--port={Port} {commandLineArguments}";
             var applicationFilePath = Path.Combine(DestinationHostedWebCoreDirectoryPath, "HostedWebCore.exe");
@@ -82,6 +80,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.EnvironmentVariables.Remove("NEWRELIC_LICENSEKEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_LICENSE_KEY");
             startInfo.EnvironmentVariables.Remove("NEW_RELIC_HOST");
+
+            // configure env vars as needed for testing environment overrides
+            foreach (var envVar in environmentVariables)
+            {
+                startInfo.EnvironmentVariables.Add(envVar.Key, envVar.Value);
+            }
 
             if (!doProfile)
             {
