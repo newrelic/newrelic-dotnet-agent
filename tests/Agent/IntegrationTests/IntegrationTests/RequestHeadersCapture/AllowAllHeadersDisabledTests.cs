@@ -10,14 +10,14 @@ using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
+namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture
 {
     [NetFrameworkTest]
-    public class AllowAllHeadersEnabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class EnvironmentVariableAllowAllHeadersDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public AllowAllHeadersEnabledTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public EnvironmentVariableAllowAllHeadersDisabledTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
@@ -32,22 +32,19 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
                     configModifier.SetAllowAllHeaders(true)
                         .ForceTransactionTraces()
                         .EnableSpanEvents(true);
+
+                    fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "false");
                 },
                 exerciseApplication: () =>
                 {
-                    var customRequestHeaders = new Dictionary<string, string>
-                    {
-                        { "FOO", "bar" },
-                        { "Cookie", "itsasecret" },
-                        { "dashes-are-valid", "true" },
-                        { "dashesarevalid", "false" }
-                    };
+                    var customRequestHeaders = new Dictionary<string, string> { { "foo", "bar" } };
 
                     _fixture.PostWithTestHeaders(customRequestHeaders);
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
-            _fixture.Initialize();
+
+            fixture.Initialize();
         }
 
         [Fact]
@@ -61,14 +58,12 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
                 { "request.headers.accept", "text/html" },
                 { "request.headers.content-length", "5" },
                 { "request.headers.host", "fakehost" },
-                { "request.headers.user-agent", "FakeUserAgent" },
-                { "request.headers.foo", "bar" },
-                { "request.headers.dashes-are-valid", "true" },
-                { "request.headers.dashesarevalid", "false" }
+                { "request.headers.user-agent", "FakeUserAgent" }
             };
 
             var unexpectedAttributes = new List<string>
             {
+                "request.headers.foo",
                 "request.headers.cookie",
                 "request.headers.authorization",
                 "request.headers.proxy-authorization",

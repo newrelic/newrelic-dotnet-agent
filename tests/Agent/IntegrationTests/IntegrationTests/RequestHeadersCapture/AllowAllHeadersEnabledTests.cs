@@ -10,14 +10,14 @@ using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
+namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture
 {
     [NetFrameworkTest]
-    public class AllowAllHeadersEnabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class EnvironmentVariableAllowAllHeadersEnabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public AllowAllHeadersEnabledTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public EnvironmentVariableAllowAllHeadersEnabledTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
@@ -29,9 +29,11 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
-                    configModifier.SetAllowAllHeaders(true)
+                    configModifier.SetAllowAllHeaders(false)
                         .ForceTransactionTraces()
                         .EnableSpanEvents(true);
+
+                    fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "true");
                 },
                 exerciseApplication: () =>
                 {
@@ -47,7 +49,8 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
-            _fixture.Initialize();
+
+            fixture.Initialize();
         }
 
         [Fact]

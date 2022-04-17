@@ -12,17 +12,27 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
 {
-    public class Asp35AllowAllHeadersDisabledTestsBase : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    [NetFrameworkTest]
+    public class AllowAllHeadersDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public Asp35AllowAllHeadersDisabledTestsBase(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public AllowAllHeadersDisabledTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _fixture.Actions
             (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+
+                    configModifier.SetAllowAllHeaders(false)
+                        .ForceTransactionTraces()
+                        .EnableSpanEvents(true);
+                },
                 exerciseApplication: () =>
                 {
                     var customRequestHeaders = new Dictionary<string, string> { { "foo", "bar" } };
@@ -31,6 +41,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
+            _fixture.Initialize();
         }
 
         [Fact]
@@ -69,52 +80,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
             Assertions.SpanEventDoesNotHaveAttributes(unexpectedAttributes, SpanEventAttributeType.Agent, spanEvent);
             Assertions.TransactionEventDoesNotHaveAttributes(unexpectedAttributes, TransactionEventAttributeType.Agent, transactionEvent);
             Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
-        }
-    }
-
-    [NetFrameworkTest]
-    public class Asp35AllowAllHeadersDisabledTests_ConfigFile : Asp35AllowAllHeadersDisabledTestsBase
-    {
-        public Asp35AllowAllHeadersDisabledTests_ConfigFile(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-            fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-
-                    configModifier.SetAllowAllHeaders(false)
-                        .ForceTransactionTraces()
-                        .EnableSpanEvents(true);
-                }
-            );
-
-            fixture.Initialize();
-        }
-    }
-
-    [NetFrameworkTest]
-    public class Asp35AllowAllHeadersDisabledTests_EnvVar : Asp35AllowAllHeadersDisabledTestsBase
-    {
-        public Asp35AllowAllHeadersDisabledTests_EnvVar(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-            fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-
-                    configModifier.SetAllowAllHeaders(true)
-                        .ForceTransactionTraces()
-                        .EnableSpanEvents(true);
-
-                    fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "false");
-                }
-            );
-
-            fixture.Initialize();
         }
     }
 }
