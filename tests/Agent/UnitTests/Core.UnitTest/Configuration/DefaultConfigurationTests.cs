@@ -2363,6 +2363,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("false", true, ExpectedResult = false)]
         [TestCase("false", false, ExpectedResult = false)]
         [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
         [TestCase(null, true, ExpectedResult = true)]
         [TestCase(null, false, ExpectedResult = false)]
         [TestCase(null, null, ExpectedResult = true)] // true by default test
@@ -2384,6 +2387,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("false", true, ExpectedResult = false)]
         [TestCase("false", false, ExpectedResult = false)]
         [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
         [TestCase(null, true, ExpectedResult = true)]
         [TestCase(null, false, ExpectedResult = false)]
         [TestCase(null, null, ExpectedResult = true)] // true by default test
@@ -2405,6 +2411,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("false", true, ExpectedResult = false)]
         [TestCase("false", false, ExpectedResult = false)]
         [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
         [TestCase(null, true, ExpectedResult = true)]
         [TestCase(null, false, ExpectedResult = false)]
         [TestCase(null, null, ExpectedResult = true)] // true by default test
@@ -2426,6 +2435,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("false", true, ExpectedResult = false)]
         [TestCase("false", false, ExpectedResult = false)]
         [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
         [TestCase(null, true, ExpectedResult = true)]
         [TestCase(null, false, ExpectedResult = false)]
         [TestCase(null, null, ExpectedResult = true)] // true by default test
@@ -2447,6 +2459,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("false", true, ExpectedResult = false)]
         [TestCase("false", false, ExpectedResult = false)]
         [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
         [TestCase(null, true, ExpectedResult = true)]
         [TestCase(null, false, ExpectedResult = false)]
         [TestCase(null, null, ExpectedResult = true)] // true by default test
@@ -2468,6 +2483,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("false", true, ExpectedResult = false)]
         [TestCase("false", false, ExpectedResult = false)]
         [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
         [TestCase(null, true, ExpectedResult = true)]
         [TestCase(null, false, ExpectedResult = false)]
         [TestCase(null, null, ExpectedResult = true)] // true by default test
