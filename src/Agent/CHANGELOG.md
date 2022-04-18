@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 ### New Features
+* Error messages in error traces and error events now retain up to 1023 characters instead of 255 characters. [#1058](https://github.com/newrelic/newrelic-dotnet-agent/pull/1058)
+* New environment variables have been add for AllowAllHeaders and Attributes configuration settings. See our [documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#optional-environment-variables) for more details. [#1059](https://github.com/newrelic/newrelic-dotnet-agent/pull/1059)
+
 ### Fixes
+
 
 ## [9.7.1] - 2022-04-13
 ### Fixes
