@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Wrapper
 {
     public class OtherTransactionWrapper : IWrapper
     {
-        private const string ForceNewTransansactionOnAsyncWrapperName = "AsyncForceNewTransactionWrapper";
+        private const string ForceNewTransactionOnAsyncWrapperName = "AsyncForceNewTransactionWrapper";
 
         private static readonly string[] PossibleWrapperNames =
         {
@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Core.Wrapper
             "NewRelic.Providers.Wrapper.CustomInstrumentation.OtherTransactionWrapper",
             "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.OtherTransactionWrapperAsync",
             "OtherTransactionWrapper",
-            ForceNewTransansactionOnAsyncWrapperName
+            ForceNewTransactionOnAsyncWrapperName
         };
 
         public bool IsTransactionRequired => false;
@@ -39,7 +39,7 @@ namespace NewRelic.Agent.Core.Wrapper
             var trackWorkAsNewTransaction = false;
 
             //If the instrumentation indicates a desire to track this work as a separate transaction, check if this is possible
-            if (instrumentedMethodCall.InstrumentedMethodInfo.RequestedWrapperName == ForceNewTransansactionOnAsyncWrapperName)
+            if (instrumentedMethodCall.InstrumentedMethodInfo.RequestedWrapperName == ForceNewTransactionOnAsyncWrapperName)
             {
                 if (transactionAlreadyExists)
                 {
