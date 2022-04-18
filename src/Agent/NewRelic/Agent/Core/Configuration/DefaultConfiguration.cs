@@ -1976,9 +1976,9 @@ namespace NewRelic.Agent.Core.Configuration
                 return local;
             }
 
+            char[] delimiters = { ',', ' ' };
             return envValue
-                .Remove(' ')
-                .Split(',')
+                .Split(delimiters, StringSplitOptions.RemoveEmptyEntries)
                 .ToList();
         }
 
