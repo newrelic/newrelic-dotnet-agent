@@ -1733,32 +1733,32 @@ namespace NewRelic.Agent.Core.Configuration
 
         public bool UtilizationDetectAws
         {
-            get { return _localConfiguration.utilization.detectAws; }
+            get { return EnvironmentOverrides(_localConfiguration.utilization.detectAws, "NEW_RELIC_UTILIZATION_DETECT_AWS"); }
         }
 
         public bool UtilizationDetectAzure
         {
-            get { return _localConfiguration.utilization.detectAzure; }
+            get { return EnvironmentOverrides(_localConfiguration.utilization.detectAzure, "NEW_RELIC_UTILIZATION_DETECT_AZURE"); }
         }
 
         public bool UtilizationDetectGcp
         {
-            get { return _localConfiguration.utilization.detectGcp; }
+            get { return EnvironmentOverrides(_localConfiguration.utilization.detectGcp, "NEW_RELIC_UTILIZATION_DETECT_GCP"); }
         }
 
         public bool UtilizationDetectPcf
         {
-            get { return _localConfiguration.utilization.detectPcf; }
+            get { return EnvironmentOverrides(_localConfiguration.utilization.detectPcf, "NEW_RELIC_UTILIZATION_DETECT_PCF"); }
         }
 
         public bool UtilizationDetectDocker
         {
-            get { return _localConfiguration.utilization.detectDocker; }
+            get { return EnvironmentOverrides(_localConfiguration.utilization.detectDocker, "NEW_RELIC_UTILIZATION_DETECT_DOCKER"); }
         }
 
         public bool UtilizationDetectKubernetes
         {
-            get { return _localConfiguration.utilization.detectKubernetes; }
+            get { return EnvironmentOverrides(_localConfiguration.utilization.detectKubernetes, "NEW_RELIC_UTILIZATION_DETECT_KUBERNETES"); }
         }
 
         public int? UtilizationLogicalProcessors
