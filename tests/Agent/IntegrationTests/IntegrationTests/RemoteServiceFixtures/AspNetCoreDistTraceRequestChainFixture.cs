@@ -32,8 +32,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 FirstCallApplication = SetupDistributedTracingApplication();
                 SecondCallApplication = SetupDistributedTracingApplication();
 
-                FirstCallApplication.Start(string.Empty, captureStandardOutput: true);
-                SecondCallApplication.Start(string.Empty, captureStandardOutput: true);
+                var environmentVariables = new Dictionary<string, string>();
+
+                FirstCallApplication.Start(string.Empty, environmentVariables, captureStandardOutput: true);
+                SecondCallApplication.Start(string.Empty, environmentVariables, captureStandardOutput: true);
             });
         }
 

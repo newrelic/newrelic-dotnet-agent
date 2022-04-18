@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
@@ -16,9 +17,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public OwinRemotingFixture() : base(new RemoteService(ClientApplicationDirectoryName, ClientExecutableName, ApplicationType.Bounded))
         {
+            var environmentVariables = new Dictionary<string, string>();
+
             OwinRemotingServerApplication = new RemoteService(ServerApplicationDirectoryName, ServerExecutableName, ApplicationType.Bounded);
             OwinRemotingServerApplication.CopyToRemote();
-            OwinRemotingServerApplication.Start(string.Empty, captureStandardOutput: false, doProfile: false);
+            OwinRemotingServerApplication.Start(string.Empty, environmentVariables, captureStandardOutput: false, doProfile: false);
         }
 
         public string GetObjectTcp()

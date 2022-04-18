@@ -40,10 +40,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                         return;
                     }
 
+                    var environmentVariables = new Dictionary<string, string>();
+
                     MockNewRelicApplication.TestLogger = new XUnitTestLogger(TestLogger);
                     MockNewRelicApplication.DeleteWorkingSpace();
                     MockNewRelicApplication.CopyToRemote();
-                    MockNewRelicApplication.Start(string.Empty, doProfile: false);
+                    MockNewRelicApplication.Start(string.Empty, environmentVariables, doProfile: false);
 
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                     ServicePointManager.ServerCertificateValidationCallback = delegate

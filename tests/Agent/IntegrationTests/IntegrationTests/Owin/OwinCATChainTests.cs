@@ -31,8 +31,10 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                     configModifier.SetOrDeleteSpanEventsEnabled(false);
                     configModifier.SetLogLevel("all");
 
+                    var environmentVariables = new Dictionary<string, string>();
+
                     _fixture.ReceiverApplication = _fixture.SetupReceiverApplication(isDistributedTracing: false, isWebApplication: false);
-                    _fixture.ReceiverApplication.Start(string.Empty, captureStandardOutput: true);
+                    _fixture.ReceiverApplication.Start(string.Empty, environmentVariables, captureStandardOutput: true);
                 },
                 exerciseApplication: () =>
                 {

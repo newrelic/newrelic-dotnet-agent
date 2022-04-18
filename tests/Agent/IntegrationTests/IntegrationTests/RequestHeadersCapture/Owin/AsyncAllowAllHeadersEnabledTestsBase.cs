@@ -30,6 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.SetAllowAllHeaders(true);
                     configModifier.EnableDistributedTrace();
                     configModifier.ForceTransactionTraces();
                     configModifier.AddAttributesInclude("request.parameters.*");

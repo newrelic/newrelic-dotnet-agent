@@ -30,6 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.SetAllowAllHeaders(false);
                     configModifier.EnableDistributedTrace();
                     configModifier.ForceTransactionTraces();
                     configModifier.AddAttributesInclude("request.parameters.*");
@@ -55,17 +56,16 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
                 { "request.uri", "/api/Values/" },
 
                 // Captured headers
-                { "request.headers.connection", "Keep-Alive" },
                 { "request.headers.accept", "application/json" },
                 { "request.headers.host", "fakehost:1234" },
                 { "request.headers.referer", "http://example.com/" },
                 { "request.headers.content-length", "7" },
-                { "request.headers.user-agent", "FakeUserAgent" },
-                { "request.headers.foo", "bar" }
+                { "request.headers.user-agent", "FakeUserAgent" }
             };
 
             var unexpectedAttributes = new List<string>
             {
+                "request.headers.foo",
                  "request.headers.cookie",
                  "request.headers.authorization",
                  "request.headers.proxy-authorization",
