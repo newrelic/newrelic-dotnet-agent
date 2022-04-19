@@ -68,7 +68,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(true, false, ExpectedResult = false)]
         [TestCase(false, true, ExpectedResult = false)]
         [TestCase(false, false, ExpectedResult = false)]
-        public bool TransactionEventsCanBeDisbledByServer(bool? server, bool local)
+        public bool TransactionEventsCanBeDisabledByServer(bool? server, bool local)
         {
             _localConfig.transactionEvents.enabled = local;
 
@@ -2357,75 +2357,148 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         #region Utilization
 
-        [Test]
-        public void UtilizationDetectAwsIsTrueByDefault()
+        [TestCase("true", true, ExpectedResult = true)]
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("false", false, ExpectedResult = false)]
+        [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = true)] // true by default test
+        public bool UtilizationDetectKubernetesConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Assert.IsTrue(_defaultConfig.UtilizationDetectAws);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_KUBERNETES")).Returns(environmentSetting);
+
+            if (localSetting.HasValue)
+            {
+                _localConfig.utilization.detectKubernetes = localSetting.Value;
+            }
+
+            return _defaultConfig.UtilizationDetectKubernetes;
         }
 
-        [Test]
-        public void UtilizationDetectAzureIsTrueByDefault()
+        [TestCase("true", true, ExpectedResult = true)]
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("false", false, ExpectedResult = false)]
+        [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = true)] // true by default test
+        public bool UtilizationDetectAwsConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Assert.IsTrue(_defaultConfig.UtilizationDetectAzure);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_AWS")).Returns(environmentSetting);
+
+            if (localSetting.HasValue)
+            {
+                _localConfig.utilization.detectAws = localSetting.Value;
+            }
+
+            return _defaultConfig.UtilizationDetectAws;
         }
 
-        [Test]
-        public void UtilizationDetectPcfIsTrueByDefualt()
+        [TestCase("true", true, ExpectedResult = true)]
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("false", false, ExpectedResult = false)]
+        [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = true)] // true by default test
+        public bool UtilizationDetectAzureConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Assert.IsTrue(_defaultConfig.UtilizationDetectPcf);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_AZURE")).Returns(environmentSetting);
+
+            if (localSetting.HasValue)
+            {
+                _localConfig.utilization.detectAzure = localSetting.Value;
+            }
+
+            return _defaultConfig.UtilizationDetectAzure;
         }
 
-        [Test]
-        public void UtilizationDetectGcpIsTrueByDefault()
+        [TestCase("true", true, ExpectedResult = true)]
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("false", false, ExpectedResult = false)]
+        [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = true)] // true by default test
+        public bool UtilizationDetectPcfConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Assert.IsTrue(_defaultConfig.UtilizationDetectGcp);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_PCF")).Returns(environmentSetting);
+
+            if (localSetting.HasValue)
+            {
+                _localConfig.utilization.detectPcf = localSetting.Value;
+            }
+
+            return _defaultConfig.UtilizationDetectPcf;
         }
 
-        [Test]
-        public void UtilizationDetectDockerIsTrueByDefault()
+        [TestCase("true", true, ExpectedResult = true)]
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("false", false, ExpectedResult = false)]
+        [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = true)] // true by default test
+        public bool UtilizationDetectGcpConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Assert.IsTrue(_defaultConfig.UtilizationDetectDocker);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_GCP")).Returns(environmentSetting);
+
+            if (localSetting.HasValue)
+            {
+                _localConfig.utilization.detectGcp = localSetting.Value;
+            }
+
+            return _defaultConfig.UtilizationDetectGcp;
         }
 
-        [Test]
-        public void UtilizationDetectKubernetesIsTrueByDefault()
+        [TestCase("true", true, ExpectedResult = true)]
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("false", false, ExpectedResult = false)]
+        [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = true)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = true)] // true by default test
+        public bool UtilizationDetectDockerConfigurationWorksProperly(string environmentSetting, bool? localSetting)
         {
-            Assert.IsTrue(_defaultConfig.UtilizationDetectKubernetes);
-        }
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_UTILIZATION_DETECT_DOCKER")).Returns(environmentSetting);
 
-        [Test]
-        public void UtilizationDetectAwsIsSetToFalse()
-        {
-            _localConfig.utilization.detectAws = false;
-            Assert.IsFalse(_defaultConfig.UtilizationDetectAws);
-        }
+            if (localSetting.HasValue)
+            {
+                _localConfig.utilization.detectDocker = localSetting.Value;
+            }
 
-        [Test]
-        public void UtilizationDetectAzureIsSetToFalse()
-        {
-            _localConfig.utilization.detectAzure = false;
-            Assert.IsFalse(_defaultConfig.UtilizationDetectAzure);
-        }
-
-        [Test]
-        public void UtilizationDetectPcfIsSetToFalse()
-        {
-            _localConfig.utilization.detectPcf = false;
-            Assert.IsFalse(_defaultConfig.UtilizationDetectPcf);
-        }
-
-        [Test]
-        public void UtilizationDetectGcpIsSetToFalse()
-        {
-            _localConfig.utilization.detectGcp = false;
-            Assert.IsFalse(_defaultConfig.UtilizationDetectGcp);
-        }
-
-        [Test]
-        public void UtilizationDetectDockerIsSetToFalse()
-        {
-            _localConfig.utilization.detectDocker = false;
-            Assert.IsFalse(_defaultConfig.UtilizationDetectDocker);
+            return _defaultConfig.UtilizationDetectDocker;
         }
 
         #endregion
