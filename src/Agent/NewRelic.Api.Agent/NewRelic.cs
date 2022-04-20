@@ -863,5 +863,13 @@ namespace NewRelic.Api.Agent
         /// will be reported as an "other" transaction.  The default is false.
         /// </summary>
         public bool Web { get; set; }
+
+        /// <summary>
+        /// If true, a new transaction will be started if this instrumentation point is encountered in a
+        /// threaded or async scenario even if an existing transaction exists, otherwise the agent will attempt
+        /// to include this instrumented method in an existing transaction as a span during threaded/async
+        /// scenarios. The default is false.
+        /// </summary>
+        public bool ForceNewTransactionOnNewThread { get; set; }
     }
 }
