@@ -1302,10 +1302,38 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Proxy
 
-        public virtual string ProxyHost { get { return _localConfiguration.service.proxy.host; } }
-        public virtual string ProxyUriPath { get { return _localConfiguration.service.proxy.uriPath; } }
-        public virtual int ProxyPort { get { return _localConfiguration.service.proxy.port; } }
-        public virtual string ProxyUsername { get { return _localConfiguration.service.proxy.user; } }
+        public virtual string ProxyHost
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.service.proxy.host, "NEW_RELIC_PROXY_HOST");
+            }
+        }
+
+        public virtual string ProxyUriPath
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.service.proxy.uriPath, "NEW_RELIC_PROXY_URI_PATH");
+            }
+        }
+
+        public virtual int ProxyPort
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.service.proxy.port, "NEW_RELIC_PROXY_PORT").Value;
+            }
+        }
+
+        public virtual string ProxyUsername
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.service.proxy.user, "NEW_RELIC_PROXY_USER");
+            }
+        }
+
 
         private bool _obscuringKeyEvaluated;
         private string _obscuringKey;
@@ -1332,15 +1360,16 @@ namespace NewRelic.Agent.Core.Configuration
                 if (!_proxyPasswordEvaluated)
                 {
                     var hasObscuringKey = !string.IsNullOrWhiteSpace(ObscuringKey);
-                    var hasObfuscatedPassword = !string.IsNullOrWhiteSpace(_localConfiguration.service.proxy.passwordObfuscated);
+                    var passwordObfuscated = EnvironmentOverrides(_localConfiguration.service.proxy.passwordObfuscated, "NEW_RELIC_PROXY_PASS_OBFUSCATED");
+                    var hasObfuscatedPassword = !string.IsNullOrWhiteSpace(passwordObfuscated);
 
                     if (hasObscuringKey && hasObfuscatedPassword)
                     {
-                        _proxyPassword = Strings.Base64Decode(_localConfiguration.service.proxy.passwordObfuscated, ObscuringKey);
+                        _proxyPassword = Strings.Base64Decode(passwordObfuscated, ObscuringKey);
                     }
                     else
                     {
-                        _proxyPassword = _localConfiguration.service.proxy.password;
+                        _proxyPassword = EnvironmentOverrides(_localConfiguration.service.proxy.password, "NEW_RELIC_PROXY_PASS");
                     }
 
                     _proxyPasswordEvaluated = true;
@@ -1350,7 +1379,13 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public virtual string ProxyDomain { get { return _localConfiguration.service.proxy.domain ?? string.Empty; } }
+        public virtual string ProxyDomain
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.service.proxy.domain, "NEW_RELIC_PROXY_DOMAIN") ?? string.Empty;
+            }
+        }
 
         #endregion
 
@@ -1984,11 +2019,18 @@ namespace NewRelic.Agent.Core.Configuration
 
         private string EnvironmentOverrides(string local, params string[] environmentVariableNames)
         {
-            return (environmentVariableNames ?? Enumerable.Empty<string>())
+            var envValue = (environmentVariableNames ?? Enumerable.Empty<string>())
                 .Select(_environment.GetEnvironmentVariable)
-                .Where(value => value != null)
-                .FirstOrDefault()
-                ?? local;
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .FirstOrDefault(); // returns null if no env var found or if enumerable<string> is empty
+
+            // if we get a null, we use local - should not get whitespace
+            if (string.IsNullOrWhiteSpace(envValue))
+            {
+                return local;
+            }
+
+            return envValue.Trim();
         }
 
         private uint? EnvironmentOverrides(uint? local, params string[] environmentVariableNames)
