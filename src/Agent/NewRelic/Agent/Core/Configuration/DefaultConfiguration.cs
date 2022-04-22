@@ -2021,16 +2021,16 @@ namespace NewRelic.Agent.Core.Configuration
         {
             var envValue = (environmentVariableNames ?? Enumerable.Empty<string>())
                 .Select(_environment.GetEnvironmentVariable)
-                .Where(value => value != null)
-                .FirstOrDefault();
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .FirstOrDefault(); // returns null if no env var found or if enumerable<string> is empty
 
-            // prevent whitespace from leaking through
+            // if we get a null, we use local - should not get whitespace
             if (string.IsNullOrWhiteSpace(envValue))
             {
                 return local;
             }
 
-            return envValue;
+            return envValue.Trim();
         }
 
         private uint? EnvironmentOverrides(uint? local, params string[] environmentVariableNames)
