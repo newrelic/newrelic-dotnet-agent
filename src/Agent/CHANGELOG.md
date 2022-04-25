@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * New environment variables have been added for AllowAllHeaders and Attributes configuration settings. See our [documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#optional-environment-variables) for more details. [#1059](https://github.com/newrelic/newrelic-dotnet-agent/pull/1059)
 * Introduces [environment variables to enabled/disable cloud detection](https://github.com/newrelic/newrelic-dotnet-agent/issues/818) to facilitate customer use cases and reduce errors in logs. ([#1061](https://github.com/newrelic/newrelic-dotnet-agent/pull/1061))
 * New environment variables have been added for all Proxy configuration settings.  See our [documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#optional-environment-variables) for more details. [#1063](https://github.com/newrelic/newrelic-dotnet-agent/pull/1063)
+* Introduces a new configuration option to force custom instrumentation to [create new transactions](https://github.com/newrelic/newrelic-dotnet-agent/issues/347) in async scenarios versus re-using an existing transaction. [#1071](https://github.com/newrelic/newrelic-dotnet-agent/pull/1071)
 
 ### Fixes
 
