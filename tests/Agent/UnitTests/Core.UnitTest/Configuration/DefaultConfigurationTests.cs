@@ -985,7 +985,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         //password = "XYZ" obscuring-key = "123"  encrypted-password = "aWtp"
         //password = "XYZ" obscuring-key = "456"  encrypted-password = "bGxs"
-
         [TestCase("ABCD", "aWtp", "123", null, ExpectedResult = "XYZ")]
         [TestCase("ABCD", "bGxs", null, "456", ExpectedResult = "XYZ")]
         [TestCase("ABCD", "bGxs", "123", "456", ExpectedResult = "XYZ")]
@@ -1005,6 +1004,107 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             return _defaultConfig.ProxyPassword;
         }
+
+        [TestCase("localtestvalue", "", ExpectedResult = "localtestvalue")]
+        [TestCase("", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("localtestvalue", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("localtestvalue", "   ", ExpectedResult = "localtestvalue")]
+        [TestCase("   ", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("", "", ExpectedResult = "")]
+        public string ProxyHost_Tests(string localProxyHost, string envProxyHost)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_HOST")).Returns(envProxyHost);
+
+            _localConfig.service.proxy.host = localProxyHost;
+
+            CreateDefaultConfiguration();
+
+            return _defaultConfig.ProxyHost;
+        }
+
+        [TestCase("localtestvalue", "", ExpectedResult = "localtestvalue")]
+        [TestCase("", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("localtestvalue", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("localtestvalue", "   ", ExpectedResult = "localtestvalue")]
+        [TestCase("   ", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("", "", ExpectedResult = "")]
+        public string ProxyUriPath_Tests(string localProxyUriPath, string envProxyUriPath)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_URI_PATH")).Returns(envProxyUriPath);
+
+            _localConfig.service.proxy.uriPath = localProxyUriPath;
+
+            CreateDefaultConfiguration();
+
+            return _defaultConfig.ProxyUriPath;
+        }
+
+        [TestCase(1234, "", ExpectedResult = 1234)]
+        [TestCase(1234, "4321", ExpectedResult = 4321)]
+        [TestCase(1234, "bob", ExpectedResult = 1234)]
+        public int ProxyPort_Tests(int localProxyPort, string envProxyPort)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_PORT")).Returns(envProxyPort);
+
+            _localConfig.service.proxy.port = localProxyPort;
+
+            CreateDefaultConfiguration();
+
+            return _defaultConfig.ProxyPort;
+        }
+
+        [TestCase("localtestvalue", "", ExpectedResult = "localtestvalue")]
+        [TestCase("", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("localtestvalue", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("localtestvalue", "   ", ExpectedResult = "localtestvalue")]
+        [TestCase("   ", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("", "", ExpectedResult = "")]
+        public string ProxyUsername_Tests(string localProxyUser, string envProxyUser)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_USER")).Returns(envProxyUser);
+
+            _localConfig.service.proxy.user = localProxyUser;
+
+            CreateDefaultConfiguration();
+
+            return _defaultConfig.ProxyUsername;
+        }
+
+        [TestCase("localtestvalue", "", ExpectedResult = "localtestvalue")]
+        [TestCase("", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("localtestvalue", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("localtestvalue", "   ", ExpectedResult = "localtestvalue")]
+        [TestCase("   ", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("", "", ExpectedResult = "")]
+        public string ProxyPassword_Tests(string localProxyPassword, string envProxyPassword)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_PASS")).Returns(envProxyPassword);
+
+            _localConfig.service.proxy.password = localProxyPassword;
+
+            CreateDefaultConfiguration();
+
+            return _defaultConfig.ProxyPassword;
+        }
+
+        [TestCase("localtestvalue", "", ExpectedResult = "localtestvalue")]
+        [TestCase("", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("localtestvalue", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("localtestvalue", "   ", ExpectedResult = "localtestvalue")]
+        [TestCase("   ", "envtestvalue", ExpectedResult = "envtestvalue")]
+        [TestCase("", "", ExpectedResult = "")]
+        public string ProxyDomain_Tests(string localProxyDomain, string envProxyDomain)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_PROXY_DOMAIN")).Returns(envProxyDomain);
+
+            _localConfig.service.proxy.domain = localProxyDomain;
+
+            CreateDefaultConfiguration();
+
+            return _defaultConfig.ProxyDomain;
+        }
+
+
 
         [Test]
         public void ExpectedErrorSettingsForAgentSettingsReportedCorrectly()
@@ -2912,8 +3012,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, "localValue", ExpectedResult = "localValue")]
         [TestCase("envValue", null, ExpectedResult = "envValue")]
         [TestCase("envValue", "localValue", ExpectedResult = "envValue")]
-        [TestCase("", "localValue", ExpectedResult = "")]
-        [TestCase("  ", "localValue", ExpectedResult = "")]
+        [TestCase("", "localValue", ExpectedResult = "localValue")]
+        [TestCase("  ", "localValue", ExpectedResult = "localValue")]
         [TestCase("  envValue  ", null, ExpectedResult = "envValue")]
         [TestCase(null, "  localValue  ", ExpectedResult = "localValue")]
         public string SecurityPoliciesTokenReturned(string environmentValue, string localConfigValue)
@@ -2928,8 +3028,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, "localValue", ExpectedResult = true)]
         [TestCase("envValue", null, ExpectedResult = true)]
         [TestCase("envValue", "localValue", ExpectedResult = true)]
-        [TestCase("", "localValue", ExpectedResult = false)]    // non-intuitive result, but this behavior is
-                                                                // consistent across all Env Var configs
+        [TestCase("", "localValue", ExpectedResult = true)]
         [TestCase("envValue", "", ExpectedResult = true)]
         [TestCase("", "", ExpectedResult = false)]
         public bool SecurityPoliciesTokenExists(string environmentValue, string localConfigValue)
