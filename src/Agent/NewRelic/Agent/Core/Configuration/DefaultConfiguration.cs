@@ -1901,6 +1901,14 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public virtual bool ForceNewTransactionOnNewThread
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.service.forceNewTransactionOnNewThread, "NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD");
+            }
+        }
+
         private bool? _diagnosticsCaptureAgentTiming;
         public bool DiagnosticsCaptureAgentTiming
         {

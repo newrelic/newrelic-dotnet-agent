@@ -189,5 +189,6 @@ namespace NewRelic.Agent.Configuration
         TimeSpan LogEventsHarvestCycle { get; }
         bool LogDecoratorEnabled { get; }
         bool AppDomainCachingDisabled { get; }
+        bool ForceNewTransactionOnNewThread { get; }
     }
 }

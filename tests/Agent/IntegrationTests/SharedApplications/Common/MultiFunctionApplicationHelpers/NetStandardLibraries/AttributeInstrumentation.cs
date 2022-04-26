@@ -104,6 +104,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Internal
             return await Task.FromResult("Some work.");
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static async Task<string> MakeOtherTransactionWithThreadedCallToInstrumentedMethod()
+        {
+            return await Task.Run(SpanOrTransactionBasedOnConfig);
 
+        }
+
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        private static async Task<string> SpanOrTransactionBasedOnConfig()
+        {
+            return await Task.FromResult("New Transaction or span based on config.");
+        }
     }
 }

@@ -804,7 +804,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void Decodes_IngoreAndExpectedClasses_IgnoreAndExpectedMessages_ExpectedStatusCodes_Configurations_Successfully()
+        public void Decodes_IgnoreAndExpectedClasses_IgnoreAndExpectedMessages_ExpectedStatusCodes_Configurations_Successfully()
         {
             const string xmlString = @"<?xml version=""1.0""?>
 <configuration xmlns=""urn:newrelic-config"" agentEnabled=""true"">
@@ -3053,6 +3053,30 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
             return defaultConfig.ForceSynchronousTimingCalculationHttpClient;
+        }
+
+        [TestCase("true", true, ExpectedResult = true)]
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("true", null, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("false", false, ExpectedResult = false)]
+        [TestCase("false", null, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", true, ExpectedResult = true)]
+        [TestCase("invalidEnvVarValue", false, ExpectedResult = false)]
+        [TestCase("invalidEnvVarValue", null, ExpectedResult = false)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = false)] // false by default test
+        public bool GloballyForceNewTransactionConfigurationTests(string environmentSetting, bool? localSetting)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD")).Returns(environmentSetting);
+
+            if (localSetting.HasValue)
+            {
+                _localConfig.service.forceNewTransactionOnNewThread = localSetting.Value;
+            }
+
+            return _defaultConfig.ForceNewTransactionOnNewThread;
         }
 
         private void CreateDefaultConfiguration()
