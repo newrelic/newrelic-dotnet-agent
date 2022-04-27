@@ -24,6 +24,7 @@ namespace NewRelic.Providers.Wrapper.Logging
         public bool IsTransactionRequired => false;
 
         private const string WrapperName = "serilog";
+        private const string DispatchName = "Dispatch";
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -37,6 +38,12 @@ namespace NewRelic.Providers.Wrapper.Logging
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
+            var potentialDispatchFrame = new System.Diagnostics.StackFrame(8, false).GetMethod().Name;
+            if (potentialDispatchFrame == DispatchName)
+            {
+                return Delegates.NoOp;
+            }
+
             var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
             RecordLogMessage(logEvent, agent);
