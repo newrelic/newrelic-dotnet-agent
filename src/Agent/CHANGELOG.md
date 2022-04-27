@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Introduces [environment variables to enabled/disable cloud detection](https://github.com/newrelic/newrelic-dotnet-agent/issues/818) to facilitate customer use cases and reduce errors in logs. ([#1061](https://github.com/newrelic/newrelic-dotnet-agent/pull/1061))
 
 ### Fixes
-
+* Fixes Agent fails to execute explain plan for parameterized stored procedure. ([#1066](https://github.com/newrelic/newrelic-dotnet-agent/pull/1066)) 
 
 ## [9.7.1] - 2022-04-13
 ### Fixes
