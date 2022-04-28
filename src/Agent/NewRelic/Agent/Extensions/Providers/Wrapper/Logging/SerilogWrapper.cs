@@ -38,7 +38,21 @@ namespace NewRelic.Providers.Wrapper.Logging
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var potentialDispatchFrame = new System.Diagnostics.StackFrame(8, false).GetMethod().Name;
+            var frame7 = new System.Diagnostics.StackFrame(7, false).GetMethod().Name;
+            string potentialDispatchFrame;
+            if (frame7 != DispatchName)
+            {
+                // Frame 7 is not Dispatch. This means that an extra frame was in the stack called "UnsafeInvokeInternal" at frame 6
+                // Look at frame 9 for duplicates instead of at frame 8
+                potentialDispatchFrame = new System.Diagnostics.StackFrame(9, false).GetMethod().Name;
+            }
+            else
+            {
+                // Frame 7 is Dispatch, no extra frames
+                // Look at frame 8 for duplicates
+                potentialDispatchFrame = new System.Diagnostics.StackFrame(8, false).GetMethod().Name;
+            }
+
             if (potentialDispatchFrame == DispatchName)
             {
                 return Delegates.NoOp;
