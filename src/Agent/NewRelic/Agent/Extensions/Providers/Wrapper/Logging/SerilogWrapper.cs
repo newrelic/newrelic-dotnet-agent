@@ -38,6 +38,9 @@ namespace NewRelic.Providers.Wrapper.Logging
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
+            // This block works around an issue we are seeing in Serilog where Dispatch is called up to 3 times for each log message
+            // When looking at a stack trace for the problem, the you will see up to 3 Dispatch methods one after the other
+            // This detects the duplicates and noops.
             var frame7 = new System.Diagnostics.StackFrame(7, false).GetMethod().Name;
             string potentialDispatchFrame;
             if (frame7 != DispatchName)
