@@ -81,7 +81,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     TransactionName = _expectedTransactionName,
                     Sql = _fixture.ProcedureName,
                     DatastoreMetricName = $"Datastore/statement/MSSQL/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure",
-                    QueryParameters = expectedQueryParameters
+                    QueryParameters = expectedQueryParameters,
+                    HasExplainPlan = true
                 }
             };
 

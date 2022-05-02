@@ -385,6 +385,11 @@ namespace NewRelic.Parsing
         /// <returns>True if the plan should be executed.  False if the plan should be aborted.</returns>
         public static bool FixParameterizedSql(IDbCommand command)
         {
+            if (command.CommandType == CommandType.StoredProcedure)
+            {
+                return true;
+            }
+
             if (command.Parameters.Count == 0)
             {
                 return true; // no params, using raw sql statement.
