@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Introduces a new configuration option to force custom instrumentation to [create new transactions](https://github.com/newrelic/newrelic-dotnet-agent/issues/347) in async scenarios versus re-using an existing transaction. [#1071](https://github.com/newrelic/newrelic-dotnet-agent/pull/1071)
 
 ### Fixes
-
+* Fixes Agent fails to execute explain plan for parameterized stored procedure. ([#1066](https://github.com/newrelic/newrelic-dotnet-agent/pull/1066)) 
 
 ## [9.7.1] - 2022-04-13
 ### Fixes

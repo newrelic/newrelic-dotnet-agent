@@ -24,7 +24,6 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             new DbParameter("date", "@typeDate", DateTime.MaxValue) { ExpectedValue = DateTime.MaxValue.ToString(CultureInfo.InvariantCulture)},
             new DbParameter("uniqueidentifier", "@typeGuid", Guid.Empty) { ExpectedValue = Guid.Empty.ToString() },
             new DbParameter("nvarchar(20)", "@typeNVarChar", "some string"),
-            new DbParameter("binary", "@typeBinary", new byte[] { 0, 1, 2 }) { ExpectedValue = new byte[0].ToString() },
             new DbParameter("int", "@typeEnumAsInt", DbParamTestingEnum.EnumValue1) { ExpectedValue = (int)DbParamTestingEnum.EnumValue1 },
             new DbParameter("nvarchar(20)", "@typeEnumAsNVarChar", DbParamTestingEnum.EnumValue2) { ExpectedValue = (int)DbParamTestingEnum.EnumValue2 },
             new DbParameter("nvarchar(20)", "@typeDbNull", DBNull.Value) { ExpectedValue = "Null" },
@@ -37,7 +36,6 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             new DbParameter("int", "@typeSqlInt", new SqlInt32(32)) { ExpectedValue = 32 },
             new DbParameter("nvarchar(20)", "@typeCharArray", new [] { 't', 'e', 's', 't' }) { ExpectedValue = "test" },
             new DbParameter("nvarchar(20)", "@typeSqlChars", new SqlChars(new [] { 't', 'e', 's', 't' })) { ExpectedValue = "test" },
-            new DbParameter("binary", "@typeSqlBinary", new SqlBinary(new byte[]{ 0, 1, 3 })) { ExpectedValue = new SqlBinary(new byte[]{ 0, 1, 3 }).ToString() }
         };
 
         public static DbParameter[] MySqlParameters =
