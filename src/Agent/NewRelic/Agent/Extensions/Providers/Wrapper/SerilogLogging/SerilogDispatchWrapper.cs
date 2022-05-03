@@ -9,9 +9,9 @@ using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.Logging
+namespace NewRelic.Providers.Wrapper.SerilogLogging
 {
-    public class SerilogWrapper : IWrapper
+    public class SerilogDispatchWrapper : IWrapper
     {
         private const string AssemblyName = "Serilog";
         private const string TypeName = "Serilog.Events.ScalarValue";
@@ -23,7 +23,7 @@ namespace NewRelic.Providers.Wrapper.Logging
 
         public bool IsTransactionRequired => false;
 
-        private const string WrapperName = "serilog";
+        private const string WrapperName = "SerilogDispatchWrapper";
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -39,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.Logging
         {
             var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
-            RecordLogMessage(logEvent, agent);
+            //RecordLogMessage(logEvent, agent);
 
             DecorateLogMessage(logEvent, agent);
 

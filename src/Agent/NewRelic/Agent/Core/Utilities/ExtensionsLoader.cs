@@ -61,7 +61,8 @@ namespace NewRelic.Agent.Core.Utilities
 
                 { "OpenConnectionTracer",                                                                           Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
                 { "OpenConnectionWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
-
+                { "SerilogCreateLoggerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") },
+                { "SerilogDispatchWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") }
             };
 
             var nonAutoReflectedAssemblies = _dynamicLoadWrapperAssemblies.Values.Distinct().ToList();
