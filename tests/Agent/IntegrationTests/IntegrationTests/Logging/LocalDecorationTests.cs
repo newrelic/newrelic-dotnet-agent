@@ -45,7 +45,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
                     configModifier
-                    .EnableApplicationLogging()
                     .EnableLogDecoration(_decorationEnabled)
                     .EnableDistributedTrace()
                     .SetLogLevel("debug");
