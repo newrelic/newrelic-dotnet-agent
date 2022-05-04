@@ -1615,7 +1615,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:complexType>
-                                    <xs:attribute name="enabled" type="xs:boolean" default="false">
+                                    <xs:attribute name="enabled" type="xs:boolean" default="true">
                                         <xs:annotation>
                                             <xs:documentation>
                                                 Controls whether or not log forwarding occurs. Defaults to false.
