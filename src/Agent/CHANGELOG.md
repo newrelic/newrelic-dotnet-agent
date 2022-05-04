@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased] changes
+
+### APM logs in context
+Automatic application log forwarding is now enabled by default. This version of the agent will automatically send enriched application logs to New Relic. To learn more about about this feature see [here](https://docs.newrelic.com/docs/apm/new-relic-apm/getting-started/get-started-logs-context/), and additional configuration options are available [here](https://docs.newrelic.com/docs/logs/logs-context/net-configure-logs-context-all). To learn about how to toggle log ingestion on or off by account see [here](https://docs.newrelic.com/docs/logs/logs-context/disable-automatic-logging).
+
 ### New Features
 * Error messages in error traces and error events now retain up to 1023 characters instead of 255 characters. [#1058](https://github.com/newrelic/newrelic-dotnet-agent/pull/1058)
 * New environment variables have been added for AllowAllHeaders and Attributes configuration settings. See our [documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#optional-environment-variables) for more details. [#1059](https://github.com/newrelic/newrelic-dotnet-agent/pull/1059)
@@ -14,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixes
 * Fixes Agent fails to execute explain plan for parameterized stored procedure. ([#1066](https://github.com/newrelic/newrelic-dotnet-agent/pull/1066)) 
+* Fixes getting duplicate logs using log forwarding and Serilog. [#1076](https://github.com/newrelic/newrelic-dotnet-agent/pull/1076)
+
+### Deprecations
+Microsoft has officially EOL .NET Framework versions 4.5.1, 4.5.2, and 4.6.1 on  Apr 26, 2022.
+The informational blog can be found [here](https://devblogs.microsoft.com/dotnet/net-framework-4-5-2-4-6-4-6-1-will-reach-end-of-support-on-april-26-2022).  The official product lifecycle start and end dates can be found [here](https://docs.microsoft.com/en-us/lifecycle/products/microsoft-net-framework).  The dotnet agent support of these framework versions is will continue as is with the released versions.  In a future major release, we will target .NET framework 4.6.2 onwards.
 
 ## [9.7.1] - 2022-04-13
 ### Fixes
