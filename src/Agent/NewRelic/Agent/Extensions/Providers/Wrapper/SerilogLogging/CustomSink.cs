@@ -24,7 +24,7 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
         }
 
         private void RecordLogMessage(LogEvent logEvent)
-        { 
+        {
             Func<object, object> getLogLevelFunc = a => logEvent.Level;
 
             Func<object, DateTime> getDateTimeFunc = a => logEvent.Timestamp.UtcDateTime;
@@ -34,7 +34,7 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
             // This will either add the log message to the transaction or directly to the aggregator
 
             var xapi = _agent.GetExperimentalApi();
-            xapi.RecordLogMessage("Serilog", logEvent, getDateTimeFunc, getLogLevelFunc, getMessageFunc, _agent.TraceMetadata.SpanId, _agent.TraceMetadata.TraceId);
+            xapi.RecordLogMessage("serilog", logEvent, getDateTimeFunc, getLogLevelFunc, getMessageFunc, _agent.TraceMetadata.SpanId, _agent.TraceMetadata.TraceId);
         }
     }
 }

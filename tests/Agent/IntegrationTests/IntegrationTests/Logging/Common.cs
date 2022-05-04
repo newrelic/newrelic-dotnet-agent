@@ -7,6 +7,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     {
         Log4net,
         Serilog,
-        MicrosoftLogging
+        MicrosoftLogging,
+        SerilogWeb
     }
 }

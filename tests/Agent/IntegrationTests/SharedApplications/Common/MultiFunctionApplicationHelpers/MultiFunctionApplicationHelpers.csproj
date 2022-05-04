@@ -72,6 +72,8 @@
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" Condition="'$(TargetFramework)' == 'net6.0'" />
 
+    <!-- Serilog Web App references NET6.0 only -->
+    <PackageReference Include="Serilog.AspNetCore" Version="5.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
 
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.7">
       <NoWarn>NU1701</NoWarn>
@@ -151,7 +153,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0" Condition="'$(TargetFramework)' == 'net6.0'" />
   </ItemGroup>
 
   <ItemGroup>
