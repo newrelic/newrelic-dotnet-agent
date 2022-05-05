@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 
+### New Features
+
+### Fixes
+
+## [9.8.0] - 2022-05-05
+
 ### APM logs in context
 Automatic application log forwarding is now enabled by default. This version of the agent will automatically send enriched application logs to New Relic. To learn more about about this feature see [here](https://docs.newrelic.com/docs/apm/new-relic-apm/getting-started/get-started-logs-context/), and additional configuration options are available [here](https://docs.newrelic.com/docs/logs/logs-context/net-configure-logs-context-all). To learn about how to toggle log ingestion on or off by account see [here](https://docs.newrelic.com/docs/logs/logs-context/disable-automatic-logging).
 
@@ -422,7 +428,8 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.7.1...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.8.0...HEAD
+[9.8.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.7.1...v9.8.0
 [9.7.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.7.0...v9.7.1
 [9.7.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.6.1...v9.7.0
 [9.6.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.6.0...v9.6.1
