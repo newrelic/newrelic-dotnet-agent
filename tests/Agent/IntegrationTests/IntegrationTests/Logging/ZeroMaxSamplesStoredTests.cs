@@ -34,10 +34,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
+                    // applicationLogging metrics and forwarding enabled by default
                     configModifier
-                    .EnableApplicationLogging()
-                    .EnableLogForwarding()
-                    .EnableLogMetrics()
                     .SetLogForwardingMaxSamplesStored(1) // must be 1 since 0 causes it to return the default
                     .EnableDistributedTrace()
                     .SetLogLevel("debug");
