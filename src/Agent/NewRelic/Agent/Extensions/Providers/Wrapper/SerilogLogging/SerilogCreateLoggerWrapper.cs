@@ -7,6 +7,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
+using Serilog;
 
 namespace NewRelic.Providers.Wrapper.SerilogLogging
 {
@@ -15,7 +16,6 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
         public bool IsTransactionRequired => false;
 
         private const string WrapperName = "SerilogCreateLoggerWrapper";
-        private Func<object, IList> _getLogEventSinks;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -29,11 +29,13 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var configurationLoader = instrumentedMethodCall.MethodCall.InvocationTarget;
-            var getLogEventSinks = _getLogEventSinks ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<IList>("Serilog", "Serilog.LoggerConfiguration", "_logEventSinks");
+            if (agent.Configuration.LogEventCollectorEnabled)
+            {
+                var loggerConfiguration = instrumentedMethodCall.MethodCall.InvocationTarget as LoggerConfiguration;
 
-            var logEventSinks = getLogEventSinks.Invoke(configurationLoader);
-            logEventSinks.Add(new CustomSink(agent));
+                loggerConfiguration.WriteTo.Sink(new NewRelicSerilogSink(agent));
+            }
+
             return Delegates.NoOp;
         }
     }

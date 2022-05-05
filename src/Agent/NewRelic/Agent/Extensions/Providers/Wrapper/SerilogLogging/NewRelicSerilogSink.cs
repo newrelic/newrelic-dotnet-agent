@@ -9,11 +9,11 @@ using Serilog.Events;
 
 namespace NewRelic.Providers.Wrapper.SerilogLogging
 {
-    public class CustomSink : ILogEventSink
+    public class NewRelicSerilogSink : ILogEventSink
     {
-        IAgent _agent;
+        readonly IAgent _agent;
 
-        public CustomSink(IAgent agent)
+        public NewRelicSerilogSink(IAgent agent)
         {
             _agent = agent;
         }
@@ -25,11 +25,11 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
 
         private void RecordLogMessage(LogEvent logEvent)
         {
-            Func<object, object> getLogLevelFunc = a => logEvent.Level;
+            Func<object, object> getLogLevelFunc = l => logEvent.Level;
 
-            Func<object, DateTime> getDateTimeFunc = a => logEvent.Timestamp.UtcDateTime;
+            Func<object, DateTime> getDateTimeFunc = l => logEvent.Timestamp.UtcDateTime;
 
-            Func<object, string> getMessageFunc = a => logEvent.RenderMessage();
+            Func<object, string> getMessageFunc = l => logEvent.RenderMessage();
 
             // This will either add the log message to the transaction or directly to the aggregator
 
