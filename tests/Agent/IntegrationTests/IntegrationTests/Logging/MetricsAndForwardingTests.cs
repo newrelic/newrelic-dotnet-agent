@@ -134,7 +134,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
-                    configModifier.EnableApplicationLogging()
+                    configModifier
                     .EnableLogMetrics(metricsEnabled)
                     .EnableLogForwarding(forwardingEnabled)
                     .EnableDistributedTrace()

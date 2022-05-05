@@ -5063,12 +5063,12 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configurationApplicationLoggingForwarding()
         {
-            this.enabledField = false;
+            this.enabledField = true;
             this.maxSamplesStoredField = 10000;
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(false)]
+        [System.ComponentModel.DefaultValueAttribute(true)]
         public bool enabled
         {
             get

@@ -2643,9 +2643,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void ApplicationLogging_ForwardingEnabled_IsFalseInLocalConfigByDefault()
+        public void ApplicationLogging_ForwardingEnabled_IsTrueInLocalConfigByDefault()
         {
-            Assert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
+            Assert.IsTrue(_defaultConfig.LogEventCollectorEnabled);
         }
 
         [Test]
