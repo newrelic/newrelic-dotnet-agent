@@ -138,7 +138,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     .EnableLogMetrics(metricsEnabled)
                     .EnableLogForwarding(forwardingEnabled)
                     .EnableDistributedTrace()
-                    .SetLogLevel("finest");
+                    .SetLogLevel("debug");
                 }
             );
 
