@@ -15,14 +15,14 @@ Updating the configuration consists of two steps:
 2. Update the class file via `xsd2code`.
 3. Add/restore the copyright to the class file.
 
-## Updating the XSD
+## Update the XSD
 
 Update the relevant XSD with new or modified configuration based on your needs.
 
 * `src\Agent\NewRelic\Agent\Core\Config\Configuration.xsd`
 * `src\Agent\NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\Extension.xsd`
 
-## Updating the Class
+## Update the Class
 
 Once the relevant XSD file has been updated, run `xsd2Code` to update the class file.
 
