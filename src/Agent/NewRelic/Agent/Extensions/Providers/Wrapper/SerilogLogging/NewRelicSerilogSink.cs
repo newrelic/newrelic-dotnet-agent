@@ -4,6 +4,7 @@
 using System;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Extensions.Logging;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -20,7 +21,11 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
 
         public void Emit(LogEvent logEvent)
         {
-            RecordLogMessage(logEvent);
+            //This check is to prevent forwarding duplicate log when Micsoft.Extensions.Logging is used.
+            if (!LogProviders.RegisteredLogProvider[(int)LogProvider.Serilog])
+            {
+                RecordLogMessage(logEvent);
+            }
         }
 
         private void RecordLogMessage(LogEvent logEvent)

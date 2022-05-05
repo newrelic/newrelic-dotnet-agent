@@ -29,12 +29,10 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            if (agent.Configuration.LogEventCollectorEnabled)
-            {
-                var loggerConfiguration = instrumentedMethodCall.MethodCall.InvocationTarget as LoggerConfiguration;
 
-                loggerConfiguration.WriteTo.Sink(new NewRelicSerilogSink(agent));
-            }
+            var loggerConfiguration = instrumentedMethodCall.MethodCall.InvocationTarget as LoggerConfiguration;
+
+            loggerConfiguration.WriteTo.Sink(new NewRelicSerilogSink(agent));
 
             return Delegates.NoOp;
         }
