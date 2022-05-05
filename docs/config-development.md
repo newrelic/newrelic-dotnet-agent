@@ -13,6 +13,7 @@ Updating the configuration consists of two steps:
 
 1. Update the relevant XSD file.
 2. Update the class file via `xsd2code`.
+3. Add/restore the copyright to the class file.
 
 ## Updating the XSD
 
@@ -37,4 +38,17 @@ $rootDirectory = Resolve-Path ".\"; .\build\Tools\xsd2code\xsd2code.exe "$rootDi
 
 ```powershell
 $rootDirectory = Resolve-Path ".\"; .\build\Tools\xsd2code\xsd2code.exe "$rootDirectory\src\Agent\NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\Extension.xsd" NewRelic.Agent.Core.Extension Extension.cs /cl /ap /sc /xa
+```
+
+## Add the Copyright
+
+The `xsd2code` tool will not automatically generate (nor keep) the required copyright header at the top of the file.
+
+Add/restore the copyright header to the top of the updated class file.
+
+The current header is:
+
+```cs
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
 ```
