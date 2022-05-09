@@ -8,7 +8,9 @@ These tests execute against valid New Relic accounts and test a variety of featu
 
 ## Testing on Windows with Visual Studio
 
-Requires Visual Studio 2019 or greater.
+Visual Studio 2022 or greater preferred.
+
+Visual Studio 2019 may work with .NET 6 additionally installed.
 
 ### Additional install requirements
 
