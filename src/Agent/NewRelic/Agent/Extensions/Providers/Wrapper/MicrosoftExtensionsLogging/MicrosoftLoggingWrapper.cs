@@ -52,6 +52,12 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
                 return Delegates.NoOp;
             }
 
+            // NLog can alter the message so we want to skip MEL decoration
+            if (LogProviders.RegisteredLogProvider[(int)LogProvider.NLog])
+            {
+                return Delegates.NoOp;
+            }
+
             // uses the foratted metadata to make a single entry
             var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
 
