@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 <extension xmlns="urn:newrelic-extension">
   <instrumentation>
 
-    <!-- NLog v5, v4, v2 - all versions   -->
+    <!-- NLog v5, v4 -->
     <tracerFactory name="nlog">
       <match assemblyName="NLog" className="NLog.LoggerImpl">
         <exactMethodMatcher methodName="Write" />
