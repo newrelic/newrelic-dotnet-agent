@@ -58,7 +58,16 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
             var logconsole = new ConsoleTarget();
-            logconsole.Layout = new JsonLayout();
+
+            var jsonLayout = new JsonLayout {
+                Attributes = {
+                    new JsonAttribute ("time", "${longdate}"),
+                    new JsonAttribute ("level", "${level:upperCase=true}"),
+                    new JsonAttribute ("message", "${message}"),
+                }
+            };
+
+            logconsole.Layout = jsonLayout;
 
             NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(logconsole, LogLevel.Debug);
             _log = LogManager.GetLogger("LoggingTest");
