@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging</AssemblyName>
-    <Description>Logging Wrapper Provider for New Relic .NET Agent</Description>
+    <Description>Microsoft.Extensions.Logging Wrapper Provider for New Relic .NET Agent</Description>
   </PropertyGroup>
 
   <ItemGroup>

@@ -21,7 +21,7 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
 
         public void Emit(LogEvent logEvent)
         {
-            //This check is to prevent forwarding duplicate log when Micsoft.Extensions.Logging is used.
+            //This check is to prevent forwarding duplicate logs when Microsoft.Extensions.Logging is used.
             if (!LogProviders.RegisteredLogProvider[(int)LogProvider.Serilog])
             {
                 RecordLogMessage(logEvent);
