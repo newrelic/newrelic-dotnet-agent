@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29613.14
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 15.0.26228.04
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "src\Agent\NewRelic\Agent\Core\Core.csproj", "{D6E22195-EE69-4320-B08B-E68229FB69AB}"
 EndProject
@@ -201,9 +201,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Home", "src\Agent\NewRelic\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmosDb", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\CosmosDb\CosmosDb.csproj", "{E10BF2F9-D5CA-4330-8169-ED30D861697E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Logging", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Logging\Logging.csproj", "{E696F7DF-D99F-4BD4-B757-531B5F5ECB36}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicrosoftExtensionsLogging", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\MicrosoftExtensionsLogging\MicrosoftExtensionsLogging.csproj", "{710C7C7A-CD27-4F94-B2D3-9804BD848D57}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicrosoftExtensionsLogging", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\MicrosoftExtensionsLogging\MicrosoftExtensionsLogging.csproj", "{710C7C7A-CD27-4F94-B2D3-9804BD848D57}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SerilogLogging", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\SerilogLogging\SerilogLogging.csproj", "{0C3E92D7-F16C-4575-9CBB-EB7349A4C5E2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Log4NetLogging", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Log4NetLogging\Log4NetLogging.csproj", "{2E6CF650-CB50-453D-830A-D00F0540FC2C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -419,14 +421,18 @@ Global
 		{E10BF2F9-D5CA-4330-8169-ED30D861697E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E10BF2F9-D5CA-4330-8169-ED30D861697E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E10BF2F9-D5CA-4330-8169-ED30D861697E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E696F7DF-D99F-4BD4-B757-531B5F5ECB36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E696F7DF-D99F-4BD4-B757-531B5F5ECB36}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E696F7DF-D99F-4BD4-B757-531B5F5ECB36}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E696F7DF-D99F-4BD4-B757-531B5F5ECB36}.Release|Any CPU.Build.0 = Release|Any CPU
 		{710C7C7A-CD27-4F94-B2D3-9804BD848D57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{710C7C7A-CD27-4F94-B2D3-9804BD848D57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{710C7C7A-CD27-4F94-B2D3-9804BD848D57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{710C7C7A-CD27-4F94-B2D3-9804BD848D57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C3E92D7-F16C-4575-9CBB-EB7349A4C5E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C3E92D7-F16C-4575-9CBB-EB7349A4C5E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C3E92D7-F16C-4575-9CBB-EB7349A4C5E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C3E92D7-F16C-4575-9CBB-EB7349A4C5E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E6CF650-CB50-453D-830A-D00F0540FC2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E6CF650-CB50-453D-830A-D00F0540FC2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E6CF650-CB50-453D-830A-D00F0540FC2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E6CF650-CB50-453D-830A-D00F0540FC2C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -492,8 +498,9 @@ Global
 		{E487774C-2805-4642-B173-63D8F2D05D39} = {F617061F-24DF-4C57-8147-84CAB336DD4E}
 		{5CF47B2E-9370-4FD8-B9BD-0D95D3EA167C} = {E3DAC9C6-AE41-4B37-A253-C621E568590E}
 		{E10BF2F9-D5CA-4330-8169-ED30D861697E} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
-		{E696F7DF-D99F-4BD4-B757-531B5F5ECB36} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{710C7C7A-CD27-4F94-B2D3-9804BD848D57} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
+		{0C3E92D7-F16C-4575-9CBB-EB7349A4C5E2} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
+		{2E6CF650-CB50-453D-830A-D00F0540FC2C} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
