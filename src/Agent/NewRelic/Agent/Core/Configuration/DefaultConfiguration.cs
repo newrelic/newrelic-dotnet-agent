@@ -1856,6 +1856,7 @@ namespace NewRelic.Agent.Core.Configuration
             get
             {
                 return ApplicationLoggingEnabled &&
+                    LogEventsMaxSamplesStored > 0 &&
                     !SecurityPoliciesTokenExists &&
                     HighSecurityModeOverrides(false,
                     EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED"));
