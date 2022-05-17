@@ -33,6 +33,9 @@ namespace NewRelic.Agent.Core.Segments
 
         public string TypeName => string.Empty;
 
+        public string UserCodeFunction { get => string.Empty; set { } }
+        public string UserCodeNamespace { get => string.Empty; set { } }
+
         public void End() { }
         public void End(Exception ex) { }
         public void MakeCombinable() { }

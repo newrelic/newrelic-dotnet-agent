@@ -30,5 +30,18 @@ namespace NewRelic.Agent.Api.Experimental
         /// <returns>The segment that the segmentData was added to.</returns>
         ISegmentExperimental MakeLeaf();
 
+        /// <summary>
+        /// Get or set the function (method) name for the user/customer code represented
+        /// by the instrumentation. This only needs set when the instrumentation point and
+        /// the customer code represented differ. For example, controller actions.
+        /// </summary>
+        string UserCodeFunction { get; set; }
+        /// <summary>
+        /// Get or set the namespace (type) name for the user/customer code represented
+        /// by the instrumentation. This only needs set when the instrumentation point and
+        /// the customer code represented differ. For example, controller actions.
+        /// </summary>
+        string UserCodeNamespace { get; set; }
+
     }
 }

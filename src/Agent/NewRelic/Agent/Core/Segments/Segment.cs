@@ -219,6 +219,13 @@ namespace NewRelic.Agent.Core.Segments
             }
         }
 
+        // For auto-instrumentation, we often instrument a function of the framework itself
+        // which represents and executes user code. So we need to keep track of the actual user
+        // code namespace (type) and function that the instrumentation represents for mapping to
+        // customer code.
+        public string UserCodeNamespace { get; set; } = null;
+        public string UserCodeFunction { get; set; } = null;
+
         private void Finish()
         {
             var endTime = _transactionSegmentState.GetRelativeTime();
@@ -267,6 +274,17 @@ namespace NewRelic.Agent.Core.Segments
                     AttribDefs.SpanIsErrorExpected.TrySetValue(attribValues, ErrorData.IsExpected);
                 }
             }
+
+            var codeNamespace = !string.IsNullOrEmpty(this.UserCodeNamespace)
+                ? this.UserCodeNamespace
+                : this.MethodCallData.TypeName;
+
+            var codeFunction = !string.IsNullOrEmpty(this.UserCodeFunction)
+                ? this.UserCodeFunction
+                : this.MethodCallData.MethodName;
+
+            AttribDefs.CodeNamespace.TrySetValue(attribValues, codeNamespace);
+            AttribDefs.CodeFunction.TrySetValue(attribValues, codeFunction);
 
             Data.SetSpanTypeSpecificAttributes(attribValues);
 
