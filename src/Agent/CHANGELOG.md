@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 ### Fixes
+* Fixes an [issue with log forwarding](https://github.com/newrelic/newrelic-dotnet-agent/issues/1088) where an agent could momentarily forward logs even if the feature had been disabled at an account level. ([#1051](https://github.com/newrelic/newrelic-dotnet-agent/pull/1097))
 
 ## [9.8.0] - 2022-05-05
 
