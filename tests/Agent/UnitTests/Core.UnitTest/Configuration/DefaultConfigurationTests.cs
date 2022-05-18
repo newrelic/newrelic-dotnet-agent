@@ -3079,6 +3079,20 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ForceNewTransactionOnNewThread;
         }
 
+        [Test]
+        public void ShouldDefaultCodeLevelMetricsEnabledFalse()
+        {
+            Assert.AreEqual(false, _defaultConfig.CodeLevelMetricsEnabled);
+        }
+
+        [Test]
+        public void ShouldUpdateCodeLevelMetricsEnabled()
+        {
+            _localConfig.codeLevelMetrics.enabled = true;
+            Assert.AreEqual(true, _defaultConfig.CodeLevelMetricsEnabled);
+        }
+
+
         private void CreateDefaultConfiguration()
         {
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);

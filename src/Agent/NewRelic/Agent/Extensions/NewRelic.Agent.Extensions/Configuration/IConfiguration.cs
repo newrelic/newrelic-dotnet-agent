@@ -190,5 +190,6 @@ namespace NewRelic.Agent.Configuration
         bool LogDecoratorEnabled { get; }
         bool AppDomainCachingDisabled { get; }
         bool ForceNewTransactionOnNewThread { get; }
+        bool CodeLevelMetricsEnabled {  get; }
     }
 }

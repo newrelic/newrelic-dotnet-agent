@@ -2448,6 +2448,8 @@ namespace NewRelic.Agent.Core.Configuration
         public int DatabaseStatementCacheCapcity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
             TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
 
+        public bool CodeLevelMetricsEnabled =>  _localConfiguration.codeLevelMetrics.enabled;
+
         #endregion
 
         private const bool CaptureTransactionTraceAttributesDefault = true;
