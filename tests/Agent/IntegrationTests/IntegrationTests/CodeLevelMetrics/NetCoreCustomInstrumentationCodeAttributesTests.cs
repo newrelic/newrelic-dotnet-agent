@@ -29,6 +29,9 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
             (
                 setupConfiguration: () =>
                 {
+                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                    configModifier.SetCodeLevelMetricsEnabled();
+
                     var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "NetCoreAsyncApplication", AsyncUseCasesNamespace, "IoBoundNoSpecialAsync", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.OtherTransactionWrapperAsync", "IoBoundNoSpecialAsync", 7);

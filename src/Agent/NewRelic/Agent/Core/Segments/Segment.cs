@@ -275,16 +275,19 @@ namespace NewRelic.Agent.Core.Segments
                 }
             }
 
-            var codeNamespace = !string.IsNullOrEmpty(this.UserCodeNamespace)
-                ? this.UserCodeNamespace
-                : this.MethodCallData.TypeName;
+            if (_configurationSubscriber.Configuration.CodeLevelMetricsEnabled)
+            {
+                var codeNamespace = !string.IsNullOrEmpty(this.UserCodeNamespace)
+                    ? this.UserCodeNamespace
+                    : this.MethodCallData.TypeName;
 
-            var codeFunction = !string.IsNullOrEmpty(this.UserCodeFunction)
-                ? this.UserCodeFunction
-                : this.MethodCallData.MethodName;
+                var codeFunction = !string.IsNullOrEmpty(this.UserCodeFunction)
+                    ? this.UserCodeFunction
+                    : this.MethodCallData.MethodName;
 
-            AttribDefs.CodeNamespace.TrySetValue(attribValues, codeNamespace);
-            AttribDefs.CodeFunction.TrySetValue(attribValues, codeFunction);
+                AttribDefs.CodeNamespace.TrySetValue(attribValues, codeNamespace);
+                AttribDefs.CodeFunction.TrySetValue(attribValues, codeFunction);
+            }
 
             Data.SetSpanTypeSpecificAttributes(attribValues);
 

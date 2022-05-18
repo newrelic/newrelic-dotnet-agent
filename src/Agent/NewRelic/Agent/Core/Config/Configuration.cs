@@ -94,6 +94,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationProcessHost processHostField;
         
+        private configurationCodeLevelMetrics codeLevelMetricsField;
+        
         private bool agentEnabledField;
         
         private bool rootAgentEnabledField;
@@ -113,6 +115,7 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configuration()
         {
+            this.codeLevelMetricsField = new configurationCodeLevelMetrics();
             this.processHostField = new configurationProcessHost();
             this.utilizationField = new configurationUtilization();
             this.appSettingsField = new List<configurationAdd>();
@@ -561,6 +564,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.processHostField = value;
+            }
+        }
+        
+        public configurationCodeLevelMetrics codeLevelMetrics
+        {
+            get
+            {
+                return this.codeLevelMetricsField;
+            }
+            set
+            {
+                this.codeLevelMetricsField = value;
             }
         }
         
@@ -5443,6 +5458,48 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationProcessHost Clone()
         {
             return ((configurationProcessHost)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationCodeLevelMetrics
+    {
+        
+        private bool enabledField;
+        
+        /// <summary>
+        /// configurationCodeLevelMetrics class constructor
+        /// </summary>
+        public configurationCodeLevelMetrics()
+        {
+            this.enabledField = false;
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationCodeLevelMetrics object
+        /// </summary>
+        public virtual configurationCodeLevelMetrics Clone()
+        {
+            return ((configurationCodeLevelMetrics)(this.MemberwiseClone()));
         }
         #endregion
     }
