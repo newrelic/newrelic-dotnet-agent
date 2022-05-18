@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http.Controllers;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
@@ -36,7 +37,9 @@ namespace NewRelic.Providers.Wrapper.WebApi2
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             var httpActionContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<HttpActionContext>(0);
-            var controllerName = TryGetControllerName(httpActionContext) ?? "Unknown Controller";
+            var controllerDescriptor = TryGetControllerDescriptor(httpActionContext);
+
+            var controllerName = controllerDescriptor?.ControllerName ?? "Unknown Controller";
             var actionName = TryGetActionName(httpActionContext) ?? "Unknown Action";
 
             var transactionName = string.Format("{0}/{1}", controllerName, actionName);
@@ -44,20 +47,20 @@ namespace NewRelic.Providers.Wrapper.WebApi2
 
             var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 
+            var segmentApi = segment.GetExperimentalApi();
+            segmentApi.UserCodeNamespace = controllerDescriptor?.ControllerType.FullName;
+            segmentApi.UserCodeFunction = httpActionContext.ActionDescriptor?.ActionName;
+
             return Delegates.GetAsyncDelegateFor<Task<HttpResponseMessage>>(agent, segment);
         }
 
-        private static string TryGetControllerName(HttpActionContext httpActionContext)
+        private static HttpControllerDescriptor TryGetControllerDescriptor(HttpActionContext httpActionContext)
         {
             var controllerContext = httpActionContext.ControllerContext;
             if (controllerContext == null)
                 return null;
 
-            var controllerDescriptor = controllerContext.ControllerDescriptor;
-            if (controllerDescriptor == null)
-                return null;
-
-            return controllerDescriptor.ControllerName;
+            return controllerContext.ControllerDescriptor;
         }
 
         private static string TryGetActionName(HttpActionContext httpActionContext)
