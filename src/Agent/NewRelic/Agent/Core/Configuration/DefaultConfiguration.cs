@@ -2448,7 +2448,19 @@ namespace NewRelic.Agent.Core.Configuration
         public int DatabaseStatementCacheCapcity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
             TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
 
-        public bool CodeLevelMetricsEnabled =>  _localConfiguration.codeLevelMetrics.enabled;
+        private bool? _codeLevelMetricsEnabled;
+        public bool CodeLevelMetricsEnabled
+        {
+            get
+            {
+                if (!_codeLevelMetricsEnabled.HasValue)
+                {
+                    _codeLevelMetricsEnabled = EnvironmentOverrides(_localConfiguration.codeLevelMetrics.enabled, "NEW_RELIC_CODE_LEVEL_METRICS_ENABLED");
+                }
+
+                return _codeLevelMetricsEnabled.Value;
+            }
+        }
 
         #endregion
 
