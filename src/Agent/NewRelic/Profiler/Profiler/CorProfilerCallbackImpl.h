@@ -893,7 +893,6 @@ namespace NewRelic { namespace Profiler {
             auto filePaths = GetXmlFilesInExtensionsDirectory(systemCalls);
 
             for (auto filePath : filePaths) {
-
                 instrumentationXmls->emplace(filePath, ReadFile(filePath));
             }
 
@@ -1031,8 +1030,6 @@ namespace NewRelic { namespace Profiler {
                 auto runtimeExtensionsDirectoryXmlFiles = GetXmlFilesInDirectory(systemCalls, runtimeExtensionsDirectory);
                 xmlFiles.insert(runtimeExtensionsDirectoryXmlFiles.begin(), runtimeExtensionsDirectoryXmlFiles.end());
             }
-
-            
 
             return xmlFiles;
         }
