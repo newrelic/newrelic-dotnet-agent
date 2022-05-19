@@ -25,7 +25,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls) :
             _instrumentationPointsSet(new InstrumentationPointSet())
         {
-
             // pull instrumentation points from every xml string
             for (auto instrumentationXml : *instrumentationXmls)
             {
@@ -49,9 +48,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                     continue;
                 }
             }
-
             LogInfo("Identified ", _instrumentationPointsSet->size(), " Instrumentation points in .xml files");
-            
         }
 
         InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints) :
@@ -96,12 +93,10 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         static bool InstrumentationXmlIsDeprecated(xstring_t instrumentationXmlFilePath)
         {
             bool returnValue = false;
-
             if (NewRelic::Profiler::Strings::ContainsCaseInsensitive(instrumentationXmlFilePath, _X("NewRelic.Providers.Wrapper.Logging.Instrumentation.xml")))
             {
                 returnValue = true;
             }
-
             return returnValue;
         }
 
