@@ -893,10 +893,30 @@ namespace NewRelic { namespace Profiler {
             auto filePaths = GetXmlFilesInExtensionsDirectory(systemCalls);
 
             for (auto filePath : filePaths) {
-                instrumentationXmls->emplace(filePath, ReadFile(filePath));
+
+                if (!InstrumentationXmlIsDeprecated(filePath))
+                {
+                    instrumentationXmls->emplace(filePath, ReadFile(filePath));
+                }
+                else
+                {
+                    LogWarn("Deprecated instrumentation file being ignored: ", filePath);
+                }
             }
 
             return instrumentationXmls;
+        }
+
+        static bool InstrumentationXmlIsDeprecated(xstring_t instrumentationXmlFilePath)
+        {
+            bool returnValue = false;
+            
+            if (NewRelic::Profiler::Strings::ContainsCaseInsensitive(instrumentationXmlFilePath, _X("NewRelic.Providers.Wrapper.Logging.Instrumentation.xml")))
+            {
+                returnValue = true;
+            }
+
+            return returnValue;
         }
 
         static xstring_t GetAppPoolId(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
@@ -1030,6 +1050,8 @@ namespace NewRelic { namespace Profiler {
                 auto runtimeExtensionsDirectoryXmlFiles = GetXmlFilesInDirectory(systemCalls, runtimeExtensionsDirectory);
                 xmlFiles.insert(runtimeExtensionsDirectoryXmlFiles.begin(), runtimeExtensionsDirectoryXmlFiles.end());
             }
+
+            
 
             return xmlFiles;
         }
