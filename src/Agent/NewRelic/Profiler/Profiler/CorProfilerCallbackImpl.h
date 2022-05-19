@@ -894,29 +894,10 @@ namespace NewRelic { namespace Profiler {
 
             for (auto filePath : filePaths) {
 
-                if (!InstrumentationXmlIsDeprecated(filePath))
-                {
-                    instrumentationXmls->emplace(filePath, ReadFile(filePath));
-                }
-                else
-                {
-                    LogWarn("Deprecated instrumentation file being ignored: ", filePath);
-                }
+                instrumentationXmls->emplace(filePath, ReadFile(filePath));
             }
 
             return instrumentationXmls;
-        }
-
-        static bool InstrumentationXmlIsDeprecated(xstring_t instrumentationXmlFilePath)
-        {
-            bool returnValue = false;
-            
-            if (NewRelic::Profiler::Strings::ContainsCaseInsensitive(instrumentationXmlFilePath, _X("NewRelic.Providers.Wrapper.Logging.Instrumentation.xml")))
-            {
-                returnValue = true;
-            }
-
-            return returnValue;
         }
 
         static xstring_t GetAppPoolId(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)

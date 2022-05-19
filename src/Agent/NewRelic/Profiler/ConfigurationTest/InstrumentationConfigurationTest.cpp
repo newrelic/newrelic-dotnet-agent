@@ -73,6 +73,26 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(instrumentationPoint == nullptr);
         }
 
+        TEST_METHOD(deprecated_logforwarding_xml_is_ignored)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"NewRelic.Providers.Wrapper.Logging.Instrumentation.xml", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"MyAssembly\" className=\"MyNamespace.MyClass\">\
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet);
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
+            Assert::IsTrue(instrumentationPoint == nullptr);
+        }
+
         TEST_METHOD(no_assembly_match)
         {
             InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
