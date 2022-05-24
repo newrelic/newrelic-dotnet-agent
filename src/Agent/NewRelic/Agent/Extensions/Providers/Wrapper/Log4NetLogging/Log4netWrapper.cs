@@ -35,37 +35,38 @@ namespace NewRelic.Providers.Wrapper.Logging
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[0];
+            var logEventType = logEvent.GetType();
 
-            RecordLogMessage(logEvent, agent);
+            RecordLogMessage(logEvent, logEventType, agent);
 
-            DecorateLogMessage(logEvent, agent);
+            DecorateLogMessage(logEvent, logEventType, agent);
 
             return Delegates.NoOp;
         }
 
-        private void RecordLogMessage(object logEvent, IAgent agent)
+        private void RecordLogMessage(object logEvent, Type logEventType, IAgent agent)
         {
-            var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEvent.GetType(), "Level");
+            var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Level");
 
             // RenderedMessage is get only
-            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEvent.GetType(), "RenderedMessage");
+            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "RenderedMessage");
 
             // Older versions of log4net only allow access to a timestamp in local time
-            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEvent.GetType(), "TimeStamp");
+            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
             xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLogLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
-        private void DecorateLogMessage(object logEvent, IAgent agent)
+        private void DecorateLogMessage(object logEvent, Type logEventType, IAgent agent)
         {
             if (!agent.Configuration.LogDecoratorEnabled)
             {
                 return;
             }
 
-            var getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEvent.GetType(), "Properties");
+            var getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEventType, "Properties");
             var propertiesDictionary = getProperties(logEvent);
 
             if (propertiesDictionary == null)

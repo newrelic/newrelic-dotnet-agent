@@ -30,32 +30,33 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[2];
+            var logEventType = logEvent.GetType();
 
             if (!LogProviders.RegisteredLogProvider[(int)LogProvider.NLog])
             {
-                RecordLogMessage(logEvent, agent);
+                RecordLogMessage(logEvent, logEventType, agent);
             }
 
             // We want this to happen instead of MEL so no provider check here.
-            DecorateLogMessage(logEvent, agent);
+            DecorateLogMessage(logEvent, logEventType, agent);
 
             return Delegates.NoOp;
         }
 
-        private void RecordLogMessage(object logEvent, IAgent agent)
+        private void RecordLogMessage(object logEvent, Type logEventType, IAgent agent)
         {
-            var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEvent.GetType(), "Level");
+            var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Level");
 
-            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEvent.GetType(), "FormattedMessage");
+            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "FormattedMessage");
 
-            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEvent.GetType(), "TimeStamp");
+            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
             xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLogLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
-        private void DecorateLogMessage(object logEvent, IAgent agent)
+        private void DecorateLogMessage(object logEvent, Type logEventType, IAgent agent)
         {
             if (!agent.Configuration.LogDecoratorEnabled)
             {
@@ -64,12 +65,18 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
 
             var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
 
-            var messageGetter = _messageGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEvent.GetType(), "Message");
-            var message = messageGetter(logEvent) + " " + formattedMetadata;
+            var messageGetter = _messageGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "Message");
+
+            // Message should not be null, but better to be sure
+            var originalMessage = messageGetter(logEvent);
+            if (string.IsNullOrWhiteSpace(originalMessage))
+            {
+                return;
+            }
 
             // this cannot be made a static since it is unique to each logEvent
             var messageSetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(logEvent, "Message");
-            messageSetter(message);
+            messageSetter(messageGetter + " " + formattedMetadata);
         }
     }
 }
