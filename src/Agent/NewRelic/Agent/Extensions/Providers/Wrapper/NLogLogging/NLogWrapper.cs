@@ -46,10 +46,8 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
         {
             var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEvent.GetType(), "Level");
 
-            // RenderedMessage is get only
             var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEvent.GetType(), "FormattedMessage");
 
-            // Older versions of log4net only allow access to a timestamp in local time
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEvent.GetType(), "TimeStamp");
 
             // This will either add the log message to the transaction or directly to the aggregator

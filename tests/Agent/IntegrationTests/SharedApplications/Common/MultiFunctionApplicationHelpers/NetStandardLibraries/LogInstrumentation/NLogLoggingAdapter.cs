@@ -43,22 +43,16 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void Configure()
         {
-            var logconsole = new ConsoleTarget();
-        
-            NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(logconsole, LogLevel.Debug);
-            _log = LogManager.GetLogger("LoggingTest");
+            _log = GetLogger();
         }
 
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
-            // The default layout is plain text and NLog appends NR-LINKING to the message automatically.
-            Configure();
+            _log = GetLogger();
         }
 
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
-            var logconsole = new ConsoleTarget();
-
             var jsonLayout = new JsonLayout {
                 Attributes = {
                     new JsonAttribute ("time", "${longdate}"),
@@ -67,10 +61,24 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 }
             };
 
-            logconsole.Layout = jsonLayout;
+            _log = _log = GetLogger(jsonLayout);
+        }
 
-            NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(logconsole, LogLevel.Debug);
-            _log = LogManager.GetLogger("LoggingTest");
+        private Logger GetLogger(Layout layoutOverride = null)
+        {
+            var logFactory = new NLog.LogFactory();
+            var logConfig = new NLog.Config.LoggingConfiguration();
+            var logConsole = new ConsoleTarget();
+
+            if (layoutOverride != null)
+            {
+                logConsole.Layout = layoutOverride;
+            }
+
+            logConfig.AddTarget("console", logConsole);
+            logConfig.LoggingRules.Add(new NLog.Config.LoggingRule("*", LogLevel.Debug, logConsole));
+            logFactory.Configuration = logConfig;
+            return logFactory.GetLogger("LoggingTest");
         }
     }
 }
