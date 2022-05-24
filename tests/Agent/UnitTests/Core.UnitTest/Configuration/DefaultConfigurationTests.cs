@@ -2658,7 +2658,27 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void ApplicationLogging_LocalDecordingEnabled_IsFalseInLocalConfigByDefault()
+        public void ApplicationLogging_ForwardingEnabled_IsOverriddenWhenNoSpanEventsAllowed_ByLocalConfig()
+        {
+            _localConfig.applicationLogging.forwarding.maxSamplesStored = 0;
+
+            Assert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
+        }
+
+        [Test]
+        public void ApplicationLogging_ForwardingEnabled_IsOverriddenWhenNoSpanEventsAllowed_ByServer()
+        {
+            _serverConfig.EventHarvestConfig = new EventHarvestConfig
+            {
+                ReportPeriodMs = 5000,
+                HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.LogEventHarvestLimitKey, 0 } }
+            };
+
+            Assert.IsFalse(_defaultConfig.LogEventCollectorEnabled);
+        }
+
+        [Test]
+        public void ApplicationLogging_LocalDecoratingEnabled_IsFalseInLocalConfigByDefault()
         {
             Assert.IsFalse(_defaultConfig.LogDecoratorEnabled);
         }
