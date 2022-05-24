@@ -3085,11 +3085,30 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(false, _defaultConfig.CodeLevelMetricsEnabled);
         }
 
-        [Test]
-        public void ShouldUpdateCodeLevelMetricsEnabled()
+        [TestCase(true, null, ExpectedResult = true)]
+        [TestCase(true, "true", ExpectedResult = true)]
+        [TestCase(true, "1", ExpectedResult = true)]
+        [TestCase(true, "false", ExpectedResult = false)]
+        [TestCase(true, "0", ExpectedResult = false)]
+        [TestCase(true, "invalid", ExpectedResult = true)]
+        [TestCase(false, null, ExpectedResult = false)]
+        [TestCase(false, "true", ExpectedResult = true)]
+        [TestCase(false, "1", ExpectedResult = true)]
+        [TestCase(false, "false", ExpectedResult = false)]
+        [TestCase(false, "0", ExpectedResult = false)]
+        [TestCase(false, "invalid", ExpectedResult = false)]
+        [TestCase(null, "true", ExpectedResult = true)]
+        [TestCase(null, "1", ExpectedResult = true)]
+        [TestCase(null, "false", ExpectedResult = false)]
+        [TestCase(null, "0", ExpectedResult = false)]
+        [TestCase(null, "invalid", ExpectedResult = false)]
+        public bool ShouldUpdateCodeLevelMetricsEnabled(bool localConfigValue, string envConfigValue)
         {
-            _localConfig.codeLevelMetrics.enabled = true;
-            Assert.AreEqual(true, _defaultConfig.CodeLevelMetricsEnabled);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_CODE_LEVEL_METRICS_ENABLED")).Returns(envConfigValue);
+
+            _localConfig.codeLevelMetrics.enabled = localConfigValue;
+
+            return _defaultConfig.CodeLevelMetricsEnabled;
         }
 
 
