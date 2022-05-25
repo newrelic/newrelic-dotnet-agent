@@ -20,5 +20,7 @@ namespace NewRelic.Agent.Extensions.Logging
         public static readonly List<string> Log4NetProviderNames = new List<string> { "Microsoft.Extensions.Logging.Log4NetProvider", "log4net.Extensions.Logging.Log4NetProvider" };
 
         public static readonly List<string> SerilogProviderNames = new List<string> { "Microsoft.Extensions.Logging.SerilogLoggerProvider", "Serilog.Extensions.Logging.SerilogLoggerProvider" };
+
+        public static readonly List<string> NLogProviderNames = new List<string> { "Microsoft.Extensions.Logging.NLogLoggerProvider", "NLog.Extensions.Logging.NLogLoggerProvider" };
     }
 }

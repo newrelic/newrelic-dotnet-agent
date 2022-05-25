@@ -32,6 +32,11 @@ namespace MicrosoftExtensionsLogging
                 LogProviders.RegisteredLogProvider[(int)LogProvider.Serilog] = true;
                 agent.Logger.Log(Level.Info, "Detected Serilog provider in use with Microsoft.Extensions.Logging, disabling Serilog instrumentation.");
             }
+            else if (LogProviders.NLogProviderNames.Contains(provider))
+            {
+                LogProviders.RegisteredLogProvider[(int)LogProvider.NLog] = true;
+                agent.Logger.Log(Level.Info, "Detected NLog provider in use with Microsoft.Extensions.Logging, disabling NLog instrumentation.");
+            }
 
             return Delegates.NoOp;
         }

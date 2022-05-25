@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+
+    <!-- NLog v5, v4 -->
+    <tracerFactory name="nlog">
+      <match assemblyName="NLog" className="NLog.LoggerImpl">
+        <exactMethodMatcher methodName="Write" />
+      </match>
+    </tracerFactory>
+
+  </instrumentation>
+</extension>

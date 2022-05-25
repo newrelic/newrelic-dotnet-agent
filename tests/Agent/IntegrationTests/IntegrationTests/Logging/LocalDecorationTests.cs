@@ -86,7 +86,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
 
     #region log4net
 
-    // Json layout, decoration enabled
+    #region Json layout, decoration enabled
+
     [NetFrameworkTest]
     public class Log4netJsonLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
@@ -140,8 +141,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         {
         }
     }
+    #endregion
 
-    // Json layout, decoration disabled
+    #region Json layout, decoration disabled
+
     [NetFrameworkTest]
     public class Log4netJsonLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
@@ -196,7 +199,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         }
     }
 
-    // Pattern layout, decoration enabled
+    #endregion
+
+    #region Pattern layout, decoration enabled
+
     [NetFrameworkTest]
     public class Log4netPatternLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
@@ -251,7 +257,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         }
     }
 
-    // Pattern layout, decoration disabled
+    #endregion
+
+    #region Pattern layout, decoration disabled
+
     [NetFrameworkTest]
     public class Log4netPatternLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
@@ -305,6 +314,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         {
         }
     }
+
+    #endregion
 
     #endregion
 
@@ -705,4 +716,238 @@ namespace NewRelic.Agent.IntegrationTests.Logging
 
     #endregion
 
+    #region NLog
+
+    #region Json layout, decoration enabled
+
+    [NetFrameworkTest]
+    public class NLogJsonLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public NLogJsonLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class NLogJsonLayoutDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public NLogJsonLayoutDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogJsonLayoutDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public NLogJsonLayoutDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogJsonLayoutDecorationEnabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public NLogJsonLayoutDecorationEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogJsonLayoutDecorationEnabledTestsNetCore31Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public NLogJsonLayoutDecorationEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogJsonLayoutDecorationEnabledTestsNetCore22Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore22>
+    {
+        public NLogJsonLayoutDecorationEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+    #endregion
+
+    #region Json layout, decoration disabled
+
+    [NetFrameworkTest]
+    public class NLogJsonLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public NLogJsonLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class NLogJsonLayoutDecorationDisabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public NLogJsonLayoutDecorationDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogJsonLayoutDecorationDisabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public NLogJsonLayoutDecorationDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogJsonLayoutDecorationDisabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public NLogJsonLayoutDecorationDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogJsonLayoutDecorationDisabledTestsNetCore31Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public NLogJsonLayoutDecorationDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogJsonLayoutDecorationDisabledTestsNetCore22Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore22>
+    {
+        public NLogJsonLayoutDecorationDisabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    #endregion
+
+    #region Pattern layout, decoration enabled
+
+    [NetFrameworkTest]
+    public class NLogPatternLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public NLogPatternLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class NLogPatternLayoutDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public NLogPatternLayoutDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogPatternLayoutDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public NLogPatternLayoutDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogPatternLayoutDecorationEnabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public NLogPatternLayoutDecorationEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogPatternLayoutDecorationEnabledTestsNetCore31Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public NLogPatternLayoutDecorationEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogPatternLayoutDecorationEnabledTestsNetCore22Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore22>
+    {
+        public NLogPatternLayoutDecorationEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    #endregion
+
+    #region Pattern layout, decoration disabled
+
+    [NetFrameworkTest]
+    public class NLogPatternLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public NLogPatternLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class NLogPatternLayoutDecorationDisabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public NLogPatternLayoutDecorationDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogPatternLayoutDecorationDisabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public NLogPatternLayoutDecorationDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogPatternLayoutDecorationDisabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public NLogPatternLayoutDecorationDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogPatternLayoutDecorationDisabledTestsNetCore31Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public NLogPatternLayoutDecorationDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogPatternLayoutDecorationDisabledTestsNetCore22Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore22>
+    {
+        public NLogPatternLayoutDecorationDisabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    #endregion
+
+    #endregion
 }

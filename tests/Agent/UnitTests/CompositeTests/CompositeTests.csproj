@@ -12,7 +12,7 @@
     <PackageReference Include="JustMock" Version="2020.1.113.1" />
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="1.1.1" />
     <PackageReference Include="MoreLinq" Version="2.4.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="NUnit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.16.1">
       <PrivateAssets>all</PrivateAssets>
