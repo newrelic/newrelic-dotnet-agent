@@ -35,6 +35,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     _log = new MicrosoftLoggingLoggingAdapter();
 #endif
                     break;
+                case "NLOG":
+                    _log = new NLogLoggingAdapter();
+                    break;
                 default:
                     throw new System.ArgumentNullException(nameof(loggingFramework));
             }
