@@ -250,6 +250,13 @@ function RemoveNewRelicInstallArtifacts($fromDirectory)
 	}
 }
 
+function RemoveDeprecatedInstrumentationFiles($newRelicInstallPath)
+{
+	# Logging files
+	Remove-Item "$newRelicInstallPath\extensions\NewRelic.Providers.Wrapper.Logging.Instrumentation.xml" -ErrorAction Ignore
+	Remove-Item "$newRelicInstallPath\extensions\NewRelic.Providers.Wrapper.Logging.dll" -ErrorAction Ignore
+}
+
 try
 {
 	WriteToInstallLog "Start executing install.ps1"
@@ -365,6 +372,8 @@ try
 		InstallNewAgent $newRelicNugetContentPath $newRelicInstallPath $newRelicLegacyInstallPath
 
 		CopyAgentInfo $newRelicInstallPath
+
+		RemoveDeprecatedInstrumentationFiles $newRelicInstallPath
 
 		cd ..\..
 	}

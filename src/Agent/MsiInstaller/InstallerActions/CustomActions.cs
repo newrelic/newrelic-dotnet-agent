@@ -228,6 +228,16 @@ namespace InstallerActions
             DeleteFile(@"C:\Windows\SysWOW64\NewRelic.IL.dll");
             DeleteFile(session.CustomActionData["NETAGENTCOMMONFOLDER"] + @"newrelic.xml");
 
+            // Delete old logging XMLs to prevent duplicate logs from being sent up.
+            DeleteFile(@"C:\ProgramData\New Relic\.NET Agent\Extensions\netcore\NewRelic.Providers.Wrapper.Logging.Instrumentation.xml");
+            DeleteFile(@"C:\ProgramData\New Relic\.NET Agent\Extensions\netframework\NewRelic.Providers.Wrapper.Logging.Instrumentation.xml");
+
+            // Delete old logging DLLs (from default locations) to prevent duplicate logs from being sent up.
+            DeleteFile(@"C:\Program Files\New Relic\.NET Agent\netcore\Extensions\NewRelic.Providers.Wrapper.Logging.dll");
+            DeleteFile(@"C:\Program Files\New Relic\.NET Agent\netframework\Extensions\NewRelic.Providers.Wrapper.Logging.dll");
+            DeleteFile(@"C:\Program Files (x86)\New Relic\.NET Agent\netcore\Extensions\NewRelic.Providers.Wrapper.Logging.dll");
+            DeleteFile(@"C:\Program Files (x86)\New Relic\.NET Agent\netframework\Extensions\NewRelic.Providers.Wrapper.Logging.dll");
+
             String newrelicHomePath = Environment.GetEnvironmentVariable("NEWRELIC_HOME");
             if (newrelicHomePath != null) DeleteFile(newrelicHomePath + @"\newrelic.xml");
 
