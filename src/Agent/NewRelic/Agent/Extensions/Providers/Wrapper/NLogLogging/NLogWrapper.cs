@@ -2,43 +2,42 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.Logging
+namespace NewRelic.Providers.Wrapper.NLogLogging
 {
-    public class Log4netWrapper : IWrapper
+    public class NLogWrapper : IWrapper
     {
         private static Func<object, object> _getLogLevel;
         private static Func<object, string> _getRenderedMessage;
         private static Func<object, DateTime> _getTimestamp;
-        private static Func<object, IDictionary> _getProperties;
+        private static Func<object, string> _messageGetter;
 
         public bool IsTransactionRequired => false;
 
-        private const string WrapperName = "log4net";
+        private const string WrapperName = "nlog";
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            if (!LogProviders.RegisteredLogProvider[(int)LogProvider.Log4Net])
-            {
-                return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
-            }
-
-            return new CanWrapResponse(false);
+            // Since NLog can alter the messages directly, we need to move the MEL check
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[0];
+            var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[2];
             var logEventType = logEvent.GetType();
 
-            RecordLogMessage(logEvent, logEventType, agent);
+            if (!LogProviders.RegisteredLogProvider[(int)LogProvider.NLog])
+            {
+                RecordLogMessage(logEvent, logEventType, agent);
+            }
 
+            // We want this to happen instead of MEL so no provider check here.
             DecorateLogMessage(logEvent, logEventType, agent);
 
             return Delegates.NoOp;
@@ -48,10 +47,8 @@ namespace NewRelic.Providers.Wrapper.Logging
         {
             var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Level");
 
-            // RenderedMessage is get only
-            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "RenderedMessage");
+            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "FormattedMessage");
 
-            // Older versions of log4net only allow access to a timestamp in local time
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
 
             // This will either add the log message to the transaction or directly to the aggregator
@@ -66,19 +63,20 @@ namespace NewRelic.Providers.Wrapper.Logging
                 return;
             }
 
-            var getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEventType, "Properties");
-            var propertiesDictionary = getProperties(logEvent);
+            var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
 
-            if (propertiesDictionary == null)
+            var messageGetter = _messageGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "Message");
+
+            // Message should not be null, but better to be sure
+            var originalMessage = messageGetter(logEvent);
+            if (string.IsNullOrWhiteSpace(originalMessage))
             {
                 return;
             }
 
-            // uses the foratted metadata to make a single entry
-            var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
-
-            // uses underscores to support other frameworks that do not allow hyphens (Serilog)
-            propertiesDictionary["NR_LINKING"] = formattedMetadata;
+            // this cannot be made a static since it is unique to each logEvent
+            var messageSetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(logEvent, "Message");
+            messageSetter(messageGetter + " " + formattedMetadata);
         }
     }
 }

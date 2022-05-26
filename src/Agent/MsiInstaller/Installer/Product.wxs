@@ -460,6 +460,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="SerilogLoggingWrapperComponent" Guid="{6E0C2C78-762F-4022-880A-D5833C265884}">
         <File Id="SerilogLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.SerilogLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.SerilogLogging.dll"/>
       </Component>
+      <Component Id="NLogLoggingWrapperComponent" Guid="{31EA2456-A5E3-4B04-AD4B-B010594F494D}">
+        <File Id="NLogLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.NLogLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.NLogLogging.dll"/>
+      </Component>
 
       <!-- Reference libraries -->
       <Component Id="NewRelicCoreReferenceComponent" Guid="{C196ED1E-0FBA-4D36-9C34-E969B0C9E8C9}">
@@ -503,6 +506,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreSerilogLoggingWrapperComponent" Guid="{9B0099B2-96B8-4491-924E-9B43343B3809}">
         <File Id="CoreSerilogLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.SerilogLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.SerilogLogging.dll"/>
+      </Component>
+      <Component Id="CoreNLogLoggingWrapperComponent" Guid="{897C07B8-AF97-4BA3-B6F3-26395A02147E}">
+        <File Id="CoreNLogLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.NLogLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.NLogLogging.dll"/>
       </Component>
 
       <!-- Reference libraries -->
@@ -597,6 +603,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="SerilogLoggingInstrumentationComponent" Guid="{E3E48218-BAC8-428E-8D1A-088D2A5F0637}">
         <File Id="SerilogLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.SerilogLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.SerilogLogging.Instrumentation.xml"/>
       </Component>
+      <Component Id="NLogLoggingInstrumentationComponent" Guid="{C803621B-EC47-4559-8B7D-2FD836A36DCD}">
+        <File Id="NLogLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml"/>
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions.Instrumentation" Directory="CoreExtensionsFolder">
@@ -629,6 +638,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreSerilogLoggingInstrumentationComponent" Guid="{5F7C6A8F-8958-46B1-BC56-5EC197213BC5}">
         <File Id="CoreSerilogLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.SerilogLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.SerilogLogging.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreNLogLoggingInstrumentationComponent" Guid="{D9A87E74-C43B-4ACD-BF6C-DC082FEDD777}">
+        <File Id="CoreNLogLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 

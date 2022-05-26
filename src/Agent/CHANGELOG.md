@@ -7,14 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] changes
 
 ### New Features
+* Adds support for logging metrics, forwarding application logs, and enriching application logs written to disk or standard out for NLog versions v5 and v4. [#1087](https://github.com/newrelic/newrelic-dotnet-agent/pull/1087)
+* Updates the following installation methods to check for and remove deprecated files. ([#1104](https://github.com/newrelic/newrelic-dotnet-agent/pull/1104))
+  * MSI Installer
+  * Azure Site Extension
+  * RPM package
+  * DEB package
 
 ### Fixes
+* Upgrades Newtonsoft.Json to version 13.0.1 to address potential security vulnerabilities identified by Snyk ([#1107](https://github.com/newrelic/newrelic-dotnet-agent/pull/1107))
 
 ## [9.8.1] - 2022-05-19
 
 ### Fixes
-* Fixes an [issue with log forwarding](https://github.com/newrelic/newrelic-dotnet-agent/issues/1088) where an agent could momentarily forward logs even if the feature had been disabled at an account level. ([#1051](https://github.com/newrelic/newrelic-dotnet-agent/pull/1097))
-* Adds an internal list of deprecated instrumentation xml files which will cause the profiler to ignore deprecated instrumentation. This feature avoids an issue where orphaned deprecated log forwarding instrumentation could conflict with newer instrumentation. ([#1051](https://github.com/newrelic/newrelic-dotnet-agent/pull/1097))
+* Fixes an [issue with log forwarding](https://github.com/newrelic/newrelic-dotnet-agent/issues/1088) where an agent could momentarily forward logs even if the feature had been disabled at an account level. ([#1097](https://github.com/newrelic/newrelic-dotnet-agent/pull/1097))
+* Adds an internal list of deprecated instrumentation xml files which will cause the profiler to ignore deprecated instrumentation. This feature avoids an issue where orphaned deprecated log forwarding instrumentation could conflict with newer instrumentation. ([#1097](https://github.com/newrelic/newrelic-dotnet-agent/pull/1097))
 * Serilog instrumentation is now performed by injecting a custom sink in to the logging chain. ([#1084](https://github.com/newrelic/newrelic-dotnet-agent/pull/1084))
 
 ## [9.8.0] - 2022-05-05

@@ -70,6 +70,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
     }
 
     #region log4net
+
     [NetFrameworkTest]
     public class Log4netHSMDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
     {
@@ -104,9 +105,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         {
         }
     }
+
     #endregion
 
     #region MicrosoftLogging
+
     [NetCoreTest]
     public class MicrosoftLoggingHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
     {
@@ -123,9 +126,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         {
         }
     }
+
     #endregion
 
     #region Serilog
+
     [NetFrameworkTest]
     public class SerilogHSMDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
     {
@@ -160,5 +165,45 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         {
         }
     }
+
+    #endregion
+
+    #region NLog
+
+    [NetFrameworkTest]
+    public class NLogHSMDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
+    {
+        public NLogHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class NLogCSPDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestCSP>
+    {
+        public NLogCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestCSP fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogHSMDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestHSM>
+    {
+        public NLogHSMDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestHSM fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.NLog)
+        {
+        }
+    }
+    [NetCoreTest]
+    public class NLogCSPDisablesForwardingTestsNetCoreLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatestCSP>
+    {
+        public NLogCSPDisablesForwardingTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatestCSP fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.NLog)
+        {
+        }
+    }
+
     #endregion
 }
