@@ -45,6 +45,10 @@ rm -rf %{buildroot}
 %post
 NEWRELIC_HOME=/usr/local/%{name}
 
+# Deprecated instrumentation files to remove post install
+rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.Instrumentation.xml 2> /dev/null
+rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.dll 2> /dev/null
+
 # create logs dir
 mkdir -p $NEWRELIC_HOME/logs 2> /dev/null
 
