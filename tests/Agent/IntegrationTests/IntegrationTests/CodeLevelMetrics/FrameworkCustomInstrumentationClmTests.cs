@@ -14,13 +14,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
     [NetFrameworkTest]
-    public class FrameworkCustomInstrumentationCodeAttributesTest : NewRelicIntegrationTest<RemoteServiceFixtures.AgentApiExecutor>
+    public class FrameworkCustomInstrumentationClmTests : NewRelicIntegrationTest<RemoteServiceFixtures.AgentApiExecutor>
     {
         private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;
 
         private const string ProgramNamespace = "NewRelic.Agent.IntegrationTests.Applications.AgentApiExecutor.Program";
 
-        public FrameworkCustomInstrumentationCodeAttributesTest(RemoteServiceFixtures.AgentApiExecutor fixture, ITestOutputHelper output)
+        public FrameworkCustomInstrumentationClmTests(RemoteServiceFixtures.AgentApiExecutor fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;

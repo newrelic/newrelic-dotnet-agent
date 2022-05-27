@@ -13,11 +13,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
     [NetCoreTest]
-    public class AspNetCoreMvcCodeAttributesTest : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+    public class AspNetCoreMvcClmTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
 
-        public AspNetCoreMvcCodeAttributesTest(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+        public AspNetCoreMvcClmTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;

@@ -15,13 +15,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
     [NetCoreTest]
-    public class NetCoreCustomInstrumentationCodeAttributesTests : NewRelicIntegrationTest<NetCoreAsyncTestsFixture>
+    public class NetCoreCustomInstrumentationClmTests : NewRelicIntegrationTest<NetCoreAsyncTestsFixture>
     {
         private readonly NetCoreAsyncTestsFixture _fixture;
 
         private const string AsyncUseCasesNamespace = "NetCoreAsyncApplication.AsyncUseCases";
 
-        public NetCoreCustomInstrumentationCodeAttributesTests(NetCoreAsyncTestsFixture fixture, ITestOutputHelper output) : base(fixture)
+        public NetCoreCustomInstrumentationClmTests(NetCoreAsyncTestsFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
