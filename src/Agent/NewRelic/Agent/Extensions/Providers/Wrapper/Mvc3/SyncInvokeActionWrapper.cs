@@ -26,14 +26,16 @@ namespace NewRelic.Providers.Wrapper.Mvc3
 
             if (controllerContext != null)
             {
-                // We are being intentional with types over using 'var' here due to the effects of handling a `dynamic` object
+                // IMPORTANT: Resist the urge to blindly refactor all of this code to use `var`
+                // IMPORTANT: We are being intentional with types over using `var` here due to
+                // IMPORTANT: the effects of handling a `dynamic` object
                 string controllerName = MvcRouteNamingHelper.TryGetControllerNameFromObject(controllerContext);
                 string actionName = MvcRouteNamingHelper.TryGetActionNameFromRouteParameters(instrumentedMethodCall.MethodCall, controllerContext.RouteData);
 
                 string transactionName = controllerName + "/" + actionName;
                 transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkLow);
 
-                var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
+                ISegment segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 
                 // segment should never be null.. it will either be a NoOp segment, or we would have thrown here...
                 if (segment != null)

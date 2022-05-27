@@ -17,11 +17,12 @@ namespace NewRelic.Providers.Wrapper.Mvc3
         {
             return Delegates.GetDelegateFor(onFailure: exception =>
             {
-                // TODO: are there other error cases we should capture here?
-
                 // Handle a missing Controller after already being pushed through a valid Route
                 if (exception is HttpException he && he.GetHttpCode() == 404)
-                    transaction.SetWebTransactionName(WebTransactionType.StatusCode, "404", TransactionNamePriority.FrameworkHigh);
+                {
+                    transaction.SetWebTransactionName(WebTransactionType.StatusCode, "404",
+                        TransactionNamePriority.FrameworkHigh);
+                }
             });
         }
     }

@@ -22,14 +22,11 @@ namespace NewRelic.Providers.Wrapper.Mvc3
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             var exception = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<Exception>(2);
-            if (exception == null)
+            if (exception != null)
             {
-                // TODO: I think it would be valuable to capture any information at this point... when is this ever called with a null exception?
-                return Delegates.NoOp;
+                transaction.NoticeError(exception);
             }
-
-            transaction.NoticeError(exception);
-
+            
             return Delegates.NoOp;
         }
     }

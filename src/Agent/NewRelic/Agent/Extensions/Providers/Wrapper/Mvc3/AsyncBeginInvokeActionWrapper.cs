@@ -30,7 +30,9 @@ namespace NewRelic.Providers.Wrapper.Mvc3
             var controllerContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<dynamic>(0);
             if (controllerContext != null)
             {
-                // We are being intentional with types over using 'var' here due to the effects of handling a `dynamic` object
+                // IMPORTANT: Resist the urge to blindly refactor all of this code to use `var`
+                // IMPORTANT: We are being intentional with types over using `var` here due to
+                // IMPORTANT: the effects of handling a `dynamic` object
                 string controllerName = MvcRouteNamingHelper.TryGetControllerNameFromObject(controllerContext);
                 string actionName = MvcRouteNamingHelper.TryGetActionNameFromRouteParameters(instrumentedMethodCall.MethodCall, controllerContext.RouteData);
 
@@ -40,7 +42,7 @@ namespace NewRelic.Providers.Wrapper.Mvc3
                     throw new NullReferenceException("httpContext");
                 }
 
-                var transactionName = controllerName + "/" + actionName;
+                string transactionName = controllerName + "/" + actionName;
                 transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkLow);
 
                 ISegment segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
