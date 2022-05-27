@@ -23,7 +23,10 @@ namespace NewRelic.Providers.Wrapper.Mvc3
         {
             var exception = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<Exception>(2);
             if (exception == null)
+            {
+                // TODO: I think it would be valuable to capture any information at this point... when is this ever called with a null exception?
                 return Delegates.NoOp;
+            }
 
             transaction.NoticeError(exception);
 
