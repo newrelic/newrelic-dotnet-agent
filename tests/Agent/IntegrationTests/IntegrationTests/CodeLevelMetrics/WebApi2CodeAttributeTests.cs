@@ -14,13 +14,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
     [NetFrameworkTest]
-    public class WebApi2ClmTests : NewRelicIntegrationTest<WebApiAsyncFixture>
+    public class WebApi2CodeAttributeTests : NewRelicIntegrationTest<WebApiAsyncFixture>
     {
         private readonly WebApiAsyncFixture _fixture;
         
         private const string AsyncAwaitControllerNamespace = "WebApiAsyncApplication.Controllers.AsyncAwaitController";
 
-        public WebApi2ClmTests(WebApiAsyncFixture fixture, ITestOutputHelper output) : base(fixture)
+        public WebApi2CodeAttributeTests(WebApiAsyncFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

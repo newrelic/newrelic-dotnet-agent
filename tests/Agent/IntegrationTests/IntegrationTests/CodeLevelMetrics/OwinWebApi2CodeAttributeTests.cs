@@ -14,13 +14,13 @@ using NewRelic.Testing.Assertions;
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
     [NetFrameworkTest]
-    public abstract class OwinWebApi2ClmTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class OwinWebApi2CodeAttributeTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : RemoteServiceFixtures.OwinWebApiFixture
     {
         private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
 
         // The base test class runs tests for Owin 2; the derived classes test Owin 3 and 4
-        protected OwinWebApi2ClmTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected OwinWebApi2CodeAttributeTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -76,25 +76,25 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
         }
     }
 
-    public class OwinWebApi2ClmTests : OwinWebApi2ClmTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
+    public class OwinWebApi2CodeAttributeTests : OwinWebApi2CodeAttributeTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
     {
-        public OwinWebApi2ClmTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
+        public OwinWebApi2CodeAttributeTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class Owin3WebApi2ClmTests : OwinWebApi2ClmTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
+    public class Owin3WebApi2CodeAttributeTests : OwinWebApi2CodeAttributeTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
     {
-        public Owin3WebApi2ClmTests(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
+        public Owin3WebApi2CodeAttributeTests(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
-    public class Owin4WebApi2ClmTests : OwinWebApi2ClmTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
+    public class Owin4WebApi2CodeAttributeTests : OwinWebApi2CodeAttributeTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
     {
-        public Owin4WebApi2ClmTests(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)
+        public Owin4WebApi2CodeAttributeTests(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

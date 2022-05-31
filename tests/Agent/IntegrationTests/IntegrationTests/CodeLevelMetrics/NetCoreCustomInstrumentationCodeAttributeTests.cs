@@ -15,13 +15,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
     [NetCoreTest]
-    public class NetCoreCustomInstrumentationClmTests : NewRelicIntegrationTest<NetCoreAsyncTestsFixture>
+    public class NetCoreCustomInstrumentationCodeAttributeTests : NewRelicIntegrationTest<NetCoreAsyncTestsFixture>
     {
         private readonly NetCoreAsyncTestsFixture _fixture;
 
         private const string AsyncUseCasesNamespace = "NetCoreAsyncApplication.AsyncUseCases";
 
-        public NetCoreCustomInstrumentationClmTests(NetCoreAsyncTestsFixture fixture, ITestOutputHelper output) : base(fixture)
+        public NetCoreCustomInstrumentationCodeAttributeTests(NetCoreAsyncTestsFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -55,7 +55,7 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
             NrAssert.Multiple
             (
                 () => Assertions.SpanEventHasAttributes(_expectedIoBoundNoSpecialAttributes, SpanEventAttributeType.Agent, ioBoundNoSpecialSpan),
-                () => Assertions.SpanEventHasAttributes(_expectedioBoundConfigureAwaitFalseAttributes, SpanEventAttributeType.Agent, ioBoundConfigureAwaitFalseSpan),
+                () => Assertions.SpanEventHasAttributes(_expectedIoBoundConfigureAwaitFalseAttributes, SpanEventAttributeType.Agent, ioBoundConfigureAwaitFalseSpan),
                 () => Assertions.SpanEventHasAttributes(_expectedCustomMethodAsync1Attributes, SpanEventAttributeType.Agent, customMethodAsync1Span)
             );
         }
@@ -66,7 +66,7 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
             { "code.function", "IoBoundNoSpecialAsync" }
         };
 
-        private readonly Dictionary<string, string> _expectedioBoundConfigureAwaitFalseAttributes = new Dictionary<string, string>()
+        private readonly Dictionary<string, string> _expectedIoBoundConfigureAwaitFalseAttributes = new Dictionary<string, string>()
         {
             { "code.namespace", AsyncUseCasesNamespace },
             { "code.function", "IoBoundConfigureAwaitFalseAsync" }
