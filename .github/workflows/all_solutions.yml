@@ -570,7 +570,13 @@ jobs:
           }
 
           Write-Host "Run tests"
-          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel none -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+          $parallelXunitOption = "none" 
+          if ("${{ matrix.namespace }}" -like "Logging.*" ) {
+            Write-Host "Logging tests detected, running xunit tests in parallel."
+            $parallelXunitOption = "all"
+          }
+
+          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
           
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
