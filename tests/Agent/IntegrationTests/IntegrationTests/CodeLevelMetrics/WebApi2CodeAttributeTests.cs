@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -36,6 +37,8 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
                     _fixture.GetIoBoundNoSpecialAsync();
                     _fixture.GetIoBoundConfigureAwaitFalseAsync();
                     _fixture.GetCpuBoundTasksAsync();
+
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
             _fixture.Initialize();
@@ -49,6 +52,10 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
             var getIoBoundNoSpecialSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "DotNet/AsyncAwait/IoBoundNoSpecialAsync");
             var getIoBoundConfigureAwaitFalseSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "DotNet/AsyncAwait/IoBoundConfigureAwaitFalseAsync");
             var getCpuBoundSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "DotNet/AsyncAwait/CpuBoundTasksAsync");
+
+            Assert.NotNull(getIoBoundNoSpecialSpan);
+            Assert.NotNull(getIoBoundConfigureAwaitFalseSpan);
+            Assert.NotNull(getCpuBoundSpan);
 
             NrAssert.Multiple
             (

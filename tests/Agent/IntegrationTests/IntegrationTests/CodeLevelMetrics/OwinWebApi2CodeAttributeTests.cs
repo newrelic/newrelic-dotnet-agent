@@ -36,6 +36,8 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
                     _fixture.Get();
                     _fixture.Get404();
                     _fixture.Post();
+
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
             _fixture.Initialize();
@@ -55,6 +57,10 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
             var valuesGetSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "DotNet/Values/Get");
             var valuesPostSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "DotNet/Values/Post");
             var valuesGet404Span = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "DotNet/Values/Get404");
+
+            Assert.NotNull(valuesGetSpan);
+            Assert.NotNull(valuesPostSpan);
+            Assert.NotNull(valuesGet404Span);
 
             NrAssert.Multiple
             (
