@@ -22,11 +22,11 @@ namespace NewRelic.Providers.Wrapper.Mvc3
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             var exception = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<Exception>(2);
-            if (exception == null)
-                return Delegates.NoOp;
-
-            transaction.NoticeError(exception);
-
+            if (exception != null)
+            {
+                transaction.NoticeError(exception);
+            }
+            
             return Delegates.NoOp;
         }
     }

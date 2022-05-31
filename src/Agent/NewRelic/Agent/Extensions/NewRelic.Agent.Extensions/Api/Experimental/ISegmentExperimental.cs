@@ -36,6 +36,7 @@ namespace NewRelic.Agent.Api.Experimental
         /// the customer code represented differ. For example, controller actions.
         /// </summary>
         string UserCodeFunction { get; set; }
+
         /// <summary>
         /// Get or set the namespace (type) name for the user/customer code represented
         /// by the instrumentation. This only needs set when the instrumentation point and
