@@ -494,7 +494,9 @@ jobs:
       matrix:
         namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
           CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
-          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
+          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, 
+          Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.MetricsAndForwarding, Logging.ZeroMaxSamplesStored,
+          Owin, ReJit.NetCore, 
           ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
           WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
           RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, RequestHandling ]

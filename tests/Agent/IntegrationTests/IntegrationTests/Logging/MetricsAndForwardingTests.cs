@@ -10,7 +10,7 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.Logging
+namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 {
     public abstract class MetricsAndForwardingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
