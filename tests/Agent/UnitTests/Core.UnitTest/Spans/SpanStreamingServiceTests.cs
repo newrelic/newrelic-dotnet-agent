@@ -573,6 +573,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 {
                     Thread.Sleep(TimeSpan.FromMilliseconds(250));
                 }
+                Thread.Sleep(TimeSpan.FromMilliseconds(250));
             });
 
             _streamingSvc.StartConsumingCollection(sourceCollection);
@@ -754,13 +755,25 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
 
             Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire");
-            // We sleep here after the signal is fired to allow ALL of the consumers to shut down.. 
-            Thread.Sleep(TimeSpan.FromSeconds(5));
             Assert.AreEqual(2, streamCancellationTokens.Count, "Did not see enough streams created");
-            Assert.IsTrue(streamCancellationTokens[0].IsCancellationRequested,
+
+            Assert.IsTrue(WaitForCancellationTokenToBeCancelled(streamCancellationTokens[0]),
                 "The first stream cancellation token was not triggered.");
-            Assert.IsTrue(streamCancellationTokens[1].IsCancellationRequested,
+            Assert.IsTrue(WaitForCancellationTokenToBeCancelled(streamCancellationTokens[1]),
                 "The second stream cancellation token was not triggered.");
+        }
+
+        private static bool WaitForCancellationTokenToBeCancelled(CancellationToken cancellationToken, int seconds = 1)
+        {
+            try
+            {
+                Task.Delay(TimeSpan.FromSeconds(seconds), cancellationToken).Wait(cancellationToken);
+            }
+            catch (Exception)
+            {
+                return true;
+            }
+            return false;
         }
 
         [Test]
