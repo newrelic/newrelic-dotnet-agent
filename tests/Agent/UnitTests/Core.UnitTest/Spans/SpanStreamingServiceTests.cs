@@ -757,7 +757,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
 
             Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire");
-            Task.Delay(TimeSpan.FromSeconds(1));
+            Thread.Sleep(TimeSpan.FromSeconds(5));
             Assert.AreEqual(2, streamCancellationTokens.Count, "Did not see enough streams created");
             Assert.IsTrue(streamCancellationTokens[0].IsCancellationRequested,
                 "The first stream cancellation token was not triggered.");
@@ -1019,7 +1019,6 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 .DoInstead<string, long>((metricName, countSent) =>
                 {
                     actualCountSent = countSent;
-
                 });
 
             var agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>());
@@ -1037,7 +1036,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _streamingSvc.StartConsumingCollection(collection);
 
             Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(5)), "Signal Didn't fire");
-            Task.Delay(TimeSpan.FromSeconds(1));
+            Thread.Sleep(TimeSpan.FromSeconds(5));
 
             agentHealthReporter.CollectMetrics();
 
