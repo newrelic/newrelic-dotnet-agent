@@ -174,6 +174,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
     }
 
     [TestFixture]
+    [NonParallelizable]
     internal abstract class DataStreamingServiceTests<TService, TRequest, TRequestBatch, TResponse>
         where TService : IDataStreamingService<TRequest, TRequestBatch, TResponse>
         where TRequest : class, IStreamingModel
@@ -529,6 +530,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         }
 
         [Test]
+        [NonParallelizable]
         public void DelayCallingRecordSpanAfterAnErrorStreamingASpan()
         {
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
@@ -717,6 +719,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         [Test]
         [Ignore("This test is flickering in our CI", Until = "2022-06-01 00:00:00Z")]
+        [NonParallelizable]
         public void ShuttingDownTheDataStreamingService_ShouldShutdownResponseStream()
         {
             var signalIsDone = new ManualResetEventSlim();
@@ -965,6 +968,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         [Test]
         [Ignore("This test is flickering in our CI", Until = "2022-06-01 00:00:00Z")]
+        [NonParallelizable]
         public void SupportabilityMetrics_ItemsSent_BatchSizeAndCount()
         {
             const int maxBatchSize = 17;
