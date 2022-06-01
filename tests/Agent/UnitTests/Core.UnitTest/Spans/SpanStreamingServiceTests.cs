@@ -83,7 +83,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         public System.Func<string, int, bool, Metadata, CancellationToken, bool> WithCreateChannelImpl { get; set; } = (host, port, ssl, headers, cancellationToken) => true;
 
         public System.Func<Metadata, CancellationToken, Tuple<IClientStreamWriter<TRequest>, MockResponseStream<TResponse>>> WithCreateStreamsImpl { get; set; } = (metadata, CancellationToken) =>
-        { 
+        {
             return CreateStreams();
         };
 
@@ -102,7 +102,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         public bool CreateStreams(Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken, out IClientStreamWriter<TRequest> requestStream, out IAsyncStreamReader<TResponse> responseStream)
         {
             var streams = WithCreateStreamsImpl?.Invoke(headers, cancellationToken);
-            
+
             requestStream = streams?.Item1;
             responseStream = streams?.Item2;
 
@@ -178,7 +178,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
     internal abstract class DataStreamingServiceTests<TService, TRequest, TRequestBatch, TResponse>
         where TService : IDataStreamingService<TRequest, TRequestBatch, TResponse>
         where TRequest : class, IStreamingModel
-        where TRequestBatch: class, IStreamingBatchModel<TRequest>
+        where TRequestBatch : class, IStreamingBatchModel<TRequest>
         where TResponse : class
     {
         protected const string _validHost = "infiniteTracing.net";
@@ -250,9 +250,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
         }
 
         [TestCase(false, false, false)]
-        [TestCase(false, true,  false)]
-        [TestCase(true, false,  false)]
-        [TestCase(true, true,   true)]
+        [TestCase(false, true, false)]
+        [TestCase(true, false, false)]
+        [TestCase(true, true, true)]
         public void IsServiceEnabledTests(bool isServiceEnabled, bool isChannelConnected, bool expectedIsServiceAvailable)
         {
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceObserverHost).Returns(isServiceEnabled ? _validHost : null as string);
@@ -266,7 +266,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _grpcWrapper.WithTrySendDataImpl = (requestStream, request, timeoutMs, CancellationToken) =>
             {
                 countSends++;
-                if(countSends > 1)
+                if (countSends > 1)
                 {
                     signalIsDone.Set();
                 }
@@ -274,7 +274,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return true;
             };
 
-            if(!isServiceEnabled || !isChannelConnected)
+            if (!isServiceEnabled || !isChannelConnected)
             {
                 signalIsDone.Set();
             }
@@ -328,7 +328,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
-            Dictionary<string,string> actualConnectionMetadata = new Dictionary<string, string>();
+            Dictionary<string, string> actualConnectionMetadata = new Dictionary<string, string>();
             _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, headers, token) =>
             {
                 actualConnectionMetadata = headers.ToDictionary(k => k.Key, v => v.Value);
@@ -610,7 +610,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     return true;
                 };
 
-            var sourceCollection = new PartitionedBlockingCollection<TRequest>(requestItems.Count + 100,3, requestItems);
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(requestItems.Count + 100, 3, requestItems);
 
             var waitForConsumptionTask = Task.Run(() =>
             {
@@ -646,7 +646,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 var items = GetBatchItems(batch);
                 actualBatchSizes.Add(items.Count());
 
-                if(actualBatchSizes.Sum(x=>x) >= expectedCountItems)
+                if (actualBatchSizes.Sum(x => x) >= expectedCountItems)
                 {
                     signalIsDone.Set();
                 }
@@ -655,7 +655,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             };
 
             var queue = new PartitionedBlockingCollection<TRequest>(1000, 2);
-            for(var i =0; i < expectedCountItems; i++)
+            for (var i = 0; i < expectedCountItems; i++)
             {
                 queue.TryAdd(GetRequestModel());
             }
@@ -733,8 +733,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 var attempt = actualAttempts++;
                 if (attempt > 0)
                 {
-                    signalIsDone.Set();
                     _streamingSvc.Shutdown(false);
+                    signalIsDone.Set();
                     return true;
                 }
 
@@ -755,13 +755,14 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(queue);
 
-            NrAssert.Multiple
-            (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
-                () => Assert.AreEqual(2, streamCancellationTokens.Count, "Did not see enough streams created"),
-                () => Assert.IsTrue(streamCancellationTokens[0].IsCancellationRequested, "The first stream cancellation token was not triggered."),
-                () => Assert.IsTrue(streamCancellationTokens[1].IsCancellationRequested, "The second stream cancellation token was not triggered.")
-            );
+
+            Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire");
+            Task.Delay(TimeSpan.FromSeconds(1));
+            Assert.AreEqual(2, streamCancellationTokens.Count, "Did not see enough streams created");
+            Assert.IsTrue(streamCancellationTokens[0].IsCancellationRequested,
+                "The first stream cancellation token was not triggered.");
+            Assert.IsTrue(streamCancellationTokens[1].IsCancellationRequested,
+                "The second stream cancellation token was not triggered.");
         }
 
         [Test]
@@ -1018,7 +1019,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 .DoInstead<string, long>((metricName, countSent) =>
                 {
                     actualCountSent = countSent;
-                 
+
                 });
 
             var agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>());
@@ -1028,7 +1029,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, agentHealthReporter);
 
             var collection = new PartitionedBlockingCollection<TRequest>(1000, 3);
-            for(var i = 0; i < countItemsToProcess; i++)
+            for (var i = 0; i < countItemsToProcess; i++)
             {
                 collection.TryAdd(GetRequestModel());
             }
@@ -1036,19 +1037,20 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _streamingSvc.StartConsumingCollection(collection);
 
             Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(5)), "Signal Didn't fire");
+            Task.Delay(TimeSpan.FromSeconds(1));
 
             agentHealthReporter.CollectMetrics();
 
-            NrAssert.Multiple
-            (
 
-                () => Assert.AreEqual(actualCountSent, countItemsToProcess, "All Items Processed through GRPC"),
-                () => Assert.AreEqual(actualBatchSizeTotal, countItemsToProcess, "All items reported through Agent Health Reporter"),
-                () => Assert.LessOrEqual(actualBatchSizeMin, actualBatchSizeMax, "Min batch size should be less than max"),
-                () => Assert.LessOrEqual(actualBatchSizeMin, actualAvgBatchSize, "Avg batch size should be greater than min"),
-                () => Assert.LessOrEqual(actualAvgBatchSize, actualBatchSizeMax, "Avg batch size should be less than than max"),
-                () => Assert.LessOrEqual(actualBatchSizeMax, maxBatchSize, "Max Batch Size should not exceed the constrained value")
-            );
+            Assert.AreEqual(countItemsToProcess, actualCountSent, "All Items Processed through GRPC");
+            Assert.AreEqual(countItemsToProcess, actualBatchSizeTotal,
+                "All items reported through Agent Health Reporter");
+            Assert.LessOrEqual(actualBatchSizeMin, actualBatchSizeMax, "Min batch size should be less than max");
+            Assert.LessOrEqual(actualBatchSizeMin, actualAvgBatchSize, "Avg batch size should be greater than min");
+            Assert.LessOrEqual(actualAvgBatchSize, actualBatchSizeMax,
+                "Avg batch size should be less than than max");
+            Assert.LessOrEqual(actualBatchSizeMax, maxBatchSize,
+                "Max Batch Size should not exceed the constrained value");
         }
 
 
@@ -1447,7 +1449,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return true;
             };
 
-  
+
             var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
             sourceCollection.TryAdd(GetRequestModel());
 
