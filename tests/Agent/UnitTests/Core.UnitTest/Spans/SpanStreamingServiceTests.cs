@@ -719,7 +719,6 @@ namespace NewRelic.Agent.Core.Spans.Tests
         }
 
         [Test]
-        [Ignore("This test is flickering in our CI", Until = "2022-06-01 00:00:00Z")]
         [NonParallelizable]
         [Retry(10)]
         public void ShuttingDownTheDataStreamingService_ShouldShutdownResponseStream()
@@ -970,7 +969,6 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
 
         [Test]
-        [Ignore("This test is flickering in our CI", Until = "2022-06-01 00:00:00Z")]
         [NonParallelizable]
         [Retry(10)]
         public void SupportabilityMetrics_ItemsSent_BatchSizeAndCount()
