@@ -531,7 +531,6 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         [Test]
         [NonParallelizable]
-        [Retry(10)]
         public void DelayCallingRecordSpanAfterAnErrorStreamingASpan()
         {
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
@@ -720,7 +719,6 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         [Test]
         [NonParallelizable]
-        [Retry(10)]
         public void ShuttingDownTheDataStreamingService_ShouldShutdownResponseStream()
         {
             var signalIsDone = new ManualResetEventSlim();
@@ -756,6 +754,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
 
             Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire");
+            // We sleep here after the signal is fired to allow ALL of the consumers to shut down.. 
             Thread.Sleep(TimeSpan.FromSeconds(5));
             Assert.AreEqual(2, streamCancellationTokens.Count, "Did not see enough streams created");
             Assert.IsTrue(streamCancellationTokens[0].IsCancellationRequested,
@@ -970,7 +969,6 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         [Test]
         [NonParallelizable]
-        [Retry(10)]
         public void SupportabilityMetrics_ItemsSent_BatchSizeAndCount()
         {
             const int maxBatchSize = 17;
@@ -1034,6 +1032,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _streamingSvc.StartConsumingCollection(collection);
 
             Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(5)), "Signal Didn't fire");
+
+            // We sleep here since there are actually 3 consumers all doing things, and we need to give them time
+            // to finish aggregating their stats (what this test covers).
             Thread.Sleep(TimeSpan.FromSeconds(5));
 
             agentHealthReporter.CollectMetrics();
