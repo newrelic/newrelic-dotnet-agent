@@ -494,7 +494,10 @@ jobs:
       matrix:
         namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
           CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
-          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
+          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Owin, ReJit.NetCore, 
+          Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.ZeroMaxSamplesStored,
+          Logging.MetricsAndForwarding.log4net, Logging.MetricsAndForwarding.MicrosoftLogging, 
+          Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog,
           ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
           WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
           RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, RequestHandling ]
@@ -568,7 +571,13 @@ jobs:
           }
 
           Write-Host "Run tests"
-          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel none -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+          $parallelXunitOption = "none" 
+          if ("${{ matrix.namespace }}" -like "Logging.*" ) {
+            Write-Host "Logging tests detected, running xunit tests in parallel."
+            $parallelXunitOption = "all"
+          }
+
+          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
           
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
