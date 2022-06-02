@@ -7,7 +7,7 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.Logging
+namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
 {
     public abstract class MaxSamplesStoredTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture

@@ -8,7 +8,7 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.Logging
+namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
 {
     public abstract class HSMOrCSPDisablesForwardingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture

@@ -7,7 +7,7 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.Logging
+namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
 {
     public abstract class ZeroMaxSamplesStoredTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
