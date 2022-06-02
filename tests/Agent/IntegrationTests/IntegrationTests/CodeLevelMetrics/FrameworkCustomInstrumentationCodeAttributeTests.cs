@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -52,6 +53,10 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
             var myCustomMetricNameSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "MyCustomMetricName");
             var someSlowMethodSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString().Contains("SomeSlowMethod"));
             var someOtherMethodSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString().Contains("SomeOtherMethod"));
+
+            Assert.NotNull(myCustomMetricNameSpan);
+            Assert.NotNull(someSlowMethodSpan);
+            Assert.NotNull(someOtherMethodSpan);
 
             NrAssert.Multiple
             (

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -34,6 +35,8 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
                     _fixture.Get();
                     _fixture.ThrowException();
                     _fixture.GetCallAsyncExternal();
+
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
             _fixture.Initialize();
@@ -47,6 +50,10 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
             var getIndexSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "DotNet/HomeController/Index");
             var throwExceptionSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "DotNet/HomeController/ThrowException");
             var callAsyncExternalSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "DotNet/DetachWrapperController/CallAsyncExternal");
+
+            Assert.NotNull(getIndexSpan);
+            Assert.NotNull(throwExceptionSpan);
+            Assert.NotNull(callAsyncExternalSpan);
 
             NrAssert.Multiple
             (

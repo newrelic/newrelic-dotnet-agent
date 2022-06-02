@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -33,6 +34,8 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
                 {
                     _fixture.Get();
                     _fixture.GetWithAsyncDisabled();
+
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
             _fixture.Initialize();

@@ -11,6 +11,7 @@ using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
+using System;
 
 namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
 {
@@ -38,6 +39,10 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "NetCoreAsyncApplication", AsyncUseCasesNamespace, "IoBoundConfigureAwaitFalseAsync", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.OtherTransactionWrapperAsync", "IoBoundConfigureAwaitFalseAsync", 7);
 
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "NetCoreAsyncApplication", AsyncUseCasesNamespace, "CustomMethodAsync1", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "CustomMethodAsync1");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
             _fixture.Initialize();
@@ -51,6 +56,10 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
             var ioBoundNoSpecialSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "IoBoundNoSpecialAsync");
             var ioBoundConfigureAwaitFalseSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "IoBoundConfigureAwaitFalseAsync");
             var customMethodAsync1Span = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "CustomMethodAsync1");
+
+            Assert.NotNull(ioBoundNoSpecialSpan);
+            Assert.NotNull(ioBoundConfigureAwaitFalseSpan);
+            Assert.NotNull(customMethodAsync1Span);
 
             NrAssert.Multiple
             (
