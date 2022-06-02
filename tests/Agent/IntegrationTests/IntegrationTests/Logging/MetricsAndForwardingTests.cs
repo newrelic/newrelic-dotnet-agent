@@ -507,1016 +507,1261 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     #region log4net
 
-    #region Metrics and Forwarding Enabled
-    [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    namespace log4net
     {
-        public Log4NetMetricsAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+        #region Metrics and Forwarding Enabled
+        [NetFrameworkTest]
+        public class Log4NetMetricsAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
         {
+            public Log4NetMetricsAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public Log4NetMetricsAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+        [NetFrameworkTest]
+        public class Log4NetMetricsAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
         {
+            public Log4NetMetricsAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public Log4NetMetricsAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+        [NetFrameworkTest]
+        public class Log4NetMetricsAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
         {
+            public Log4NetMetricsAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public Log4NetMetricsAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public Log4NetMetricsAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public Log4NetMetricsAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
         {
+            public Log4NetMetricsAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public Log4NetMetricsAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
         {
+            public Log4NetMetricsAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public Log4NetMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
         {
+            public Log4NetMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
-    #endregion
+        #endregion
 
-    #region Metrics and Forwarding Disabled
-    [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public Log4NetMetricsAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+        #region Metrics and Forwarding Disabled
+        [NetFrameworkTest]
+        public class Log4NetMetricsAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
         {
+            public Log4NetMetricsAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public Log4NetMetricsAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+        [NetFrameworkTest]
+        public class Log4NetMetricsAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
         {
+            public Log4NetMetricsAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public Log4NetMetricsAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+        [NetFrameworkTest]
+        public class Log4NetMetricsAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
         {
+            public Log4NetMetricsAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public Log4NetMetricsAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public Log4NetMetricsAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public Log4NetMetricsAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
         {
+            public Log4NetMetricsAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public Log4NetMetricsAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
         {
+            public Log4NetMetricsAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public Log4NetMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
         {
+            public Log4NetMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
 
-    #region Metrics Enabled, Forwarding Disabled
-    [NetFrameworkTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+        #region Metrics Enabled, Forwarding Disabled
+        [NetFrameworkTest]
+        public class Log4NetMetricsEnabledAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
         {
+            public Log4NetMetricsEnabledAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+        [NetFrameworkTest]
+        public class Log4NetMetricsEnabledAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
         {
+            public Log4NetMetricsEnabledAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+        [NetFrameworkTest]
+        public class Log4NetMetricsEnabledAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
         {
+            public Log4NetMetricsEnabledAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
         {
+            public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
         {
+            public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
         {
+            public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
 
-    #region Metrics Disabled, Forwarding Enabled
-    [NetFrameworkTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+        #region Metrics Disabled, Forwarding Enabled
+        [NetFrameworkTest]
+        public class Log4netMetricsDisabledAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
         {
+            public Log4netMetricsDisabledAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+        [NetFrameworkTest]
+        public class Log4netMetricsDisabledAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
         {
+            public Log4netMetricsDisabledAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+        [NetFrameworkTest]
+        public class Log4netMetricsDisabledAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
         {
+            public Log4netMetricsDisabledAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public Log4netMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
         {
+            public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
         {
+            public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore22>
-    {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore22>
         {
+            public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+        [NetCoreTest]
+        public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
         {
+            public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
+    }
 
     #endregion
 
     #region MicrosoftLogging
 
-    #region Metrics and Forwarding Enabled
-
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    namespace MicrosoftLogging
     {
-        public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
+        #region Metrics and Forwarding Enabled
+
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCoreLatestTests(
+                ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore50Tests(
+                ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore31Tests(
+                ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore21Tests(
+                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
-    #endregion
 
-    #region Metrics and Forwarding Disabled
+        #endregion
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
+        #region Metrics and Forwarding Disabled
+
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCoreLatestTests(
+                ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore50Tests(
+                ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore31Tests(
+                ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore21Tests(
+                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
 
-    #region Metrics Enabled, Forwarding Disabled
+        #region Metrics Enabled, Forwarding Disabled
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests(
+                ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore50Tests(
+                ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore31Tests(
+                ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(
+                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
 
-    #region Metrics Disabled, Forwarding Enabled
+        #region Metrics Disabled, Forwarding Enabled
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(
+                ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(
+                ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(
+                ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore22>
-    {
-        public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore22>
         {
+            public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(
+                ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(
+                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
+    }
 
     #endregion
 
     #region Serilog
 
-    #region Metrics and Forwarding Enabled
-
-    [NetFrameworkTest]
-    public class SerilogMetricsAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    namespace Serilog
     {
-        public SerilogMetricsAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+        #region Metrics and Forwarding Enabled
+
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFWLatest>
         {
+            public SerilogMetricsAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class SerilogMetricsAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public SerilogMetricsAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW471>
         {
+            public SerilogMetricsAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class SerilogMetricsAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public SerilogMetricsAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW462>
         {
+            public SerilogMetricsAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public SerilogMetricsAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public SerilogMetricsAndForwardingEnabledTestsNetCoreLatestTests(
+                ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public SerilogMetricsAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public SerilogMetricsAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public SerilogMetricsAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public SerilogMetricsAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public SerilogMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public SerilogMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogWebMetricsAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public SerilogWebMetricsAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, false, LoggingFramework.SerilogWeb)
+        [NetCoreTest]
+        public class
+            SerilogWebMetricsAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
         {
+            public SerilogWebMetricsAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, false, LoggingFramework.SerilogWeb)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
 
-    #region Metrics and Forwarding Disabled
-    [NetFrameworkTest]
-    public class SerilogMetricsAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public SerilogMetricsAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+        #region Metrics and Forwarding Disabled
+
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFWLatest>
         {
+            public SerilogMetricsAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class SerilogMetricsAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public SerilogMetricsAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW471>
         {
+            public SerilogMetricsAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class SerilogMetricsAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public SerilogMetricsAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW462>
         {
+            public SerilogMetricsAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public SerilogMetricsAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public SerilogMetricsAndForwardingDisabledTestsNetCoreLatestTests(
+                ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public SerilogMetricsAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public SerilogMetricsAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public SerilogMetricsAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public SerilogMetricsAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public SerilogMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public SerilogMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
 
-    #region Metrics Enabled, Forwarding Disabled
-    [NetFrameworkTest]
-    public class SerilogMetricsEnabledAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public SerilogMetricsEnabledAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+        #region Metrics Enabled, Forwarding Disabled
+
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsEnabledAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFWLatest>
         {
+            public SerilogMetricsEnabledAndForwardingDisabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class SerilogMetricsEnabledAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public SerilogMetricsEnabledAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsEnabledAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW471>
         {
+            public SerilogMetricsEnabledAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class SerilogMetricsEnabledAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public SerilogMetricsEnabledAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsEnabledAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW462>
         {
+            public SerilogMetricsEnabledAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public SerilogMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public SerilogMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests(
+                ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests(
+                ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsEnabledAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsEnabledAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore31Tests(
+                ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(
+                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
 
-    #region Metrics Disabled, Forwarding Enabled
-    [NetFrameworkTest]
-    public class SerilogMetricsDisabledAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public SerilogMetricsDisabledAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+        #region Metrics Disabled, Forwarding Enabled
+
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsDisabledAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFWLatest>
         {
+            public SerilogMetricsDisabledAndForwardingEnabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class SerilogMetricsDisabledAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public SerilogMetricsDisabledAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsDisabledAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW471>
         {
+            public SerilogMetricsDisabledAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class SerilogMetricsDisabledAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public SerilogMetricsDisabledAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+        [NetFrameworkTest]
+        public class
+            SerilogMetricsDisabledAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW462>
         {
+            public SerilogMetricsDisabledAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public SerilogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public SerilogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(
+                ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(
+                ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(
+                ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore22>
-    {
-        public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore22>
         {
+            public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(
+                ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class SerilogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+        [NetCoreTest]
+        public class
+            SerilogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(
+                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
+    }
 
     #endregion
 
     #region NLog
 
-    #region Metrics and Forwarding Enabled
-
-    [NetFrameworkTest]
-    public class NLogMetricsAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    namespace NLog
     {
-        public NLogMetricsAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.NLog)
+        #region Metrics and Forwarding Enabled
+
+        [NetFrameworkTest]
+        public class
+            NLogMetricsAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFWLatest>
         {
+            public NLogMetricsAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class NLogMetricsAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public NLogMetricsAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.NLog)
+        [NetFrameworkTest]
+        public class
+            NLogMetricsAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW471>
         {
+            public NLogMetricsAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class NLogMetricsAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public NLogMetricsAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.NLog)
+        [NetFrameworkTest]
+        public class
+            NLogMetricsAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW462>
         {
+            public NLogMetricsAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public NLogMetricsAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public NLogMetricsAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public NLogMetricsAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public NLogMetricsAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public NLogMetricsAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public NLogMetricsAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public NLogMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, true, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public NLogMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
-    #endregion
 
-    #region Metrics and Forwarding Disabled
+        #endregion
 
-    [NetFrameworkTest]
-    public class NLogMetricsAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public NLogMetricsAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.NLog)
+        #region Metrics and Forwarding Disabled
+
+        [NetFrameworkTest]
+        public class
+            NLogMetricsAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFWLatest>
         {
+            public NLogMetricsAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class NLogMetricsAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public NLogMetricsAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.NLog)
+        [NetFrameworkTest]
+        public class
+            NLogMetricsAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW471>
         {
+            public NLogMetricsAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class NLogMetricsAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public NLogMetricsAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.NLog)
+        [NetFrameworkTest]
+        public class
+            NLogMetricsAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW462>
         {
+            public NLogMetricsAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public NLogMetricsAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public NLogMetricsAndForwardingDisabledTestsNetCoreLatestTests(
+                ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public NLogMetricsAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public NLogMetricsAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public NLogMetricsAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public NLogMetricsAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public NLogMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, false, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public NLogMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
 
-    #region Metrics Enabled, Forwarding Disabled
+        #region Metrics Enabled, Forwarding Disabled
 
-    [NetFrameworkTest]
-    public class NLogMetricsEnabledAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public NLogMetricsEnabledAndForwardingDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.NLog)
+        [NetFrameworkTest]
+        public class
+            NLogMetricsEnabledAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFWLatest>
         {
+            public NLogMetricsEnabledAndForwardingDisabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class NLogMetricsEnabledAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public NLogMetricsEnabledAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.NLog)
+        [NetFrameworkTest]
+        public class
+            NLogMetricsEnabledAndForwardingDisabledTestsFW471Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW471>
         {
+            public NLogMetricsEnabledAndForwardingDisabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class NLogMetricsEnabledAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public NLogMetricsEnabledAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.NLog)
+        [NetFrameworkTest]
+        public class
+            NLogMetricsEnabledAndForwardingDisabledTestsFW462Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW462>
         {
+            public NLogMetricsEnabledAndForwardingDisabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public NLogMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public NLogMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests(
+                ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public NLogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public NLogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsEnabledAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public NLogMetricsEnabledAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsEnabledAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public NLogMetricsEnabledAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public NLogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, false, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public NLogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
 
-    #region Metrics Disabled, Forwarding Enabled
+        #region Metrics Disabled, Forwarding Enabled
 
-    [NetFrameworkTest]
-    public class NLogMetricsDisabledAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public NLogMetricsDisabledAndForwardingEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.NLog)
+        [NetFrameworkTest]
+        public class
+            NLogMetricsDisabledAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFWLatest>
         {
+            public NLogMetricsDisabledAndForwardingEnabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class NLogMetricsDisabledAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public NLogMetricsDisabledAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.NLog)
+        [NetFrameworkTest]
+        public class
+            NLogMetricsDisabledAndForwardingEnabledTestsFW471Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW471>
         {
+            public NLogMetricsDisabledAndForwardingEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetFrameworkTest]
-    public class NLogMetricsDisabledAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureFW462>
-    {
-        public NLogMetricsDisabledAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.NLog)
+        [NetFrameworkTest]
+        public class
+            NLogMetricsDisabledAndForwardingEnabledTestsFW462Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFW462>
         {
+            public NLogMetricsDisabledAndForwardingEnabledTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public NLogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCoreLatest>
         {
+            public NLogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(
+                ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public NLogMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore50>
         {
+            public NLogMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public NLogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore31>
         {
+            public NLogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore22>
-    {
-        public NLogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore22>
         {
+            public NLogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    [NetCoreTest]
-    public class NLogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public NLogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, true, true, LoggingFramework.NLog)
+        [NetCoreTest]
+        public class
+            NLogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore21>
         {
+            public NLogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.NLog)
+            {
+            }
         }
-    }
 
-    #endregion
+        #endregion
+    }
 
     #endregion
 
