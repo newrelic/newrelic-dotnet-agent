@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.Samplers
 
             // allocate some memory to increase .PrivateMemorySize64 and .WorkingSet64
             var someBytes = IncreaseMemoryUsage();
-
+            
             // Arrange
             var memorySampleAfter = null as ImmutableMemorySample;
             Mock.Arrange(() => _memorySampleTransformer.Transform(Arg.IsAny<ImmutableMemorySample>()))
@@ -75,9 +75,17 @@ namespace NewRelic.Agent.Core.Samplers
             // Act
             _sampleAction();
 
+            foreach (byte b in someBytes)
+            {
+                if (b != 0x77)
+                {
+                    Console.WriteLine("sanity check prevent array being optimized out failed");
+                }
+            }
+
             // Assert
-            Assert.IsTrue(memorySampleBefore.MemoryPrivate < memorySampleAfter.MemoryPrivate, "PrivateMemorySize64 did not increase as expected");
-            Assert.IsTrue(memorySampleBefore.MemoryWorkingSet < memorySampleAfter.MemoryWorkingSet, "WorkingSet64 did not increase as expected");
+            Assert.Less(memorySampleBefore.MemoryPrivate, memorySampleAfter.MemoryPrivate, "PrivateMemorySize64 did not increase as expected");
+            Assert.Less(memorySampleBefore.MemoryWorkingSet, memorySampleAfter.MemoryWorkingSet, "WorkingSet64 did not increase as expected");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
