@@ -74,21 +74,6 @@ namespace MultiFunctionApplicationHelpers
         }
     }
 
-
-    public class ConsoleDynamicMethodFixtureCore21 : ConsoleDynamicMethodFixtureCoreSpecificVersion
-    {
-        public ConsoleDynamicMethodFixtureCore21() : base("netcoreapp2.1")
-        {
-        }
-    }
-
-    public class ConsoleDynamicMethodFixtureCore22 : ConsoleDynamicMethodFixtureCoreSpecificVersion
-    {
-        public ConsoleDynamicMethodFixtureCore22() : base("netcoreapp2.2")
-        {
-        }
-    }
-
     public class ConsoleDynamicMethodFixtureCore31 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
         public ConsoleDynamicMethodFixtureCore31() : base("netcoreapp3.1")

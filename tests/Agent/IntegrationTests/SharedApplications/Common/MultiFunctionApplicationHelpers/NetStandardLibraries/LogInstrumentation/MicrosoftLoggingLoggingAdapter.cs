@@ -80,12 +80,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         private void CreateLogger()
         {
-#if NETCOREAPP2_1 || NETCOREAPP2_2 // .NET Core 2.1 & 2.2 don;t support LoggerFactory.Create
-            var loggerFactory = new LoggerFactory()
-                .AddSerilog()
-                .AddConsole(LogLevel.Debug);
-
-#else
             using var loggerFactory = LoggerFactory.Create(builder =>
             {
                 builder
@@ -95,7 +89,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     .AddSerilog()
                     .AddConsole();
             });
-#endif
             logger = loggerFactory.CreateLogger<LoggingTester>();
         }
     }
