@@ -17,8 +17,6 @@ namespace NewRelic.Providers.Wrapper.Mvc3
         {
             return Delegates.GetDelegateFor(onFailure: exception =>
             {
-                // TODO: are there other error cases we should capture here?
-
                 // Handle a missing Action after already being pushed through a valid Route and onto a Controller
                 if (exception is HttpException he && he.GetHttpCode() == 404)
                 {
