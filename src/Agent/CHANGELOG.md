@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### New Features
 * Adds support for logging metrics, forwarding application logs, and enriching application logs written to disk or standard out for NLog versions v5 and v4. [#1087](https://github.com/newrelic/newrelic-dotnet-agent/pull/1087)
+* Adds integration with CodeStream Now Introducing Code-Level Metrics! Golden Signals visible in your IDE through New Relic CodeStream. [Learn more here](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/net-codestream-integration). For any issues or direct feedback, please reach out to support@codestream.com
 * Updates the following installation methods to check for and remove deprecated files. ([#1104](https://github.com/newrelic/newrelic-dotnet-agent/pull/1104))
   * MSI Installer
   * Azure Site Extension
