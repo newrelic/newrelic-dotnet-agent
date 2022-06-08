@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using CommandLine;
 
@@ -50,13 +51,21 @@ namespace NewRelic.Agent.IntegrationTests.Applications.AgentApiExecutor
             };
             Api.Agent.NewRelic.NoticeError(new Exception("Rawr!"), errorAttributes);
 
+            SomeOtherMethod();
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void SomeSlowMethod()
         {
             var stuff = string.Empty;
             Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("test", "test");
             Thread.Sleep(2000); //needed for OtherTransaction test
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void SomeOtherMethod()
+        {
+            Thread.Sleep(20);
         }
 
         private static void CreatePidFile()

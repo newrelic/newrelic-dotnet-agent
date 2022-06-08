@@ -500,7 +500,8 @@ jobs:
           Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog,
           ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
           WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
-          RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, RequestHandling ]
+          RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, 
+          RequestHandling, CodeLevelMetrics ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
