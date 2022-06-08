@@ -48,6 +48,12 @@ namespace NewRelic.Agent.Core.Configuration
         const bool BrowserMonitoringAutoInstrument = true;
         const int TransactionEventMaxSamplesStored = 10000;
 
+        const bool ApplicationLoggingEnabled = true;
+        const bool ApplicationLoggingForwardingEnabled = true;
+        const int ApplicationLoggingForwardingMaxSamplesStored = 1234;
+        const bool ApplicationLoggingMetricsEnabled = true;
+        const bool ApplicationLoggingLocalDecoratingEnabled = false;
+
         [Test]
         public void serializes_correctly()
         {
@@ -80,6 +86,13 @@ namespace NewRelic.Agent.Core.Configuration
             Mock.Arrange(() => configuration.BrowserMonitoringAutoInstrument).Returns(BrowserMonitoringAutoInstrument);
             Mock.Arrange(() => configuration.TransactionEventsMaximumSamplesStored).Returns(TransactionEventMaxSamplesStored);
 
+            Mock.Arrange(() => configuration.ApplicationLoggingEnabled).Returns(ApplicationLoggingEnabled);
+            Mock.Arrange(() => configuration.LogEventCollectorEnabled).Returns(ApplicationLoggingForwardingEnabled);
+            Mock.Arrange(() => configuration.LogEventsMaxSamplesStored).Returns(ApplicationLoggingForwardingMaxSamplesStored);
+            Mock.Arrange(() => configuration.LogMetricsCollectorEnabled).Returns(ApplicationLoggingMetricsEnabled);
+            Mock.Arrange(() => configuration.LogDecoratorEnabled).Returns(ApplicationLoggingLocalDecoratingEnabled);
+
+
             var agentSettings = new ReportedConfiguration
             {
                 ApdexT = configuration.TransactionTraceApdexT.TotalSeconds,
@@ -108,12 +121,17 @@ namespace NewRelic.Agent.Core.Configuration
                 TransactionTracerRecordSql = configuration.TransactionTracerRecordSql,
                 SlowSqlEnabled = configuration.SlowSqlEnabled,
                 BrowserMonitoringAutoInstrument = configuration.BrowserMonitoringAutoInstrument,
-                TransactionEventMaxSamplesStored = configuration.TransactionEventsMaximumSamplesStored
+                TransactionEventMaxSamplesStored = configuration.TransactionEventsMaximumSamplesStored,
+                ApplicationLoggingEnabled = configuration.ApplicationLoggingEnabled,
+                ApplicationLoggingForwardingEnabled = configuration.LogEventCollectorEnabled,
+                ApplicationLoggingForwardingMaxSamplesStored = configuration.LogEventsMaxSamplesStored,
+                ApplicationLoggingMetricsEnabled = configuration.LogMetricsCollectorEnabled,
+                ApplicationLoggingLocalDecoratingEnabled = configuration.LogDecoratorEnabled
             };
 
             var json = JsonConvert.SerializeObject(agentSettings);
 
-            const string expectedJson = @"{""agent"":"".NET Agent"",""apdex_t"":10.0,""cross_process_id"":""acctId#appId"",""encoding_key"":""thisistheencodingkey"",""trusted_account_ids"":[123456,98765],""max_stack_trace_lines"":100,""server_side_configuration_enabled"":false,""ignore_server_side_configuration"":false,""thread_profiler.enabled"":false,""cross_application_tracer.enabled"":false,""distributed_tracing.enabled"":true,""error_collector.enabled"":true,""error_collector.ignore_status_codes"":[""401"",""404""],""error_collector.ignore_classes"":[""ExceptionClass1""],""error_collector.ignore_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_classes"":[""ExceptionClass1""],""error_collector.expected_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_status_codes"":[""403"",""500""],""transaction_tracer.stack_trace_threshold"":11.0,""transaction_tracer.explain_enabled"":false,""transaction_tracer.max_sql_statements"":100,""transaction_tracer.max_explain_plans"":10,""transaction_tracer.explain_threshold"":12.0,""transaction_tracer.transaction_threshold"":13.0,""transaction_tracer.record_sql"":""obfuscate"",""slow_sql.enabled"":false,""browser_monitoring.auto_instrument"":true,""transaction_event.max_samples_stored"":10000}";
+            const string expectedJson = @"{""agent"":"".NET Agent"",""apdex_t"":10.0,""cross_process_id"":""acctId#appId"",""encoding_key"":""thisistheencodingkey"",""trusted_account_ids"":[123456,98765],""max_stack_trace_lines"":100,""server_side_configuration_enabled"":false,""ignore_server_side_configuration"":false,""thread_profiler.enabled"":false,""cross_application_tracer.enabled"":false,""distributed_tracing.enabled"":true,""error_collector.enabled"":true,""error_collector.ignore_status_codes"":[""401"",""404""],""error_collector.ignore_classes"":[""ExceptionClass1""],""error_collector.ignore_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_classes"":[""ExceptionClass1""],""error_collector.expected_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_status_codes"":[""403"",""500""],""transaction_tracer.stack_trace_threshold"":11.0,""transaction_tracer.explain_enabled"":false,""transaction_tracer.max_sql_statements"":100,""transaction_tracer.max_explain_plans"":10,""transaction_tracer.explain_threshold"":12.0,""transaction_tracer.transaction_threshold"":13.0,""transaction_tracer.record_sql"":""obfuscate"",""slow_sql.enabled"":false,""browser_monitoring.auto_instrument"":true,""transaction_event.max_samples_stored"":10000,""application_logging.enabled"":true,""application_logging.forwarding.enabled"":true,""application_logging.forwarding.max_samples_stored"":1234,""application_logging.metrics.enabled"":true,""application_logging.local_decorating.enabled"":false}";
 
             Assert.AreEqual(expectedJson, json);
         }

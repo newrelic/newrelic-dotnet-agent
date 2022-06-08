@@ -365,7 +365,13 @@ namespace NewRelic.Agent.Core.DataTransport
                 TransactionTracerRecordSql = _configuration.TransactionTracerRecordSql,
                 SlowSqlEnabled = _configuration.SlowSqlEnabled,
                 BrowserMonitoringAutoInstrument = _configuration.BrowserMonitoringAutoInstrument,
-                TransactionEventMaxSamplesStored = _configuration.TransactionEventsMaximumSamplesStored
+                TransactionEventMaxSamplesStored = _configuration.TransactionEventsMaximumSamplesStored,
+                // Application logging settings
+                ApplicationLoggingEnabled = _configuration.ApplicationLoggingEnabled,
+                ApplicationLoggingForwardingEnabled = _configuration.LogEventCollectorEnabled,
+                ApplicationLoggingForwardingMaxSamplesStored = _configuration.LogEventsMaxSamplesStored,
+                ApplicationLoggingMetricsEnabled = _configuration.LogMetricsCollectorEnabled,
+                ApplicationLoggingLocalDecoratingEnabled = _configuration.LogDecoratorEnabled
             };
 
             try
