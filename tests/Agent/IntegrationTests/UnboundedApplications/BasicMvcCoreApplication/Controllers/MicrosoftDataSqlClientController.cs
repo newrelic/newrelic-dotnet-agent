@@ -19,6 +19,7 @@ namespace BasicMvcApplication.Controllers
         private const string CountPersonMsSql = "SELECT COUNT(*) FROM {0} WITH(nolock)";
 
         [HttpGet]
+        [Route("MicrosoftDataSqlClient/MsSql")]
         public string MsSql(string tableName)
         {
             var teamMembers = new List<string>();
@@ -67,6 +68,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
+        [Route("MicrosoftDataSqlClient/MsSqlAsync")]
         public async Task<string> MsSqlAsync(string tableName)
         {
             var teamMembers = new List<string>();
@@ -113,6 +115,8 @@ namespace BasicMvcApplication.Controllers
             return string.Join(",", teamMembers);
         }
 
+        [HttpGet]
+        [Route("MicrosoftDataSqlClient/MsSql_WithParameterizedQuery")]
         public string MsSql_WithParameterizedQuery(string tableName, bool paramsWithAtSign)
         {
             var teamMembers = new List<string>();
@@ -142,6 +146,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
+        [Route("MicrosoftDataSqlClient/MsSqlAsync_WithParameterizedQuery")]
         public async Task<string> MsSqlAsync_WithParameterizedQuery(string tableName, bool paramsWithAtSign)
         {
             var teamMembers = new List<string>();
@@ -190,6 +195,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
+        [Route("MicrosoftDataSqlClient/MsSqlParameterizedStoredProcedure")]
         public int MsSqlParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
         {
             EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
