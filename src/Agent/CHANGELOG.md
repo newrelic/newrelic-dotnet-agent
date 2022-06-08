@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixes
 * Upgrades Newtonsoft.Json to version 13.0.1 to address potential security vulnerabilities identified by Snyk ([#1107](https://github.com/newrelic/newrelic-dotnet-agent/pull/1107))
+* The agent will now send the values of application logging config options (e.g. `application_logging.forwarding.enabled`) to the agent initialization settings page. ([#1135](https://github.com/newrelic/newrelic-dotnet-agent/pull/1135))
 
 ## [9.8.1] - 2022-05-19
 
