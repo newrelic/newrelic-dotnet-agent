@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Core.Configuration
         }
     }
 
-#if NET45
+#if NETFRAMEWORK
 
 	public class ConfigurationManagerStatic : IConfigurationManagerStatic
 	{
