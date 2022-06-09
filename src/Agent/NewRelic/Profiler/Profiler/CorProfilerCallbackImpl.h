@@ -398,6 +398,7 @@ namespace NewRelic { namespace Profiler {
             }
             else
             {
+                // TODO: Find a different method to determine the 'at least' version of .NET Framework... There is on ICorProfilerInfoX api released for .NET 4.6.2
                 CComPtr<ICorProfilerInfo4> temp;
                 HRESULT interfaceCheckResult = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo4), (void**)&temp);
                 if (FAILED(interfaceCheckResult)) {
