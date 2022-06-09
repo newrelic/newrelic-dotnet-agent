@@ -573,10 +573,12 @@ jobs:
 
           Write-Host "Run tests"
           $parallelXunitOption = "none" 
-          if ("${{ matrix.namespace }}" -like "Logging.*" ) {
-            Write-Host "Logging tests detected, running xunit tests in parallel."
-            $parallelXunitOption = "all"
-          }
+
+          # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
+          # if ("${{ matrix.namespace }}" -like "Logging.*" ) {
+          #   Write-Host "Logging tests detected, running xunit tests in parallel."
+          #   $parallelXunitOption = "all"
+          # }
 
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
           
