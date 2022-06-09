@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 
-## [9.9.0] - 2022-05-19
+## [9.9.0] - 2022-06-08
 
 ### New Features
 * Adds support for logging metrics, forwarding application logs, and enriching application logs written to disk or standard out for NLog versions v5 and v4. [#1087](https://github.com/newrelic/newrelic-dotnet-agent/pull/1087)
