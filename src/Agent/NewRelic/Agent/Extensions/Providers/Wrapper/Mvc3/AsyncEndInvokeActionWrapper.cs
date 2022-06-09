@@ -23,7 +23,9 @@ namespace NewRelic.Providers.Wrapper.Mvc3
         {
             var httpContext = HttpContext.Current;
             if (httpContext == null)
+            {
                 throw new NullReferenceException("httpContext");
+            }
 
             var segment = agent.CastAsSegment(httpContext.Items[AsyncBeginInvokeActionWrapper.HttpContextSegmentKey]);
             httpContext.Items[AsyncBeginInvokeActionWrapper.HttpContextSegmentKey] = null;

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
@@ -25,16 +26,28 @@ namespace NewRelic.Providers.Wrapper.Mvc3
 
             if (controllerContext != null)
             {
-                var controllerName = MvcRouteNamingHelper.TryGetControllerNameFromObject(controllerContext);
-                var actionName = MvcRouteNamingHelper.TryGetActionNameFromRouteParameters(instrumentedMethodCall.MethodCall, controllerContext.RouteData);
+                // IMPORTANT: Resist the urge to blindly refactor all of this code to use `var`
+                // IMPORTANT: We are being intentional with types over using `var` here due to
+                // IMPORTANT: the effects of handling a `dynamic` object
+                string controllerName = MvcRouteNamingHelper.TryGetControllerNameFromObject(controllerContext);
+                string actionName = MvcRouteNamingHelper.TryGetActionNameFromRouteParameters(instrumentedMethodCall.MethodCall, controllerContext.RouteData);
 
-                var transactionName = string.Format("{0}/{1}", controllerName, actionName);
+                string transactionName = controllerName + "/" + actionName;
                 transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkLow);
 
-                var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
+                ISegment segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 
+                // segment should never be null.. it will either be a NoOp segment, or we would have thrown here...
                 if (segment != null)
                 {
+                    string fullControllerName = MvcRouteNamingHelper.TryGetControllerFullNameFromObject(controllerContext);
+                    if (fullControllerName != null)
+                    {
+                        ISegmentExperimental segmentApi = segment.GetExperimentalApi();
+                        segmentApi.UserCodeNamespace = fullControllerName;
+                        segmentApi.UserCodeFunction = actionName;
+                    }
+
                     return Delegates.GetDelegateFor(segment);
                 }
             }

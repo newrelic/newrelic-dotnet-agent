@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Linq;
 using System.Net.Http.Headers;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -51,42 +52,37 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
 
             var catResponseData = HeaderEncoder.DecodeAndDeserialize<CrossApplicationResponseData>(catResponseHeader, HeaderEncoder.IntegrationTestEncodingKey);
 
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/Index");
-            var transactionEventIndex = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/Index");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/SlowAndLikelyTracedAction");
+            var transactionEventSlowAndLikelySampled = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/SlowAndLikelyTracedAction");
             var transactionEventRedirect = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/DoRedirect");
             var metrics = _fixture.AgentLog.GetMetrics();
 
-            NrAssert.Multiple
-            (
-                () => Assert.NotNull(transactionSample),
-                () => Assert.NotNull(transactionEventRedirect),
-                () => Assert.NotNull(transactionEventIndex)
-            );
+            Assert.NotNull(transactionSample);
+            Assert.NotNull(transactionEventRedirect);
+            Assert.NotNull(transactionEventSlowAndLikelySampled);
 
-            NrAssert.Multiple
-            (
-                () => Assert.Equal(_fixture.AgentLog.GetCrossProcessId(), catResponseData.CrossProcessId),
-                () => Assert.Equal("WebTransaction/MVC/DefaultController/Index", catResponseData.TransactionName),
-                () => Assert.True(catResponseData.QueueTimeInSeconds >= 0),
-                () => Assert.True(catResponseData.ResponseTimeInSeconds >= 0),
-                () => Assert.Equal(-1, catResponseData.ContentLength),
-                () => Assert.NotNull(catResponseData.TransactionGuid),
-                () => Assert.False(catResponseData.Unused),
+            Assert.Equal(_fixture.AgentLog.GetCrossProcessId(), catResponseData.CrossProcessId);
+            Assert.Equal("WebTransaction/MVC/DefaultController/SlowAndLikelyTracedAction", catResponseData.TransactionName);
+            Assert.True(catResponseData.QueueTimeInSeconds >= 0);
+            Assert.True(catResponseData.ResponseTimeInSeconds >= 0);
+            Assert.Equal(-1, catResponseData.ContentLength);
+            Assert.NotNull(catResponseData.TransactionGuid);
+            Assert.False(catResponseData.Unused);
 
-                // Trace attributes
-                () => Assertions.TransactionTraceHasAttributes(Expectations.ExpectedTransactionTraceIntrinsicAttributesCatEnabled, TransactionTraceAttributeType.Intrinsic, transactionSample),
-                () => Assertions.TransactionTraceDoesNotHaveAttributes(Expectations.UnexpectedTransactionTraceIntrinsicAttributesCatEnabled, TransactionTraceAttributeType.Intrinsic, transactionSample),
+            // Trace attributes
+            Assertions.TransactionTraceHasAttributes(Expectations.ExpectedTransactionTraceIntrinsicAttributesCatEnabled, TransactionTraceAttributeType.Intrinsic, transactionSample);
+            Assertions.TransactionTraceDoesNotHaveAttributes(Expectations.UnexpectedTransactionTraceIntrinsicAttributesCatEnabled, TransactionTraceAttributeType.Intrinsic, transactionSample);
 
-                // transactionEventIndex attributes
-                () => Assertions.TransactionEventHasAttributes(Expectations.ExpectedTransactionEventIntrinsicAttributesCatEnabled, TransactionEventAttributeType.Intrinsic, transactionEventIndex),
-                () => Assertions.TransactionEventDoesNotHaveAttributes(Expectations.UnexpectedTransactionEventIntrinsicAttributesCatEnabled, TransactionEventAttributeType.Intrinsic, transactionEventIndex),
+            // transactionEventIndex attributes
+            Assertions.TransactionEventHasAttributes(Expectations.ExpectedTransactionEventIntrinsicAttributesCatEnabled, TransactionEventAttributeType.Intrinsic, transactionEventSlowAndLikelySampled);
+            Assertions.TransactionEventDoesNotHaveAttributes(Expectations.UnexpectedTransactionEventIntrinsicAttributesCatEnabled, TransactionEventAttributeType.Intrinsic, transactionEventSlowAndLikelySampled);
 
-                // transactionEventRedirect attributes
-                () => Assertions.TransactionEventHasAttributes(Expectations.ExpectedTransactionEventIntrinsicAttributesCatEnabled, TransactionEventAttributeType.Intrinsic, transactionEventRedirect),
-                () => Assertions.TransactionEventDoesNotHaveAttributes(Expectations.UnexpectedTransactionEventIntrinsicAttributesCatEnabled, TransactionEventAttributeType.Intrinsic, transactionEventRedirect),
+            // transactionEventRedirect attributes
+            Assertions.TransactionEventHasAttributes(Expectations.ExpectedTransactionEventIntrinsicAttributesCatEnabled, TransactionEventAttributeType.Intrinsic, transactionEventRedirect);
+            Assertions.TransactionEventDoesNotHaveAttributes(Expectations.UnexpectedTransactionEventIntrinsicAttributesCatEnabled, TransactionEventAttributeType.Intrinsic, transactionEventRedirect);
 
-                () => Assertions.MetricsExist(Expectations.ExpectedMetricsCatEnabled, metrics)
-            );
+            Assertions.MetricsExist(Expectations.ExpectedMetricsCatEnabled, metrics);
+
         }
     }
 }

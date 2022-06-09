@@ -500,7 +500,8 @@ jobs:
           Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog,
           ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
           WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
-          RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, RequestHandling ]
+          RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, 
+          RequestHandling, CodeLevelMetrics, InfiniteTracing]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -572,10 +573,12 @@ jobs:
 
           Write-Host "Run tests"
           $parallelXunitOption = "none" 
-          if ("${{ matrix.namespace }}" -like "Logging.*" ) {
-            Write-Host "Logging tests detected, running xunit tests in parallel."
-            $parallelXunitOption = "all"
-          }
+
+          # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
+          # if ("${{ matrix.namespace }}" -like "Logging.*" ) {
+          #   Write-Host "Logging tests detected, running xunit tests in parallel."
+          #   $parallelXunitOption = "all"
+          # }
 
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
           

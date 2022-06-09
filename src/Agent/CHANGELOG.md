@@ -6,8 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 
+## [9.9.0] - 2022-05-19
+
 ### New Features
 * Adds support for logging metrics, forwarding application logs, and enriching application logs written to disk or standard out for NLog versions v5 and v4. [#1087](https://github.com/newrelic/newrelic-dotnet-agent/pull/1087)
+* Adds integration with CodeStream, introducing Code-Level Metrics! Golden Signals visible in your IDE through New Relic CodeStream. [Learn more here](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/net-codestream-integration). For any issues or direct feedback, please reach out to support@codestream.com
 * Updates the following installation methods to check for and remove deprecated files. ([#1104](https://github.com/newrelic/newrelic-dotnet-agent/pull/1104))
   * MSI Installer
   * Azure Site Extension
@@ -16,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixes
 * Upgrades Newtonsoft.Json to version 13.0.1 to address potential security vulnerabilities identified by Snyk ([#1107](https://github.com/newrelic/newrelic-dotnet-agent/pull/1107))
+* The agent will now send the values of application logging config options (e.g. `application_logging.forwarding.enabled`) to the agent initialization settings page. ([#1135](https://github.com/newrelic/newrelic-dotnet-agent/pull/1135))
 
 ## [9.8.1] - 2022-05-19
 
@@ -442,7 +446,8 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.8.1...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.9.0...HEAD
+[9.9.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.8.1...v9.9.0
 [9.8.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.8.0...v9.8.1
 [9.8.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.7.1...v9.8.0
 [9.7.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.7.0...v9.7.1
