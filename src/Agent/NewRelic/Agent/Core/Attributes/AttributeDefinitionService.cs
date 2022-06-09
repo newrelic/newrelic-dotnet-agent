@@ -34,6 +34,8 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> CatReferringTransactionGuidForEvents { get; }
         AttributeDefinition<string, string> CatReferringTransactionGuidForTraces { get; }
         AttributeDefinition<string, string> ClientCrossProcessId { get; }
+        AttributeDefinition<string, string> CodeFunction { get; }
+        AttributeDefinition<string, string> CodeNamespace { get; }
         AttributeDefinition<string, string> Component { get; }
         AttributeDefinition<TimeSpan, double> CpuTime { get; }
         AttributeDefinition<string, string> CustomEventType { get; }
@@ -957,5 +959,25 @@ namespace NewRelic.Agent.Core.Attributes
             AttributeDefinitionBuilder.CreateString("type", AttributeClassification.Intrinsics)
                 .AppliesTo(AttributeDestinations.CustomEvent)
                 .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _codeFunction;
+        public AttributeDefinition<string, string> CodeFunction => _codeFunction ?? (
+            _codeFunction = AttributeDefinitionBuilder.CreateString(
+                "code.function",
+                AttributeClassification.AgentAttributes
+            )
+            .AppliesTo(AttributeDestinations.SpanEvent)
+            .Build(_attribFilter)
+        );
+
+        private AttributeDefinition<string, string> _codeNamespace;
+        public AttributeDefinition<string, string> CodeNamespace => _codeNamespace ?? (
+            _codeNamespace = AttributeDefinitionBuilder.CreateString(
+                "code.namespace",
+                AttributeClassification.AgentAttributes
+            )
+            .AppliesTo(AttributeDestinations.SpanEvent)
+            .Build(_attribFilter)
+        );
     }
 }

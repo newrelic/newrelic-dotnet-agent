@@ -4,6 +4,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using System;
@@ -38,12 +39,17 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 
             transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
 
+            var controllerTypeInfo = controllerContext.ActionDescriptor.ControllerTypeInfo;
             //Framework uses ControllerType.Action for these metrics & transactions. WebApi is Controller.Action for both
             //Taking opinionated stance to do ControllerType.MethodName for segments. Controller/Action for transactions
-            var controllerTypeName = controllerContext.ActionDescriptor.ControllerTypeInfo.Name;
+            var controllerTypeName = controllerTypeInfo.Name;
             var methodName = controllerContext.ActionDescriptor.MethodInfo.Name;
 
             var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerTypeName, methodName);
+
+            var segmentApi = segment.GetExperimentalApi();
+            segmentApi.UserCodeNamespace = controllerTypeInfo.FullName;
+            segmentApi.UserCodeFunction = methodName;
 
             return Delegates.GetAsyncDelegateFor<Task>(agent, segment, TaskContinueWithOption.None);
         }

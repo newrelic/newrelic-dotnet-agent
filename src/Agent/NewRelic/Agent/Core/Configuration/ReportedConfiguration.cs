@@ -94,5 +94,21 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("transaction_event.max_samples_stored")]
         public int TransactionEventMaxSamplesStored { get; set; }
+
+        // Application Logging settings
+        [JsonProperty("application_logging.enabled")]
+        public bool ApplicationLoggingEnabled { get; set; }
+
+        [JsonProperty("application_logging.forwarding.enabled")]
+        public bool ApplicationLoggingForwardingEnabled { get; set; }
+
+        [JsonProperty("application_logging.forwarding.max_samples_stored")]
+        public int ApplicationLoggingForwardingMaxSamplesStored { get; set; }
+
+        [JsonProperty("application_logging.metrics.enabled")]
+        public bool ApplicationLoggingMetricsEnabled { get; set; }
+
+        [JsonProperty("application_logging.local_decorating.enabled")]
+        public bool ApplicationLoggingLocalDecoratingEnabled { get; set; }
     }
 }

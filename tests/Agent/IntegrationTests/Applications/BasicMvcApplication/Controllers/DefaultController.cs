@@ -19,6 +19,13 @@ namespace BasicMvcApplication.Controllers
             return View();
         }
 
+        // GET: SlowAndLikelyTracedAction
+        public ActionResult SlowAndLikelyTracedAction()
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(2));
+            return View("Index");
+        }
+
         // GET: Query
         public ActionResult Query(string data)
         {
@@ -121,7 +128,7 @@ namespace BasicMvcApplication.Controllers
 
         public string DoRedirect(string data)
         {
-            Response.Redirect("Index");
+            Response.Redirect("SlowAndLikelyTracedAction");
             return data;
         }
 

@@ -1788,6 +1788,25 @@
                         </xs:attribute>
                     </xs:complexType>
                 </xs:element>
+
+                <xs:element name="codeLevelMetrics" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Turns on/off capture of code level metric attributes.
+                        </xs:documentation>
+                    </xs:annotation>
+
+                    <xs:complexType>
+                        <xs:attribute name="enabled" type="xs:boolean" default="false">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Set this to "true" to capture namespace and function information
+                                    on spans to enable code level metrics in CodeStream.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                    </xs:complexType>
+                </xs:element>
             </xs:all>
 
             <xs:attribute name="agentEnabled" type="xs:boolean" default="true">
