@@ -84,7 +84,7 @@ foreach ($storageDir in $storageDirs) {
     $storageDirPath = $storageDir.FullName
     $storageName = $storageDir.Name
 
-    if ($netFrameworkPath = Resolve-Path "$storageDirPath\bin\$Configuration\net4*") {
+    if ($netFrameworkPath = Resolve-Path "$storageDirPath\bin\$Configuration\net462") {
         $dllObject = Get-ChildItem -File -Path "$netFrameworkPath" -Filter NewRelic.Providers.Storage.$storageName.dll
         $netFrameworkStorageArray += $dllObject
     }
