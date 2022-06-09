@@ -23,7 +23,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public MockNewRelicFixture(RemoteApplication remoteApplication) : base(remoteApplication)
         {
-            MockNewRelicApplication = new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded, true, true, true); ; ;
+            MockNewRelicApplication = new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded, true, true, true);
 
             Actions(
                 setupConfiguration: () =>
