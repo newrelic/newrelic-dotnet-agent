@@ -129,7 +129,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
             LogHelpers = logHelpersImpl;
 
             // Add actions executes the applied actions after actions defined by the base.
-            // In this case the base efines an exerciseApplication action we want to wait after.
+            // In this case the base defines an exerciseApplication action we want to wait after.
             _fixture.AddActions
             (
                 setupConfiguration: () =>
