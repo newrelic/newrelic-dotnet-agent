@@ -277,7 +277,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 var logsOfInterest = logLines.Where(x => x.Message.StartsWith("DifferentTraceAttributesInsideTransaction")).ToArray();
 
                 Assert.Equal(2, logsOfInterest.Length);
-                Assert.NotEqual(logsOfInterest[0].Attributes.Spanid, logsOfInterest[1].Attributes.Spanid);
+                Assert.NotEqual(logsOfInterest[0].Spanid, logsOfInterest[1].Spanid);
             }
         }
 

@@ -62,9 +62,6 @@ namespace NewRelic.Agent.Core.JsonConverters
                 jsonWriter.WritePropertyName(Level);
                 jsonWriter.WriteValue(logEvent.Level);
 
-                jsonWriter.WritePropertyName(Attributes);
-                jsonWriter.WriteStartObject();
-
                 if (!string.IsNullOrWhiteSpace(logEvent.SpanId))
                 {
                     jsonWriter.WritePropertyName(SpanId);
@@ -77,7 +74,6 @@ namespace NewRelic.Agent.Core.JsonConverters
                     jsonWriter.WriteValue(logEvent.TraceId);
                 }
 
-                jsonWriter.WriteEndObject();
                 jsonWriter.WriteEndObject();
             }
 

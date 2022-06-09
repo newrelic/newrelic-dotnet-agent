@@ -602,13 +602,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     continue;
                 if (expectedLogLine.LogMessage != actualLogLine.Message)
                     continue;
-                if (expectedLogLine.HasSpanId.HasValue && expectedLogLine.HasSpanId.Value && string.IsNullOrWhiteSpace(actualLogLine.Attributes.Spanid))
+                if (expectedLogLine.HasSpanId.HasValue && expectedLogLine.HasSpanId.Value && string.IsNullOrWhiteSpace(actualLogLine.Spanid))
                     continue;
-                if (expectedLogLine.HasSpanId.HasValue && !expectedLogLine.HasSpanId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Attributes.Spanid))
+                if (expectedLogLine.HasSpanId.HasValue && !expectedLogLine.HasSpanId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Spanid))
                     continue;
-                if (expectedLogLine.HasTraceId.HasValue && expectedLogLine.HasTraceId.Value && string.IsNullOrWhiteSpace(actualLogLine.Attributes.Traceid))
+                if (expectedLogLine.HasTraceId.HasValue && expectedLogLine.HasTraceId.Value && string.IsNullOrWhiteSpace(actualLogLine.Traceid))
                     continue;
-                if (expectedLogLine.HasTraceId.HasValue && !expectedLogLine.HasTraceId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Attributes.Traceid))
+                if (expectedLogLine.HasTraceId.HasValue && !expectedLogLine.HasTraceId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Traceid))
                     continue;
 
                 return actualLogLine;
