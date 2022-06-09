@@ -128,7 +128,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             // Give the unawaited async logs some time to catch up
             _fixture.AddCommand($"RootCommands DelaySeconds 10");
 
-            // Add actions executes the applied actions after actions defined by the base.
+            // AddActions() executes the applied actions after actions defined by the base.
             // In this case the base defines an exerciseApplication action we want to wait after.
             _fixture.AddActions
             (

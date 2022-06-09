@@ -137,7 +137,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 var processOutput = new ProcessOutput(TestLogger, process, true);
 
                 // Publishes take longer in CI currently, regularly taking longer than 3 minutes.
-                // 10 minutes may or may not extreme but stabilizes these failures.
+                // 10 minutes may or may not be extreme but stabilizes these failures.
                 const int timeoutInMilliseconds = 10 * 60 * 1000;
                 if (!process.WaitForExit(timeoutInMilliseconds))
                 {

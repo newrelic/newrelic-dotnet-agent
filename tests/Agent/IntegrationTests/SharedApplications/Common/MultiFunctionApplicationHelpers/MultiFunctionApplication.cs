@@ -31,7 +31,7 @@ namespace MultiFunctionApplicationHelpers
                 if (string.IsNullOrWhiteSpace(command))
                 {
                     // Delay checking for next command for when there's a delay
-                    // receiving commands such as waitin for log line before shutdown.
+                    // receiving commands such as waiting for log line(s) before shutdown.
                     Thread.Sleep(TimeSpan.FromSeconds(1));
                     continue;
                 }
