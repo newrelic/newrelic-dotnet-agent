@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
     <PropertyGroup>
-        <TargetFramework>net45</TargetFramework>
+        <TargetFramework>net462</TargetFramework>
         <AssemblyName>NewRelic.Providers.Wrapper.HttpWebRequest</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.HttpWebRequest</RootNamespace>
         <Description>HttpWebRequest Wrapper Provider for New Relic .NET Agent</Description>

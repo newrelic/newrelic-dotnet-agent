@@ -116,8 +116,8 @@ function Copy-ExtensionsOther {
     Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\extension.xsd" -Destination "$Destination\extensions" -Force 
 
     if ($Type -like "Framework"){
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Core\net45-ILRepacked\NewRelic.Core.dll" -Destination "$Destination\extensions" -Force 
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Parsing\bin\$Configuration\net45\NewRelic.Parsing.dll" -Destination "$Destination\extensions" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Core\net462-ILRepacked\NewRelic.Core.dll" -Destination "$Destination\extensions" -Force 
+        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Parsing\bin\$Configuration\net462\NewRelic.Parsing.dll" -Destination "$Destination\extensions" -Force 
     }
 
     if ($Type -like "Core"){
@@ -143,8 +143,8 @@ function Copy-AgentRoot {
     Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\Config\Configuration.xsd" -Destination "$Destination\newrelic.xsd" -Force 
     
     if ($Type -like "Framework") {
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\$Configuration\net45\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\net45-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\$Configuration\net462\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\net462-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force 
     }
 
     if ($Type -like "Core") {
@@ -189,7 +189,7 @@ function Copy-AgentApi {
     $ErrorActionPreference = "Stop"
 
     if ($Type -like "Framework") {
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Api.Agent\net45\NewRelic.Api.Agent.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Api.Agent\net462\NewRelic.Api.Agent.dll" -Destination "$Destination" -Force 
     }
 
     if ($Type -like "Core") {

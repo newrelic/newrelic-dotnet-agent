@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net45</TargetFrameworks>
+    <TargetFrameworks>net462</TargetFrameworks>
     <AssemblyName>NewRelic.Providers.Storage.OperationContext</AssemblyName>
     <RootNamespace>NewRelic.Providers.Storage.OperationContext</RootNamespace>
     <Description>WCF 3 Transaction Context Provider for New Relic .NET Agent</Description>

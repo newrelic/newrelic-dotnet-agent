@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NET45
+#if NETFRAMEWORK
 using Microsoft.Win32;
 #endif
 
@@ -34,9 +34,9 @@ namespace NewRelic.Core
 
     public static class DotnetVersion
     {
-#if NET45
-		// This code is derived from: https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/how-to-determine-which-versions-are-installed#net_d
-		public static DotnetFrameworkVersion GetDotnetFrameworkVersion()
+#if NETFRAMEWORK
+        // This code is derived from: https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/how-to-determine-which-versions-are-installed#net_d
+        public static DotnetFrameworkVersion GetDotnetFrameworkVersion()
 		{
 			const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
 
