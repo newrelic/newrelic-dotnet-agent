@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.WireModels
             Assert.NotNull(objectUnderTest);
             Assert.AreEqual(expectedTimestamp, objectUnderTest.TimeStamp);
             Assert.AreEqual(expectedMessage, objectUnderTest.Message);
-            Assert.AreEqual(expectedLogLevel, objectUnderTest.LogLevel);
+            Assert.AreEqual(expectedLogLevel, objectUnderTest.Level);
             Assert.AreEqual(expectedSpanId, objectUnderTest.SpanId);
             Assert.AreEqual(expectedTraceId, objectUnderTest.TraceId);
             Assert.AreEqual(expectedPriority, objectUnderTest.Priority);

@@ -150,11 +150,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             var loggingMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLogLevelName(_loggingFramework, "DEBUG"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLogLevelName(_loggingFramework, "INFO"), callCount = 10 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLogLevelName(_loggingFramework, "WARN"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLogLevelName(_loggingFramework, "ERROR"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLogLevelName(_loggingFramework, "FATAL"), callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "DEBUG"), callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "INFO"), callCount = 10 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "WARN"), callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "ERROR"), callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "FATAL"), callCount = 7 },
 
                 new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 38 },
             };
@@ -232,7 +232,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 foreach (var logLine in logLines)
                 {
                     Assert.False(string.IsNullOrWhiteSpace(logLine.Message));
-                    Assert.False(string.IsNullOrWhiteSpace(logLine.LogLevel));
+                    Assert.False(string.IsNullOrWhiteSpace(logLine.Level));
                     Assert.NotEqual(0, logLine.Timestamp);
                 }
             }
@@ -249,7 +249,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = TraceAttributeOutsideTransactionLogMessage, HasTraceId = false, HasSpanId = false }
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = TraceAttributeOutsideTransactionLogMessage, HasTraceId = false, HasSpanId = false }
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -267,7 +267,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = DifferentTraceAttributesInsideTransactionLogMessage, HasTraceId = true, HasSpanId = true }
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = DifferentTraceAttributesInsideTransactionLogMessage, HasTraceId = true, HasSpanId = true }
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -288,11 +288,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = InTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = InTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = InTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = InTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = InTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = InTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = InTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = InTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = InTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = InTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -310,11 +310,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = AsyncInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = AsyncInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -334,11 +334,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 // Because of this the spanId/traceId members are not checked by not specifying true/false in the ExpectedLogLines
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitInTransactionDebugMessage},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitInTransactionInfoMessage},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitInTransactionWarningMessage},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitInTransactionErrorMessage},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitInTransactionFatalMessage},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitInTransactionDebugMessage},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitInTransactionInfoMessage},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitInTransactionWarningMessage},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitInTransactionErrorMessage},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitInTransactionFatalMessage},
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -356,11 +356,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = OutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = OutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = OutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = OutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = OutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = OutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = OutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = OutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = OutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = OutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
@@ -378,11 +378,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = AsyncOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = AsyncOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
@@ -400,11 +400,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
@@ -422,11 +422,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitWithDelayInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitWithDelayInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitWithDelayInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitWithDelayInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitWithDelayInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitWithDelayInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitWithDelayInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitWithDelayInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -455,7 +455,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        private string GetLogLevelName(LoggingFramework loggingFramework, string level)
+        private string GetLevelName(LoggingFramework loggingFramework, string level)
         {
             switch (loggingFramework)
             {

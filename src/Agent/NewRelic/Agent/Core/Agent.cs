@@ -406,21 +406,21 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
         }
 
-        public void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLogLevel, Func<object,string> getLogMessage, string spanId, string traceId)
+        public void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLevel, Func<object,string> getLogMessage, string spanId, string traceId)
         {
             _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
 
-            var normalizedLogLevel = string.Empty;
+            var normalizedLevel = string.Empty;
             if (_configurationService.Configuration.LogMetricsCollectorEnabled ||
                 _configurationService.Configuration.LogEventCollectorEnabled)
             {
-                var logLevel = getLogLevel(logEvent).ToString();
-                normalizedLogLevel = string.IsNullOrWhiteSpace(logLevel) ? "UNKNOWN" : logLevel.ToUpper();
+                var level = getLevel(logEvent).ToString();
+                normalizedLevel = string.IsNullOrWhiteSpace(level) ? "UNKNOWN" : level.ToUpper();
             }
 
             if (_configurationService.Configuration.LogMetricsCollectorEnabled)
             {
-                _agentHealthReporter.IncrementLogLinesCount(normalizedLogLevel);
+                _agentHealthReporter.IncrementLogLinesCount(normalizedLevel);
             }
 
             // IOC container defaults to singleton so this will access the same aggregator
@@ -437,13 +437,13 @@ namespace NewRelic.Agent.Core
                 if (transaction != null && transaction.IsValid)
                 {
                     // use transaction batching for messages in transactions
-                    transaction.LogEvents.Add(new LogEventWireModel(timestamp, logMessage, normalizedLogLevel, spanId, traceId));
+                    transaction.LogEvents.Add(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId));
                     return;
                 }
 
                 // non-transaction messages with proper sanitized priority value
                 _logEventAggregator.Collect(new LogEventWireModel(timestamp,
-                    logMessage, normalizedLogLevel, spanId, traceId, _transactionService.CreatePriority()));
+                    logMessage, normalizedLevel, spanId, traceId, _transactionService.CreatePriority()));
             }
 
         }
