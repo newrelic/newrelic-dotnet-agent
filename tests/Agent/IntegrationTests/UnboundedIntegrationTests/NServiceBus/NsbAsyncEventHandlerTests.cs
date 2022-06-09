@@ -97,24 +97,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbAsyncEventHandlerTestsCore21 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public NsbAsyncEventHandlerTestsCore21(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NsbAsyncEventHandlerTestsCore22 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureCore22>
-    {
-        public NsbAsyncEventHandlerTestsCore22(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
     public class NsbAsyncEventHandlerTestsCore31 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public NsbAsyncEventHandlerTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)

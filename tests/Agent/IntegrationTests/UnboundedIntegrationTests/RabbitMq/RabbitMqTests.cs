@@ -147,13 +147,4 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         }
     }
 
-    [NetCoreTest]
-    public class RabbitMqNetCore510Tests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public RabbitMqNetCore510Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
 }

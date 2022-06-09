@@ -122,24 +122,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
         }
     }
 
-    [NetCoreTest]
-    public class Log4netMaxSamplesStoredTestsNetCore22Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore22>
-    {
-        public Log4netMaxSamplesStoredTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class Log4netMaxSamplesStoredTestsNetCore21Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public Log4netMaxSamplesStoredTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
-        {
-        }
-    }
-
     #endregion
 
     #region MicrosoftLogging
@@ -166,24 +148,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
     public class MicrosoftLoggingMaxSamplesStoredTestsNetCore31Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public MicrosoftLoggingMaxSamplesStoredTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MicrosoftLoggingMaxSamplesStoredTestsNetCore22Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore22>
-    {
-        public MicrosoftLoggingMaxSamplesStoredTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MicrosoftLoggingMaxSamplesStoredTestsNetCore21Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public MicrosoftLoggingMaxSamplesStoredTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
@@ -247,24 +211,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
         }
     }
 
-    [NetCoreTest]
-    public class SerilogMaxSamplesStoredTestsNetCore22Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore22>
-    {
-        public SerilogMaxSamplesStoredTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class SerilogMaxSamplesStoredTestsNetCore21Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public SerilogMaxSamplesStoredTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
-        {
-        }
-    }
-
     #endregion
 
     #region NLog
@@ -318,24 +264,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
     public class NLogMaxSamplesStoredTestsNetCore31Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public NLogMaxSamplesStoredTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NLogMaxSamplesStoredTestsNetCore22Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore22>
-    {
-        public NLogMaxSamplesStoredTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NLogMaxSamplesStoredTestsNetCore21Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public NLogMaxSamplesStoredTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
         }

@@ -101,13 +101,4 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         }
     }
 
-    [NetCoreTest]
-    public class RabbitMqDistributedTracingNetCore510Tests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public RabbitMqDistributedTracingNetCore510Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
 }

@@ -18,6 +18,7 @@ namespace BasicMvcCoreApplication.Controllers
     {
 
         [HttpGet]
+        [Route("Postgres/Postgres")]
         public string Postgres()
         {
             var teamMembers = new List<string>();
@@ -41,6 +42,7 @@ namespace BasicMvcCoreApplication.Controllers
         }
 
         [HttpGet]
+        [Route("Postgres/PostgresAsync")]
         public async Task<string> PostgresAsync()
         {
             var teamMembers = new List<string>();
@@ -64,6 +66,7 @@ namespace BasicMvcCoreApplication.Controllers
         }
 
         [HttpGet]
+        [Route("Postgres/PostgresParameterizedStoredProcedure")]
         public void PostgresParameterizedStoredProcedure(string procedureName)
         {
             CreateProcedure(procedureName);
@@ -94,6 +97,7 @@ namespace BasicMvcCoreApplication.Controllers
         }
 
         [HttpGet]
+        [Route("Postgres/PostgresParameterizedStoredProcedureAsync")]
         public async Task PostgresParameterizedStoredProcedureAsync(string procedureName)
         {
             CreateProcedure(procedureName);
@@ -124,6 +128,7 @@ namespace BasicMvcCoreApplication.Controllers
         }
 
         [HttpGet]
+        [Route("Postgres/PostgresExecuteScalar")]
         public string PostgresExecuteScalar()
         {
             using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
@@ -136,6 +141,7 @@ namespace BasicMvcCoreApplication.Controllers
         }
 
         [HttpGet]
+        [Route("Postgres/PostgresExecuteScalarAsync")]
         public async Task<string> PostgresExecuteScalarAsync()
         {
             using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
@@ -148,6 +154,7 @@ namespace BasicMvcCoreApplication.Controllers
         }
 
         [HttpGet]
+        [Route("Postgres/PostgresIteratorTest")]
         public void PostgresIteratorTest()
         {
             var teamMembers = new List<string>();
@@ -169,6 +176,7 @@ namespace BasicMvcCoreApplication.Controllers
         }
 
         [HttpGet]
+        [Route("Postgres/PostgresAsyncIteratorTest")]
         public async Task<List<string>> PostgresAsyncIteratorTest()
         {
             var teamMembers = new List<string>();
