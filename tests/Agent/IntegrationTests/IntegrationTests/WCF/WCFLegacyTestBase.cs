@@ -128,7 +128,9 @@ namespace NewRelic.Agent.IntegrationTests.WCF
 
             LogHelpers = logHelpersImpl;
 
-            _fixture.Actions
+            // Add actions executes the applied actions after actions defined by the base.
+            // In this case the base efines an exerciseApplication action we want to wait after.
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
@@ -143,6 +145,10 @@ namespace NewRelic.Agent.IntegrationTests.WCF
 
                     _fixture.SetTimeout(TimeSpan.FromMinutes(5));
 
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
 
