@@ -564,10 +564,10 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
         }
 
-        public void IncrementLogLinesCount(string logLevel)
+        public void IncrementLogLinesCount(string level)
         {
-            _logLinesCountByLevel.TryAdd(logLevel, new InterlockedCounter());
-            _logLinesCountByLevel[logLevel].Increment();
+            _logLinesCountByLevel.TryAdd(level, new InterlockedCounter());
+            _logLinesCountByLevel[level].Increment();
         }
 
         public void ReportLoggingEventCollected() => TrySend(_metricBuilder.TryBuildSupportabilitLoggingEventsCollectedMetric());
