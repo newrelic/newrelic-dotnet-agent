@@ -5,6 +5,7 @@
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -199,6 +200,10 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 
                     SetupConfiguration(instrumentationFilePath);
 
+                },
+                exerciseApplication: () =>
+                {
+                    Fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
             Fixture.Initialize();

@@ -6,6 +6,7 @@ using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace MultiFunctionApplicationHelpers
 {
@@ -29,6 +30,9 @@ namespace MultiFunctionApplicationHelpers
                     
                 if (string.IsNullOrWhiteSpace(command))
                 {
+                    // Delay checking for next command for when there's a delay
+                    // receiving commands such as waiting for log line(s) before shutdown.
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
                     continue;
                 }
 
