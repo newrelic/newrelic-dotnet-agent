@@ -373,49 +373,49 @@ jobs:
           path: ${{ github.workspace }}\TestResults
           if-no-files-found: error
 
-  build-integration-tests:
-    needs: build-test-fullagent-msi
-    name: Build IntegrationTests
-    runs-on: windows-2022
+  # build-integration-tests:
+  #   needs: build-test-fullagent-msi
+  #   name: Build IntegrationTests
+  #   runs-on: windows-2022
 
-    env:
-      integration_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
+  #   env:
+  #     integration_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.3
-        with:
-          vs-prerelease: true
+  #     - name: Add msbuild to PATH
+  #       uses: microsoft/setup-msbuild@v1.0.3
+  #       with:
+  #         vs-prerelease: true
 
-      - name: Add .NET 6 Preview SDK
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x'
-          include-prerelease: true
+  #     - name: Add .NET 6 Preview SDK
+  #       uses: actions/setup-dotnet@v1
+  #       with:
+  #         dotnet-version: '6.0.x'
+  #         include-prerelease: true
 
-      - name: Build IntegrationTests.sln
-        run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
-        shell: powershell
+  #     - name: Build IntegrationTests.sln
+  #       run: |
+  #         Write-Host "List NuGet Sources"
+  #         dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+  #         Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
+  #         MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
+  #       shell: powershell
 
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          name: integrationtests
-          path: |
-            ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
-            ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
-            ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
-            !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
-          if-no-files-found: error
+  #     - name: Archive Artifacts
+  #       uses: actions/upload-artifact@v2.2.4
+  #       with:
+  #         name: integrationtests
+  #         path: |
+  #           ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
+  #           ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
+  #           ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
+  #           !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
+  #         if-no-files-found: error
 
   build-unbounded-tests:
     needs: build-test-fullagent-msi
@@ -461,221 +461,221 @@ jobs:
             !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
           if-no-files-found: error
 
-  build-platform-tests: 
-    needs: build-test-fullagent-msi
-    name: Build PlatformTests
-    runs-on: windows-2019
+  # build-platform-tests: 
+  #   needs: build-test-fullagent-msi
+  #   name: Build PlatformTests
+  #   runs-on: windows-2019
 
-    env:
-      platform_solution_path: ${{ github.workspace }}\tests\Agent\PlatformTests\PlatformTests.sln
+  #   env:
+  #     platform_solution_path: ${{ github.workspace }}\tests\Agent\PlatformTests\PlatformTests.sln
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
+  #     - name: Add msbuild to PATH
+  #       uses: microsoft/setup-msbuild@v1
 
-      - name: Build PlatformTests.sln
-        run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}
-        shell: powershell
+  #     - name: Build PlatformTests.sln
+  #       run: |
+  #         Write-Host "List NuGet Sources"
+  #         dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+  #         Write-Host "MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}"
+  #         MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}
+  #       shell: powershell
 
-  run-integration-tests:
-    needs: [build-integration-tests]
-    name: Run IntegrationTests
-    runs-on: windows-2019
-    strategy:
-      matrix:
-        namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
-          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
-          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Owin, ReJit.NetCore, 
-          Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.ZeroMaxSamplesStored,
-          Logging.MetricsAndForwarding.log4net, Logging.MetricsAndForwarding.MicrosoftLogging, 
-          Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog,
-          ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
-          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
-          RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, 
-          RequestHandling, CodeLevelMetrics ]
-      fail-fast: false # we don't want one test failure in one namespace to kill the other runs
+  # run-integration-tests:
+  #   needs: [build-integration-tests]
+  #   name: Run IntegrationTests
+  #   runs-on: windows-2019
+  #   strategy:
+  #     matrix:
+  #       namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
+  #         CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
+  #         HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Owin, ReJit.NetCore, 
+  #         Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.ZeroMaxSamplesStored,
+  #         Logging.MetricsAndForwarding.log4net, Logging.MetricsAndForwarding.MicrosoftLogging, 
+  #         Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog,
+  #         ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
+  #         WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
+  #         RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, 
+  #         RequestHandling, CodeLevelMetrics ]
+  #     fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
-    env:
-      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
-      integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net462/NewRelic.Agent.IntegrationTests.dll
-      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
-      enhanced_logging: false
-      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
+  #   env:
+  #     integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+  #     xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
+  #     integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net462/NewRelic.Agent.IntegrationTests.dll
+  #     # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+  #     enhanced_logging: false
+  #     NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
       
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Setup .NET Core 2.2.103
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '2.2.103'
+  #     - name: Setup .NET Core 2.2.103
+  #       uses: actions/setup-dotnet@v1
+  #       with:
+  #         dotnet-version: '2.2.103'
 
-      - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '3.1.100'
+  #     - name: Setup .NET Core 3.1.100
+  #       uses: actions/setup-dotnet@v1
+  #       with:
+  #         dotnet-version: '3.1.100'
 
-      - name: Setup .NET 5.0
-        uses: actions/setup-dotnet@v1
-        with:
-            dotnet-version: '5.0.100'
+  #     - name: Setup .NET 5.0
+  #       uses: actions/setup-dotnet@v1
+  #       with:
+  #           dotnet-version: '5.0.100'
 
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x'
-          include-prerelease: true
+  #     - name: Setup .NET 6.0
+  #       uses: actions/setup-dotnet@v1
+  #       with:
+  #         dotnet-version: '6.0.x'
+  #         include-prerelease: true
 
-      - name: Set up secrets
-        env:
-          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
-        run: |
-          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
-        shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
+  #     - name: Set up secrets
+  #       env:
+  #         INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+  #       run: |
+  #         "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+  #       shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
-      - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
-        with:
-          name: homefolders
-          path: src/Agent
+  #     - name: Download Agent Home Folders
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: homefolders
+  #         path: src/Agent
 
-      - name: Download Integration Test Artifacts
-        uses: actions/download-artifact/@v2
-        with:
-          name: integrationtests
-          # Should not need a path because the integration test artifacts are archived with the full directory structure
+  #     - name: Download Integration Test Artifacts
+  #       uses: actions/download-artifact/@v2
+  #       with:
+  #         name: integrationtests
+  #         # Should not need a path because the integration test artifacts are archived with the full directory structure
 
-      - name: Install dependencies
-        run: |
-          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-          pip install aiohttp
-        shell: powershell
+  #     - name: Install dependencies
+  #       run: |
+  #         Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+  #         pip install aiohttp
+  #       shell: powershell
 
-      - name: Run Integration Tests
-        run: |
-          if ($Env:enhanced_logging -eq $True) {
-            Write-Host "List ports in use"
-            netstat -no  
-          }
+  #     - name: Run Integration Tests
+  #       run: |
+  #         if ($Env:enhanced_logging -eq $True) {
+  #           Write-Host "List ports in use"
+  #           netstat -no  
+  #         }
 
-          Write-Host "Run tests"
-          $parallelXunitOption = "none" 
+  #         Write-Host "Run tests"
+  #         $parallelXunitOption = "none" 
 
-          # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
-          # if ("${{ matrix.namespace }}" -like "Logging.*" ) {
-          #   Write-Host "Logging tests detected, running xunit tests in parallel."
-          #   $parallelXunitOption = "all"
-          # }
+  #         # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
+  #         # if ("${{ matrix.namespace }}" -like "Logging.*" ) {
+  #         #   Write-Host "Logging tests detected, running xunit tests in parallel."
+  #         #   $parallelXunitOption = "all"
+  #         # }
 
-          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+  #         ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
           
-          if ($Env:enhanced_logging -eq $True) {
-            Write-Host "Get HostableWebCore errors (if any)"
-            Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
+  #         if ($Env:enhanced_logging -eq $True) {
+  #           Write-Host "Get HostableWebCore errors (if any)"
+  #           Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
 
-            Write-Host "Get .NET Runtime errors (if any)"
-            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
-          }
-        shell: powershell
+  #           Write-Host "Get .NET Runtime errors (if any)"
+  #           Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+  #         }
+  #       shell: powershell
 
-      - name: Archive IntegrationTestWorkingDirectory on Failure
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          name: integration-test-artifacts
-          path: |
-            C:\IntegrationTestWorkingDirectory\**\*.log
-            C:\IntegrationTestWorkingDirectory\**\*.config
-          if-no-files-found: error
+  #     - name: Archive IntegrationTestWorkingDirectory on Failure
+  #       if: ${{ failure() }}
+  #       uses: actions/upload-artifact@v2.2.4
+  #       with:
+  #         name: integration-test-artifacts
+  #         path: |
+  #           C:\IntegrationTestWorkingDirectory\**\*.log
+  #           C:\IntegrationTestWorkingDirectory\**\*.config
+  #         if-no-files-found: error
 
-      - name: Archive Test Artifacts
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          name: integration-test-artifacts
-          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
-          if-no-files-found: error
+  #     - name: Archive Test Artifacts
+  #       if: ${{ always() }}
+  #       uses: actions/upload-artifact@v2.2.4
+  #       with:
+  #         name: integration-test-artifacts
+  #         path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
+  #         if-no-files-found: error
 
-  run-integration-tests-linux-arm64:
-    needs: build-test-fullagent-msi
-    name: Run IntegrationTests linux-arm64
-    runs-on: ubuntu-18.04
-    if: false
+  # run-integration-tests-linux-arm64:
+  #   needs: build-test-fullagent-msi
+  #   name: Run IntegrationTests linux-arm64
+  #   runs-on: ubuntu-18.04
+  #   if: false
 
-    env:
-      test_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/TestResults
+  #   env:
+  #     test_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/TestResults
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
-        with:
-          name: homefolders
-          path: src/Agent
+  #     - name: Download Agent Home Folders
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: homefolders
+  #         path: src/Agent
 
-      - name: Run test commands
-        uses: uraimo/run-on-arch-action@v2.0.5
-        with:
-          arch: aarch64
-          distro: ubuntu18.04
-          githubToken: ${{ github.token }}
+  #     - name: Run test commands
+  #       uses: uraimo/run-on-arch-action@v2.0.5
+  #       with:
+  #         arch: aarch64
+  #         distro: ubuntu18.04
+  #         githubToken: ${{ github.token }}
 
-          env: |
-            test_secrets: '${{ secrets.TEST_SECRETS }}'
-            NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
-            DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
+  #         env: |
+  #           test_secrets: '${{ secrets.TEST_SECRETS }}'
+  #           NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+  #           DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
 
-          install: |
-            apt-get update -q -y && apt-get install -q -y curl
-            export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
-            mkdir -p /usr/share/dotnet
-            curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/2.1.818/dotnet-sdk-2.1.818-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
-            curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
-            curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
-            curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
-            ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
-            dotnet help
+  #         install: |
+  #           apt-get update -q -y && apt-get install -q -y curl
+  #           export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+  #           mkdir -p /usr/share/dotnet
+  #           curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/2.1.818/dotnet-sdk-2.1.818-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
+  #           curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
+  #           curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
+  #           curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
+  #           ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
+  #           dotnet help
 
-          dockerRunArgs: |
-            --volume "${{ env.test_path }}:/tmp/IntegrationTestWorkingDirectory"
+  #         dockerRunArgs: |
+  #           --volume "${{ env.test_path }}:/tmp/IntegrationTestWorkingDirectory"
 
-          run: |
-            cd tests/Agent/IntegrationTests/IntegrationTests
-            echo $test_secrets | dotnet user-secrets set --project "../Shared"
-            dotnet test -f netcoreapp3.1 -c Release -l "trx" --filter "FullyQualifiedName~ApiCallsTestsCore|FullyQualifiedName~InfiniteTracingNetCoreLatestTests"
+  #         run: |
+  #           cd tests/Agent/IntegrationTests/IntegrationTests
+  #           echo $test_secrets | dotnet user-secrets set --project "../Shared"
+  #           dotnet test -f netcoreapp3.1 -c Release -l "trx" --filter "FullyQualifiedName~ApiCallsTestsCore|FullyQualifiedName~InfiniteTracingNetCoreLatestTests"
 
-      - name: Archive IntegrationTestWorkingDirectory on Failure
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          name: integration-test-artifacts-linux-arm64
-          path: ${{ env.test_path }}/**/*
-          if-no-files-found: error
+  #     - name: Archive IntegrationTestWorkingDirectory on Failure
+  #       if: ${{ failure() }}
+  #       uses: actions/upload-artifact@v2.2.4
+  #       with:
+  #         name: integration-test-artifacts-linux-arm64
+  #         path: ${{ env.test_path }}/**/*
+  #         if-no-files-found: error
 
-      - name: Archive Test Artifacts
-        uses: actions/upload-artifact@v2.2.4
-        if: ${{ always() }}
-        with:
-          name: integration-test-artifacts-linux-arm64
-          path: ${{ env.test_path }}/*.trx
-          if-no-files-found: error
+  #     - name: Archive Test Artifacts
+  #       uses: actions/upload-artifact@v2.2.4
+  #       if: ${{ always() }}
+  #       with:
+  #         name: integration-test-artifacts-linux-arm64
+  #         path: ${{ env.test_path }}/*.trx
+  #         if-no-files-found: error
 
   run-unbounded-tests:
     needs: [build-unbounded-tests]
@@ -683,7 +683,8 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        namespace: [ CosmosDB, Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, NServiceBus5, Oracle, Postgres, RabbitMq, Redis ]
+        # namespace: [ CosmosDB, Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, NServiceBus5, Oracle, Postgres, RabbitMq, Redis ]
+        namespace: [ CosmosDB ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -721,7 +722,6 @@ jobs:
         with:
           name: unboundedintegrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
-      
       - name: Setup TLS
         run: |
           $registryRootPath = "HKCU:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols"
@@ -766,6 +766,9 @@ jobs:
             Start-Sleep 20 # Need to wait for install to finish -- takes only a few seconds, but we need to be sure.
           }
         shell: powershell
+
+      - name: Start CosmosDB
+        uses: southpolesteve/cosmos-emulator-github-action@v1
 
       - name: Set up secrets
         env:
