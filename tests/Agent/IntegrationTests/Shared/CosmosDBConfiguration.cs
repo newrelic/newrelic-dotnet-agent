@@ -20,8 +20,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                     try
                     {
                         var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("CosmosDBTests");
-                        //_authKey = testConfiguration["AuthKey"];
-                        _authKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+                        _authKey = testConfiguration["AuthKey"];
                     }
                     catch (Exception ex)
                     {
@@ -42,8 +41,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                     try
                     {
                         var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("CosmosDBTests");
-                        //_cosmosDBServer = testConfiguration["Server"];
-                        _cosmosDBServer = "https://localhost:8081/";
+                        _cosmosDBServer = testConfiguration["Server"];
                     }
                     catch (Exception ex)
                     {
