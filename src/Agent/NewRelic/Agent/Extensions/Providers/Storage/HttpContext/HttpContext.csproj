@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net45</TargetFrameworks>
+    <TargetFrameworks>net462</TargetFrameworks>
     <AssemblyName>NewRelic.Providers.Storage.HttpContext</AssemblyName>
     <RootNamespace>NewRelic.Providers.Storage.HttpContext</RootNamespace>
     <Description></Description>

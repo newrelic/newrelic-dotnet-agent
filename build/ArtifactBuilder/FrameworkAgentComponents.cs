@@ -138,7 +138,7 @@ namespace ArtifactBuilder
 
             AgentInfoJson = $@"{SourcePath}\..\src\Agent\Miscellaneous\{Platform}\agentinfo.json";
 
-            AgentApiDll = $@"{SourcePath}\..\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\net45\NewRelic.Api.Agent.dll";
+            AgentApiDll = $@"{SourcePath}\..\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\net462\NewRelic.Api.Agent.dll";
 
             SetConfigurationComponents(NewRelicXsd, AgentInfoJson);
         }

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net45</TargetFrameworks>
+    <TargetFrameworks>net462</TargetFrameworks>
     <AssemblyName>NewRelic.Providers.Wrapper.Asp35</AssemblyName>
     <RootNamespace>NewRelic.Providers.Wrapper.Asp35</RootNamespace>
     <Description>ASP.NET 3.5 Wrapper Provider for New Relic .NET Agent</Description>
