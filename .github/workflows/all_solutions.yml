@@ -775,7 +775,7 @@ jobs:
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
       - name: Start CosmosDB Emulator for CosmosDB Tests
-        if: ${{ matrix.namespace }} == 'CosmosDB'
+        if: matrix.namespace == 'CosmosDB'
         uses: southpolesteve/cosmos-emulator-github-action@v1
 
       - name: Run Unbounded Integration Tests
