@@ -774,6 +774,10 @@ jobs:
           "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
+      - name: Start CosmosDB Emulator for CosmosDB Tests
+        if: ${{ matrix.namespace }} == 'CosmosDB'
+        uses: southpolesteve/cosmos-emulator-github-action@v1
+
       - name: Run Unbounded Integration Tests
         run: |
           if ($Env:enhanced_logging -eq $True) {
