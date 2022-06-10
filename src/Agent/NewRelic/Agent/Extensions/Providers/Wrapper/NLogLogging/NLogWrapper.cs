@@ -12,7 +12,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
 {
     public class NLogWrapper : IWrapper
     {
-        private static Func<object, object> _getLogLevel;
+        private static Func<object, object> _getLevel;
         private static Func<object, string> _getRenderedMessage;
         private static Func<object, DateTime> _getTimestamp;
         private static Func<object, string> _messageGetter;
@@ -45,7 +45,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
 
         private void RecordLogMessage(object logEvent, Type logEventType, IAgent agent)
         {
-            var getLogLevelFunc = _getLogLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Level");
+            var getLevelFunc = _getLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Level");
 
             var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "FormattedMessage");
 
@@ -53,7 +53,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
-            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLogLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
         private void DecorateLogMessage(object logEvent, Type logEventType, IAgent agent)

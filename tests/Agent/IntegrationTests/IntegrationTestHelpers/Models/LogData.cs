@@ -57,15 +57,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         [JsonProperty("message")]
         public string Message { get; set; }
 
-        [JsonProperty("log.level")]
-        public string LogLevel { get; set; }
+        [JsonProperty("level")]
+        public string Level { get; set; }
 
-        [JsonProperty("attributes")]
-        public LogAttributes Attributes { get; set; }
-    }
-
-    public class LogAttributes
-    {
         [JsonProperty("span.id", NullValueHandling = NullValueHandling.Ignore)]
         public string Spanid { get; set; }
 

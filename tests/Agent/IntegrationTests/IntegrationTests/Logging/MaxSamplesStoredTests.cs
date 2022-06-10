@@ -60,7 +60,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
             Assert.Single(logData.Logs);
             var logLine = logData.Logs[0];
             Assert.False(string.IsNullOrWhiteSpace(logLine.Message));
-            Assert.False(string.IsNullOrWhiteSpace(logLine.LogLevel));
+            Assert.False(string.IsNullOrWhiteSpace(logLine.Level));
             Assert.NotEqual(0, logLine.Timestamp);
 
         }

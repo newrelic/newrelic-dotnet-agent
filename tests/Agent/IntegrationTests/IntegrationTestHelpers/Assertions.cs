@@ -598,17 +598,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             foreach (var actualLogLine in actualLogLines)
             {
-                if (expectedLogLine.LogLevel != actualLogLine.LogLevel)
+                if (expectedLogLine.Level != actualLogLine.Level)
                     continue;
                 if (expectedLogLine.LogMessage != actualLogLine.Message)
                     continue;
-                if (expectedLogLine.HasSpanId.HasValue && expectedLogLine.HasSpanId.Value && string.IsNullOrWhiteSpace(actualLogLine.Attributes.Spanid))
+                if (expectedLogLine.HasSpanId.HasValue && expectedLogLine.HasSpanId.Value && string.IsNullOrWhiteSpace(actualLogLine.Spanid))
                     continue;
-                if (expectedLogLine.HasSpanId.HasValue && !expectedLogLine.HasSpanId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Attributes.Spanid))
+                if (expectedLogLine.HasSpanId.HasValue && !expectedLogLine.HasSpanId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Spanid))
                     continue;
-                if (expectedLogLine.HasTraceId.HasValue && expectedLogLine.HasTraceId.Value && string.IsNullOrWhiteSpace(actualLogLine.Attributes.Traceid))
+                if (expectedLogLine.HasTraceId.HasValue && expectedLogLine.HasTraceId.Value && string.IsNullOrWhiteSpace(actualLogLine.Traceid))
                     continue;
-                if (expectedLogLine.HasTraceId.HasValue && !expectedLogLine.HasTraceId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Attributes.Traceid))
+                if (expectedLogLine.HasTraceId.HasValue && !expectedLogLine.HasTraceId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Traceid))
                     continue;
 
                 return actualLogLine;
@@ -1005,13 +1005,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public class ExpectedLogLine
         {
             public string LogMessage = null;
-            public string LogLevel = null;
+            public string Level = null;
             public bool? HasSpanId = null;
             public bool? HasTraceId = null;
 
             public override string ToString()
             {
-                return $"{{ LogLevel: {LogLevel}, LogMessage: {LogMessage}, HasSpanId: {HasSpanId}, HasTraceId: {HasTraceId} }}";
+                return $"{{ Level: {Level}, LogMessage: {LogMessage}, HasSpanId: {HasSpanId}, HasTraceId: {HasTraceId} }}";
             }
         }
 

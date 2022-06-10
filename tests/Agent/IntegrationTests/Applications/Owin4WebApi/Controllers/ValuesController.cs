@@ -43,6 +43,9 @@ namespace Owin4WebApi.Controllers
         public string Get([FromUri] string data)
         {
             new WebClient().DownloadString("http://www.google.com");
+
+            // Attempt to enforce this is always the transaction trace.
+            Thread.Sleep(5000);
             return data;
         }
 

@@ -186,8 +186,14 @@ namespace MultiFunctionApplicationHelpers
 
                     RemoteApplication.WriteToStandardInput(cmd);
                 }
-                RemoteApplication.WriteToStandardInput("exit");
             });
+        }
+
+        public override void ShutdownRemoteApplication()
+        {
+            RemoteApplication.WriteToStandardInput("exit");
+
+            base.ShutdownRemoteApplication();
         }
     }
 }
