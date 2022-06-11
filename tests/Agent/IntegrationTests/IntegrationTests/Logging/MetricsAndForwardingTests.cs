@@ -131,7 +131,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
             // AddActions() executes the applied actions after actions defined by the base.
             // In this case the base defines an exerciseApplication action we want to wait after.
-            // Commentary: This only applies if actions are added in sub-classes, but this is the base class...
+            // Commentary: The actions defined by the base class do not impact failure/success
             _fixture.AddActions
             (
                 setupConfiguration: () =>
