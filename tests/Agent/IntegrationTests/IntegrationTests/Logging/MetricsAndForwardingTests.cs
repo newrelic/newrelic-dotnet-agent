@@ -127,7 +127,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             _fixture.AddCommand($"LoggingTester CreateTwoLogMessagesInTransactionWithDifferentTraceAttributes {DifferentTraceAttributesInsideTransactionLogMessage} INFO");
 
             // Give the unawaited async logs some time to catch up
-            _fixture.AddCommand($"RootCommands DelaySeconds 5");
+            _fixture.AddCommand($"RootCommands DelaySeconds 10");
 
             // AddActions() executes the applied actions after actions defined by the base.
             // In this case the base defines an exerciseApplication action we want to wait after.
@@ -146,7 +146,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 },
                 exerciseApplication: () =>
                 {
-                    Thread.Sleep(TimeSpan.FromSeconds(5));
+                    Thread.Sleep(TimeSpan.FromSeconds(10));
                 }
             );
 
