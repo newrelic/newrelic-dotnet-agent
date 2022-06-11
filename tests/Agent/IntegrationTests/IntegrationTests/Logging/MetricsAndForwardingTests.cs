@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -126,7 +127,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             _fixture.AddCommand($"LoggingTester CreateTwoLogMessagesInTransactionWithDifferentTraceAttributes {DifferentTraceAttributesInsideTransactionLogMessage} INFO");
 
             // Give the unawaited async logs some time to catch up
-            _fixture.AddCommand($"RootCommands DelaySeconds 10");
+            _fixture.AddCommand($"RootCommands DelaySeconds 5");
 
             // AddActions() executes the applied actions after actions defined by the base.
             // In this case the base defines an exerciseApplication action we want to wait after.
@@ -144,7 +145,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    // It's easy mmmkay
+                    Thread.Sleep(TimeSpan.FromSeconds(5));
                 }
             );
 
@@ -152,7 +154,25 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
 
         [Fact]
-        public void LogLinesPerLevelMetricsExist()
+        public void Test()
+        {
+            LogLinesPerLevelMetricsExist();
+            SupportabilityForwardingConfigurationMetricExists();
+            SupportabilityMetricsConfigurationMetricExists();
+            SupportabilityLoggingFrameworkMetricExists();
+            CountsAndValuesAreAsExpected();
+            LoggingWorksWithTraceAttributeOutsideTransaction();
+            LoggingWorksWithDifferentTraceAttributesInsideTransaction();
+            LoggingWorksInsideTransaction();
+            AsyncLoggingWorksInsideTransaction();
+            AsyncNoAwaitLoggingWorksInsideTransaction();
+            LoggingWorksOutsideTransaction();
+            AsyncLoggingWorksOutsideTransaction();
+            AsyncNoAwaitLoggingWorksOutsideTransaction();
+            AsyncNoAwaitWithDelayLoggingWorksInsideTransaction();
+        }
+        
+        private void LogLinesPerLevelMetricsExist()
         {
             var loggingMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -176,8 +196,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void SupportabilityForwardingConfigurationMetricExists()
+        private void SupportabilityForwardingConfigurationMetricExists()
         {
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             if (_forwardingEnabled)
@@ -190,8 +209,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void SupportabilityMetricsConfigurationMetricExists()
+        private void SupportabilityMetricsConfigurationMetricExists()
         {
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             if (_metricsEnabled)
@@ -204,16 +222,14 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void SupportabilityLoggingFrameworkMetricExists()
+        private void SupportabilityLoggingFrameworkMetricExists()
         {
             var expectedFrameworkName = GetFrameworkName(_loggingFramework);
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             Assert.Contains(actualMetrics, x => x.MetricSpec.Name == $"Supportability/Logging/DotNET/{expectedFrameworkName}/enabled");
         }
 
-        [Fact]
-        public void CountsAndValuesAreAsExpected()
+        private void CountsAndValuesAreAsExpected()
         {
             var logEventData = _fixture.AgentLog.GetLogEventData().FirstOrDefault();
             if (_forwardingEnabled)
@@ -248,8 +264,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void LoggingWorksWithTraceAttributeOutsideTransaction()
+        private void LoggingWorksWithTraceAttributeOutsideTransaction()
         {
             if (_forwardingEnabled && _canHaveLogsOutsideTransaction)
             {
@@ -266,8 +281,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void LoggingWorksWithDifferentTraceAttributesInsideTransaction()
+        private void LoggingWorksWithDifferentTraceAttributesInsideTransaction()
         {
             if (_forwardingEnabled)
             {
@@ -287,8 +301,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void LoggingWorksInsideTransaction()
+        private void LoggingWorksInsideTransaction()
         {
             if (_forwardingEnabled)
             {
@@ -309,8 +322,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void AsyncLoggingWorksInsideTransaction()
+        private void AsyncLoggingWorksInsideTransaction()
         {
             if (_forwardingEnabled)
             {
@@ -331,8 +343,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void AsyncNoAwaitLoggingWorksInsideTransaction()
+        private void AsyncNoAwaitLoggingWorksInsideTransaction()
         {
             if (_forwardingEnabled)
             {
@@ -355,8 +366,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void LoggingWorksOutsideTransaction()
+        private void LoggingWorksOutsideTransaction()
         {
             if (_forwardingEnabled && _canHaveLogsOutsideTransaction)
             {
@@ -377,8 +387,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void AsyncLoggingWorksOutsideTransaction()
+        private void AsyncLoggingWorksOutsideTransaction()
         {
             if (_forwardingEnabled && _canHaveLogsOutsideTransaction)
             {
@@ -399,8 +408,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void AsyncNoAwaitLoggingWorksOutsideTransaction()
+        private void AsyncNoAwaitLoggingWorksOutsideTransaction()
         {
             if (_forwardingEnabled && _canHaveLogsOutsideTransaction)
             {
@@ -421,8 +429,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void AsyncNoAwaitWithDelayLoggingWorksInsideTransaction()
+        private void AsyncNoAwaitWithDelayLoggingWorksInsideTransaction()
         {
             if (_forwardingEnabled)
             {
