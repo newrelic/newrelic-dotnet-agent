@@ -65,6 +65,33 @@ namespace NewRelic.Agent.Core.Aggregators
             _configurationAutoResponder.Dispose();
         }
 
+        #region Configuration
+
+        [Test]
+        public void Collections_are_reset_on_configuration_update_event()
+        {
+            // Arrange
+            var configuration = GetDefaultConfiguration(int.MaxValue);
+            var sentEvents = null as LogEventWireModelCollection;
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>()))
+                .DoInstead<LogEventWireModelCollection>(events => sentEvents = events);
+            var logEvents = new List<LogEventWireModel>
+            {
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid")
+            };
+
+            _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
+
+            // Act
+            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
+            _harvestAction();
+
+            // Assert
+            Assert.Null(sentEvents);
+        }
+
+        #endregion
+
         [Test]
         public void Events_send_on_harvest()
         {

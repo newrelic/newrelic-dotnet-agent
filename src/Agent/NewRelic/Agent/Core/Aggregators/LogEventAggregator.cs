@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.Aggregators
             : base(dataTransportService, scheduler, processStatic)
         {
             _agentHealthReporter = agentHealthReporter;
-            ResizeCollection(_configuration.LogEventsMaxSamplesStored);
+            ResetCollections(_configuration.LogEventsMaxSamplesStored);
         }
 
         protected override TimeSpan HarvestCycle => _configuration.LogEventsHarvestCycle;
@@ -99,22 +99,14 @@ namespace NewRelic.Agent.Core.Aggregators
             // It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
             // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-            ResizeCollection(_configuration.LogEventsMaxSamplesStored);
+            ResetCollections(_configuration.LogEventsMaxSamplesStored);
         }
 
         #region Private Helpers
 
-        private void ResizeCollection(int logEventCollectionCapacity)
+        private void ResetCollections(int logEventCollectionCapacity)
         {
-            var oldEvents = GetAndResetLogEvents(logEventCollectionCapacity);
-            if(oldEvents != null)
-            {
-                foreach(var oldEvent in oldEvents)
-                {
-                    _logEvents.Add(oldEvent);
-                }
-            }
-
+            GetAndResetLogEvents(logEventCollectionCapacity);
         }
 
         private ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>> GetAndResetLogEvents(int logEventCollectionCapacity)
