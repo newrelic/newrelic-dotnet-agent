@@ -21,7 +21,7 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN mkdir /root/git
 WORKDIR /root/git
 
-RUN git clone --branch release/3.0 https://github.com/dotnet/coreclr.git
+RUN git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
 
 # Install the build tools that the profiler requires
 RUN apt-get update && apt-get install -y \
