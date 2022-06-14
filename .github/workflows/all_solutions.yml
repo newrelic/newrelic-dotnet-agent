@@ -461,31 +461,6 @@ jobs:
             !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
           if-no-files-found: error
 
-  build-platform-tests: 
-    needs: build-test-fullagent-msi
-    name: Build PlatformTests
-    runs-on: windows-2019
-
-    env:
-      platform_solution_path: ${{ github.workspace }}\tests\Agent\PlatformTests\PlatformTests.sln
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
-
-      - name: Build PlatformTests.sln
-        run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}
-        shell: powershell
-
   run-integration-tests:
     needs: [build-integration-tests]
     name: Run IntegrationTests
