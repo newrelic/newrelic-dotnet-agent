@@ -158,7 +158,7 @@ jobs:
             wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
             mkdir /root/git
             cd /root/git
-            git clone --branch release/3.0 https://github.com/dotnet/coreclr.git
+            git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
             curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
             chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
             ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
