@@ -6,9 +6,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 
-### Fixes
-* Logs accumulated before agent connect will be forwarded if log forwarding is not disabled.
-
 ## [9.9.0] - 2022-06-08
 
 ### New Features
