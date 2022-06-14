@@ -39,12 +39,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
             // This is needed to avoid a hang on shutdown in the test app
             _fixture.AddCommand("RabbitMQ Shutdown");
 
-            _fixture.Actions
+            // AddActions() executes the applied actions after actions defined by the base.
+            // In this case the base defines an exerciseApplication action we want to wait after.
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                     configModifier.ForceTransactionTraces();
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
 

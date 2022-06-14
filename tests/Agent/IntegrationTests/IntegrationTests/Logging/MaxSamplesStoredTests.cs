@@ -1,6 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Linq;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -28,7 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage Four ERROR");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage GetYourLogsOnTheDanceFloor FATAL");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
@@ -39,6 +40,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
                     .SetLogForwardingMaxSamplesStored(12)
                     .EnableDistributedTrace()
                     .SetLogLevel("debug");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.LogDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
 
