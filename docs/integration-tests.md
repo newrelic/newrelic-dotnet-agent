@@ -22,8 +22,6 @@ Install the "ASP.NET and web development" workload in the "Web & Cloud" category
 
 Depending on which version of Visual Studio you are using, you may have to install some or all of the following:
 
-* .NET Core 2.1 (out of support, but we currently still have tests which target this runtime)
-* .NET Core 2.2 (ditto)
 * .NET Core 3.1
 * .NET 5
 * .NET 6
@@ -256,13 +254,12 @@ We recommend using [WSL](https://docs.microsoft.com/en-us/windows/wsl/about) to 
 
 ### Linux system setup
 
-You will need to install the .NET Core/5+ SDKs for .NET Core 2.1, .NET Core 3.1, .NET 5, and .NET 6.
+You will need to install the .NET Core/5+ SDKs for .NET Core 3.1, .NET 5, and .NET 6.
 
 ```
-apt-get update -q -y && sudo apt-get install -q -y curl
+sudo apt-get update -q -y && sudo apt-get install -q -y curl
 sudo mkdir -p /usr/share/dotnet
 
-sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/2.1.818/dotnet-sdk-2.1.818-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
 sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
 sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
 sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
@@ -287,7 +284,7 @@ As previously mentioned, the agent solution needs to be built on Windows.  If yo
 
 ```
 cd {DOTNET_AGENT_REPO_PATH}/tests/Agent/IntegrationTests/IntegrationTests
-dotnet test -f netcoreapp3.1 -c Release --filter RuntimeFramework=NetCore
+sudo dotnet test -f netcoreapp3.1 -c Release --filter RuntimeFramework=NetCore
 ```
 
 For more details on how to use dotnet test, see https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-test.
