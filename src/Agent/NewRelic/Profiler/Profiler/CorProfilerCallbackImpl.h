@@ -389,20 +389,19 @@ namespace NewRelic { namespace Profiler {
             if (_isCoreClr)
             {
                 CComPtr<ICorProfilerInfo8> temp;
-                HRESULT result = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo8), (void**)&temp);
+                HRESULT result = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo11), (void**)&temp);
                 if (FAILED(result)) {
-                    LogError(_X(".NET Core 2.0 or greater required. Profiler not attaching."));
+                    LogError(_X(".NET Core 3.1 or greater required. Profiler not attaching."));
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
                 return S_OK;
             }
             else
             {
-                // TODO: Find a different method to determine the 'at least' version of .NET Framework... There is on ICorProfilerInfoX api released for .NET 4.6.2
                 CComPtr<ICorProfilerInfo4> temp;
-                HRESULT interfaceCheckResult = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo4), (void**)&temp);
+                HRESULT interfaceCheckResult = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo7), (void**)&temp);
                 if (FAILED(interfaceCheckResult)) {
-                    LogError(_X(".NET Framework 4.5 is required.  Detaching New Relic profiler."));
+                    LogError(_X(".NET Framework 4.6.1 is required.  Detaching New Relic profiler."));
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
