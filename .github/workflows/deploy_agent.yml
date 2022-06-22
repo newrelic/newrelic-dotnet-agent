@@ -239,10 +239,11 @@ jobs:
 
       - name: Get GPG Key
         id: write_gpgkey
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: 'gpg.tar.bz2'
-          encodedString: ${{ secrets.GPG_KEY }}
+        run: |
+          filePath="/tmp/gpg.tar.bz2"
+          echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
+          echo "::set-output name=filePath::$filePath"
+        shell: bash
 
       - name: Move Artifacts and GPG Key to Staging Location
         run: |
