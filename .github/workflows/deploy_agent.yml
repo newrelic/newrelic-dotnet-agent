@@ -300,7 +300,7 @@ jobs:
         shell: bash
 
       - name: Clear Fastly cache
-        if: ${{ success() }}
+        if: ${{ github.event.inputs.deploy == 'true' && success() }}
         run: |
           curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
         shell: bash
