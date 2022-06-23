@@ -50,25 +50,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             try
             {
                 tcpListener.Start();
-                // we got the port, so can return (implicitly closes listener using finally block)
+                tcpListener.Stop();
                 return true;
             }
-            catch (Exception)
-            {
-                // we were unable to get the port
-                return false;
-            }
-            finally
-            {
-                try
-                {
-                    tcpListener.Stop();
-                }
-                catch (Exception)
-                {
-                    // Ignore errors stopping the listener
-                }
-            }
+            catch (Exception) { }
+            return false;
         }
 
         public static bool TryReleasePort(int port)
