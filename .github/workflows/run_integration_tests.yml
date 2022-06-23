@@ -1,0 +1,217 @@
+name: Run Integration Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run ID of the build workflow (all_solutions.yml) to use the agent and integration tests from. ID can be found in URL for run.'
+        required: true
+      namespaces:
+        description: 'A comma-separated list of integration test namespaces to run.  If not specified, all integration tests will be run.'
+        required: true
+        default: 'ALL'
+      iterations:
+        description: 'Number of times to execute each test, regardless of success or failure.  Defaults to 1.'
+        required: true
+        default: 1
+
+env:
+  DOTNET_NOLOGO: true
+
+jobs:
+
+  get-external-artifacts:
+    name: Get and Publish Agent and Test Artifacts Locally
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Agent Home Folders
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: all_solutions.yml
+          run_id: ${{ github.event.inputs.run_id }}
+          name: homefolders
+          path: ${{ github.workspace }}
+          repo: ${{ github.repository }}
+      
+      - name: Upload Agent Home Folders Locally
+        uses: actions/upload-artifact@v2
+        with:
+          name: homefolders
+          path: ${{ github.workspace }}/src/Agent
+          if-no-files-found: error
+
+      - name: Download Integration Tests
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: all_solutions.yml
+          run_id: ${{ github.event.inputs.run_id }}
+          name: integrationtests
+          path: ${{ github.workspace }}
+          repo: ${{ github.repository }}
+      
+      - name: Upload Integration Tests Locally
+        uses: actions/upload-artifact@v2
+        with:
+          name: integrationtests
+          path: |
+            ${{ github.workspace }}/test.runsettings  # Force the artifacts to use repo root as root of package.
+            ${{ github.workspace }}/tests/Agent/IntegrationTests/**/bin/**/*
+            ${{ github.workspace }}/tests/Agent/IntegrationTests/**/Deploy/**/*
+            !${{ github.workspace }}/tests/Agent/IntegrationTests/**/obj/**/*
+          if-no-files-found: error
+
+      - name: Clear integration tests from workspace
+        run: |
+          rm ${{ github.workspace }}/test.runsettings
+          rm -r ${{ github.workspace }}/tests
+        shell: bash
+
+      - name: Download Unbounded Integration Tests
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: all_solutions.yml
+          run_id: ${{ github.event.inputs.run_id }}
+          name: unboundedintegrationtests
+          path: ${{ github.workspace }}
+          repo: ${{ github.repository }}
+      
+      - name: Upload Unbounded Integration Tests Locally
+        uses: actions/upload-artifact@v2
+        with:
+          name: unboundedintegrationtests
+          path: |
+            ${{ github.workspace }}/test.runsettings  # Force the artifacts to use repo root as root of package.
+            ${{ github.workspace }}/tests/Agent/IntegrationTests/**/bin/**/*
+            ${{ github.workspace }}/tests/Agent/IntegrationTests/**/Deploy/**/*
+            !${{ github.workspace }}/tests/Agent/IntegrationTests/**/obj/**/*
+          if-no-files-found: error
+
+
+  run-integration-tests:
+    needs: [get-external-artifacts]
+    name: Run IntegrationTests
+    runs-on: windows-2019 # TODO: make this a input so we can test different OSes?
+    strategy:
+      matrix:
+        namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
+          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
+          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Owin, ReJit.NetCore, 
+          Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.ZeroMaxSamplesStored,
+          Logging.MetricsAndForwarding.log4net, Logging.MetricsAndForwarding.MicrosoftLogging, 
+          Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog,
+          ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
+          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
+          RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, 
+          RequestHandling, CodeLevelMetrics ]
+      fail-fast: false # we don't want one test failure in one namespace to kill the other runs
+
+    env:
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
+      integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net462/NewRelic.Agent.IntegrationTests.dll
+      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+      enhanced_logging: false
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
+      
+    steps:
+      # - name: Checkout
+      #   uses: actions/checkout@v2
+      #   with:
+      #     fetch-depth: 0
+
+      - name: Setup .NET Core 2.2.103
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '2.2.103'
+
+      - name: Setup .NET Core 3.1.100
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.100'
+
+      - name: Setup .NET 5.0
+        uses: actions/setup-dotnet@v1
+        with:
+            dotnet-version: '5.0.100'
+
+      - name: Setup .NET 6.0
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+          include-prerelease: true
+
+      - name: Set up secrets
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+        shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
+
+      - name: Download Agent Home Folders
+        uses: actions/download-artifact@v2
+        with:
+          name: homefolders
+          path: src/Agent
+
+      - name: Download Integration Test Artifacts
+        uses: actions/download-artifact/@v2
+        with:
+          name: integrationtests
+          # Should not need a path because the integration test artifacts are archived with the full directory structure
+
+      - name: Install dependencies
+        run: |
+          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+          pip install aiohttp
+        shell: powershell
+
+      - name: Run Integration Tests
+        run: |
+          if ($Env:enhanced_logging -eq $True) {
+            Write-Host "List ports in use"
+            netstat -no  
+          }
+
+          Write-Host "Run tests"
+          $parallelXunitOption = "none" 
+
+          # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
+          # if ("${{ matrix.namespace }}" -like "Logging.*" ) {
+          #   Write-Host "Logging tests detected, running xunit tests in parallel."
+          #   $parallelXunitOption = "all"
+          # }
+
+          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+          
+          if ($Env:enhanced_logging -eq $True) {
+            Write-Host "Get HostableWebCore errors (if any)"
+            Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
+
+            Write-Host "Get .NET Runtime errors (if any)"
+            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+          }
+        shell: powershell
+
+      - name: Archive IntegrationTestWorkingDirectory on Failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: integration-test-artifacts
+          path: |
+            C:\IntegrationTestWorkingDirectory\**\*.log
+            C:\IntegrationTestWorkingDirectory\**\*.config
+          if-no-files-found: error
+
+      - name: Archive Test Artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: integration-test-artifacts
+          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
+          if-no-files-found: error
+
+
+
