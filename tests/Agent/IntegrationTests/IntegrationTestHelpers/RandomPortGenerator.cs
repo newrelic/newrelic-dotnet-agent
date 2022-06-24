@@ -16,21 +16,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         private const int maxPortID = 60000;
         private const int portPoolSize = maxPortID - minPortID;
         private const int maxAttempts = 200;
-
-        private static int _currentPortID;
+        private static Random RNJesus;
 
         static RandomPortGenerator()
         {
             var seed = Process.GetCurrentProcess().Id + AppDomain.CurrentDomain.Id + Environment.TickCount;
-            var rnd = new Random(seed);
-            _currentPortID = rnd.Next(portPoolSize);
+            RNJesus = new Random(seed);
         }
 
         public static int NextPort()
         {
             for (var countAttempts = 0; countAttempts < maxAttempts; countAttempts++)
             {
-                var potentialPort = (Interlocked.Increment(ref _currentPortID) % portPoolSize) + minPortID;
+                var potentialPort = RNJesus.Next(portPoolSize) + minPortID;
                 if (IsPortAvailable(potentialPort))
                 {
                     return potentialPort;
