@@ -19,6 +19,11 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
         public void Collect(TransactionTraceWireModelComponents transactionTraceWireModelComponents)
         {
+            if(transactionTraceWireModelComponents == null)
+            {
+                return;
+            }
+
             if (transactionTraceWireModelComponents.Duration <= ConfigurationSubscription.Configuration.TransactionTraceThreshold)
             {
                 return;
