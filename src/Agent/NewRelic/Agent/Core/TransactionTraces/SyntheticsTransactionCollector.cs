@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -12,7 +14,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
 {
     public class SyntheticsTransactionCollector : ITransactionCollector, IDisposable
     {
-        private volatile ICollection<TransactionTraceWireModelComponents> _collectedSamples = new ConcurrentHashSet<TransactionTraceWireModelComponents>();
+        private volatile ConcurrentBag<TransactionTraceWireModelComponents> _collectedSamples = new ConcurrentBag<TransactionTraceWireModelComponents>();
 
         private readonly ConfigurationSubscriber _configurationSubscription = new ConfigurationSubscriber();
 
@@ -28,13 +30,10 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
         public IEnumerable<TransactionTraceWireModelComponents> GetCollectedSamples()
         {
-            var oldCollectedSamples = _collectedSamples;
-            return oldCollectedSamples;
-        }
+            var harvestedTransactions = Interlocked.Exchange(ref _collectedSamples,
+                new ConcurrentBag<TransactionTraceWireModelComponents>());
 
-        public void ClearCollectedSamples()
-        {
-            _collectedSamples = new ConcurrentHashSet<TransactionTraceWireModelComponents>();
+            return harvestedTransactions;
         }
 
         public void Dispose()

@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 
@@ -11,8 +13,8 @@ namespace NewRelic.Agent.Core.TransactionTraces
 {
     public class KeyTransactionCollector : ITransactionCollector, IDisposable
     {
-        private volatile TransactionTraceWireModelComponents _slowTransaction;
-        private double _score = 0.0;
+        private volatile ConcurrentDictionary<double, TransactionTraceWireModelComponents> _keyTransactions =
+            new ConcurrentDictionary<double, TransactionTraceWireModelComponents>();
 
         protected ConfigurationSubscriber ConfigurationSubscription = new ConfigurationSubscriber();
 
@@ -28,23 +30,26 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
             // larger the score, the larger the diff
             var score = 100.0 * (transactionTraceWireModelComponents.Duration.TotalMilliseconds / apdexTime.TotalMilliseconds);
-            if (_slowTransaction != null && _score > score)
-                return;
 
-            _slowTransaction = transactionTraceWireModelComponents;
-            _score = score;
+            // If there aren't any lower scores than what we currently encountered, then add this one to the collection
+            if (!_keyTransactions.Any(x => x.Key < score))
+            {
+                _keyTransactions[score] = transactionTraceWireModelComponents;
+            }
         }
 
         public IEnumerable<TransactionTraceWireModelComponents> GetCollectedSamples()
         {
-            var slowTransaction = _slowTransaction;
-            return slowTransaction == null ? Enumerable.Empty<TransactionTraceWireModelComponents>() :
-                new TransactionTraceWireModelComponents[] { slowTransaction };
-        }
+            var harvestedKeyTransactions = Interlocked.Exchange(ref _keyTransactions,
+                new ConcurrentDictionary<double, TransactionTraceWireModelComponents>());
 
-        public void ClearCollectedSamples()
-        {
-            _slowTransaction = null;
+            if (harvestedKeyTransactions.Count == 0)
+            {
+                return Enumerable.Empty<TransactionTraceWireModelComponents>();
+            }
+
+            var worstScoredTransaction = harvestedKeyTransactions.Aggregate((x, y) => x.Key < y.Key ? x : y).Value;
+            return new TransactionTraceWireModelComponents[] { worstScoredTransaction };
         }
 
         public void Dispose()
