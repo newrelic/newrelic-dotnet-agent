@@ -906,6 +906,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Infinite Tracing
 
+        public bool InfiniteTracingEnabled => 
+
         private int? _infiniteTracingTimeoutMsConnect = null;
         public int InfiniteTracingTraceTimeoutMsConnect => (_infiniteTracingTimeoutMsConnect
             ?? (_infiniteTracingTimeoutMsConnect = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("InfiniteTracingTimeoutConnect", 10000), "NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT")).Value);

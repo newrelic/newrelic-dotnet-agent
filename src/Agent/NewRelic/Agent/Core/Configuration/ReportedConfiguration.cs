@@ -95,7 +95,7 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("transaction_event.max_samples_stored")]
         public int TransactionEventMaxSamplesStored { get; set; }
 
-        // Application Logging settings
+        // Application logging settings
         [JsonProperty("application_logging.enabled")]
         public bool ApplicationLoggingEnabled { get; set; }
 
@@ -110,5 +110,22 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("application_logging.local_decorating.enabled")]
         public bool ApplicationLoggingLocalDecoratingEnabled { get; set; }
+
+        // Infinite tracing settings
+        [JsonProperty("infinite_tracing.enabled")]
+        public bool InfiniteTracingEnabled { get; set; }
+        int InfiniteTracingTraceCountConsumers { get; }
+        string InfiniteTracingTraceObserverHost { get; }
+        string InfiniteTracingTraceObserverPort { get; }
+        string InfiniteTracingTraceObserverSsl { get; }
+        float? InfiniteTracingTraceObserverTestFlaky { get; }
+        int? InfiniteTracingTraceObserverTestFlakyCode { get; }
+        int? InfiniteTracingTraceObserverTestDelayMs { get; }
+        int InfiniteTracingQueueSizeSpans { get; }
+        int InfiniteTracingPartitionCountSpans { get; }
+        int InfiniteTracingBatchSizeSpans { get; }
+        int InfiniteTracingTraceTimeoutMsConnect { get; }
+        int InfiniteTracingTraceTimeoutMsSendData { get; }
+        int InfiniteTracingExitTimeoutMs { get; }
     }
 }

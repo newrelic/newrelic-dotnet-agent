@@ -67,6 +67,7 @@ namespace NewRelic.Agent.Configuration
         bool SpanEventsAttributesEnabled { get; }
         HashSet<string> SpanEventsAttributesInclude { get; }
         HashSet<string> SpanEventsAttributesExclude { get; }
+        bool InfiniteTracingEnabled { get; }
         int InfiniteTracingTraceCountConsumers { get; }
         string InfiniteTracingTraceObserverHost { get; }
         string InfiniteTracingTraceObserverPort { get; }

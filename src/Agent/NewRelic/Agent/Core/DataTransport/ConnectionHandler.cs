@@ -372,6 +372,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 ApplicationLoggingForwardingMaxSamplesStored = _configuration.LogEventsMaxSamplesStored,
                 ApplicationLoggingMetricsEnabled = _configuration.LogMetricsCollectorEnabled,
                 ApplicationLoggingLocalDecoratingEnabled = _configuration.LogDecoratorEnabled
+                // Infinite tracing settings
+                InfiniteTracingEnabled = _configuration.InfiniteTracingBatchSizeSpans
             };
 
             try
