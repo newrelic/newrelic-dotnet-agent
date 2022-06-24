@@ -27,11 +27,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             _randomNumberDiety = new Random(seed);
         }
 
-
-        private static readonly object _lock = new object();
+        private static readonly object _usedPortLock = new object();
         public static int NextPort()
         {
-            lock (_lock)
+            lock (_usedPortLock)
             {
                 for (var countAttempts = 0; countAttempts < maxAttempts; countAttempts++)
                 {
@@ -53,9 +52,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         //but before the test app uses the assigned port.
         private static bool IsPortAvailable(int potentialPort)
         {
-            var tcpListener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
             try
             {
+                var tcpListener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
                 tcpListener.Start();
                 tcpListener.Stop();
                 return true;
@@ -66,6 +65,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public static bool TryReleasePort(int port)
         {
+            lock (_usedPortLock)
+            {
+                _usedPorts.Remove(port);
+            }
             return true;
         }
     }
