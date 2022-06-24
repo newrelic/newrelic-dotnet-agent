@@ -15,18 +15,24 @@ using Telerik.JustMock;
 namespace NewRelic.Agent.Core.TransactionTraces
 {
     [TestFixture]
-    public class SlowestTransactionCollectorTests
+    public class KeyTransactionCollectorTests
     {
-        public SlowestTransactionCollector ObjectUnderTest;
+        public KeyTransactionCollector ObjectUnderTest;
+
+        private const string _keyTransactionName = "Awesome/KeyTransaction";
+        private const double _keyTransactionApdexT = 1.5;
 
         [SetUp]
         public void SetUp()
         {
-            ObjectUnderTest = new SlowestTransactionCollector();
+            ObjectUnderTest = new KeyTransactionCollector();
 
-            // SlowestTransactionCollector has an uninjected ConfigurationObserver, so let's update the config! :)
+            // KeyTransactionCollector has an uninjected ConfigurationObserver, so let's update the config! :)
             var configuration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => configuration.TransactionTraceThreshold).Returns(TimeSpan.FromSeconds(5));
+            Mock.Arrange(() => configuration.WebTransactionsApdex).Returns(new Dictionary<string, double>
+            {
+                { _keyTransactionName, _keyTransactionApdexT }
+            });
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(500);
             EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Unknown));
         }
@@ -47,9 +53,9 @@ namespace NewRelic.Agent.Core.TransactionTraces
         }
 
         [Test]
-        public void TransactionTraceIsCollectedWhenOverConfiguredThreshold()
+        public void TransactionTraceIsCollectedWhenTraceIsKeyTransactionOverThreshold()
         {
-            var input = new TransactionTraceWireModelComponents(new TransactionMetricName("bleep", "bloop"), TimeSpan.FromSeconds(10), false, null);
+            var input = new TransactionTraceWireModelComponents(new TransactionMetricName("Awesome", "KeyTransaction"), TimeSpan.FromSeconds(_keyTransactionApdexT + 1), false, null);
 
             ObjectUnderTest.Collect(input);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
@@ -59,9 +65,20 @@ namespace NewRelic.Agent.Core.TransactionTraces
         }
 
         [Test]
+        public void TransactionTraceIsNotCollectedWhenTraceIsKeyTransactionUnderThreshold()
+        {
+            var input = new TransactionTraceWireModelComponents(new TransactionMetricName("Awesome", "KeyTransaction"), TimeSpan.FromSeconds(_keyTransactionApdexT - 1), false, null);
+
+            ObjectUnderTest.Collect(input);
+            var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
+
+            Assert.IsEmpty(samples);
+        }
+
+        [Test]
         public void GettingCollectedSamplesClearsStorage()
         {
-            ObjectUnderTest.Collect(new TransactionTraceWireModelComponents(new TransactionMetricName("bleep", "bloop"), TimeSpan.FromSeconds(10), false, null));
+            ObjectUnderTest.Collect(new TransactionTraceWireModelComponents(new TransactionMetricName("Awesome", "KeyTransaction"), TimeSpan.FromSeconds(_keyTransactionApdexT + 1), false, null));
 
             var firstHarvest = ObjectUnderTest.GetCollectedSamples().ToArray();
             var secondHarvest = ObjectUnderTest.GetCollectedSamples().ToArray();
@@ -71,9 +88,9 @@ namespace NewRelic.Agent.Core.TransactionTraces
         }
 
         [Test]
-        public void TransactionTraceIsNotCollectedWhenUnderConfiguredThreshold()
+        public void TransactionTraceIsNotCollectedWhenTraceIsNotKeyTransaction()
         {
-            var input = new TransactionTraceWireModelComponents(new TransactionMetricName("bleep", "bloop"), TimeSpan.FromSeconds(1), false, null);
+            var input = new TransactionTraceWireModelComponents(new TransactionMetricName("NotKey", "Transaction"), TimeSpan.FromSeconds(10), false, null);
 
             ObjectUnderTest.Collect(input);
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
@@ -82,10 +99,10 @@ namespace NewRelic.Agent.Core.TransactionTraces
         }
 
         [Test]
-        public void SlowestTransactionTraceIsCollected()
+        public void LowestScoredKeyTransactionTraceIsReported()
         {
-            var slowTransactionTrace = new TransactionTraceWireModelComponents(new TransactionMetricName("bleep", "bloop"), TimeSpan.FromSeconds(10), false, null);
-            var slowestTransactionTrace = new TransactionTraceWireModelComponents(new TransactionMetricName("bleep", "bloop"), TimeSpan.FromSeconds(15), false, null);
+            var slowTransactionTrace = new TransactionTraceWireModelComponents(new TransactionMetricName("Awesome", "KeyTransaction"), TimeSpan.FromSeconds(_keyTransactionApdexT + 1), false, null);
+            var slowestTransactionTrace = new TransactionTraceWireModelComponents(new TransactionMetricName("Awesome", "KeyTransaction"), TimeSpan.FromSeconds(_keyTransactionApdexT + 10), false, null);
 
             ObjectUnderTest.Collect(slowTransactionTrace);
             ObjectUnderTest.Collect(slowestTransactionTrace);
@@ -95,7 +112,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
             Assert.AreEqual(1, samples.Length);
             Assert.AreSame(slowestTransactionTrace, samples[0]);
 
-            // Now do it in reverse order
+            // Now do it in reverse order :)
             ObjectUnderTest.Collect(slowestTransactionTrace);
             ObjectUnderTest.Collect(slowTransactionTrace);
 
@@ -106,10 +123,11 @@ namespace NewRelic.Agent.Core.TransactionTraces
         }
 
         [Test]
-        public void FirstSlowTransactionTraceIsCollected()
+        public void LastSlowTransactionTraceIsCollected()
         {
-            var firstTransactionTrace = new TransactionTraceWireModelComponents(new TransactionMetricName("bleep", "bloop"), TimeSpan.FromSeconds(10), false, null);
-            var secondTransactionTrace = new TransactionTraceWireModelComponents(new TransactionMetricName("bleep", "bloop"), TimeSpan.FromSeconds(10), false, null);
+            // NOTE: interestingly, the other trace collectors save the first desirable sample, but the key transaction collector saves the last...
+            var firstTransactionTrace = new TransactionTraceWireModelComponents(new TransactionMetricName("Awesome", "KeyTransaction"), TimeSpan.FromSeconds(_keyTransactionApdexT + 1), false, null);
+            var secondTransactionTrace = new TransactionTraceWireModelComponents(new TransactionMetricName("Awesome", "KeyTransaction"), TimeSpan.FromSeconds(_keyTransactionApdexT + 1), false, null);
 
             ObjectUnderTest.Collect(firstTransactionTrace);
             ObjectUnderTest.Collect(secondTransactionTrace);
@@ -117,7 +135,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
             var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
 
             Assert.AreEqual(1, samples.Length);
-            Assert.AreSame(firstTransactionTrace, samples[0]);
+            Assert.AreSame(secondTransactionTrace, samples[0]);
         }
 
         [Test]
@@ -129,7 +147,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
                 var transactionTraces = new List<TransactionTraceWireModelComponents>();
                 for (var i = 0; i < 1000; i++)
                 {
-                    transactionTraces.Add(new TransactionTraceWireModelComponents(new TransactionMetricName("bleep", "bloop"), TimeSpan.FromSeconds(10 + i), false, null));
+                    transactionTraces.Add(new TransactionTraceWireModelComponents(new TransactionMetricName("Awesome", "KeyTransaction"), TimeSpan.FromSeconds(_keyTransactionApdexT + i), false, null));
                 }
 
                 var collectionActions = new List<Action>();

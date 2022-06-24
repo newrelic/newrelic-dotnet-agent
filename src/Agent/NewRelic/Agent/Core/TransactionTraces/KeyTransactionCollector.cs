@@ -20,19 +20,28 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
         public void Collect(TransactionTraceWireModelComponents transactionTraceWireModelComponents)
         {
+            if (transactionTraceWireModelComponents == null)
+            {
+                return;
+            }
+
             var isKeyTransaction = ConfigurationSubscription.Configuration.WebTransactionsApdex.TryGetValue(transactionTraceWireModelComponents.TransactionMetricName.ToString(), out double apdexT);
             if (!isKeyTransaction)
+            {
                 return;
+            }
 
             var apdexTime = TimeSpan.FromSeconds(apdexT);
             if (transactionTraceWireModelComponents.Duration <= apdexTime)
+            {
                 return;
+            }
 
-            // larger the score, the larger the diff
+            // larger the score, the larger the diff. A low score indicates a better performing transaction (golf rules).
             var score = 100.0 * (transactionTraceWireModelComponents.Duration.TotalMilliseconds / apdexTime.TotalMilliseconds);
 
-            // If there aren't any lower scores than what we currently encountered, then add this one to the collection
-            if (!_keyTransactions.Any(x => x.Key < score))
+            // If there aren't any higher scores than what we currently encountered, add this one to the collection
+            if (!_keyTransactions.Any(x => x.Key > score))
             {
                 _keyTransactions[score] = transactionTraceWireModelComponents;
             }
@@ -48,7 +57,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
                 return Enumerable.Empty<TransactionTraceWireModelComponents>();
             }
 
-            var worstScoredTransaction = harvestedKeyTransactions.Aggregate((x, y) => x.Key < y.Key ? x : y).Value;
+            var worstScoredTransaction = harvestedKeyTransactions.Aggregate((x, y) => x.Key > y.Key ? x : y).Value;
             return new TransactionTraceWireModelComponents[] { worstScoredTransaction };
         }
 
