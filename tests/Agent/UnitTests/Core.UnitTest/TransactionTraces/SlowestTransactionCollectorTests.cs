@@ -99,24 +99,28 @@ namespace NewRelic.Agent.Core.TransactionTraces
         [Test]
         public void SlowestTransactionTraceIsCollectedInThreadedScenario()
         {
-            var transactionTraces = new List<TransactionTraceWireModelComponents>();
-            for(var i = 0; i < 1000; i++)
+            // This is testing for a race condition, so try it 100 times just to make sure! :)
+            for (var tries = 0; tries < 100; tries++)
             {
-                transactionTraces.Add(new TransactionTraceWireModelComponents(new TransactionMetricName("bleep", "bloop"), TimeSpan.FromSeconds(10 + i), false, null));
+                var transactionTraces = new List<TransactionTraceWireModelComponents>();
+                for (var i = 0; i < 1000; i++)
+                {
+                    transactionTraces.Add(new TransactionTraceWireModelComponents(new TransactionMetricName("bleep", "bloop"), TimeSpan.FromSeconds(10 + i), false, null));
+                }
+
+                var collectionActions = new List<Action>();
+                foreach (var transactionTrace in transactionTraces)
+                {
+                    collectionActions.Add(() => ObjectUnderTest.Collect(transactionTrace));
+                }
+
+                Parallel.Invoke(collectionActions.ToArray());
+
+                var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
+
+                Assert.AreEqual(1, samples.Length);
+                Assert.AreEqual(transactionTraces.Last().Duration, samples[0].Duration);
             }
-
-            var collectionActions = new List<Action>();
-            foreach(var transactionTrace in transactionTraces)
-            {
-                collectionActions.Add(() => ObjectUnderTest.Collect(transactionTrace));
-            }
-
-            Parallel.Invoke(collectionActions.ToArray());
-
-            var samples = ObjectUnderTest.GetCollectedSamples().ToArray();
-
-            Assert.AreEqual(1, samples.Length);
-            Assert.AreSame(transactionTraces.Last(), samples[0]);
         }
     }
 }
