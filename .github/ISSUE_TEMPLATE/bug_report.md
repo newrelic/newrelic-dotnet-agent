@@ -25,7 +25,11 @@ assignees: ''
 [TIP]:  # ( Link a sample application that demonstrates the issue. )
 
 **Your Environment**
-[TIP]:  # ( Include as many relevant details about your environment as possible including the running version of the agent and any relevant configurations, such as the .NET framework or core version of your application. )
+[TIP]:  # ( Describe your environment, please include the running version of the agent, .NET Framework, .NET Core, or .NET versions, and any relevant configurations)
 
 **Additional context**
 [TIP]:  # ( Add any other context about the problem here. For example, relevant community posts or support tickets. )
+
+**For Maintainers Only or Hero Triaging this bug**
+*Suggested Priority (P1,P2,P3,P4,P5):*
+*Suggested T-Shirt size (S, M, L, XL, Unknown):*

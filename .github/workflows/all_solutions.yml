@@ -10,7 +10,7 @@ on:
     types: [ published ]
   workflow_dispatch:
   schedule:
-    - cron:  '0 9 * * 6'
+    - cron:  '0 9 * * *'
 
 env:
   scripts_path: ${{ github.workspace }}\build\scripts
