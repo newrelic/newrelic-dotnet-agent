@@ -6,8 +6,19 @@ on:
       run_id:
         description: 'Run ID of the build workflow (all_solutions.yml) to use the agent and integration tests from. ID can be found in URL for run.'
         required: true
-      namespaces:
+      solutions:
+        type: choice
+        description: Which test solutions (IntegrationTests, UnboundedIntegrationTests, or both) to run
+        options:
+        - IntegrationTests
+        - UnboundedIntegrationTests
+        - Both
+      integration-test-namespaces:
         description: 'A comma-separated list of integration test namespaces to run.  If not specified, all integration tests will be run.'
+        required: true
+        default: 'ALL'
+      unbounded-test-namespaces:
+        description: 'A comma-separated list of unbounded integration test namespaces to run.  If not specified, all unbounded tests will be run.'
         required: true
         default: 'ALL'
       iterations:
@@ -42,6 +53,7 @@ jobs:
           if-no-files-found: error
 
       - name: Download Integration Tests
+        if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'IntegrationTests'
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -52,6 +64,7 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Upload Integration Tests Locally
+        if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'IntegrationTests'
         uses: actions/upload-artifact@v2
         with:
           name: integrationtests
@@ -63,12 +76,14 @@ jobs:
           if-no-files-found: error
 
       - name: Clear integration tests from workspace
+        if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'IntegrationTests'
         run: |
           rm ${{ github.workspace }}/test.runsettings
           rm -r ${{ github.workspace }}/tests
         shell: bash
 
       - name: Download Unbounded Integration Tests
+        if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'UnboundedIntegrationTests'
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -79,6 +94,7 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Upload Unbounded Integration Tests Locally
+        if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'UnboundedIntegrationTests'
         uses: actions/upload-artifact@v2
         with:
           name: unboundedintegrationtests
@@ -89,23 +105,57 @@ jobs:
             !${{ github.workspace }}/tests/Agent/IntegrationTests/**/obj/**/*
           if-no-files-found: error
 
+  setup-matrices:
+    needs: [get-external-artifacts]
+    name: Configure namespaces for test matrices
+    runs-on: ubuntu-latest
+    outputs:
+      integration-tests-matrix: ${{ steps.configure_integration_tests_matrix.outputs.matrix }}
+      unbounded-tests-matrix: ${{ steps.configure_unbounded_tests_matrix.outputs.matrix }}
+    steps:
+      - id: configure_integration_tests_matrix
+        run: |
+          if [ "${{ github.events.inputs.integration-test-namespaces }}" == "ALL" ] ; then
+            # Use the full list of namespaces
+            namespaces="[ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, \
+              CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, \
+              HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Owin, ReJit.NetCore, \
+              Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.ZeroMaxSamplesStored, \
+              Logging.MetricsAndForwarding.log4net, Logging.MetricsAndForwarding.MicrosoftLogging, \
+              Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog, \
+              ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, \
+              WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, \
+              RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, \
+              RequestHandling, CodeLevelMetrics ]"
+          else
+            # Just use the supplied list of namespaces
+            namespaces="[ ${{ github.events.inputs.integration-test-namespaces }} ]"
+          fi
+          echo "::set-output name=matrix::$namespaces"
+        shell: bash
+
+      - id: configure_unbounded_tests_matrix
+        run: |
+          if [ "${{ github.events.inputs.unbounded-test-namespaces }}" == "ALL" ] ; then
+            # Use the full list of namespaces
+            namespaces="[ CosmosDB, Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, NServiceBus5, Oracle, Postgres, RabbitMq, Redis ]"
+          else
+            # Just use the supplied list of namespaces
+            namespaces="[ ${{ github.events.inputs.unbounded-test-namespaces }} ]"
+          fi
+          echo "::set-output name=matrix::$namespaces"
+        shell: bash
+
+
 
   run-integration-tests:
-    needs: [get-external-artifacts]
+    needs: [setup-matrices]
+    if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'IntegrationTests'
     name: Run IntegrationTests
     runs-on: windows-2019 # TODO: make this a input so we can test different OSes?
     strategy:
       matrix:
-        namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
-          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
-          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Owin, ReJit.NetCore, 
-          Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.ZeroMaxSamplesStored,
-          Logging.MetricsAndForwarding.log4net, Logging.MetricsAndForwarding.MicrosoftLogging, 
-          Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog,
-          ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
-          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
-          RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, 
-          RequestHandling, CodeLevelMetrics ]
+        namespace: ${{ needs.setup-matrices.outputs.integration-tests-matrix}}
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -212,6 +262,145 @@ jobs:
           name: integration-test-artifacts
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
           if-no-files-found: error
+
+  run-unbounded-tests:
+    needs: [setup-matrices]
+    if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'UnboundedIntegrationTests'
+    name: Run Unbounded Tests
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        namespace: ${{ needs.setup-matrices.outputs.unbounded-tests-matrix}}
+      fail-fast: false # we don't want one test failure in one namespace to kill the other runs
+
+    env:
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
+      unbounded_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net462/NewRelic.Agent.UnboundedIntegrationTests.dll
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+      enhanced_logging: false
+
+    steps:
+      - name: My IP
+        run: (Invoke-WebRequest -uri "http://ifconfig.me/ip").Content
+        shell: powershell
+        
+      # - name: Checkout
+      #   uses: actions/checkout@v2
+      #   with:
+      #     fetch-depth: 0
+
+      - name: Setup .NET 6.0
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+          include-prerelease: true
+
+      - name: Download Agent Home Folders
+        uses: actions/download-artifact@v2
+        with:
+          name: homefolders
+          path: src/Agent
+
+      - name: Download Unbounded Integration Test Artifacts
+        uses: actions/download-artifact/@v2
+        with:
+          name: unboundedintegrationtests
+          # Should not need a path because the integration test artifacts are archived with the full directory structure
+      
+      - name: Setup TLS
+        run: |
+          $registryRootPath = "HKCU:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols"
+          $tls10 = "TLS 1.0"
+          $tls11 = "TLS 1.1"
+          $tls12 = "TLS 1.2"
+          $client = "Client"
+          $server = "Server"
+          $registryPaths = @(
+          "$registryRootPath\$tls10\$client",
+          "$registryRootPath\$tls10\$server",
+          "$registryRootPath\$tls11\$client",
+          "$registryRootPath\$tls11\$server",
+          "$registryRootPath\$tls12\$client",
+          "$registryRootPath\$tls12\$server"
+          )
+          $name = "Enabled"
+          $value = "1"
+          foreach ($registryPath in $registryPaths) {
+            if(!(Test-Path $registryPath)) {
+              New-Item -Path $registryPath -Force | Out-Null
+              New-ItemProperty -Path $registryPath -Name $name -Value $value -PropertyType DWORD -Force | Out-Null
+            }
+            else {
+              New-ItemProperty -Path $registryPath -Name $name -Value $value -PropertyType DWORD -Force | Out-Null
+            }
+          }  
+        shell: powershell
+
+      - name: Install dependencies
+        run: |
+          Write-Host "Installing HostableWebCore Feature"
+          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+          Write-Host "Installing Msmq Features"
+          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server -All
+          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP -All
+          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Triggers -All
+
+          if ("${{ matrix.namespace }}" -eq "MsSql") {
+            Write-Host "Installing MSSQL CLI"
+            msiexec /i "${{ github.workspace }}\build\Tools\sqlncli.msi" IACCEPTSQLNCLILICENSETERMS=YES /quiet /qn /norestart
+            Start-Sleep 20 # Need to wait for install to finish -- takes only a few seconds, but we need to be sure.
+          }
+        shell: powershell
+
+      - name: Set up secrets
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.UNBOUNDED_TEST_SECRETS }}
+        run: |
+          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+        shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
+
+      - name: Start Local CosmosDB Emulator for CosmosDB Tests
+        if: matrix.namespace == 'CosmosDB'
+        uses: southpolesteve/cosmos-emulator-github-action@v1
+
+      - name: Run Unbounded Integration Tests
+        run: |
+          if ($Env:enhanced_logging -eq $True) {
+            Write-Host "List ports in use"
+            netstat -no  
+          }
+
+          ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel none -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+
+          if ($Env:enhanced_logging -eq $True) {
+            Write-Host "Get HostableWebCore errors (if any)"
+            Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
+
+            Write-Host "Get .NET Runtime errors (if any)"
+            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+          }
+        shell: powershell
+
+      - name: Archive IntegrationTestWorkingDirectory on Failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: integration-test-artifacts
+          path: |
+            C:\IntegrationTestWorkingDirectory\**\*.log
+            C:\IntegrationTestWorkingDirectory\**\*.config
+          if-no-files-found: error
+
+      - name: Archive Test Artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: integration-test-artifacts
+          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
+          if-no-files-found: error
+
 
 
 
