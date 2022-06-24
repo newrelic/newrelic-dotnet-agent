@@ -21,10 +21,10 @@ on:
         description: 'A comma-separated list of unbounded integration test namespaces to run.  If not specified, all unbounded tests will be run.'
         required: true
         default: 'ALL'
-      iterations:
-        description: 'Number of times to execute each test, regardless of success or failure.  Defaults to 1.'
-        required: true
-        default: 1
+      # iterations:
+      #   description: 'Number of times to execute each test, regardless of success or failure.  Defaults to 1.'
+      #   required: true
+      #   default: 1
 
 env:
   DOTNET_NOLOGO: true
