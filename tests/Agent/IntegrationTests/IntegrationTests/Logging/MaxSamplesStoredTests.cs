@@ -158,6 +158,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
         }
     }
 
+    [NetFrameworkTest]
+    public class MicrosoftLoggingMaxSamplesStoredTestsFW471Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public MicrosoftLoggingMaxSamplesStoredTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
     #endregion
 
     #region Serilog

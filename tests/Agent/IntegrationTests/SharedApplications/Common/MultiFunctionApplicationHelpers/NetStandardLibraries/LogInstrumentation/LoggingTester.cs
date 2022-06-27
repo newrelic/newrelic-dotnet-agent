@@ -31,7 +31,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 #endif
                     break;
                 case "MICROSOFTLOGGING":
-#if NETCOREAPP2_1_OR_GREATER
+#if NETCOREAPP2_1_OR_GREATER || NET471_OR_GREATER
                     _log = new MicrosoftLoggingLoggingAdapter();
 #endif
                     break;
