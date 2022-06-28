@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 
+### New Features
+* Adds support for forwarding application logs to New Relic for .NET Framework applications using Microsoft.Extensions.Logging. [#1172](https://github.com/newrelic/newrelic-dotnet-agent/pull/1172)
+
 ## [9.9.0] - 2022-06-08
 
 ### New Features
