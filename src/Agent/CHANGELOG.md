@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 
+### New Features
+### Fixes
+### Deprecations/Removed Features
+* The scriptable installers have been removed. ([#1170](https://github.com/newrelic/newrelic-dotnet-agent/pull/1170))
+
 ## [9.9.0] - 2022-06-08
 
 ### New Features

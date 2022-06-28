@@ -66,7 +66,7 @@ jobs:
   deploy-downloadsite:
     needs: get-external-artifacts
     if: ${{ github.event.inputs.downloadsite == 'true' }}
-    name: Deploy MSI and Scriptable to Download Site
+    name: Deploy MSI to Download Site
     runs-on: windows-2019
 
     steps:
@@ -85,7 +85,6 @@ jobs:
         run: |
           Copy-Item .\working_dir\newrelic-agent-win-x64-*.msi .\working_dir\NewRelicDotNetAgent_x64.msi -Force -Recurse
           Copy-Item .\working_dir\newrelic-agent-win-x86-*.msi .\working_dir\NewRelicDotNetAgent_x86.msi -Force -Recurse
-          Copy-Item .\working_dir\newrelic-agent-*-scriptable-installer.zip .\working_dir\NewRelic.Agent.Installer.zip -Force -Recurse
         shell: powershell
 
       - name: Deploy latest_release to Download Site

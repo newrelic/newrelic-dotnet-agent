@@ -19,12 +19,6 @@ namespace ArtifactBuilder
                     case "ziparchives":
                         BuildZipArchives(args);
                         break;
-                    case "coreinstaller":
-                        BuildCoreInstaller(args);
-                        break;
-                    case "scriptableinstaller":
-                        BuildScriptableInstaller(args);
-                        break;
                     case "nugetazurewebsites":
                         BuildNugetAzureWebsites(args);
                         break;
@@ -145,18 +139,6 @@ namespace ArtifactBuilder
             new ZipArchive(AgentType.Framework, "x86", configuration).Build();
             new ZipArchive(AgentType.Core, "x64", configuration).Build();
             new ZipArchive(AgentType.Core, "x86", configuration).Build();
-        }
-
-        private static void BuildCoreInstaller(string[] args)
-        {
-            var configuration = args[1];
-            new CoreInstaller(configuration).Build();
-        }
-
-        private static void BuildScriptableInstaller(string[] args)
-        {
-            var configuration = args[1];
-            new ScriptableInstaller(configuration).Build();
         }
 
         private static void BuildAzureSiteExtension()
