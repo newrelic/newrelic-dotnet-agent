@@ -45,6 +45,9 @@ namespace Owin4WebApi.Controllers
             await Task.Run(() => TaskRunBackgroundMethod());
             await Task.Factory.StartNew(TaskFactoryStartNewBackgroundMethod);
 
+            // Try to force this to be the slowest transaction
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
             return "Worked";
         }
 
