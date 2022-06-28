@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net462;net471;net48</TargetFrameworks>
@@ -36,7 +36,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="2.1.0" Condition="'$(TargetFramework)' == 'net462'" />
 
-    <PackageReference Include="Serilog" Version="2.8.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="Serilog" Version="2.5.0" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" Condition="'$(TargetFramework)' == 'net471'" />
 
@@ -111,13 +111,8 @@
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.23.0" />
   </ItemGroup>
 
-  <!-- Microsoft.Extensions.Logging supports netstandard 2.0 and up only -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.0.0" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.0.0" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net471'" />
-
+    <!--Due to Serilog dependency conflicts, we can only test Microsoft.Extensions.Logging for Framework on  net48-->
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />

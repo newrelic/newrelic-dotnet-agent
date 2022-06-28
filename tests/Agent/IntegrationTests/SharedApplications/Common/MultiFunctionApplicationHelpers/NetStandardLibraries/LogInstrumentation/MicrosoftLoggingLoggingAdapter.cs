@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-#if NETCOREAPP2_1_OR_GREATER || NET471_OR_GREATER
+#if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
 
 using Microsoft.Extensions.Logging;
 using Serilog;
