@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
 
         public void Collect(TransactionTraceWireModelComponents transactionTraceWireModelComponents)
         {
-            if(transactionTraceWireModelComponents == null)
+            if (transactionTraceWireModelComponents == null)
             {
                 return;
             }
