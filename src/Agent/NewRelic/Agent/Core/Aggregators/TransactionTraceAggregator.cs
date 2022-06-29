@@ -43,42 +43,45 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override void Harvest()
         {
-            var traces = _transactionCollectors
+            var traceSamples = _transactionCollectors
                 .Where(t => t != null)
                 .SelectMany(t => t.GetCollectedSamples())
                 .Distinct()
+                .ToList();
+
+            var traceWireModels = traceSamples
                 .Select(t => t.CreateWireModel())
                 .ToList();
 
-            if (!traces.Any())
+            if (!traceWireModels.Any())
                 return;
 
-            LogUnencodedTraceData(traces);
+            LogUnencodedTraceData(traceWireModels);
 
-            var responseStatus = DataTransportService.Send(traces);
-            HandleResponse(responseStatus, traces);
+            var responseStatus = DataTransportService.Send(traceWireModels);
+            HandleResponse(responseStatus, traceSamples);
         }
 
-        private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<TransactionTraceWireModel> traces)
+        private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<TransactionTraceWireModelComponents> traceSamples)
         {
             switch (responseStatus)
             {
                 case DataTransportResponseStatus.RequestSuccessful:
-                    ClearTransactionTraces(); // Only clear traces after successfully sending data
                     break;
+
                 case DataTransportResponseStatus.Retain:
+                    // Retain collected samples if applicable
+                    foreach (var traceSample in traceSamples)
+                    {
+                        Collect(traceSample);
+                    }
+                    break;
+
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                 case DataTransportResponseStatus.Discard:
                 default:
+                    Log.Warn($"Discarding {traceSamples.Count} transaction traces due to collector response.");
                     break;
-            }
-        }
-
-        private void ClearTransactionTraces()
-        {
-            foreach (var transactionCollector in _transactionCollectors)
-            {
-                transactionCollector?.ClearCollectedSamples();
             }
         }
 
