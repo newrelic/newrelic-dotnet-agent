@@ -68,15 +68,19 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 case DataTransportResponseStatus.RequestSuccessful:
                     break;
+
                 case DataTransportResponseStatus.Retain:
-                case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
-                case DataTransportResponseStatus.Discard:
-                default:
-                    // Feed collected samples back in if we didn't successfully send them
+                    // Retain collected samples if applicable
                     foreach (var traceSample in traceSamples)
                     {
                         Collect(traceSample);
                     }
+                    break;
+
+                case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
+                case DataTransportResponseStatus.Discard:
+                default:
+                    Log.Warn($"Discarding {traceSamples.Count} transaction traces due to collector response.");
                     break;
             }
         }

@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 
+### Fixes
+* Resolves an issue with transaction trace aggregation where the slowest transaction trace was not always captured due to a race condition. ([#1166](https://github.com/newrelic/newrelic-dotnet-agent/pull/1166))
+
 ## [9.9.0] - 2022-06-08
 
 ### New Features
