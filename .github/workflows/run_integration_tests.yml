@@ -1,0 +1,14 @@
+name: Run Integration Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  hello-world:
+    name: Placeholder job
+    runs-on: ubuntu-latest
+    steps:
+    - name: Hello World
+      run: echo "Hello world!"
+      shell: bash
