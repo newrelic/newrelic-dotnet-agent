@@ -59,7 +59,8 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("browser_monitoring.error_beacon_address")]
         public string BrowserMonitoringErrorBeaconAddress => _configuration.BrowserMonitoringErrorBeaconAddress;
 
-        [JsonProperty("browser_monitoring.javascript_agent")]
+        //[JsonProperty("browser_monitoring.javascript_agent")]
+        [JsonIgnore()]
         public string BrowserMonitoringJavaScriptAgent => _configuration.BrowserMonitoringJavaScriptAgent;
 
         [JsonProperty("browser_monitoring.javascript_agent_file")]
