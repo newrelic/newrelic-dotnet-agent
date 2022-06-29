@@ -93,41 +93,7 @@ namespace NewRelic.Agent.Core.Configuration
             Mock.Arrange(() => configuration.LogDecoratorEnabled).Returns(ApplicationLoggingLocalDecoratingEnabled);
 
 
-            var agentSettings = new ReportedConfiguration
-            {
-                ApdexT = configuration.TransactionTraceApdexT.TotalSeconds,
-                CatId = configuration.CrossApplicationTracingCrossProcessId,
-                EncodingKey = configuration.EncodingKey,
-                TrustedAccountIds = configuration.TrustedAccountIds.ToList(),
-                MaxStackTraceLines = configuration.StackTraceMaximumFrames,
-                ServerSideConfigurationEnabled = configuration.ServerSideConfigurationEnabled,
-                IgnoreServerSideConfiguration = configuration.IgnoreServerSideConfiguration,
-                ThreadProfilerEnabled = configuration.ThreadProfilingEnabled,
-                CrossApplicationTracerEnabled = configuration.CrossApplicationTracingEnabled,
-                DistributedTracingEnabled = configuration.DistributedTracingEnabled,
-                ErrorCollectorEnabled = configuration.ErrorCollectorEnabled,
-                ErrorCollectorIgnoreStatusCodes = configuration.HttpStatusCodesToIgnore.ToList(),
-                ErrorCollectorIgnoreClasses = configuration.IgnoreErrorClassesForAgentSettings,
-                ErrorCollectorIgnoreMessages = configuration.IgnoreErrorMessagesForAgentSettings,
-                ErrorCollectorExpectedClasses = configuration.ExpectedErrorClassesForAgentSettings,
-                ErrorCollectorExpectedMessages = configuration.ExpectedErrorMessagesForAgentSettings,
-                ErrorCollectorExpectedStatusCodes = configuration.ExpectedErrorStatusCodesForAgentSettings,
-                TransactionTracerStackThreshold = configuration.TransactionTracerStackThreshold.TotalSeconds,
-                TransactionTracerExplainEnabled = configuration.SqlExplainPlansEnabled,
-                TransactionTracerExplainThreshold = configuration.SqlExplainPlanThreshold.TotalSeconds,
-                MaxSqlStatements = configuration.SqlStatementsPerTransaction,
-                MaxExplainPlans = configuration.SqlExplainPlansMax,
-                TransactionTracerThreshold = configuration.TransactionTraceThreshold.TotalSeconds,
-                TransactionTracerRecordSql = configuration.TransactionTracerRecordSql,
-                SlowSqlEnabled = configuration.SlowSqlEnabled,
-                BrowserMonitoringAutoInstrument = configuration.BrowserMonitoringAutoInstrument,
-                TransactionEventMaxSamplesStored = configuration.TransactionEventsMaximumSamplesStored,
-                ApplicationLoggingEnabled = configuration.ApplicationLoggingEnabled,
-                ApplicationLoggingForwardingEnabled = configuration.LogEventCollectorEnabled,
-                ApplicationLoggingForwardingMaxSamplesStored = configuration.LogEventsMaxSamplesStored,
-                ApplicationLoggingMetricsEnabled = configuration.LogMetricsCollectorEnabled,
-                ApplicationLoggingLocalDecoratingEnabled = configuration.LogDecoratorEnabled
-            };
+            var agentSettings = new ReportedConfiguration(configuration);
 
             var json = JsonConvert.SerializeObject(agentSettings);
 

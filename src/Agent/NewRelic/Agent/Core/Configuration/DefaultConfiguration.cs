@@ -906,8 +906,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Infinite Tracing
 
-        public bool InfiniteTracingEnabled => 
-
         private int? _infiniteTracingTimeoutMsConnect = null;
         public int InfiniteTracingTraceTimeoutMsConnect => (_infiniteTracingTimeoutMsConnect
             ?? (_infiniteTracingTimeoutMsConnect = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("InfiniteTracingTimeoutConnect", 10000), "NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT")).Value);
@@ -2448,7 +2446,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         int? _databaseStatementCacheCapcity = null;
 
-        public int DatabaseStatementCacheCapcity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
+        public int DatabaseStatementCacheCapacity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
             TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
 
         private bool? _codeLevelMetricsEnabled;

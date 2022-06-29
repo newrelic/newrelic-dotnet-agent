@@ -67,7 +67,6 @@ namespace NewRelic.Agent.Configuration
         bool SpanEventsAttributesEnabled { get; }
         HashSet<string> SpanEventsAttributesInclude { get; }
         HashSet<string> SpanEventsAttributesExclude { get; }
-        bool InfiniteTracingEnabled { get; }
         int InfiniteTracingTraceCountConsumers { get; }
         string InfiniteTracingTraceObserverHost { get; }
         string InfiniteTracingTraceObserverPort { get; }
@@ -180,7 +179,7 @@ namespace NewRelic.Agent.Configuration
         int? SamplingTargetPeriodInSeconds { get; }
         bool PayloadSuccessMetricsEnabled { get; }
         string ProcessHostDisplayName { get; }
-        int DatabaseStatementCacheCapcity { get; }
+        int DatabaseStatementCacheCapacity { get; }
         bool ForceSynchronousTimingCalculationHttpClient { get; }
         bool ExcludeNewrelicHeader { get; }
         bool ApplicationLoggingEnabled { get; }

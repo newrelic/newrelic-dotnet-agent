@@ -51,6 +51,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     new UtilizationSettingsModel(2, 3, "myHost2", "myHost2.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, utilitizationConfig),
                     null,
                     null,
+                    null,
                     null
                 );
 

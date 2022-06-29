@@ -306,7 +306,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter).GetUtilizationSettings(),
                 _configuration.CollectorSendEnvironmentInfo ? _environment : null,
                 _configuration.SecurityPoliciesTokenExists ? new SecurityPoliciesSettingsModel(_configuration) : null,
-                new EventHarvestConfigModel(_configuration)
+                new EventHarvestConfigModel(_configuration),
+                new ReportedConfiguration(_configuration)
             );
         }
 
@@ -337,44 +338,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private void SendAgentSettings()
         {
-            var agentSettings = new ReportedConfiguration
-            {
-                ApdexT = _configuration.TransactionTraceApdexT.TotalSeconds,
-                CatId = _configuration.CrossApplicationTracingCrossProcessId,
-                EncodingKey = _configuration.EncodingKey,
-                TrustedAccountIds = _configuration.TrustedAccountIds.ToList(),
-                MaxStackTraceLines = _configuration.StackTraceMaximumFrames,
-                ServerSideConfigurationEnabled = _configuration.ServerSideConfigurationEnabled,
-                IgnoreServerSideConfiguration = _configuration.IgnoreServerSideConfiguration,
-                ThreadProfilerEnabled = _configuration.ThreadProfilingEnabled,
-                CrossApplicationTracerEnabled = _configuration.CrossApplicationTracingEnabled,
-                DistributedTracingEnabled = _configuration.DistributedTracingEnabled,
-                ErrorCollectorEnabled = _configuration.ErrorCollectorEnabled,
-                ErrorCollectorIgnoreStatusCodes = _configuration.HttpStatusCodesToIgnore.ToList(),
-                ErrorCollectorIgnoreClasses = _configuration.IgnoreErrorClassesForAgentSettings,
-                ErrorCollectorIgnoreMessages = _configuration.IgnoreErrorMessagesForAgentSettings,
-                ErrorCollectorExpectedClasses = _configuration.ExpectedErrorClassesForAgentSettings,
-                ErrorCollectorExpectedMessages = _configuration.ExpectedErrorMessagesForAgentSettings,
-                ErrorCollectorExpectedStatusCodes = _configuration.ExpectedErrorStatusCodesForAgentSettings,
-                TransactionTracerStackThreshold = _configuration.TransactionTracerStackThreshold.TotalSeconds,
-                TransactionTracerExplainEnabled = _configuration.SqlExplainPlansEnabled,
-                TransactionTracerExplainThreshold = _configuration.SqlExplainPlanThreshold.TotalSeconds,
-                MaxSqlStatements = _configuration.SqlStatementsPerTransaction,
-                MaxExplainPlans = _configuration.SqlExplainPlansMax,
-                TransactionTracerThreshold = _configuration.TransactionTraceThreshold.TotalSeconds,
-                TransactionTracerRecordSql = _configuration.TransactionTracerRecordSql,
-                SlowSqlEnabled = _configuration.SlowSqlEnabled,
-                BrowserMonitoringAutoInstrument = _configuration.BrowserMonitoringAutoInstrument,
-                TransactionEventMaxSamplesStored = _configuration.TransactionEventsMaximumSamplesStored,
-                // Application logging settings
-                ApplicationLoggingEnabled = _configuration.ApplicationLoggingEnabled,
-                ApplicationLoggingForwardingEnabled = _configuration.LogEventCollectorEnabled,
-                ApplicationLoggingForwardingMaxSamplesStored = _configuration.LogEventsMaxSamplesStored,
-                ApplicationLoggingMetricsEnabled = _configuration.LogMetricsCollectorEnabled,
-                ApplicationLoggingLocalDecoratingEnabled = _configuration.LogDecoratorEnabled
-                // Infinite tracing settings
-                InfiniteTracingEnabled = _configuration.InfiniteTracingBatchSizeSpans
-            };
+            var agentSettings = new ReportedConfiguration(_configuration);
 
             try
             {

@@ -54,8 +54,11 @@ namespace NewRelic.Agent.Core.DataTransport
         [JsonProperty("labels")]
         public readonly IEnumerable<Label> Labels;
 
-        [JsonProperty("settings")]
+        [JsonProperty("old_settings")]
         public readonly JavascriptAgentSettingsModel JavascriptAgentSettings;
+
+        [JsonProperty("settings")]
+        public readonly ReportedConfiguration Configuration;
 
         [JsonProperty("metadata")]
         public readonly Dictionary<string, string> Metadata;
@@ -69,7 +72,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [JsonProperty("security_policies", NullValueHandling = NullValueHandling.Ignore)]
         public readonly SecurityPoliciesSettingsModel SecurityPoliciesSettings;
 
-        public ConnectModel(int processId, string language, string displayHost, string hostName, IEnumerable<string> appNames, string agentVersion, long agentVersionTimestamp, SecuritySettingsModel securitySettings, bool highSecurityModeEnabled, string identifier, IEnumerable<Label> labels, JavascriptAgentSettingsModel javascriptAgentSettings, Dictionary<string, string> metadata, UtilizationSettingsModel utilizationSettings, Environment environment, SecurityPoliciesSettingsModel securityPoliciesSettings, EventHarvestConfigModel eventHarvestConfig)
+        public ConnectModel(int processId, string language, string displayHost, string hostName, IEnumerable<string> appNames, string agentVersion, long agentVersionTimestamp, SecuritySettingsModel securitySettings, bool highSecurityModeEnabled, string identifier, IEnumerable<Label> labels, JavascriptAgentSettingsModel javascriptAgentSettings, Dictionary<string, string> metadata, UtilizationSettingsModel utilizationSettings, Environment environment, SecurityPoliciesSettingsModel securityPoliciesSettings, EventHarvestConfigModel eventHarvestConfig, ReportedConfiguration configuration)
         {
             ProcessId = processId;
             Language = language;
@@ -88,6 +91,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Environment = environment;
             SecurityPoliciesSettings = securityPoliciesSettings;
             EventHarvestConfig = eventHarvestConfig;
+            Configuration = configuration;
         }
     }
 
