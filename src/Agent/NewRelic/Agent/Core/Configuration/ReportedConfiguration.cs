@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.Configuration;
 using Newtonsoft.Json;
@@ -22,8 +21,7 @@ namespace NewRelic.Agent.Core.Configuration
             _configuration = configuration;
         }
 
-        //[JsonProperty("agent.name")]
-        [JsonProperty("name")]
+        [JsonProperty("agent")]
         public const string Agent = ".NET Agent";
 
         #region IConfiguration
@@ -34,7 +32,6 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.enabled")]
         public bool AgentEnabled => _configuration.AgentEnabled;
 
-        //[JsonProperty("agent.license_key")]
         [JsonIgnore()]
         public string AgentLicenseKey => _configuration.AgentLicenseKey;
 
@@ -59,7 +56,6 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("browser_monitoring.error_beacon_address")]
         public string BrowserMonitoringErrorBeaconAddress => _configuration.BrowserMonitoringErrorBeaconAddress;
 
-        //[JsonProperty("browser_monitoring.javascript_agent")]
         [JsonIgnore()]
         public string BrowserMonitoringJavaScriptAgent => _configuration.BrowserMonitoringJavaScriptAgent;
 
@@ -73,7 +69,7 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("browser_monitoring.loader_debug")]
         public bool LoaderDebug => false;
 
-        [JsonProperty("browser_monitoring.monitoring_key")]
+        [JsonIgnore()]
         public string BrowserMonitoringKey => _configuration.BrowserMonitoringKey;
 
         [JsonProperty("browser_monitoring.use_ssl")]
@@ -275,17 +271,17 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("error_collector.max_per_period")]
         public uint ErrorsMaximumPerPeriod => _configuration.ErrorsMaximumPerPeriod;
 
-        [JsonProperty("error_collector.expected_status_codes")]
-        public IEnumerable<MatchRule> ExpectedStatusCodes => _configuration.ExpectedStatusCodes;
-
         [JsonProperty("error_collector.expected_classes")]
         public IEnumerable<string> ExpectedErrorClassesForAgentSettings => _configuration.ExpectedErrorClassesForAgentSettings;
 
         [JsonProperty("error_collector.expected_messages")]
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings => _configuration.ExpectedErrorMessagesForAgentSettings;
 
-        // TODO: Less snark
-        [JsonProperty("error_collector.expected_status_codes_for_agent_settings_trolololol")]
+        // The following IConfiguration property `ExpectedErrorStatusCodesForAgentSettings` actually reports the same information in a more friendly way
+        [JsonIgnore()]
+        public IEnumerable<MatchRule> ExpectedStatusCodes => _configuration.ExpectedStatusCodes;
+
+        [JsonProperty("error_collector.expected_status_codes")]
         public IEnumerable<string> ExpectedErrorStatusCodesForAgentSettings => _configuration.ExpectedErrorStatusCodesForAgentSettings;
 
         [JsonProperty("error_collector.expected_errors_config")]
@@ -303,8 +299,8 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.request_headers_map")]
         public Dictionary<string, string> RequestHeadersMap => _configuration.RequestHeadersMap;
 
-        // Use old name
-        //[JsonProperty("agent.encoding_key")]
+        
+        //[JsonProperty("cross_application_tracer.encoding_key")]
         [JsonProperty("encoding_key")]
         public string EncodingKey => _configuration.EncodingKey;
 
@@ -353,11 +349,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("proxy.port")]
         public int ProxyPort => _configuration.ProxyPort;
 
-        //[JsonProperty("proxy.username")]
         [JsonIgnore()]
         public string ProxyUsername => _configuration.ProxyUsername;
 
-        //[JsonProperty("proxy.password")]
         [JsonIgnore()]
         public string ProxyPassword => _configuration.ProxyPassword;
 
@@ -371,18 +365,15 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("slow_sql.enabled")]
         public bool SlowSqlEnabled => _configuration.SlowSqlEnabled;
 
-        //[JsonProperty("transaction_tracer.sql_explain_plan_threshold")]
         [JsonProperty("transaction_tracer.explain_threshold")]
         public TimeSpan SqlExplainPlanThreshold => _configuration.SqlExplainPlanThreshold;
 
-        //[JsonProperty("transaction_tracer.explain_plans_enabled")]
         [JsonProperty("transaction_tracer.explain_enabled")]
         public bool SqlExplainPlansEnabled => _configuration.SqlExplainPlansEnabled;
 
         [JsonProperty("transaction_tracer.max_explain_plans")]
         public int SqlExplainPlansMax => _configuration.SqlExplainPlansMax;
 
-        //[JsonProperty("transaction_tracer.sql_statements_per_transaction")]
         [JsonProperty("transaction_tracer.max_sql_statements")]
         public uint SqlStatementsPerTransaction => _configuration.SqlStatementsPerTransaction;
 
@@ -452,7 +443,6 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("apdex_t")]
         public TimeSpan TransactionTraceApdexT => _configuration.TransactionTraceApdexT;
 
-        //[JsonProperty("transaction_tracer.threshold")]
         [JsonProperty("transaction_tracer.transaction_threshold")]
         public TimeSpan TransactionTraceThreshold => _configuration.TransactionTraceThreshold;
 
@@ -468,7 +458,6 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("transaction_tracer.record_sql_source")]
         public string TransactionTracerRecordSqlSource => _configuration.TransactionTracerRecordSqlSource;
 
-        //[JsonProperty("transaction_tracer.stack_threshold")]
         [JsonProperty("transaction_tracer.stack_trace_threshold")]
         public TimeSpan TransactionTracerStackThreshold => _configuration.TransactionTracerStackThreshold;
 
