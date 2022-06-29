@@ -12,19 +12,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="1.2.0" />
-    <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="1.0.0" />
-    <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
-    <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="1.1.0" />
-    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="1.1.0" />
-    <PackageReference Include="Amazon.Lambda.S3Events" Version="1.1.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.5.0" />
-    <PackageReference Include="Amazon.Lambda.SNSEvents" Version="1.0.0" />
-    <PackageReference Include="Amazon.Lambda.SQSEvents" Version="1.1.0" />
-    <PackageReference Include="Amazon.Lambda.TestUtilities" Version="1.1.0" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.8" />
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.101.7" />
-    <PackageReference Include="AWSSDK.SQS" Version="3.3.100.18" />
+    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.5.0" />
+    <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="2.1.0" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
+    <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="2.0.0" />
+    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="2.1.0" />
+    <PackageReference Include="Amazon.Lambda.S3Events" Version="2.0.1" />
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="2.1.0" />
+    <PackageReference Include="Amazon.Lambda.SNSEvents" Version="2.0.0" />
+    <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.1.0" />
+    <PackageReference Include="Amazon.Lambda.TestUtilities" Version="2.0.0" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.52" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.3.76" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.7.2.73" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="NUnit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.16.1">
