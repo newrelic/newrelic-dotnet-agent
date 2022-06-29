@@ -13,6 +13,7 @@ namespace NewRelic.Agent.Core.Configuration
     /// <summary>
     /// The configuration that is reported to the collector using the agent_settings command, and in connect.settings.
     /// </summary>
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class ReportedConfiguration : IConfiguration
     {
         private readonly IConfiguration _configuration;
@@ -20,151 +21,21 @@ namespace NewRelic.Agent.Core.Configuration
         {
             _configuration = configuration;
         }
-        //    CrossApplicationTracingCrossProcessId = configuration.CrossApplicationTracingCrossProcessId;
-        //    EncodingKey = configuration.EncodingKey;
-        //    TrustedAccountIds = configuration.TrustedAccountIds.ToList();
-        //    StackTraceMaximumFrames = configuration.StackTraceMaximumFrames;
-        //    ServerSideConfigurationEnabled = configuration.ServerSideConfigurationEnabled;
-        //    IgnoreServerSideConfiguration = configuration.IgnoreServerSideConfiguration;
-        //    ThreadProfilingEnabled = configuration.ThreadProfilingEnabled;
-        //    CrossApplicationTracingEnabled = configuration.CrossApplicationTracingEnabled;
-        //    DistributedTracingEnabled = configuration.DistributedTracingEnabled;
-        //    ErrorCollectorEnabled = configuration.ErrorCollectorEnabled;
-        //    ErrorCollectorIgnoreStatusCodes = configuration.HttpStatusCodesToIgnore.ToList();
-        //    ErrorCollectorIgnoreClasses = configuration.IgnoreErrorClassesForAgentSettings;
-        //    ErrorCollectorIgnoreMessages = configuration.IgnoreErrorMessagesForAgentSettings;
-        //    ErrorCollectorExpectedClasses = configuration.ExpectedErrorClassesForAgentSettings;
-        //    ErrorCollectorExpectedMessages = configuration.ExpectedErrorMessagesForAgentSettings;
-        //    ErrorCollectorExpectedStatusCodes = configuration.ExpectedErrorStatusCodesForAgentSettings;
-        //    TransactionTracerStackThreshold = configuration.TransactionTracerStackThreshold.TotalSeconds;
-        //    TransactionTracerExplainEnabled = configuration.SqlExplainPlansEnabled;
-        //    TransactionTracerExplainThreshold = configuration.SqlExplainPlanThreshold.TotalSeconds;
-        //    MaxSqlStatements = configuration.SqlStatementsPerTransaction;
-        //    MaxExplainPlans = configuration.SqlExplainPlansMax;
-        //    TransactionTracerThreshold = configuration.TransactionTraceThreshold.TotalSeconds;
-        //    TransactionTracerRecordSql = configuration.TransactionTracerRecordSql;
-        //    SlowSqlEnabled = configuration.SlowSqlEnabled;
-        //    BrowserMonitoringAutoInstrument = configuration.BrowserMonitoringAutoInstrument;
-        //    TransactionEventMaxSamplesStored = configuration.TransactionEventsMaximumSamplesStored;
 
-        //    // Application logging settings
-        //    ApplicationLoggingEnabled = configuration.ApplicationLoggingEnabled;
-        //    ApplicationLoggingForwardingEnabled = configuration.LogEventCollectorEnabled;
-        //    ApplicationLoggingForwardingMaxSamplesStored = configuration.LogEventsMaxSamplesStored;
-        //    ApplicationLoggingMetricsEnabled = configuration.LogMetricsCollectorEnabled;
-        //    ApplicationLoggingLocalDecoratingEnabled = configuration.LogDecoratorEnabled;
-
-        //}
-
-        //[JsonProperty("apdex_t")]
-        //public double? TransactionTraceApdexT { get; set; }
-
-        //[JsonProperty("cross_process_id")]
-        //public string CrossApplicationTracingCrossProcessId { get; set; }
-
-        //[JsonProperty("encoding_key")]
-        //public string EncodingKey { get; set; }
-
-        //[JsonProperty("trusted_account_ids")]
-        //public IEnumerable<long> TrustedAccountIds { get; set; }
-
-        //[JsonProperty("max_stack_trace_lines")]
-        //public int StackTraceMaximumFrames { get; set; }
-
-        //[JsonProperty("server_sideconfiguration_enabled")]
-        //public bool ServerSideConfigurationEnabled { get; set; }
-
-        //[JsonProperty("ignore_server_sideconfiguration")]
-        //public bool IgnoreServerSideConfiguration { get; set; }
-
-        //[JsonProperty("thread_profiler.enabled")]
-        //public bool ThreadProfilingEnabled { get; set; }
-
-        //[JsonProperty("cross_application_tracer.enabled")]
-        //public bool CrossApplicationTracingEnabled { get; set; }
-
-        //[JsonProperty("distributed_tracing.enabled")]
-        //public bool DistributedTracingEnabled { get; set; }
-
-        //[JsonProperty("error_collector.enabled")]
-        //public bool ErrorCollectorEnabled { get; set; }
-
-        //[JsonProperty("error_collector.ignore_status_codes")]
-        //public IEnumerable<string> ErrorCollectorIgnoreStatusCodes { get; set; }
-
-        //[JsonProperty("error_collector.ignore_classes")]
-        //public IEnumerable<string> ErrorCollectorIgnoreClasses { get; set; }
-
-        //[JsonProperty("error_collector.ignore_messages")]
-        //public IDictionary<string, IEnumerable<string>> ErrorCollectorIgnoreMessages { get; set; }
-
-        //[JsonProperty("error_collector.expected_classes")]
-        //public IEnumerable<string> ErrorCollectorExpectedClasses { get; set; }
-
-        //[JsonProperty("error_collector.expected_messages")]
-        //public IDictionary<string, IEnumerable<string>> ErrorCollectorExpectedMessages { get; set; }
-
-        //[JsonProperty("error_collector.expected_status_codes")]
-        //public IEnumerable<string> ErrorCollectorExpectedStatusCodes { get; set; }
-
-        //[JsonProperty("transaction_tracer.stack_trace_threshold")]
-        //public double TransactionTracerStackThreshold { get; set; }
-
-        //[JsonProperty("transaction_tracer.explain_enabled")]
-        //public bool TransactionTracerExplainEnabled { get; set; }
-
-        //[JsonProperty("transaction_tracer.max_sql_statements")]
-        //public uint MaxSqlStatements { get; set; }
-
-        //[JsonProperty("transaction_tracer.max_explain_plans")]
-        //public int MaxExplainPlans { get; set; }
-
-        //[JsonProperty("transaction_tracer.explain_threshold")]
-        //public double TransactionTracerExplainThreshold { get; set; }
-
-        //[JsonProperty("transaction_tracer.transaction_threshold")]
-        //public double TransactionTracerThreshold { get; set; }
-
-        //[JsonProperty("transaction_tracer.record_sql")]
-        //public string TransactionTracerRecordSql { get; set; }
-
-        //[JsonProperty("slow_sql.enabled")]
-        //public bool SlowSqlEnabled { get; set; }
-
-        //[JsonProperty("browser_monitoring.auto_instrument")]
-        //public bool BrowserMonitoringAutoInstrument { get; set; }
-
-        //[JsonProperty("transaction_event.max_samples_stored")]
-        //public int TransactionEventMaxSamplesStored { get; set; }
-
-        //// Application logging settings
-        //[JsonProperty("application_logging.enabled")]
-        //public bool ApplicationLoggingEnabled { get; set; }
-
-        //[JsonProperty("application_logging.forwarding.enabled")]
-        //public bool ApplicationLoggingForwardingEnabled { get; set; }
-
-        //[JsonProperty("application_logging.forwarding.max_samples_stored")]
-        //public int ApplicationLoggingForwardingMaxSamplesStored { get; set; }
-
-        //[JsonProperty("application_logging.metrics.enabled")]
-        //public bool ApplicationLoggingMetricsEnabled { get; set; }
-
-        //[JsonProperty("application_logging.local_decorating.enabled")]
-        //public bool ApplicationLoggingLocalDecoratingEnabled { get; set; }
-
-        [JsonProperty("agent.name")]
+        //[JsonProperty("agent.name")]
+        [JsonProperty("name")]
         public const string Agent = ".NET Agent";
 
         #region IConfiguration
 
         [JsonProperty("agent.run_id")]
-        public object AgentRunId => _configuration.AgentRunId;
+        public object AgentRunId => _configuration.AgentRunId?.ToString();
 
         [JsonProperty("agent.enabled")]
         public bool AgentEnabled => _configuration.AgentEnabled;
 
-        [JsonProperty("agent.license_key")]
+        //[JsonProperty("agent.license_key")]
+        [JsonIgnore()]
         public string AgentLicenseKey => _configuration.AgentLicenseKey;
 
         [JsonProperty("agent.application_names")]
@@ -194,8 +65,12 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("browser_monitoring.javascript_agent_file")]
         public string BrowserMonitoringJavaScriptAgentFile => _configuration.BrowserMonitoringJavaScriptAgentFile;
 
-        [JsonProperty("browser_monitoring.javascript_agent_loader_type")]
+        [JsonProperty("browser_monitoring.loader")]
         public string BrowserMonitoringJavaScriptAgentLoaderType => _configuration.BrowserMonitoringJavaScriptAgentLoaderType;
+
+        // Not an IConfiguration member, but this is here to replicate the behavior of the old 'connect' payload
+        [JsonProperty("browser_monitoring.loader_debug")]
+        public bool LoaderDebug => false;
 
         [JsonProperty("browser_monitoring.monitoring_key")]
         public string BrowserMonitoringKey => _configuration.BrowserMonitoringKey;
@@ -305,10 +180,11 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.configuration_version")]
         public long ConfigurationVersion => _configuration.ConfigurationVersion;
 
-        [JsonProperty("cross_application_tracing.process_id")]
+        //[JsonProperty("cross_application_tracer.cross_process_id")]
+        [JsonProperty("cross_process_id")]
         public string CrossApplicationTracingCrossProcessId => _configuration.CrossApplicationTracingCrossProcessId;
 
-        [JsonProperty("cross_application_tracing.enabled")]
+        [JsonProperty("cross_application_tracer.enabled")]
         public bool CrossApplicationTracingEnabled => _configuration.CrossApplicationTracingEnabled;
 
         [JsonProperty("distributed_tracing.enabled")]
@@ -401,13 +277,13 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("error_collector.expected_status_codes")]
         public IEnumerable<MatchRule> ExpectedStatusCodes => _configuration.ExpectedStatusCodes;
 
-        [JsonProperty("error_collector.expected_error_classes")]
+        [JsonProperty("error_collector.expected_classes")]
         public IEnumerable<string> ExpectedErrorClassesForAgentSettings => _configuration.ExpectedErrorClassesForAgentSettings;
 
-        [JsonProperty("error_collector.expected_error_messages")]
+        [JsonProperty("error_collector.expected_messages")]
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings => _configuration.ExpectedErrorMessagesForAgentSettings;
 
-        [JsonProperty("error_collector.expected_error_status_codes")]
+        [JsonProperty("error_collector.expected_status_codes")]
         public IEnumerable<string> ExpectedErrorStatusCodesForAgentSettings => _configuration.ExpectedErrorStatusCodesForAgentSettings;
 
         [JsonProperty("error_collector.expected_errors_config")]
@@ -416,16 +292,18 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("error_collector.ignore_errors_config")]
         public IDictionary<string, IEnumerable<string>> IgnoreErrorsConfiguration => _configuration.IgnoreErrorsConfiguration;
 
-        [JsonProperty("error_collector.ignore_error_classes")]
+        [JsonProperty("error_collector.ignore_classes")]
         public IEnumerable<string> IgnoreErrorClassesForAgentSettings => _configuration.IgnoreErrorClassesForAgentSettings;
 
-        [JsonProperty("error_collector.ignore_error_messages")]
+        [JsonProperty("error_collector.ignore_messages")]
         public IDictionary<string, IEnumerable<string>> IgnoreErrorMessagesForAgentSettings => _configuration.IgnoreErrorMessagesForAgentSettings;
 
         [JsonProperty("agent.request_headers_map")]
         public Dictionary<string, string> RequestHeadersMap => _configuration.RequestHeadersMap;
 
-        [JsonProperty("agent.encoding_key")]
+        // Use old name
+        //[JsonProperty("agent.encoding_key")]
+        [JsonProperty("encoding_key")]
         public string EncodingKey => _configuration.EncodingKey;
 
         [JsonProperty("agent.entity_guid")]
@@ -473,11 +351,12 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("proxy.port")]
         public int ProxyPort => _configuration.ProxyPort;
 
-        [JsonProperty("proxy.username")]
+        //[JsonProperty("proxy.username")]
+        [JsonIgnore()]
         public string ProxyUsername => _configuration.ProxyUsername;
 
-        // TODO: hmm.... ignore this IConfiguration memeber, and maybe just report if it is set or not?
-        [JsonProperty("proxy.password")]
+        //[JsonProperty("proxy.password")]
+        [JsonIgnore()]
         public string ProxyPassword => _configuration.ProxyPassword;
 
         [JsonProperty("proxy.domain")]
@@ -486,28 +365,33 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.put_for_data_sent")]
         public bool PutForDataSend => _configuration.PutForDataSend;
 
-        [JsonProperty("transaction_tracer.slow_sql_enabled")]
+        //[JsonProperty("transaction_tracer.slow_sql_enabled")]
+        [JsonProperty("slow_sql.enabled")]
         public bool SlowSqlEnabled => _configuration.SlowSqlEnabled;
 
-        [JsonProperty("transaction_tracer.sql_explain_plan_threshold")]
+        //[JsonProperty("transaction_tracer.sql_explain_plan_threshold")]
+        [JsonProperty("transaction_tracer.explain_threshold")]
         public TimeSpan SqlExplainPlanThreshold => _configuration.SqlExplainPlanThreshold;
 
-        [JsonProperty("transaction_tracer.explain_plans_enabled")]
+        //[JsonProperty("transaction_tracer.explain_plans_enabled")]
+        [JsonProperty("transaction_tracer.explain_enabled")]
         public bool SqlExplainPlansEnabled => _configuration.SqlExplainPlansEnabled;
 
         [JsonProperty("transaction_tracer.max_explain_plans")]
         public int SqlExplainPlansMax => _configuration.SqlExplainPlansMax;
 
-        [JsonProperty("transaction_tracer.sql_statements_per_transaction")]
+        //[JsonProperty("transaction_tracer.sql_statements_per_transaction")]
+        [JsonProperty("transaction_tracer.max_sql_statements")]
         public uint SqlStatementsPerTransaction => _configuration.SqlStatementsPerTransaction;
 
         [JsonProperty("transaction_tracer.sql_traces_per_period")]
         public int SqlTracesPerPeriod => _configuration.SqlTracesPerPeriod;
 
-        [JsonProperty("transaction_tracer.stack_trace")]
+        //[JsonProperty("transaction_tracer.stack_trace")]
+        [JsonProperty("max_stack_trace_lines")]
         public int StackTraceMaximumFrames => _configuration.StackTraceMaximumFrames;
 
-        [JsonProperty("agent.http_status_codes_to_ignore")]
+        [JsonProperty("error_collector.ignore_status_codes")]
         public IEnumerable<string> HttpStatusCodesToIgnore => _configuration.HttpStatusCodesToIgnore;
 
         [JsonProperty("agent.thread_profiling_methods_to_ignore")]
@@ -537,13 +421,14 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.disable_samplers")]
         public bool DisableSamplers => _configuration.DisableSamplers;
 
-        [JsonProperty("agent.thread_profiling_enabled")]
+        [JsonProperty("thread_profiler.enabled")]
         public bool ThreadProfilingEnabled => _configuration.ThreadProfilingEnabled;
 
         [JsonProperty("transaction_events.enabled")]
         public bool TransactionEventsEnabled => _configuration.TransactionEventsEnabled;
 
-        [JsonProperty("transaction_events.max_samples_stored")]
+        //[JsonProperty("transaction_events.max_samples_stored")]
+        [JsonProperty("transaction_event.max_samples_stored")]
         public int TransactionEventsMaximumSamplesStored => _configuration.TransactionEventsMaximumSamplesStored;
 
         [JsonProperty("transaction_events.harvest_cycle")]
@@ -561,10 +446,12 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("transaction_tracer.apdex_f")]
         public TimeSpan TransactionTraceApdexF => _configuration.TransactionTraceApdexF;
 
-        [JsonProperty("transaction_tracer.apdex_t")]
+        //[JsonProperty("transaction_tracer.apdex_t")]
+        [JsonProperty("apdex_t")]
         public TimeSpan TransactionTraceApdexT => _configuration.TransactionTraceApdexT;
 
-        [JsonProperty("transaction_tracer.threshold")]
+        //[JsonProperty("transaction_tracer.threshold")]
+        [JsonProperty("transaction_tracer.transaction_threshold")]
         public TimeSpan TransactionTraceThreshold => _configuration.TransactionTraceThreshold;
 
         [JsonProperty("transaction_tracer.enabled")]
@@ -579,19 +466,23 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("transaction_tracer.record_sql_source")]
         public string TransactionTracerRecordSqlSource => _configuration.TransactionTracerRecordSqlSource;
 
-        [JsonProperty("transaction_tracer.stack_threshold")]
+        //[JsonProperty("transaction_tracer.stack_threshold")]
+        [JsonProperty("transaction_tracer.stack_trace_threshold")]
         public TimeSpan TransactionTracerStackThreshold => _configuration.TransactionTracerStackThreshold;
 
         [JsonProperty("transaction_tracer.max_stack_traces")]
         public int TransactionTracerMaxStackTraces => _configuration.TransactionTracerMaxStackTraces;
 
-        [JsonProperty("agent.trusted_account_ids")]
+        //[JsonProperty("agent.trusted_account_ids")]
+        [JsonProperty("trusted_account_ids")]
         public IEnumerable<long> TrustedAccountIds => _configuration.TrustedAccountIds;
 
-        [JsonProperty("agent.server_side_config_enabled")]
+        //[JsonProperty("agent.server_side_config_enabled")]
+        [JsonProperty("server_sideconfiguration_enabled")]
         public bool ServerSideConfigurationEnabled => _configuration.ServerSideConfigurationEnabled;
 
-        [JsonProperty("agent.ignore_server_side_config")]
+        //[JsonProperty("agent.ignore_server_side_config")]
+        [JsonProperty("ignore_server_sideconfiguration")]
         public bool IgnoreServerSideConfiguration => _configuration.IgnoreServerSideConfiguration;
 
         [JsonProperty("agent.url_regex_rules")]
@@ -678,19 +569,19 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("application_logging.enabled")]
         public bool ApplicationLoggingEnabled => _configuration.ApplicationLoggingEnabled;
 
-        [JsonProperty("application_logging.metrics_enabled")]
+        [JsonProperty("application_logging.metrics.enabled")]
         public bool LogMetricsCollectorEnabled => _configuration.LogMetricsCollectorEnabled;
 
-        [JsonProperty("application_logging.forwarding_enabled")]
+        [JsonProperty("application_logging.forwarding.enabled")]
         public bool LogEventCollectorEnabled => _configuration.LogEventCollectorEnabled;
 
-        [JsonProperty("application_logging.max_samples_stored")]
+        [JsonProperty("application_logging.forwarding.max_samples_stored")]
         public int LogEventsMaxSamplesStored => _configuration.LogEventsMaxSamplesStored;
 
         [JsonProperty("application_logging.harvest_cycle")]
         public TimeSpan LogEventsHarvestCycle => _configuration.LogEventsHarvestCycle;
 
-        [JsonProperty("application_logging.decoration_enabled")]
+        [JsonProperty("application_logging.local_decorating.enabled")]
         public bool LogDecoratorEnabled => _configuration.LogDecoratorEnabled;
 
         [JsonProperty("agent.app_domain_caching_disabled")]
@@ -708,7 +599,6 @@ namespace NewRelic.Agent.Core.Configuration
         {
             return _configuration.GetAppSettings();
         }
-
 
         #endregion
     }

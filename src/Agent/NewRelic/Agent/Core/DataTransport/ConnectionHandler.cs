@@ -301,7 +301,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 _configuration.HighSecurityModeEnabled,
                 identifier,
                 _labelsService.Labels,
-                GetJsAgentSettings(),
                 metadata ?? new Dictionary<string, string>(),
                 new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter).GetUtilizationSettings(),
                 _configuration.CollectorSendEnvironmentInfo ? _environment : null,
@@ -323,17 +322,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 ? $"{HttpRuntime.AppDomainAppId}:{_environment.AppDomainAppPath}{appNames}"
                 : $"{Path.GetFileName(_processStatic.GetCurrentProcess().MainModuleFileName)}{appNames}";
 #endif
-        }
-
-        private JavascriptAgentSettingsModel GetJsAgentSettings()
-        {
-            var loader = "rum";
-            if (_configuration.BrowserMonitoringJavaScriptAgentLoaderType.Equals("full", StringComparison.InvariantCultureIgnoreCase))
-                loader = "full";
-            else if (_configuration.BrowserMonitoringJavaScriptAgentLoaderType.Equals("none", StringComparison.InvariantCultureIgnoreCase))
-                loader = "none";
-
-            return new JavascriptAgentSettingsModel(false, loader);
         }
 
         private void SendAgentSettings()
