@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-#if NETCOREAPP2_1_OR_GREATER // This is only applicable to the .net core agent
+#if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
 
 using Microsoft.Extensions.Logging;
 using Serilog;

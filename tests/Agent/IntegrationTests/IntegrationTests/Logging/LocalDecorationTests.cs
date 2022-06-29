@@ -515,6 +515,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
         }
     }
 
+    [NetFrameworkTest]
+    public class MicrosoftLoggingJsonLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MicrosoftLoggingJsonLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
     #endregion
 
     #region Json layout, decoration disabled
@@ -541,6 +550,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     public class MicrosoftLoggingJsonLayoutDecorationDisabledTestsNetCore31Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public MicrosoftLoggingJsonLayoutDecorationDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Json, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MicrosoftLoggingJsonLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MicrosoftLoggingJsonLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, false, LayoutType.Json, LoggingFramework.MicrosoftLogging)
         {
         }
@@ -577,6 +595,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
         }
     }
 
+    [NetFrameworkTest]
+    public class MicrosoftLoggingPatternLayoutDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MicrosoftLoggingPatternLayoutDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
     #endregion
 
     #region Pattern layout, decoration disabled
@@ -603,6 +630,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     public class MicrosoftLoggingPatternLayoutDecorationDisabledTestsNetCore31Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public MicrosoftLoggingPatternLayoutDecorationDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MicrosoftLoggingPatternLayoutDecorationDisabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MicrosoftLoggingPatternLayoutDecorationDisabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.MicrosoftLogging)
         {
         }

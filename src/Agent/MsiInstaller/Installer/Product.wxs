@@ -463,6 +463,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="NLogLoggingWrapperComponent" Guid="{31EA2456-A5E3-4B04-AD4B-B010594F494D}">
         <File Id="NLogLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.NLogLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.NLogLogging.dll"/>
       </Component>
+      <Component Id="MicrosoftExtensionsLoggingWrapperComponent" Guid="{33598C6C-BF8E-4AFC-A6C1-56310CEE61D7}">
+        <File Id="MicrosoftExtensionsLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll"/>
+      </Component>
 
       <!-- Reference libraries -->
       <Component Id="NewRelicCoreReferenceComponent" Guid="{C196ED1E-0FBA-4D36-9C34-E969B0C9E8C9}">
@@ -605,6 +608,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="NLogLoggingInstrumentationComponent" Guid="{C803621B-EC47-4559-8B7D-2FD836A36DCD}">
         <File Id="NLogLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml"/>
+      </Component>
+      <Component Id="MicrosoftExtensionsLoggingInstrumentationComponent" Guid="{FE0A1615-93B7-4355-AE20-D5C2E1ABE56C}">
+        <File Id="MicrosoftExtensionsLoggingFile" Name="NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 

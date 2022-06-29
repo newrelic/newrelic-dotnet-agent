@@ -795,6 +795,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
+        [NetFrameworkTest]
+        public class
+        MicrosoftLoggingMetricsAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+        ConsoleDynamicMethodFixtureFWLatest>
+        {
+            public MicrosoftLoggingMetricsAndForwardingEnabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
         #endregion
 
         #region Metrics and Forwarding Disabled
@@ -830,6 +842,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore31Tests(
                 ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
+        [NetFrameworkTest]
+        public class
+            MicrosoftLoggingMetricsAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+        ConsoleDynamicMethodFixtureFWLatest>
+        {
+            public MicrosoftLoggingMetricsAndForwardingDisabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
                 : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
             {
             }
@@ -875,6 +899,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
+        [NetFrameworkTest]
+        public class
+            MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+        ConsoleDynamicMethodFixtureFWLatest>
+        {
+            public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
         #endregion
 
         #region Metrics Disabled, Forwarding Enabled
@@ -910,6 +946,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(
                 ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
+        [NetFrameworkTest]
+        public class
+            MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFWLatest>
+        {
+            public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
                 : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
             {
             }
