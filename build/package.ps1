@@ -23,8 +23,6 @@ $packagesToBuild = @(
     "dotnet run --project '$artifactBuilderCsproj' NugetAgent $configuration",
     "dotnet run --project '$artifactBuilderCsproj' NugetAwsLambdaOpenTracer $configuration",
     "dotnet run --project '$artifactBuilderCsproj' ZipArchives $configuration",
-    "dotnet run --project '$artifactBuilderCsproj' CoreInstaller $configuration",
-    "dotnet run --project '$artifactBuilderCsproj' ScriptableInstaller $configuration",
     "dotnet run --project '$artifactBuilderCsproj' MsiInstaller $configuration",
     "dotnet run --project '$artifactBuilderCsproj' LinuxPackages $configuration"
 )
