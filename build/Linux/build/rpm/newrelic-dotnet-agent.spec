@@ -3,7 +3,7 @@
 %define          debug_package %{nil}
 %define        __os_install_post %{_dbpath}/brp-compress
 
-Name: newrelic-netcore20-agent
+Name: newrelic-dotnet-agent
 Version: %{getenv:AGENT_VERSION}
 Release: 1
 License: Apache Software License 2.0
@@ -19,7 +19,7 @@ SOURCE0: %{name}-%{version}.tar.gz
 
 %description
 The New Relic .NET agent monitors applications running
-on .NET Core 2.0+.
+on .NET Core 3.1+.
 
 %prep
 %setup -q

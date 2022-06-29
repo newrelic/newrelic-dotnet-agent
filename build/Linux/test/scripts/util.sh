@@ -1,7 +1,7 @@
 #!/bin/bash
 source /test/osht.sh
 
-PACKAGE_NAME='newrelic-netcore20-agent'
+PACKAGE_NAME='newrelic-dotnet-agent'
 
 function print_header {
     printf "\n\n\e[34m### $1\033[0m\n"

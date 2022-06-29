@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGE_NAME='newrelic-netcore20-agent'
+PACKAGE_NAME='newrelic-dotnet-agent'
 NEWRELIC_HOME=/usr/local/${PACKAGE_NAME}
 
 # Deprecated instrumentation files to remove post install

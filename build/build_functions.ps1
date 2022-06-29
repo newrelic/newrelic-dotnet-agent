@@ -150,7 +150,7 @@ function Copy-AgentRoot {
     if ($Type -like "Core") {
         Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\$Configuration\netstandard2.0\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
         Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\netstandard2.0-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force 
-        Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\netcore20-agent-readme.md" -Destination "$Destination\README.md" -Force 
+        Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\core-agent-readme.md" -Destination "$Destination\README.md" -Force 
     }
 
     $grpcDir = Get-GrpcPackagePath $RootDirectory
