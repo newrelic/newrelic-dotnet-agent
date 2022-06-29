@@ -283,7 +283,8 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("error_collector.expected_messages")]
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings => _configuration.ExpectedErrorMessagesForAgentSettings;
 
-        [JsonProperty("error_collector.expected_status_codes")]
+        // TODO: Less snark
+        [JsonProperty("error_collector.expected_status_codes_for_agent_settings_trolololol")]
         public IEnumerable<string> ExpectedErrorStatusCodesForAgentSettings => _configuration.ExpectedErrorStatusCodesForAgentSettings;
 
         [JsonProperty("error_collector.expected_errors_config")]
