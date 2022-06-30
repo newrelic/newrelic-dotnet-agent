@@ -73,10 +73,20 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(instrumentationPoint == nullptr);
         }
 
-        TEST_METHOD(deprecated_logforwarding_xml_is_ignored)
+        TEST_METHOD(deprecated_instrumentation_xml_is_ignored)
         {
-            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
-            xmlSet->emplace(L"NewRelic.Providers.Wrapper.Logging.Instrumentation.xml", L"\
+            wchar_t* wrapperNames[2] =
+            {
+                L"NewRelic.Providers.Wrapper.Logging.Instrumentation.xml",
+                L"NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml"
+            };
+
+            int size = sizeof(wrapperNames) / sizeof(wchar_t*);
+
+            for (int i = 0; i < size; i++)
+            {
+                InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+                xmlSet->emplace(wrapperNames[i], L"\
                 <?xml version=\"1.0\" encoding=\"utf-8\"?>\
                 <extension>\
                     <instrumentation>\
@@ -88,9 +98,10 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                     </instrumentation>\
                 </extension>\
                 ");
-            InstrumentationConfiguration instrumentation(xmlSet);
-            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
-            Assert::IsTrue(instrumentationPoint == nullptr);
+                InstrumentationConfiguration instrumentation(xmlSet);
+                auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
+                Assert::IsTrue(instrumentationPoint == nullptr);
+            }
         }
 
         TEST_METHOD(no_assembly_match)
