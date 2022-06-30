@@ -73,25 +73,15 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 new Assertions.ExpectedMetric {metricName = @"OtherTransaction/all", callCount = 5},
             };
 
-            var expectedAttributes = new Dictionary<string, string>
-            {
-                 { "request.parameters.data", "mything" },
-            };
-
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
             var transactionSamples = _fixture.AgentLog.GetTransactionSamples();
-            //this is the transaction trace that is generally returned, but this 
-            //is not necessarily always the case
-            var getTransactionSample = transactionSamples
+
+            var getDataTransactionSample = transactionSamples
                 .Where(sample => sample.Path == "WebTransaction/WebAPI/Values/Get")
                 .FirstOrDefault();
-            var get404TransactionSample = transactionSamples
-                .Where(sample => sample.Path == "WebTransaction/WebAPI/Values/Get404")
-                .FirstOrDefault();
-            var postTransactionSample = transactionSamples
-                .Where(sample => sample.Path == "WebTransaction/WebAPI/Values/Post")
-                .FirstOrDefault();
+
+            Assert.NotNull(getDataTransactionSample);
 
             var transactionEventWithExternal = _fixture.AgentLog.GetTransactionEvents()
                 .Where(e => e.IntrinsicAttributes.ContainsKey("externalDuration"))
@@ -105,64 +95,35 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
             );
 
-            // check the transaction trace samples
-            TransactionSample traceToCheck = null;
-            List<string> expectedTransactionTraceSegments = null;
-            List<string> doNotExistTraceSegments = null;
-            if (getTransactionSample != null)
+            // check the transaction trace sample
+            var expectedTransactionTraceSegments = new List<string>
             {
-                traceToCheck = getTransactionSample;
-                expectedTransactionTraceSegments = new List<string>
-                {
-                    @"Owin Middleware Pipeline",
-                    @"DotNet/Values/Get"
-                };
-                doNotExistTraceSegments = new List<string>
-                {
-                    @"DotNet/Values/Get404",
-                    @"DotNet/Values/Post"
-                };
-                expectedAttributes.Add("request.uri", "/api/values");
-            }
-            else if (get404TransactionSample != null)
+                @"Owin Middleware Pipeline",
+                @"DotNet/Values/Get"
+            };
+
+            var doNotExistTraceSegments = new List<string>
             {
-                traceToCheck = get404TransactionSample;
-                expectedTransactionTraceSegments = new List<string>
-                {
-                    @"Owin Middleware Pipeline",
-                    @"DotNet/Values/Get404"
-                };
-                doNotExistTraceSegments = new List<string>
-                {
-                    @"External/www.google.com/Stream/GET",
-                    @"DotNet/Values/Get",
-                    @"DotNet/Values/Post"
-                };
-                expectedAttributes.Add("request.uri", "/api/404");
-            }
-            else if (postTransactionSample != null)
+                @"DotNet/Values/Get404",
+                @"DotNet/Values/Post"
+            };
+
+            var expectedAttributes = new Dictionary<string, string>
             {
-                traceToCheck = postTransactionSample;
-                expectedTransactionTraceSegments = new List<string>
-                {
-                    @"Owin Middleware Pipeline",
-                    @"DotNet/Values/Post"
-                };
-                doNotExistTraceSegments = new List<string>
-                {
-                    @"External/www.google.com/Stream/GET",
-                    @"DotNet/Values/Get404",
-                    @"DotNet/Values/Get"
-                };
-                expectedAttributes.Add("request.uri", "/api/values");
-            }
+                { "request.parameters.data", "mything" },
+                {"request.uri", "/api/values" }
+            };
 
             NrAssert.Multiple(
-                () => Assert.NotNull(traceToCheck),
-                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, traceToCheck),
-                () => Assertions.TransactionTraceSegmentsNotExist(doNotExistTraceSegments, traceToCheck),
-                () => Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Agent,
-                    traceToCheck));
+                () => Assert.NotNull(getDataTransactionSample),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, getDataTransactionSample),
+                () => Assertions.TransactionTraceSegmentsNotExist(doNotExistTraceSegments, getDataTransactionSample),
+                () => Assertions.TransactionTraceHasAttributes(
+                    expectedAttributes,
+                    TransactionTraceAttributeType.Agent,
+                    getDataTransactionSample
+                )
+            );
         }
     }
 

@@ -37,9 +37,10 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
 
             exerciseApplication: () =>
                 {
+                    // Generates a transaction trace.
                     _fixture.Get();
 
-                    //This transaction trace will appear as error trace instead of transaction trace.
+                    // Generates an error trace.
                     _fixture.Get404();
                     _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
                 }
@@ -100,12 +101,21 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()
                 .Where(sample => sample.Path == expectedTransactionName)
                 .FirstOrDefault();
+
+            Assert.NotNull(transactionSample);
+
+
             var errorTrace = _fixture.AgentLog.GetErrorTraces()
                 .Where(trace => trace.Path == expectedTracedErrorPathAsync)
                 .FirstOrDefault();
+
+            Assert.NotNull(errorTrace);
+
             var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
 
             var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
+
+            Assert.NotNull(transactionEvent);
 
             NrAssert.Multiple
             (

@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net45</TargetFrameworks>
+    <TargetFrameworks>net462</TargetFrameworks>
     <RootNamespace>NewRelic.Providers.Wrapper.WebApi1</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.WebApi1</AssemblyName>
     <Description>Web API 1 Wrapper Provider for New Relic .NET Agent</Description>

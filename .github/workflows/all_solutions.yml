@@ -10,7 +10,7 @@ on:
     types: [ published ]
   workflow_dispatch:
   schedule:
-    - cron:  '0 9 * * 6'
+    - cron:  '0 9 * * *'
 
 env:
   scripts_path: ${{ github.workspace }}\build\scripts
@@ -158,7 +158,7 @@ jobs:
             wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
             mkdir /root/git
             cd /root/git
-            git clone --branch release/3.0 https://github.com/dotnet/coreclr.git
+            git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
             curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
             chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
             ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
@@ -237,7 +237,7 @@ jobs:
       - name: Create agentVersion
         id: agentVersion
         run: |
-          $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
+          $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
           Write-Host "::set-output name=version::$agentVersion"
         shell: powershell
 
@@ -392,7 +392,7 @@ jobs:
         with:
           vs-prerelease: true
 
-      - name: Add .NET 6 Preview SDK
+      - name: Add .NET 6 SDK
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '6.0.x'
@@ -436,7 +436,7 @@ jobs:
         with:
           vs-prerelease: true
 
-      - name: Add .NET 6 Preview SDK
+      - name: Add .NET 6 SDK
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '6.0.x'
@@ -461,31 +461,6 @@ jobs:
             !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
           if-no-files-found: error
 
-  build-platform-tests: 
-    needs: build-test-fullagent-msi
-    name: Build PlatformTests
-    runs-on: windows-2019
-
-    env:
-      platform_solution_path: ${{ github.workspace }}\tests\Agent\PlatformTests\PlatformTests.sln
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
-
-      - name: Build PlatformTests.sln
-        run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}
-        shell: powershell
-
   run-integration-tests:
     needs: [build-integration-tests]
     name: Run IntegrationTests
@@ -501,7 +476,7 @@ jobs:
           ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
           WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
           RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, 
-          RequestHandling, CodeLevelMetrics ]
+          RequestHandling, CodeLevelMetrics, InfiniteTracing]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -517,11 +492,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-
-      - name: Setup .NET Core 2.2.103
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '2.2.103'
 
       - name: Setup .NET Core 3.1.100
         uses: actions/setup-dotnet@v1
@@ -646,7 +616,6 @@ jobs:
             apt-get update -q -y && apt-get install -q -y curl
             export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
             mkdir -p /usr/share/dotnet
-            curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/2.1.818/dotnet-sdk-2.1.818-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
             curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
             curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
             curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-linux-arm64.tar.gz | tar -xzC /usr/share/dotnet
@@ -773,6 +742,10 @@ jobs:
         run: |
           "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
+
+      - name: Start Local CosmosDB Emulator for CosmosDB Tests
+        if: matrix.namespace == 'CosmosDB'
+        uses: southpolesteve/cosmos-emulator-github-action@v1
 
       - name: Run Unbounded Integration Tests
         run: |

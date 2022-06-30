@@ -19,7 +19,7 @@ namespace ArtifactBuilder.Artifacts
 
             var package = new NugetPackage(StagingDirectory, OutputDirectory);
             package.CopyAll(PackageDirectory);
-            package.CopyToLib(frameworkAgentComponents.AgentApiDll, "net45");
+            package.CopyToLib(frameworkAgentComponents.AgentApiDll, "net462");
             package.CopyToLib(coreAgentComponents.AgentApiDll, "netstandard2.0");
             package.CopyToRoot(frameworkAgentComponents.NewRelicLicenseFile);
             package.CopyToRoot(frameworkAgentComponents.NewRelicThirdPartyNoticesFile);

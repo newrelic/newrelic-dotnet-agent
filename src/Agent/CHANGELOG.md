@@ -6,7 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 
-## [9.9.0] - 2022-05-19
+### New Features
+* Adds support for forwarding application logs to New Relic for .NET Framework applications using Microsoft.Extensions.Logging. [#1172](https://github.com/newrelic/newrelic-dotnet-agent/pull/1172)
+
+### Fixes
+* Resolves an issue with transaction trace aggregation where the slowest transaction trace was not always captured due to a race condition. ([#1166](https://github.com/newrelic/newrelic-dotnet-agent/pull/1166))
+
+### Deprecations/Removed Features
+* The scriptable installers have been removed. ([#1170](https://github.com/newrelic/newrelic-dotnet-agent/pull/1170))
+
+## [9.9.0] - 2022-06-08
 
 ### New Features
 * Adds support for logging metrics, forwarding application logs, and enriching application logs written to disk or standard out for NLog versions v5 and v4. [#1087](https://github.com/newrelic/newrelic-dotnet-agent/pull/1087)

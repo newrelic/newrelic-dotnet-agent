@@ -36,13 +36,13 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
             // MSE Logging doesn't have a timestamp for us to pull so we fudge it here.
             Func<object, DateTime> getTimestampFunc = mc => DateTime.UtcNow;
 
-            Func<object, string> getLogLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
+            Func<object, string> getLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
 
             Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
 
             var xapi = agent.GetExperimentalApi();
 
-            xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLogLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+            xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
         private AfterWrappedMethodDelegate DecorateLogMessage(MEL.ILogger logger, IAgent agent)

@@ -18,6 +18,9 @@ namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
             NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("key", "value");
             NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("foo", "bar");
 
+            // Attempt to force this as the captured transaction trace.
+            Thread.Sleep(1000);
+
             return "success";
         }
 

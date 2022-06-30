@@ -37,10 +37,10 @@ namespace ArtifactBuilder.Artifacts
             Directory.CreateDirectory($@"{rootDirectory}\logs");
             System.IO.File.Create($@"{rootDirectory}\logs\placeholder").Dispose();
 
-            frameworkAgentComponents.CopyComponents($@"{package.GetContentFilesDirectory("any", "net45")}\newrelic");
-            FileHelpers.CopyFile(frameworkAgentX86Components.WindowsProfiler, $@"{package.GetContentFilesDirectory("any", "net45")}\newrelic\x86");
-            Directory.CreateDirectory($@"{StagingDirectory}\contentFiles\any\net45\newrelic\logs");
-            System.IO.File.Create($@"{StagingDirectory}\contentFiles\any\net45\newrelic\logs\placeholder").Dispose();
+            frameworkAgentComponents.CopyComponents($@"{package.GetContentFilesDirectory("any", "net462")}\newrelic");
+            FileHelpers.CopyFile(frameworkAgentX86Components.WindowsProfiler, $@"{package.GetContentFilesDirectory("any", "net462")}\newrelic\x86");
+            Directory.CreateDirectory($@"{StagingDirectory}\contentFiles\any\net462\newrelic\logs");
+            System.IO.File.Create($@"{StagingDirectory}\contentFiles\any\net462\newrelic\logs\placeholder").Dispose();
 
             coreAgentComponents.CopyComponents($@"{package.GetContentFilesDirectory("any", "netstandard2.0")}\newrelic");
             FileHelpers.CopyFile(coreAgentX86Components.WindowsProfiler, $@"{package.GetContentFilesDirectory("any", "netstandard2.0")}\newrelic\x86");
@@ -58,7 +58,7 @@ namespace ArtifactBuilder.Artifacts
             var newRelicConfigPaths = new[]
             {
                 $@"{rootDirectory}\newrelic.config",
-                $@"{StagingDirectory}\contentFiles\any\net45\newrelic\newrelic.config",
+                $@"{StagingDirectory}\contentFiles\any\net462\newrelic\newrelic.config",
                 $@"{StagingDirectory}\contentFiles\any\netstandard2.0\newrelic\newrelic.config",
             };
 

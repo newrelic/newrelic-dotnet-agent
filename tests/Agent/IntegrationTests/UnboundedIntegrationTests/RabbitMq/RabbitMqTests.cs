@@ -39,12 +39,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
             // This is needed to avoid a hang on shutdown in the test app
             _fixture.AddCommand("RabbitMQ Shutdown");
 
-            _fixture.Actions
+            // AddActions() executes the applied actions after actions defined by the base.
+            // In this case the base defines an exerciseApplication action we want to wait after.
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                     configModifier.ForceTransactionTraces();
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
 
@@ -142,15 +148,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
     public class RabbitMqNetCore621Tests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public RabbitMqNetCore621Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class RabbitMqNetCore510Tests : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public RabbitMqNetCore510Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

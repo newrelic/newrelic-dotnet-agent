@@ -74,21 +74,6 @@ namespace MultiFunctionApplicationHelpers
         }
     }
 
-
-    public class ConsoleDynamicMethodFixtureCore21 : ConsoleDynamicMethodFixtureCoreSpecificVersion
-    {
-        public ConsoleDynamicMethodFixtureCore21() : base("netcoreapp2.1")
-        {
-        }
-    }
-
-    public class ConsoleDynamicMethodFixtureCore22 : ConsoleDynamicMethodFixtureCoreSpecificVersion
-    {
-        public ConsoleDynamicMethodFixtureCore22() : base("netcoreapp2.2")
-        {
-        }
-    }
-
     public class ConsoleDynamicMethodFixtureCore31 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
         public ConsoleDynamicMethodFixtureCore31() : base("netcoreapp3.1")
@@ -165,7 +150,7 @@ namespace MultiFunctionApplicationHelpers
     {
         protected static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
 
-        protected override int MaxTries => 1;       //No need to retry this;
+        protected override int MaxTries => 3;
 
         private List<string> _commands = new List<string>();
 
@@ -201,8 +186,14 @@ namespace MultiFunctionApplicationHelpers
 
                     RemoteApplication.WriteToStandardInput(cmd);
                 }
-                RemoteApplication.WriteToStandardInput("exit");
             });
+        }
+
+        public override void ShutdownRemoteApplication()
+        {
+            RemoteApplication.WriteToStandardInput("exit");
+
+            base.ShutdownRemoteApplication();
         }
     }
 }

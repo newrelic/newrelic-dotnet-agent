@@ -39,12 +39,6 @@ namespace ArtifactBuilder.Artifacts
                     $@"newrelic-agent-win-{platform}-{Version}.msi");
             }
 
-            //Scriptable Installer
-            CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\ScriptableInstaller", "*.zip", OutputDirectory, $@"newrelic-agent-win-{Version}-scriptable-installer.zip");
-
-            //Core Scriptable Installer
-            CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\ZipArchiveCoreInstaller", "*.zip", OutputDirectory, $@"newrelic-netcore20-agent-win-{Version}-scriptable-installer.zip");
-
             //Core Zip files
             foreach (var platform in platforms)
             {

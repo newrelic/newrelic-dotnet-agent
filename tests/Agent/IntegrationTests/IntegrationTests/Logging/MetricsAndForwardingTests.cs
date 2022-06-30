@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -128,7 +129,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             // Give the unawaited async logs some time to catch up
             _fixture.AddCommand($"RootCommands DelaySeconds 10");
 
-            _fixture.Actions
+            // AddActions() executes the applied actions after actions defined by the base.
+            // In this case the base defines an exerciseApplication action we want to wait after.
+            // Commentary: The actions defined by the base class do not impact failure/success
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
@@ -139,6 +143,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                     .EnableLogForwarding(forwardingEnabled)
                     .EnableDistributedTrace()
                     .SetLogLevel("debug");
+                },
+                exerciseApplication: () =>
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(10));
                 }
             );
 
@@ -146,15 +154,33 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
 
         [Fact]
-        public void LogLinesPerLevelMetricsExist()
+        public void Test()
+        {
+            LogLinesPerLevelMetricsExist();
+            SupportabilityForwardingConfigurationMetricExists();
+            SupportabilityMetricsConfigurationMetricExists();
+            SupportabilityLoggingFrameworkMetricExists();
+            CountsAndValuesAreAsExpected();
+            LoggingWorksWithTraceAttributeOutsideTransaction();
+            LoggingWorksWithDifferentTraceAttributesInsideTransaction();
+            LoggingWorksInsideTransaction();
+            AsyncLoggingWorksInsideTransaction();
+            AsyncNoAwaitLoggingWorksInsideTransaction();
+            LoggingWorksOutsideTransaction();
+            AsyncLoggingWorksOutsideTransaction();
+            AsyncNoAwaitLoggingWorksOutsideTransaction();
+            AsyncNoAwaitWithDelayLoggingWorksInsideTransaction();
+        }
+        
+        private void LogLinesPerLevelMetricsExist()
         {
             var loggingMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLogLevelName(_loggingFramework, "DEBUG"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLogLevelName(_loggingFramework, "INFO"), callCount = 10 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLogLevelName(_loggingFramework, "WARN"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLogLevelName(_loggingFramework, "ERROR"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLogLevelName(_loggingFramework, "FATAL"), callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "DEBUG"), callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "INFO"), callCount = 10 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "WARN"), callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "ERROR"), callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "FATAL"), callCount = 7 },
 
                 new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 38 },
             };
@@ -170,8 +196,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void SupportabilityForwardingConfigurationMetricExists()
+        private void SupportabilityForwardingConfigurationMetricExists()
         {
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             if (_forwardingEnabled)
@@ -184,8 +209,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void SupportabilityMetricsConfigurationMetricExists()
+        private void SupportabilityMetricsConfigurationMetricExists()
         {
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             if (_metricsEnabled)
@@ -198,16 +222,14 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void SupportabilityLoggingFrameworkMetricExists()
+        private void SupportabilityLoggingFrameworkMetricExists()
         {
             var expectedFrameworkName = GetFrameworkName(_loggingFramework);
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             Assert.Contains(actualMetrics, x => x.MetricSpec.Name == $"Supportability/Logging/DotNET/{expectedFrameworkName}/enabled");
         }
 
-        [Fact]
-        public void CountsAndValuesAreAsExpected()
+        private void CountsAndValuesAreAsExpected()
         {
             var logEventData = _fixture.AgentLog.GetLogEventData().FirstOrDefault();
             if (_forwardingEnabled)
@@ -232,7 +254,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 foreach (var logLine in logLines)
                 {
                     Assert.False(string.IsNullOrWhiteSpace(logLine.Message));
-                    Assert.False(string.IsNullOrWhiteSpace(logLine.LogLevel));
+                    Assert.False(string.IsNullOrWhiteSpace(logLine.Level));
                     Assert.NotEqual(0, logLine.Timestamp);
                 }
             }
@@ -242,14 +264,13 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void LoggingWorksWithTraceAttributeOutsideTransaction()
+        private void LoggingWorksWithTraceAttributeOutsideTransaction()
         {
             if (_forwardingEnabled && _canHaveLogsOutsideTransaction)
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = TraceAttributeOutsideTransactionLogMessage, HasTraceId = false, HasSpanId = false }
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = TraceAttributeOutsideTransactionLogMessage, HasTraceId = false, HasSpanId = false }
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -260,14 +281,13 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void LoggingWorksWithDifferentTraceAttributesInsideTransaction()
+        private void LoggingWorksWithDifferentTraceAttributesInsideTransaction()
         {
             if (_forwardingEnabled)
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = DifferentTraceAttributesInsideTransactionLogMessage, HasTraceId = true, HasSpanId = true }
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = DifferentTraceAttributesInsideTransactionLogMessage, HasTraceId = true, HasSpanId = true }
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -277,22 +297,21 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 var logsOfInterest = logLines.Where(x => x.Message.StartsWith("DifferentTraceAttributesInsideTransaction")).ToArray();
 
                 Assert.Equal(2, logsOfInterest.Length);
-                Assert.NotEqual(logsOfInterest[0].Attributes.Spanid, logsOfInterest[1].Attributes.Spanid);
+                Assert.NotEqual(logsOfInterest[0].Spanid, logsOfInterest[1].Spanid);
             }
         }
 
-        [Fact]
-        public void LoggingWorksInsideTransaction()
+        private void LoggingWorksInsideTransaction()
         {
             if (_forwardingEnabled)
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = InTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = InTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = InTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = InTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = InTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = InTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = InTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = InTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = InTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = InTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -303,18 +322,17 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void AsyncLoggingWorksInsideTransaction()
+        private void AsyncLoggingWorksInsideTransaction()
         {
             if (_forwardingEnabled)
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = AsyncInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = AsyncInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -325,8 +343,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void AsyncNoAwaitLoggingWorksInsideTransaction()
+        private void AsyncNoAwaitLoggingWorksInsideTransaction()
         {
             if (_forwardingEnabled)
             {
@@ -334,11 +351,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 // Because of this the spanId/traceId members are not checked by not specifying true/false in the ExpectedLogLines
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitInTransactionDebugMessage},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitInTransactionInfoMessage},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitInTransactionWarningMessage},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitInTransactionErrorMessage},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitInTransactionFatalMessage},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitInTransactionDebugMessage},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitInTransactionInfoMessage},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitInTransactionWarningMessage},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitInTransactionErrorMessage},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitInTransactionFatalMessage},
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -349,18 +366,17 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void LoggingWorksOutsideTransaction()
+        private void LoggingWorksOutsideTransaction()
         {
             if (_forwardingEnabled && _canHaveLogsOutsideTransaction)
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = OutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = OutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = OutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = OutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = OutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = OutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = OutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = OutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = OutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = OutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
@@ -371,18 +387,17 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void AsyncLoggingWorksOutsideTransaction()
+        private void AsyncLoggingWorksOutsideTransaction()
         {
             if (_forwardingEnabled && _canHaveLogsOutsideTransaction)
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = AsyncOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = AsyncOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
@@ -393,18 +408,17 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void AsyncNoAwaitLoggingWorksOutsideTransaction()
+        private void AsyncNoAwaitLoggingWorksOutsideTransaction()
         {
             if (_forwardingEnabled && _canHaveLogsOutsideTransaction)
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
@@ -415,18 +429,17 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [Fact]
-        public void AsyncNoAwaitWithDelayLoggingWorksInsideTransaction()
+        private void AsyncNoAwaitWithDelayLoggingWorksInsideTransaction()
         {
             if (_forwardingEnabled)
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitWithDelayInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitWithDelayInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitWithDelayInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { LogLevel = GetLogLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitWithDelayInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitWithDelayInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitWithDelayInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitWithDelayInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
+                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitWithDelayInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -455,7 +468,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        private string GetLogLevelName(LoggingFramework loggingFramework, string level)
+        private string GetLevelName(LoggingFramework loggingFramework, string level)
         {
             switch (loggingFramework)
             {
@@ -564,14 +577,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [NetCoreTest]
-        public class Log4NetMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-        {
-            public Log4NetMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-                : base(fixture, output, true, true, true, LoggingFramework.Log4net)
-            {
-            }
-        }
         #endregion
 
         #region Metrics and Forwarding Disabled
@@ -624,15 +629,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         public class Log4NetMetricsAndForwardingDisabledTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
         {
             public Log4NetMetricsAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-                : base(fixture, output, false, false, true, LoggingFramework.Log4net)
-            {
-            }
-        }
-
-        [NetCoreTest]
-        public class Log4NetMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-        {
-            public Log4NetMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
                 : base(fixture, output, false, false, true, LoggingFramework.Log4net)
             {
             }
@@ -695,15 +691,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [NetCoreTest]
-        public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-        {
-            public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-                : base(fixture, output, true, false, true, LoggingFramework.Log4net)
-            {
-            }
-        }
-
         #endregion
 
         #region Metrics Disabled, Forwarding Enabled
@@ -761,24 +748,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [NetCoreTest]
-        public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore22>
-        {
-            public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
-            {
-            }
-        }
-
-        [NetCoreTest]
-        public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore21>
-        {
-            public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
-            {
-            }
-        }
-
         #endregion
     }
 
@@ -826,13 +795,13 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [NetCoreTest]
+        [NetFrameworkTest]
         public class
-            MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
+        MicrosoftLoggingMetricsAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+        ConsoleDynamicMethodFixtureFWLatest>
         {
-            public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore21Tests(
-                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+            public MicrosoftLoggingMetricsAndForwardingEnabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
                 : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
             {
             }
@@ -878,13 +847,13 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [NetCoreTest]
+        [NetFrameworkTest]
         public class
-            MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
+            MicrosoftLoggingMetricsAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+        ConsoleDynamicMethodFixtureFWLatest>
         {
-            public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore21Tests(
-                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+            public MicrosoftLoggingMetricsAndForwardingDisabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
                 : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
             {
             }
@@ -930,13 +899,13 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [NetCoreTest]
+        [NetFrameworkTest]
         public class
-            MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
+            MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+        ConsoleDynamicMethodFixtureFWLatest>
         {
-            public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(
-                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+            public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
                 : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
             {
             }
@@ -982,25 +951,13 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [NetCoreTest]
+        [NetFrameworkTest]
         public class
-            MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore22>
+            MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsFWLatestTests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureFWLatest>
         {
-            public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(
-                ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-                : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
-            {
-            }
-        }
-
-        [NetCoreTest]
-        public class
-            MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
-        {
-            public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(
-                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
+            public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsFWLatestTests(
+                ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
                 : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
             {
             }
@@ -1083,18 +1040,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 ConsoleDynamicMethodFixtureCore31>
         {
             public SerilogMetricsAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture,
-                ITestOutputHelper output)
-                : base(fixture, output, true, true, true, LoggingFramework.Serilog)
-            {
-            }
-        }
-
-        [NetCoreTest]
-        public class
-            SerilogMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
-        {
-            public SerilogMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
                 ITestOutputHelper output)
                 : base(fixture, output, true, true, true, LoggingFramework.Serilog)
             {
@@ -1189,18 +1134,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [NetCoreTest]
-        public class
-            SerilogMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
-        {
-            public SerilogMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
-                ITestOutputHelper output)
-                : base(fixture, output, false, false, true, LoggingFramework.Serilog)
-            {
-            }
-        }
-
         #endregion
 
         #region Metrics Enabled, Forwarding Disabled
@@ -1277,18 +1210,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [NetCoreTest]
-        public class
-            SerilogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
-        {
-            public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(
-                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-                : base(fixture, output, true, false, true, LoggingFramework.Serilog)
-            {
-            }
-        }
-
         #endregion
 
         #region Metrics Disabled, Forwarding Enabled
@@ -1360,30 +1281,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(
                 ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
-            {
-            }
-        }
-
-        [NetCoreTest]
-        public class
-            SerilogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore22>
-        {
-            public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(
-                ConsoleDynamicMethodFixtureCore22 fixture, ITestOutputHelper output)
-                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
-            {
-            }
-        }
-
-        [NetCoreTest]
-        public class
-            SerilogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
-        {
-            public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(
-                ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
                 : base(fixture, output, false, true, true, LoggingFramework.Serilog)
             {
             }
@@ -1472,18 +1369,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [NetCoreTest]
-        public class
-            NLogMetricsAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
-        {
-            public NLogMetricsAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
-                ITestOutputHelper output)
-                : base(fixture, output, true, true, true, LoggingFramework.NLog)
-            {
-            }
-        }
-
         #endregion
 
         #region Metrics and Forwarding Disabled
@@ -1554,18 +1439,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 ConsoleDynamicMethodFixtureCore31>
         {
             public NLogMetricsAndForwardingDisabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture,
-                ITestOutputHelper output)
-                : base(fixture, output, false, false, true, LoggingFramework.NLog)
-            {
-            }
-        }
-
-        [NetCoreTest]
-        public class
-            NLogMetricsAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
-        {
-            public NLogMetricsAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
                 ITestOutputHelper output)
                 : base(fixture, output, false, false, true, LoggingFramework.NLog)
             {
@@ -1648,18 +1521,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             }
         }
 
-        [NetCoreTest]
-        public class
-            NLogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
-        {
-            public NLogMetricsEnabledAndForwardingDisabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
-                ITestOutputHelper output)
-                : base(fixture, output, true, false, true, LoggingFramework.NLog)
-            {
-            }
-        }
-
         #endregion
 
         #region Metrics Disabled, Forwarding Enabled
@@ -1730,30 +1591,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 ConsoleDynamicMethodFixtureCore31>
         {
             public NLogMetricsDisabledAndForwardingEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture,
-                ITestOutputHelper output)
-                : base(fixture, output, false, true, true, LoggingFramework.NLog)
-            {
-            }
-        }
-
-        [NetCoreTest]
-        public class
-            NLogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore22>
-        {
-            public NLogMetricsDisabledAndForwardingEnabledTestsNetCore22Tests(ConsoleDynamicMethodFixtureCore22 fixture,
-                ITestOutputHelper output)
-                : base(fixture, output, false, true, true, LoggingFramework.NLog)
-            {
-            }
-        }
-
-        [NetCoreTest]
-        public class
-            NLogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests : MetricsAndForwardingTestsBase<
-                ConsoleDynamicMethodFixtureCore21>
-        {
-            public NLogMetricsDisabledAndForwardingEnabledTestsNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture,
                 ITestOutputHelper output)
                 : base(fixture, output, false, true, true, LoggingFramework.NLog)
             {

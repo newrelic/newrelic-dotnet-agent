@@ -79,7 +79,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             if (IsCoreApp && _publishApp)
             {
-                PublishWithDotnetExe(string.IsNullOrWhiteSpace(_targetFramework) ? "netcoreapp2.1" : _targetFramework);
+                PublishWithDotnetExe(string.IsNullOrWhiteSpace(_targetFramework) ? "netcoreapp3.1" : _targetFramework);
                 CopyNewRelicHomeCoreClrDirectoryToRemote();
             }
             else if (_publishApp)
@@ -136,7 +136,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 var processOutput = new ProcessOutput(TestLogger, process, true);
 
-                const int timeoutInMilliseconds = 3 * 60 * 1000;
+                // Publishes take longer in CI currently, regularly taking longer than 3 minutes.
+                // 10 minutes may or may not be extreme but stabilizes these failures.
+                const int timeoutInMilliseconds = 10 * 60 * 1000;
                 if (!process.WaitForExit(timeoutInMilliseconds))
                 {
                     TestLogger?.WriteLine($"[RemoteService]: PublishCoreApp timed out while waiting for {ApplicationDirectoryName} to publish after {timeoutInMilliseconds} milliseconds.");
