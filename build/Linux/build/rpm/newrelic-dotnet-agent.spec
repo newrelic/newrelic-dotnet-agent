@@ -9,7 +9,8 @@ Release: 1
 License: Apache Software License 2.0
 Vendor: New Relic, Inc.
 Group: Development/Languages
-Summary: The New Relic .NET agent for .NET Core
+Summary: The New Relic agent for .NET Core
+Obsoletes: newrelic-netcore20-agent
 
 URL: http://newrelic.com/
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
