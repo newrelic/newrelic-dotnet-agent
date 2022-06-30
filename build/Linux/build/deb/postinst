@@ -5,10 +5,6 @@ OBSOLETE_PACKAGE_NAME='newrelic-netcore20-agent'
 NEWRELIC_HOME=/usr/local/${PACKAGE_NAME}
 OBSOLETE_NEWRELIC_HOME=/usr/local/${OBSOLETE_PACKAGE_NAME}
 
-# Deprecated instrumentation files to remove post install
-rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.Instrumentation.xml 2> /dev/null
-rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.dll 2> /dev/null
-
 # create logs dir
 mkdir -p $NEWRELIC_HOME/logs 2> /dev/null
 
@@ -35,9 +31,13 @@ if [ -d $OBSOLETE_NEWRELIC_HOME ]; then
 
   # migrate any custom instrumentation
   if [ -d $OBSOLETE_NEWRELIC_HOME/extensions ]; then
-    cp -v $OBSOLETE_NEWRELIC_HOME/extensions/*.xml $NEWRELIC_HOME/extensions
+    cp -nv $OBSOLETE_NEWRELIC_HOME/extensions/*.xml $NEWRELIC_HOME/extensions
   fi
 fi
+
+# Deprecated instrumentation files to remove post install
+rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.Instrumentation.xml 2> /dev/null
+rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.dll 2> /dev/null
 
 echo "export CORECLR_NEWRELIC_HOME=${NEWRELIC_HOME}" > /etc/profile.d/${PACKAGE_NAME}-path.sh
 source /etc/profile.d/${PACKAGE_NAME}-path.sh

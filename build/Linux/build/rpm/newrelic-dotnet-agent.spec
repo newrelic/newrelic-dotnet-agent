@@ -45,18 +45,42 @@ rm -rf %{buildroot}
 
 %post
 NEWRELIC_HOME=/usr/local/%{name}
-
-# Deprecated instrumentation files to remove post install
-rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.Instrumentation.xml 2> /dev/null
-rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.dll 2> /dev/null
+OBSOLETE_PACKAGE_NAME=newrelic-netcore20-agent
+OBSOLETE_NEWRELIC_HOME=/usr/local/${OBSOLETE_PACKAGE_NAME}
 
 # create logs dir
 mkdir -p $NEWRELIC_HOME/logs 2> /dev/null
 
-if [ ! -L /var/log/newrelic/dotnet ]; then
-  mkdir -p /var/log/newrelic 2> /dev/null
-  ln -sTf $NEWRELIC_HOME/logs /var/log/newrelic/dotnet 2> /dev/null
+# create symlink to logs dir in /var/log/newrelic
+mkdir -p /var/log/newrelic 2> /dev/null
+ln -sTf $NEWRELIC_HOME/logs /var/log/newrelic/dotnet 2> /dev/null
+
+# remove old profile.d file if it exists
+oldHomeDirFile="/etc/profile.d/${OBSOLETE_PACKAGE_NAME}-path.sh"
+if [ -e $oldHomeDirFile ]; then
+  echo "Cleaning up $oldHomeDirFile"
+  rm -f $oldHomeDirFile
 fi
+
+# migrate data from obsoleted package, if applicable
+if [ -d $OBSOLETE_NEWRELIC_HOME ]; then
+  echo "Migrating user data from $OBSOLETE_NEWRELIC_HOME"
+
+  # migrate config file, backing up original first
+  if [ -e $OBSOLETE_NEWRELIC_HOME/newrelic.config ]; then
+    mv $NEWRELIC_HOME/newrelic.config $NEWRELIC_HOME/newrelic.config.original
+    cp -v $OBSOLETE_NEWRELIC_HOME/newrelic.config $NEWRELIC_HOME/newrelic.config
+  fi
+
+  # migrate any custom instrumentation
+  if [ -d $OBSOLETE_NEWRELIC_HOME/extensions ]; then
+    cp -nv $OBSOLETE_NEWRELIC_HOME/extensions/*.xml $NEWRELIC_HOME/extensions
+  fi
+fi
+
+# Deprecated instrumentation files to remove post install
+rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.Instrumentation.xml 2> /dev/null
+rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.dll 2> /dev/null
 
 echo "export CORECLR_NEWRELIC_HOME=${NEWRELIC_HOME}" > /etc/profile.d/%{name}-path.sh
 source /etc/profile.d/%{name}-path.sh
