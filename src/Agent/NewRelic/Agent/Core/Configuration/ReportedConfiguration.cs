@@ -35,6 +35,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonIgnore()]
         public string AgentLicenseKey => _configuration.AgentLicenseKey;
 
+        [JsonProperty("agent.license_key.configured")]
+        public bool AgentLicenseKeyConfigured => !string.IsNullOrWhiteSpace(AgentLicenseKey);
+
         [JsonProperty("agent.application_names")]
         public IEnumerable<string> ApplicationNames => _configuration.ApplicationNames;
 
@@ -59,6 +62,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonIgnore()]
         public string BrowserMonitoringJavaScriptAgent => _configuration.BrowserMonitoringJavaScriptAgent;
 
+        [JsonProperty("browser_monitoring.javascript_agent.populated")]
+        public bool BrowserMonitoringJavaScriptAgentPopulated => !string.IsNullOrWhiteSpace(BrowserMonitoringJavaScriptAgent);
+
         [JsonProperty("browser_monitoring.javascript_agent_file")]
         public string BrowserMonitoringJavaScriptAgentFile => _configuration.BrowserMonitoringJavaScriptAgentFile;
 
@@ -71,6 +77,9 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonIgnore()]
         public string BrowserMonitoringKey => _configuration.BrowserMonitoringKey;
+
+        [JsonProperty("browser_monitoring.monitoring_key.populated")]
+        public bool BrowserMonitoringKeyPopulated => !string.IsNullOrWhiteSpace(BrowserMonitoringKey);
 
         [JsonProperty("browser_monitoring.use_ssl")]
         public bool BrowserMonitoringUseSsl => _configuration.BrowserMonitoringUseSsl;
@@ -214,13 +223,13 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("infinite_tracing.trace_observer_ssl")]
         public string InfiniteTracingTraceObserverSsl => _configuration.InfiniteTracingTraceObserverSsl;
 
-        [JsonIgnore()]
+        [JsonProperty("infinite_tracing.dev.test_flaky")]
         public float? InfiniteTracingTraceObserverTestFlaky => _configuration.InfiniteTracingTraceObserverTestFlaky;
 
-        [JsonIgnore()]
+        [JsonProperty("infinite_tracing.dev.test_flaky_code")]
         public int? InfiniteTracingTraceObserverTestFlakyCode => _configuration.InfiniteTracingTraceObserverTestFlakyCode;
 
-        [JsonIgnore()]
+        [JsonProperty("infinite_tracing.dev.test_delay_ms")]
         public int? InfiniteTracingTraceObserverTestDelayMs => _configuration.InfiniteTracingTraceObserverTestDelayMs;
 
         [JsonProperty("infinite_tracing.spans_queue_size")]
@@ -298,8 +307,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("agent.request_headers_map")]
         public Dictionary<string, string> RequestHeadersMap => _configuration.RequestHeadersMap;
-
-        
+                
         //[JsonProperty("cross_application_tracer.encoding_key")]
         [JsonProperty("encoding_key")]
         public string EncodingKey => _configuration.EncodingKey;
@@ -340,23 +348,41 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.app_settings_config_file_path")]
         public string AppSettingsConfigFilePath => _configuration.AppSettingsConfigFilePath;
 
-        [JsonProperty("proxy.host")]
+        [JsonIgnore()]
         public string ProxyHost => _configuration.ProxyHost;
 
-        [JsonProperty("proxy.uri_path")]
+        [JsonProperty("proxy.host.configured")]
+        public bool ProxyHostConfigured => !string.IsNullOrWhiteSpace(ProxyHost);
+
+        [JsonIgnore()]
         public string ProxyUriPath => _configuration.ProxyUriPath;
 
-        [JsonProperty("proxy.port")]
+        [JsonProperty("proxy.uri_path.configured")]
+        public bool ProxyUriPathConfigured => !string.IsNullOrWhiteSpace(ProxyUriPath);
+
+        [JsonIgnore()]
         public int ProxyPort => _configuration.ProxyPort;
+
+        [JsonProperty("proxy.port.configured")]
+        public bool ProxyPortConfigured => true; // as this is an integer with a default value, it will always be 'configured'
 
         [JsonIgnore()]
         public string ProxyUsername => _configuration.ProxyUsername;
 
+        [JsonProperty("proxy.username.configured")]
+        public bool ProxyUsernameConfigured => !string.IsNullOrWhiteSpace(ProxyUsername);
+
         [JsonIgnore()]
         public string ProxyPassword => _configuration.ProxyPassword;
 
-        [JsonProperty("proxy.domain")]
+        [JsonProperty("proxy.password.configured")]
+        public bool ProxyPasswordConfigured => !string.IsNullOrWhiteSpace(ProxyPassword);
+
+        [JsonIgnore()]
         public string ProxyDomain => _configuration.ProxyDomain;
+
+        [JsonProperty("proxy.domain.configured")]
+        public bool ProxyDomainConfigured => !string.IsNullOrWhiteSpace(ProxyDomain);
 
         [JsonProperty("agent.put_for_data_sent")]
         public bool PutForDataSend => _configuration.PutForDataSend;
