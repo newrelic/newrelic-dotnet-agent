@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
         {
-            _cache.SetCapacity(_configuration.DatabaseStatementCacheCapcity);
+            _cache.SetCapacity(_configuration.DatabaseStatementCacheCapacity);
         }
     }
 }

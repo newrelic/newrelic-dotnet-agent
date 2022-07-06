@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### New Features
 * Adds support for forwarding application logs to New Relic for .NET Framework applications using Microsoft.Extensions.Logging. [#1172](https://github.com/newrelic/newrelic-dotnet-agent/pull/1172)
+* The amount of agent configuration information reported up to NR1 has been dramatically increased. Agent configuration is also now reported during agent connect. This information can be seen in the `APM->Environment->Agent Initialization` view. [#1174](https://github.com/newrelic/newrelic-dotnet-agent/pull/1174)
 
 ### Fixes
 * Resolves an issue with transaction trace aggregation where the slowest transaction trace was not always captured due to a race condition. ([#1166](https://github.com/newrelic/newrelic-dotnet-agent/pull/1166))
