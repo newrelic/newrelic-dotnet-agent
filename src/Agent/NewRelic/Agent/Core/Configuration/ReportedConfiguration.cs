@@ -21,7 +21,7 @@ namespace NewRelic.Agent.Core.Configuration
             _configuration = configuration;
         }
 
-        [JsonProperty("agent")]
+        [JsonProperty("agent.name")]
         public const string Agent = ".NET Agent";
 
         #region IConfiguration
@@ -186,8 +186,7 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.configuration_version")]
         public long ConfigurationVersion => _configuration.ConfigurationVersion;
 
-        //[JsonProperty("cross_application_tracer.cross_process_id")]
-        [JsonProperty("cross_process_id")]
+        [JsonProperty("cross_application_tracer.cross_process_id")]
         public string CrossApplicationTracingCrossProcessId => _configuration.CrossApplicationTracingCrossProcessId;
 
         [JsonProperty("cross_application_tracer.enabled")]
@@ -308,8 +307,7 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.request_headers_map")]
         public Dictionary<string, string> RequestHeadersMap => _configuration.RequestHeadersMap;
                 
-        //[JsonProperty("cross_application_tracer.encoding_key")]
-        [JsonProperty("encoding_key")]
+        [JsonProperty("cross_application_tracer.encoding_key")]
         public string EncodingKey => _configuration.EncodingKey;
 
         [JsonProperty("agent.entity_guid")]
@@ -387,7 +385,6 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.put_for_data_sent")]
         public bool PutForDataSend => _configuration.PutForDataSend;
 
-        //[JsonProperty("transaction_tracer.slow_sql_enabled")]
         [JsonProperty("slow_sql.enabled")]
         public bool SlowSqlEnabled => _configuration.SlowSqlEnabled;
 
@@ -406,8 +403,7 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("transaction_tracer.sql_traces_per_period")]
         public int SqlTracesPerPeriod => _configuration.SqlTracesPerPeriod;
 
-        //[JsonProperty("transaction_tracer.stack_trace")]
-        [JsonProperty("max_stack_trace_lines")]
+        [JsonProperty("transaction_tracer.max_stack_trace_lines")]
         public int StackTraceMaximumFrames => _configuration.StackTraceMaximumFrames;
 
         [JsonProperty("error_collector.ignore_status_codes")]
@@ -446,8 +442,7 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("transaction_events.enabled")]
         public bool TransactionEventsEnabled => _configuration.TransactionEventsEnabled;
 
-        //[JsonProperty("transaction_events.max_samples_stored")]
-        [JsonProperty("transaction_event.max_samples_stored")]
+        [JsonProperty("transaction_events.max_samples_stored")]
         public int TransactionEventsMaximumSamplesStored => _configuration.TransactionEventsMaximumSamplesStored;
 
         [JsonProperty("transaction_events.harvest_cycle")]
@@ -465,8 +460,7 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("transaction_tracer.apdex_f")]
         public TimeSpan TransactionTraceApdexF => _configuration.TransactionTraceApdexF;
 
-        //[JsonProperty("transaction_tracer.apdex_t")]
-        [JsonProperty("apdex_t")]
+        [JsonProperty("transaction_tracer.apdex_t")]
         public TimeSpan TransactionTraceApdexT => _configuration.TransactionTraceApdexT;
 
         [JsonProperty("transaction_tracer.transaction_threshold")]
@@ -490,16 +484,13 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("transaction_tracer.max_stack_traces")]
         public int TransactionTracerMaxStackTraces => _configuration.TransactionTracerMaxStackTraces;
 
-        //[JsonProperty("agent.trusted_account_ids")]
-        [JsonProperty("trusted_account_ids")]
+        [JsonProperty("agent.trusted_account_ids")]
         public IEnumerable<long> TrustedAccountIds => _configuration.TrustedAccountIds;
 
-        //[JsonProperty("agent.server_side_config_enabled")]
-        [JsonProperty("server_sideconfiguration_enabled")]
+        [JsonProperty("agent.server_side_config_enabled")]
         public bool ServerSideConfigurationEnabled => _configuration.ServerSideConfigurationEnabled;
 
-        //[JsonProperty("agent.ignore_server_side_config")]
-        [JsonProperty("ignore_server_sideconfiguration")]
+        [JsonProperty("agent.ignore_server_side_config")]
         public bool IgnoreServerSideConfiguration => _configuration.IgnoreServerSideConfiguration;
 
         [JsonProperty("agent.url_regex_rules")]
