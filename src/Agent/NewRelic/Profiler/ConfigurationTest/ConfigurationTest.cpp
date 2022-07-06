@@ -55,6 +55,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsTrue(configuration.ShouldInstrument(L"WcfSvcHost.exe", L"foo", L"", false));
         }
 
+        TEST_METHOD(should_not_instrument_SMSvcHost)
+        {
+            Configuration configuration(true);
+            Assert::IsFalse(configuration.ShouldInstrument(L"SMSvcHost.exe", L"foo", L"", false));
+        }
+
         TEST_METHOD(should_not_instrument_if_disabled)
         {
             Configuration configuration(false);
