@@ -8,101 +8,25 @@ using System.Linq;
 using Telerik.JustMock;
 using System.Collections.Generic;
 using System;
+using NewRelic.Agent.Core.DataTransport;
 
 namespace NewRelic.Agent.Core.Configuration
 {
     [TestFixture]
     public class AgentSettingsTests
     {
-        TimeSpan ApdexT = new TimeSpan(0, 0, 10);
-        const string CatId = "acctId#appId";
-        const string EncodingKey = "thisistheencodingkey";
-        List<long> TrustedAccountIds = new List<long> { 123456, 098765 };
-        const int MaxStackTraceLines = 100;
-        const bool UsingServerSideConfig = false;
-        const bool IgnoreServerSideConfig = false;
-        const bool ThreadProfilerEnabled = false;
-        const bool CrossApplicationTracerEnabled = false;
-        const bool DistributedTracingEnabled = true;
-        const bool ErrorCollectorEnabled = true;
-        List<string> ErrorCollectorIgnoreStatusCodes = new List<string> { "401", "404" };
-        List<string> ErrorCollectorExpectedClasses = new List<string> { "ExceptionClass1" };
-        IDictionary<string, IEnumerable<string>> ErrorCollectorExpectedMessages = new Dictionary<string, IEnumerable<string>>
-            {
-                { "ExceptionClass2", new [] { "exception message 1" } }
-            };
-        List<string> ErrorCollectorIgnoreClasses = new List<string> { "ExceptionClass1" };
-        IDictionary<string, IEnumerable<string>> ErrorCollectorIgnoreMessages = new Dictionary<string, IEnumerable<string>>
-            {
-                { "ExceptionClass2", new [] { "exception message 1" } }
-            };
-        readonly string[] ErrorCollectorExpectedStatusCodes = { "403", "500" };
-        TimeSpan TransactionTracerStackThreshold = new TimeSpan(0, 0, 11);
-        const bool TransactionTracerExplainEnabled = false;
-        TimeSpan TransactionTracerExplainThreshold = new TimeSpan(0, 0, 12);
-        const uint MaxSqlStatements = 100;
-        const int MaxExplainPlans = 10;
-        TimeSpan TransactionTracerThreshold = new TimeSpan(0, 0, 13);
-        const string TransactionTracerRecordSql = "obfuscate";
-        const bool SlowSqlEnabled = false;
-        const bool BrowserMonitoringAutoInstrument = true;
-        const int TransactionEventMaxSamplesStored = 10000;
-
-        const bool ApplicationLoggingEnabled = true;
-        const bool ApplicationLoggingForwardingEnabled = true;
-        const int ApplicationLoggingForwardingMaxSamplesStored = 1234;
-        const bool ApplicationLoggingMetricsEnabled = true;
-        const bool ApplicationLoggingLocalDecoratingEnabled = false;
-
         [Test]
         public void serializes_correctly()
         {
-            var configuration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => configuration.TransactionTraceApdexT).Returns(ApdexT);
-            Mock.Arrange(() => configuration.CrossApplicationTracingCrossProcessId).Returns(CatId);
-            Mock.Arrange(() => configuration.EncodingKey).Returns(EncodingKey);
-            Mock.Arrange(() => configuration.TrustedAccountIds).Returns(TrustedAccountIds);
-            Mock.Arrange(() => configuration.StackTraceMaximumFrames).Returns(MaxStackTraceLines);
-            Mock.Arrange(() => configuration.ServerSideConfigurationEnabled).Returns(UsingServerSideConfig);
-            Mock.Arrange(() => configuration.IgnoreServerSideConfiguration).Returns(IgnoreServerSideConfig);
-            Mock.Arrange(() => configuration.ThreadProfilingEnabled).Returns(ThreadProfilerEnabled);
-            Mock.Arrange(() => configuration.CrossApplicationTracingEnabled).Returns(CrossApplicationTracerEnabled);
-            Mock.Arrange(() => configuration.DistributedTracingEnabled).Returns(DistributedTracingEnabled);
-            Mock.Arrange(() => configuration.ErrorCollectorEnabled).Returns(ErrorCollectorEnabled);
-            Mock.Arrange(() => configuration.ExpectedErrorClassesForAgentSettings).Returns(ErrorCollectorExpectedClasses);
-            Mock.Arrange(() => configuration.ExpectedErrorMessagesForAgentSettings).Returns(ErrorCollectorExpectedMessages);
-            Mock.Arrange(() => configuration.ExpectedErrorStatusCodesForAgentSettings).Returns(ErrorCollectorExpectedStatusCodes);
-            Mock.Arrange(() => configuration.HttpStatusCodesToIgnore).Returns(ErrorCollectorIgnoreStatusCodes);
-            Mock.Arrange(() => configuration.IgnoreErrorClassesForAgentSettings).Returns(ErrorCollectorIgnoreClasses);
-            Mock.Arrange(() => configuration.IgnoreErrorMessagesForAgentSettings).Returns(ErrorCollectorIgnoreMessages);
-            Mock.Arrange(() => configuration.TransactionTracerStackThreshold).Returns(TransactionTracerStackThreshold);
-            Mock.Arrange(() => configuration.SqlExplainPlansEnabled).Returns(TransactionTracerExplainEnabled);
-            Mock.Arrange(() => configuration.SqlExplainPlanThreshold).Returns(TransactionTracerExplainThreshold);
-            Mock.Arrange(() => configuration.SqlStatementsPerTransaction).Returns(MaxSqlStatements);
-            Mock.Arrange(() => configuration.SqlExplainPlansMax).Returns(MaxExplainPlans);
-            Mock.Arrange(() => configuration.TransactionTraceThreshold).Returns(TransactionTracerThreshold);
-            Mock.Arrange(() => configuration.TransactionTracerRecordSql).Returns(TransactionTracerRecordSql);
-            Mock.Arrange(() => configuration.SlowSqlEnabled).Returns(SlowSqlEnabled);
-            Mock.Arrange(() => configuration.BrowserMonitoringAutoInstrument).Returns(BrowserMonitoringAutoInstrument);
-            Mock.Arrange(() => configuration.TransactionEventsMaximumSamplesStored).Returns(TransactionEventMaxSamplesStored);
+            var fullyPopulatedTestConfiguration = new ExhaustiveTestConfiguration();
 
-            Mock.Arrange(() => configuration.ApplicationLoggingEnabled).Returns(ApplicationLoggingEnabled);
-            Mock.Arrange(() => configuration.LogEventCollectorEnabled).Returns(ApplicationLoggingForwardingEnabled);
-            Mock.Arrange(() => configuration.LogEventsMaxSamplesStored).Returns(ApplicationLoggingForwardingMaxSamplesStored);
-            Mock.Arrange(() => configuration.LogMetricsCollectorEnabled).Returns(ApplicationLoggingMetricsEnabled);
-            Mock.Arrange(() => configuration.LogDecoratorEnabled).Returns(ApplicationLoggingLocalDecoratingEnabled);
-
-
-            var agentSettings = new ReportedConfiguration(configuration);
+            var agentSettings = new ReportedConfiguration(fullyPopulatedTestConfiguration);
 
             var json = JsonConvert.SerializeObject(agentSettings);
 
-            
-            const string expectedJson = @"{""agent"":"".NET Agent"",""apdex_t"":10.0,""cross_process_id"":""acctId#appId"",""encoding_key"":""thisistheencodingkey"",""trusted_account_ids"":[123456,98765],""max_stack_trace_lines"":100,""server_side_configuration_enabled"":false,""ignore_server_side_configuration"":false,""thread_profiler.enabled"":false,""cross_application_tracer.enabled"":false,""distributed_tracing.enabled"":true,""error_collector.enabled"":true,""error_collector.ignore_status_codes"":[""401"",""404""],""error_collector.ignore_classes"":[""ExceptionClass1""],""error_collector.ignore_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_classes"":[""ExceptionClass1""],""error_collector.expected_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_status_codes"":[""403"",""500""],""transaction_tracer.stack_trace_threshold"":11.0,""transaction_tracer.explain_enabled"":false,""transaction_tracer.max_sql_statements"":100,""transaction_tracer.max_explain_plans"":10,""transaction_tracer.explain_threshold"":12.0,""transaction_tracer.transaction_threshold"":13.0,""transaction_tracer.record_sql"":""obfuscate"",""slow_sql.enabled"":false,""browser_monitoring.auto_instrument"":true,""transaction_event.max_samples_stored"":10000,""application_logging.enabled"":true,""application_logging.forwarding.enabled"":true,""application_logging.forwarding.max_samples_stored"":1234,""application_logging.metrics.enabled"":true,""application_logging.local_decorating.enabled"":false}";
+            const string expectedJson = @"{""agent.name"":"".NET Agent"",""agent.run_id"":""AgentRunId"",""agent.enabled"":true,""agent.license_key.configured"":true,""agent.application_names"":[""name1"",""name2"",""name3""],""agent.application_names_source"":""ApplicationNameSource"",""agent.auto_start"":true,""browser_monitoring.application_id"":""BrowserMonitoringApplicationId"",""browser_monitoring.auto_instrument"":true,""browser_monitoring.beacon_address"":""BrowserMonitoringBeaconAddress"",""browser_monitoring.error_beacon_address"":""BrowserMonitoringErrorBeaconAddress"",""browser_monitoring.javascript_agent.populated"":true,""browser_monitoring.javascript_agent_file"":""BrowserMonitoringJavaScriptAgentFile"",""browser_monitoring.loader"":""BrowserMonitoringJavaScriptAgentLoaderType"",""browser_monitoring.loader_debug"":false,""browser_monitoring.monitoring_key.populated"":true,""browser_monitoring.use_ssl"":true,""security.policies_token"":""SecurityPoliciesToken"",""security.policies_token_exists"":true,""agent.allow_all_request_headers"":true,""agent.attributes_enabled"":true,""agent.can_use_attributes_includes"":true,""agent.can_use_attributes_includes_source"":""CanUseAttributesIncludesSource"",""agent.attributes_include"":[""include1"",""include2"",""include3""],""agent.attributes_exclude"":[""exclude1"",""exclude2"",""exclude3""],""agent.attributes_default_excludes"":[""defaultExclude1"",""defaultExclude2"",""defaultExclude3""],""transaction_events.attributes_enabled"":false,""transaction_events.attributes_include"":[""attributeInclude1"",""attributeInclude2"",""attributeInclude3""],""transaction_events.attributes_exclude"":[""attributeExclude1"",""attributeExclude2"",""attributeExclude3""],""transaction_trace.attributes_enabled"":true,""transaction_trace.attributes_include"":[""include1"",""include2"",""include3""],""transaction_trace.attributes_exclude"":[""exclude1"",""exclude2"",""exclude3""],""error_collector.attributes_enabled"":false,""error_collector.attributes_include"":[""include1"",""include2"",""include3""],""error_collector.attributes_exclude"":[""exclude1"",""exclude2"",""exclude3""],""browser_monitoring.attributes_enabled"":false,""browser_monitoring.attributes_include"":[""include1"",""include2"",""include3""],""browser_monitoring.attributes_exclude"":[""exclude1"",""exclude2"",""exclude3""],""custom_parameters.enabled"":false,""custom_parameters.source"":""CaptureCustomParametersSource"",""collector.host"":""CollectorHost"",""collector.port"":1234,""collector.send_data_on_exit"":true,""collector.send_data_on_exit_threshold"":4321.0,""collector.send_environment_info"":true,""collector.sync_startup"":true,""collector.timeout"":1234,""collector.max_payload_size_in_bytes"":4321,""agent.complete_transactions_on_thread"":true,""agent.compressed_content_encoding"":""CompressedContentEncoding"",""agent.configuration_version"":1234,""cross_application_tracer.cross_process_id"":""CrossApplicationTracingCrossProcessId"",""cross_application_tracer.enabled"":true,""distributed_tracing.enabled"":true,""span_events.enabled"":true,""span_events.harvest_cycle"":""00:20:34"",""span_events.attributes_enabled"":true,""span_events.attributes_include"":[""attributeInclude1"",""attributeInclude2"",""attributeInclude3""],""span_events.attributes_exclude"":[""attributeExclude1"",""attributeExclude2"",""attributeExclude3""],""infinite_tracing.trace_count_consumers"":1234,""infinite_tracing.trace_observer_host"":""InfiniteTracingTraceObserverHost"",""infinite_tracing.trace_observer_port"":""InfiniteTracingTraceObserverPort"",""infinite_tracing.trace_observer_ssl"":""InfiniteTracingTraceObserverSsl"",""infinite_tracing.dev.test_flaky"":1234.0,""infinite_tracing.dev.test_flaky_code"":4321,""infinite_tracing.dev.test_delay_ms"":1234,""infinite_tracing.spans_queue_size"":4321,""infinite_tracing.spans_partition_count"":1234,""infinite_tracing.spans_batch_size"":4321,""infinite_tracing.connect_timeout_ms"":1234,""infinite_tracing.send_data_timeout_ms"":4321,""infinite_tracing.exit_timeout_ms"":1234,""agent.primary_application_id"":""PrimaryApplicationId"",""agent.trusted_account_key"":""TrustedAccountKey"",""agent.account_id"":""AccountId"",""datastore_tracer.name_reporting_enabled"":true,""datastore_tracer.query_parameters_enabled"":true,""error_collector.enabled"":true,""error_collector.capture_events_enabled"":true,""error_collector.max_samples_stored"":1234,""error_collector.harvest_cycle"":""00:20:34"",""error_collector.max_per_period"":4321,""error_collector.expected_classes"":[""expected1"",""expected2"",""expected3""],""error_collector.expected_messages"":{""first"":[""first1"",""first2""],""second"":[""second1"",""second2""]},""error_collector.expected_status_codes"":[""expectedError1"",""expectedError2"",""expectedError3""],""error_collector.expected_errors_config"":{""third"":[""third1"",""third2""],""fourth"":[""fourth1"",""fourth2""]},""error_collector.ignore_errors_config"":{""fifth"":[""fifth1"",""fifth2""],""sixth"":[""sixth1"",""sixth2""]},""error_collector.ignore_classes"":[""ignoreError1"",""ignoreError2"",""ignoreError3""],""error_collector.ignore_messages"":{""seven"":[""seven1"",""seven2""],""eight"":[""eight1"",""eight2""]},""agent.request_headers_map"":{""one"":""1"",""two"":""2""},""cross_application_tracer.encoding_key"":""EncodingKey"",""agent.entity_guid"":""EntityGuid"",""agent.high_security_mode_enabled"":true,""agent.custom_instrumentation_editor_enabled"":true,""agent.custom_instrumentation_editor_enabled_source"":""CustomInstrumentationEditorEnabledSource"",""agent.strip_exception_messages"":true,""agent.strip_exception_messages_source"":""StripExceptionMessagesSource"",""agent.instance_reporting_enabled"":true,""agent.instrumentation_logging_enabled"":true,""agent.labels"":""Labels"",""agent.metric_name_regex_rules"":[{""MatchExpression"":""match1"",""Replacement"":""replacement1"",""Ignore"":true,""EvaluationOrder"":1,""TerminateChain"":true,""EachSegment"":true,""ReplaceAll"":true,""MatchRegex"":{""Pattern"":""match1"",""Options"":3}},{""MatchExpression"":""match2"",""Replacement"":""replacement2"",""Ignore"":false,""EvaluationOrder"":2,""TerminateChain"":false,""EachSegment"":false,""ReplaceAll"":false,""MatchRegex"":{""Pattern"":""match2"",""Options"":3}}],""agent.new_relic_config_file_path"":""NewRelicConfigFilePath"",""agent.app_settings_config_file_path"":""AppSettingsConfigFilePath"",""proxy.host.configured"":true,""proxy.uri_path.configured"":true,""proxy.port.configured"":true,""proxy.username.configured"":true,""proxy.password.configured"":true,""proxy.domain.configured"":true,""agent.put_for_data_sent"":true,""slow_sql.enabled"":true,""transaction_tracer.explain_threshold"":""00:20:34"",""transaction_tracer.explain_enabled"":true,""transaction_tracer.max_explain_plans"":1234,""transaction_tracer.max_sql_statements"":4321,""transaction_tracer.sql_traces_per_period"":1234,""transaction_tracer.max_stack_trace_lines"":4321,""error_collector.ignore_status_codes"":[""ignore1"",""ignore2"",""ignore3""],""agent.thread_profiling_methods_to_ignore"":[""ignoreMethod1"",""ignoreMethod2"",""ignoreMethod3""],""custom_events.enabled"":true,""custom_events.enabled_source"":""CustomEventsEnabledSource"",""custom_events.attributes_enabled"":true,""custom_events.attributes_include"":[""attributeInclude1"",""attributeInclude2"",""attributeInclude3""],""custom_events.attributes_exclude"":[""attributeExclude1"",""attributeExclude2"",""attributeExclude3""],""custom_events.max_samples_stored"":1234,""custom_events.harvest_cycle"":""00:20:34"",""agent.disable_samplers"":true,""thread_profiler.enabled"":true,""transaction_events.enabled"":true,""transaction_events.max_samples_stored"":4321,""transaction_events.harvest_cycle"":""01:12:01"",""transaction_events.transactions_enabled"":true,""transaction_name.regex_rules"":[{""MatchExpression"":""matchTrans1"",""Replacement"":""replacementTrans1"",""Ignore"":true,""EvaluationOrder"":1,""TerminateChain"":true,""EachSegment"":true,""ReplaceAll"":true,""MatchRegex"":{""Pattern"":""matchTrans1"",""Options"":3}},{""MatchExpression"":""matchTrans2"",""Replacement"":""replacementTrans2"",""Ignore"":false,""EvaluationOrder"":2,""TerminateChain"":false,""EachSegment"":false,""ReplaceAll"":false,""MatchRegex"":{""Pattern"":""matchTrans2"",""Options"":3}}],""transaction_name.whitelist_rules"":{""nine"":[""nine1"",""nine2""],""ten"":[""ten1"",""ten2""]},""transaction_tracer.apdex_f"":""00:20:34"",""transaction_tracer.apdex_t"":""01:12:01"",""transaction_tracer.transaction_threshold"":""00:20:34"",""transaction_tracer.enabled"":true,""transaction_tracer.max_segments"":1234,""transaction_tracer.record_sql"":""TransactionTracerRecordSql"",""transaction_tracer.record_sql_source"":""TransactionTracerRecordSqlSource"",""transaction_tracer.stack_trace_threshold"":""01:12:01"",""transaction_tracer.max_stack_traces"":4321,""agent.trusted_account_ids"":[1,2,3],""agent.server_side_config_enabled"":true,""agent.ignore_server_side_config"":true,""agent.url_regex_rules"":[{""MatchExpression"":""matchUrl1"",""Replacement"":""replacementUrl1"",""Ignore"":true,""EvaluationOrder"":1,""TerminateChain"":true,""EachSegment"":true,""ReplaceAll"":true,""MatchRegex"":{""Pattern"":""matchUrl1"",""Options"":3}},{""MatchExpression"":""matchUrl2"",""Replacement"":""replacementUrl2"",""Ignore"":false,""EvaluationOrder"":2,""TerminateChain"":false,""EachSegment"":false,""ReplaceAll"":false,""MatchRegex"":{""Pattern"":""matchUrl2"",""Options"":3}}],""agent.request_path_exclusion_list"":[{""Pattern"":""asdf"",""Options"":0},{""Pattern"":""qwerty"",""Options"":1},{""Pattern"":""yolo"",""Options"":4}],""agent.web_transactions_apdex"":{""first"":1.0,""second"":2.0},""agent.wrapper_exception_limit"":1234,""utilization.detect_aws_enabled"":true,""utilization.detect_azure_enabled"":true,""utilization.detect_gcp_enabled"":true,""utilization.detect_pcf_enabled"":true,""utilization.detect_docker_enabled"":true,""utilization.detect_kubernetes_enabled"":true,""utilization.logical_processors"":22,""utilization.total_ram_mib"":33,""utilization.billing_host"":""UtilizationBillingHost"",""utilization.hostname"":""UtilizationHostName"",""utilization.full_hostname"":""UtilizationFullHostName"",""diagnostics.capture_agent_timing_enabled"":true,""diagnostics.capture_agent_timing_frequency"":1234,""agent.use_resource_based_naming_for_wcf_enabled"":true,""agent.event_listener_samplers_enabled"":true,""agent.sampling_target"":1234,""span_events.max_samples_stored"":4321,""agent.sampling_target_period_in_seconds"":1234,""agent.payload_success_metrics_enabled"":true,""agent.process_host_display_name"":""ProcessHostDisplayName"",""transaction_tracer.database_statement_cache_capacity"":1234,""agent.force_synchronous_timing_calculation_for_http_client"":true,""agent.exclude_new_relic_header"":true,""application_logging.enabled"":true,""application_logging.metrics.enabled"":true,""application_logging.forwarding.enabled"":true,""application_logging.forwarding.max_samples_stored"":1234,""application_logging.harvest_cycle"":""00:20:34"",""application_logging.local_decorating.enabled"":true,""agent.app_domain_caching_disabled"":true,""agent.force_new_transaction_on_new_thread_enabled"":true,""agent.code_level_metrics_enabled"":true,""agent.app_settings"":{""hello"":""friend"",""we"":""made"",""it"":""to"",""the"":""end""}}";
 
-            // TODO: pay the piper and mock the entire IConfiguration class :(
-            // Commenting for now to run CI int tests
-            // Assert.AreEqual(expectedJson, json);
+            Assert.AreEqual(expectedJson, json);
         }
     }
 }
