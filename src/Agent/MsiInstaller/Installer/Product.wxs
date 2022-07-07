@@ -438,9 +438,6 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="ScriptHandlerFactoryWrapperComponent" Guid="{D2C6737B-4F71-40BE-8F86-EB6ED31E6A93}">
         <File Id="ScriptHandlerFactoryWrapperFile" Name="NewRelic.Providers.Wrapper.ScriptHandlerFactory.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.dll"/>
       </Component>
-      <Component Id="CastleMonoRail2WrapperComponent" Guid="{56BC32DA-62A6-4E81-BBBB-AC28E69ACB8D}">
-        <File Id="CastleMonoRail2WrapperFile" Name="NewRelic.Providers.Wrapper.CastleMonoRail2.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.CastleMonoRail2.dll"/>
-      </Component>
       <Component Id="OpenRastaWrapperComponent" Guid="{59A6C862-3D09-44AF-B69E-38B464D041FA}">
         <File Id="OpenRastaWrapperFile" Name="NewRelic.Providers.Wrapper.OpenRasta.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.OpenRasta.dll"/>
       </Component>
@@ -587,9 +584,6 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="ScriptHandlerFactoryInstrumentationComponent" Guid="{FF3E7F54-BDEB-4882-BD1F-94F7BA46A724}">
         <File Id="ScriptHandlerFactoryInstrumentationFile" Name="NewRelic.Providers.Wrapper.ScriptHandlerFactory.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.Instrumentation.xml"/>
-      </Component>
-      <Component Id="CastleMonoRail2InstrumentationComponent" Guid="{18239B34-29FC-4C65-BF72-41C42F087F4F}">
-        <File Id="CastleMonoRail2InstrumentationFile" Name="NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml"/>
       </Component>
       <Component Id="OpenRastaInstrumentationComponent" Guid="{532A2C8E-17AA-4D1D-910F-23E2CFFAEF86}">
         <File Id="OpenRastaInstrumentationFile" Name="NewRelic.Providers.Wrapper.OpenRasta.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.OpenRasta.Instrumentation.xml"/>

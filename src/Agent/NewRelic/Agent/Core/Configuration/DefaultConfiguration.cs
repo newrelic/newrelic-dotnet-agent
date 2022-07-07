@@ -2444,9 +2444,9 @@ namespace NewRelic.Agent.Core.Configuration
             Log.WarnFormat("Configuration property '{0}' is disabled (unused) and will be removed from the config schema in a future release.  {1}  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", disabledPropertyName, replacementText);
         }
 
-        int? _databaseStatementCacheCapcity = null;
+        int? _databaseStatementCacheCapacity = null;
 
-        public int DatabaseStatementCacheCapcity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
+        public int DatabaseStatementCacheCapacity => _databaseStatementCacheCapacity ?? (_databaseStatementCacheCapacity =
             TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
 
         private bool? _codeLevelMetricsEnabled;
