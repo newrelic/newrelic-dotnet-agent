@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixes
 * Resolves an issue with transaction trace aggregation where the slowest transaction trace was not always captured due to a race condition. ([#1166](https://github.com/newrelic/newrelic-dotnet-agent/pull/1166))
+* Adds an ignore rule to prevent profiling `SMSvcHost.exe`. ([#1182](https://github.com/newrelic/newrelic-dotnet-agent/pull/1182))
 
 ### Deprecations/Removed Features
 * The scriptable installers have been removed. ([#1170](https://github.com/newrelic/newrelic-dotnet-agent/pull/1170))
