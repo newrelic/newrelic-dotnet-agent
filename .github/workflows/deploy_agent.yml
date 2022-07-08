@@ -256,13 +256,11 @@ jobs:
           # Confirm that the version is in the proper format.
           IFS='.' read -ra agent_version_array <<< "${{ github.event.inputs.agent_version }}"
           agent_version_count=${#agent_version_array[@]}
-          if [ $agent_version_count -lt 3 ] || [ $agent_version_count -gt 4 ] ; then
-            echo "::error Supplied agent version from Workflow (${{ github.event.inputs.agent_version }}) is malformed.  It needs to be like 8.29.0 or 8.29.0.0"
+          if [ $agent_version_count -ne 3 ] ; then
+            echo "::error Supplied agent version from Workflow (${{ github.event.inputs.agent_version }}) is malformed.  It needs to be like '10.0.0'."
             exit 1
-          elif [ $agent_version_count -eq 4 ] ; then
-            AGENT_VERSION=${{ github.event.inputs.agent_version }}
           else
-            AGENT_VERSION=${{ github.event.inputs.agent_version }}.0
+            AGENT_VERSION=${{ github.event.inputs.agent_version }}
           fi
 
           # Build the docker.env
