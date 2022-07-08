@@ -411,6 +411,18 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             return false;
         }
 
+        bool IsIgnoreProcess(const xstring_t& processName)
+        {
+            //Since instrumenting the SMSvcHost.exe proccess was reported to cause connection failure, force the profiler to ignore this process for safety.
+            if (Strings::EndsWith(processName, _X("SMSvcHost.exe")))
+            {
+                LogInfo(_X("The SMSvcHost.exe process has been identified as an ignored process."));
+                return true;
+            }
+
+            return false;
+        }
+
         bool IsW3wpProcess(const xstring_t& processName)
         {
             return Strings::EndsWith(processName, _X("W3WP.EXE"));
@@ -538,6 +550,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         {
             if (!_agentEnabled) {
                 LogInfo("New Relic has been disabled via newrelic.config file.");
+                return false;
+            }
+
+            if (IsIgnoreProcess(processName))
+            {
                 return false;
             }
 
