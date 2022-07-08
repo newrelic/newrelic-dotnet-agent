@@ -36,19 +36,13 @@ namespace ArtifactBuilder.Artifacts
             foreach (var platform in platforms)
             {
                 CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\MsiInstaller-{platform}", "*.msi", OutputDirectory,
-                    $@"newrelic-agent-win-{platform}-{Version}.msi");
+                    $@"NewRelicDotNetAgent_{Version}_{platform}.msi");
             }
 
-            //Core Zip files
+            //Zip files
             foreach (var platform in platforms)
             {
-                CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\ZipArchiveCore-{platform}", "*.zip", OutputDirectory, $@"newrelic-netcore20-agent-win-{platform}-{Version}.zip");
-            }
-
-            //Framework Zip files
-            foreach (var platform in platforms)
-            {
-                CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\ZipArchiveFramework-{platform}", "*.zip", OutputDirectory, $@"newrelic-agent-win-{platform}-{Version}.zip");
+                CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\ZipArchive-{platform}", "*.zip", OutputDirectory, $@"NewRelicDotNetAgent_{Version}_{platform}.zip");
             }
 
             //Linux packages
