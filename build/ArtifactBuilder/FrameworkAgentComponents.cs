@@ -111,20 +111,27 @@ namespace ArtifactBuilder
                     $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x64.dll"
                 };
 
-            var root = new List<string>()
+            var installRootFiles = new List<string>()
+            {
+                NewRelicLicenseFile,
+                NewRelicThirdPartyNoticesFile,
+            };
+
+            SetRootInstallDirectoryComponents(installRootFiles.ToArray());
+
+            var agentHomeDirFiles = new List<string>()
             {
                 $@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
                 $@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
-                NewRelicConfig,
                 WindowsProfiler,
-                NewRelicXsd,
-                NewRelicLicenseFile,
-                NewRelicThirdPartyNoticesFile
+                NewRelicConfig,
+                NewRelicXsd
             };
 
-            root.AddRange(GRPCExtensionsLibWindows);
+            agentHomeDirFiles.AddRange(GRPCExtensionsLibWindows);
 
-            SetRootInstallDirectoryComponents(root.ToArray());
+
+            SetAgentHomeDirComponents(agentHomeDirFiles.ToArray());
 
             var extensions = agentDllsForExtensionDirectory
                 .Concat(storageProviders)
