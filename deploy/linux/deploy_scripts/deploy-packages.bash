@@ -188,7 +188,7 @@ printf \\n
 
 ## BEGIN MODIFY PHASE ##
 
-PRODUCT_NAME='newrelic-netcore20-agent'
+PRODUCT_NAME='newrelic-dotnet-agent'
 
 if [[ "$ACTION" == 'release' ]]; then
   # Find the local package files to be deployed

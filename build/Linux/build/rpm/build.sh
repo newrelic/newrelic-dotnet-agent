@@ -34,7 +34,7 @@ EXPECT
     ./sign.expect
 }
 
-PACKAGE_NAME='newrelic-netcore20-agent'
+PACKAGE_NAME='newrelic-dotnet-agent'
 AGENT_HOMEDIR='newrelichome_x64_coreclr_linux'
 
 if [ -z "$AGENT_VERSION" ]; then
@@ -76,7 +76,7 @@ rm -rf logs Logs
 
 cp /common/setenv.sh .
 cp /common/run.sh .
-cp /docs/netcore20-agent-readme.md ./README.md
+cp /docs/core-agent-readme.md ./README.md
 
 dos2unix *.x* extensions/*.x* *.sh
 
