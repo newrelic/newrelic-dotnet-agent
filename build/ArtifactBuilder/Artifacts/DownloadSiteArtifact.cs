@@ -18,7 +18,7 @@ namespace ArtifactBuilder.Artifacts
             OutputDirectory = $@"{RepoRootDirectory}\build\BuildArtifacts\{Name}";
             ShaDirectory = OutputDirectory + @"\SHA256";
             var agentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, configuration, "x64", RepoRootDirectory, HomeRootDirectory);
-            Version = agentComponents.Version;
+            Version = agentComponents.SemanticVersion;
         }
 
         protected override void InternalBuild()
@@ -42,7 +42,8 @@ namespace ArtifactBuilder.Artifacts
             //Zip files
             foreach (var platform in platforms)
             {
-                CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\ZipArchive-{platform}", "*.zip", OutputDirectory, $@"NewRelicDotNetAgent_{Version}_{platform}.zip");
+                CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\ZipArchive-{platform}", "*.zip", OutputDirectory,
+                    $@"NewRelicDotNetAgent_{Version}_{platform}.zip");
             }
 
             //Linux packages

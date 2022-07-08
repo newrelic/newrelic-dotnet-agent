@@ -98,6 +98,14 @@ namespace ArtifactBuilder
             }
         }
 
+        public string SemanticVersion
+        {
+            get
+            {
+                return new Version(Version).ToString(3);
+            }
+        }
+
         protected abstract string SourceHomeBuilderPath { get; }
         protected abstract List<string> IgnoredHomeBuilderFiles { get; }
         protected abstract void CreateAgentComponents();

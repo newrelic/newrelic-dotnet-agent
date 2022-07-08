@@ -38,7 +38,7 @@ namespace ArtifactBuilder.Artifacts
             agentInfo.WriteToDisk(Path.Combine(StagingDirectory, FrameworkSubDirectoryName));
             agentInfo.WriteToDisk(Path.Combine(StagingDirectory, CoreSubDirectoryName));
 
-            var zipFilePath = $@"{OutputDirectory}\NewRelicDotNetAgent_{frameworkAgentComponents.Version}_{Platform}.zip";
+            var zipFilePath = $@"{OutputDirectory}\NewRelicDotNetAgent_{frameworkAgentComponents.SemanticVersion}_{Platform}.zip";
             Directory.CreateDirectory(OutputDirectory);
             System.IO.Compression.ZipFile.CreateFromDirectory(StagingDirectory, zipFilePath);
             File.WriteAllText($@"{OutputDirectory}\checksum.sha256", FileHelpers.GetSha256Checksum(zipFilePath));
