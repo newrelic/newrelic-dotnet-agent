@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Api.Agent", "src\A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Miscellaneous", "Miscellaneous", "{D8E8DC37-B021-4C1D-8E32-6F9DF0F0A2BD}"
 	ProjectSection(SolutionItems) = preProject
-		src\Agent\Miscellaneous\netcore20-agent-readme.md = src\Agent\Miscellaneous\netcore20-agent-readme.md
+		src\Agent\Miscellaneous\core-agent-readme.md = src\Agent\Miscellaneous\core-agent-readme.md
 		src\Agent\Miscellaneous\NewRelic-icon-16x16.ico = src\Agent\Miscellaneous\NewRelic-icon-16x16.ico
 		src\Agent\Miscellaneous\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml = src\Agent\Miscellaneous\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml
 	EndProjectSection

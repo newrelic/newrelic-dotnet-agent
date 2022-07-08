@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # constants
-package_name='newrelic-netcore20-agent'
+package_name='newrelic-dotnet-agent'
 agent_package_dir='/agent'
 
 local_deb_package=$(find ${agent_package_dir} -name "${package_name}*.deb" |tail -n 1)

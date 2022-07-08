@@ -15,7 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Adds an ignore rule to prevent profiling `SMSvcHost.exe`. ([#1182](https://github.com/newrelic/newrelic-dotnet-agent/pull/1182))
 
 ### Deprecations/Removed Features
+
+INSERT LINK TO MIGRATION GUIDE HERE
+
 * The scriptable installers have been removed. ([#1170](https://github.com/newrelic/newrelic-dotnet-agent/pull/1170))
+* The Linux installation packages have been renamed. ([#1180](https://github.com/newrelic/newrelic-dotnet-agent/pull/1180))
 * Castle.Monorail instrumentation has been removed. ([#1177])(https://github.com/newrelic/newrelic-dotnet-agent/pull/1177)
 
 ## [9.9.0] - 2022-06-08

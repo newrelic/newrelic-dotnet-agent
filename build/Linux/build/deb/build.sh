@@ -2,7 +2,7 @@
 
 ARCH='amd64'
 AGENT_HOMEDIR='newrelichome_x64_coreclr_linux'
-PACKAGE_NAME='newrelic-netcore20-agent'
+PACKAGE_NAME='newrelic-dotnet-agent'
 
 if [ "$1" = "arm64" ]; then
     ARCH="arm64"
@@ -39,7 +39,7 @@ rm -rf logs Logs
 
 cp /common/setenv.sh .
 cp /common/run.sh .
-cp /docs/netcore20-agent-readme.md ./README.md
+cp /docs/core-agent-readme.md ./README.md
 
 dos2unix *.x* extensions/*.x* *.sh
 
