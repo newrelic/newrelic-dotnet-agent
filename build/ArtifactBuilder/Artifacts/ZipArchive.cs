@@ -43,14 +43,6 @@ namespace ArtifactBuilder.Artifacts
             System.IO.Compression.ZipFile.CreateFromDirectory(StagingDirectory, zipFilePath);
             File.WriteAllText($@"{OutputDirectory}\checksum.sha256", FileHelpers.GetSha256Checksum(zipFilePath));
 
-            // TODO: I don't think this is necessary anymore
-            //// For now, the DotNet-Core20-Agent-DeployToS3 job expects core agent artifacts to be in the following directory
-            //// At some point we should change the job to pull from the new location under the Build\BuildArtifacts directory
-            //if (AgentType == AgentType.Core)
-            //{
-            //    FileHelpers.CopyFile(zipFilePath, $@"{RepoRootDirectory}\src\_build\CoreArtifacts");
-            //}
-
             Console.WriteLine($"Successfully created artifact for {nameof(ZipArchive)}.");
         }
     }
