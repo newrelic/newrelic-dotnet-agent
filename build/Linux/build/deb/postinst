@@ -21,16 +21,22 @@ fi
 
 # migrate data from obsoleted package, if applicable
 if [ -d $OBSOLETE_NEWRELIC_HOME ]; then
-  echo "Migrating user data from $OBSOLETE_NEWRELIC_HOME"
 
   # migrate config file, backing up original first
   if [ -e $OBSOLETE_NEWRELIC_HOME/newrelic.config ]; then
+    echo "Migrating newrelic.config from $OBSOLETE_NEWRELIC_HOME"
+    # Move the existing config file in the new package directory out of the way
     mv $NEWRELIC_HOME/newrelic.config $NEWRELIC_HOME/newrelic.config.original
+    # Copy the config file from the old package directory to the new package directory
     cp -v $OBSOLETE_NEWRELIC_HOME/newrelic.config $NEWRELIC_HOME/newrelic.config
+    # Rename the config file in the old package directory so it won't get migrated again
+    mv $OBSOLETE_NEWRELIC_HOME/newrelic.config $OBSOLETE_NEWRELIC_HOME/newrelic.config.migrated
   fi
 
   # migrate any custom instrumentation
   if [ -d $OBSOLETE_NEWRELIC_HOME/extensions ]; then
+    # This is safe to run multiple times because of the -n option, which means "don't overwrite an existing file"
+    # This also means that only custom instrumentation XML files (not our default auto-instrumentation ones) will be migrated the first time
     cp -nv $OBSOLETE_NEWRELIC_HOME/extensions/*.xml $NEWRELIC_HOME/extensions
   fi
 fi
