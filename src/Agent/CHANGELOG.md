@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] changes
 
 ### New Features
-* Adds support for forwarding application logs to New Relic for .NET Framework applications using Microsoft.Extensions.Logging. [#1172](https://github.com/newrelic/newrelic-dotnet-agent/pull/1172)
+* Adds support for forwarding application logs to New Relic for .NET Framework 4.6.2 and newer applications using Microsoft.Extensions.Logging. [#1172](https://github.com/newrelic/newrelic-dotnet-agent/pull/1172)
 * The amount of agent configuration information reported up to NR1 has been dramatically increased. Agent configuration is also now reported during agent connect. This information can be seen in the `APM->Environment->Agent Initialization` view. [#1174](https://github.com/newrelic/newrelic-dotnet-agent/pull/1174)
 
 ### Fixes
@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 INSERT LINK TO MIGRATION GUIDE HERE
 
+* This agent version updated the target to .NET Framework 4.6.2 and .NET Core 3.1 onwards.
 * The scriptable installers have been removed. ([#1170](https://github.com/newrelic/newrelic-dotnet-agent/pull/1170))
 * Windows installation files have been consolidated and renamed. ([#1187](https://github.com/newrelic/newrelic-dotnet-agent/pull/1187))
 * The Linux installation packages have been renamed. ([#1180](https://github.com/newrelic/newrelic-dotnet-agent/pull/1180))
