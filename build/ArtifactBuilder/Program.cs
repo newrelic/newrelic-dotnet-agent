@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using ArtifactBuilder.Artifacts;
 
 namespace ArtifactBuilder
@@ -135,10 +132,8 @@ namespace ArtifactBuilder
         private static void BuildZipArchives(string[] args)
         {
             var configuration = args[1];
-            new ZipArchive(AgentType.Framework, "x64", configuration).Build();
-            new ZipArchive(AgentType.Framework, "x86", configuration).Build();
-            new ZipArchive(AgentType.Core, "x64", configuration).Build();
-            new ZipArchive(AgentType.Core, "x86", configuration).Build();
+            new ZipArchive("x64", configuration).Build();
+            new ZipArchive("x86", configuration).Build();
         }
 
         private static void BuildAzureSiteExtension()

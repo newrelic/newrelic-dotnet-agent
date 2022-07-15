@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 INSERT LINK TO MIGRATION GUIDE HERE
 
 * The scriptable installers have been removed. ([#1170](https://github.com/newrelic/newrelic-dotnet-agent/pull/1170))
+* Windows installation files have been consolidated and renamed. ([#1187](https://github.com/newrelic/newrelic-dotnet-agent/pull/1187))
 * The Linux installation packages have been renamed. ([#1180](https://github.com/newrelic/newrelic-dotnet-agent/pull/1180))
 * Castle.Monorail instrumentation has been removed. ([#1177])(https://github.com/newrelic/newrelic-dotnet-agent/pull/1177)
 

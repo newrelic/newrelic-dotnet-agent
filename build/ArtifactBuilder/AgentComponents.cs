@@ -43,6 +43,7 @@ namespace ArtifactBuilder
         public IReadOnlyCollection<string> ExtensionDirectoryComponents { get; private set; }
         public IReadOnlyCollection<string> WrapperXmlFiles { get; private set; }
         public IReadOnlyCollection<string> RootInstallDirectoryComponents { get; private set; }
+        public IReadOnlyCollection<string> AgentHomeDirComponents { get; private set; }
         public IReadOnlyCollection<string> ConfigurationComponents { get; private set; }
         public string AgentApiDll;
         public string WindowsProfiler;
@@ -61,6 +62,7 @@ namespace ArtifactBuilder
             get
             {
                 var list = RootInstallDirectoryComponents
+                    .Concat(AgentHomeDirComponents)
                     .Concat(ExtensionDirectoryComponents)
                     .Concat(WrapperXmlFiles)
                     .Append(ExtensionXsd)
@@ -96,6 +98,14 @@ namespace ArtifactBuilder
             }
         }
 
+        public string SemanticVersion
+        {
+            get
+            {
+                return new Version(Version).ToString(3);
+            }
+        }
+
         protected abstract string SourceHomeBuilderPath { get; }
         protected abstract List<string> IgnoredHomeBuilderFiles { get; }
         protected abstract void CreateAgentComponents();
@@ -109,6 +119,10 @@ namespace ArtifactBuilder
         {
             RootInstallDirectoryComponents = new HashSet<string>(items);
         }
+        protected void SetAgentHomeDirComponents(params string[] items)
+        {
+            AgentHomeDirComponents = new HashSet<string>(items);
+        }
 
         protected void SetWrapperXmlFiles(params string[] items)
         {
@@ -120,11 +134,17 @@ namespace ArtifactBuilder
             ExtensionDirectoryComponents = new HashSet<string>(items);
         }
 
-        public void CopyComponents(string destinationDirectory)
+        public void CopyComponents(string destinationDirectory, string agentTypeSubDirectory = null)
         {
             FileHelpers.CopyFile(RootInstallDirectoryComponents, destinationDirectory);
-            FileHelpers.CopyFile(ExtensionDirectoryComponents, $@"{destinationDirectory}\extensions");
-            FileHelpers.CopyFile(WrapperXmlFiles, $@"{destinationDirectory}\extensions");
+            var agentTypeInstallDirectory = destinationDirectory;
+            if (agentTypeSubDirectory != null)
+            {
+                agentTypeInstallDirectory = Path.Combine(destinationDirectory, agentTypeSubDirectory);
+            }
+            FileHelpers.CopyFile(AgentHomeDirComponents, agentTypeInstallDirectory);
+            FileHelpers.CopyFile(ExtensionDirectoryComponents, $@"{agentTypeInstallDirectory}\extensions");
+            FileHelpers.CopyFile(WrapperXmlFiles, $@"{agentTypeInstallDirectory}\extensions");
         }
 
         public void ValidateComponents()

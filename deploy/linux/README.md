@@ -7,7 +7,7 @@ The assets in this path are used to deploy the Linux packages (.deb and .rpm) fo
 2. AWS S3 access keys with read/write access to the bucket(s) you are updating
 3. A Linux-like command line environment, such as `git-bash` on Windows, or a real Linux system or VM (e.g. WSL2)
 
-To deploy the .rpm and .deb packages for a particular release version (e.g. 6.18.123.0): (note: all commands should be run from the same location as this README)
+To deploy the .rpm and .deb packages for a particular release version (e.g. 10.0.0): (note: all commands should be run from the same location as this README)
 
 1. Add the packages to be released to the `packages` subfolder:
     
@@ -19,7 +19,7 @@ To deploy the .rpm and .deb packages for a particular release version (e.g. 6.18
 
 3. Create the `docker.env` [environment variable file](https://docs.docker.com/compose/env-file/) with required values (the values shown here are just examples, you will need to supply the correct ones):
 
-        echo "AGENT_VERSION=6.18.123.0" >docker.env
+        echo "AGENT_VERSION=10.0.0" >docker.env
         echo "S3_BUCKET=s3://your-s3-bucket" >>docker.env
         echo "AWS_ACCESS_KEY_ID=AKAKAKAKAKAKAKA" >>docker.env
         echo "AWS_SECRET_ACCESS_KEY=6SQ6SQ6SQ6SQ6SQ6SQ6SQ6SQ6SQ6SQ6SQ" >>docker.env

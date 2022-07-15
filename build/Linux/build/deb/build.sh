@@ -13,7 +13,10 @@ if [ -z "$AGENT_VERSION" ]; then
     # Get version from agent core dll
     version_from_dll=$(exiftool ./${AGENT_HOMEDIR}/NewRelic.Agent.Core.dll |grep "Product Version Number" |cut -d':' -f2 |tr -d ' ')
     if [[ "$version_from_dll" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-        AGENT_VERSION="$version_from_dll"
+        major=$(echo $version_from_dll | cut -d'.' -f1)
+        minor=$(echo $version_from_dll | cut -d'.' -f2)
+        patch=$(echo $version_from_dll | cut -d'.' -f3)
+        AGENT_VERSION="${major}.${minor}.${patch}"
     else
         echo "AGENT_VERSION is not set, exiting."
         exit 1
