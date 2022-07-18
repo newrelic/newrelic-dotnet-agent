@@ -21,7 +21,7 @@ namespace ArtifactBuilder.Artifacts
         protected override void InternalBuild()
         {
             //Note that the wildcard purposely includes the separator and the version number
-            var fileNameSearchPattern = $"newrelic-netcore20-agent*{_packagePlatform}.{_fileExtension}";
+            var fileNameSearchPattern = $"newrelic-dotnet-agent*{_packagePlatform}.{_fileExtension}";
             var packagePath = Directory.GetFiles(_buildOutputDirectory, fileNameSearchPattern).FirstOrDefault();
 
             if (string.IsNullOrEmpty(packagePath))

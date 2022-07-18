@@ -3,3 +3,5 @@ Architecture: all
 Description: The New Relic .NET Agent for CoreCLR
 Section: non-free
 Homepage: http://www.newrelic.com/
+Conflicts: newrelic-netcore20-agent
+Replaces: newrelic-netcore20-agent

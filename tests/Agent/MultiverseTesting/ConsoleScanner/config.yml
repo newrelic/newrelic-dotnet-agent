@@ -12,12 +12,6 @@
   #      - { package-name: Microsoft.AspNetCore.Mvc.Core, versions: [2.1.3, 2.1.16, 2.2.5] }
   #   local-assemblies:
 
-  # not available from nuget, dll in inst.xml isn't referenced by any test apps
-  # - name: castleMonoRail
-  #   xml-file: ${{ MVS_XML_PATH }}/CastleMonoRail2/Instrumentation.xml
-  #   nuget-packages:
-  #   local-assemblies:
-
   # - name: couchbase
   #   xml-file: ${{ MVS_XML_PATH }}/Couchbase/Instrumentation.xml
   #   nuget-packages:

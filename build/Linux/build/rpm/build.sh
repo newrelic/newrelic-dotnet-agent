@@ -34,14 +34,17 @@ EXPECT
     ./sign.expect
 }
 
-PACKAGE_NAME='newrelic-netcore20-agent'
+PACKAGE_NAME='newrelic-dotnet-agent'
 AGENT_HOMEDIR='newrelichome_x64_coreclr_linux'
 
 if [ -z "$AGENT_VERSION" ]; then
     # Get the agent version from the core .dll
     version_from_dll=$(exiftool ./${AGENT_HOMEDIR}/NewRelic.Agent.Core.dll |grep "Product Version Number" |cut -d':' -f2 |tr -d ' ')
     if [[ "$version_from_dll" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-        export AGENT_VERSION="$version_from_dll"
+        major=$(echo $version_from_dll | cut -d'.' -f1)
+        minor=$(echo $version_from_dll | cut -d'.' -f2)
+        patch=$(echo $version_from_dll | cut -d'.' -f3)
+        export AGENT_VERSION="${major}.${minor}.${patch}"
     else
         echo "AGENT_VERSION is not set, exiting."
         exit 1
@@ -76,7 +79,7 @@ rm -rf logs Logs
 
 cp /common/setenv.sh .
 cp /common/run.sh .
-cp /docs/netcore20-agent-readme.md ./README.md
+cp /docs/core-agent-readme.md ./README.md
 
 dos2unix *.x* extensions/*.x* *.sh
 

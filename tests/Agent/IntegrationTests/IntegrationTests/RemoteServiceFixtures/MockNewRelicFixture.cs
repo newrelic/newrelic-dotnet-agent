@@ -17,12 +17,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"MockNewRelic";
         private const string ExecutableName = @"MockNewRelic.exe";
+        private const string TargetFramework = "net6";
 
         public RemoteService MockNewRelicApplication { get; set; }
 
         public MockNewRelicFixture(RemoteApplication remoteApplication) : base(remoteApplication)
         {
-            MockNewRelicApplication = new RemoteService(ApplicationDirectoryName, ExecutableName, ApplicationType.Bounded, true, true, true);
+            MockNewRelicApplication = new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded, true, true, true);
 
             Actions(
                 setupConfiguration: () =>

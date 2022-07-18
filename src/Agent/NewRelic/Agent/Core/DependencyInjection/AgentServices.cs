@@ -52,8 +52,8 @@ namespace NewRelic.Agent.Core.DependencyInjection
     {
         public static IContainer GetContainer()
         {
-#if NET45
-			return new WindsorContainer();
+#if NETFRAMEWORK
+            return new WindsorContainer();
 #else
             return new CoreContainer();
 #endif
@@ -134,7 +134,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<IApiSupportabilityMetricCounters, IOutOfBandMetricSource, ApiSupportabilityMetricCounters>();
             container.Register<ICATSupportabilityMetricCounters, IOutOfBandMetricSource, CATSupportabilityMetricCounters>();
             container.Register<IAgentTimerService, AgentTimerService>();
-#if NET45
+#if NETFRAMEWORK
 			container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);
 #endif
             container.Register<IThreadPoolStatic, ThreadPoolStatic>();

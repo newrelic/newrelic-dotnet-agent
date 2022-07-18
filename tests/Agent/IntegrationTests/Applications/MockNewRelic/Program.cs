@@ -36,7 +36,7 @@ namespace MockNewRelic
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .UseKestrel(options =>
+                .ConfigureKestrel(options =>
                 {
                     options.Listen(IPAddress.Loopback, int.Parse(_port), listenOptions =>
                     {

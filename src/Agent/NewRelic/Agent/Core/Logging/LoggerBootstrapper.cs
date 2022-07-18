@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core
         /// </summary>
         private static readonly string TemporaryEventLogAppenderName = "TemporaryEventLog";
 
-#if NET45
+#if NETFRAMEWORK
 		/// <summary>
 		/// The name of the event log appender.
 		/// </summary>
@@ -265,7 +265,7 @@ namespace NewRelic.Agent.Core
         /// <param name="logger"></param>
         private static void SetupTemporaryEventLogAppender(log4netLogger logger)
         {
-#if NET45
+#if NETFRAMEWORK
 			var appender = new EventLogAppender();
 			appender.Layout = eventLoggerLayout;
 			appender.Name = TemporaryEventLogAppenderName;
@@ -286,7 +286,7 @@ namespace NewRelic.Agent.Core
         /// <param name="config">The configuration for the appender.</param>
         private static void SetupEventLogAppender(log4netLogger logger, ILogConfig config)
         {
-#if NET45
+#if NETFRAMEWORK
 			var appender = new EventLogAppender();
 			appender.Layout = eventLoggerLayout;
 			appender.Threshold = Level.Warn;

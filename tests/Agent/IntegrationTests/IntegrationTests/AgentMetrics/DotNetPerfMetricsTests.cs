@@ -24,21 +24,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
     }
 
     [NetCoreTest]
-    public class DotNetPerfMetricsTestsCore21 : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCore21>
-    {
-        public DotNetPerfMetricsTestsCore21(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-
-        // GC metrics don't work in .NET Core <3.0
-        protected override string[] ExpectedMetricNames_GC => new string[]
-        {
-        };
-
-    }
-
-    [NetCoreTest]
     public class DotNetPerfMetricsTestsCore31 : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCore31>
     {
         public DotNetPerfMetricsTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)

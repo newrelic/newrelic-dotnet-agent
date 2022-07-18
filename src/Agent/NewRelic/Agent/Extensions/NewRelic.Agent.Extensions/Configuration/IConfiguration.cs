@@ -179,7 +179,7 @@ namespace NewRelic.Agent.Configuration
         int? SamplingTargetPeriodInSeconds { get; }
         bool PayloadSuccessMetricsEnabled { get; }
         string ProcessHostDisplayName { get; }
-        int DatabaseStatementCacheCapcity { get; }
+        int DatabaseStatementCacheCapacity { get; }
         bool ForceSynchronousTimingCalculationHttpClient { get; }
         bool ExcludeNewrelicHeader { get; }
         bool ApplicationLoggingEnabled { get; }

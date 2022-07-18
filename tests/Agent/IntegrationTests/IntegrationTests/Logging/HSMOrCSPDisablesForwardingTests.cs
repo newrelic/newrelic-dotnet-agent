@@ -127,6 +127,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
         }
     }
 
+    [NetFrameworkTest]
+    public class MicrosoftLoggingCSPDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
+    {
+        public MicrosoftLoggingCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
     #endregion
 
     #region Serilog

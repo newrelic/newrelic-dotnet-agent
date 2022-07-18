@@ -438,9 +438,6 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="ScriptHandlerFactoryWrapperComponent" Guid="{D2C6737B-4F71-40BE-8F86-EB6ED31E6A93}">
         <File Id="ScriptHandlerFactoryWrapperFile" Name="NewRelic.Providers.Wrapper.ScriptHandlerFactory.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.dll"/>
       </Component>
-      <Component Id="CastleMonoRail2WrapperComponent" Guid="{56BC32DA-62A6-4E81-BBBB-AC28E69ACB8D}">
-        <File Id="CastleMonoRail2WrapperFile" Name="NewRelic.Providers.Wrapper.CastleMonoRail2.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.CastleMonoRail2.dll"/>
-      </Component>
       <Component Id="OpenRastaWrapperComponent" Guid="{59A6C862-3D09-44AF-B69E-38B464D041FA}">
         <File Id="OpenRastaWrapperFile" Name="NewRelic.Providers.Wrapper.OpenRasta.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.OpenRasta.dll"/>
       </Component>
@@ -462,6 +459,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="NLogLoggingWrapperComponent" Guid="{31EA2456-A5E3-4B04-AD4B-B010594F494D}">
         <File Id="NLogLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.NLogLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.NLogLogging.dll"/>
+      </Component>
+      <Component Id="MicrosoftExtensionsLoggingWrapperComponent" Guid="{33598C6C-BF8E-4AFC-A6C1-56310CEE61D7}">
+        <File Id="MicrosoftExtensionsLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll"/>
       </Component>
 
       <!-- Reference libraries -->
@@ -585,9 +585,6 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="ScriptHandlerFactoryInstrumentationComponent" Guid="{FF3E7F54-BDEB-4882-BD1F-94F7BA46A724}">
         <File Id="ScriptHandlerFactoryInstrumentationFile" Name="NewRelic.Providers.Wrapper.ScriptHandlerFactory.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.Instrumentation.xml"/>
       </Component>
-      <Component Id="CastleMonoRail2InstrumentationComponent" Guid="{18239B34-29FC-4C65-BF72-41C42F087F4F}">
-        <File Id="CastleMonoRail2InstrumentationFile" Name="NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml"/>
-      </Component>
       <Component Id="OpenRastaInstrumentationComponent" Guid="{532A2C8E-17AA-4D1D-910F-23E2CFFAEF86}">
         <File Id="OpenRastaInstrumentationFile" Name="NewRelic.Providers.Wrapper.OpenRasta.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.OpenRasta.Instrumentation.xml"/>
       </Component>
@@ -605,6 +602,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="NLogLoggingInstrumentationComponent" Guid="{C803621B-EC47-4559-8B7D-2FD836A36DCD}">
         <File Id="NLogLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml"/>
+      </Component>
+      <Component Id="MicrosoftExtensionsLoggingInstrumentationComponent" Guid="{FE0A1615-93B7-4355-AE20-D5C2E1ABE56C}">
+        <File Id="MicrosoftExtensionsLoggingFile" Name="NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 
@@ -654,14 +654,14 @@ SPDX-License-Identifier: Apache-2.0
     <!-- API -->
     <ComponentGroup Id="ApiComponents">
       <Component Id="ApiComponent" Guid="{15D2360A-0C6D-4CF3-8158-6D0DB76D4D2F}" Directory="FRAMEWORKAGENTFOLDER">
-        <File Id="ApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net45\NewRelic.Api.Agent.dll" />
+        <File Id="ApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net462\NewRelic.Api.Agent.dll" />
       </Component>
       <Component Id="CoreApiComponent" Guid="{06F38D70-0220-4E36-B02F-1AF445867F5D}" Directory="COREAGENTFOLDER">
         <File Id="CoreApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll" />
       </Component>
       <!-- Installs a copy in the root of the [NETAGENTFOLDER] to support upgrades from older installs.  Moved the GUID from API here as well.-->
       <Component Id="ApiComponentLegacy" Guid="{26BF7AE0-A921-438C-A16C-FF6F8E0F9366}" Directory="NETAGENTFOLDER">
-        <File Id="ApiFileLegacy" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net45\NewRelic.Api.Agent.dll" />
+        <File Id="ApiFileLegacy" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net462\NewRelic.Api.Agent.dll" />
       </Component>
     </ComponentGroup>
         

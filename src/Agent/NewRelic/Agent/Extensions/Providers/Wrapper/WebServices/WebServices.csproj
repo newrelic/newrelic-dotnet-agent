@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net45</TargetFrameworks>
+    <TargetFrameworks>net462</TargetFrameworks>
     <RootNamespace>NewRelic.Providers.Wrapper.WebServices</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.WebServices</AssemblyName>
     <Description>Web Services Wrapper Provider for New Relic .NET Agent</Description>

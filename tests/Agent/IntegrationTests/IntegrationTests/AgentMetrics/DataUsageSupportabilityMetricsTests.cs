@@ -24,15 +24,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
     }
 
     [NetCoreTest]
-    public class DataUsageSupportabilityMetricsTestsCore21 : DataUsageSupportabilityMetricsTests<ConsoleDynamicMethodFixtureCore21>
-    {
-        public DataUsageSupportabilityMetricsTestsCore21(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
     public class DataUsageSupportabilityMetricsTestsCore31 : DataUsageSupportabilityMetricsTests<ConsoleDynamicMethodFixtureCore31>
     {
         public DataUsageSupportabilityMetricsTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)

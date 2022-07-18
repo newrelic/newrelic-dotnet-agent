@@ -25,8 +25,8 @@ $xUnitPath = Resolve-Path "$rootDirectory\build\Tools\XUnit-Console\xunit.consol
 $unboundedServicesControlPath = Resolve-Path "$rootDirectory\tests\Agent\IntegrationTests\UnboundedServices\unbounded-services-control.ps1"
 
 switch ($testSuite) {
-    "integration" { $testSuiteDll = "$rootDirectory\tests\Agent\IntegrationTests\IntegrationTests\bin\Release\net461\NewRelic.Agent.IntegrationTests.dll" }
-    "unbounded" { $testSuiteDll = "$rootDirectory\tests\Agent\IntegrationTests\UnboundedIntegrationTests\bin\Release\net461\NewRelic.Agent.UnboundedIntegrationTests.dll" }
+    "integration" { $testSuiteDll = "$rootDirectory\tests\Agent\IntegrationTests\IntegrationTests\bin\Release\net462\NewRelic.Agent.IntegrationTests.dll" }
+    "unbounded" { $testSuiteDll = "$rootDirectory\tests\Agent\IntegrationTests\UnboundedIntegrationTests\bin\Release\net462\NewRelic.Agent.UnboundedIntegrationTests.dll" }
 }
 
 if (!(Test-Path $testSuiteDll)) {

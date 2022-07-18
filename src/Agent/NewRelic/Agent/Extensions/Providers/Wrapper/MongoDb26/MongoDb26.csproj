@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
 	<PropertyGroup>
-		<TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
 		<AssemblyName>NewRelic.Providers.Wrapper.MongoDb26</AssemblyName>
 		<RootNamespace>NewRelic.Providers.Wrapper.MongoDb26</RootNamespace>
 		<Description>MongoDb 2.6 Wrapper Provider for New Relic .NET Agent</Description>
@@ -15,7 +15,7 @@
 	  <ProjectReference Include="..\..\..\..\Parsing\Parsing.csproj" />
 	  <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
 		<Reference Include="System" />
 		<Reference Include="System.Core" />
 		<Reference Include="System.Xml.Linq" />
