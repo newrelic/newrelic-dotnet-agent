@@ -826,9 +826,9 @@ jobs:
           agentVersion=${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
           
           if [[ "$agentVersion" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            major=$(echo $version_from_dll | cut -d'.' -f1)
-            minor=$(echo $version_from_dll | cut -d'.' -f2)
-            patch=$(echo $version_from_dll | cut -d'.' -f3)
+            major=$(echo $agentVersion | cut -d'.' -f1)
+            minor=$(echo $agentVersion | cut -d'.' -f2)
+            patch=$(echo $agentVersion | cut -d'.' -f3)
             agentVersion="${major}.${minor}.${patch}"
             echo "agentVersion is simplified to $agentVersion"
           fi
@@ -874,9 +874,9 @@ jobs:
           agentVersion=${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
           
           if [[ "$agentVersion" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            major=$(echo $version_from_dll | cut -d'.' -f1)
-            minor=$(echo $version_from_dll | cut -d'.' -f2)
-            patch=$(echo $version_from_dll | cut -d'.' -f3)
+            major=$(echo $agentVersion | cut -d'.' -f1)
+            minor=$(echo $agentVersion | cut -d'.' -f2)
+            patch=$(echo $agentVersion | cut -d'.' -f3)
             agentVersion="${major}.${minor}.${patch}"
             echo "agentVersion is simplified to $agentVersion"
           fi
