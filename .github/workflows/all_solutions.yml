@@ -830,7 +830,7 @@ jobs:
             minor=$(echo $version_from_dll | cut -d'.' -f2)
             patch=$(echo $version_from_dll | cut -d'.' -f3)
             agentVersion="${major}.${minor}.${patch}"
-            echo "agentVersion is simplify to $agentVersion"
+            echo "agentVersion is simplified to $agentVersion"
           fi
           
           cd ${{ github.workspace }}/build/Linux
@@ -878,7 +878,7 @@ jobs:
             minor=$(echo $version_from_dll | cut -d'.' -f2)
             patch=$(echo $version_from_dll | cut -d'.' -f3)
             agentVersion="${major}.${minor}.${patch}"
-            echo "agentVersion is simplify to $agentVersion"
+            echo "agentVersion is simplified to $agentVersion"
           fi
           
           cd ${{ github.workspace }}/build/Linux
