@@ -824,6 +824,15 @@ jobs:
       - name: Build RPM
         run: |
           agentVersion=${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
+          
+          if [[ "$agentVersion" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            major=$(echo $version_from_dll | cut -d'.' -f1)
+            minor=$(echo $version_from_dll | cut -d'.' -f2)
+            patch=$(echo $version_from_dll | cut -d'.' -f3)
+            agentVersion="${major}.${minor}.${patch}"
+            echo "agentVersion is simplify to $agentVersion"
+          fi
+          
           cd ${{ github.workspace }}/build/Linux
           docker-compose build build_rpm
           docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
@@ -863,6 +872,15 @@ jobs:
       - name: Build Debian Package
         run: |
           agentVersion=${{ needs.build-test-fullagent-msi.outputs.agentVersion }}
+          
+          if [[ "$agentVersion" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            major=$(echo $version_from_dll | cut -d'.' -f1)
+            minor=$(echo $version_from_dll | cut -d'.' -f2)
+            patch=$(echo $version_from_dll | cut -d'.' -f3)
+            agentVersion="${major}.${minor}.${patch}"
+            echo "agentVersion is simplify to $agentVersion"
+          fi
+          
           cd ${{ github.workspace }}/build/Linux
           docker-compose build build_deb
           docker-compose run -e AGENT_VERSION=$agentVersion build_deb
