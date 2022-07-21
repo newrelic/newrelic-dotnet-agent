@@ -8,7 +8,7 @@ priority: ''
 ---
 
 ### Describe the story, please be clear on scope of the story.
-Please be conscice with the scope for the story.  
+Please be concice with the scope for the story.  
 
 ### Acceptance Criteria
 Please outline the acceptance criteria
