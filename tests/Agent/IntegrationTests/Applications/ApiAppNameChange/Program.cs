@@ -26,13 +26,17 @@ namespace NewRelic.Agent.IntegrationTests.Applications.ApiAppNameChange
                 return;
 
             // Create handle that RemoteApplication expects
-            new EventWaitHandle(false, EventResetMode.ManualReset, "app_server_wait_for_all_request_done_" + program.Port);
+            var eventWaitHandle =
+                new EventWaitHandle(false, EventResetMode.ManualReset, "app_server_wait_for_all_request_done_" + program.Port);
 
             CreatePidFile();
 
             Api.Agent.NewRelic.SetApplicationName("AgentApi");
             Api.Agent.NewRelic.StartAgent();
             Api.Agent.NewRelic.SetApplicationName("AgentApi2");
+
+            // Wait for the test harness to tell us to shut down
+            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
         }
 
         private static void CreatePidFile()
