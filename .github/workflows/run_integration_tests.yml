@@ -161,7 +161,7 @@ jobs:
     runs-on: windows-2019 # TODO: make this a input so we can test different OSes?
     strategy:
       matrix:
-        namespace: ${{ needs.setup-matrices.outputs.integration-tests-matrix}}
+        namespace: ${{fromJSON(needs.setup-matrices.outputs.integration-tests-matrix)}}
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -276,7 +276,7 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        namespace: ${{ needs.setup-matrices.outputs.unbounded-tests-matrix}}
+        namespace: ${{fromJSON(needs.setup-matrices.outputs.unbounded-tests-matrix)}}
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
