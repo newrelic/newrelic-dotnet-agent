@@ -106,7 +106,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void ReportDotnetVersion()
         {
-#if NET45
+#if NETFRAMEWORK
             var metric = _metricBuilder.TryBuildDotnetFrameworkVersionMetric(AgentInstallConfiguration.DotnetFrameworkVersion);
 #else
             var metric = _metricBuilder.TryBuildDotnetCoreVersionMetric(AgentInstallConfiguration.DotnetCoreVersion);

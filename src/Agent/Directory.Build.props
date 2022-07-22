@@ -5,7 +5,7 @@
     <GitTagPrefix>v</GitTagPrefix>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net462'">
     <Product>New Relic .NET Agent</Product>
   </PropertyGroup>
 
@@ -13,7 +13,7 @@
     <Product>New Relic .NET CoreCLR Agent</Product>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net462'">
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
   </PropertyGroup>
 

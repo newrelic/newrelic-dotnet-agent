@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
     <PropertyGroup>
-        <TargetFramework>net45</TargetFramework>
+        <TargetFramework>net462</TargetFramework>
         <AssemblyName>NewRelic.Providers.Wrapper.Msmq</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.Msmq</RootNamespace>
         <Description>Msmq Wrapper Provider for New Relic .NET Agent</Description>

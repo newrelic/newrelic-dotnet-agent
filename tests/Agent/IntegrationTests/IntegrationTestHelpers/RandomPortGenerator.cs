@@ -3,6 +3,8 @@
 
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Sockets;
@@ -16,24 +18,28 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         private const int maxPortID = 60000;
         private const int portPoolSize = maxPortID - minPortID;
         private const int maxAttempts = 200;
-
-        private static int _currentPortID;
+        private static readonly Random _randomNumberDiety;
+        private static readonly HashSet<int> _usedPorts = new HashSet<int>();
 
         static RandomPortGenerator()
         {
             var seed = Process.GetCurrentProcess().Id + AppDomain.CurrentDomain.Id + Environment.TickCount;
-            var rnd = new Random(seed);
-            _currentPortID = rnd.Next(portPoolSize);
+            _randomNumberDiety = new Random(seed);
         }
 
+        private static readonly object _usedPortLock = new object();
         public static int NextPort()
         {
-            for (var countAttempts = 0; countAttempts < maxAttempts; countAttempts++)
+            lock (_usedPortLock)
             {
-                var potentialPort = (Interlocked.Increment(ref _currentPortID) % portPoolSize) + minPortID;
-                if (IsPortAvailable(potentialPort))
+                for (var countAttempts = 0; countAttempts < maxAttempts; countAttempts++)
                 {
-                    return potentialPort;
+                    var potentialPort = _randomNumberDiety.Next(portPoolSize) + minPortID;
+                    if (!_usedPorts.Contains(potentialPort) && IsPortAvailable(potentialPort))
+                    {
+                        _usedPorts.Add(potentialPort);
+                        return potentialPort;
+                    }
                 }
             }
 
@@ -46,33 +52,23 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         //but before the test app uses the assigned port.
         private static bool IsPortAvailable(int potentialPort)
         {
-            var tcpListener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
             try
             {
+                var tcpListener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
                 tcpListener.Start();
-                // we got the port, so can return (implicitly closes listener using finally block)
+                tcpListener.Stop();
                 return true;
             }
-            catch (Exception)
-            {
-                // we were unable to get the port
-                return false;
-            }
-            finally
-            {
-                try
-                {
-                    tcpListener.Stop();
-                }
-                catch (Exception)
-                {
-                    // Ignore errors stopping the listener
-                }
-            }
+            catch (Exception) { }
+            return false;
         }
 
         public static bool TryReleasePort(int port)
         {
+            lock (_usedPortLock)
+            {
+                _usedPorts.Remove(port);
+            }
             return true;
         }
     }

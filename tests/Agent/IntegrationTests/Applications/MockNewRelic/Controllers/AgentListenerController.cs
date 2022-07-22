@@ -18,7 +18,7 @@ namespace MockNewRelic.Controllers
         private const string ReqeustHeaderKey = "NR-Session";
         private const string ReqeustHeaderValue = "TestHeaderValue";
         private static readonly Dictionary<string, string> _requestHeaderMap = new Dictionary<string, string> { { ReqeustHeaderKey, ReqeustHeaderValue } };
-        private static readonly CollectorResponseEnvelope<string> EmptyResponse = new CollectorResponseEnvelope<string>(null, null);
+        private static readonly string EmptyResponse = "{}";
 
         private static List<CollectedRequest> _collectedRequests = new List<CollectedRequest>();
         private static List<AgentCommand> _queuedCommands = new List<AgentCommand>();
@@ -49,7 +49,7 @@ namespace MockNewRelic.Controllers
         [HttpPost]
         [HttpPut]
         [Route("invoke_raw_method")]
-        public object InvokeRawMethod([FromBody] byte[] body)
+        public string InvokeRawMethod([FromBody] byte[] body)
         {
             var capturedRequest = CaptureRequest(body);
             _collectedRequests.Add(capturedRequest);
@@ -66,7 +66,8 @@ namespace MockNewRelic.Controllers
                             ["redirect_host"] = Request.Host.Host
                         };
                         var host = new CollectorResponseEnvelope<Dictionary<string, object>>(null, preconnectResponse);
-                        return host;
+
+                        return JsonConvert.SerializeObject(host);
                     }
                 case "connect":
                     {
@@ -93,7 +94,7 @@ namespace MockNewRelic.Controllers
                         serverConfig["request_headers_map"] = _requestHeaderMap;
 
                         var config = new CollectorResponseEnvelope<Dictionary<string, object>>(null, serverConfig);
-                        return config;
+                        return JsonConvert.SerializeObject(config);
                     }
                 case "get_agent_commands":
                     {
@@ -101,7 +102,7 @@ namespace MockNewRelic.Controllers
                         _queuedCommands = new List<AgentCommand>();
 
                         var result = new CollectorResponseEnvelope<List<AgentCommand>>(null, commands);
-                        return result;
+                        return JsonConvert.SerializeObject(result);
                     }
                 case "metric_data":
                     {

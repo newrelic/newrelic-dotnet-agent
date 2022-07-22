@@ -23,7 +23,5 @@ namespace NewRelic.Agent.Core.TransactionTraces
         /// Returns an immutable enumerable of samples and clears the sample storage.
         /// </summary>
         IEnumerable<TransactionTraceWireModelComponents> GetCollectedSamples();
-
-        void ClearCollectedSamples();
     }
 }

@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Database
             // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
             _sqlObfuscator = SqlObfuscator.GetSqlObfuscator(_configuration.TransactionTracerRecordSql);
-            _cache.SetCapacity(_configuration.DatabaseStatementCacheCapcity);
+            _cache.SetCapacity(_configuration.DatabaseStatementCacheCapacity);
         }
     }
 }

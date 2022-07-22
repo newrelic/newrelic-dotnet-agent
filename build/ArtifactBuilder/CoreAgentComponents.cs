@@ -76,29 +76,35 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x86.dll"
             };
 
-            var root = new List<string>()
+            var installRootFiles = new List<string>()
             {
-                $@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
-                $@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
-                $@"{SourceHomeBuilderPath}\NewRelic.Api.Agent.dll",
-                NewRelicConfig,
-                WindowsProfiler,
-                NewRelicXsd,
                 NewRelicLicenseFile,
                 NewRelicThirdPartyNoticesFile,
                 $@"{SourceHomeBuilderPath}\README.md"
             };
 
-            root.AddRange(GRPCExtensionsLibWindows);
+            SetRootInstallDirectoryComponents(installRootFiles.ToArray());
 
-            SetRootInstallDirectoryComponents(root.ToArray());
+            var agentHomeDirFiles = new List<string>()
+            {
+                $@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
+                $@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
+                $@"{SourceHomeBuilderPath}\NewRelic.Api.Agent.dll",
+                WindowsProfiler,
+                NewRelicConfig,
+                NewRelicXsd
+            };
+
+            agentHomeDirFiles.AddRange(GRPCExtensionsLibWindows);
+
+
+            SetAgentHomeDirComponents(agentHomeDirFiles.ToArray());
 
             var extensions = agentDllsForExtensionDirectory
-                .Concat(storageProviders)
-                .Concat(wrapperProviders)
-                .Append(ExtensionXsd)
-                .ToArray();
-
+               .Concat(storageProviders)
+               .Concat(wrapperProviders)
+               .Append(ExtensionXsd)
+               .ToArray();
             SetExtensionDirectoryComponents(extensions);
 
             SetWrapperXmlFiles(wrapperXmls);

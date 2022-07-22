@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup>
     <CoreClrRepo>https://github.com/dotnet/coreclr.git</CoreClrRepo>
-    <CoreClrBranch>release/3.0</CoreClrBranch>
+    <CoreClrBranch>release/3.1</CoreClrBranch>
     <CloneCoreClr Condition="'$(CORECLR_PATH)' == ''">true</CloneCoreClr>
     <CORECLR_PATH Condition="'$(CORECLR_PATH)' == ''">$(SolutionDir)..\..\..\..\..\coreclr</CORECLR_PATH>
   </PropertyGroup>

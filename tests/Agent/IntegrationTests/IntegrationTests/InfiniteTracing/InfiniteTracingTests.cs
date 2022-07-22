@@ -115,13 +115,4 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         {
         }
     }
-
-    [NetCoreTest]
-    public class InfiniteTracingNetCore21Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCore21>
-    {
-        public InfiniteTracingNetCore21Tests(ConsoleDynamicMethodFixtureCore21 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
 }

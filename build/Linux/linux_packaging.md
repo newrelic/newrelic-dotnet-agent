@@ -3,10 +3,7 @@
 The Linux CoreCLR agent can be packaged into .rpm (for Red Hat/Centos/Oracle/SUSE systems) and/or .deb (for Debian/Ubuntu/Mint systems) packages using Docker.
 
 1. From Visual Studio, build the FullAgent solution, `Release` or `Debug` depending on your needs.
-2. From Visual Studio, build `src\Agent\MsiInstaller\MsiInstaller.sln` for the configuration you built in step 1.
-3. In Powershell, from the top-level `Build` directory:
-      1. `.\package.ps1 -configuration {Release|Debug}` (choose the configuration based on which mode you built the agent as)
-4. In Powershell, from `Build/Linux`:
+2. In Powershell, from `build/Linux`:
       1. `docker-compose build`
       2. `docker-compose run build_rpm`
       3. `docker-compose run build_deb`

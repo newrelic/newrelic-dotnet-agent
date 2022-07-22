@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 
 namespace ArtifactBuilder
 {
@@ -48,7 +49,7 @@ namespace ArtifactBuilder
         {
             using (var stream = File.OpenRead(file))
             {
-                var sha = new System.Security.Cryptography.SHA256Managed();
+                var sha = SHA256.Create();
                 byte[] checksum = sha.ComputeHash(stream);
                 return BitConverter.ToString(checksum).Replace("-", String.Empty);
             }

@@ -6,6 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 
+### New Features
+
+### Fixes
+
+## [10.0.0] - 2022-07-19
+
+### New Features
+* Adds support for forwarding application logs to New Relic for .NET Framework 4.6.2 and newer applications using Microsoft.Extensions.Logging. [#1172](https://github.com/newrelic/newrelic-dotnet-agent/pull/1172)
+* Additional agent configuration options are now visible and easily accessible through the UI on NR1. Agent configuration is also now reported during agent connect. This information can be seen in the `APM->Environment->Agent Initialization` view. [#1174](https://github.com/newrelic/newrelic-dotnet-agent/pull/1174)
+
+### Fixes
+* Resolves an issue with transaction trace aggregation where the slowest transaction trace was not always captured due to a race condition. [#1166](https://github.com/newrelic/newrelic-dotnet-agent/pull/1166)
+* Adds an ignore rule to prevent profiling `SMSvcHost.exe`. [#1182](https://github.com/newrelic/newrelic-dotnet-agent/pull/1182)
+* Updates applicationLogging attribute `log.level` to be `level`. [#1144](https://github.com/newrelic/newrelic-dotnet-agent/pull/1144)
+
+### Deprecations/Removed Features
+* This is a major release of the agent, and contains breaking changes. See the [migration guide](https://docs.newrelic.com/docs/apm/agents/net-agent/getting-started/9x-to-10x-agent-migration-guide/) for details.
+* This agent release targets .NET Framework 4.6.2 and .NET Standard 2.0. The minimum supported runtime versions for profiled applications are .NET Framework 4.6.2+ and .NET Core 3.1+.
+* The scriptable installers have been removed. [#1170](https://github.com/newrelic/newrelic-dotnet-agent/pull/1170)
+* Windows installation files have been consolidated and renamed. [#1187](https://github.com/newrelic/newrelic-dotnet-agent/pull/1187)
+* The Linux installation packages have been renamed. [#1180](https://github.com/newrelic/newrelic-dotnet-agent/pull/1180)
+* Castle.Monorail instrumentation has been removed. [#1177](https://github.com/newrelic/newrelic-dotnet-agent/pull/1177)
+
 ## [9.9.0] - 2022-06-08
 
 ### New Features
@@ -446,7 +469,8 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.9.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.0.0...HEAD
+[10.0.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.9.0...v10.0.0
 [9.9.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.8.1...v9.9.0
 [9.8.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.8.0...v9.8.1
 [9.8.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.7.1...v9.8.0

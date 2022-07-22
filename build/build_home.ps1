@@ -49,17 +49,17 @@ $HomePath = Get-HomeRootPath $HomePath
 # Gather data for home folders #
 ################################
 
-$net45WrapperHash = @{}
+$netFrameworkWrapperHash = @{}
 $netstandard20WrapperHash = @{}
 
 $wrapperDirs = Get-ChildItem -LiteralPath "$wrappersRootDir" -Directory
 foreach ($wrapperDir in $wrapperDirs) {
     $wrapperDirPath = $wrapperDir.FullName
     $wrapperName = $wrapperDir.Name
-    if ($net45path = Resolve-Path "$wrapperDirPath\bin\$Configuration\net4*") {
-        $dllObject = Get-ChildItem -File -Path "$net45path" -Filter NewRelic.Providers.Wrapper.$wrapperName.dll
-        $xmlObject = Get-ChildItem -File -Path "$net45path" -Filter Instrumentation.xml
-        $net45WrapperHash.Add($dllObject, $xmlObject)
+    if ($netFrameworkPath = Resolve-Path "$wrapperDirPath\bin\$Configuration\net4*") {
+        $dllObject = Get-ChildItem -File -Path "$netFrameworkPath" -Filter NewRelic.Providers.Wrapper.$wrapperName.dll
+        $xmlObject = Get-ChildItem -File -Path "$netFrameworkPath" -Filter Instrumentation.xml
+        $netFrameworkWrapperHash.Add($dllObject, $xmlObject)
     }
 
     if ($netstandard20path = Resolve-Path "$wrapperDirPath\bin\$Configuration\netstandard2.*") {
@@ -69,14 +69,21 @@ foreach ($wrapperDir in $wrapperDirs) {
     }
 }
 
-# AspNetCore needs to be in net45 as well netstandard2.0
-if ($apsNetCorePath = Resolve-Path "$wrappersRootDir\AspNetCore\bin\$Configuration\netstandard2.*") {
-    $dllObject = Get-ChildItem -File -Path "$apsNetCorePath" -Filter NewRelic.Providers.Wrapper.AspNetCore.dll
-    $xmlObject = Get-ChildItem -File -Path "$apsNetCorePath" -Filter Instrumentation.xml
-    $net45WrapperHash.Add($dllObject, $xmlObject)
+# AspNetCore needs to be in netFramework as well netstandard2.0
+if ($aspNetCorePath = Resolve-Path "$wrappersRootDir\AspNetCore\bin\$Configuration\netstandard2.0") {
+    $dllObject = Get-ChildItem -File -Path "$aspNetCorePath" -Filter NewRelic.Providers.Wrapper.AspNetCore.dll
+    $xmlObject = Get-ChildItem -File -Path "$aspNetCorePath" -Filter Instrumentation.xml
+    $netFrameworkWrapperHash.Add($dllObject, $xmlObject)
 }
 
-$net45StorageArray = @()
+# MicrosoftExtensionsLogging needs to be in netFramework as well netstandard2.0
+if ($melNetCorePath = Resolve-Path "$wrappersRootDir\MicrosoftExtensionsLogging\bin\$Configuration\netstandard2.0") {
+    $dllObject = Get-ChildItem -File -Path "$melNetCorePath" -Filter NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll
+    $xmlObject = Get-ChildItem -File -Path "$melNetCorePath" -Filter Instrumentation.xml
+    $netFrameworkWrapperHash.Add($dllObject, $xmlObject)
+}
+
+$netFrameworkStorageArray = @()
 $netstandard20StorageArray = @()
 
 $storageDirs = Get-ChildItem -LiteralPath "$storageRootDir" -Directory
@@ -84,9 +91,9 @@ foreach ($storageDir in $storageDirs) {
     $storageDirPath = $storageDir.FullName
     $storageName = $storageDir.Name
 
-    if ($net45path = Resolve-Path "$storageDirPath\bin\$Configuration\net4*") {
-        $dllObject = Get-ChildItem -File -Path "$net45path" -Filter NewRelic.Providers.Storage.$storageName.dll
-        $net45StorageArray += $dllObject
+    if ($netFrameworkPath = Resolve-Path "$storageDirPath\bin\$Configuration\net462") {
+        $dllObject = Get-ChildItem -File -Path "$netFrameworkPath" -Filter NewRelic.Providers.Storage.$storageName.dll
+        $netFrameworkStorageArray += $dllObject
     }
 
     if ($netstandard20path = Resolve-Path "$storageDirPath\bin\$Configuration\netstandard2.*") {
@@ -105,8 +112,8 @@ Write-Host "Creating home folders"
 if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "Framework") {
     if ($Architecture -like "All" -or $Architecture -like "x64") {
         New-HomeStructure -Path "$HomePath" -Name "newrelichome_x64"
-        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x64" -Extensions $net45WrapperHash
-        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x64" -Extensions $net45StorageArray
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x64" -Extensions $netFrameworkWrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x64" -Extensions $netFrameworkStorageArray
         Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64" -Configuration "$Configuration" -Type "Framework"
         Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64" -Configuration "$Configuration" -Type "Framework" -Architecture "x64"
 
@@ -117,8 +124,8 @@ if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "Framework") {
 
     if ($Architecture -like "All" -or $Architecture -like "x86") {
         New-HomeStructure -Path "$HomePath" -Name "newrelichome_x86"
-        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x86" -Extensions $net45WrapperHash
-        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x86" -Extensions $net45StorageArray
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x86" -Extensions $netFrameworkWrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x86" -Extensions $netFrameworkStorageArray
         Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86" -Configuration "$Configuration" -Type "Framework"
         Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86" -Configuration "$Configuration" -Type "Framework" -Architecture "x86"
 

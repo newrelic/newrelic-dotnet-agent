@@ -200,43 +200,32 @@ namespace NewRelic.Agent.IntegrationTests.Owin
 
             Assert.NotNull(metrics);
 
-            NrAssert.Multiple(
-                () => Assertions.MetricsExist(generalMetrics, metrics)
-            );
+            Assertions.MetricsExist(generalMetrics, metrics);
 
             var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
             var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
 
-            NrAssert.Multiple(
-                () => Assert.Single(errorTraces),
-                () => Assert.Single(errorTraces)
-            );
+            Assert.Single(errorTraces);
+            Assert.Single(errorEvents);
 
             var errorTrace = errorTraces.First();
             var errorEvent = errorEvents.First();
 
-            NrAssert.Multiple
-            (
-                () => Assert.Equal("500", errorTrace.ExceptionClassName),
-                () => Assert.Equal("500", errorEvent.IntrinsicAttributes["error.class"])
-            );
+            Assert.Equal("500", errorTrace.ExceptionClassName);
+            Assert.Equal("500", errorEvent.IntrinsicAttributes["error.class"]);
 
-            NrAssert.Multiple
-            (
-                () => Assertions.MetricsExist(ioBoundNoSpecialAsyncMetrics, metrics),
-                () => Assertions.MetricsExist(ioBoundConfigureAwaitFalseAsyncMetrics, metrics),
-                () => Assertions.MetricsExist(cpuBoundTasksAsyncMetrics, metrics),
-                () => Assertions.MetricsExist(errorReponse, metrics)
-            );
+
+            Assertions.MetricsExist(ioBoundNoSpecialAsyncMetrics, metrics);
+            Assertions.MetricsExist(ioBoundConfigureAwaitFalseAsyncMetrics, metrics);
+            Assertions.MetricsExist(cpuBoundTasksAsyncMetrics, metrics);
+            Assertions.MetricsExist(errorReponse, metrics);
 
             Assertions.MetricsExist(customMiddlewareIoBoundNoSpecialAsyncMetrics, metrics);
 
-            NrAssert.Multiple
-            (
-                () => Assertions.MetricsExist(manualTaskRunBlockedMetrics, metrics),
-                () => Assertions.MetricsExist(manualTaskFactoryStartNewMetrics, metrics),
-                () => Assertions.MetricsExist(manualNewThreadStartBlocked, metrics)
-            );
+
+            Assertions.MetricsExist(manualTaskRunBlockedMetrics, metrics);
+            Assertions.MetricsExist(manualTaskFactoryStartNewMetrics, metrics);
+            Assertions.MetricsExist(manualNewThreadStartBlocked, metrics);
 
             var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault(sample => sample.Path == "WebTransaction/WebAPI/AsyncAwait/CpuBoundTasksAsync");
             var expectedTransactionTraceSegments = new List<string>
@@ -251,12 +240,9 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 { "request.uri", "/AsyncAwait/CpuBoundTasksAsync" },
             };
 
-
-            NrAssert.Multiple(
-                () => Assert.NotNull(transactionSample),
-                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
-                () => Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Agent, transactionSample)
-            );
+            Assert.NotNull(transactionSample);
+            Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample);
+            Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
         }
     }
 
