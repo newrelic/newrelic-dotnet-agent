@@ -20,6 +20,7 @@ using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
@@ -92,6 +93,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             ComputeSampled(transaction);
             PrioritizeAndCollectLogEvents(transaction);
+            Log.Error($"JOSH! Transaction: `{transaction.Guid}` just collected log events");
 
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 

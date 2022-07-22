@@ -436,7 +436,10 @@ namespace NewRelic.Agent.Core
                 var transaction = _transactionService.GetCurrentInternalTransaction();
                 if (transaction != null && transaction.IsValid)
                 {
+                    Logger.Log(Extensions.Logging.Level.Error, $"JOSH! Before sleep trying to add log: `{logMessage}` to transaction: `{transaction.Guid}`");
+                    Thread.Sleep(3000);
                     // use transaction batching for messages in transactions
+                    Logger.Log(Extensions.Logging.Level.Error, $"JOSH! After sleep trying to add log: `{logMessage}` to transaction: `{transaction.Guid}`");
                     transaction.LogEvents.Add(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId));
                     return;
                 }
