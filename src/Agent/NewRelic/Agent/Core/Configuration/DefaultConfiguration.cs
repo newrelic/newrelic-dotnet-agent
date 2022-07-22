@@ -1867,8 +1867,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return TimeSpan.FromSeconds(.5);
-                //return ServerOverrides(_serverConfiguration.EventHarvestConfig?.LogEventHarvestCycle(), TimeSpan.FromSeconds(5));
+                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.LogEventHarvestCycle(), TimeSpan.FromSeconds(5));
             }
         }
 

@@ -93,8 +93,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             ComputeSampled(transaction);
             PrioritizeAndCollectLogEvents(transaction);
-            Log.Error($"JOSH! Transaction: `{transaction.Guid}` just collected log events");
-
+            
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
             // Note: Metric names are normally handled internally by the IMetricBuilder. However, transactionMetricName is an exception because (sadly) it is used for more than just metrics. For example, transaction events need to use metric name, as does RUM and CAT.
@@ -477,7 +476,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private void PrioritizeAndCollectLogEvents(IInternalTransaction transaction)
         {
-            _logEventAggregator.CollectWithPriority(transaction.LogEvents, transaction.Priority);
+            _logEventAggregator.CollectWithPriority(transaction.HarvestLogEvents(), transaction.Priority);
         }
     }
 }

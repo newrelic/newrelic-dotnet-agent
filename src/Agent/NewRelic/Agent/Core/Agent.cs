@@ -406,7 +406,7 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
         }
 
-        public void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLevel, Func<object,string> getLogMessage, string spanId, string traceId)
+        public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, string spanId, string traceId)
         {
             _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
 
@@ -424,7 +424,7 @@ namespace NewRelic.Agent.Core
             }
 
             // IOC container defaults to singleton so this will access the same aggregator
-            if (_configurationService.Configuration.LogEventCollectorEnabled) 
+            if (_configurationService.Configuration.LogEventCollectorEnabled)
             {
                 var logMessage = getLogMessage(logEvent);
                 if (string.IsNullOrWhiteSpace(logMessage))
@@ -436,11 +436,15 @@ namespace NewRelic.Agent.Core
                 var transaction = _transactionService.GetCurrentInternalTransaction();
                 if (transaction != null && transaction.IsValid)
                 {
-                    Logger.Log(Extensions.Logging.Level.Error, $"JOSH! Before sleep trying to add log: `{logMessage}` to transaction: `{transaction.Guid}`");
-                    Thread.Sleep(3000);
                     // use transaction batching for messages in transactions
-                    Logger.Log(Extensions.Logging.Level.Error, $"JOSH! After sleep trying to add log: `{logMessage}` to transaction: `{transaction.Guid}`");
-                    transaction.LogEvents.Add(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId));
+                    if (!transaction.AddLogEvent(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId)))
+                    {
+                        // AddLogEvent returns false in the case that logs have already been harvested by transaction transform.
+                        // Fall back to collecting the log based on the information we have. Since the transaction was finalized,
+                        // the Priority should be correct.
+                        _logEventAggregator.Collect(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId,
+                            traceId, transaction.Priority));
+                    }
                     return;
                 }
 
@@ -448,7 +452,6 @@ namespace NewRelic.Agent.Core
                 _logEventAggregator.Collect(new LogEventWireModel(timestamp,
                     logMessage, normalizedLevel, spanId, traceId, _transactionService.CreatePriority()));
             }
-
         }
 
         #endregion
