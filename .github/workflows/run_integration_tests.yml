@@ -84,7 +84,7 @@ jobs:
       - name: Clear integration tests from workspace
         if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
         run: |
-          rm ${{ github.workspace }}/test.runsettings
+          #rm ${{ github.workspace }}/test.runsettings
           rm -r ${{ github.workspace }}/tests
         shell: bash
 
