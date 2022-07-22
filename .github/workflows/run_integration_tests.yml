@@ -52,6 +52,12 @@ jobs:
           path: ${{ github.workspace }}/newrelichome*
           if-no-files-found: error
 
+      - name: Print input vars
+        run: |
+          echo "github.events.inputs.solutions = ${{ github.events.inputs.solutions }}"
+          echo "github.events.inputs.integration-test-namespaces = ${{ github.events.inputs.integration-test-namespaces }}"
+          echo "github.events.inputs.unbounded-test-namespaces = ${{ github.events.inputs.unbounded-test-namespaces }}"
+
       - name: Download Integration Tests
         if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'IntegrationTests'
         uses: dawidd6/action-download-artifact@v2
