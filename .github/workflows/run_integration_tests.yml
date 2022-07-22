@@ -54,12 +54,12 @@ jobs:
 
       - name: Print input vars
         run: |
-          echo "github.events.inputs.solutions = ${{ github.events.inputs.solutions }}"
-          echo "github.events.inputs.integration-test-namespaces = ${{ github.events.inputs.integration-test-namespaces }}"
-          echo "github.events.inputs.unbounded-test-namespaces = ${{ github.events.inputs.unbounded-test-namespaces }}"
+          echo "github.event.inputs.solutions = ${{ github.event.inputs.solutions }}"
+          echo "github.event.inputs.integration-test-namespaces = ${{ github.event.inputs.integration-test-namespaces }}"
+          echo "github.event.inputs.unbounded-test-namespaces = ${{ github.event.inputs.unbounded-test-namespaces }}"
 
       - name: Download Integration Tests
-        if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'IntegrationTests'
+        if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -70,7 +70,7 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Upload Integration Tests Locally
-        if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'IntegrationTests'
+        if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
         uses: actions/upload-artifact@v2
         with:
           name: integrationtests
@@ -82,14 +82,14 @@ jobs:
           if-no-files-found: error
 
       - name: Clear integration tests from workspace
-        if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'IntegrationTests'
+        if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
         run: |
           rm ${{ github.workspace }}/test.runsettings
           rm -r ${{ github.workspace }}/tests
         shell: bash
 
       - name: Download Unbounded Integration Tests
-        if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'UnboundedIntegrationTests'
+        if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'UnboundedIntegrationTests'
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -100,7 +100,7 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Upload Unbounded Integration Tests Locally
-        if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'UnboundedIntegrationTests'
+        if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'UnboundedIntegrationTests'
         uses: actions/upload-artifact@v2
         with:
           name: unboundedintegrationtests
@@ -121,7 +121,7 @@ jobs:
     steps:
       - id: configure_integration_tests_matrix
         run: |
-          if [ "${{ github.events.inputs.integration-test-namespaces }}" == "ALL" ] ; then
+          if [ "${{ github.event.inputs.integration-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
             namespaces="[ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, \
               CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, \
@@ -135,19 +135,19 @@ jobs:
               RequestHandling, CodeLevelMetrics ]"
           else
             # Just use the supplied list of namespaces
-            namespaces="[ ${{ github.events.inputs.integration-test-namespaces }} ]"
+            namespaces="[ ${{ github.event.inputs.integration-test-namespaces }} ]"
           fi
           echo "::set-output name=matrix::$namespaces"
         shell: bash
 
       - id: configure_unbounded_tests_matrix
         run: |
-          if [ "${{ github.events.inputs.unbounded-test-namespaces }}" == "ALL" ] ; then
+          if [ "${{ github.event.inputs.unbounded-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
             namespaces="[ CosmosDB, Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, NServiceBus5, Oracle, Postgres, RabbitMq, Redis ]"
           else
             # Just use the supplied list of namespaces
-            namespaces="[ ${{ github.events.inputs.unbounded-test-namespaces }} ]"
+            namespaces="[ ${{ github.event.inputs.unbounded-test-namespaces }} ]"
           fi
           echo "::set-output name=matrix::$namespaces"
         shell: bash
@@ -156,7 +156,7 @@ jobs:
 
   run-integration-tests:
     needs: [setup-matrices]
-    if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'IntegrationTests'
+    if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
     name: Run IntegrationTests
     runs-on: windows-2019 # TODO: make this a input so we can test different OSes?
     strategy:
@@ -271,7 +271,7 @@ jobs:
 
   run-unbounded-tests:
     needs: [setup-matrices]
-    if: github.events.inputs.solutions == 'Both' || github.events.inputs.solutions == 'UnboundedIntegrationTests'
+    if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'UnboundedIntegrationTests'
     name: Run Unbounded Tests
     runs-on: windows-2019
     strategy:
