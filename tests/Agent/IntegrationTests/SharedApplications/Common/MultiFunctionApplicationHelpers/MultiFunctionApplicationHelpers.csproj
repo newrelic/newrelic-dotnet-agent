@@ -30,6 +30,7 @@
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net5.0'" />
     <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="MySql.Data" Version="8.0.30" />
 
     <!-- Serilog .NET framework references -->
     <PackageReference Include="Serilog" Version="2.0.0" Condition="'$(TargetFramework)' == 'net462'" />
