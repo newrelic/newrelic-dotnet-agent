@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -15,14 +16,17 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
     [NetFrameworkTest]
-    public class MySqlAsyncTests : NewRelicIntegrationTest<RemoteServiceFixtures.MySqlBasicMvcFixture>
+    public class MySqlAsyncTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
     {
-        private readonly RemoteServiceFixtures.MySqlBasicMvcFixture _fixture;
+        private readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
 
-        public MySqlAsyncTests(RemoteServiceFixtures.MySqlBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public MySqlAsyncTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
+
+            _fixture.AddCommand($"MySqlExerciser SingleDateQueryAsync");
+
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -36,13 +40,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
                     var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
-                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(
-                       instrumentationFilePath,
-                        "", "enabled", "true");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.GetMySqlAsync();
+                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
                 }
             );
             _fixture.Initialize();
@@ -51,25 +49,33 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         [Fact]
         public void Test()
         {
+            var transactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser/SingleDateQueryAsync";
+
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
+
                 new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1, metricScope = "WebTransaction/MVC/MySqlController/MySqlAsync"},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1, metricScope = transactionName}
+
+                // TODO: should these be expected metrics? They were for the non-async test
+                // We are not checking callCount on Iterate metrics
+                //new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount },
+                //new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = transactionName}
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = 1 },
+                // The datastore operation happened inside a console app so there should be no allWeb metrics
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
 
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1, metricScope = "WebTransaction/MVC/MySqlController/MySqlAsync" }
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1, metricScope = transactionName }
             };
             var expectedTransactionTraceSegments = new List<string>
             {
@@ -85,7 +91,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             {
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = "WebTransaction/MVC/MySqlController/MySqlAsync",
+                    TransactionName = transactionName,
                     Sql = "SELECT _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?",
                     DatastoreMetricName = "Datastore/statement/MySQL/dates/select",
 
@@ -104,8 +110,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/MySqlController/MySqlAsync");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/MySqlController/MySqlAsync");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample(transactionName);
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(transactionName);
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
 
             NrAssert.Multiple(
