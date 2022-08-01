@@ -72,6 +72,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             // IWrapper map
             container.RegisterFactory<IEnumerable<IWrapper>>(() => ExtensionsLoader.LoadWrappers());
             container.Register<IWrapperMap, WrapperMap>();
+            container.Register<IHttpClientFactory, HttpClientFactory>();
 
             // Other
             container.Register<ICpuSampleTransformer, CpuSampleTransformer>();

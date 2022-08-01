@@ -10,12 +10,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
     public class HttpCollectorWire : ICollectorWire
     {
+
+        private readonly IHttpClientFactory _httpClientFactory;
+
+
         /// <summary>
         /// This represents the origin or source of data. Used for audit logs.
         /// </summary>
@@ -46,18 +52,20 @@ namespace NewRelic.Agent.Core.DataTransport
         private static Dictionary<string, string> _emptyRequestHeadersMap = new Dictionary<string, string>();
         private readonly IAgentHealthReporter _agentHealthReporter;
 
-        public HttpCollectorWire(IConfiguration configuration, IAgentHealthReporter agentHealthReporter)
+        public HttpCollectorWire(IConfiguration configuration, IAgentHealthReporter agentHealthReporter, IHttpClientFactory httpClientFactory)
         {
             _configuration = configuration;
             _requestHeadersMap = _emptyRequestHeadersMap;
             _agentHealthReporter = agentHealthReporter;
+            _httpClientFactory = httpClientFactory;
         }
 
-        public HttpCollectorWire(IConfiguration configuration, Dictionary<string, string> requestHeadersMap, IAgentHealthReporter agentHealthReporter)
+        public HttpCollectorWire(IConfiguration configuration, Dictionary<string, string> requestHeadersMap, IAgentHealthReporter agentHealthReporter, IHttpClientFactory httpClientFactory)
         {
             _configuration = configuration;
             _requestHeadersMap = requestHeadersMap ?? _emptyRequestHeadersMap;
             _agentHealthReporter = agentHealthReporter;
+            _httpClientFactory = httpClientFactory;
         }
 
         public string SendData(string method, ConnectionInfo connectionInfo, string serializedData)
@@ -65,35 +73,74 @@ namespace NewRelic.Agent.Core.DataTransport
             try
             {
                 var uri = GetUri(method, connectionInfo);
-
                 Log.DebugFormat("Invoking \"{0}\" with : {1}", method, serializedData);
-                AuditLog(Direction.Sent, Source.InstrumentedApp, uri);
+                AuditLog(Direction.Sent, Source.InstrumentedApp, uri.ToString());
                 AuditLog(Direction.Sent, Source.InstrumentedApp, serializedData);
 
                 var bytes = new UTF8Encoding().GetBytes(serializedData);
                 var uncompressedByteCount = bytes.Length;
                 var requestPayload = GetRequestPayload(bytes);
-                var request = BuildRequest(uri, connectionInfo, requestPayload);
 
-                // Check serializedData length < MaxPayloadSizeInBytes before sending
-                // if > silently drop the payload for now, ideally want to be able split the data
-                // into chunks to send
-                if (requestPayload.Data.Length > _configuration.CollectorMaxPayloadSizeInBytes)
+                var httpClient = _httpClientFactory.CreateClient(connectionInfo.Proxy);
+
+                httpClient.DefaultRequestHeaders.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
+                httpClient.DefaultRequestHeaders.Add("Timeout", _configuration.CollectorTimeout.ToString());
+
+                httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
+                httpClient.DefaultRequestHeaders.Add("Keep-Alive", "true");
+                httpClient.DefaultRequestHeaders.Add("ACCEPT-ENCODING", "gzip");
+
+                var request = new HttpRequestMessage
                 {
-                    // Log that the payload is being dropped. 
-                    Log.ErrorFormat("Dropped large payload: size: {0}, max_payload_size_bytes={1}", requestPayload.Data.Length, _configuration.CollectorMaxPayloadSizeInBytes);
-                    _agentHealthReporter.ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(method);
-                    return "{}"; // mimics what is sent by NoOpCollectorWire
+                    RequestUri = uri
+                };
+
+                var content = new ByteArrayContent(requestPayload.Data);
+                var encoding = (requestPayload.IsCompressed) ? requestPayload.CompressionType.ToLower() : "identity";
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                content.Headers.Add("Content-Encoding", encoding);
+                content.Headers.Add("Content-Length", requestPayload.Data.Length.ToString());
+
+                request.Content = content;
+
+                foreach (var header in _requestHeadersMap)
+                {
+                    request.Headers.Add(header.Key, header.Value);
                 }
 
-                var response = SendRequest(request, requestPayload.Data);
+                if (_configuration.PutForDataSend)
+                {
+                    request.Method = HttpMethod.Put;
+                }
+                else
+                {
+                    request.Method = HttpMethod.Post;
+                }
 
-                _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response).Length);
+                var response = httpClient.SendAsync(request).GetAwaiter().GetResult();
 
-                Log.DebugFormat("Received : {0}", response);
-                AuditLog(Direction.Received, Source.Collector, response);
+                var responseStream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
 
-                return response;
+                if (responseStream == null)
+                    throw new NullReferenceException("responseStream");
+                if (response.Headers == null)
+                    throw new NullReferenceException("response.Headers");
+
+                var contentTypeEncoding = response.Content.Headers.ContentEncoding;
+                if (contentTypeEncoding.Contains("gzip"))
+                    responseStream = new GZipStream(responseStream, CompressionMode.Decompress);
+
+                using (responseStream)
+                using (var reader = new StreamReader(responseStream, Encoding.UTF8))
+                {
+                    var responseBody = reader.ReadLine();
+
+                    if (responseBody != null)
+                        return responseBody;
+                    else
+                        return EmptyResponseBody;
+                }
+
             }
             catch (WebException ex)
             {
@@ -106,7 +153,59 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 throw;
             }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
+
+        //public string SendData(string method, ConnectionInfo connectionInfo, string serializedData)
+        //{
+        //    try
+        //    {
+        //        var uri = GetUri(method, connectionInfo).ToString().Replace("%3F", "?");
+
+        //        Log.DebugFormat("Invoking \"{0}\" with : {1}", method, serializedData);
+        //        AuditLog(Direction.Sent, Source.InstrumentedApp, uri);
+        //        AuditLog(Direction.Sent, Source.InstrumentedApp, serializedData);
+
+        //        var bytes = new UTF8Encoding().GetBytes(serializedData);
+        //        var uncompressedByteCount = bytes.Length;
+        //        var requestPayload = GetRequestPayload(bytes);
+        //        var request = BuildRequest(uri, connectionInfo, requestPayload);
+
+        //        // Check serializedData length < MaxPayloadSizeInBytes before sending
+        //        // if > silently drop the payload for now, ideally want to be able split the data
+        //        // into chunks to send
+        //        if (requestPayload.Data.Length > _configuration.CollectorMaxPayloadSizeInBytes)
+        //        {
+        //            // Log that the payload is being dropped. 
+        //            Log.ErrorFormat("Dropped large payload: size: {0}, max_payload_size_bytes={1}", requestPayload.Data.Length, _configuration.CollectorMaxPayloadSizeInBytes);
+        //            _agentHealthReporter.ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(method);
+        //            return "{}"; // mimics what is sent by NoOpCollectorWire
+        //        }
+
+        //        var response = SendRequest(request, requestPayload.Data);
+
+        //        _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response).Length);
+
+        //        Log.DebugFormat("Received : {0}", response);
+        //        AuditLog(Direction.Received, Source.Collector, response);
+
+        //        return response;
+        //    }
+        //    catch (WebException ex)
+        //    {
+        //        var httpWebResponse = ex.Response as HttpWebResponse;
+        //        if (httpWebResponse != null)
+        //            ThrowExceptionFromHttpWebResponse(serializedData, httpWebResponse);
+
+        //        if (_diagnoseConnectionError)
+        //            DiagnoseConnectionError(connectionInfo);
+
+        //        throw;
+        //    }
+        //}
 
         private static string SendRequest(WebRequest request, byte[] requestPayloadData)
         {
@@ -121,7 +220,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Logging.AuditLog.Log(message);
         }
 
-        private string GetUri(string method, ConnectionInfo connectionInfo)
+        private Uri GetUri(string method, ConnectionInfo connectionInfo)
         {
             var uri = new StringBuilder("/agent_listener/invoke_raw_method?method=")
                 .Append(method)
@@ -135,7 +234,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 uri.Append("&run_id=").Append(_configuration.AgentRunId);
 
             var uriBuilder = new UriBuilder(connectionInfo.HttpProtocol, connectionInfo.Host, connectionInfo.Port, uri.ToString());
-            return uriBuilder.Uri.ToString().Replace("%3F", "?");
+            return new Uri(uriBuilder.Uri.ToString().Replace("%3F", "?"));
         }
 
         private CollectorRequestPayload GetRequestPayload(byte[] bytes)
