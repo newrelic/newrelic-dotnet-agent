@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiFunctionApplicationHelpers;
@@ -19,7 +18,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     {
         private readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
 
-        public MySqlAsyncTestsBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)  : base(fixture)
+        public MySqlAsyncTestsBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

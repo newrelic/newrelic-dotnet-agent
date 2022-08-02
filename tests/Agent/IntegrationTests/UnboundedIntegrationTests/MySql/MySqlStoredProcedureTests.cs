@@ -20,7 +20,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         private readonly bool _paramsWithAtSigns;
 
         // TODO: this follows the pattern in the existing CosmosDB tests but does it make sense here?
-        private string procedureName = "testProcedure" + Guid.NewGuid().ToString("n").Substring(0, 4);
+        private string _procedureName = "testProcedure" + Guid.NewGuid().ToString("n").Substring(0, 4);
 
         protected MySqlStoredProcedureTestsBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, bool paramsWithAtSigns) : base(fixture)
         {
@@ -28,7 +28,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             _fixture.TestLogger = output;
             _paramsWithAtSigns = paramsWithAtSigns;
 
-            _fixture.AddCommand($"MySqlExerciser ExecuteStoredProcedure {procedureName} {paramsWithAtSigns}");
+            _fixture.AddCommand($"MySqlExerciser ExecuteStoredProcedure {_procedureName} {paramsWithAtSigns}");
 
             _fixture.Actions
             (
@@ -58,14 +58,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             {
                 //new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
                 //new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = transactionName}
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{procedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = transactionName}
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = transactionName}
             };
 
             var expectedTransactionTraceSegments = new List<string>
             {
                 //$"Datastore/statement/MySQL/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure"
-                $"Datastore/statement/MySQL/{procedureName.ToLower()}/ExecuteProcedure"
+                $"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure"
             };
 
             var expectedQueryParameters = _paramsWithAtSigns
@@ -75,7 +75,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             var expectedTransactionTraceQueryParameters = new Assertions.ExpectedSegmentQueryParameters
             {
                 //segmentName = $"Datastore/statement/MySQL/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure",
-                segmentName = $"Datastore/statement/MySQL/{procedureName.ToLower()}/ExecuteProcedure",
+                segmentName = $"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure",
                 QueryParameters = expectedQueryParameters
             };
 
@@ -85,9 +85,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 {
                     TransactionName = transactionName,
                     //Sql = _fixture.ProcedureName,
-                    Sql = procedureName,
+                    Sql = _procedureName,
                     //DatastoreMetricName = $"Datastore/statement/MySQL/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure",
-                    DatastoreMetricName = $"Datastore/statement/MySQL/{procedureName.ToLower()}/ExecuteProcedure",
+                    DatastoreMetricName = $"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure",
                     QueryParameters = expectedQueryParameters,
                     HasExplainPlan = false
                 }
