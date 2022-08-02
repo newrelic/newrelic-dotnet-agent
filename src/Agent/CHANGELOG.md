@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 ### Fixes
+* Resolves an issue where log forwarding could drop logs in async scenarios. [#1174](https://github.com/newrelic/newrelic-dotnet-agent/pull/1201)
 
 ## [10.0.0] - 2022-07-19
 
