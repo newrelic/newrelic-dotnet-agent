@@ -1,11 +1,9 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
@@ -57,5 +55,45 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
 
             ConsoleMFLogger.Info(string.Join(",", dates));
         }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void ExecuteStoredProcedure(string procedureName, bool paramsWithAtSigns)
+        {
+            CreateProcedure(procedureName);
+
+            using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
+            using (var command = new MySqlCommand(procedureName, connection))
+            {
+                connection.Open();
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                foreach (var parameter in DbParameterData.MySqlParameters)
+                {
+                    var sqlParam = paramsWithAtSigns
+                        ? new MySqlParameter(parameter.ParameterName, parameter.Value)
+                        : new MySqlParameter(parameter.ParameterName.TrimStart('@'), parameter.Value);
+
+                    command.Parameters.Add(sqlParam);
+                }
+
+                ConsoleMFLogger.Info(command.ExecuteNonQuery().ToString()); // TODO: This logs the number of affected rows. Necessary or just execute the query?
+            }
+        }
+
+        private static readonly string CreateProcedureStatement = @"CREATE PROCEDURE `{0}`.`{1}`({2}) BEGIN END;";
+
+        private void CreateProcedure(string procedureName)
+        {
+            var parameters = string.Join(", ", DbParameterData.MySqlParameters.Select(x => $"{x.ParameterName} {x.DbTypeName}"));
+            var statement = string.Format(CreateProcedureStatement, MySqlTestConfiguration.MySqlDbName, procedureName, parameters);
+            using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
+            using (var command = new MySqlCommand(statement, connection))
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+        }
     }
+
 }

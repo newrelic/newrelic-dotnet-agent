@@ -76,7 +76,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
 
-                // The operation metric should not be scoped because the statement metric is scoped instead
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1, metricScope = transactionName }
             };
             var expectedTransactionTraceSegments = new List<string>
