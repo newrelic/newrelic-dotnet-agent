@@ -20,6 +20,7 @@ using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
@@ -92,7 +93,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             ComputeSampled(transaction);
             PrioritizeAndCollectLogEvents(transaction);
-
+            
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
             // Note: Metric names are normally handled internally by the IMetricBuilder. However, transactionMetricName is an exception because (sadly) it is used for more than just metrics. For example, transaction events need to use metric name, as does RUM and CAT.
@@ -475,7 +476,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private void PrioritizeAndCollectLogEvents(IInternalTransaction transaction)
         {
-            _logEventAggregator.CollectWithPriority(transaction.LogEvents, transaction.Priority);
+            _logEventAggregator.CollectWithPriority(transaction.HarvestLogEvents(), transaction.Priority);
         }
     }
 }
