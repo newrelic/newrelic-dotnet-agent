@@ -15,12 +15,11 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
-    [NetFrameworkTest]
-    public class MySqlAsyncTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
+    public abstract class MySqlAsyncTestsBase : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
     {
         private readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
 
-        public MySqlAsyncTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)  : base(fixture)
+        public MySqlAsyncTestsBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -117,7 +116,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
                 () => Assert.NotNull(transactionEvent)
-                );
+            );
 
             NrAssert.Multiple
             (
@@ -129,6 +128,24 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces),
                 () => Assertions.TransactionTraceSegmentParametersExist(expectedTransactionTraceSegmentParameters, transactionSample)
             );
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlAsyncTestsFW : MySqlAsyncTestsBase
+    {
+        public MySqlAsyncTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlAsyncTestsCore : MySqlAsyncTestsBase
+    {
+        public MySqlAsyncTestsCore(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
         }
     }
 }

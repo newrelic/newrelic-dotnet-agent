@@ -14,8 +14,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
-    [NetFrameworkTest]
-    public class MySqlTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
+    public abstract class MySqlTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
     {
         private readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
 
@@ -127,6 +126,24 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces),
                 () => Assertions.TransactionTraceSegmentParametersExist(expectedTransactionTraceSegmentParameters, transactionSample)
             );
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlTestsFW : MySqlAsyncTestsBase
+    {
+        public MySqlTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlTestsCore : MySqlAsyncTestsBase
+    {
+        public MySqlTestsCore(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
         }
     }
 }
