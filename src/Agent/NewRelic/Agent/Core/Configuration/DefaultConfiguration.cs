@@ -1294,6 +1294,13 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
+                var labels = _configurationManagerStatic.GetAppSetting("NewRelic.Labels");
+                if (labels != null)
+                {
+                    Log.Info("Application labels from web.config or app.config.");
+                    return labels;
+                }
+
                 return EnvironmentOverrides(_localConfiguration.labels, @"NEW_RELIC_LABELS");
             }
         }
