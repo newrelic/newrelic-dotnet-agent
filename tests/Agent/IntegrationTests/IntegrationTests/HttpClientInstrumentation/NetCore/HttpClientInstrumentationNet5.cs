@@ -91,4 +91,12 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation.NetCore
         }
     }
 
+    public class HttpClientInstrumentationTests_net70 : HttpClientInstrumentationTestsBase<AspNetCoreBasicWebApiApplicationFixture_net70>
+    {
+        public HttpClientInstrumentationTests_net70(AspNetCoreBasicWebApiApplicationFixture_net70 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
 }

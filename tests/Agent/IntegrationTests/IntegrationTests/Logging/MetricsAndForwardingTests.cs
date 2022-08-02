@@ -560,6 +560,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
 
         [NetCoreTest]
+        public class Log4NetMetricsAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore60>
+        {
+            public Log4NetMetricsAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+            {
+            }
+        }
+
+        [NetCoreTest]
         public class Log4NetMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
         {
             public Log4NetMetricsAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -611,6 +620,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         public class Log4NetMetricsAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
         {
             public Log4NetMetricsAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class Log4NetMetricsAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore60>
+        {
+            public Log4NetMetricsAndForwardingDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
                 : base(fixture, output, false, false, true, LoggingFramework.Log4net)
             {
             }
@@ -674,6 +692,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
 
         [NetCoreTest]
+        public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore60>
+        {
+            public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+            {
+            }
+        }
+
+        [NetCoreTest]
         public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
         {
             public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -731,6 +758,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
 
         [NetCoreTest]
+        public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore60>
+        {
+            public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+            {
+            }
+        }
+
+        [NetCoreTest]
         public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
         {
             public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -766,6 +802,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCoreLatestTests(
                 ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
                 : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
             {
             }
@@ -825,6 +873,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -877,6 +937,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -922,6 +994,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(
                 ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
                 : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
             {
             }
@@ -1024,6 +1108,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            SerilogMetricsAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public SerilogMetricsAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             SerilogMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -1112,6 +1208,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            SerilogMetricsAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public SerilogMetricsAndForwardingDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             SerilogMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -1188,6 +1296,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            SerilogMetricsEnabledAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             SerilogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -1257,6 +1377,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public SerilogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(
                 ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
+            SerilogMetricsDisabledAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
                 : base(fixture, output, false, true, true, LoggingFramework.Serilog)
             {
             }
@@ -1347,6 +1479,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            NLogMetricsAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public NLogMetricsAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.NLog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             NLogMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -1416,6 +1560,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public NLogMetricsAndForwardingDisabledTestsNetCoreLatestTests(
                 ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.NLog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
+            NLogMetricsAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public NLogMetricsAndForwardingDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
                 : base(fixture, output, false, false, true, LoggingFramework.NLog)
             {
             }
@@ -1499,6 +1655,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            NLogMetricsEnabledAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public NLogMetricsEnabledAndForwardingDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.NLog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             NLogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -1568,6 +1736,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public NLogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(
                 ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.NLog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
+            NLogMetricsDisabledAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public NLogMetricsDisabledAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
                 : base(fixture, output, false, true, true, LoggingFramework.NLog)
             {
             }

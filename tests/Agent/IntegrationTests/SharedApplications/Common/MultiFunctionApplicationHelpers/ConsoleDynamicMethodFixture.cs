@@ -95,13 +95,20 @@ namespace MultiFunctionApplicationHelpers
         }
     }
 
+    public class ConsoleDynamicMethodFixtureCore70 : ConsoleDynamicMethodFixtureCoreSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureCore70() : base("net7.0")
+        {
+        }
+    }
+
     /// <summary>
     /// Use this fixture if you don't care about which .net core version the test application should use.
     /// If you need to test against a feature that belongs to a specific .net core version, then consider
     /// using one of the existing specific version fixtures, or create a new specific version.
     /// When testing newer .net core preview releases, this targetFramework version should be updated.
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore60
+    public class ConsoleDynamicMethodFixtureCoreLatest : ConsoleDynamicMethodFixtureCore70
     {
         public ConsoleDynamicMethodFixtureCoreLatest()
         {
@@ -111,7 +118,7 @@ namespace MultiFunctionApplicationHelpers
     /// <summary>
     /// Use this fixture for High Security Mode tests
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatestHSM : ConsoleDynamicMethodFixtureCore60
+    public class ConsoleDynamicMethodFixtureCoreLatestHSM : ConsoleDynamicMethodFixtureCore70
     {
         public override string TestSettingCategory { get { return "HSM"; } }
         public ConsoleDynamicMethodFixtureCoreLatestHSM()
@@ -123,7 +130,7 @@ namespace MultiFunctionApplicationHelpers
     /// <summary>
     /// Use this fixture for Configurable Security Policy tests
     /// </summary>
-    public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCore60
+    public class ConsoleDynamicMethodFixtureCoreLatestCSP : ConsoleDynamicMethodFixtureCore70
     {
         public override string TestSettingCategory { get { return "CSP"; } }
         public ConsoleDynamicMethodFixtureCoreLatestCSP()
