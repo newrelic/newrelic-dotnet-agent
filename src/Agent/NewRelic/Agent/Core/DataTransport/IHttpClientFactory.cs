@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -17,22 +18,18 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public HttpClient CreateClient(IWebProxy proxy)
         {
-            if (_httpClient == null)
+            if (proxy != null)
             {
-                if (proxy != null)
+                Interlocked.CompareExchange(ref _httpClient, new HttpClient(new HttpClientHandler
                 {
-                    var httpClientHandler = new HttpClientHandler
-                    {
-                        Proxy = proxy,
-                    };
-
-                    _httpClient = new HttpClient(handler: httpClientHandler, disposeHandler: true);
-                }
-                else
-                {
-                    _httpClient = new HttpClient();
-                }
+                    Proxy = proxy,
+                }, disposeHandler: true), null);
             }
+            else
+            {
+                Interlocked.CompareExchange(ref _httpClient, new HttpClient(), null);
+            }
+
             return _httpClient;
         }
     }

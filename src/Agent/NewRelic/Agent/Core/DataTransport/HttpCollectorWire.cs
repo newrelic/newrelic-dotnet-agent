@@ -83,17 +83,19 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 var httpClient = _httpClientFactory.CreateClient(connectionInfo.Proxy);
 
-                httpClient.DefaultRequestHeaders.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
-                httpClient.DefaultRequestHeaders.Add("Timeout", _configuration.CollectorTimeout.ToString());
-
-                httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
-                httpClient.DefaultRequestHeaders.Add("Keep-Alive", "true");
-                httpClient.DefaultRequestHeaders.Add("ACCEPT-ENCODING", "gzip");
 
                 var request = new HttpRequestMessage
                 {
                     RequestUri = uri
                 };
+
+
+                request.Headers.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
+                request.Headers.Add("Timeout", _configuration.CollectorTimeout.ToString());
+
+                request.Headers.Add("Connection", "keep-alive");
+                request.Headers.Add("Keep-Alive", "true");
+                request.Headers.Add("ACCEPT-ENCODING", "gzip");
 
                 var content = new ByteArrayContent(requestPayload.Data);
                 var encoding = (requestPayload.IsCompressed) ? requestPayload.CompressionType.ToLower() : "identity";
