@@ -11,17 +11,9 @@ namespace MultiFunctionApplicationHelpers
 {
     public class ConsoleDynamicMethodFixtureFWLatest : ConsoleDynamicMethodFixtureFW48
     {
-        public string ProcedureName { get; }
 
         public ConsoleDynamicMethodFixtureFWLatest()
         {
-            ProcedureName = GenerateProcedureName();
-        }
-
-        private static string GenerateProcedureName()
-        {
-            var procId = Guid.NewGuid().ToString("N").ToLower();
-            return $"pTestProc{procId}";
         }
     }
 

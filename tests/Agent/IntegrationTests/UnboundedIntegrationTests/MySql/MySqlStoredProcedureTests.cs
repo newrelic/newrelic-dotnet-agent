@@ -14,21 +14,19 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
-    public abstract class MySqlStoredProcedureTestsBase : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
+    public abstract class MySqlStoredProcedureTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
         private readonly bool _paramsWithAtSigns;
-
-        // TODO: this follows the pattern in the existing CosmosDB tests but does it make sense here?
         private string _procedureName = "testProcedure" + Guid.NewGuid().ToString("n").Substring(0, 4);
 
-        protected MySqlStoredProcedureTestsBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output, bool paramsWithAtSigns) : base(fixture)
+        protected MySqlStoredProcedureTestsBase(TFixture fixture, ITestOutputHelper output, bool paramsWithAtSigns) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _paramsWithAtSigns = paramsWithAtSigns;
 
-            _fixture.AddCommand($"MySqlExerciser ExecuteStoredProcedure {_procedureName} {paramsWithAtSigns}");
+            _fixture.AddCommand($"MySqlExerciser CreateAndExecuteStoredProcedure {_procedureName} {paramsWithAtSigns}");
 
             _fixture.Actions
             (
@@ -52,19 +50,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         [Fact]
         public void Test()
         {
-            var transactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser/ExecuteStoredProcedure";
+            var transactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser/CreateAndExecuteStoredProcedure";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                //new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
-                //new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = transactionName}
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = transactionName}
             };
 
             var expectedTransactionTraceSegments = new List<string>
             {
-                //$"Datastore/statement/MySQL/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure"
                 $"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure"
             };
 
@@ -74,7 +69,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
             var expectedTransactionTraceQueryParameters = new Assertions.ExpectedSegmentQueryParameters
             {
-                //segmentName = $"Datastore/statement/MySQL/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure",
                 segmentName = $"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure",
                 QueryParameters = expectedQueryParameters
             };
@@ -84,9 +78,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 new Assertions.ExpectedSqlTrace
                 {
                     TransactionName = transactionName,
-                    //Sql = _fixture.ProcedureName,
                     Sql = _procedureName,
-                    //DatastoreMetricName = $"Datastore/statement/MySQL/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure",
                     DatastoreMetricName = $"Datastore/statement/MySQL/{_procedureName.ToLower()}/ExecuteProcedure",
                     QueryParameters = expectedQueryParameters,
                     HasExplainPlan = false
@@ -116,18 +108,36 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
 
     [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithAtSigns : MySqlStoredProcedureTestsBase
+    public class MySqlStoredProcedureTestsWithAtSignsFW : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MySqlStoredProcedureTestsWithAtSigns(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MySqlStoredProcedureTestsWithAtSignsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithoutAtSigns : MySqlStoredProcedureTestsBase
+    public class MySqlStoredProcedureTestsWithoutAtSignsFW : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MySqlStoredProcedureTestsWithoutAtSigns(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MySqlStoredProcedureTestsWithoutAtSignsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, false)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlStoredProcedureTestsWithAtSignsCore : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MySqlStoredProcedureTestsWithAtSignsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlStoredProcedureTestsWithoutAtSignsCore : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MySqlStoredProcedureTestsWithoutAtSignsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output, false)
         {
 
         }

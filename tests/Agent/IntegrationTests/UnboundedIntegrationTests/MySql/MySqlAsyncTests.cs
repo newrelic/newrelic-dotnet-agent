@@ -14,11 +14,11 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
-    public abstract class MySqlAsyncTestsBase : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
+    public abstract class MySqlAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
 
-        public MySqlAsyncTestsBase(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture)
+        public MySqlAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -47,6 +47,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         [Fact]
         public void Test()
         {
+            var expectedIterateCallCount = 3;
             var transactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser/SingleDateQueryAsync";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
@@ -60,11 +61,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1, metricScope = transactionName}
-
-                // TODO: should these be expected metrics? They were for the non-async test
-                // We are not checking callCount on Iterate metrics
-                //new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount },
-                //new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = transactionName}
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -131,7 +127,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
-    public class MySqlAsyncTestsFW : MySqlAsyncTestsBase
+    public class MySqlAsyncTestsFW : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlAsyncTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
@@ -140,9 +136,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetCoreTest]
-    public class MySqlAsyncTestsCore : MySqlAsyncTestsBase
+    public class MySqlAsyncTestsCore : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MySqlAsyncTestsCore(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public MySqlAsyncTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

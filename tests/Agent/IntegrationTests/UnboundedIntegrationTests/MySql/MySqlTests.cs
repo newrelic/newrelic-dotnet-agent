@@ -14,11 +14,11 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
-    public abstract class MySqlTests : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFWLatest>
+    public abstract class MySqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture: ConsoleDynamicMethodFixture
     {
-        private readonly ConsoleDynamicMethodFixtureFWLatest _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
 
-        public MySqlTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)  : base(fixture)
+        public MySqlTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -63,8 +63,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1, metricScope = transactionName},
-
-                // We are not checking callCount on Iterate metrics
                 new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = transactionName}
 
@@ -111,7 +109,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             var transactionSample = _fixture.AgentLog.TryGetTransactionSample(transactionName);
             var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(transactionName);
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
-
+            
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
                 () => Assert.NotNull(transactionEvent)
@@ -130,7 +128,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
-    public class MySqlTestsFW : MySqlAsyncTestsBase
+    public class MySqlTestsFW : MySqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
@@ -139,9 +137,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetCoreTest]
-    public class MySqlTestsCore : MySqlAsyncTestsBase
+    public class MySqlTestsCore : MySqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MySqlTestsCore(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public MySqlTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

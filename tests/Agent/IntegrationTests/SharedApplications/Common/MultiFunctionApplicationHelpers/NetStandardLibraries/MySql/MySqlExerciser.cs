@@ -59,7 +59,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void ExecuteStoredProcedure(string procedureName, bool paramsWithAtSigns)
+        public void CreateAndExecuteStoredProcedure(string procedureName, bool paramsWithAtSigns)
         {
             CreateProcedure(procedureName);
 
@@ -77,7 +77,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
                     command.Parameters.Add(sqlParam);
                 }
 
-                ConsoleMFLogger.Info(command.ExecuteNonQuery().ToString()); // TODO: This logs the number of affected rows. Necessary or just execute the query?
+                ConsoleMFLogger.Info(command.ExecuteNonQuery().ToString());
             }
         }
 
