@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
@@ -26,10 +27,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
             using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1", connection))
             {
                 connection.Open();
-                using var reader = command.ExecuteReader();
-                while (reader.Read())
+                using (var reader = command.ExecuteReader())
                 {
-                    dates.Add(reader.GetString(reader.GetOrdinal("_date")));
+                    while (reader.Read())
+                    {
+                        dates.Add(reader.GetString(reader.GetOrdinal("_date")));
+                    }
                 }
             }
             ConsoleMFLogger.Info(string.Join(",", dates));
@@ -38,7 +41,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async void SingleDateQueryAsync()
+        public async Task SingleDateQueryAsync()
         {
             var dates = new List<string>();
 
@@ -46,10 +49,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
             using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 10000", connection))
             {
                 connection.Open();
-                using var reader = await command.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
+                using (var reader = await command.ExecuteReaderAsync())
                 {
-                    dates.Add(reader.GetString(reader.GetOrdinal("_date")));
+                    while (await reader.ReadAsync())
+                    {
+                        dates.Add(reader.GetString(reader.GetOrdinal("_date")));
+                    }
                 }
             }
 
@@ -95,5 +100,4 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
             }
         }
     }
-
 }

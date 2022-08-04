@@ -128,9 +128,45 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
-    public class MySqlTestsFW : MySqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MySqlTestsFW462 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MySqlTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public MySqlTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlTestsFW471 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public MySqlTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlTestsFWLatest : MySqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MySqlTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlTestsCore31 : MySqlTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MySqlTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlTestsCore50 : MySqlTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public MySqlTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

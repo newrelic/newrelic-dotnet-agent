@@ -106,20 +106,91 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         }
     }
 
-
     [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithAtSignsFW : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MySqlStoredProcedureTestsWithAtSignsFW462 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MySqlStoredProcedureTestsWithAtSignsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MySqlStoredProcedureTestsWithAtSignsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output, true)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class MySqlStoredProcedureTestsWithoutAtSignsFW : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MySqlStoredProcedureTestsWithoutAtSignsFW462 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MySqlStoredProcedureTestsWithoutAtSignsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MySqlStoredProcedureTestsWithoutAtSignsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlStoredProcedureTestsWithAtSignsFW471 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public MySqlStoredProcedureTestsWithAtSignsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output, true)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlStoredProcedureTestsWithoutAtSignsFW471 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public MySqlStoredProcedureTestsWithoutAtSignsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlStoredProcedureTestsWithAtSignsFWLatest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MySqlStoredProcedureTestsWithAtSignsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlStoredProcedureTestsWithoutAtSignsFWLatest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MySqlStoredProcedureTestsWithoutAtSignsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, false)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlStoredProcedureTestsWithAtSignsCore31 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MySqlStoredProcedureTestsWithAtSignsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output, true)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlStoredProcedureTestsWithoutAtSignsCore31 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MySqlStoredProcedureTestsWithoutAtSignsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlStoredProcedureTestsWithAtSignsCore50 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public MySqlStoredProcedureTestsWithAtSignsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output, true)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlStoredProcedureTestsWithoutAtSignsCore50 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public MySqlStoredProcedureTestsWithoutAtSignsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output, false)
         {
 
         }
@@ -142,6 +213,4 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
         }
     }
-
-
 }

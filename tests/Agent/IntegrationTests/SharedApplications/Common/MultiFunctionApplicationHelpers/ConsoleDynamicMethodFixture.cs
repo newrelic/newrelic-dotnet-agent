@@ -11,7 +11,6 @@ namespace MultiFunctionApplicationHelpers
 {
     public class ConsoleDynamicMethodFixtureFWLatest : ConsoleDynamicMethodFixtureFW48
     {
-
         public ConsoleDynamicMethodFixtureFWLatest()
         {
         }
