@@ -1290,11 +1290,27 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Labels
 
+        private string _labels;
+        private bool _labelsChecked;
         public virtual string Labels
         {
             get
             {
-                return EnvironmentOverrides(_localConfiguration.labels, @"NEW_RELIC_LABELS");
+                if (!_labelsChecked)
+                {
+                    var labels = _configurationManagerStatic.GetAppSetting("NewRelic.Labels");
+                    if (labels != null)
+                    {
+                        Log.Info("Application labels from web.config, app.config, or appsettings.json.");
+                        _labels = labels;
+                    }
+                    else
+                    {
+                        _labels = EnvironmentOverrides(_localConfiguration.labels, @"NEW_RELIC_LABELS");
+                    }
+                    _labelsChecked = true;
+                }
+                return _labels;
             }
         }
 
@@ -1845,7 +1861,7 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual bool LogMetricsCollectorEnabled
         {
             get
-            { 
+            {
                 return ApplicationLoggingEnabled &&
                     EnvironmentOverrides(_localConfiguration.applicationLogging.metrics.enabled, "NEW_RELIC_APPLICATION_LOGGING_METRICS_ENABLED");
             }
