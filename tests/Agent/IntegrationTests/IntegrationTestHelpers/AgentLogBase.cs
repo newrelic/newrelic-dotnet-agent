@@ -44,6 +44,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         // Collector response content
         public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":{""agent_run_id""(.*)";
+        public const string ErrorResponseLogLinePrefixRegex = ErrorLogLinePrefixRegex + @"Request\(.{36}\): ";
         //"Request({0}): Invocation of \"{1}\" yielded response : {2}"
 
         public const string ThreadProfileStartingLogLineRegex = InfoLogLinePrefixRegex + @"Starting a thread profiling session";
