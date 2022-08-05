@@ -152,7 +152,6 @@
     <Compile Include="Controllers\MySqlConnectorController.cs" />
     <Compile Include="Controllers\PostgresController.cs" />
     <Compile Include="Controllers\OracleController.cs" />
-    <Compile Include="Controllers\MySqlController.cs" />
     <Compile Include="Controllers\MsSqlController.cs" />
     <Compile Include="Controllers\RedisController.cs" />
     <Compile Include="Global.asax.cs">

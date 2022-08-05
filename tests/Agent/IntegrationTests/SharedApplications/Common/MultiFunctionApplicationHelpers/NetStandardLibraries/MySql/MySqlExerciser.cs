@@ -1,20 +1,25 @@
-// Copyright 2020 New Relic, Inc. All rights reserved.
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
-using MySql.Data.MySqlClient;
-using NewRelic.Agent.IntegrationTests.Shared;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using System.Web.Mvc;
+using MySql.Data.MySqlClient;
+using NewRelic.Agent.IntegrationTests.Shared;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
+using NewRelic.Api.Agent;
 
-namespace BasicMvcApplication.Controllers
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
 {
-    public class MySqlController : Controller
+    [Library]
+    public class MySqlExerciser
     {
-        [HttpGet]
-        public string MySql()
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void SingleDateQuery()
         {
             var dates = new List<string>();
 
@@ -30,12 +35,13 @@ namespace BasicMvcApplication.Controllers
                     }
                 }
             }
-
-            return string.Join(",", dates);
+            ConsoleMFLogger.Info(string.Join(",", dates));
         }
 
-        [HttpGet]
-        public async Task<string> MySqlAsync()
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task SingleDateQueryAsync()
         {
             var dates = new List<string>();
 
@@ -52,11 +58,13 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return string.Join(",", dates);
+            ConsoleMFLogger.Info(string.Join(",", dates));
         }
 
-        [HttpGet]
-        public int MySqlParameterizedStoredProcedure(string procedureName, bool paramsWithAtSigns)
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void CreateAndExecuteStoredProcedure(string procedureName, bool paramsWithAtSigns)
         {
             CreateProcedure(procedureName);
 
@@ -74,10 +82,9 @@ namespace BasicMvcApplication.Controllers
                     command.Parameters.Add(sqlParam);
                 }
 
-                return command.ExecuteNonQuery();
+                ConsoleMFLogger.Info(command.ExecuteNonQuery().ToString());
             }
         }
-
 
         private static readonly string CreateProcedureStatement = @"CREATE PROCEDURE `{0}`.`{1}`({2}) BEGIN END;";
 
