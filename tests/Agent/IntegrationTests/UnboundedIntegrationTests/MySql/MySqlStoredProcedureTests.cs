@@ -45,7 +45,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 }
             );
 
-            // Confirm transaction transform has completed before moving on to log-based assertions
+            // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
             _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
 
             _fixture.Initialize();
