@@ -30,7 +30,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string AgentReportingToLogLineRegex = InfoLogLinePrefixRegex + @"Reporting to: (.*)";
         public const string AgentConnectedLogLineRegex = InfoLogLinePrefixRegex + @"Agent fully connected.";
 
-        // Collector data capture regex's after succesful response
+        // Collector request data capture regex's after successful response
         public const string ConnectLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""connect"" with : (.*)";
         public const string TransactionSampleLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""transaction_sample_data"" with : (.*)";
         public const string MetricDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""metric_data"" with : (.*)";
@@ -42,10 +42,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string ErrorEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""error_event_data"" with : (.*)";
         public const string ThreadProfileDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""profile_data"" with : (.*)";
 
-        // Collector response content
+        // Collector responses
         public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":{""agent_run_id""(.*)";
         public const string ErrorResponseLogLinePrefixRegex = ErrorLogLinePrefixRegex + @"Request\(.{36}\): ";
-        //"Request({0}): Invocation of \"{1}\" yielded response : {2}"
 
         public const string ThreadProfileStartingLogLineRegex = InfoLogLinePrefixRegex + @"Starting a thread profiling session";
         public const string AgentWrapperApiCallLogLineRegex = DebugLogLinePrefixRegex + @"AgentWrapperApi call: (.*)\((.*)\)(?: - (.*))?";
