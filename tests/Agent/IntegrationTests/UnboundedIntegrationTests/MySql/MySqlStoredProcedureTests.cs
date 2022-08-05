@@ -44,6 +44,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "datastoreTracer", "queryParameters" }, "enabled", "true");
                 }
             );
+
+            // Confirm transaction transform has completed before moving on to log-based assertions
+            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
+
             _fixture.Initialize();
         }
 
