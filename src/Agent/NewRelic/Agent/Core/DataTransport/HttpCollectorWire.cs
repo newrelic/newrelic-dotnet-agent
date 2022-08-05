@@ -60,11 +60,8 @@ namespace NewRelic.Agent.Core.DataTransport
             _agentHealthReporter = agentHealthReporter;
         }
 
-        public string SendData(string method, ConnectionInfo connectionInfo, string serializedData)
+        public string SendData(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid)
         {
-            // Create a guid to uniquely identify this particular request in logs
-            var requestGuid = Guid.NewGuid();
-
             try
             {
                 var uri = GetUri(method, connectionInfo);
@@ -234,7 +231,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             if (response.StatusCode == HttpStatusCode.UnsupportedMediaType)
             {
-                Log.ErrorFormat("Request({0}): had invalid json: {1}.  Please report to support@newrelic.com", requestGuid, serializedData);
+                Log.ErrorFormat("Request({0}): Had invalid json: {1}.  Please report to support@newrelic.com", requestGuid, serializedData);
             }
 
             // P17: Not supposed to read/use the exception message in the connect response body. We are still going to log it, carefully, since it is very useful for support.
@@ -243,7 +240,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 using (var reader = new StreamReader(response.GetResponseStream(), ASCIIEncoding.ASCII))
                 {
                     var responseText = reader.ReadToEnd();
-                    Log.ErrorFormat("Request({0}): received HTTP status code {1} with message {2}", requestGuid, response.StatusCode.ToString(), responseText);
+                    Log.ErrorFormat("Request({0}): Received HTTP status code {1} with message {2}", requestGuid, response.StatusCode.ToString(), responseText);
                 }
             }
             catch (Exception exception)
