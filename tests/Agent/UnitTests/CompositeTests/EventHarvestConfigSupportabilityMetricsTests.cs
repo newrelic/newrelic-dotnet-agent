@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -36,7 +37,7 @@ namespace CompositeTests
             var agentEnvironment = new NewRelic.Agent.Core.Environment(systemInfo, processStatic, configurationService);
 
             Mock.Arrange(() => collectorWireFactory.GetCollectorWire(null, Arg.IsAny<IAgentHealthReporter>())).IgnoreArguments().Returns(_collectorWire);
-            Mock.Arrange(() => _collectorWire.SendData("preconnect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _collectorWire.SendData("preconnect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
                 .Returns("{'return_value': { 'redirect_host': ''}}");
 
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
@@ -159,7 +160,7 @@ namespace CompositeTests
             }
 
             var serverConfigJson = Newtonsoft.Json.JsonConvert.SerializeObject(_compositeTestAgent.ServerConfiguration);
-            Mock.Arrange(() => _collectorWire.SendData("connect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>()))
+            Mock.Arrange(() => _collectorWire.SendData("connect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
                 .Returns($"{{'return_value': {serverConfigJson} }}");
         }
 
