@@ -56,9 +56,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             try
             {
-                var tcpListener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
-                tcpListener.Start();
-                tcpListener.Stop();
+                var tcp4Listener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
+                tcp4Listener.Start();
+                tcp4Listener.Stop();
+
+                var tcp6Listener = new TcpListener(System.Net.IPAddress.IPv6Any, potentialPort);
+                tcp6Listener.Start();
+                tcp6Listener.Stop();
 
                 // Wait for port to be reported as available
                 for (var waitDeadline = DateTime.Now + TimeSpan.FromSeconds(30); DateTime.Now < waitDeadline; Thread.Sleep(250))
