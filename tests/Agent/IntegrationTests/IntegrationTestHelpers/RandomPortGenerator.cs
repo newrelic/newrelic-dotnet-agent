@@ -7,6 +7,8 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -57,7 +59,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 var tcpListener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
                 tcpListener.Start();
                 tcpListener.Stop();
-                return true;
+
+                // Wait for port to be reported as available
+                for (var waitDeadline = DateTime.Now + TimeSpan.FromSeconds(30); DateTime.Now < waitDeadline; Thread.Sleep(250))
+                {
+                    var activeListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+                    if (!activeListeners.Any(x => x.Port == potentialPort))
+                    {
+                        return true;
+                    }
+                }
             }
             catch (Exception) { }
             return false;
