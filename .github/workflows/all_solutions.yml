@@ -80,7 +80,7 @@ jobs:
   build-linux-x64-profiler:
     needs: cancel-previous-workflow-runs
     name: Build Linux x64 Profiler
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
@@ -124,7 +124,7 @@ jobs:
   build-linux-arm64-profiler:
     needs: cancel-previous-workflow-runs
     name: Build Linux ARM64 Profiler
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
@@ -582,7 +582,7 @@ jobs:
   run-integration-tests-linux-arm64:
     needs: build-test-fullagent-msi
     name: Run IntegrationTests linux-arm64
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     if: false
 
     env:
@@ -787,7 +787,7 @@ jobs:
     needs: build-test-fullagent-msi
     if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
     name: Create RPM Package
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -849,7 +849,7 @@ jobs:
     needs: build-test-fullagent-msi
     if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
     name: Create Debian package
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
