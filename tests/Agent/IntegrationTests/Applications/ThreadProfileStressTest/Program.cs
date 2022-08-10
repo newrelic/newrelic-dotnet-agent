@@ -92,6 +92,11 @@ namespace ThreadProfileStressTest
         {
             try
             {
+                for(var i = 0; i < 1000000; ++i)
+                {
+                    // Simulate doing something...
+                }
+
                 Method1();
             }
             catch (Exception ex)
@@ -107,6 +112,11 @@ namespace ThreadProfileStressTest
         {
             try
             {
+                for (var i = 0; i < 1000000; ++i)
+                {
+                    // Simulate doing something...
+                }
+
                 Method2();
             }
             catch (Exception ex)
@@ -121,6 +131,11 @@ namespace ThreadProfileStressTest
         {
             try
             {
+                for (var i = 0; i < 1000000; ++i)
+                {
+                    // Simulate doing something...
+                }
+
                 Method3();
             }
             catch (Exception ex)
@@ -133,6 +148,10 @@ namespace ThreadProfileStressTest
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Method3()
         {
+            for (var i = 0; i < 1000000; ++i)
+            {
+                // Simulate doing something...
+            }
         }
 
         private static void CreatePidFile()
