@@ -55,26 +55,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             try
             {
-                if (!ICanHazPortAccordingToOS(potentialPort))
+                if (!IsPortAvailableAccordingToOS(potentialPort))
                 {
                     return false;
                 }
 
-                var tcp4Listener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
+                var tcp4Listener = new TcpListener(System.Net.IPAddress.Loopback, potentialPort);
                 tcp4Listener.Start();
                 tcp4Listener.Stop();
 
-                var tcp6Listener = new TcpListener(System.Net.IPAddress.IPv6Any, potentialPort);
+                var tcp6Listener = new TcpListener(System.Net.IPAddress.Loopback, potentialPort);
                 tcp6Listener.Start();
                 tcp6Listener.Stop();
 
-                return WaitTilICanHazPort(potentialPort);
+                return WaitUntilPortIsReportedAvailable(potentialPort);
             }
             catch (Exception) { }
             return false;
         }
 
-        private static bool ICanHazPortAccordingToOS(int port)
+        private static bool IsPortAvailableAccordingToOS(int port)
         {
             var activeListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
             if (activeListeners.Any(x => x.Port == port))
@@ -91,11 +91,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return true;
         }
 
-        private static bool WaitTilICanHazPort(int port, int waitSecond = 5)
+        private static bool WaitUntilPortIsReportedAvailable(int port, int waitSecond = 5)
         {
             for (var waitDeadline = DateTime.Now + TimeSpan.FromSeconds(waitSecond); DateTime.Now < waitDeadline; Thread.Sleep(100))
             {
-                if (ICanHazPortAccordingToOS(port))
+                if (IsPortAvailableAccordingToOS(port))
                 {
                     return true;
                 }
