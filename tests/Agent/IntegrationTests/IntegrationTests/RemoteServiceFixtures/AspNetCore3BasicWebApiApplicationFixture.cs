@@ -20,7 +20,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public string GetTraceId()
         {
-            var address = $"http://localhost:{Port}/api/default/GetTraceId";
+            var address = $"http://127.0.0.1:{Port}/api/default/GetTraceId";
             var webClient = new WebClient();
             var result = webClient.DownloadString(address);
             Assert.NotNull(result);

@@ -29,67 +29,67 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void GetCpuBoundTasksAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwait/CpuBoundTasksAsync";
+            var address = $"http://127.0.0.1:{Port}/AsyncAwait/CpuBoundTasksAsync";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualTaskRunBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/TaskRunBlocked";
+            var address = $"http://127.0.0.1:{Port}/ManualAsync/TaskRunBlocked";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualTaskFactoryStartNewBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/TaskFactoryStartNewBlocked";
+            var address = $"http://127.0.0.1:{Port}/ManualAsync/TaskFactoryStartNewBlocked";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualNewThreadStartBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/NewThreadStartBlocked";
+            var address = $"http://127.0.0.1:{Port}/ManualAsync/NewThreadStartBlocked";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetAsync_AwaitedAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Async_AwaitedAsync";
+            var address = $"http://127.0.0.1:{Port}/AsyncFireAndForget/Async_AwaitedAsync";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetAsync_FireAndForget()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Async_FireAndForget";
+            var address = $"http://127.0.0.1:{Port}/AsyncFireAndForget/Async_FireAndForget";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetAsync_Sync()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Async_Sync";
+            var address = $"http://127.0.0.1:{Port}/AsyncFireAndForget/Async_Sync";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetSync_AwaitedAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Sync_AwaitedAsync";
+            var address = $"http://127.0.0.1:{Port}/AsyncFireAndForget/Sync_AwaitedAsync";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetSync_FireAndForget()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Sync_FireAndForget";
+            var address = $"http://127.0.0.1:{Port}/AsyncFireAndForget/Sync_FireAndForget";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetSync_Sync()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Sync_Sync";
+            var address = $"http://127.0.0.1:{Port}/AsyncFireAndForget/Sync_Sync";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
         public void ExecuteResponseTimeTestOperation(int delayDurationSeconds)
         {
-            var address = $"http://localhost:{Port}/ResponseTime/CallsOtherMethod/{delayDurationSeconds}";
+            var address = $"http://127.0.0.1:{Port}/ResponseTime/CallsOtherMethod/{delayDurationSeconds}";
             DownloadJsonAndAssertEqual(address, "Worked");
         }
 
@@ -97,7 +97,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             using (var httpClient = new HttpClient())
             {
-                var requestMessage = new HttpRequestMessage(method, $"http://localhost:{Port}/AsyncFireAndForget/Sync_Sync");
+                var requestMessage = new HttpRequestMessage(method, $"http://127.0.0.1:{Port}/AsyncFireAndForget/Sync_Sync");
                 var result = httpClient.SendAsync(requestMessage).Result;
 
                 return result.Content.ReadAsStringAsync().Result;
@@ -108,7 +108,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             try
             {
-                new WebClient().DownloadString($"http://localhost:{Port}/{Path}");
+                new WebClient().DownloadString($"http://127.0.0.1:{Port}/{Path}");
             }
             catch (WebException) { }
         }

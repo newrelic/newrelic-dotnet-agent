@@ -16,7 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void MakeExternalCallUsingHttpClient(string baseAddress, string path)
         {
-            var address = $"http://localhost:{Port}/api/default/MakeExternalCallUsingHttpClient?baseAddress={baseAddress}&path={path}";
+            var address = $"http://127.0.0.1:{Port}/api/default/MakeExternalCallUsingHttpClient?baseAddress={baseAddress}&path={path}";
             using (var client = new HttpClient())
             {
                 var response = client.GetStringAsync(address).Result;

@@ -29,7 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 setupConfiguration: () =>
                 {
                     //Always restore the New Relic config settings even if the mock collector is already running
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "host", "localhost");
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "host", "127.0.0.1");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "port", MockNewRelicApplication.Port.ToString(CultureInfo.InvariantCulture));
 
                     //Increase the timeout for requests to the mock collector to 5 seconds - default is 2 seconds.
@@ -65,7 +65,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public string WarmUpCollector()
         {
-            var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/WarmUpCollector";
+            var address = $"https://127.0.0.1:{MockNewRelicApplication.Port}/agent_listener/WarmUpCollector";
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Warming up collector via: {address}");
 
@@ -76,7 +76,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public IEnumerable<CollectedRequest> GetCollectedRequests()
         {
-            var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/CollectedRequests";
+            var address = $"https://127.0.0.1:{MockNewRelicApplication.Port}/agent_listener/CollectedRequests";
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Get collected requests via: {address}");
 
@@ -88,7 +88,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void TriggerThreadProfile()
         {
-            var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/TriggerThreadProfile";
+            var address = $"https://127.0.0.1:{MockNewRelicApplication.Port}/agent_listener/TriggerThreadProfile";
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Trigger thread profile via: {address}");
 
@@ -98,7 +98,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void TriggerCustomInstrumentationEditorAgentCommand()
         {
-            var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/TriggerCustomInstrumentationEditorAgentCommand";
+            var address = $"https://127.0.0.1:{MockNewRelicApplication.Port}/agent_listener/TriggerCustomInstrumentationEditorAgentCommand";
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Trigger custom instrumentation editor via: {address}");
 
@@ -108,7 +108,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void SetCustomInstrumentationEditorOnConnect()
         {
-            var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/SetCustomInstrumentationEditorOnConnect";
+            var address = $"https://127.0.0.1:{MockNewRelicApplication.Port}/agent_listener/SetCustomInstrumentationEditorOnConnect";
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Set custom instrumentation editor on connect via: {address}");
 
@@ -118,7 +118,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public HeaderValidationData GetRequestHeaderMapValidationData()
         {
-            var address = $"https://localhost:{MockNewRelicApplication.Port}/agent_listener/HeaderValidation";
+            var address = $"https://127.0.0.1:{MockNewRelicApplication.Port}/agent_listener/HeaderValidation";
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Get request_header_map HeaderValidation via: {address}");
 

@@ -128,8 +128,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void ExecuteTraceRequestChainHttpClient(IEnumerable<KeyValuePair<string, string>> headers = null)
         {
             // the test calls the senderUrl, passing in the receiverUrl as a parameter
-            var senderBaseUrl = $"http://localhost:{RemoteApplication.Port}";
-            var receiverBaseUrl = $"http://localhost:{ReceiverApplication.Port}";
+            var senderBaseUrl = $"http://127.0.0.1:{RemoteApplication.Port}";
+            var receiverBaseUrl = $"http://127.0.0.1:{ReceiverApplication.Port}";
 
             var receiverUrl = $"{receiverBaseUrl}/api/CallEnd";
             var senderUrl = $"{senderBaseUrl}/api/CallNext?nextUrl={receiverUrl}";
@@ -141,8 +141,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void ExecuteTraceRequestChainRestSharp(IEnumerable<KeyValuePair<string, string>> headers)
         {
-            var secondCallUrl = $"http://localhost:{ReceiverApplication.Port}/api/RestAPI";
-            var firstCallUrl = $"http://localhost:{SenderApplication.Port}/DistributedTracing/MakeExternalCallUsingRestClient?externalCallUrl={secondCallUrl}";
+            var secondCallUrl = $"http://127.0.0.1:{ReceiverApplication.Port}/api/RestAPI";
+            var firstCallUrl = $"http://127.0.0.1:{SenderApplication.Port}/DistributedTracing/MakeExternalCallUsingRestClient?externalCallUrl={secondCallUrl}";
 
             DownloadStringAndAssertEqual(firstCallUrl, "Worked", headers);
         }

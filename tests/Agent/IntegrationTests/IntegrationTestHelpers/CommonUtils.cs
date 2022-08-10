@@ -770,7 +770,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public static string NormalizeHostname(string host)
         {
-            var resolvedHostName = IsLocalHost(host) ? Dns.GetHostName() : host;
+            var resolvedHostName = IsLocalHost(host) ? "127.0.0.1" : host;
             return resolvedHostName;
         }
 

@@ -26,7 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void GetCpuBoundTasksAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwait/CpuBoundTasksAsync";
+            var address = $"http://127.0.0.1:{Port}/AsyncAwait/CpuBoundTasksAsync";
             DownloadStringAndAssertEqual(address, "Worked");
         }
     }

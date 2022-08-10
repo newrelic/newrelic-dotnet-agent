@@ -65,7 +65,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             Log.Logger = loggerConfig.CreateLogger();
 
             var port = RandomPortGenerator.NextPort();
-            _uriBase = "http://localhost:" + port + "/";
+            _uriBase = "http://127.0.0.1:" + port + "/";
             var hostTask = CreateHostBuilder(_uriBase).Build().RunAsync();
 
             Console.WriteLine("URI: " + _uriBase);

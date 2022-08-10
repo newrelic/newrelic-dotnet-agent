@@ -22,7 +22,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             RemoteApplication.UseTieredCompilation = useTieredCompilation;
         }
 
-        public override string DestinationServerName => "localhost";
+        public override string DestinationServerName => "127.0.0.1";
     }
 
     public class AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation : AspNetCoreReJitMvcApplicationFixture
