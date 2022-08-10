@@ -48,7 +48,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             throw new Exception($"Unable to obtain port after {maxAttempts} attempts.");
         }
 
-
         //Checks if something outside our current test run instance is currently using the port.
         //This does not prevent us from getting into a conflict with another process taking that port after this check,
         //but before the test app uses the assigned port.
@@ -56,6 +55,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             try
             {
+                if (!ICanHazPortAccordingToOS(potentialPort))
+                {
+                    return false;
+                }
+
                 var tcp4Listener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
                 tcp4Listener.Start();
                 tcp4Listener.Stop();
@@ -64,17 +68,38 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 tcp6Listener.Start();
                 tcp6Listener.Stop();
 
-                // Wait for port to be reported as available
-                for (var waitDeadline = DateTime.Now + TimeSpan.FromSeconds(30); DateTime.Now < waitDeadline; Thread.Sleep(250))
-                {
-                    var activeListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
-                    if (!activeListeners.Any(x => x.Port == potentialPort))
-                    {
-                        return true;
-                    }
-                }
+                return WaitTilICanHazPort(potentialPort);
             }
             catch (Exception) { }
+            return false;
+        }
+
+        private static bool ICanHazPortAccordingToOS(int port)
+        {
+            var activeListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+            if (activeListeners.Any(x => x.Port == port))
+            {
+                return false;
+            }
+
+            var activeConnections = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections();
+            if (activeConnections.Any(x => x.LocalEndPoint.Port == port))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool WaitTilICanHazPort(int port, int waitSecond = 5)
+        {
+            for (var waitDeadline = DateTime.Now + TimeSpan.FromSeconds(waitSecond); DateTime.Now < waitDeadline; Thread.Sleep(100))
+            {
+                if (ICanHazPortAccordingToOS(port))
+                {
+                    return true;
+                }
+            }
             return false;
         }
 
