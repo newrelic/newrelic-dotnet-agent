@@ -5,7 +5,7 @@
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using OpenQA.Selenium;
-using OpenQA.Selenium.IE;
+using OpenQA.Selenium.Chrome;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
@@ -14,17 +14,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         private IWebDriver _driver;
         public BasicAspWebService() : base(new RemoteWebApplication("BasicAspWebService", ApplicationType.Bounded))
         {
-            var driverService = InternetExplorerDriverService.CreateDefaultService();
+            var driverService = ChromeDriverService.CreateDefaultService();
             driverService.HideCommandPromptWindow = true;
             driverService.SuppressInitialDiagnosticInformation = true;
-
-            var options = new InternetExplorerOptions
-            {
-                IntroduceInstabilityByIgnoringProtectedModeSettings = true,
-                IgnoreZoomLevel = true
-            };
-
-            _driver = new InternetExplorerDriver(driverService, options);
+            _driver = new ChromeDriver(driverService);
         }
 
         public void InvokeAsyncCall()
