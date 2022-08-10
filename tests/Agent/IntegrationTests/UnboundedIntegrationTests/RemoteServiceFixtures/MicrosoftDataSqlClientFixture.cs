@@ -32,7 +32,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void GetMsSql()
         {
-            var address = $"http://localhost:{Port}/MicrosoftDataSqlClient/MsSql?tableName={TableName}";
+            var address = $"http://127.0.0.1:{Port}/MicrosoftDataSqlClient/MsSql?tableName={TableName}";
 
             using (var webClient = new WebClient())
             {
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void GetMsSqlAsync()
         {
-            var address = $"http://localhost:{Port}/MicrosoftDataSqlClient/MsSqlAsync?tableName={TableName}";
+            var address = $"http://127.0.0.1:{Port}/MicrosoftDataSqlClient/MsSqlAsync?tableName={TableName}";
 
             using (var webClient = new WebClient())
             {
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void GetMsSql_WithParameterizedQuery(bool paramsWithAtSign)
         {
-            var address = $"http://localhost:{Port}/MicrosoftDataSqlClient/MsSql_WithParameterizedQuery?tableName={TableName}&paramsWithAtSign={paramsWithAtSign}";
+            var address = $"http://127.0.0.1:{Port}/MicrosoftDataSqlClient/MsSql_WithParameterizedQuery?tableName={TableName}&paramsWithAtSign={paramsWithAtSign}";
 
             using (var webClient = new WebClient())
             {
@@ -65,7 +65,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void GetMsSqlAsync_WithParameterizedQuery(bool paramsWithAtSign)
         {
-            var address = $"http://localhost:{Port}/MicrosoftDataSqlClient/MsSqlAsync_WithParameterizedQuery?tableName={TableName}&paramsWithAtSign={paramsWithAtSign}";
+            var address = $"http://127.0.0.1:{Port}/MicrosoftDataSqlClient/MsSqlAsync_WithParameterizedQuery?tableName={TableName}&paramsWithAtSign={paramsWithAtSign}";
 
             using (var webClient = new WebClient())
             {
@@ -76,7 +76,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void GetMsSqlParameterizedStoredProcedure(bool paramsWithAtSign)
         {
-            var address = $"http://localhost:{Port}/MicrosoftDataSqlClient/MsSqlParameterizedStoredProcedure?procedureName={ProcedureName}&paramsWithAtSign={paramsWithAtSign}";
+            var address = $"http://127.0.0.1:{Port}/MicrosoftDataSqlClient/MsSqlParameterizedStoredProcedure?procedureName={ProcedureName}&paramsWithAtSign={paramsWithAtSign}";
 
             using (var webClient = new WebClient())
             {
