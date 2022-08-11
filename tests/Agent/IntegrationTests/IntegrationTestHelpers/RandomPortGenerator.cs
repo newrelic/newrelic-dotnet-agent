@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
@@ -60,13 +61,22 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     return false;
                 }
 
-                var tcp4Listener = new TcpListener(System.Net.IPAddress.Loopback, potentialPort);
+                var tcp4Listener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
                 tcp4Listener.Start();
                 tcp4Listener.Stop();
 
-                var tcp6Listener = new TcpListener(System.Net.IPAddress.Loopback, potentialPort);
+                var tcp6Listener = new TcpListener(System.Net.IPAddress.IPv6Any, potentialPort);
                 tcp6Listener.Start();
                 tcp6Listener.Stop();
+
+                // Try to create a HTTP listener if we can, since this is what most test apps do.
+                if (HttpListener.IsSupported)
+                {
+                    HttpListener listener = new HttpListener();
+                    listener.Prefixes.Add($"http://127.0.0.1:{potentialPort}/port-check-{Guid.NewGuid()}/");
+                    listener.Start();
+                    listener.Stop();
+                }
 
                 return WaitUntilPortIsReportedAvailable(potentialPort);
             }
