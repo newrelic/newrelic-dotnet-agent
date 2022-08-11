@@ -3,6 +3,7 @@
 
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Web.Http;
 
 namespace BasicMvcApplication.Controllers
@@ -25,6 +26,11 @@ namespace BasicMvcApplication.Controllers
         public Bird Get(int id)
         {
             //System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"GET api/RestAPI/{id} called" + System.Environment.NewLine);
+            if (id == 4)
+            {
+                // There is a test where a rest client is supposed to timeout when id of 4 is passed. This was sometimes completing before the client timed out.
+                Thread.Sleep(10000);
+            }
             return new Bird { CommonName = "Northern Flicker", BandingCode = "NOFL" };
         }
 
@@ -35,7 +41,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         // PUT: api/RestAPI/5
-        public void Put(int id, [FromBody]Bird bird)
+        public void Put(int id, [FromBody] Bird bird)
         {
             //System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"PUT api/RestAPI/{id} called with {bird.CommonName} ({bird.BandingCode})" + System.Environment.NewLine);
         }
