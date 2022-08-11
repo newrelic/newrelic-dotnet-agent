@@ -7,7 +7,7 @@ using System;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Edge;
+using OpenQA.Selenium.IE;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
@@ -16,13 +16,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         private IWebDriver _driver;
         public BasicAspWebService() : base(new RemoteWebApplication("BasicAspWebService", ApplicationType.Bounded))
         {
-            var driverService = EdgeDriverService.CreateDefaultService();
+            var driverService = InternetExplorerDriverService.CreateDefaultService();
             driverService.HideCommandPromptWindow = true;
             driverService.SuppressInitialDiagnosticInformation = true;
             driverService.InitializationTimeout = TimeSpan.FromMinutes(2);
             driverService.Port = RandomPortGenerator.NextPort();
 
-            _driver = new EdgeDriver(driverService, new EdgeOptions(), TimeSpan.FromMinutes(2));
+            var options = new InternetExplorerOptions
+            {
+                IntroduceInstabilityByIgnoringProtectedModeSettings = true,
+                IgnoreZoomLevel = true
+            };
+
+            _driver = new InternetExplorerDriver(driverService, options, TimeSpan.FromMinutes(2));
         }
 
         public void InvokeAsyncCall()
