@@ -27,11 +27,11 @@ namespace ThreadProfileStressTest
 
             _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
 
-            Console.WriteLine($"[{_applicationName}] Invoked with args: { string.Join(" ", args) }");
+            Console.WriteLine($"[{_applicationName}] Invoked with args: {string.Join(" ", args)}");
 
             var port = GetPortFromArgs(args) ?? DefaultPort;
 
-            Console.WriteLine($"[{_applicationName}] Parsed port: { port }");
+            Console.WriteLine($"[{_applicationName}] Parsed port: {port}");
 
             var eventWaitHandleName = "app_server_wait_for_all_request_done_" + port;
 
@@ -92,11 +92,6 @@ namespace ThreadProfileStressTest
         {
             try
             {
-                for(var i = 0; i < 1000000; ++i)
-                {
-                    // Simulate doing something...
-                }
-
                 Method1();
             }
             catch (Exception ex)
@@ -112,11 +107,6 @@ namespace ThreadProfileStressTest
         {
             try
             {
-                for (var i = 0; i < 1000000; ++i)
-                {
-                    // Simulate doing something...
-                }
-
                 Method2();
             }
             catch (Exception ex)
@@ -131,11 +121,6 @@ namespace ThreadProfileStressTest
         {
             try
             {
-                for (var i = 0; i < 1000000; ++i)
-                {
-                    // Simulate doing something...
-                }
-
                 Method3();
             }
             catch (Exception ex)
@@ -148,10 +133,6 @@ namespace ThreadProfileStressTest
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Method3()
         {
-            for (var i = 0; i < 1000000; ++i)
-            {
-                // Simulate doing something...
-            }
         }
 
         private static void CreatePidFile()
