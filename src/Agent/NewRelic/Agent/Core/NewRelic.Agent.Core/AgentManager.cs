@@ -17,6 +17,7 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Core.Logging;
 using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core
 {
@@ -191,28 +192,25 @@ namespace NewRelic.Agent.Core
             //Log here for debugging configuration issues
             if (Log.IsDebugEnabled)
             {
-                Log.DebugFormat("Environment Variable NEWRELIC_HOME value: {0}", System.Environment.GetEnvironmentVariable("NEWRELIC_HOME"));
-                Log.DebugFormat("Environment Variable NEWRELIC_INSTALL_PATH value: {0}", System.Environment.GetEnvironmentVariable("NEWRELIC_INSTALL_PATH"));
-                Log.DebugFormat("Environment Variable CORECLR_NEWRELIC_HOME value: {0}", System.Environment.GetEnvironmentVariable("CORECLR_NEWRELIC_HOME"));
-                Log.DebugFormat("Environment Variable COR_PROFILER_PATH value: {0}", System.Environment.GetEnvironmentVariable("COR_PROFILER_PATH"));
-                Log.DebugFormat("Environment Variable CORECLR_PROFILER_PATH value: {0}", System.Environment.GetEnvironmentVariable("CORECLR_PROFILER_PATH"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_LOG value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_LOG"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_APP_NAME value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME"));
-                Log.DebugFormat("Environment Variable MAX_TRANSACTION_SAMPLES_STORED value: {0}", System.Environment.GetEnvironmentVariable("MAX_TRANSACTION_SAMPLES_STORED"));
-                Log.DebugFormat("Environment Variable MAX_EVENT_SAMPLES_STORED value: {0}", System.Environment.GetEnvironmentVariable("MAX_EVENT_SAMPLES_STORED"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_DISTRIBUTED_TRACING_ENABLED value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_DISTRIBUTED_TRACING_ENABLED"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_SPAN_EVENTS_ENABLED value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_SPAN_EVENTS_ENABLED"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_LABELS value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_LABELS"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_PROXY_HOST value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_PROXY_HOST"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_PROXY_URI_PATH value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_PROXY_URI_PATH"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_PROXY_PORT value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_PROXY_PORT"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_PROXY_DOMAIN value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_PROXY_DOMAIN"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_DISABLE_SAMPLERS value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_SAMPLERS"));
-                Log.DebugFormat("Environment Variable NEWRELIC_PROFILER_LOG_DIRECTORY value: {0}", System.Environment.GetEnvironmentVariable("NEWRELIC_PROFILER_LOG_DIRECTORY"));
-                Log.DebugFormat("Environment Variable NEWRELIC_LOG_LEVEL value: {0}", System.Environment.GetEnvironmentVariable("NEWRELIC_LOG_LEVEL"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_APPLICATION_LOGGING_ENABLED value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_APPLICATION_LOGGING_ENABLED"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_APPLICATION_LOGGING_METRICS_ENABLED value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_APPLICATION_LOGGING_METRICS_ENABLED"));
-                Log.DebugFormat("Environment Variable NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED value: {0}", System.Environment.GetEnvironmentVariable("NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED"));
+                List<string> environmentVariables = new List<string> { "NEWRELIC_HOME", "CORECLR_ENABLE_PROFILING", "CORECLR_PROFILER", "CORECLR_NEWRELIC_HOME", "CORECLR_PROFILER_PATH", "COR_ENABLE_PROFILING", "COR_PROFILER", "COR_PROFILER_PATH", "NEWRELIC_INSTALL_PATH", "NEW_RELIC_APP_NAME", "RoleName", "IISEXPRESS_SITENAME", "NEW_RELIC_APPLICATION_LOGGING_ENABLED", "NEW_RELIC_APPLICATION_LOGGING_METRICS_ENABLED", "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED", "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_MAX_SAMPLES_STORED", "NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED", "NEW_RELIC_DISTRIBUTED_TRACING_ENABLED", "NEW_RELIC_SPAN_EVENTS_ENABLED", "NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED", "MAX_TRANSACTION_SAMPLES_STORED", "MAX_EVENT_SAMPLES_STORED", "NEW_RELIC_DISABLE_SAMPLERS", "NEW_RELIC_PROCESS_HOST_DISPLAY_NAME", "NEW_RELIC_IGNORE_SERVER_SIDE_CONFIG", "NEW_RELIC_LOG", "NEWRELIC_PROFILER_LOG_DIRECTORY", "NEWRELIC_LOG_LEVEL", "NEW_RELIC_LABELS", "APP_POOL_ID", "NEW_RELIC_PROXY_HOST", "NEW_RELIC_PROXY_URI_PATH", "NEW_RELIC_PROXY_PORT", "NEW_RELIC_PROXY_DOMAIN", "NEW_RELIC_ALLOW_ALL_HEADERS", "NEW_RELIC_ATTRIBUTES_ENABLED", "NEW_RELIC_ATTRIBUTES_INCLUDE", "NEW_RELIC_ATTRIBUTES_EXCLUDE", "NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT", "NEW_RELIC_INFINITE_TRACING_TIMEOUT_SEND", "NEW_RELIC_INFINITE_TRACING_EXIT_TIMEOUT", "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_STREAMS_COUNT", "NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_HOST", "NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_PORT", "NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_SSL", "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_QUEUE_SIZE", "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_PARTITION_COUNT", "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_BATCH_SIZE", "NEW_RELIC_UTILIZATION_DETECT_AWS", "NEW_RELIC_UTILIZATION_DETECT_AZURE", "NEW_RELIC_UTILIZATION_DETECT_GCP", "NEW_RELIC_UTILIZATION_DETECT_PCF", "NEW_RELIC_UTILIZATION_DETECT_DOCKER", "NEW_RELIC_UTILIZATION_DETECT_KUBERNETES", "NEW_RELIC_UTILIZATION_LOGICAL_PROCESSORS", "NEW_RELIC_UTILIZATION_TOTAL_RAM_MIB", "NEW_RELIC_UTILIZATION_BILLING_HOSTNAME", "NEW_RELIC_DISABLE_APPDOMAIN_CACHING", "NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD", "NEW_RELIC_CODE_LEVEL_METRICS_ENABLED" };
+
+                List<string> environmentVariablesSensitive = new List<string> { "NEW_RELIC_LICENSE_KEY", "NEWRELIC_LICENSEKEY", "NEW_RELIC_SECURITY_POLICIES_TOKEN", "NEW_RELIC_PROXY_USER", "NEW_RELIC_CONFIG_OBSCURING_KEY", "NEW_RELIC_PROXY_PASS_OBFUSCATED", "NEW_RELIC_PROXY_PASS" };
+
+                foreach (var ev in environmentVariables)
+                {
+                    if (!String.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(ev)))
+                    {
+                        Log.DebugFormat("Environment Variable {0} value: {1}", ev, System.Environment.GetEnvironmentVariable(ev));
+                    }
+                }
+
+                foreach (var evs in environmentVariablesSensitive)
+                {
+                    if (!String.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(evs)))
+                    {
+                        Log.DebugFormat("Environment Variable {0} is configured with a value. Not logging potentially sensitive value", evs);
+                    }
+                }
 
             }
 
