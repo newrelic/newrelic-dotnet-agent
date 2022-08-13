@@ -24,6 +24,12 @@ namespace BasicMvcApplication.Controllers
         // GET: api/RestAPI/5
         public Bird Get(int id)
         {
+            // If the ID is 4, this request is coming from the RestSharpClientTaskCancelled parent
+            // endpoint and we need to ensure that the client times out before the request succeeds
+            if (id == 4)
+            {
+                System.Threading.Thread.Sleep(100);
+            }    
             //System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"GET api/RestAPI/{id} called" + System.Environment.NewLine);
             return new Bird { CommonName = "Northern Flicker", BandingCode = "NOFL" };
         }
