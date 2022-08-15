@@ -55,6 +55,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             try
             {
                 var tcpListener = new TcpListener(System.Net.IPAddress.Any, potentialPort);
+                tcpListener.ExclusiveAddressUse = true; // This is necessary to make this check meaningful at all
                 tcpListener.Start();
                 tcpListener.Stop();
                 return true;
