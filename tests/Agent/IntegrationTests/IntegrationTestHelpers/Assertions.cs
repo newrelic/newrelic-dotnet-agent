@@ -527,7 +527,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        private static Metric TryFindMetric(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
+        public static Metric TryFindMetric(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
         {
             foreach (var actualMetric in actualMetrics)
             {
@@ -544,7 +544,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return null;
         }
 
-        private static List<Metric> TryFindMetrics(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
+        public static List<Metric> TryFindMetrics(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
         {
             var foundMetrics = actualMetrics
                 .Where(actualMetric => (expectedMetric.IsRegexName && Regex.IsMatch(actualMetric.MetricSpec.Name, expectedMetric.metricName)) ||
