@@ -61,6 +61,7 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
                 new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/PUT", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/POST", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/DELETE", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/GET", metricScope = @"WebTransaction/MVC/RestSharpController/RestSharpClientTaskCancelled", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Get", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Put", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Post", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
@@ -84,25 +85,6 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assert.NotNull(transactionEventWithExternal)
             );
-
-            // The external call in the RestSharpClientTaskCancelled controller method will be reported as either an External, or ExternalTransaction depending on timing...
-            var atleastOneMustExist = new List<Assertions.ExpectedMetric>
-            {
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/GET", metricScope = @"WebTransaction/MVC/RestSharpController/RestSharpClientTaskCancelled", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Get", metricScope = @"WebTransaction/MVC/RestSharpController/RestSharpClientTaskCancelled", callCount = 1 }
-            };
-
-            bool atleastOneMetricFound = false;
-            foreach( var metric in atleastOneMustExist )
-            {
-                if( Assertions.TryFindMetric(metric, metrics) != null )
-                {
-                    Assertions.MetricExists(metric, metrics);
-                    Assert.False(atleastOneMetricFound, $"Only one of the following metrics should have been found, but both were: {atleastOneMustExist[0]}, {atleastOneMustExist[1]}");
-                    atleastOneMetricFound = true;
-                }
-            }
-            Assert.True(atleastOneMetricFound, $"One of the following metrics should have been found, but none were: {atleastOneMustExist[0]}, {atleastOneMustExist[1]}");
 
             var agentWrapperErrorRegex = AgentLogBase.ErrorLogLinePrefixRegex + @"An exception occurred in a wrapper: (.*)";
             var wrapperError = _fixture.AgentLog.TryGetLogLine(agentWrapperErrorRegex);
