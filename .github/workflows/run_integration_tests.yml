@@ -137,15 +137,15 @@ jobs:
             # Just use the supplied list of namespaces
             namespaces="${{ github.event.inputs.integration-test-namespaces }}"
           fi
-          #echo "::set-output name=matrix::[$namespaces]"
-          echo "::set-output name=matrix::['CustomInstrumentation', 'DistributedTracing']"
+          echo "::set-output name=matrix::[$namespaces]"
+          #echo "::set-output name=matrix::['CustomInstrumentation', 'DistributedTracing']"
         shell: bash
 
       - id: configure_unbounded_tests_matrix
         run: |
           if [ "${{ github.event.inputs.unbounded-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
-            namespaces="[ CosmosDB, Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, NServiceBus5, Oracle, Postgres, RabbitMq, Redis ]"
+            namespaces="[ 'CosmosDB', 'Couchbase', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Oracle', 'Postgres', 'RabbitMq', 'Redis' ]"
           else
             # Just use the supplied list of namespaces
             namespaces="[ ${{ github.event.inputs.unbounded-test-namespaces }} ]"
