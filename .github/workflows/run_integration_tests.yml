@@ -174,10 +174,10 @@ jobs:
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
       
     steps:
-      # - name: Checkout
-      #   uses: actions/checkout@v2
-      #   with:
-      #     fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET Core 2.2.103
         uses: actions/setup-dotnet@v1
@@ -293,10 +293,10 @@ jobs:
         run: (Invoke-WebRequest -uri "http://ifconfig.me/ip").Content
         shell: powershell
         
-      # - name: Checkout
-      #   uses: actions/checkout@v2
-      #   with:
-      #     fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET 6.0
         uses: actions/setup-dotnet@v1
