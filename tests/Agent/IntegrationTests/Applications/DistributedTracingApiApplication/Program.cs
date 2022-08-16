@@ -54,7 +54,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.DistributedTracingApiAppl
                 return;
 
             // Create handle that RemoteApplication expects
-            new EventWaitHandle(false, EventResetMode.ManualReset, "app_server_wait_for_all_request_done_" + program.Port);
+            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset, "app_server_wait_for_all_request_done_" + program.Port);
 
             CreatePidFile();
 
@@ -71,6 +71,9 @@ namespace NewRelic.Agent.IntegrationTests.Applications.DistributedTracingApiAppl
                 var dtPayload = CallCreateDTPayload();
                 CallAcceptDTPayload(dtPayload);
             }
+
+            // wait for the test harness to tell us to shut down
+            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
         }
 
         [Transaction]

@@ -24,7 +24,6 @@ namespace NewRelic.Agent.Core.Transactions
         /// parent segment (unless it is a root segment).
         /// </summary>
         IList<Segment> Segments { get; }
-        IList<LogEventWireModel> LogEvents { get; }
         ICandidateTransactionName CandidateTransactionName { get; }
         void RollupTransactionNameByStatusCodeIfNeeded();
         ITransactionMetadata TransactionMetadata { get; }
@@ -82,5 +81,19 @@ namespace NewRelic.Agent.Core.Transactions
         ITransactionSegmentState GetTransactionSegmentState();
 
         void NoticeError(ErrorData errorData);
+
+        /// <summary>
+        /// Harvests the log events from the transaction. After doing this, no more logs can be added to the transaction.
+        /// </summary>
+        /// <returns>The accumulated logs on the first call, or null if logs have already been harvested</returns>
+        IList<LogEventWireModel> HarvestLogEvents();
+
+        /// <summary>
+        /// Attempts to add a log to the current transaction. Logs cannot be added after the transaction transform has
+        /// harvested logs.
+        /// </summary>
+        /// <param name="logEvent">The log event to add</param>
+        /// <returns>true if the log was added, false if the log was unable to be added</returns>
+        bool AddLogEvent(LogEventWireModel logEvent);
     }
 }
