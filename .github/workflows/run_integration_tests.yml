@@ -14,11 +14,11 @@ on:
         - UnboundedIntegrationTests
         - Both
       integration-test-namespaces:
-        description: 'A comma-separated list of integration test namespaces to run.  If not specified, all integration tests will be run.'
+        description: 'A comma-separated, single-quoted list of integration test namespaces to run (e.g. "''AgentFeatures'', ''BasicInstrumentation''").  If not specified, all integration tests will be run.'
         required: true
         default: 'ALL'
       unbounded-test-namespaces:
-        description: 'A comma-separated list of unbounded integration test namespaces to run.  If not specified, all unbounded tests will be run.'
+        description: 'A comma-separated, single-quoted list of unbounded integration test namespaces to run (e.g. "''MsSql'', ''Couchbase''").  If not specified, all unbounded tests will be run.'
         required: true
         default: 'ALL'
       # iterations:
