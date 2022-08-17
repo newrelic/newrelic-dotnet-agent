@@ -83,7 +83,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                // The datastore operation happened inside a web transaction so there should be no allOther metrics
+                // The datastore operation happened inside a non-web transaction so there should be no allWeb metrics
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
 
