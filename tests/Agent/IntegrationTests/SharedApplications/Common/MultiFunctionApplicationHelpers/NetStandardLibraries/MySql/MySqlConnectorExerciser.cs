@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
