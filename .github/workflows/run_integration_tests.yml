@@ -81,10 +81,10 @@ jobs:
             !${{ github.workspace }}/tests/Agent/IntegrationTests/**/obj/**/*
           if-no-files-found: error
 
+      # This step is necessary to avoid redundantly uploading the "bounded" integration test assets along with the unbounded ones in the following steps
       - name: Clear integration tests from workspace
         if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
         run: |
-          #rm ${{ github.workspace }}/test.runsettings
           rm -r ${{ github.workspace }}/tests
         shell: bash
 
