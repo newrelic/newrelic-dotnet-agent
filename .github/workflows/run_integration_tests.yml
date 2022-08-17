@@ -35,6 +35,12 @@ jobs:
     name: Get and Publish Agent and Test Artifacts Locally
     runs-on: ubuntu-latest
     steps:
+      - name: Print input vars
+        run: |
+          echo "github.event.inputs.solutions = ${{ github.event.inputs.solutions }}"
+          echo "github.event.inputs.integration-test-namespaces = ${{ github.event.inputs.integration-test-namespaces }}"
+          echo "github.event.inputs.unbounded-test-namespaces = ${{ github.event.inputs.unbounded-test-namespaces }}"
+
       - name: Download Agent Home Folders
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -51,12 +57,6 @@ jobs:
           name: homefolders
           path: ${{ github.workspace }}/newrelichome*
           if-no-files-found: error
-
-      - name: Print input vars
-        run: |
-          echo "github.event.inputs.solutions = ${{ github.event.inputs.solutions }}"
-          echo "github.event.inputs.integration-test-namespaces = ${{ github.event.inputs.integration-test-namespaces }}"
-          echo "github.event.inputs.unbounded-test-namespaces = ${{ github.event.inputs.unbounded-test-namespaces }}"
 
       - name: Download Integration Tests
         if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
