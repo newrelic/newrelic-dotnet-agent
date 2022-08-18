@@ -162,6 +162,7 @@ jobs:
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
+            C:\IntegrationTestWorkingDirectory\**\appsettings.json
           if-no-files-found: error
 
       - name: Archive Test Artifacts
@@ -303,6 +304,7 @@ jobs:
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
+            C:\IntegrationTestWorkingDirectory\**\appsettings.json
           if-no-files-found: error
 
       - name: Archive Test Artifacts
