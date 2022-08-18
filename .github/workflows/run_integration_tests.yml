@@ -108,7 +108,7 @@ jobs:
   #         if-no-files-found: error
 
   setup-matrices:
-    needs: [get-external-artifacts]
+    #needs: [get-external-artifacts]
     name: Configure namespaces for test matrices
     runs-on: ubuntu-latest
     outputs:
