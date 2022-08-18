@@ -21,6 +21,9 @@ on:
         description: 'A comma-separated, single-quoted list of unbounded integration test namespaces to run (e.g. "''MsSql'', ''Couchbase''").  If not specified, all unbounded tests will be run.'
         required: true
         default: 'ALL'
+      parallelize:
+        type: boolean
+        description: 'Run tests in parallel within each namespace'
 
 env:
   DOTNET_NOLOGO: true
@@ -142,6 +145,11 @@ jobs:
           #   Write-Host "Logging tests detected, running xunit tests in parallel."
           #   $parallelXunitOption = "all"
           # }
+
+          # Enable test parallelization based on input
+          if ("${{ github.event.inputs.parallelize }}" -eq "True") {
+            $parallelXunitOption = "all"
+          }
 
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
           
