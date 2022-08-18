@@ -151,8 +151,6 @@ jobs:
             $parallelXunitOption = "all"
           }
 
-          Write-Host "parallelXunitOption = $parallelXunitOption"
-
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
           
           if ($Env:enhanced_logging -eq $True) {
@@ -295,7 +293,14 @@ jobs:
             netstat -no  
           }
 
-          ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel none -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+          $parallelXunitOption = "none"
+
+          # Enable test parallelization based on input
+          if ("${{ github.event.inputs.parallelize }}" -eq "true") {
+            $parallelXunitOption = "all"
+          }
+
+          ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
