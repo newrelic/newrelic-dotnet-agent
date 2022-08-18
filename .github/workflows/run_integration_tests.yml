@@ -27,86 +27,6 @@ env:
 
 jobs:
 
-  # get-external-artifacts:
-  #   name: Get and Publish Agent and Test Artifacts Locally
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Print input vars
-  #       run: |
-  #         echo "github.event.inputs.solutions = ${{ github.event.inputs.solutions }}"
-  #         echo "github.event.inputs.integration-test-namespaces = ${{ github.event.inputs.integration-test-namespaces }}"
-  #         echo "github.event.inputs.unbounded-test-namespaces = ${{ github.event.inputs.unbounded-test-namespaces }}"
-
-  #     - name: Download Agent Home Folders
-  #       uses: dawidd6/action-download-artifact@v2
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-  #         workflow: all_solutions.yml
-  #         run_id: ${{ github.event.inputs.run_id }}
-  #         name: homefolders
-  #         path: ${{ github.workspace }}
-  #         repo: ${{ github.repository }}
-      
-  #     - name: Upload Agent Home Folders Locally
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: homefolders
-  #         path: ${{ github.workspace }}/newrelichome*
-  #         if-no-files-found: error
-
-  #     - name: Download Integration Tests
-  #       if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
-  #       uses: dawidd6/action-download-artifact@v2
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-  #         workflow: all_solutions.yml
-  #         run_id: ${{ github.event.inputs.run_id }}
-  #         name: integrationtests
-  #         path: ${{ github.workspace }}
-  #         repo: ${{ github.repository }}
-      
-  #     - name: Upload Integration Tests Locally
-  #       if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: integrationtests
-  #         path: |
-  #           ${{ github.workspace }}/test.runsettings  # Force the artifacts to use repo root as root of package.
-  #           ${{ github.workspace }}/tests/Agent/IntegrationTests/**/bin/**/*
-  #           ${{ github.workspace }}/tests/Agent/IntegrationTests/**/Deploy/**/*
-  #           !${{ github.workspace }}/tests/Agent/IntegrationTests/**/obj/**/*
-  #         if-no-files-found: error
-
-  #     # This step is necessary to avoid redundantly uploading the "bounded" integration test assets along with the unbounded ones in the following steps
-  #     - name: Clear integration tests from workspace
-  #       if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
-  #       run: |
-  #         rm -r ${{ github.workspace }}/tests
-  #       shell: bash
-
-  #     - name: Download Unbounded Integration Tests
-  #       if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'UnboundedIntegrationTests'
-  #       uses: dawidd6/action-download-artifact@v2
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-  #         workflow: all_solutions.yml
-  #         run_id: ${{ github.event.inputs.run_id }}
-  #         name: unboundedintegrationtests
-  #         path: ${{ github.workspace }}
-  #         repo: ${{ github.repository }}
-      
-  #     - name: Upload Unbounded Integration Tests Locally
-  #       if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'UnboundedIntegrationTests'
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: unboundedintegrationtests
-  #         path: |
-  #           ${{ github.workspace }}/test.runsettings  # Force the artifacts to use repo root as root of package.
-  #           ${{ github.workspace }}/tests/Agent/IntegrationTests/**/bin/**/*
-  #           ${{ github.workspace }}/tests/Agent/IntegrationTests/**/Deploy/**/*
-  #           !${{ github.workspace }}/tests/Agent/IntegrationTests/**/obj/**/*
-  #         if-no-files-found: error
-
   setup-matrices:
     #needs: [get-external-artifacts]
     name: Configure namespaces for test matrices
@@ -191,15 +111,7 @@ jobs:
           path: ${{ github.workspace }}/src/Agent
           repo: ${{ github.repository }}
       
-      # - name: Upload Agent Home Folders Locally
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: homefolders
-      #     path: ${{ github.workspace }}/newrelichome*
-      #     if-no-files-found: error
-
       - name: Download Integration Tests
-        if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -208,18 +120,6 @@ jobs:
           name: integrationtests
           path: ${{ github.workspace }}
           repo: ${{ github.repository }}
-
-      # - name: Download Agent Home Folders
-      #   uses: actions/download-artifact@v2
-      #   with:
-      #     name: homefolders
-      #     path: src/Agent
-
-      # - name: Download Integration Test Artifacts
-      #   uses: actions/download-artifact/@v2
-      #   with:
-      #     name: integrationtests
-      #     # Should not need a path because the integration test artifacts are archived with the full directory structure
 
       - name: Install dependencies
         run: |
@@ -302,16 +202,24 @@ jobs:
           dotnet-version: '6.0.x'
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: dawidd6/action-download-artifact@v2
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: all_solutions.yml
+          run_id: ${{ github.event.inputs.run_id }}
           name: homefolders
-          path: src/Agent
-
-      - name: Download Unbounded Integration Test Artifacts
-        uses: actions/download-artifact/@v2
+          path: ${{ github.workspace }}/src/Agent
+          repo: ${{ github.repository }}
+      
+      - name: Download Integration Tests
+        uses: dawidd6/action-download-artifact@v2
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: all_solutions.yml
+          run_id: ${{ github.event.inputs.run_id }}
           name: unboundedintegrationtests
-          # Should not need a path because the integration test artifacts are archived with the full directory structure
+          path: ${{ github.workspace }}
+          repo: ${{ github.repository }}
       
       - name: Setup TLS
         run: |
