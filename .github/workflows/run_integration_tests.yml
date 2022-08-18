@@ -21,10 +21,6 @@ on:
         description: 'A comma-separated, single-quoted list of unbounded integration test namespaces to run (e.g. "''MsSql'', ''Couchbase''").  If not specified, all unbounded tests will be run.'
         required: true
         default: 'ALL'
-      # iterations:
-      #   description: 'Number of times to execute each test, regardless of success or failure.  Defaults to 1.'
-      #   required: true
-      #   default: 1
 
 env:
   DOTNET_NOLOGO: true
@@ -173,26 +169,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET Core 2.2.103
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '2.2.103'
+      # - name: Setup .NET Core 2.2.103
+      #   uses: actions/setup-dotnet@v1
+      #   with:
+      #     dotnet-version: '2.2.103'
 
-      - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '3.1.100'
+      # - name: Setup .NET Core 3.1.100
+      #   uses: actions/setup-dotnet@v1
+      #   with:
+      #     dotnet-version: '3.1.100'
 
-      - name: Setup .NET 5.0
-        uses: actions/setup-dotnet@v1
-        with:
-            dotnet-version: '5.0.100'
+      # - name: Setup .NET 5.0
+      #   uses: actions/setup-dotnet@v1
+      #   with:
+      #       dotnet-version: '5.0.100'
 
       - name: Setup .NET 6.0
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '6.0.x'
-          include-prerelease: true
+          #include-prerelease: true
 
       - name: Set up secrets
         env:
@@ -283,9 +279,9 @@ jobs:
       enhanced_logging: false
 
     steps:
-      - name: My IP
-        run: (Invoke-WebRequest -uri "http://ifconfig.me/ip").Content
-        shell: powershell
+      # - name: My IP
+      #   run: (Invoke-WebRequest -uri "http://ifconfig.me/ip").Content
+      #   shell: powershell
         
       - name: Checkout
         uses: actions/checkout@v2
@@ -296,7 +292,7 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '6.0.x'
-          include-prerelease: true
+          #include-prerelease: true
 
       - name: Download Agent Home Folders
         uses: actions/download-artifact@v2
