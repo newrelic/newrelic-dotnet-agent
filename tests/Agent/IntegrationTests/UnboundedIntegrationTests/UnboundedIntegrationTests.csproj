@@ -35,6 +35,15 @@
   <ItemGroup>
     <None Remove="RemoteServiceFixtures\MSMQBasicMVCApplicationFixture.cs" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="para-xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Common.Logging" Version="3.3.1" />
     <PackageReference Include="Common.Logging.Core" Version="3.3.1" />

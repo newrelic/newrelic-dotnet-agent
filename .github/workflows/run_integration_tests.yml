@@ -9,6 +9,7 @@ on:
       solutions:
         type: choice
         description: Which test solutions (IntegrationTests, UnboundedIntegrationTests, or both) to run
+        required: false
         options:
         - IntegrationTests
         - UnboundedIntegrationTests
@@ -24,6 +25,7 @@ on:
       parallelize:
         type: boolean
         description: 'Run tests in parallel within each namespace'
+        required: false
 
 env:
   DOTNET_NOLOGO: true
@@ -82,6 +84,7 @@ jobs:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
       xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
       integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net462/NewRelic.Agent.IntegrationTests.dll
+      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net462
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
@@ -138,21 +141,24 @@ jobs:
           }
 
           Write-Host "Run tests"
-          $parallelXunitOption = "none" 
 
           # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
           # if ("${{ matrix.namespace }}" -like "Logging.*" ) {
-          #   Write-Host "Logging tests detected, running xunit tests in parallel."
-          #   $parallelXunitOption = "all"
+          # Will need to replace the default xunit.runner.json with one that supports parallel
+          # Having both in the solution and swap by renaming would be simplest method
+          # A para-xunit.runner.json has already been added to the integration test repo to support this
+          # Rename-Item -Path "${{ env.integration_tests_path }}/xunit.runner.json" -NewName nopara-xunit.runner.json -Force
+          # Rename-Item -Path "${{ env.integration_tests_path }}/para-xunit.runner.json" -NewName xunit.runner.json -Force
           # }
 
           # Enable test parallelization based on input
           if ("${{ github.event.inputs.parallelize }}" -eq "true") {
-            $parallelXunitOption = "all"
+            Rename-Item -Path "${{ env.integration_tests_path }}/xunit.runner.json" -NewName nopara-xunit.runner.json -Force
+            Rename-Item -Path "${{ env.integration_tests_path }}/para-xunit.runner.json" -NewName xunit.runner.json -Force
           }
 
-          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
-          
+          dotnet test ${{ env.integration_tests_dll }} --filter FullyQualifiedName~NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
             Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
@@ -178,7 +184,7 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           name: integration-test-artifacts
-          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
+          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
   run-unbounded-tests:
@@ -195,6 +201,7 @@ jobs:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
       xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
       unbounded_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net462/NewRelic.Agent.UnboundedIntegrationTests.dll
+      unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net462
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
@@ -298,14 +305,14 @@ jobs:
             netstat -no  
           }
 
-          $parallelXunitOption = "none"
-
           # Enable test parallelization based on input
           if ("${{ github.event.inputs.parallelize }}" -eq "true") {
+            Rename-Item -Path "${{ env.unbounded_tests_path }}/xunit.runner.json" -NewName nopara-xunit.runner.json -Force
+            Rename-Item -Path "${{ env.unbounded_tests_path }}/para-xunit.runner.json" -NewName xunit.runner.json -Force
             $parallelXunitOption = "all"
           }
 
-          ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+          dotnet test ${{ env.unbounded_tests_dll }} --filter FullyQualifiedName~NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
@@ -332,7 +339,7 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           name: integration-test-artifacts
-          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
+          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
 
