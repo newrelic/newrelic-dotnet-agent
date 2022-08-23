@@ -481,8 +481,6 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
-      integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net462/NewRelic.Agent.IntegrationTests.dll
       integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net462
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
@@ -554,7 +552,7 @@ jobs:
           # }
           $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
-          dotnet test ${{ env.integration_tests_dll }} --filter FullyQualifiedName~NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          dotnet test ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.dll --filter FullyQualifiedName~NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
@@ -661,8 +659,7 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
-      unbounded_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net462/NewRelic.Agent.UnboundedIntegrationTests.dll
+      unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net462
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
@@ -759,12 +756,12 @@ jobs:
           }
 
           # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
-          $json = Get-Content "${{ env.integration_tests_path }}/xunit.runner.json" | ConvertFrom-Json
+          $json = Get-Content "${{ env.unbounded_tests_path }}/xunit.runner.json" | ConvertFrom-Json
           $json | Add-Member -Name "parallelizeAssembly" -Value $false -MemberType NoteProperty
           $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
-          $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
+          $json | ConvertTo-Json | Out-File "${{ env.unbounded_tests_path }}/xunit.runner.json"
 
-          dotnet test ${{ env.unbounded_tests_dll }} --filter FullyQualifiedName~NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
+          dotnet test ${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.dll --filter FullyQualifiedName~NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
