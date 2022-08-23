@@ -37,9 +37,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Content Include="para-xunit.runner.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="xunit.runner.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

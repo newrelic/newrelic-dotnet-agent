@@ -545,13 +545,14 @@ jobs:
           Write-Host "Run tests"
 
           # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
+          $json = Get-Content "${{ env.integration_tests_path }}/xunit.runner.json" | ConvertFrom-Json
+          $json | Add-Member -Name "parallelizeAssembly" -Value $false -MemberType NoteProperty
+          $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
           # if ("${{ matrix.namespace }}" -like "Logging.*" ) {
-          # Will need to replace the default xunit.runner.json with one that supports parallel
-          # Having both in the solution and swap by renaming would be simplest method
-          # A para-xunit.runner.json has already been added to the integration test repo to support this
-          # Rename-Item -Path "${{ env.integration_tests_path }}/xunit.runner.json" -NewName nopara-xunit.runner.json -Force
-          # Rename-Item -Path "${{ env.integration_tests_path }}/para-xunit.runner.json" -NewName xunit.runner.json -Force
+          #   $json.parallelizeAssembly = $true
+          #   $json.parallelizeTestCollections = $true
           # }
+          $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
           dotnet test ${{ env.integration_tests_dll }} --filter FullyQualifiedName~NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           
@@ -756,6 +757,12 @@ jobs:
             Write-Host "List ports in use"
             netstat -no  
           }
+
+          # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
+          $json = Get-Content "${{ env.integration_tests_path }}/xunit.runner.json" | ConvertFrom-Json
+          $json | Add-Member -Name "parallelizeAssembly" -Value $false -MemberType NoteProperty
+          $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
+          $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
           dotnet test ${{ env.unbounded_tests_dll }} --filter FullyQualifiedName~NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
