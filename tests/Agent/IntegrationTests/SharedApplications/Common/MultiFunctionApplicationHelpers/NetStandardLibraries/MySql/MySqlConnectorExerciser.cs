@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using MySqlConnector;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
@@ -32,7 +33,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
                         dates.Add(reader.GetString(reader.GetOrdinal("_date")));
                     }
                 }
-                ConsoleMFLogger.Info(string.Join(",", dates));
+                string res = string.Join(",", dates);
+                ConsoleMFLogger.Info(res);
+                return res;
             });
         }
 
@@ -43,7 +46,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
         {
             ExecuteCommand(command =>
             {
-                ConsoleMFLogger.Info((string)command.ExecuteScalar());
+                string res = (string)command.ExecuteScalar();
+                ConsoleMFLogger.Info(res);
+                return res;
             });
         }
 
@@ -54,14 +59,15 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
         {
             command.ExecuteNonQuery();
             ConsoleMFLogger.Info("done");
+            return "done";
         });
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void ExecuteReaderAsync()
+        public async Task ExecuteReaderAsync()
         {
-            ExecuteCommand(async command =>
+            await ExecuteCommandAsync(async command =>
             {
                 var dates = new List<string>();
 
@@ -72,27 +78,37 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
                         dates.Add(reader.GetString(reader.GetOrdinal("_date")));
                     }
                 }
-                ConsoleMFLogger.Info(string.Join(",", dates));
+                string res = string.Join(",", dates);
+                ConsoleMFLogger.Info(res);
+                return res;
             });
         }
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void ExecuteScalarAsync() => ExecuteDbCommand(async command =>
+        public async Task ExecuteScalarAsync()
         {
-            string res = (string)await command.ExecuteScalarAsync();
-            ConsoleMFLogger.Info(res);
-        });
+            await ExecuteDbCommandAsync(async command =>
+            {
+                string res = (string)await command.ExecuteScalarAsync();
+                ConsoleMFLogger.Info(res);
+                return res;
+            });
+        }
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void ExecuteNonQueryAsync() => ExecuteDbCommand(async command =>
+        public async Task ExecuteNonQueryAsync()
         {
-            await command.ExecuteNonQueryAsync();
-            ConsoleMFLogger.Info("done");
-        });
+            await ExecuteDbCommandAsync(async command =>
+            {
+                await command.ExecuteNonQueryAsync();
+                ConsoleMFLogger.Info("done");
+                return "done";
+            });
+        }
 
         [LibraryMethod]
         [Transaction]
@@ -109,30 +125,44 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
                         dates.Add(reader.GetString(reader.GetOrdinal("_date")));
                     }
                 }
-                ConsoleMFLogger.Info(string.Join(",", dates));
+                string res = string.Join(",", dates);
+                ConsoleMFLogger.Info(res);
+                return res;
             });
         }
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void DbCommandExecuteScalar() => ExecuteDbCommand(command => ConsoleMFLogger.Info((string)command.ExecuteScalar()));
+        public void DbCommandExecuteScalar()
+        {
+            ExecuteDbCommand(command =>
+            {
+                string res = (string)command.ExecuteScalar();
+                ConsoleMFLogger.Info(res);
+                return res;
+            });
+        }
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void DbCommandExecuteNonQuery() => ExecuteDbCommand(command =>
+        public void DbCommandExecuteNonQuery()
         {
-            command.ExecuteNonQuery();
-            ConsoleMFLogger.Info("done");
-        });
+            ExecuteDbCommand(command =>
+            {
+                command.ExecuteNonQuery();
+                ConsoleMFLogger.Info("done");
+                return "done";
+            });
+        }
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void DbCommandExecuteReaderAsync()
+        public async Task DbCommandExecuteReaderAsync()
         {
-            ExecuteDbCommand(async command =>
+            await ExecuteDbCommandAsync(async command =>
             {
                 var dates = new List<string>();
 
@@ -143,35 +173,61 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
                         dates.Add(reader.GetString(reader.GetOrdinal("_date")));
                     }
                 }
-                ConsoleMFLogger.Info(string.Join(",", dates));
+                string res = string.Join(",", dates);
+                ConsoleMFLogger.Info(res);
+                return res;
             });
         }
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void DbCommandExecuteScalarAsync() => ExecuteDbCommand(async command => ConsoleMFLogger.Info((string)await command.ExecuteScalarAsync()));
+        public async Task DbCommandExecuteScalarAsync()
+        {
+            await ExecuteDbCommandAsync(async command =>
+            {
+                string res = (string)await command.ExecuteScalarAsync();
+                ConsoleMFLogger.Info(res);
+                return res;
+            });
+        }
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void DbCommandExecuteNonQueryAsync() => ExecuteDbCommand(async command =>
+        public async Task DbCommandExecuteNonQueryAsync()
         {
-            await command.ExecuteNonQueryAsync();
-            ConsoleMFLogger.Info("done");
-        });
+            await ExecuteDbCommandAsync(async command =>
+            {
+                await command.ExecuteNonQueryAsync();
+                ConsoleMFLogger.Info("done");
+                return "done";
+            });
+        }
 
-        private void ExecuteCommand(Action<MySqlCommand> action)
+        private string ExecuteCommand(Func<MySqlCommand, string> action) =>
+             ExecuteCommandAsync(command => Task.FromResult(action(command))).GetAwaiter().GetResult();
+
+        private async Task<string> ExecuteCommandAsync(Func<MySqlCommand, Task<string>> action)
         {
+            string result;
+
             using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
             using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1", connection))
             {
                 connection.Open();
-                action(command);
+                result = await action(command);
             }
+
+            return result;
         }
 
-        private void ExecuteDbCommand(Action<DbCommand> action) => ExecuteCommand(action);
+        private string ExecuteDbCommand(Func<DbCommand, string> action) => ExecuteCommand(action);
+
+        private async Task ExecuteDbCommandAsync(Func<DbCommand, Task<string>> action)
+        {
+            await ExecuteCommandAsync(async x => await action(x));
+        }
 
         [LibraryMethod]
         [Transaction]
