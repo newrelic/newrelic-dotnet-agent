@@ -37,7 +37,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     _logger.LogWarning(message);
                     break;
                 case "ERROR":
-                    _logger.LogError(message);
+                    var exception = ExceptionBuilder.BuildException(message);
+                    _logger.LogError(exception, exception.Message);
                     break;
                 case "FATAL":
                     _logger.LogCritical(message);

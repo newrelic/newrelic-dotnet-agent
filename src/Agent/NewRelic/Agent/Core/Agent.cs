@@ -15,6 +15,7 @@ using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
@@ -406,7 +407,7 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
         }
 
-        public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, string spanId, string traceId)
+        public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException, string spanId, string traceId)
         {
             _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
 
@@ -431,26 +432,44 @@ namespace NewRelic.Agent.Core
                 {
                     return;
                 }
+
                 var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
+
+                var logException = getLogException(logEvent);
+
+                LogEventWireModel logEventWireModel = null;
+                if (logException != null)
+                {
+                    // logException.StackTrace.Split(new[] { '\n' }, 300)
+                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel,
+                        StackTraces.ScrubAndTruncate(logException, 300), logException.Message, logException.GetType().ToString(),
+                        spanId, traceId);
+                }
+                else
+                {
+                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId);
+                }
 
                 var transaction = _transactionService.GetCurrentInternalTransaction();
                 if (transaction != null && transaction.IsValid)
                 {
                     // use transaction batching for messages in transactions
-                    if (!transaction.AddLogEvent(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId)))
+                    if (!transaction.AddLogEvent(logEventWireModel))
                     {
                         // AddLogEvent returns false in the case that logs have already been harvested by transaction transform.
                         // Fall back to collecting the log based on the information we have. Since the transaction was finalized,
                         // the Priority should be correct.
-                        _logEventAggregator.Collect(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId,
-                            traceId, transaction.Priority));
+
+                        logEventWireModel.Priority = transaction.Priority;
+                        _logEventAggregator.Collect(logEventWireModel);
+
                     }
                     return;
                 }
 
                 // non-transaction messages with proper sanitized priority value
-                _logEventAggregator.Collect(new LogEventWireModel(timestamp,
-                    logMessage, normalizedLevel, spanId, traceId, _transactionService.CreatePriority()));
+                logEventWireModel.Priority = _transactionService.CreatePriority();
+                _logEventAggregator.Collect(logEventWireModel);
             }
         }
 

@@ -65,5 +65,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
         [JsonProperty("trace.id", NullValueHandling = NullValueHandling.Ignore)]
         public string Traceid { get; set; }
+
+        [JsonProperty("error.stack", NullValueHandling = NullValueHandling.Ignore)]
+        public string ErrorStack { get; set; }
+
+        [JsonProperty("error.message", NullValueHandling = NullValueHandling.Ignore)]
+        public string ErrorMessage { get; set; }
+
+        [JsonProperty("error.class", NullValueHandling = NullValueHandling.Ignore)]
+        public string ErrorClass { get; set; }
     }
 }

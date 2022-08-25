@@ -1,6 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Reflection;
 using log4net;
 using log4net.Appender;
@@ -32,9 +33,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log.Warn(message);
         }
 
-        public void Error(string message)
+        public void Error(Exception exception)
         {
-            _log.Error(message);
+            _log.Error(exception.Message, exception);
         }
 
         public void Fatal(string message)

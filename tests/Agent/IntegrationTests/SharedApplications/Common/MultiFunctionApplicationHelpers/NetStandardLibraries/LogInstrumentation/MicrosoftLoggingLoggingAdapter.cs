@@ -4,6 +4,7 @@
 
 #if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
 
+using System;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Formatting.Json;
@@ -33,9 +34,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             logger.LogWarning(message);
         }
 
-        public void Error(string message)
+        public void Error(Exception exception)
         {
-            logger.LogError(message);
+            logger.LogError(exception, exception.Message);
         }
 
         public void Fatal(string message)

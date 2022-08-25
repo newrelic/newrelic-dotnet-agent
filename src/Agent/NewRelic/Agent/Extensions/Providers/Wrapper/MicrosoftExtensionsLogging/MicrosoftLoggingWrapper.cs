@@ -40,9 +40,11 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
             Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
 
+            Func<object, Exception> getLogExceptionFunc = mc => ((MethodCall)mc).MethodArguments[3] as Exception; // using "as" since we want a null if missing
+
             var xapi = agent.GetExperimentalApi();
 
-            xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+            xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
         private AfterWrappedMethodDelegate DecorateLogMessage(MEL.ILogger logger, IAgent agent)

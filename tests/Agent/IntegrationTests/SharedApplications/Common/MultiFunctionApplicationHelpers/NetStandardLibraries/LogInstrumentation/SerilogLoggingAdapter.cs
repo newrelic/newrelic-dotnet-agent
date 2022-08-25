@@ -1,6 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using Serilog;
 using Serilog.Core;
 using Serilog.Formatting.Json;
@@ -30,9 +31,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log.Warning(message);
         }
 
-        public void Error(string message)
+        public void Error(Exception exception)
         {
-            _log.Error(message);
+            _log.Error(exception, exception.Message);
         }
 
         public void Fatal(string message)
