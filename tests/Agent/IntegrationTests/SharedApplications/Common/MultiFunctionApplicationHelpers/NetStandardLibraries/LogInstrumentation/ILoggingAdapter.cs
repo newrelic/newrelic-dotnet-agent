@@ -12,7 +12,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void Warn(string message);
         public void Error(Exception exception);
         public void Fatal(string message);
-
+        public void NoMessage();
         public void Configure();
         public void ConfigurePatternLayoutAppenderForDecoration();
         public void ConfigureJsonLayoutAppenderForDecoration();

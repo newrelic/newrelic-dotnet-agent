@@ -53,6 +53,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             var result = _client.GetStringAsync(_uriBase + "test?logLevel=FATAL&message=" + message).Result;
         }
 
+        public void NoMessage()
+        {
+            var result = _client.GetStringAsync(_uriBase + "test?logLevel=FATAL&message=").Result;
+        }
+
         public void Configure()
         {
             _client = new HttpClient();

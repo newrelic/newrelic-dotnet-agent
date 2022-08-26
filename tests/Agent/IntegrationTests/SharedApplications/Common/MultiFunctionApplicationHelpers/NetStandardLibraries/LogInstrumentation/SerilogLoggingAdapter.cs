@@ -41,6 +41,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log.Fatal(message);
         }
 
+        public void NoMessage()
+        {
+            _log.Verbose(string.Empty);
+        }
+
         public void Configure()
         {
             var loggerConfig = new LoggerConfiguration();

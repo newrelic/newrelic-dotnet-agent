@@ -54,7 +54,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         [JsonProperty("timestamp")]
         public long Timestamp { get; set; }
 
-        [JsonProperty("message")]
+        [JsonProperty("message", NullValueHandling = NullValueHandling.Ignore)]
         public string Message { get; set; }
 
         [JsonProperty("level")]

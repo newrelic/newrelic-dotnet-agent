@@ -44,6 +44,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             logger.LogTrace(message);
         }
 
+        public void NoMessage()
+        {
+            logger.LogCritical(string.Empty);
+        }
+
         public void Configure()
         {
             Log.Logger = new LoggerConfiguration()

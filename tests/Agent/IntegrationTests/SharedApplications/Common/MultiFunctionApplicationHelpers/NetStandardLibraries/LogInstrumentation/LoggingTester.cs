@@ -83,6 +83,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 case "FATAL":
                     _log.Fatal(message);
                     break;
+                case "NOMESSAGE":
+                    _log.NoMessage();
+                    break;
                 default:
                     _log.Info(message);
                     break;

@@ -37,6 +37,7 @@ namespace NewRelic.Agent.Core
     public class Agent : IAgent // any changes to api, update the interface in extensions and re-import, then implement in legacy api as NotImplementedException
     {
         public const int QueryParameterMaxStringLength = 256;
+        private const int LogExceptionStackLimit = 300;
         internal static Agent Instance;
         private static readonly ITransaction _noOpTransaction = new NoOpTransaction();
 
@@ -428,10 +429,6 @@ namespace NewRelic.Agent.Core
             if (_configurationService.Configuration.LogEventCollectorEnabled)
             {
                 var logMessage = getLogMessage(logEvent);
-                if (string.IsNullOrWhiteSpace(logMessage))
-                {
-                    return;
-                }
 
                 var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
 
@@ -440,9 +437,8 @@ namespace NewRelic.Agent.Core
                 LogEventWireModel logEventWireModel = null;
                 if (logException != null)
                 {
-                    // logException.StackTrace.Split(new[] { '\n' }, 300)
                     logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel,
-                        StackTraces.ScrubAndTruncate(logException, 300), logException.Message, logException.GetType().ToString(),
+                        StackTraces.ScrubAndTruncate(logException, LogExceptionStackLimit), logException.Message, logException.GetType().ToString(),
                         spanId, traceId);
                 }
                 else
@@ -459,11 +455,11 @@ namespace NewRelic.Agent.Core
                         // AddLogEvent returns false in the case that logs have already been harvested by transaction transform.
                         // Fall back to collecting the log based on the information we have. Since the transaction was finalized,
                         // the Priority should be correct.
-
                         logEventWireModel.Priority = transaction.Priority;
                         _logEventAggregator.Collect(logEventWireModel);
 
                     }
+
                     return;
                 }
 

@@ -60,8 +60,13 @@ namespace NewRelic.Agent.Core.JsonConverters
                 jsonWriter.WriteStartObject();
                 jsonWriter.WritePropertyName(TimeStamp);
                 jsonWriter.WriteValue(logEvent.TimeStamp);
-                jsonWriter.WritePropertyName(Message);
-                jsonWriter.WriteValue(logEvent.Message);
+
+                if (!string.IsNullOrEmpty(logEvent.Message))
+                {
+                    jsonWriter.WritePropertyName(Message);
+                    jsonWriter.WriteValue(logEvent.Message);
+                }
+
                 jsonWriter.WritePropertyName(Level);
                 jsonWriter.WriteValue(logEvent.Level);
 
