@@ -19,7 +19,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void GetPostgres()
         {
-            var address = $"http://localhost:{Port}/Postgres/Postgres";
+            var address = $"http://127.0.0.1:{Port}/Postgres/Postgres";
 
             using (var webClient = new WebClient())
             {
@@ -30,7 +30,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void GetPostgresAsync()
         {
-            var address = $"http://localhost:{Port}/Postgres/PostgresAsync";
+            var address = $"http://127.0.0.1:{Port}/Postgres/PostgresAsync";
 
             using (var webClient = new WebClient())
             {
@@ -41,7 +41,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void PostgresParameterizedStoredProcedure(string procedureName)
         {
-            var address = $"http://localhost:{Port}/Postgres/PostgresParameterizedStoredProcedure?procedureName={procedureName}";
+            var address = $"http://127.0.0.1:{Port}/Postgres/PostgresParameterizedStoredProcedure?procedureName={procedureName}";
 
             using (var webClient = new WebClient())
             {
@@ -52,7 +52,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void PostgresParameterizedStoredProcedureAsync(string procedureName)
         {
-            var address = $"http://localhost:{Port}/Postgres/PostgresParameterizedStoredProcedureAsync?procedureName={procedureName}";
+            var address = $"http://127.0.0.1:{Port}/Postgres/PostgresParameterizedStoredProcedureAsync?procedureName={procedureName}";
 
             using (var webClient = new WebClient())
             {
@@ -63,7 +63,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void PostgresExecuteScalar()
         {
-            var address = $"http://localhost:{Port}/Postgres/PostgresExecuteScalar";
+            var address = $"http://127.0.0.1:{Port}/Postgres/PostgresExecuteScalar";
 
             using (var webClient = new WebClient())
             {
@@ -74,7 +74,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void PostgresExecuteScalarAsync()
         {
-            var address = $"http://localhost:{Port}/Postgres/PostgresExecuteScalarAsync";
+            var address = $"http://127.0.0.1:{Port}/Postgres/PostgresExecuteScalarAsync";
 
             using (var webClient = new WebClient())
             {
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void PostgresIteratorTest()
         {
-            var address = $"http://localhost:{Port}/Postgres/PostgresIteratorTest";
+            var address = $"http://127.0.0.1:{Port}/Postgres/PostgresIteratorTest";
 
             using (var webClient = new WebClient())
             {
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public void PostgresAsyncIteratorTest()
         {
-            var address = $"http://localhost:{Port}/Postgres/PostgresAsyncIteratorTest";
+            var address = $"http://127.0.0.1:{Port}/Postgres/PostgresAsyncIteratorTest";
 
             using (var webClient = new WebClient())
             {

@@ -27,7 +27,7 @@ namespace ServiceStackApplication
             // This plugin attempts to serialize everything in HttpContext using ServiceStack.Text
             // It tests that we do not reintroduce a StackOverflow issue that can crash apps.
             // We don't formally take responsibility over this but we do our best to do no harm.
-            Plugins.Add(new SeqRequestLogsFeature { SeqUrl = "http://localhost:5341" });
+            Plugins.Add(new SeqRequestLogsFeature { SeqUrl = "http://127.0.0.1:5341" });
         }
     }
 }

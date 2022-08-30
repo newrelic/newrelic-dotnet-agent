@@ -3,8 +3,8 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:5768/",
-      "sslPort": 0
+        "applicationUrl": "http://127.0.0.1:5768/",
+        "sslPort": 0
     }
   },
   "profiles": {
@@ -17,13 +17,13 @@
       }
     },
     "MongoDB2_6CoreApplication": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "launchUrl": "api/values",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "http://localhost:5769/"
+        "commandName": "Project",
+        "launchBrowser": true,
+        "launchUrl": "api/values",
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development"
+        },
+        "applicationUrl": "http://127.0.0.1:5769/"
     }
   }
 }

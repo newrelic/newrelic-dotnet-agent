@@ -182,7 +182,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             };
             var attributes = new[]
             {
-                new KeyValuePair<string, string>("bindingInformation", string.Format(@"*:{0}:", Port)),
+                new KeyValuePair<string, string>("bindingInformation", string.Format(@"127.0.0.1:{0}:", Port)),
             };
             CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, string.Empty, nodes, attributes);
         }

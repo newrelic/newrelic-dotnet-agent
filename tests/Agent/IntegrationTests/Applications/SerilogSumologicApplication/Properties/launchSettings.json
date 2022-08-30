@@ -3,8 +3,8 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:50817/",
-      "sslPort": 0
+        "applicationUrl": "http://127.0.0.1:50817/",
+        "sslPort": 0
     }
   },
   "profiles": {
@@ -16,12 +16,12 @@
       }
     },
     "sumologictest": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "http://localhost:50818/"
+        "commandName": "Project",
+        "launchBrowser": true,
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development"
+        },
+        "applicationUrl": "http://127.0.0.1:50818/"
     }
   }
 }

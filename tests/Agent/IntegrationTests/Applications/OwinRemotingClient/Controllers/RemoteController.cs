@@ -14,14 +14,14 @@ namespace OwinRemotingClient.Controllers
         [Route("GetObjectTcp")]
         public string GetObjectTcp()
         {
-            var myMarshalByRefClassObj = (MyMarshalByRefClass)Activator.GetObject(typeof(MyMarshalByRefClass), "tcp://localhost:7878/GetObject");
+            var myMarshalByRefClassObj = (MyMarshalByRefClass)Activator.GetObject(typeof(MyMarshalByRefClass), "tcp://127.0.0.1:7878/GetObject");
             return GetObject(myMarshalByRefClassObj);
         }
 
         [Route("GetObjectHttp")]
         public string GetObjectHttp()
         {
-            var myMarshalByRefClassObj = (MyMarshalByRefClass)Activator.GetObject(typeof(MyMarshalByRefClass), "http://localhost:7879/GetObject");
+            var myMarshalByRefClassObj = (MyMarshalByRefClass)Activator.GetObject(typeof(MyMarshalByRefClass), "http://127.0.0.1:7879/GetObject");
             return GetObject(myMarshalByRefClassObj);
         }
 

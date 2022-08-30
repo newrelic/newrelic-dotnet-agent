@@ -20,12 +20,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Get()
         {
-            var address = $"http://localhost:{Port}/";
+            var address = $"http://127.0.0.1:{Port}/";
             DownloadStringAndAssertContains(address, "<html>");
         }
         public void GetCORSPreflight()
         {
-            var address = $"http://localhost:{Port}/Home/About";
+            var address = $"http://127.0.0.1:{Port}/Home/About";
             var request = (HttpWebRequest)WebRequest.Create(address);
             request.Method = "OPTIONS";
             request.Headers.Add("Origin", "http://example.com");
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void MakePostRequestWithCustomRequestHeader(Dictionary<string, string> customHeadersToAdd)
         {
-            var address = $"http://localhost:{Port}/";
+            var address = $"http://127.0.0.1:{Port}/";
             var request = (HttpWebRequest)WebRequest.Create(address);
             request.Method = "POST";
             request.Referer = "http://example.com/";
@@ -70,21 +70,21 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void ThrowException()
         {
-            var address = $"http://localhost:{Port}/Home/ThrowException";
+            var address = $"http://127.0.0.1:{Port}/Home/ThrowException";
             var webClient = new WebClient();
             Assert.Throws<WebException>(() => webClient.DownloadString(address));
         }
 
         public void ThrowExceptionWithMessage(string exceptionMessage)
         {
-            var address = $"http://localhost:{Port}/ExpectedErrorTest/ThrowExceptionWithMessage?exceptionMessage={exceptionMessage}";
+            var address = $"http://127.0.0.1:{Port}/ExpectedErrorTest/ThrowExceptionWithMessage?exceptionMessage={exceptionMessage}";
             var webClient = new WebClient();
             Assert.Throws<WebException>(() => webClient.DownloadString(address));
         }
 
         public void ReturnADesiredStatusCode(int statusCode)
         {
-            var address = $"http://localhost:{Port}/ExpectedErrorTest/ReturnADesiredStatusCode?statusCode={statusCode}";
+            var address = $"http://127.0.0.1:{Port}/ExpectedErrorTest/ReturnADesiredStatusCode?statusCode={statusCode}";
             var webClient = new WebClient();
             Assert.Throws<WebException>(() => webClient.DownloadString(address));
         }
@@ -92,44 +92,44 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void ThrowCustomException()
         {
-            var address = $"http://localhost:{Port}/ExpectedErrorTest/ThrowCustomException";
+            var address = $"http://127.0.0.1:{Port}/ExpectedErrorTest/ThrowCustomException";
             var webClient = new WebClient();
             Assert.Throws<WebException>(() => webClient.DownloadString(address));
         }
 
         public void GetWithData(string requestParameter)
         {
-            var address = $"http://localhost:{Port}/Home/Query?data={requestParameter}";
+            var address = $"http://127.0.0.1:{Port}/Home/Query?data={requestParameter}";
             DownloadStringAndAssertContains(address, "<html>");
         }
 
         public void GetHttpClient()
         {
-            var address = $"http://localhost:{Port}/Home/HttpClient";
+            var address = $"http://127.0.0.1:{Port}/Home/HttpClient";
             DownloadStringAndAssertEqual(address, "Worked");
         }
 
         public void GetHttpClientTaskCancelled()
         {
-            var address = $"http://localhost:{Port}/Home/HttpClientTaskCancelled";
+            var address = $"http://127.0.0.1:{Port}/Home/HttpClientTaskCancelled";
             DownloadStringAndAssertEqual(address, "Worked");
         }
 
         public void GetHttpClientFactory()
         {
-            var address = $"http://localhost:{Port}/Home/HttpClientFactory";
+            var address = $"http://127.0.0.1:{Port}/Home/HttpClientFactory";
             DownloadStringAndAssertEqual(address, "Worked");
         }
 
         public void GetTypedHttpClient()
         {
-            var address = $"http://localhost:{Port}/Home/TypedHttpClient";
+            var address = $"http://127.0.0.1:{Port}/Home/TypedHttpClient";
             DownloadStringAndAssertEqual(address, "Worked");
         }
 
         public void GetCallAsyncExternal()
         {
-            var address = $"http://localhost:{Port}/DetachWrapper/CallAsyncExternal";
+            var address = $"http://127.0.0.1:{Port}/DetachWrapper/CallAsyncExternal";
             DownloadStringAndAssertEqual(address, "Worked");
         }
     }

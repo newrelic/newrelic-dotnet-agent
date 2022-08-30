@@ -42,6 +42,10 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
                     _fixture.FirstCallApplication.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
                     _fixture.SecondCallApplication.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
                     _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
+
+                    // We need the metrics to be sent for this test
+                    _fixture.FirstCallApplication.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(60));
+                    _fixture.SecondCallApplication.AgentLog.WaitForLogLines(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromSeconds(60));
                 }
             );
 
@@ -363,10 +367,10 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
                 new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/FirstCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
 
                 new Assertions.ExpectedMetric { metricName = @"DotNet/FirstCallController/CallNext", CallCountAllHarvests = ExpectedTransactionCount },
-                new Assertions.ExpectedMetric { metricName = @"External/localhost/Stream/GET", CallCountAllHarvests = ExpectedTransactionCount },
+                new Assertions.ExpectedMetric { metricName = @"External/127.0.0.1/Stream/GET", CallCountAllHarvests = ExpectedTransactionCount },
 
                 new Assertions.ExpectedMetric { metricName = @"DotNet/FirstCallController/CallNext", metricScope = @"WebTransaction/MVC/FirstCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
-                new Assertions.ExpectedMetric { metricName = @"External/localhost/Stream/GET", metricScope = @"WebTransaction/MVC/FirstCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
+                new Assertions.ExpectedMetric { metricName = @"External/127.0.0.1/Stream/GET", metricScope = @"WebTransaction/MVC/FirstCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/FirstCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
             };
 
@@ -408,10 +412,10 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
                 new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/SecondCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
 
                 new Assertions.ExpectedMetric { metricName = @"DotNet/SecondCallController/CallNext", CallCountAllHarvests = ExpectedTransactionCount },
-                new Assertions.ExpectedMetric { metricName = @"External/localhost/Stream/GET", CallCountAllHarvests = ExpectedTransactionCount },
+                new Assertions.ExpectedMetric { metricName = @"External/127.0.0.1/Stream/GET", CallCountAllHarvests = ExpectedTransactionCount },
 
                 new Assertions.ExpectedMetric { metricName = @"DotNet/SecondCallController/CallNext", metricScope = @"WebTransaction/MVC/SecondCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
-                new Assertions.ExpectedMetric { metricName = @"External/localhost/Stream/GET", metricScope = @"WebTransaction/MVC/SecondCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
+                new Assertions.ExpectedMetric { metricName = @"External/127.0.0.1/Stream/GET", metricScope = @"WebTransaction/MVC/SecondCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/SecondCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
             };
 

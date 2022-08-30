@@ -12,7 +12,7 @@ namespace BasicMvcApplication.Controllers
     {
         public string Get()
         {
-            using (var client = new RedisClient("localhost"))
+            using (var client = new RedisClient("127.0.0.1"))
             {
                 client.ServerVersionNumber = 1;
 

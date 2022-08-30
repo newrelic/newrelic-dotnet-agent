@@ -3,8 +3,8 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:4390/",
-      "sslPort": 0
+        "applicationUrl": "http://127.0.0.1:4390/",
+        "sslPort": 0
     }
   },
   "profiles": {
@@ -16,12 +16,12 @@
       }
     },
     "AspNetCoreMvcFrameworkApplication": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "http://localhost:4391/"
+        "commandName": "Project",
+        "launchBrowser": true,
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development"
+        },
+        "applicationUrl": "http://127.0.0.1:4391/"
     }
   }
 }

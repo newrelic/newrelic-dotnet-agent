@@ -35,7 +35,7 @@ namespace AspNetCore3Features
                 {
                     webBuilder
                         .UseStartup<Startup>()
-                        .UseUrls($@"http://localhost:{_port}/");
+                        .UseUrls($@"http://127.0.0.1:{_port}/");
                 });
 
     }

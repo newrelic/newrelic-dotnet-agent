@@ -29,7 +29,7 @@ namespace AspNetCoreMvcCoreFrameworkApplication
         public static IWebHost BuildWebHost(string[] args, string port) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .UseUrls($@"http://localhost:{port}/")
+                .UseUrls($@"http://127.0.0.1:{port}/")
                 .Build();
     }
 }

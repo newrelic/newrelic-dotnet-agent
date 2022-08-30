@@ -31,7 +31,7 @@ namespace Owin4WebApi
 
         private void RealMain()
         {
-            var baseAddress = string.Format(@"http://*:{0}/", Port);
+            var baseAddress = string.Format(@"http://127.0.0.1:{0}/", Port);
             using (WebApp.Start<Startup>(baseAddress))
             {
                 var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + Port.ToString());

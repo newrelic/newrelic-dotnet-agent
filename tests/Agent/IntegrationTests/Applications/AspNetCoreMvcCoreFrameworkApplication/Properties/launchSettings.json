@@ -2,10 +2,10 @@
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "iisSettings": {
     "windowsAuthentication": false, 
-    "anonymousAuthentication": true, 
+    "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:9125",
-      "sslPort": 0
+        "applicationUrl": "http://127.0.0.1:9125",
+        "sslPort": 0
     }
   },
   "profiles": {
@@ -18,13 +18,13 @@
       }
     },
     "AspNetCoreMvcCoreFrameworkApplication": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "launchUrl": "api/values",
-      "applicationUrl": "http://localhost:5000",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+        "commandName": "Project",
+        "launchBrowser": true,
+        "launchUrl": "api/values",
+        "applicationUrl": "http://127.0.0.1:5000",
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development"
+        }
     }
   }
 }

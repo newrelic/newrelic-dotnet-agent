@@ -3,8 +3,8 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:61986/",
-      "sslPort": 0
+        "applicationUrl": "http://127.0.0.1:61986/",
+        "sslPort": 0
     }
   },
   "profiles": {
@@ -17,13 +17,13 @@
       }
     },
     "AspNetCoreWebApiCustomAttributesApplication": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "launchUrl": "api/values",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "http://localhost:61987/"
+        "commandName": "Project",
+        "launchBrowser": true,
+        "launchUrl": "api/values",
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development"
+        },
+        "applicationUrl": "http://127.0.0.1:61987/"
     }
   }
 }

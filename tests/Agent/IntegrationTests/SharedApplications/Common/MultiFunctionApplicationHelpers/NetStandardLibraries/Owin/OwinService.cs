@@ -27,7 +27,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Owin
 
         public void StartService(int port)
         {
-            _service = WebApp.Start(url: $"http://localhost:{port}/", _startup.Configuration);
+            _service = WebApp.Start(url: $"http://127.0.0.1:{port}/", _startup.Configuration);
             Task.Delay(7000).Wait();
         }
 

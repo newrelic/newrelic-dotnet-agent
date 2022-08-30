@@ -27,11 +27,11 @@ namespace ThreadProfileStressTest
 
             _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
 
-            Console.WriteLine($"[{_applicationName}] Invoked with args: { string.Join(" ", args) }");
+            Console.WriteLine($"[{_applicationName}] Invoked with args: {string.Join(" ", args)}");
 
             var port = GetPortFromArgs(args) ?? DefaultPort;
 
-            Console.WriteLine($"[{_applicationName}] Parsed port: { port }");
+            Console.WriteLine($"[{_applicationName}] Parsed port: {port}");
 
             var eventWaitHandleName = "app_server_wait_for_all_request_done_" + port;
 
