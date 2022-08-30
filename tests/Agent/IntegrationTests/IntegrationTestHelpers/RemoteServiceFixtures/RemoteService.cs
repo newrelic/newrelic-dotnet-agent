@@ -16,7 +16,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
     public class RemoteService : RemoteApplication
     {
-        private static readonly ConcurrentDictionary<string, object> PublishCoreAppLocks = new ConcurrentDictionary<string, object>();
+        private static readonly object _dotnetPublishLockObject = new object();
 
         protected readonly string _executableName;
 
@@ -130,7 +130,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             //We cannot run dotnet publish against the same directory concurrently.
             //Doing so causes the publish job to fail because it can't obtain a lock on files in the obj and bin directories.
-            lock (GetPublishLockObjectForCoreApp())
+            lock (_dotnetPublishLockObject)
             {
                 process.Start();
 
@@ -175,14 +175,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath}");
         }
-
-        private object GetPublishLockObjectForCoreApp()
-        {
-            return PublishCoreAppLocks.GetOrAdd(ApplicationDirectoryName, _ => new object());
-        }
-
-
-
 
         public override void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true)
         {
