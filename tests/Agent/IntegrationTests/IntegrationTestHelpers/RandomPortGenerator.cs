@@ -67,7 +67,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 tcp4Listener.Stop();
 
                 var tcp6Listener = new TcpListener(System.Net.IPAddress.IPv6Any, potentialPort);
-				tcp6Listener.ExclusiveAddressUse = true;
+                tcp6Listener.ExclusiveAddressUse = true;
                 tcp6Listener.Start();
                 tcp6Listener.Stop();
 
@@ -117,10 +117,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public static bool TryReleasePort(int port)
         {
-            lock (_usedPortLock)
-            {
-                _usedPorts.Remove(port);
-            }
             return true;
         }
     }
