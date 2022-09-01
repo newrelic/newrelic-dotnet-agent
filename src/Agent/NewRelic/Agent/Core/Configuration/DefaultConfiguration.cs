@@ -1528,10 +1528,8 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return (int)EnvironmentOverrides(
-                    ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(),
-                        _localConfiguration.customEvents.maximumSamplesStored),
-                    "MAX_EVENT_SAMPLES_STORED");
+                var maxValue = _localConfiguration.customEvents.maximumSamplesStored;
+                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(), (int)EnvironmentOverrides(maxValue, "MAX_EVENT_SAMPLES_STORED"));
             }
         }
 
@@ -1600,9 +1598,8 @@ namespace NewRelic.Agent.Core.Configuration
             get
             {
                 var maxValue = _localConfiguration.transactionEvents.maximumSamplesStored;
-                return (int)EnvironmentOverrides(
-                    ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), maxValue),
-                    "MAX_TRANSACTION_SAMPLES_STORED");
+
+                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), (int)EnvironmentOverrides(maxValue, "MAX_TRANSACTION_SAMPLES_STORED"));
             }
         }
 
