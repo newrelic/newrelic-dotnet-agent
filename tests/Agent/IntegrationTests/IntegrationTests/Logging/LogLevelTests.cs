@@ -211,6 +211,16 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         }
     }
 
+    [NetCoreTest]
+    public class SerilogWebLogLevelTestsNetCore60Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public SerilogWebLogLevelTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+            ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.SerilogWeb)
+        {
+        }
+    }
+
     #endregion
 
     #region NLog
