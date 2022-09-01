@@ -33,16 +33,27 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
         private void RecordLogMessage(MethodCall methodCall, IAgent agent)
         {
-            // MSE Logging doesn't have a timestamp for us to pull so we fudge it here.
-            Func<object, DateTime> getTimestampFunc = mc => DateTime.UtcNow;
+            // We need to manually check if each log message is enabled since our MEL instrumentation takes place before
+            // logs have been filtered to enabled levels
+            var melLoggerInstance = (MEL.ILogger)methodCall.InvocationTarget;
+            var logLevelIsEnabled = melLoggerInstance.IsEnabled((MEL.LogLevel)methodCall.MethodArguments[0]);
 
-            Func<object, string> getLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
+            // TODO: Need to test what happens when the Serilog Provider (and possibly others) is used with MEL, as it
+            // TODO: subscribes to to ALL events in the pipeline with the intention of performing its own filtering.
 
-            Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
+            if (logLevelIsEnabled)
+            {
+                // MSE Logging doesn't have a timestamp for us to pull so we fudge it here.
+                Func<object, DateTime> getTimestampFunc = mc => DateTime.UtcNow;
 
-            var xapi = agent.GetExperimentalApi();
+                Func<object, string> getLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
 
-            xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+                Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
+
+                var xapi = agent.GetExperimentalApi();
+
+                xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+            }
         }
 
         private AfterWrappedMethodDelegate DecorateLogMessage(MEL.ILogger logger, IAgent agent)
