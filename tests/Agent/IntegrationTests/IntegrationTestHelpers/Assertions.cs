@@ -568,7 +568,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var succeeded = true;
             var builder = new StringBuilder();
 
-            if (!actualLogLines.Any() && actualLogLines.Any())
+            if (!actualLogLines.Any() && expectedLogLines.Any())
             {
                 builder.AppendLine("Unable to validate expected Log Lines because actualLogLines has no items.");
                 succeeded = false;
@@ -590,7 +590,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 }
             }
 
-
             Assert.True(succeeded, builder.ToString());
         }
 
@@ -603,25 +602,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var succeeded = true;
             var builder = new StringBuilder();
 
-            if (!actualLogLines.Any() && actualLogLines.Any())
+            foreach (var unexpectedLogLine in unexpectedLogLines)
             {
-                builder.AppendLine("Unable to validate expected Log Lines because actualLogLines has no items.");
-                succeeded = false;
-            }
-            else
-            {
-                foreach (var unexpectedLogLine in unexpectedLogLines)
+                var matchedLogLine = TryFindLogLine(unexpectedLogLine, actualLogLines);
+                if (matchedLogLine != null)
                 {
-                    var matchedLogLine = TryFindLogLine(unexpectedLogLine, actualLogLines);
-                    if (matchedLogLine != null)
-                    {
-                        builder.Append($"Unexpected LogLine `{unexpectedLogLine}` was found in the Log payload.");
-                        builder.AppendLine();
-                        builder.AppendLine();
+                    builder.Append($"Unexpected LogLine `{unexpectedLogLine}` was found in the Log payload.");
+                    builder.AppendLine();
+                    builder.AppendLine();
 
-                        succeeded = false;
-                        continue;
-                    }
+                    succeeded = false;
+                    continue;
                 }
             }
 
@@ -650,7 +641,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             return null;
         }
-        
+
         #endregion
 
         #region Transaction Events
