@@ -14,14 +14,17 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
+        private readonly LoggingFramework _loggingFramework;
 
         public LogLevelTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework) : base(fixture)
         {
+            _loggingFramework = loggingFramework;
+
             _fixture = fixture;
-            _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"LoggingTester SetFramework {loggingFramework}");
+            _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework}");
             _fixture.AddCommand($"LoggingTester ConfigureWithInfoLevelEnabled");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage ShouldNotBeForwardedDebugMessage DEBUG");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage ShouldBeForwardedInfoMessage INFO");
@@ -50,10 +53,27 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
         [Fact]
         public void OnlyTwoLogLinesAreSent()
         {
-            // TODO: Better assertions, this should work for now though
+            // These assertions could be improved, but this does effectively verify that DEBUG messages are ignored
             var logData = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
             Assert.NotEmpty(logData);
             Assert.Equal(2, logData.Length);
+        }
+
+        [Fact]
+        public void CorrectLogsWereForwarded()
+        {
+            var expectedLogLines = new Assertions.ExpectedLogLine[]
+            {   
+                new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = "ShouldBeForwardedInfoMessage" },
+                new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = "ShouldBeForwardedErrorMessage" }
+            };
+
+            var unexpectedLogLines = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "DEBUG"), LogMessage = "ShouldNotBeForwardedDebugMessage" };
+
+            var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
+
+            Assertions.LogLinesExist(expectedLogLines, logLines);
+            Assertions.LogLineDoesntExist(unexpectedLogLines, logLines);
         }
     }
 

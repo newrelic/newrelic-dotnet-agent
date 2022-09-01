@@ -24,7 +24,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            // There is no LogEvent equivilent in MSE Logging
+            // There is no LogEvent equivalent in MSE Logging
             RecordLogMessage(instrumentedMethodCall.MethodCall, agent);
 
             // need to return AfterWrappedMethodDelegate here since we have two different return options from this method.
@@ -37,9 +37,6 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
             // logs have been filtered to enabled levels
             var melLoggerInstance = (MEL.ILogger)methodCall.InvocationTarget;
             var logLevelIsEnabled = melLoggerInstance.IsEnabled((MEL.LogLevel)methodCall.MethodArguments[0]);
-
-            // TODO: Need to test what happens when the Serilog Provider (and possibly others) is used with MEL, as it
-            // TODO: subscribes to to ALL events in the pipeline with the intention of performing its own filtering.
 
             if (logLevelIsEnabled)
             {

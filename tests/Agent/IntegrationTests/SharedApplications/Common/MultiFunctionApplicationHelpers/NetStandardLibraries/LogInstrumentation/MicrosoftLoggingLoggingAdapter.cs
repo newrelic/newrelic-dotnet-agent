@@ -45,19 +45,18 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void Configure()
         {
-            CreateLogger(LogLevel.Debug);
+            CreateMelLogger(LogLevel.Debug);
         }
 
         public void ConfigureWithInfoLevelEnabled()
         {
-            // TODO: Need to test what happens when Serilog Provider (and possibly others) is used with MEL, as it
-            // TODO: subscribes to to ALL events in the pipeline with the intention of performing its own filtering.
-            CreateLogger(LogLevel.Information);
+            CreateMelLogger(LogLevel.Information);
         }
 
-        // NOTE: We are using serilog in this case
+        
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
+            // NOTE: This is a serilog logger we are setting up
             var serilogLogger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
@@ -66,22 +65,22 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 )
                 .CreateLogger();
 
-            CreateLogger(LogLevel.Debug, serilogLogger);
+            CreateMelLogger(LogLevel.Debug, serilogLogger);
         }
 
-        // NOTE: We are using serilog in this case
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
+            // NOTE: This is a serilog logger we are setting up
             var serilogLogger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
                 .WriteTo.Console(new JsonFormatter())
                 .CreateLogger();
 
-            CreateLogger(LogLevel.Debug, serilogLogger);
+            CreateMelLogger(LogLevel.Debug, serilogLogger);
         }
 
-        private void CreateLogger(LogLevel minimumLogLevel, Serilog.ILogger serilogLoggerImpl = null)
+        private void CreateMelLogger(LogLevel minimumLogLevel, Serilog.ILogger serilogLoggerImpl = null)
         {
             using var loggerFactory = LoggerFactory.Create(builder =>
             {
