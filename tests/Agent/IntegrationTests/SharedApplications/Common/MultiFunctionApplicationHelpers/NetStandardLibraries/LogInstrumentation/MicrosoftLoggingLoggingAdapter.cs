@@ -40,23 +40,26 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void Fatal(string message)
         {
+            // This seems odd...
             logger.LogTrace(message);
         }
 
         public void Configure()
         {
-            Log.Logger = new LoggerConfiguration()
-              .MinimumLevel.Debug()
-              .Enrich.FromLogContext()
-              .WriteTo.Console()
-              .CreateLogger();
-
-            CreateLogger(); ;
+            CreateLogger(LogLevel.Debug);
         }
 
+        public void ConfigureWithInfoLevelEnabled()
+        {
+            // TODO: Need to test what happens when Serilog Provider (and possibly others) is used with MEL, as it
+            // TODO: subscribes to to ALL events in the pipeline with the intention of performing its own filtering.
+            CreateLogger(LogLevel.Information);
+        }
+
+        // NOTE: We are using serilog in this case
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
-            Log.Logger = new LoggerConfiguration()
+            var serilogLogger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
                 .WriteTo.Console(
@@ -64,30 +67,36 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 )
                 .CreateLogger();
 
-            CreateLogger();
+            CreateLogger(LogLevel.Debug, serilogLogger);
         }
 
+        // NOTE: We are using serilog in this case
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
-            Log.Logger = new LoggerConfiguration()
-               .MinimumLevel.Debug()
-              .Enrich.FromLogContext()
-              .WriteTo.Console(new JsonFormatter())
-              .CreateLogger();
+            var serilogLogger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .Enrich.FromLogContext()
+                .WriteTo.Console(new JsonFormatter())
+                .CreateLogger();
 
-            CreateLogger();
+            CreateLogger(LogLevel.Debug, serilogLogger);
         }
 
-        private void CreateLogger()
+        private void CreateLogger(LogLevel minimumLogLevel, Serilog.ILogger serilogLoggerImpl = null)
         {
             using var loggerFactory = LoggerFactory.Create(builder =>
             {
-                builder
-                    .AddFilter("Microsoft", LogLevel.Warning)
-                    .AddFilter("System", LogLevel.Warning)
-                    .AddFilter("NonHostConsoleApp.Program", LogLevel.Debug)
-                    .AddSerilog()
-                    .AddConsole();
+                builder.AddFilter("Default", minimumLogLevel);
+
+                // Either use serilog OR the built in console appender
+                if (serilogLoggerImpl != null)
+                {
+                    builder.AddSerilog(serilogLoggerImpl);
+                }
+                else
+                {
+                    builder.AddConsole();
+                }
             });
             logger = loggerFactory.CreateLogger<LoggingTester>();
         }
