@@ -487,7 +487,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                         case "ERROR":
                             return "ERROR";
                         case "FATAL":
-                            return "TRACE";
+                            return "CRITICAL";
                         default:
                             return level;
                     }

@@ -40,8 +40,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void Fatal(string message)
         {
-            // This seems odd...
-            logger.LogTrace(message);
+            logger.LogCritical(message);
         }
 
         public void Configure()
@@ -86,7 +85,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         {
             using var loggerFactory = LoggerFactory.Create(builder =>
             {
-                builder.AddFilter("Default", minimumLogLevel);
+                builder.SetMinimumLevel(minimumLogLevel);
 
                 // Either use serilog OR the built in console appender
                 if (serilogLoggerImpl != null)
