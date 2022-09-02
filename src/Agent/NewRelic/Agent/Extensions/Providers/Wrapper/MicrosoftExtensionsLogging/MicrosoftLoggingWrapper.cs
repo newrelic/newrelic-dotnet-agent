@@ -8,7 +8,6 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 
 namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 {
@@ -49,9 +48,11 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
                 Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
 
+                Func<object, Exception> getLogExceptionFunc = mc => ((MethodCall)mc).MethodArguments[3] as Exception; // using "as" since we want a null if missing
+
                 var xapi = agent.GetExperimentalApi();
 
-                xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+                xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
             }
         }
 
