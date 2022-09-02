@@ -38,8 +38,6 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
 
             Func<object, string> getMessageFunc = l => logEvent.RenderMessage();
 
-            // This will either add the log message to the transaction or directly to the aggregator
-
             var xapi = _agent.GetExperimentalApi();
             xapi.RecordLogMessage("serilog", logEvent, getDateTimeFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, _agent.TraceMetadata.SpanId, _agent.TraceMetadata.TraceId);
         }

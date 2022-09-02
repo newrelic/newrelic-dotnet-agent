@@ -434,6 +434,12 @@ namespace NewRelic.Agent.Core
 
                 var logException = getLogException(logEvent);
 
+                // exit quickly if the message and exception are missing
+                if (string.IsNullOrWhiteSpace(logMessage) && logException is null)
+                {
+                    return;
+                }
+
                 LogEventWireModel logEventWireModel = null;
                 if (logException != null)
                 {

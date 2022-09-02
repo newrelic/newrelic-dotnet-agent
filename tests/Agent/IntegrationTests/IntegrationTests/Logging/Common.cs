@@ -38,7 +38,13 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             {
                 // log4net names are the same as our internal names
                 case LoggingFramework.Log4net:
-                    return level;
+                    switch (level)
+                    {
+                        case "NOMESSAGE":
+                            return "EMERGENCY";
+                        default:
+                            return level;
+                    }
                 case LoggingFramework.MicrosoftLogging:
                     switch (level)
                     {
@@ -52,6 +58,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                             return "ERROR";
                         case "FATAL":
                             return "CRITICAL";
+                        case "NOMESSAGE":
+                            return "TRACE";
                         default:
                             return level;
                     }
@@ -69,11 +77,19 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                             return "ERROR";
                         case "FATAL":
                             return "FATAL";
+                        case "NOMESSAGE":
+                            return "VERBOSE";
                         default:
                             return level;
                     }
                 case LoggingFramework.NLog:
-                    return level;
+                    switch (level)
+                    {
+                        case "NOMESSAGE":
+                            return "TRACE";
+                        default:
+                            return level;
+                    }
             }
 
             return string.Empty;
