@@ -8,7 +8,7 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
-using Microsoft.Extensions.Caching.Memory;
+using System.Collections.Concurrent;
 
 namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 {
@@ -17,7 +17,6 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
         public bool IsTransactionRequired => false;
 
         private const string WrapperName = "MicrosoftLogging";
-        private static readonly IMemoryCache MemoryCache = new MemoryCache(new MemoryCacheOptions());
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -39,19 +38,14 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
         {
             // We need to manually check if each log message is enabled since our MEL instrumentation takes place before
             // logs have been filtered to enabled levels.. Since this iterates all the loggers, cache responses for 60 seconds
-            var logLevel = methodCall.MethodArguments[0].ToString();
-            var logLevelIsEnabled = MemoryCache.GetOrCreate(logLevel, cacheEntry =>
-            {
-                cacheEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60);
-                return logger.IsEnabled((MEL.LogLevel)methodCall.MethodArguments[0]);
-            });
+            var logLevelIsEnabled = logger.IsEnabled((MEL.LogLevel)methodCall.MethodArguments[0]);
 
             if (logLevelIsEnabled)
             {
                 // MSE Logging doesn't have a timestamp for us to pull so we fudge it here.
                 Func<object, DateTime> getTimestampFunc = mc => DateTime.UtcNow;
 
-                Func<object, string> getLevelFunc = mc => logLevel;
+                Func<object, string> getLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
 
                 Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
 
