@@ -15,11 +15,11 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
-    public abstract class MySqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture: ConsoleDynamicMethodFixture
+    public abstract class MySqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        public MySqlTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public MySqlTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -41,7 +41,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
                     var instrumentationFilePath = string.Format(@"{0}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml", fixture.DestinationNewRelicExtensionsDirectoryPath);
                     CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
-                }   
+                }
             );
 
             // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
@@ -63,7 +63,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             {
                 new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = 1 },       
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1 },
@@ -115,11 +115,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             var transactionSample = _fixture.AgentLog.TryGetTransactionSample(transactionName);
             var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(transactionName);
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
-            
-            NrAssert.Multiple(
+
+            NrAssert.Multiple
+            (
                 () => Assert.NotNull(transactionSample),
                 () => Assert.NotNull(transactionEvent)
-                );
+            );
 
             NrAssert.Multiple
             (

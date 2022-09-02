@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Additional DEBUG-level logging of all environment variables.
 
 ### Fixes
-* Resolves an issue where log forwarding could drop logs in async scenarios. [#1174](https://github.com/newrelic/newrelic-dotnet-agent/pull/1201)
+* Resolves an issue where log forwarding could drop logs in async scenarios. [#1201](https://github.com/newrelic/newrelic-dotnet-agent/pull/1201)
+* Resolves an issue where more logs were forwarded than expected from Microsoft.Extensions.Logging. [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237)
 
 ## [10.0.0] - 2022-07-19
 

@@ -6,6 +6,7 @@ using System.Reflection;
 using log4net;
 using log4net.Appender;
 using log4net.Config;
+using log4net.Core;
 using log4net.Layout;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
@@ -50,7 +51,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void Configure()
         {
-            BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()));
+            BasicConfigurator.Configure(LogManager.GetRepository());
+        }
+
+        public void ConfigureWithInfoLevelEnabled()
+        {
+            Configure();
+            ((log4net.Repository.Hierarchy.Hierarchy)LogManager.GetRepository()).Root.Level = Level.Info;
+            ((log4net.Repository.Hierarchy.Hierarchy)LogManager.GetRepository()).RaiseConfigurationChanged(EventArgs.Empty);
         }
 
         public void ConfigurePatternLayoutAppenderForDecoration()
@@ -63,14 +71,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             consoleAppender.Layout = patternLayout;
             consoleAppender.ActivateOptions();
 
-            var callingAssembly = Assembly.GetCallingAssembly();
-
-            BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()), consoleAppender);
+            BasicConfigurator.Configure(LogManager.GetRepository(), consoleAppender);
         }
 
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
-#if NETCOREAPP2_2_OR_GREATER || NET471_OR_GREATER // Only supported in newer verisons of .NET
+#if NETCOREAPP2_2_OR_GREATER || NET471_OR_GREATER // Only supported in newer versions of .NET
             SerializedLayout serializedLayout = new SerializedLayout();
             serializedLayout.AddMember("NR_LINKING");
             serializedLayout.ActivateOptions();
@@ -79,7 +85,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             consoleAppender.Layout = serializedLayout;
             consoleAppender.ActivateOptions();
 
-            BasicConfigurator.Configure(LogManager.GetRepository(Assembly.GetCallingAssembly()), consoleAppender);
+            BasicConfigurator.Configure(LogManager.GetRepository(), consoleAppender);
 #else
             throw new System.NotImplementedException();
 #endif

@@ -51,6 +51,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         }
 
         [LibraryMethod]
+        public static void ConfigureWithInfoLevelEnabled()
+        {
+            _log.ConfigureWithInfoLevelEnabled();
+        }
+
+        [LibraryMethod]
         public static void ConfigurePatternLayoutAppenderForDecoration()
         {
             _log.ConfigurePatternLayoutAppenderForDecoration();
