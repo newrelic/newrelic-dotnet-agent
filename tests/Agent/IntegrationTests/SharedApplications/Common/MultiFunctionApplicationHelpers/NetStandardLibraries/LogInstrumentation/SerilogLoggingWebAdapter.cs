@@ -18,7 +18,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 {
     class SerilogLoggingWebAdapter : ILoggingAdapter
     {
-        private HttpClient _client;
+        private static readonly HttpClient _client = new HttpClient();
         private string _uriBase;
 
         public SerilogLoggingWebAdapter()
@@ -52,17 +52,30 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void Configure()
         {
-            _client = new HttpClient();
 
-            var loggerConfig = new LoggerConfiguration();
-
-            loggerConfig
+            var loggerConfig = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Fatal)
                 .MinimumLevel.Debug()
                 .WriteTo.Console();
 
-            Log.Logger = loggerConfig.CreateLogger();
+            RunApplication(loggerConfig);
+        }
+
+        public void ConfigureWithInfoLevelEnabled()
+        {
+            var loggerConfig = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Fatal)
+                .MinimumLevel.Information()
+                .WriteTo.Console();
+
+            RunApplication(loggerConfig);
+        }
+
+        private void RunApplication(LoggerConfiguration loggerConfig)
+        { 
+            var logger = loggerConfig.CreateLogger();
 
             var port = RandomPortGenerator.NextPort();
             _uriBase = "http://localhost:" + port + "/";
@@ -74,7 +87,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             IHostBuilder CreateHostBuilder(string uriBase)
             {
                 return Host.CreateDefaultBuilder()
-                .UseSerilog()
+                .UseSerilog(logger)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                 webBuilder.UseStartup<Startup>();
@@ -106,7 +119,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllers();
         }
 
