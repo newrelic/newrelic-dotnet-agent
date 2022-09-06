@@ -925,8 +925,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings;
         }
 
-        [TestCase("401-404", new string[] { "401.5", "402.3"}, new bool[] { false, false})] //does not support full status codes
-        [TestCase("400,401,404", new string[]{"400", "401", "402", "403", "404"},  new bool[] { true, true, false, false, true })]
+        [TestCase("401-404", new string[] { "401.5", "402.3" }, new bool[] { false, false })] //does not support full status codes
+        [TestCase("400,401,404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]
         [TestCase("400, 401 ,404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]
         [TestCase("400, 401,404, ", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]
         [TestCase("400,401-404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, true, true, true })]
@@ -948,7 +948,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             }
 
             CollectionAssert.AreEqual(expected, actual);
-            
+
         }
 
         [TestCase(true, ExpectedResult = "server,server")]
@@ -999,7 +999,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.service.proxy.password = password;
             _localConfig.service.obscuringKey = localConfigObscuringKey;
             _localConfig.service.proxy.passwordObfuscated = passwordObfuscated;
-            
+
             CreateDefaultConfiguration();
 
             return _defaultConfig.ProxyPassword;
@@ -1296,16 +1296,32 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsTrue(_defaultConfig.TransactionEventsAttributesEnabled);
         }
 
-        [TestCase(null, null, ExpectedResult = null)]
-        [TestCase(null, "Foo", ExpectedResult = "Foo")]
-        [TestCase("Foo", null, ExpectedResult = "Foo")]
-        [TestCase("Foo", "Bar", ExpectedResult = "Foo")]
-        public string LabelsEnvironmentOverridesLocal(string environment, string local)
+        [TestCase(null, null, null, ExpectedResult = null)]
+        [TestCase(null, null, "Foo", ExpectedResult = "Foo")]
+        [TestCase(null, "Foo", null, ExpectedResult = "Foo")]
+        [TestCase(null, "Foo", "Bar", ExpectedResult = "Foo")]
+        [TestCase("appConfigValue", null, null, ExpectedResult = "appConfigValue")]
+        [TestCase("appConfigValue", null, "Foo", ExpectedResult = "appConfigValue")]
+        [TestCase("appConfigValue", "Foo", null, ExpectedResult = "appConfigValue")]
+        [TestCase("appConfigValue", "Foo", "Bar", ExpectedResult = "appConfigValue")]
+        public string LabelsAreOverriddenProperlyAndAreCached(string appConfigValue, string environment, string local)
         {
             _localConfig.labels = local;
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.Labels")).Returns(appConfigValue);
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LABELS")).Returns(environment);
 
-            return _defaultConfig.Labels;
+            // call Labels accessor multiple times to verify caching behavior
+            string result = _defaultConfig.Labels;
+            for (var i = 0; i < 10; ++i)
+            {
+                result = _defaultConfig.Labels;
+            }
+
+            // Checking that the underlying abstractions are only ever called once verifies caching behavior
+            Mock.Assert(() => _configurationManagerStatic.GetAppSetting("NewRelic.Labels"), Occurs.AtMost(1));
+            Mock.Assert(() => _environment.GetEnvironmentVariable("NEW_RELIC_LABELS"), Occurs.AtMost(1));
+
+            return result;
         }
 
         [TestCase(null, null, ExpectedResult = null)]
@@ -2731,7 +2747,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.allowAllHeaders.enabled = enabled;
             _localConfig.highSecurity.enabled = true;
-        
+
             Assert.AreEqual(expectedResult, _defaultConfig.AllowAllRequestHeaders);
             Assert.AreEqual(0, _defaultConfig.CaptureAttributesIncludes.Count());
         }

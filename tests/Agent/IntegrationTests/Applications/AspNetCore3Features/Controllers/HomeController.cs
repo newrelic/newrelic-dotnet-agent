@@ -6,6 +6,7 @@ using AspNetCore3Features.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Diagnostics;
+using System.Threading;
 
 namespace AspNetCore3Features.Controllers
 {
@@ -13,6 +14,8 @@ namespace AspNetCore3Features.Controllers
     {
         public IActionResult Index()
         {
+            // Tests expect this to be the traced transaction, so let's help them out
+            Thread.Sleep(1000);
             return View();
         }
 

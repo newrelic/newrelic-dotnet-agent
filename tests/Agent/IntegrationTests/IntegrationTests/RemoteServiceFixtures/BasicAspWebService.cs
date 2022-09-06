@@ -3,6 +3,8 @@
 
 #if NETFRAMEWORK
 
+using System;
+using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using OpenQA.Selenium;
 using OpenQA.Selenium.IE;
@@ -17,6 +19,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var driverService = InternetExplorerDriverService.CreateDefaultService();
             driverService.HideCommandPromptWindow = true;
             driverService.SuppressInitialDiagnosticInformation = true;
+            driverService.InitializationTimeout = TimeSpan.FromMinutes(2);
+            driverService.Port = RandomPortGenerator.NextPort();
 
             var options = new InternetExplorerOptions
             {
@@ -24,7 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 IgnoreZoomLevel = true
             };
 
-            _driver = new InternetExplorerDriver(driverService, options);
+            _driver = new InternetExplorerDriver(driverService, options, TimeSpan.FromMinutes(2));
         }
 
         public void InvokeAsyncCall()

@@ -235,7 +235,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
                        .EnableSpanEvents(true);
 
                     fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "true");
-                    fixture.EnvironmentVariables.Add("NEW_RELIC_ATTRIBUTES_EXCLUDE", "request.headers.referer,request.headers.accept");
+                    fixture.EnvironmentVariables.Add("NEW_RELIC_ATTRIBUTES_EXCLUDE", "request.headers.referer,request.headers.accept,request.headers.cookie");
                 }
             );
 
@@ -279,7 +279,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
                        .EnableSpanEvents(true);
 
                     fixture.EnvironmentVariables.Add("NEW_RELIC_ALLOW_ALL_HEADERS", "true");
-                    fixture.EnvironmentVariables.Add("NEW_RELIC_ATTRIBUTES_EXCLUDE", "request.headers.referer, request.headers.accept");
+                    fixture.EnvironmentVariables.Add("NEW_RELIC_ATTRIBUTES_EXCLUDE", "request.headers.referer, request.headers.accept, request.headers.cookie");
                 }
             );
 

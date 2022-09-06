@@ -40,23 +40,24 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void Fatal(string message)
         {
-            logger.LogTrace(message);
+            logger.LogCritical(message);
         }
 
         public void Configure()
         {
-            Log.Logger = new LoggerConfiguration()
-              .MinimumLevel.Debug()
-              .Enrich.FromLogContext()
-              .WriteTo.Console()
-              .CreateLogger();
-
-            CreateLogger(); ;
+            CreateMelLogger(LogLevel.Debug);
         }
 
+        public void ConfigureWithInfoLevelEnabled()
+        {
+            CreateMelLogger(LogLevel.Information);
+        }
+
+        
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
-            Log.Logger = new LoggerConfiguration()
+            // NOTE: This is a serilog logger we are setting up
+            var serilogLogger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
                 .WriteTo.Console(
@@ -64,30 +65,36 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 )
                 .CreateLogger();
 
-            CreateLogger();
+            CreateMelLogger(LogLevel.Debug, serilogLogger);
         }
 
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
-            Log.Logger = new LoggerConfiguration()
-               .MinimumLevel.Debug()
-              .Enrich.FromLogContext()
-              .WriteTo.Console(new JsonFormatter())
-              .CreateLogger();
+            // NOTE: This is a serilog logger we are setting up
+            var serilogLogger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .Enrich.FromLogContext()
+                .WriteTo.Console(new JsonFormatter())
+                .CreateLogger();
 
-            CreateLogger();
+            CreateMelLogger(LogLevel.Debug, serilogLogger);
         }
 
-        private void CreateLogger()
+        private void CreateMelLogger(LogLevel minimumLogLevel, Serilog.ILogger serilogLoggerImpl = null)
         {
             using var loggerFactory = LoggerFactory.Create(builder =>
             {
-                builder
-                    .AddFilter("Microsoft", LogLevel.Warning)
-                    .AddFilter("System", LogLevel.Warning)
-                    .AddFilter("NonHostConsoleApp.Program", LogLevel.Debug)
-                    .AddSerilog()
-                    .AddConsole();
+                builder.SetMinimumLevel(minimumLogLevel);
+
+                // Either use serilog OR the built in console appender
+                if (serilogLoggerImpl != null)
+                {
+                    builder.AddSerilog(serilogLoggerImpl);
+                }
+                else
+                {
+                    builder.AddConsole();
+                }
             });
             logger = loggerFactory.CreateLogger<LoggingTester>();
         }

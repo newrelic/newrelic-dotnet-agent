@@ -98,6 +98,7 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
                 var url = (string)spanEvent.AgentAttributes["http.url"];
                 if (url.Contains("/RestAPI/4"))
                 {
+                    // When an id of 4 is supplied, the client is supposed to timeout before the server has a chance to respond, so no status code
                     Assert.DoesNotContain("http.statusCode", spanEvent.AgentAttributes.Keys);
                 }
                 else

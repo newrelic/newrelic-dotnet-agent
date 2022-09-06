@@ -527,7 +527,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        private static Metric TryFindMetric(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
+        public static Metric TryFindMetric(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
         {
             foreach (var actualMetric in actualMetrics)
             {
@@ -544,7 +544,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return null;
         }
 
-        private static List<Metric> TryFindMetrics(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
+        public static List<Metric> TryFindMetrics(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
         {
             var foundMetrics = actualMetrics
                 .Where(actualMetric => (expectedMetric.IsRegexName && Regex.IsMatch(actualMetric.MetricSpec.Name, expectedMetric.metricName)) ||
@@ -557,7 +557,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #endregion Metrics
 
-        #region Log Lines
+        #region In Agent Log Forwarding Log Lines Assertions
 
         public static void LogLineExists(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines) => LogLinesExist(new[] { expectedLogLine }, actualLogLines);
 
@@ -568,7 +568,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var succeeded = true;
             var builder = new StringBuilder();
 
-            if (!actualLogLines.Any() && actualLogLines.Any())
+            if (!actualLogLines.Any() && expectedLogLines.Any())
             {
                 builder.AppendLine("Unable to validate expected Log Lines because actualLogLines has no items.");
                 succeeded = false;
@@ -590,6 +590,31 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 }
             }
 
+            Assert.True(succeeded, builder.ToString());
+        }
+
+        public static void LogLineDoesntExist(ExpectedLogLine unexpectedLogLine, IEnumerable<LogLine> actualLogLines) => LogLinesDontExist(new[] { unexpectedLogLine }, actualLogLines);
+
+        public static void LogLinesDontExist(IEnumerable<ExpectedLogLine> unexpectedLogLines, IEnumerable<LogLine> actualLogLines)
+        {
+            actualLogLines = actualLogLines.ToList();
+
+            var succeeded = true;
+            var builder = new StringBuilder();
+
+            foreach (var unexpectedLogLine in unexpectedLogLines)
+            {
+                var matchedLogLine = TryFindLogLine(unexpectedLogLine, actualLogLines);
+                if (matchedLogLine != null)
+                {
+                    builder.Append($"Unexpected LogLine `{unexpectedLogLine}` was found in the Log payload.");
+                    builder.AppendLine();
+                    builder.AppendLine();
+
+                    succeeded = false;
+                    continue;
+                }
+            }
 
             Assert.True(succeeded, builder.ToString());
         }
@@ -616,7 +641,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             return null;
         }
-        
+
         #endregion
 
         #region Transaction Events
@@ -861,7 +886,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #endregion Sql Traces
 
-        #region Log lines
+        #region Generic Agent Log Lines Assertions
 
         public static void LogLinesExist(IEnumerable<string> expectedLogLineRegexes, IEnumerable<string> actualLogLines)
         {
@@ -895,7 +920,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(errorMessages == string.Empty, errorMessages);
         }
 
-        #endregion Log lines
+        #endregion
 
         private static bool ValidateAttributeValues(KeyValuePair<string, object> expectedAttribute, object rawActualValue, StringBuilder builder, string wireModelTypeName)
         {

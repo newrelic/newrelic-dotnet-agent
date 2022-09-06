@@ -60,13 +60,13 @@ namespace NewRelic.Agent.Core.DataTransport
             _agentHealthReporter = agentHealthReporter;
         }
 
-        public string SendData(string method, ConnectionInfo connectionInfo, string serializedData)
+        public string SendData(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid)
         {
             try
             {
                 var uri = GetUri(method, connectionInfo);
-
-                Log.DebugFormat("Invoking \"{0}\" with : {1}", method, serializedData);
+                
+                Log.DebugFormat("Request({0}): About to Invoke \"{1}\" with : {2}", requestGuid, method, serializedData);
                 AuditLog(Direction.Sent, Source.InstrumentedApp, uri);
                 AuditLog(Direction.Sent, Source.InstrumentedApp, serializedData);
 
@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (requestPayload.Data.Length > _configuration.CollectorMaxPayloadSizeInBytes)
                 {
                     // Log that the payload is being dropped. 
-                    Log.ErrorFormat("Dropped large payload: size: {0}, max_payload_size_bytes={1}", requestPayload.Data.Length, _configuration.CollectorMaxPayloadSizeInBytes);
+                    Log.ErrorFormat("Request({0}): Dropped large payload: size: {1}, max_payload_size_bytes={2}", requestGuid, requestPayload.Data.Length, _configuration.CollectorMaxPayloadSizeInBytes);
                     _agentHealthReporter.ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(method);
                     return "{}"; // mimics what is sent by NoOpCollectorWire
                 }
@@ -90,7 +90,10 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response).Length);
 
-                Log.DebugFormat("Received : {0}", response);
+                // Possibly combine these logs? makes parsing harder in tests...
+                Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
+                Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, response);
+
                 AuditLog(Direction.Received, Source.Collector, response);
 
                 return response;
@@ -99,7 +102,7 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 var httpWebResponse = ex.Response as HttpWebResponse;
                 if (httpWebResponse != null)
-                    ThrowExceptionFromHttpWebResponse(serializedData, httpWebResponse);
+                    ThrowExceptionFromHttpWebResponse(serializedData, httpWebResponse, requestGuid);
 
                 if (_diagnoseConnectionError)
                     DiagnoseConnectionError(connectionInfo);
@@ -224,11 +227,11 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private static void ThrowExceptionFromHttpWebResponse(string serializedData, HttpWebResponse response)
+        private static void ThrowExceptionFromHttpWebResponse(string serializedData, HttpWebResponse response, Guid requestGuid)
         {
             if (response.StatusCode == HttpStatusCode.UnsupportedMediaType)
             {
-                Log.ErrorFormat("Invalid json: {0}.  Please report to support@newrelic.com", serializedData);
+                Log.ErrorFormat("Request({0}): Had invalid json: {1}.  Please report to support@newrelic.com", requestGuid, serializedData);
             }
 
             // P17: Not supposed to read/use the exception message in the connect response body. We are still going to log it, carefully, since it is very useful for support.
@@ -237,12 +240,12 @@ namespace NewRelic.Agent.Core.DataTransport
                 using (var reader = new StreamReader(response.GetResponseStream(), ASCIIEncoding.ASCII))
                 {
                     var responseText = reader.ReadToEnd();
-                    Log.ErrorFormat("Received HTTP status code {0} with message {1}", response.StatusCode.ToString(), responseText);
+                    Log.ErrorFormat("Request({0}): Received HTTP status code {1} with message {2}", requestGuid, response.StatusCode.ToString(), responseText);
                 }
             }
             catch (Exception exception)
             {
-                Log.ErrorFormat("Unable to parse repsonse body with {0}", exception.Message);
+                Log.ErrorFormat("Request({0}): Unable to parse response body with {1}", requestGuid, exception.Message);
             }
 
             throw new HttpException(response.StatusCode, response.StatusDescription);

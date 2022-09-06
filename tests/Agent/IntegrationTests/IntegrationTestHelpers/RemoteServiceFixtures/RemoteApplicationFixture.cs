@@ -86,7 +86,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             set { RemoteApplication.KeepWorkingDirectory = value; }
         }
 
-        protected virtual int MaxTries => 3;
+        // We think that the test retry loop may be masking real problems and/or actually causing them, so we've disabled it for now
+        protected virtual int MaxTries => 1;
 
         public void DisableAsyncLocalCallStack()
         {
