@@ -90,7 +90,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     _log.Fatal(message);
                     break;
                 case "NOMESSAGE":
-                    _log.NoMessage();
+                    _log.ErrorNoMessage(ExceptionBuilder.BuildException(message));
                     break;
                 default:
                     _log.Info(message);

@@ -37,11 +37,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     _logger.LogWarning(message);
                     break;
                 case "ERROR":
-                    var exception = ExceptionBuilder.BuildException(message);
-                    _logger.LogError(exception, exception.Message);
+                    _logger.LogError(ExceptionBuilder.BuildException(message), message);
                     break;
                 case "FATAL":
                     _logger.LogCritical(message);
+                    break;
+                case "NOMESSAGE":
+                    _logger.LogError(ExceptionBuilder.BuildException(message), string.Empty);
                     break;
                 default:
                     Console.WriteLine("Log level '" + logLevel + "' is not a tested log level.");

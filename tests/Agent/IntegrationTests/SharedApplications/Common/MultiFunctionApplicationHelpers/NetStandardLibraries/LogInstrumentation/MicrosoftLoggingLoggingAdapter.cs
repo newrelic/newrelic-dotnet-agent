@@ -39,6 +39,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             logger.LogError(exception, exception.Message);
         }
 
+        public void ErrorNoMessage(Exception exception)
+        {
+            logger.LogError(exception, string.Empty);
+        }
+
         public void Fatal(string message)
         {
             logger.LogCritical(message);
@@ -46,7 +51,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void NoMessage()
         {
-            logger.LogCritical(string.Empty);
+            logger.LogTrace(string.Empty);
         }
 
         public void Configure()

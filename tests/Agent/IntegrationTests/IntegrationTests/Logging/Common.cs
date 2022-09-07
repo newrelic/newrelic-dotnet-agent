@@ -41,7 +41,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     switch (level)
                     {
                         case "NOMESSAGE":
-                            return "EMERGENCY";
+                            return "ERROR";
                         default:
                             return level;
                     }
@@ -59,7 +59,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                         case "FATAL":
                             return "CRITICAL";
                         case "NOMESSAGE":
-                            return "TRACE";
+                            return "ERROR";
                         default:
                             return level;
                     }
@@ -78,7 +78,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                         case "FATAL":
                             return "FATAL";
                         case "NOMESSAGE":
-                            return "VERBOSE";
+                            return "ERROR";
                         default:
                             return level;
                     }
@@ -86,7 +86,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     switch (level)
                     {
                         case "NOMESSAGE":
-                            return "TRACE";
+                            return "ERROR";
                         default:
                             return level;
                     }

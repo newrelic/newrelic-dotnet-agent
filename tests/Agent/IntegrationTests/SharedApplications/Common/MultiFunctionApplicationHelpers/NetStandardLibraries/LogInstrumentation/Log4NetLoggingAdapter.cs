@@ -39,6 +39,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log.Error(exception.Message, exception);
         }
 
+        public void ErrorNoMessage(Exception exception)
+        {
+            _log.Error(string.Empty, exception);
+        }
+
         public void Fatal(string message)
         {
             _log.Fatal(message);

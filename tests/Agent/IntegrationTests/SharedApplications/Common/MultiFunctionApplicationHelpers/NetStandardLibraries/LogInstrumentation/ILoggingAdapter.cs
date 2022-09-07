@@ -11,6 +11,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void Info(string message);
         public void Warn(string message);
         public void Error(Exception exception);
+
+        public void ErrorNoMessage(Exception exception);
         public void Fatal(string message);
         public void NoMessage();
         public void Configure();
