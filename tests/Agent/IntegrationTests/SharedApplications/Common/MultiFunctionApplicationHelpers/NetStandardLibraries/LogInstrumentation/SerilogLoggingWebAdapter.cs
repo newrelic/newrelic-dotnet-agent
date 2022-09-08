@@ -40,14 +40,30 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             var result = _client.GetStringAsync(_uriBase + "test?logLevel=WARN&message=" + message).Result;
         }
 
-        public void Error(string message)
+        public void Error(Exception exception)
         {
-            var result = _client.GetStringAsync(_uriBase + "test?logLevel=ERROR&message=" + message).Result;
+            // In this case we are not passing the exact Exception to the test app, just the message.
+            // The test app will create an Exception for us.
+            // As long as it has the same message and class with a stacktrace of any kind, its good for test.
+            var result = _client.GetStringAsync(_uriBase + "test?logLevel=ERROR&message=" + exception.Message).Result;
+        }
+
+        public void ErrorNoMessage(Exception exception)
+        {
+            // In this case we are not passing the exact Exception to the test app, just the message.
+            // The test app will create an Exception for us.
+            // As long as it has the same message and class with a stacktrace of any kind, its good for test.
+            var result = _client.GetStringAsync(_uriBase + "test?logLevel=NOMESSAGE&message=" + string.Empty).Result;
         }
 
         public void Fatal(string message)
         {
             var result = _client.GetStringAsync(_uriBase + "test?logLevel=FATAL&message=" + message).Result;
+        }
+
+        public void NoMessage()
+        {
+            var result = _client.GetStringAsync(_uriBase + "test?logLevel=FATAL&message=EMPTY").Result;
         }
 
         public void Configure()

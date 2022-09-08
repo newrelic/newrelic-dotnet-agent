@@ -636,6 +636,30 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 if (expectedLogLine.HasTraceId.HasValue && !expectedLogLine.HasTraceId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Traceid))
                     continue;
 
+                if (expectedLogLine.HasException.HasValue && expectedLogLine.HasException.Value)
+                {
+                    if (string.IsNullOrWhiteSpace(actualLogLine.ErrorStack)
+                    || string.IsNullOrWhiteSpace(actualLogLine.ErrorMessage)
+                    || string.IsNullOrWhiteSpace(actualLogLine.ErrorClass)
+                    )
+                        continue;
+
+                    if (!actualLogLine.ErrorStack.Contains(expectedLogLine.ErrorStack))
+                        continue;
+                    if (expectedLogLine.ErrorMessage != actualLogLine.ErrorMessage)
+                        continue;
+                    if (expectedLogLine.ErrorClass != actualLogLine.ErrorClass)
+                        continue;
+                }
+
+                if (expectedLogLine.HasException.HasValue && !expectedLogLine.HasException.Value)
+                {
+                    if (!string.IsNullOrWhiteSpace(actualLogLine.ErrorStack)
+                    || !string.IsNullOrWhiteSpace(actualLogLine.ErrorMessage)
+                    || !string.IsNullOrWhiteSpace(actualLogLine.ErrorClass))
+                        continue;
+                }
+
                 return actualLogLine;
             }
 
@@ -1034,9 +1058,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             public bool? HasSpanId = null;
             public bool? HasTraceId = null;
 
+            public bool? HasException = null;
+            public string ErrorStack = null;
+            public string ErrorMessage = null;
+            public string ErrorClass = null;
+
             public override string ToString()
             {
-                return $"{{ Level: {Level}, LogMessage: {LogMessage}, HasSpanId: {HasSpanId}, HasTraceId: {HasTraceId} }}";
+                return $"{{ Level: {Level}, LogMessage: {LogMessage}, HasSpanId: {HasSpanId}, HasTraceId: {HasTraceId} }}, HasException: {HasException}, ErrorStack: {ErrorStack}, ErrorMessage: {ErrorMessage}, ErrorClass: {ErrorClass}";
             }
         }
 
