@@ -1,0 +1,22 @@
+name: Check for new core technologies
+
+on:
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+
+jobs:
+  nuget-slack-notifications:
+    name: Check for core technology package updates
+    runs-on: ubuntu-latest
+    continue-on-error: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Check for updates to core technology packages
+        run: echo "hi!"
