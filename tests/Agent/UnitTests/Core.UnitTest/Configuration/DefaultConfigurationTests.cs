@@ -2990,8 +2990,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(10, _defaultConfig.CustomEventsMaximumSamplesStored);
         }
 
-        [TestCase("10", 20, 30, ExpectedResult = 10)]
-        [TestCase("10", null, 30, ExpectedResult = 10)]
+        [TestCase("10", 20, 30, ExpectedResult = 30)]
+        [TestCase("10", null, 30, ExpectedResult = 30)]
         [TestCase("10", 20, null, ExpectedResult = 10)]
         [TestCase("10", null, null, ExpectedResult = 10)]
         [TestCase(null, 20, 30, ExpectedResult = 30)]
