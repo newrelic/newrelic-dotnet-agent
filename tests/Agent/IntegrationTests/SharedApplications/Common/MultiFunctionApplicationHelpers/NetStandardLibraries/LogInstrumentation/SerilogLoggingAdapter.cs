@@ -51,6 +51,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log = loggerConfig.CreateLogger();
         }
 
+        public void ConfigureWithInfoLevelEnabled()
+        {
+            var loggerConfig = new LoggerConfiguration();
+
+            loggerConfig
+                .MinimumLevel.Information()
+                .WriteTo.Console();
+
+            _log = loggerConfig.CreateLogger();
+        }
+
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
             var loggerConfig = new LoggerConfiguration();

@@ -12,6 +12,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void Fatal(string message);
 
         public void Configure();
+        public void ConfigureWithInfoLevelEnabled();
         public void ConfigurePatternLayoutAppenderForDecoration();
         public void ConfigureJsonLayoutAppenderForDecoration();
 

@@ -39,5 +39,4 @@ jobs:
                  microsoft.net.http
                  restsharp
                  serilog"
-
-           
+                 
