@@ -72,6 +72,7 @@ namespace NewRelic.Agent.Core.Segments
             UniqueId = segment.UniqueId;
             ParentUniqueId = segment.ParentUniqueId;
             MethodCallData = segment.MethodCallData;
+            SegmentNameOverride = segment.SegmentNameOverride;
             _parameters = parameters;
             Combinable = segment.Combinable;
             IsLeaf = false;
@@ -225,8 +226,10 @@ namespace NewRelic.Agent.Core.Segments
         // customer code.
         public string UserCodeNamespace { get; set; } = null;
         public string UserCodeFunction { get; set; } = null;
-
-        private void Finish()
+		
+        public string SegmentNameOverride { get; set; }
+        
+		private void Finish()
         {
             var endTime = _transactionSegmentState.GetRelativeTime();
             RelativeEndTime = endTime;
@@ -328,6 +331,11 @@ namespace NewRelic.Agent.Core.Segments
 
         public string GetTransactionTraceName()
         {
+            if(!string.IsNullOrWhiteSpace(SegmentNameOverride))
+            {
+                return SegmentNameOverride;
+            }
+
             return Data.GetTransactionTraceName();
         }
 
@@ -377,6 +385,12 @@ namespace NewRelic.Agent.Core.Segments
 
             AttribDefs.GetCustomAttributeForSpan(key).TrySetValue(customAttribValues, value);
 
+            return this;
+        }
+
+        public ISpan SetName(string name)
+        {
+            SegmentNameOverride = name;
             return this;
         }
     }

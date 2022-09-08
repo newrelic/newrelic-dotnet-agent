@@ -39,6 +39,12 @@ namespace NewRelic.Agent.Api
         string SpanId { get; }
 
         /// <summary>
+        /// Provides the ability to override a segment name. If this is anything other than null or empty,
+        /// then this value should be used as the segment/span name.
+        /// </summary>
+        string SegmentNameOverride { get; set; }
+
+        /// <summary>
         /// Ends this transaction segment.
         /// </summary>
         void End();

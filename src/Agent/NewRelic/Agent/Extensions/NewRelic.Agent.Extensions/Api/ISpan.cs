@@ -10,5 +10,7 @@ namespace NewRelic.Agent.Api
     public interface ISpan
     {
         ISpan AddCustomAttribute(string key, object value);
+
+        ISpan SetName(string name);
     }
 }

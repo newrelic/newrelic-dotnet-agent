@@ -50,7 +50,16 @@ namespace NewRelic.Agent.Core.Segments
         {
             var duration = segment.Duration.Value;
             var exclusiveDuration = TimeSpanMath.Max(TimeSpan.Zero, duration - durationOfChildren);
-            MetricBuilder.TryBuildMethodSegmentMetric(Type, Method, duration, exclusiveDuration, txStats);
+           
+            if (!string.IsNullOrWhiteSpace(segment.SegmentNameOverride))
+            {
+                MetricBuilder.TryBuildSimpleSegmentMetric(segment.SegmentNameOverride, duration, exclusiveDuration, txStats);
+            }
+            else
+            {
+                MetricBuilder.TryBuildMethodSegmentMetric(Type, Method, duration, exclusiveDuration, txStats);
+            }
+            
         }
     }
 }
