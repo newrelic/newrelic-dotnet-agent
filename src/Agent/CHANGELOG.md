@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 * Support of setting up labels via appsettings.json and app/web.config file. [#1204](https://github.com/newrelic/newrelic-dotnet-agent/pull/1204)
 * Additional DEBUG-level logging of all environment variables.
+* Adds a new `SetName()` method to the Agent API for spans that allows customization of segment/span/metric names for custom instrumentation. [#1238](https://github.com/newrelic/newrelic-dotnet-agent/pull/1238)
 
 ### Fixes
 * Resolves an issue where log forwarding could drop logs in async scenarios. [#1201](https://github.com/newrelic/newrelic-dotnet-agent/pull/1201)
