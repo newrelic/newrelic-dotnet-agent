@@ -62,40 +62,64 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         }
     }
 
-    // Test class naming pattern: RabbitMqDistributedTracing{FW,NetCore}{RabbitClientVersion}Tests
-    // e.g. RabbitMqDistributedTracingFW621Tests = .NET Framework, RabbitMQ.Client 6.2.1
-
     [NetFrameworkTest]
-    public class RabbitMqDistributedTracingFW621Tests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class RabbitMqDistributedTracingTestsFWLatest : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public RabbitMqDistributedTracingFW621Tests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public RabbitMqDistributedTracingTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class RabbitMqDistributedTracingFW510Tests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class RabbitMqDistributedTracingTestsFW471 : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public RabbitMqDistributedTracingFW510Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public RabbitMqDistributedTracingTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class RabbitMqDistributedTracingFW352Tests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class RabbitMqDistributedTracingTestsFW462 : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public RabbitMqDistributedTracingFW352Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public RabbitMqDistributedTracingTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class RabbitMqDistributedTracingNetCore621Tests : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class RabbitMqDistributedTracingTestsCoreLatest : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public RabbitMqDistributedTracingNetCore621Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public RabbitMqDistributedTracingTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqDistributedTracingTestsCore60 : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public RabbitMqDistributedTracingTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqDistributedTracingTestsCore50 : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public RabbitMqDistributedTracingTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqDistributedTracingTestsCore31 : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public RabbitMqDistributedTracingTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
