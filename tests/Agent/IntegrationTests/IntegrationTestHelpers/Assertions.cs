@@ -635,20 +635,30 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     continue;
                 if (expectedLogLine.HasTraceId.HasValue && !expectedLogLine.HasTraceId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Traceid))
                     continue;
-                if (expectedLogLine.HasException.HasValue && expectedLogLine.HasException.Value && (
-                    string.IsNullOrWhiteSpace(actualLogLine.ErrorStack)
+
+                if (expectedLogLine.HasException.HasValue && expectedLogLine.HasException.Value)
+                {
+                    if (string.IsNullOrWhiteSpace(actualLogLine.ErrorStack)
                     || string.IsNullOrWhiteSpace(actualLogLine.ErrorMessage)
-                    || string.IsNullOrWhiteSpace(actualLogLine.ErrorClass))
-                    && expectedLogLine.ErrorStack != actualLogLine.ErrorStack
-                    && expectedLogLine.ErrorMessage != actualLogLine.ErrorMessage
-                    && expectedLogLine.ErrorClass != actualLogLine.ErrorClass
+                    || string.IsNullOrWhiteSpace(actualLogLine.ErrorClass)
                     )
-                    continue;
-                if (expectedLogLine.HasException.HasValue && !expectedLogLine.HasException.Value && (
-                    !string.IsNullOrWhiteSpace(actualLogLine.ErrorStack)
+                        continue;
+
+                    if (!actualLogLine.ErrorStack.Contains(expectedLogLine.ErrorStack))
+                        continue;
+                    if (expectedLogLine.ErrorMessage != actualLogLine.ErrorMessage)
+                        continue;
+                    if (expectedLogLine.ErrorClass != actualLogLine.ErrorClass)
+                        continue;
+                }
+
+                if (expectedLogLine.HasException.HasValue && !expectedLogLine.HasException.Value)
+                {
+                    if (!string.IsNullOrWhiteSpace(actualLogLine.ErrorStack)
                     || !string.IsNullOrWhiteSpace(actualLogLine.ErrorMessage)
-                    || !string.IsNullOrWhiteSpace(actualLogLine.ErrorClass)))
-                    continue;
+                    || !string.IsNullOrWhiteSpace(actualLogLine.ErrorClass))
+                        continue;
+                }
 
                 return actualLogLine;
             }

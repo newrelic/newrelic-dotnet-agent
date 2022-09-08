@@ -64,6 +64,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         private const string InTransactionErrorNoMessage = "InTransactionErrorLogNoMessage";
         private const string SerilogWebErrorNoMessage = "Exception of type 'System.Exception' was thrown.";
 
+        private const string ErrorStackValue = "at MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation.ExceptionBuilder.BuildException(String message)";
+
+        private const string ErrorClassValue = "System.Exception";
+
         public MetricsAndForwardingTestsBase(TFixture fixture, ITestOutputHelper output, bool metricsEnabled, bool forwardingEnabled, bool canHaveLogsOutsideTransaction, LoggingFramework loggingFramework) : base(fixture)
         {
             _fixture = fixture;
@@ -314,20 +318,20 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 Assertions.ExpectedLogLine OutsideTransactionExpectedLogLine;
                 if (_canHaveLogsOutsideTransaction)
                 {
-                    inTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : InTransactionErrorNoMessage, ErrorClass = "Exception" };
-                    OutsideTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = false, HasSpanId = false, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : OutsideTransactionErrorNoMessage, ErrorClass = "Exception" };
+                    inTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : InTransactionErrorNoMessage, ErrorClass = ErrorClassValue };
+                    OutsideTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = false, HasSpanId = false, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : OutsideTransactionErrorNoMessage, ErrorClass = ErrorClassValue };
                 }
                 else
                 {
                     // Serilog always exists in a transaction
-                    inTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : InTransactionErrorNoMessage, ErrorClass = "Exception" };
-                    OutsideTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : OutsideTransactionErrorNoMessage, ErrorClass = "Exception" };
+                    inTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : InTransactionErrorNoMessage, ErrorClass = ErrorClassValue };
+                    OutsideTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : OutsideTransactionErrorNoMessage, ErrorClass = ErrorClassValue };
                 }
 
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = InTransactionInfoMessage, HasTraceId = true, HasSpanId = true, HasException = false },
-                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = InTransactionErrorMessage, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = InTransactionErrorMessage, ErrorClass = "Exception" },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = InTransactionErrorMessage, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = InTransactionErrorMessage, ErrorClass = ErrorClassValue },
 
                     // 2 expected NOMESSAGE log lines since there is no way to tell the inside transaction line from the outside transaction line
                     // One line needs to have HasTraceId and HasSpanId set to false
@@ -355,7 +359,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncInTransactionDebugMessage, HasTraceId = true, HasSpanId = true, HasException = false },
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncInTransactionInfoMessage, HasTraceId = true, HasSpanId = true, HasException = false },
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncInTransactionWarningMessage, HasTraceId = true, HasSpanId = true, HasException = false },
-                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncInTransactionErrorMessage, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = AsyncInTransactionErrorMessage, ErrorClass = "Exception" },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncInTransactionErrorMessage, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = AsyncInTransactionErrorMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -379,7 +383,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitInTransactionDebugMessage, HasException = false },
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitInTransactionInfoMessage, HasException = false },
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitInTransactionWarningMessage, HasException = false },
-                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitInTransactionErrorMessage, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = AsyncNoAwaitInTransactionErrorMessage, ErrorClass = "Exception" },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitInTransactionErrorMessage, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = AsyncNoAwaitInTransactionErrorMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
@@ -399,12 +403,12 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = OutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false, HasException = false },
-                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = OutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = OutsideTransactionErrorMessage, ErrorClass = "Exception" },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = OutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = OutsideTransactionErrorMessage, ErrorClass = ErrorClassValue },
 
                     // 2 expected NOMESSAGE log lines since there is no way to tell the inside transaction line from the outside transaction line
                     // One line needs to have HasTraceId and HasSpanId set to true
-                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasSpanId = true, HasTraceId = true, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : InTransactionErrorNoMessage, ErrorClass = "Exception" },
-                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : OutsideTransactionErrorNoMessage, ErrorClass = "Exception" },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasSpanId = true, HasTraceId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : InTransactionErrorNoMessage, ErrorClass = ErrorClassValue },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : OutsideTransactionErrorNoMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
@@ -427,7 +431,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false, HasException = false },
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false, HasException = false },
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false, HasException = false },
-                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = AsyncOutsideTransactionErrorMessage, ErrorClass = "Exception" },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = AsyncOutsideTransactionErrorMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
@@ -449,7 +453,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false, HasException = false },
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false, HasException = false },
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false, HasException = false },
-                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = AsyncNoAwaitOutsideTransactionErrorMessage, ErrorClass = "Exception" },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = AsyncNoAwaitOutsideTransactionErrorMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
@@ -471,7 +475,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitWithDelayInTransactionDebugMessage, HasTraceId = true, HasSpanId = true, HasException = false },
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitWithDelayInTransactionInfoMessage, HasTraceId = true, HasSpanId = true, HasException = false },
                     new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitWithDelayInTransactionWarningMessage, HasTraceId = true, HasSpanId = true, HasException = false },
-                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = "\t   at NotNewRelic.ExceptionBuilder.BuildException(String message) in C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\UnitTests\\Core.UnitTest\\Wrapper\\AgentWrapperApi\\AgentWrapperApiTests.cs:line 1597", ErrorMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, ErrorClass = "Exception" },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();

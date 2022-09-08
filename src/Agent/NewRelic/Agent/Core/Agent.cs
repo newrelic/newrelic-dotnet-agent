@@ -429,9 +429,6 @@ namespace NewRelic.Agent.Core
             if (_configurationService.Configuration.LogEventCollectorEnabled)
             {
                 var logMessage = getLogMessage(logEvent);
-
-                var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
-
                 var logException = getLogException(logEvent);
 
                 // exit quickly if the message and exception are missing
@@ -439,6 +436,8 @@ namespace NewRelic.Agent.Core
                 {
                     return;
                 }
+
+                var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
 
                 LogEventWireModel logEventWireModel = null;
                 if (logException != null)
