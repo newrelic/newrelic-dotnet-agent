@@ -1,6 +1,8 @@
 name: Check for new core technologies
 
 on:
+  schedule:
+   - cron:  '0 10 * * *'
   workflow_dispatch:
 
 env:
@@ -11,6 +13,9 @@ jobs:
     name: Check for core technology package updates
     runs-on: ubuntu-latest
     continue-on-error: false
+    
+    env:
+      scan-tool-path: ${{ github.workspace }}/.github/workflows/scripts/nugetSlackNotifications
 
     steps:
       - name: Checkout
@@ -19,4 +24,19 @@ jobs:
           fetch-depth: 0
 
       - name: Check for updates to core technology packages
-        run: echo "hi!"
+        run: dotnet run --project ${{ env.scan-tool-path }} ${{ env.nugets }}
+        env:
+            webhook: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
+            nugets:
+                 "system.data.sqlclient
+                 microsoft.data.sqlclient
+                 mongocsharpdriver
+                 mongodb.driver
+                 mysql.data
+                 mysqlconnector
+                 stackexchange.redis
+                 rabbitmq.client
+                 microsoft.net.http
+                 restsharp
+                 serilog"
+                 
