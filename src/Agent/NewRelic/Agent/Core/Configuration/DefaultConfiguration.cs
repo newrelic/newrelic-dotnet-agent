@@ -893,6 +893,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public int? SamplingTarget => _serverConfiguration.SamplingTarget;
 
+        // Faster Event Harvest configuration rules apply here, which is why ServerOverrides takes precedence over EnvironmentOverrides
         public int SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestLimit,
            EnvironmentOverrides(_localConfiguration.spanEvents.maximumSamplesStored, "NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED").GetValueOrDefault());
 
@@ -1124,6 +1125,8 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
+                // Faster Event Harvest configuration rules apply here, if/when we add an environment variable for this property we need to make sure that
+                // ServerOverrides takes precedence over EnvironmentOverrides
                 return ServerOverrides(_serverConfiguration.EventHarvestConfig?.ErrorEventHarvestLimit(), _localConfiguration.errorCollector.maxEventSamplesStored);
             }
         }
@@ -1528,7 +1531,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-               // Faster Event Harvest configuration rules apply here, which is why ServerOverrides takes precedence over EnvironmentOverrides
+                // Faster Event Harvest configuration rules apply here, which is why ServerOverrides takes precedence over EnvironmentOverrides
                 var maxValue = _localConfiguration.customEvents.maximumSamplesStored;
                 return ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(), (int)EnvironmentOverrides(maxValue, "MAX_EVENT_SAMPLES_STORED"));
             }
