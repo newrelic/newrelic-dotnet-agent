@@ -5073,6 +5073,8 @@ namespace NewRelic.Agent.Core.Config
         
         private int maxSamplesStoredField;
         
+        private string logLevelDenyListField;
+        
         /// <summary>
         /// configurationApplicationLoggingForwarding class constructor
         /// </summary>
@@ -5107,6 +5109,19 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.maxSamplesStoredField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string logLevelDenyList
+        {
+            get
+            {
+                return this.logLevelDenyListField;
+            }
+            set
+            {
+                this.logLevelDenyListField = value;
             }
         }
         

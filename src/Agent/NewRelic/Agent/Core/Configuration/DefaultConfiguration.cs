@@ -1908,6 +1908,16 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public virtual IEnumerable<string> LogLevelDenyList
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.logLevelDenyList,
+                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_LOG_LEVEL_DENY_LIST")
+                    .Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            }
+        }
+
         #endregion
 
         public virtual bool AppDomainCachingDisabled

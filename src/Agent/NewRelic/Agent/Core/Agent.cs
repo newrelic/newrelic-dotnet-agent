@@ -420,6 +420,12 @@ namespace NewRelic.Agent.Core
                 normalizedLevel = string.IsNullOrWhiteSpace(level) ? "UNKNOWN" : level.ToUpper();
             }
 
+            // we want to ignore case so that we don't have to normalize the deny-list values
+            if (_configurationService.Configuration.LogLevelDenyList.Contains(normalizedLevel, StringComparer.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
             if (_configurationService.Configuration.LogMetricsCollectorEnabled)
             {
                 _agentHealthReporter.IncrementLogLinesCount(normalizedLevel);
