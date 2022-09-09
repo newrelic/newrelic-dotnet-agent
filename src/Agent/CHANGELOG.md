@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixes
 * Resolves an issue where log forwarding could drop logs in async scenarios. [#1174](https://github.com/newrelic/newrelic-dotnet-agent/pull/1201)
+* Fixes an agent configuration bug where values set in the `MAX_EVENT_SAMPLES_STORED` and `MAX_TRANSACTION_SAMPLES_STORED` environment variables, which configure the maximum samples stored per one-minute harvest interval, were not being properly converted to apply to the five-second harvest interval for those data types. [#1239](https://github.com/newrelic/newrelic-dotnet-agent/pull/1239)
 
 ## [10.0.0] - 2022-07-19
 
