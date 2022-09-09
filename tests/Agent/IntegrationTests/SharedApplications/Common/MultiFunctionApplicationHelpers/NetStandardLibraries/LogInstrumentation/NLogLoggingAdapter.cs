@@ -31,9 +31,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log.Warn(message);
         }
 
-        public void Error(string message)
+        public void Error(Exception exception)
         {
-            _log.Error(message);
+            _log.Error(exception, exception.Message);
+        }
+
+        public void ErrorNoMessage(Exception exception)
+        {
+            _log.Error(exception, string.Empty);
         }
 
         public void Fatal(string message)
@@ -41,14 +46,24 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log.Fatal(message);
         }
 
+        public void NoMessage()
+        {
+            _log.Trace(string.Empty);
+        }
+
         public void Configure()
         {
-            _log = GetLogger();
+            _log = GetLogger(LogLevel.Debug);
+        }
+
+        public void ConfigureWithInfoLevelEnabled()
+        {
+            _log = GetLogger(LogLevel.Info);
         }
 
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
-            _log = GetLogger();
+            _log = GetLogger(LogLevel.Debug);
         }
 
         public void ConfigureJsonLayoutAppenderForDecoration()
@@ -61,10 +76,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 }
             };
 
-            _log = _log = GetLogger(jsonLayout);
+            _log = _log = GetLogger(LogLevel.Debug, jsonLayout);
         }
 
-        private Logger GetLogger(Layout layoutOverride = null)
+        private Logger GetLogger(LogLevel minimumLogLevel, Layout layoutOverride = null)
         {
             var logFactory = new NLog.LogFactory();
             var logConfig = new NLog.Config.LoggingConfiguration();
@@ -76,9 +91,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             }
 
             logConfig.AddTarget("console", logConsole);
-            logConfig.LoggingRules.Add(new NLog.Config.LoggingRule("*", LogLevel.Debug, logConsole));
+            logConfig.LoggingRules.Add(new NLog.Config.LoggingRule("*", minimumLogLevel, logConsole));
             logFactory.Configuration = logConfig;
-            return logFactory.GetLogger("LoggingTest");
+            return logFactory.GetLogger("NLogLoggingTest");
         }
     }
 }

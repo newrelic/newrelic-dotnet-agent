@@ -24,25 +24,36 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            // There is no LogEvent equivilent in MSE Logging
-            RecordLogMessage(instrumentedMethodCall.MethodCall, agent);
+            var melLoggerInstance = (MEL.ILogger)instrumentedMethodCall.MethodCall.InvocationTarget;
+
+            // There is no LogEvent equivalent in MSE Logging
+            RecordLogMessage(instrumentedMethodCall.MethodCall, melLoggerInstance, agent);
 
             // need to return AfterWrappedMethodDelegate here since we have two different return options from this method.
-            return DecorateLogMessage((MEL.ILogger)instrumentedMethodCall.MethodCall.InvocationTarget, agent);
+            return DecorateLogMessage(melLoggerInstance, agent);
         }
 
-        private void RecordLogMessage(MethodCall methodCall, IAgent agent)
+        private void RecordLogMessage(MethodCall methodCall, MEL.ILogger logger, IAgent agent)
         {
-            // MSE Logging doesn't have a timestamp for us to pull so we fudge it here.
-            Func<object, DateTime> getTimestampFunc = mc => DateTime.UtcNow;
+            // We need to manually check if each log message is enabled since our MEL instrumentation takes place before
+            // logs have been filtered to enabled levels.. Since this iterates all the loggers, cache responses for 60 seconds
+            var logLevelIsEnabled = logger.IsEnabled((MEL.LogLevel)methodCall.MethodArguments[0]);
 
-            Func<object, string> getLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
+            if (logLevelIsEnabled)
+            {
+                // MSE Logging doesn't have a timestamp for us to pull so we fudge it here.
+                Func<object, DateTime> getTimestampFunc = mc => DateTime.UtcNow;
 
-            Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
+                Func<object, string> getLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
 
-            var xapi = agent.GetExperimentalApi();
+                Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
 
-            xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+                Func<object, Exception> getLogExceptionFunc = mc => ((MethodCall)mc).MethodArguments[3] as Exception; // using "as" since we want a null if missing
+
+                var xapi = agent.GetExperimentalApi();
+
+                xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+            }
         }
 
         private AfterWrappedMethodDelegate DecorateLogMessage(MEL.ILogger logger, IAgent agent)

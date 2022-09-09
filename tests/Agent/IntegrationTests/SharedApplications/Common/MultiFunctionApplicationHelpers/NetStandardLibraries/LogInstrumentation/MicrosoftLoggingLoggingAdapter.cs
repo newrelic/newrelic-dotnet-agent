@@ -4,6 +4,7 @@
 
 #if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
 
+using System;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Formatting.Json;
@@ -33,30 +34,41 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             logger.LogWarning(message);
         }
 
-        public void Error(string message)
+        public void Error(Exception exception)
         {
-            logger.LogError(message);
+            logger.LogError(exception, exception.Message);
+        }
+
+        public void ErrorNoMessage(Exception exception)
+        {
+            logger.LogError(exception, string.Empty);
         }
 
         public void Fatal(string message)
         {
-            logger.LogTrace(message);
+            logger.LogCritical(message);
+        }
+
+        public void NoMessage()
+        {
+            logger.LogTrace(string.Empty);
         }
 
         public void Configure()
         {
-            Log.Logger = new LoggerConfiguration()
-              .MinimumLevel.Debug()
-              .Enrich.FromLogContext()
-              .WriteTo.Console()
-              .CreateLogger();
-
-            CreateLogger(); ;
+            CreateMelLogger(LogLevel.Debug);
         }
 
+        public void ConfigureWithInfoLevelEnabled()
+        {
+            CreateMelLogger(LogLevel.Information);
+        }
+
+        
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
-            Log.Logger = new LoggerConfiguration()
+            // NOTE: This is a serilog logger we are setting up
+            var serilogLogger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .Enrich.FromLogContext()
                 .WriteTo.Console(
@@ -64,30 +76,36 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 )
                 .CreateLogger();
 
-            CreateLogger();
+            CreateMelLogger(LogLevel.Debug, serilogLogger);
         }
 
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
-            Log.Logger = new LoggerConfiguration()
-               .MinimumLevel.Debug()
-              .Enrich.FromLogContext()
-              .WriteTo.Console(new JsonFormatter())
-              .CreateLogger();
+            // NOTE: This is a serilog logger we are setting up
+            var serilogLogger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .Enrich.FromLogContext()
+                .WriteTo.Console(new JsonFormatter())
+                .CreateLogger();
 
-            CreateLogger();
+            CreateMelLogger(LogLevel.Debug, serilogLogger);
         }
 
-        private void CreateLogger()
+        private void CreateMelLogger(LogLevel minimumLogLevel, Serilog.ILogger serilogLoggerImpl = null)
         {
             using var loggerFactory = LoggerFactory.Create(builder =>
             {
-                builder
-                    .AddFilter("Microsoft", LogLevel.Warning)
-                    .AddFilter("System", LogLevel.Warning)
-                    .AddFilter("NonHostConsoleApp.Program", LogLevel.Debug)
-                    .AddSerilog()
-                    .AddConsole();
+                builder.SetMinimumLevel(minimumLogLevel);
+
+                // Either use serilog OR the built in console appender
+                if (serilogLoggerImpl != null)
+                {
+                    builder.AddSerilog(serilogLoggerImpl);
+                }
+                else
+                {
+                    builder.AddConsole();
+                }
             });
             logger = loggerFactory.CreateLogger<LoggingTester>();
         }

@@ -1,6 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using Serilog;
 using Serilog.Core;
 using Serilog.Formatting.Json;
@@ -30,14 +31,24 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log.Warning(message);
         }
 
-        public void Error(string message)
+        public void Error(Exception exception)
         {
-            _log.Error(message);
+            _log.Error(exception, exception.Message);
+        }
+
+        public void ErrorNoMessage(Exception exception)
+        {
+            _log.Error(exception, string.Empty);
         }
 
         public void Fatal(string message)
         {
             _log.Fatal(message);
+        }
+
+        public void NoMessage()
+        {
+            _log.Verbose(string.Empty);
         }
 
         public void Configure()
@@ -46,6 +57,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
             loggerConfig
                 .MinimumLevel.Debug()
+                .WriteTo.Console();
+
+            _log = loggerConfig.CreateLogger();
+        }
+
+        public void ConfigureWithInfoLevelEnabled()
+        {
+            var loggerConfig = new LoggerConfiguration();
+
+            loggerConfig
+                .MinimumLevel.Information()
                 .WriteTo.Console();
 
             _log = loggerConfig.CreateLogger();

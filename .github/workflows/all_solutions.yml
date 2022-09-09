@@ -472,7 +472,7 @@ jobs:
           HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Owin, ReJit.NetCore, 
           Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.ZeroMaxSamplesStored,
           Logging.MetricsAndForwarding.log4net, Logging.MetricsAndForwarding.MicrosoftLogging, 
-          Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog,
+          Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog, Logging.LogLevelDetection,
           ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
           WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
           RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, 

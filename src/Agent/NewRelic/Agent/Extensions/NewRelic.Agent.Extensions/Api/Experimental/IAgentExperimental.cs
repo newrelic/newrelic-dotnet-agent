@@ -26,8 +26,9 @@ namespace NewRelic.Agent.Api.Experimental
         /// <param name="getTimestamp">A Func<object,DateTime> that knows how to get the timestamp from the logEvent.</param>
         /// <param name="getLogLevel">A Func<object,object> that knows how to get the log level from the logEvent.</param>
         /// <param name="getLogMessage">A Func<object,string> that knows how to get the log message from the logEvent</param>
+        /// <param name="getLogException">A Func<object,Exception> that knows how to get the log exception from the logEvent</param>
         /// <param name="spanId">The span ID of the segment the log message occured within.</param>
         /// <param name="traceId">The trace ID of the transaction the log message occured within.</param>
-        void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLogLevel, Func<object,string> getLogMessage, string spanId, string traceId);
+        void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLogLevel, Func<object,string> getLogMessage, Func<object, Exception> getLogException, string spanId, string traceId);
     }
 }
