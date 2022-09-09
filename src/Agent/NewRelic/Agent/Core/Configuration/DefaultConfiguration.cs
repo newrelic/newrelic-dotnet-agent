@@ -1598,6 +1598,7 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
+                // Faster Event Harvest configuration rules apply here, which is why ServerOverrides takes precedence over EnvironmentOverrides
                 var maxValue = _localConfiguration.transactionEvents.maximumSamplesStored;
 
                 return ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), (int)EnvironmentOverrides(maxValue, "MAX_TRANSACTION_SAMPLES_STORED"));
