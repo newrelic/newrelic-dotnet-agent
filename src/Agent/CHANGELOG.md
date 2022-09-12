@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 
+## [10.1.0] - 2022-09-12
+
 ### New Features
 * Support of setting up labels via appsettings.json and app/web.config file. [#1204](https://github.com/newrelic/newrelic-dotnet-agent/pull/1204)
 * Additional DEBUG-level logging of all environment variables.
@@ -478,7 +480,8 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.0.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.1.0...HEAD
+[10.1.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.0.0...v10.1.0
 [10.0.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.9.0...v10.0.0
 [9.9.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.8.1...v9.9.0
 [9.8.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.8.0...v9.8.1
