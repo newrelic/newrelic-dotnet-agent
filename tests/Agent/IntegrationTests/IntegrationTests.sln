@@ -108,6 +108,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleMultiFunctionApplicationCore", "SharedApplications\ConsoleMultiFunctionApplicationCore\ConsoleMultiFunctionApplicationCore.csproj", "{4213F281-732C-4447-B347-1C46E3609986}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MultiFunctionApplicationHelpers", "SharedApplications\Common\MultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj", "{882747A5-5B57-4AD9-B209-D1F03A657DB9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B187563A-795B-4C70-A525-6470B88AD341} = {B187563A-795B-4C70-A525-6470B88AD341}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCoreMvcCoreFrameworkApplication", "Applications\AspNetCoreMvcCoreFrameworkApplication\AspNetCoreMvcCoreFrameworkApplication.csproj", "{63EC546C-650D-4CF4-94C4-A350D1D491FD}"
 EndProject
@@ -130,6 +133,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore5BasicWebApiApplication", "Applications\AspNetCore5BasicWebApiApplication\AspNetCore5BasicWebApiApplication.csproj", "{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore6BasicWebApiApplication", "Applications\AspNetCore6BasicWebApiApplication\AspNetCore6BasicWebApiApplication.csproj", "{66138A9F-0B28-4CB3-9DF9-D22C19641043}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Api.Agent", "..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj", "{B187563A-795B-4C70-A525-6470B88AD341}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -349,6 +354,10 @@ Global
 		{66138A9F-0B28-4CB3-9DF9-D22C19641043}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66138A9F-0B28-4CB3-9DF9-D22C19641043}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66138A9F-0B28-4CB3-9DF9-D22C19641043}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B187563A-795B-4C70-A525-6470B88AD341}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B187563A-795B-4C70-A525-6470B88AD341}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B187563A-795B-4C70-A525-6470B88AD341}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B187563A-795B-4C70-A525-6470B88AD341}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

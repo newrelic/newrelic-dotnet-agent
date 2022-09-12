@@ -36,7 +36,8 @@ namespace NewRelic.Agent.Core.Metric
         TransactionGetCurrentSpan = 22,
         SpanAddCustomAttribute = 23,
         InsertDistributedTraceHeaders = 24,
-        AcceptDistributedTraceHeaders = 25
+        AcceptDistributedTraceHeaders = 25,
+        SpanSetName = 26
     }
 
     public interface IApiSupportabilityMetricCounters : IOutOfBandMetricSource

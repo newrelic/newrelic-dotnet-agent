@@ -11,7 +11,6 @@ namespace NewRelic.Agent.Core.Api
 {
     public class SpanBridgeApi
     {
-
         private readonly ISpan _span;
         private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
         private readonly IConfigurationService _configSvc;
@@ -44,9 +43,31 @@ namespace NewRelic.Agent.Core.Api
                 }
                 catch (Exception)
                 {
-                    //Swallow the error
+                    // Swallow the error.. nom nom
                 }
+            }
 
+            return _span;
+        }
+
+        public object SetName(string name)
+        {
+            try
+            {
+                _apiSupportabilityMetricCounters.Record(ApiMethod.SpanSetName);
+
+                _span.SetName(name);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    Log.Error($"Error in SetName: {ex}");
+                }
+                catch (Exception)
+                {
+                    // Swallow the error.. nom nom
+                }
             }
 
             return _span;

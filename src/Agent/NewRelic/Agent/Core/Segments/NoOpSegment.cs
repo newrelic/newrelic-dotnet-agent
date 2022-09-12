@@ -36,6 +36,8 @@ namespace NewRelic.Agent.Core.Segments
         public string UserCodeFunction { get => string.Empty; set { } }
         public string UserCodeNamespace { get => string.Empty; set { } }
 
+		public string SegmentNameOverride { get; set; } = null;
+		
         public void End() { }
         public void End(Exception ex) { }
         public void MakeCombinable() { }
@@ -53,6 +55,11 @@ namespace NewRelic.Agent.Core.Segments
         }
 
         public ISpan AddCustomAttribute(string key, object value)
+        {
+            return this;
+        }
+
+        public ISpan SetName(string name)
         {
             return this;
         }

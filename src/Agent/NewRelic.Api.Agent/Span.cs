@@ -27,11 +27,31 @@ namespace NewRelic.Api.Agent
             try
             {
                 _wrappedSpan.AddCustomAttribute(key, value);
-                return this;
             }
             catch (RuntimeBinderException)
             {
                 _isAddCustomAttributeAvailable = false;
+            }
+
+            return this;
+        }
+
+        private static bool _isSetNameAvailable = true;
+
+        public ISpan SetName(string name)
+        {
+            if (!_isSetNameAvailable)
+            {
+                return _noOpSpan.SetName(name);
+            }
+
+            try
+            {
+                _wrappedSpan.SetName(name);
+            }
+            catch (RuntimeBinderException)
+            {
+                _isSetNameAvailable = false;
             }
 
             return this;

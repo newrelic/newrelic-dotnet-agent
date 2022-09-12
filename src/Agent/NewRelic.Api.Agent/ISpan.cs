@@ -8,11 +8,19 @@ namespace NewRelic.Api.Agent
     /// </summary>
     public interface ISpan
     {
-        /// <summary> Add a key/value pair to the transaction.  These are reported in errors and
-        /// transaction traces.</summary>
-        ///
-        /// <param name="key">   The key name to add to the span attributes. Limited to 255-bytes.</param>
-        /// <param name="value"> The value to add to the current span.  Values are limited to 255-bytes.</param>
+        /// <summary>
+        /// Add a key/value pair to the span.
+        /// </summary>
+        /// <param name="key"> The key name to add to the span attributes. Limited to 255-bytes.</param>
+        /// <param name="value"> The value to add to the current span. Limited to 255-bytes.</param>
+        /// <returns>ISpan to support builder pattern</returns>
         ISpan AddCustomAttribute(string key, object value);
+
+        /// <summary>
+        /// Sets the name of the current span.
+        /// </summary>
+        /// <param name="name">The new name for the span.</param>
+        /// <returns>ISpan to support builder pattern</returns>
+        ISpan SetName(string name);
     }
 }
