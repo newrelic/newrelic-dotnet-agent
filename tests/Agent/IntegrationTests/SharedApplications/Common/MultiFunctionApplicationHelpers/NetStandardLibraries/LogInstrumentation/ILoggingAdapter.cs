@@ -1,6 +1,8 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
 {
     interface ILoggingAdapter
@@ -8,9 +10,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void Debug (string message);
         public void Info(string message);
         public void Warn(string message);
-        public void Error(string message);
-        public void Fatal(string message);
+        public void Error(Exception exception);
 
+        public void ErrorNoMessage(Exception exception);
+        public void Fatal(string message);
+        public void NoMessage();
         public void Configure();
         public void ConfigureWithInfoLevelEnabled();
         public void ConfigurePatternLayoutAppenderForDecoration();

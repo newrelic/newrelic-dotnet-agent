@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30128.74
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnboundedIntegrationTests", "UnboundedIntegrationTests\UnboundedIntegrationTests.csproj", "{1E17AA8A-B8BA-4A64-892C-B58151293142}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -47,6 +47,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetStandardTestLibrary", "SharedApplications\Common\NetStandardTestLibrary\NetStandardTestLibrary.csproj", "{B64766CA-8731-493F-8417-61A70F783EB7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongoDbApi", "UnboundedApplications\MongoDbApi\MongoDbApi.csproj", "{39F0F3D0-F672-4B3B-939B-08FA8E4FE722}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Api.Agent", "..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj", "{1D93182F-CF1D-47A1-BC0F-4E27DE9ACEF9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -118,6 +120,10 @@ Global
 		{39F0F3D0-F672-4B3B-939B-08FA8E4FE722}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39F0F3D0-F672-4B3B-939B-08FA8E4FE722}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39F0F3D0-F672-4B3B-939B-08FA8E4FE722}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D93182F-CF1D-47A1-BC0F-4E27DE9ACEF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D93182F-CF1D-47A1-BC0F-4E27DE9ACEF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D93182F-CF1D-47A1-BC0F-4E27DE9ACEF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D93182F-CF1D-47A1-BC0F-4E27DE9ACEF9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -137,7 +143,7 @@ Global
 		{39F0F3D0-F672-4B3B-939B-08FA8E4FE722} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Data.6.0.1304.0\lib\NET45
 		SolutionGuid = {656848E2-BFD2-4092-9328-C6CDF39B1274}
+		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Data.6.0.1304.0\lib\NET45
 	EndGlobalSection
 EndGlobal

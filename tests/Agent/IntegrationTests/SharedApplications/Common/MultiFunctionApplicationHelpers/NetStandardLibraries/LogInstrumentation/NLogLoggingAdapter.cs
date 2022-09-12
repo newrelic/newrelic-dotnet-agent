@@ -31,14 +31,24 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log.Warn(message);
         }
 
-        public void Error(string message)
+        public void Error(Exception exception)
         {
-            _log.Error(message);
+            _log.Error(exception, exception.Message);
+        }
+
+        public void ErrorNoMessage(Exception exception)
+        {
+            _log.Error(exception, string.Empty);
         }
 
         public void Fatal(string message)
         {
             _log.Fatal(message);
+        }
+
+        public void NoMessage()
+        {
+            _log.Trace(string.Empty);
         }
 
         public void Configure()

@@ -9,5 +9,10 @@ namespace NewRelic.Api.Agent
         {
             return this;
         }
+
+        public ISpan SetName(string name)
+        {
+            return this;
+        }
     }
 }

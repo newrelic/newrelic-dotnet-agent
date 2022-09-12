@@ -18,10 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewRelic.Agent.Api" Version="8.41.1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Common\MultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj" />
     <ProjectReference Include="..\Common\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
   </ItemGroup>
