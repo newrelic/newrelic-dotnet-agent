@@ -21,6 +21,9 @@ namespace NewRelic.Agent.Core.JsonConverters
         private const string Level = "level";
         private const string SpanId = "span.id";
         private const string TraceId = "trace.id";
+        private const string ErrorStack = "error.stack";
+        private const string ErrorMessage = "error.message";
+        private const string ErrorClass = "error.class";
 
         public override LogEventWireModelCollection ReadJson(JsonReader reader, Type objectType, LogEventWireModelCollection existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
@@ -57,10 +60,33 @@ namespace NewRelic.Agent.Core.JsonConverters
                 jsonWriter.WriteStartObject();
                 jsonWriter.WritePropertyName(TimeStamp);
                 jsonWriter.WriteValue(logEvent.TimeStamp);
-                jsonWriter.WritePropertyName(Message);
-                jsonWriter.WriteValue(logEvent.Message);
+
+                if (!string.IsNullOrEmpty(logEvent.Message))
+                {
+                    jsonWriter.WritePropertyName(Message);
+                    jsonWriter.WriteValue(logEvent.Message);
+                }
+
                 jsonWriter.WritePropertyName(Level);
                 jsonWriter.WriteValue(logEvent.Level);
+
+                if (!string.IsNullOrWhiteSpace(logEvent.ErrorStack))
+                {
+                    jsonWriter.WritePropertyName(ErrorStack);
+                    jsonWriter.WriteValue(logEvent.ErrorStack);
+                }
+
+                if (!string.IsNullOrWhiteSpace(logEvent.ErrorMessage))
+                {
+                    jsonWriter.WritePropertyName(ErrorMessage);
+                    jsonWriter.WriteValue(logEvent.ErrorMessage);
+                }
+
+                if (!string.IsNullOrWhiteSpace(logEvent.ErrorClass))
+                {
+                    jsonWriter.WritePropertyName(ErrorClass);
+                    jsonWriter.WriteValue(logEvent.ErrorClass);
+                }
 
                 if (!string.IsNullOrWhiteSpace(logEvent.SpanId))
                 {

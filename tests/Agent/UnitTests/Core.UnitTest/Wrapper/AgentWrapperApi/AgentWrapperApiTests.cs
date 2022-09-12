@@ -44,6 +44,7 @@ using NewRelic.Core;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Collections;
+using NewRelic.Agent.Core.Utils;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
@@ -1301,13 +1302,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Func<object, string> getLevelFunc = (l) => level;
             Func<object, DateTime> getTimestampFunc = (l) => timestamp;
             Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => null;
 
             var spanId = "spanid";
             var traceId = "traceid";
             var loggingFramework = "testFramework";
 
             var xapi = _agent as IAgentExperimental;
-            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, spanId, traceId);
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, spanId, traceId);
 
             // Access the private collection of events to get the number of add attempts.
             var privateAccessor = new PrivateAccessor(_logEventAggregator);
@@ -1332,13 +1334,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Func<object, string> getLevelFunc = (l) => level;
             Func<object, DateTime> getTimestampFunc = (l) => timestamp;
             Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => null;
 
             var spanId = "spanid";
             var traceId = "traceid";
             var loggingFramework = "testFramework";
 
             var xapi = _agent as IAgentExperimental;
-            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, spanId, traceId);
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, spanId, traceId);
 
             // Access the private collection of events to get the number of add attempts.
             var privateAccessor = new PrivateAccessor(_logEventAggregator);
@@ -1356,6 +1359,77 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         }
 
         [Test]
+        public void RecordLogMessage_NoTransaction_NoMessage_WithException_Success()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            string message = null;
+            var exception = NotNewRelic.ExceptionBuilder.BuildException("exception message");
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => exception;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, spanId, traceId);
+
+            // Access the private collection of events to get the number of add attempts.
+            var privateAccessor = new PrivateAccessor(_logEventAggregator);
+            var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
+
+            var logEvent = logEvents?.FirstOrDefault()?.Data;
+            Assert.AreEqual(1, logEvents.Count);
+            Assert.IsNotNull(logEvent);
+            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
+            Assert.AreEqual(level, logEvent.Level);
+            Assert.AreEqual(message, logEvent.Message);
+            Assert.AreEqual(spanId, logEvent.SpanId);
+            Assert.AreEqual(traceId, logEvent.TraceId);
+            Assert.IsNotNull(logEvent.Priority);
+        }
+
+        [Test]
+        public void RecordLogMessage_NoTransaction_NoMessage_NoException_DropsEvent()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            string message = null;
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => null;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, spanId, traceId);
+
+            // Access the private collection of events to get the number of add attempts.
+            var privateAccessor = new PrivateAccessor(_logEventAggregator);
+            var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
+
+            var logEvent = logEvents?.FirstOrDefault()?.Data;
+            Assert.AreEqual(0, logEvents.Count);
+            Assert.IsNull(logEvent);
+        }
+
+        [Test]
         public void RecordLogMessage_WithTransaction_Success()
         {
             Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
@@ -1369,6 +1443,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Func<object, string> getLevelFunc = (l) => level;
             Func<object, DateTime> getTimestampFunc = (l) => timestamp;
             Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => null;
 
             var spanId = "spanid";
             var traceId = "traceid";
@@ -1379,7 +1454,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var priority = transaction.Priority;
 
             var xapi = _agent as IAgentExperimental;
-            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, spanId, traceId);
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, spanId, traceId);
 
             var harvestedLogEvents = transaction.HarvestLogEvents();
             var logEvent = harvestedLogEvents.FirstOrDefault();
@@ -1391,6 +1466,79 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Assert.AreEqual(spanId, logEvent.SpanId);
             Assert.AreEqual(traceId, logEvent.TraceId);
             Assert.AreEqual(priority, logEvent.Priority);
+        }
+
+        [Test]
+        public void RecordLogMessage_WithTransaction_NoMessage_WithException_Success()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            string message = null;
+            var exception = NotNewRelic.ExceptionBuilder.BuildException("exception message");
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => exception;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            SetupTransaction();
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            var priority = transaction.Priority;
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, spanId, traceId);
+
+            var harvestedLogEvents = transaction.HarvestLogEvents();
+            var logEvent = harvestedLogEvents.FirstOrDefault();
+            Assert.AreEqual(1, harvestedLogEvents.Count);
+            Assert.IsNotNull(logEvent);
+            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
+            Assert.AreEqual(level, logEvent.Level);
+            Assert.AreEqual(message, logEvent.Message);
+            Assert.AreEqual(spanId, logEvent.SpanId);
+            Assert.AreEqual(traceId, logEvent.TraceId);
+            Assert.AreEqual(priority, logEvent.Priority);
+        }
+
+        [Test]
+        public void RecordLogMessage_WithTransaction_NoMessage_NoException_DropsEvent()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            string message = null;
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => null;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            SetupTransaction();
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            var priority = transaction.Priority;
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, spanId, traceId);
+
+            var harvestedLogEvents = transaction.HarvestLogEvents();
+            var logEvent = harvestedLogEvents.FirstOrDefault();
+            Assert.AreEqual(0, harvestedLogEvents.Count);
+            Assert.IsNull(logEvent);
         }
 
         [Test]
@@ -1407,6 +1555,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Func<object, string> getLevelFunc = (l) => level;
             Func<object, DateTime> getTimestampFunc = (l) => timestamp;
             Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => null;
 
             var spanId = "spanid";
             var traceId = "traceid";
@@ -1418,7 +1567,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             transaction.HarvestLogEvents();
 
             var xapi = _agent as IAgentExperimental;
-            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, spanId, traceId);
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, spanId, traceId);
 
             var privateAccessor = new PrivateAccessor(_logEventAggregator);
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
@@ -1431,6 +1580,140 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Assert.AreEqual(message, logEvent.Message);
             Assert.AreEqual(spanId, logEvent.SpanId);
             Assert.AreEqual(traceId, logEvent.TraceId);
+            Assert.AreEqual(priority, logEvent.Priority);
+        }
+
+        [Test]
+        public void RecordLogMessage_NoTransaction_WithException_Success()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            var message = "message";
+            var exception = NotNewRelic.ExceptionBuilder.BuildException("exception message");
+            var fixedStackTrace = string.Join(" \n", StackTraces.ScrubAndTruncate(exception.StackTrace, 300));
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => exception;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, spanId, traceId);
+
+            // Access the private collection of events to get the number of add attempts.
+            var privateAccessor = new PrivateAccessor(_logEventAggregator);
+            var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
+
+            var logEvent = logEvents?.FirstOrDefault()?.Data;
+            Assert.AreEqual(1, logEvents.Count);
+            Assert.IsNotNull(logEvent);
+            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
+            Assert.AreEqual(level, logEvent.Level);
+            Assert.AreEqual(message, logEvent.Message);
+            Assert.AreEqual(spanId, logEvent.SpanId);
+            Assert.AreEqual(traceId, logEvent.TraceId);
+            Assert.AreEqual(fixedStackTrace, logEvent.ErrorStack);
+            Assert.AreEqual(exception.Message, logEvent.ErrorMessage);
+            Assert.AreEqual(exception.GetType().ToString(), logEvent.ErrorClass);
+            Assert.IsNotNull(logEvent.Priority);
+        }
+
+        [Test]
+        public void RecordLogMessage_WithTransaction_WithException_Success()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            var message = "message";
+            var exception = NotNewRelic.ExceptionBuilder.BuildException("exception message");
+            var fixedStackTrace = string.Join(" \n", StackTraces.ScrubAndTruncate(exception.StackTrace, 300));
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => exception;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            SetupTransaction();
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            var priority = transaction.Priority;
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, spanId, traceId);
+
+            var harvestedLogEvents = transaction.HarvestLogEvents();
+            var logEvent = harvestedLogEvents.FirstOrDefault();
+            Assert.AreEqual(1, harvestedLogEvents.Count);
+            Assert.IsNotNull(logEvent);
+            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
+            Assert.AreEqual(level, logEvent.Level);
+            Assert.AreEqual(message, logEvent.Message);
+            Assert.AreEqual(spanId, logEvent.SpanId);
+            Assert.AreEqual(traceId, logEvent.TraceId);
+            Assert.AreEqual(fixedStackTrace, logEvent.ErrorStack);
+            Assert.AreEqual(exception.Message, logEvent.ErrorMessage);
+            Assert.AreEqual(exception.GetType().ToString(), logEvent.ErrorClass);
+            Assert.AreEqual(priority, logEvent.Priority);
+        }
+
+        [Test]
+        public void RecordLogMessage_WithTransaction_WithException_ThatHasHadLogsHarvested_FallsBackToLogAggregator()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            var message = "message";
+            var exception = NotNewRelic.ExceptionBuilder.BuildException("exception message");
+            var fixedStackTrace = string.Join(" \n", StackTraces.ScrubAndTruncate(exception.StackTrace, 300));
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => exception;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            SetupTransaction();
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            var priority = transaction.Priority;
+            transaction.HarvestLogEvents();
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, spanId, traceId);
+
+            var privateAccessor = new PrivateAccessor(_logEventAggregator);
+            var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
+
+            var logEvent = logEvents?.FirstOrDefault()?.Data;
+            Assert.AreEqual(1, logEvents.Count);
+            Assert.IsNotNull(logEvent);
+            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
+            Assert.AreEqual(level, logEvent.Level);
+            Assert.AreEqual(message, logEvent.Message);
+            Assert.AreEqual(spanId, logEvent.SpanId);
+            Assert.AreEqual(traceId, logEvent.TraceId);
+            Assert.AreEqual(fixedStackTrace, logEvent.ErrorStack);
+            Assert.AreEqual(exception.Message, logEvent.ErrorMessage);
+            Assert.AreEqual(exception.GetType().ToString(), logEvent.ErrorClass);
             Assert.AreEqual(priority, logEvent.Priority);
         }
 

@@ -84,10 +84,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     _log.Warn(message);
                     break;
                 case "ERROR":
-                    _log.Error(message);
+                    _log.Error(ExceptionBuilder.BuildException(message));
                     break;
                 case "FATAL":
                     _log.Fatal(message);
+                    break;
+                case "NOMESSAGE":
+                    _log.ErrorNoMessage(ExceptionBuilder.BuildException(message));
                     break;
                 default:
                     _log.Info(message);

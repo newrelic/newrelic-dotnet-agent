@@ -34,14 +34,24 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log.Warn(message);
         }
 
-        public void Error(string message)
+        public void Error(Exception exception)
         {
-            _log.Error(message);
+            _log.Error(exception.Message, exception);
+        }
+
+        public void ErrorNoMessage(Exception exception)
+        {
+            _log.Error(string.Empty, exception);
         }
 
         public void Fatal(string message)
         {
             _log.Fatal(message);
+        }
+
+        public void NoMessage()
+        {
+            _log.Verbose("");
         }
 
         public void Configure()
@@ -85,5 +95,23 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             throw new System.NotImplementedException();
 #endif
         }
+    }
+
+    /// <summary>
+    /// Adds a "Verbose" log level to log4net to enable testing of "no message" log levels.
+    /// </summary>
+    public static class ILogExtentions
+    {
+        public static void Verbose(this ILog log, string message, Exception exception)
+        {
+            log.Logger.Log(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType,
+                log4net.Core.Level.Emergency, message, exception);
+        }
+
+        public static void Verbose(this ILog log, string message)
+        {
+            log.Verbose(message, null);
+        }
+
     }
 }
