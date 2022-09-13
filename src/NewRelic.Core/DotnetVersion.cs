@@ -29,6 +29,7 @@ namespace NewRelic.Core
         netcoreapp31,
         net5,
         net6,
+        net7,
         Other
     }
 
@@ -93,6 +94,11 @@ namespace NewRelic.Core
             if (envVer.Major == 3 && envVer.Minor == 1)
             {
                 return DotnetCoreVersion.netcoreapp31;
+            }
+
+            if (envVer.Major == 7)
+            {
+                return DotnetCoreVersion.net7;
             }
 
             if (envVer.Major == 6)
