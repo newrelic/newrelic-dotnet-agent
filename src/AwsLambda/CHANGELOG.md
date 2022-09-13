@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 ### Fixes
+* Span creation logic has been updated to fall back to using `UNKNOWN` for any missing span name components. The previous behavior was to fail span creation. [#1211](https://github.com/newrelic/newrelic-dotnet-agent/pull/1221)
 
 ## [1.3.0] - 2021-07-21
 
