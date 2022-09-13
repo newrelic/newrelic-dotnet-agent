@@ -421,7 +421,7 @@ namespace NewRelic.Agent.Core
             }
 
             // we want to ignore case so that we don't have to normalize the deny-list values
-            if (_configurationService.Configuration.LogLevelDenyList.Contains(normalizedLevel, StringComparer.OrdinalIgnoreCase))
+            if (_configurationService.Configuration.LogLevelDenylist.Contains(normalizedLevel, StringComparer.OrdinalIgnoreCase))
             {
                 return;
             }

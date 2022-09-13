@@ -188,7 +188,7 @@ namespace NewRelic.Agent.Configuration
         int LogEventsMaxSamplesStored { get; }
         TimeSpan LogEventsHarvestCycle { get; }
         bool LogDecoratorEnabled { get; }
-        IEnumerable<string> LogLevelDenyList { get; }
+        IEnumerable<string> LogLevelDenylist { get; }
         bool AppDomainCachingDisabled { get; }
         bool ForceNewTransactionOnNewThread { get; }
         bool CodeLevelMetricsEnabled {  get; }
