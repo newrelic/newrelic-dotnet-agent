@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2019-12-10
 
 ### New Features
-* New SDK providing Open Tracing instrumentation for AWS Lambda. Refer to New Relic's AWS Lambda monitoring documentation to get started https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring.
+* New SDK providing Open Tracing instrumentation for AWS Lambda. Refer to New Relic's AWS Lambda monitoring documentation to get started https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/.
 
 * **The New Relic AWS Lambda Agent for .NET is now Open Source** <br/>
 * The New Relic AWS Lambda Agent for .NET is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in the repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](https://opensource.newrelic.com/code-of-conduct/) for details on contributing!
