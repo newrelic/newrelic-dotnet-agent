@@ -404,6 +404,10 @@ jobs:
           dotnet-version: '7.0.100-preview.6.22352.1'
           include-prerelease: true
 
+      - name: List SDKS
+        run: dotnet --list-sdks
+        shell: powershell
+
       - name: Build IntegrationTests.sln
         run: |
           Write-Host "List NuGet Sources"
