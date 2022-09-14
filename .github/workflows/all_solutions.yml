@@ -292,6 +292,12 @@ jobs:
           New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)
         shell: powershell
 
+      - name: List windows sdk paths (debugging build problems)
+        run: |
+          Write-Host "Looking for windows dev kit bin paths"
+          Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin'
+        shell: powershell  
+
       - name: Build MsiInstaller.sln x86
         run: |
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}"
