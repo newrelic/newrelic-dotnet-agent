@@ -47,7 +47,7 @@ namespace nugetSlackNotifications
                     previousCatalogEntry = page.items[^2].catalogEntry;
                 }
 
-                if (latestCatalogEntry.published > DateTime.Now.AddDays(-10) && !(await latestCatalogEntry.isPrerelease()))
+                if (latestCatalogEntry.published > DateTime.Now.AddDays(-1) && !(await latestCatalogEntry.isPrerelease()))
                     newVersions.Add(new Tuple<string, string, string, string>(package, previousCatalogEntry.version, latestCatalogEntry.version, $"https://www.nuget.org/packages/{package}/"));
             }
 
