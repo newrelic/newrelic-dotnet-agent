@@ -10,9 +10,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public abstract class AspNetCoreBasicWebApiApplicationFixture : RemoteApplicationFixture
     {
-        protected const string _appDirName = "AspNetCoreBasicWebApiApplication";
-        protected const string _appExecutableName = "AspNetCoreBasicWebApiApplication.exe";
-
         protected AspNetCoreBasicWebApiApplicationFixture(string ApplicationDirectoryName, string ExecutableName, string TargetFramework) : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded, true, true, true))
         {
         }
@@ -29,21 +26,21 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     }
     public class AspNetCoreBasicWebApiApplicationFixture_net50 : AspNetCoreBasicWebApiApplicationFixture
     {
-        public AspNetCoreBasicWebApiApplicationFixture_net50() : base(_appDirName, _appExecutableName, "net5.0")
+        public AspNetCoreBasicWebApiApplicationFixture_net50() : base("AspNetCoreBasicWebApiApplication", "AspNetCoreBasicWebApiApplication.exe", "net5.0")
         {
         }
     }
 
     public class AspNetCoreBasicWebApiApplicationFixture_net60 : AspNetCoreBasicWebApiApplicationFixture
     {
-        public AspNetCoreBasicWebApiApplicationFixture_net60() : base(_appDirName, _appExecutableName, "net6.0")
+        public AspNetCoreBasicWebApiApplicationFixture_net60() : base("AspNetCoreBasicWebApiApplication", "AspNetCoreBasicWebApiApplication.exe", "net6.0")
         {
         }
     }
 
     public class AspNetCoreBasicWebApiApplicationFixture_net70 : AspNetCoreBasicWebApiApplicationFixture
     {
-        public AspNetCoreBasicWebApiApplicationFixture_net70() : base(_appDirName, _appExecutableName, "net7.0")
+        public AspNetCoreBasicWebApiApplicationFixture_net70() : base("AspNetCoreBasicWebApiApplication", "AspNetCoreBasicWebApiApplication.exe", "net7.0")
         {
         }
     }
