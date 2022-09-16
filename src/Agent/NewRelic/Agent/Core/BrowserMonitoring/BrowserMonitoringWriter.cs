@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             return bodyWithJsHeader;
         }
 
-        // Specification for Javascript insertion: https://newrelic.atlassian.net/wiki/display/eng/JavaScript+Agent+Auto-Instrumentation
+        // Specification for Javascript insertion: https://newrelic.atlassian.net/wiki/spaces/eng/pages/50299103/BAM+Agent+Auto-Instrumentation
         public string WriteScriptHeaders(string content)
         {
             var openingHeadTagIndex = FindFirstOpeningHeadTag(content);
