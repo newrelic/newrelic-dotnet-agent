@@ -130,7 +130,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{30CF07
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLifecycle", "ApplicationHelperLibraries\ApplicationLifecycle\ApplicationLifecycle.csproj", "{3C182E17-0085-4B30-8AA9-B229ABED7A39}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCoreBasicWebApiApplication", "Applications\AspNetCoreBasicWebApiApplication\AspNetCoreBasicWebApiApplication.csproj", "{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCoreBasicWebApiApplication", "Applications\AspNetCore5BasicWebApiApplication\AspNetCoreBasicWebApiApplication.csproj", "{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore6BasicWebApiApplication", "Applications\AspNetCore6BasicWebApiApplication\AspNetCore6BasicWebApiApplication.csproj", "{66138A9F-0B28-4CB3-9DF9-D22C19641043}"
 EndProject
