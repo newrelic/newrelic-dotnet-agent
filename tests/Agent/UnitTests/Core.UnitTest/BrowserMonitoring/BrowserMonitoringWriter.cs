@@ -9,7 +9,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
     public class Class_BrowserMonitoringWriter
     {
         private readonly string _jsScript =
-                            "<script type=\"text/javascript\">window.NREUM||(NREUM={});NREUM.info = {\"beacon\":\"staging-beacon-N.newrelic.com\",\"errorBeacon:\":\"staging-jserror.newrelic.com\",\"licenseKey\":\"a4fa192fe5\",\"applicationID\":\"48102\",\"transactionName\":\"ZlIAbEACVxFYVkBbDV8YJldGLVwWelpaRhBeWw5dQExxDVRQG3sMVVIa\",\"queueTime\":\"0\",\"applicationTime\":\"37\",\"ttGuid\":\"BD0436479135FF3F\",\"agent\":\"js-agent.newrelic.com/nr-248.min.js\"}</script>";
+                    "<script type=\"text/javascript\">window.NREUM||(NREUM={});NREUM.info = {\"beacon\":\"staging-beacon-N.newrelic.com\",\"errorBeacon:\":\"staging-jserror.newrelic.com\",\"licenseKey\":\"a4fa192fe5\",\"applicationID\":\"48102\",\"transactionName\":\"ZlIAbEACVxFYVkBbDV8YJldGLVwWelpaRhBeWw5dQExxDVRQG3sMVVIa\",\"queueTime\":\"0\",\"applicationTime\":\"37\", \"$1\", \"ttGuid\":\"BD0436479135FF3F\",\"agent\":\"js-agent.newrelic.com/nr-248.min.js\"}</script>";
+
         [Test]
         public void empty_input_results_in_empty_output()
         {
