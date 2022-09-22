@@ -164,18 +164,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTests : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientQueryParameterCaptureTests : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
     {
-        public MicrosoftDataSqlClientQueryParameterCaptureTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientQueryParameterCaptureTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", true)
         {
         }
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSigns : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSigns : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
     {
-        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSigns(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSigns(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", false)
         {
         }

@@ -128,18 +128,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientStoredProcedureTests : MsSqlStoredProcedureTestsBase<MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientStoredProcedureTests : MsSqlStoredProcedureTestsBase<MicrosoftDataSqlClientFixtureCore>
     {
-        public MicrosoftDataSqlClientStoredProcedureTests(MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientStoredProcedureTests(MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSqlParameterizedStoredProcedure/{procedureName}/{paramsWithAtSign}", true)
         {
         }
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSigns : MsSqlStoredProcedureTestsBase<MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSigns : MsSqlStoredProcedureTestsBase<MicrosoftDataSqlClientFixtureCore>
     {
-        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSigns(MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSigns(MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSqlParameterizedStoredProcedure/{procedureName}/{paramsWithAtSign}", false)
         {
         }

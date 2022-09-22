@@ -47,6 +47,7 @@ SPDX-License-Identifier: Apache-2.0
       <!-- MS SQL flagship data access driver -->
       <match assemblyName="Microsoft.Data.SqlClient" className="Microsoft.Data.SqlClient.SqlCommand">
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior,System.String" />
         <exactMethodMatcher methodName="ExecuteNonQuery" />
         <exactMethodMatcher methodName="ExecuteScalar" />
         <exactMethodMatcher methodName="ExecuteXmlReader" />
@@ -140,6 +141,7 @@ SPDX-License-Identifier: Apache-2.0
       <!-- MS SQL flagship data access driver -->
       <match assemblyName="Microsoft.Data.SqlClient" className="Microsoft.Data.SqlClient.SqlCommand">
         <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="InternalExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ExecuteXmlReaderAsync" parameters="System.Threading.CancellationToken" />

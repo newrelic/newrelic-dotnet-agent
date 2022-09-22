@@ -179,9 +179,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientAsyncTests : MsSqlAsyncTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientAsyncTests : MsSqlAsyncTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
     {
-        public MicrosoftDataSqlClientAsyncTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientAsyncTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSqlAsync/{tableName}")
         {
         }

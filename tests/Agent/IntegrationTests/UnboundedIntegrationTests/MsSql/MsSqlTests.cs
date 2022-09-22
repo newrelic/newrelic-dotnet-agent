@@ -180,9 +180,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientTests : MsSqlTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientTests : MsSqlTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
     {
-        public MicrosoftDataSqlClientTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql/{tableName}")
         {
         }

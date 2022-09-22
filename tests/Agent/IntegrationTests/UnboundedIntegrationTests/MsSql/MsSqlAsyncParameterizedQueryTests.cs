@@ -196,21 +196,44 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
-    public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    #region Microsoft.Data.SqlClient Tests
+
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework>
     {
-        public MicrosoftDataSqlClientAsyncTestsParameterizedQuery(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
+            
+            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSqlAsync_WithParameterizedQuery", true)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFramework : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework>
+    {
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFramework(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSqlAsync_WithParameterizedQuery", false)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQueryCore : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
+    {
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQueryCore(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSqlAsync_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", true)
         {
         }
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSign : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignCore : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
     {
-        public MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSign(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignCore(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSqlAsync_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", false)
         {
         }
     }
+
+    #endregion
 }
