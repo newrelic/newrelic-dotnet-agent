@@ -89,7 +89,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
         [JsonProperty("js_agent_loader_version")]
         public string JsAgentLoaderVersion { get; set; }
-
+        
         [JsonProperty("js_agent_file")]
         public string JsAgentFile { get; set; }
 
@@ -110,5 +110,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
         [JsonProperty("browser_monitoring.debug")]
         public string BrowserMonitoringDebug { get; set; }
+
+        [JsonProperty("js_agent_loader")]
+        public string JsAgentLoader { get; set; }
     }
 }
