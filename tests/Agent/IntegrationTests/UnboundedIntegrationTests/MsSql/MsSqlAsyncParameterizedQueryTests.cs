@@ -202,7 +202,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     public class MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework>
     {
         public MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
-            
+
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSqlAsync_WithParameterizedQuery", true)
         {
         }

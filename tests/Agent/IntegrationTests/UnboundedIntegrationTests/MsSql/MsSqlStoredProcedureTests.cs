@@ -16,7 +16,7 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
     public abstract class MsSqlStoredProcedureTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture:RemoteApplicationFixture, IMsSqlClientFixture
+        where TFixture : RemoteApplicationFixture, IMsSqlClientFixture
     {
         private readonly IMsSqlClientFixture _fixture;
         private readonly string _expectedTransactionName;
@@ -111,7 +111,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     [NetFrameworkTest]
     public class MsSqlStoredProcedureTests : MsSqlStoredProcedureTestsBase<MsSqlBasicMvcFixture>
     {
-        public MsSqlStoredProcedureTests(MsSqlBasicMvcFixture fixture, ITestOutputHelper output) 
+        public MsSqlStoredProcedureTests(MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedure", true)
         {
         }
@@ -126,20 +126,37 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientStoredProcedureTestsFramework : MsSqlStoredProcedureTestsBase<MicrosoftDataSqlClientFixtureFramework>
+    {
+        public MicrosoftDataSqlClientStoredProcedureTestsFramework(MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSqlParameterizedStoredProcedure", true)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFramework : MsSqlStoredProcedureTestsBase<MicrosoftDataSqlClientFixtureFramework>
+    {
+        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFramework(MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSqlParameterizedStoredProcedure", false)
+        {
+        }
+    }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientStoredProcedureTests : MsSqlStoredProcedureTestsBase<MicrosoftDataSqlClientFixtureCore>
+    public class MicrosoftDataSqlClientStoredProcedureTestsCore : MsSqlStoredProcedureTestsBase<MicrosoftDataSqlClientFixtureCore>
     {
-        public MicrosoftDataSqlClientStoredProcedureTests(MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientStoredProcedureTestsCore(MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSqlParameterizedStoredProcedure/{procedureName}/{paramsWithAtSign}", true)
         {
         }
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSigns : MsSqlStoredProcedureTestsBase<MicrosoftDataSqlClientFixtureCore>
+    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsCore : MsSqlStoredProcedureTestsBase<MicrosoftDataSqlClientFixtureCore>
     {
-        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSigns(MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsCore(MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSqlParameterizedStoredProcedure/{procedureName}/{paramsWithAtSign}", false)
         {
         }

@@ -15,7 +15,7 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
     public abstract class MsSqlQueryParameterCaptureTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture:RemoteApplicationFixture, RemoteServiceFixtures.IMsSqlClientFixture
+        where TFixture : RemoteApplicationFixture, RemoteServiceFixtures.IMsSqlClientFixture
     {
         private readonly RemoteServiceFixtures.IMsSqlClientFixture _fixture;
         private readonly string _expectedTransactionName;
@@ -163,19 +163,37 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTests : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientQueryParameterCaptureTestsFramework : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework>
     {
-        public MicrosoftDataSqlClientQueryParameterCaptureTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientQueryParameterCaptureTestsFramework(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSql_WithParameterizedQuery", true)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFramework : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework>
+    {
+        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFramework(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSql_WithParameterizedQuery", false)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftDataSqlClientQueryParameterCaptureTestsCore : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
+    {
+        public MicrosoftDataSqlClientQueryParameterCaptureTestsCore(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", true)
         {
         }
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSigns : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
+    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsCore : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
     {
-        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSigns(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsCore(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", false)
         {
         }
