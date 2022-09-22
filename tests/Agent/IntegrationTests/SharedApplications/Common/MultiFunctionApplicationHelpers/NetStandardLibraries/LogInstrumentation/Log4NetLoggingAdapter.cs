@@ -83,6 +83,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         {
 #if NETCOREAPP2_2_OR_GREATER || NET471_OR_GREATER // Only supported in newer versions of .NET
             SerializedLayout serializedLayout = new SerializedLayout();
+#if NETFRAMEWORK
+            serializedLayout.AddMember("Message");
+#else
+            serializedLayout.AddMember("message");
+#endif
             serializedLayout.AddMember("NR_LINKING");
             serializedLayout.ActivateOptions();
 

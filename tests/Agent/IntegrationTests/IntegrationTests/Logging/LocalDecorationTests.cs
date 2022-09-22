@@ -1,6 +1,8 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
 using MultiFunctionApplicationHelpers;
@@ -24,6 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
         private const string _primaryApplicationName = "Local Decoration Test App Name";
         private const string _secondaryApplicationName = "Some other testing application name";
         private const string _compositeApplicationName = _primaryApplicationName + ", " + _secondaryApplicationName;
+        private const string _testMessage = "DecorateMe";
 
         public LocalDecorationTestsBase(TFixture fixture, ITestOutputHelper output, bool decorationEnabled, LayoutType layoutType, LoggingFramework loggingFramework) : base(fixture)
         {
@@ -34,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
 
             _fixture.AddCommand($"LoggingTester SetFramework {loggingFramework}");
             _fixture.AddCommand($"LoggingTester Configure{layoutType}LayoutAppenderForDecoration");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction DecorateMe DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {_testMessage} DEBUG");
 
             _fixture.RemoteApplication.AppName = _compositeApplicationName;
 
@@ -62,7 +65,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
             var regex = new Regex(@"NR-LINKING\|([a-zA-Z0-9]*)\|([a-zA-Z0-9._-]*)\|([a-zA-Z0-9]*)\|([a-zA-Z0-9]*)\|(.+?)\|");
             if (_decorationEnabled)
             {
-                var match = regex.Match(_fixture.RemoteApplication.CapturedOutput.StandardOutput);
+                var testOutput = _fixture.RemoteApplication.CapturedOutput.StandardOutput;
+                // Make sure the added metadata is there
+                var match = regex.Match(testOutput);
                 Assert.True(match.Success);
                 Assert.NotEmpty(match.Groups);
                 var entityGuid = match.Groups[1].Value;
@@ -76,6 +81,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
                 Assert.NotNull(traceId);
                 Assert.NotNull(spanId);
                 Assert.Equal(_primaryApplicationName, entityName);
+
+                // Make sure the original message is there too
+                var commandResults = Regex.Split(testOutput, System.Environment.NewLine).Where(l => !l.Contains("EXECUTING"));
+                Assert.Contains(_testMessage, string.Join(System.Environment.NewLine, commandResults));
             }
             else
             {
