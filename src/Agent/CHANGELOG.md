@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] changes
 
+### New Features
+* Add new environment variables to control SendDataOnExit functionality: `NEW_RELIC_SEND_DATA_ON_EXIT`, `NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS`. [#1250](https://github.com/newrelic/newrelic-dotnet-agent/pull/1250)
+
 ### Fixes
 * Resolves an issue where some instrumentation was missing for Microsoft.Data.SqlClient in .NET Framework. [#1248](https://github.com/newrelic/newrelic-dotnet-agent/pull/1248)
 
