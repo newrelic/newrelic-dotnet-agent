@@ -16,12 +16,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
     public abstract class MsSqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture:RemoteApplicationFixture, RemoteServiceFixtures.IMsSqlClientFixture
+        where TFixture : RemoteApplicationFixture, RemoteServiceFixtures.IMsSqlClientFixture
     {
         private readonly RemoteServiceFixtures.IMsSqlClientFixture _fixture;
         private readonly string _expectedTransactionName;
 
-        public MsSqlTestsBase(TFixture fixture, ITestOutputHelper output, string expectedTransactionName) :  base(fixture)
+        public MsSqlTestsBase(TFixture fixture, ITestOutputHelper output, string expectedTransactionName) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -179,10 +179,19 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetCoreTest]
-    public class MicrosoftDataSqlClientTests : MsSqlTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientTestsFramework : MsSqlTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework>
     {
-        public MicrosoftDataSqlClientTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientTestsFramework(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSql")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftDataSqlClientTestsCore : MsSqlTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
+    {
+        public MicrosoftDataSqlClientTestsCore(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql/{tableName}")
         {
         }
