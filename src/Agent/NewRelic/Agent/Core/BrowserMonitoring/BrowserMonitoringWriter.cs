@@ -78,8 +78,6 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 var jsScriptWithContentSubString = string.Format("{0}{1}", contentSubString, _getJsScript());
 
                 return content.Remove(match.Index, match.Length).Insert(match.Index, jsScriptWithContentSubString);
-        
-                //return xUaCompatibleFilterMatch.Index > charsetFilterMatch.Index ? XUaCompatibleFilter.Replace(content, jsScriptWithContentSubString, 1) : CharsetFilter.Replace(content, jsScriptWithContentSubString, 1);
             }
 
             // Found both HEAD tags, no  meta tags, get index immediately after the <HEAD>. Find first '>' which will be end of head opening tag.

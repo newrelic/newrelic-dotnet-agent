@@ -46,9 +46,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                 () => Assert.NotNull(_htmlContent)
             );
 
-            var connecResponsetData = _fixture.AgentLog.GetConnectResponseData();
+            var connecResponseData = _fixture.AgentLog.GetConnectResponseData();
 
-            var jsAgentFromConnectResponse = connecResponsetData.JsAgentLoader;
+            var jsAgentFromConnectResponse = connecResponseData.JsAgentLoader;
 
             var jsAgentFromHtmlContent = JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_htmlContent);
 
