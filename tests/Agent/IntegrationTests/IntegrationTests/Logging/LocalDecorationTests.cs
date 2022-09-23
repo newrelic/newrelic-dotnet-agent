@@ -60,12 +60,16 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
         [Fact]
         public void LogIsDecorated()
         {
+            var testOutput = _fixture.RemoteApplication.CapturedOutput.StandardOutput;
+            // Make sure the original message is there
+            var commandResults = Regex.Split(testOutput, System.Environment.NewLine).Where(l => !l.Contains("EXECUTING"));
+            Assert.Contains(_testMessage, string.Join(System.Environment.NewLine, commandResults));
+
             // Sample decorated data we are looking for:
             // "NR-LINKING|MjczMDcwfEFQTXxBUFBMSUNBVElPTnwxODQyMg|blah.hsd1.ca.comcast.net|45f120972d61834b96fb890d2a8f97e7|840d9a82e8bc18a8|myApplicationName|"
             var regex = new Regex(@"NR-LINKING\|([a-zA-Z0-9]*)\|([a-zA-Z0-9._-]*)\|([a-zA-Z0-9]*)\|([a-zA-Z0-9]*)\|(.+?)\|");
             if (_decorationEnabled)
             {
-                var testOutput = _fixture.RemoteApplication.CapturedOutput.StandardOutput;
                 // Make sure the added metadata is there
                 var match = regex.Match(testOutput);
                 Assert.True(match.Success);
@@ -82,9 +86,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
                 Assert.NotNull(spanId);
                 Assert.Equal(_primaryApplicationName, entityName);
 
-                // Make sure the original message is there too
-                var commandResults = Regex.Split(testOutput, System.Environment.NewLine).Where(l => !l.Contains("EXECUTING"));
-                Assert.Contains(_testMessage, string.Join(System.Environment.NewLine, commandResults));
             }
             else
             {
