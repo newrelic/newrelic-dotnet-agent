@@ -18,7 +18,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     {
         private readonly RemoteServiceFixtures.MsSqlBasicMvcFixture _fixture;
 
-        public MsSqlAsyncLegacyAspPipelineTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public MsSqlAsyncLegacyAspPipelineTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
