@@ -79,7 +79,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
 
             // this cannot be made a static since it is unique to each logEvent
             var messageSetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(logEvent, "Message");
-            messageSetter(messageGetter + " " + formattedMetadata);
+            messageSetter(originalMessage + " " + formattedMetadata);
         }
     }
 }
