@@ -780,8 +780,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual string CollectorHost { get { return EnvironmentOverrides(_localConfiguration.service.host, @"NEW_RELIC_HOST"); } }
         public virtual int CollectorPort => EnvironmentOverrides(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : (int?)null, "NEW_RELIC_PORT") ?? DefaultSslPort;
-        public virtual bool CollectorSendDataOnExit { get { return _localConfiguration.service.sendDataOnExit; } }
-        public virtual float CollectorSendDataOnExitThreshold { get { return _localConfiguration.service.sendDataOnExitThreshold; } }
+        public virtual bool CollectorSendDataOnExit { get { return EnvironmentOverrides(_localConfiguration.service.sendDataOnExit, "NEW_RELIC_SEND_DATA_ON_EXIT"); } }
+        public virtual float CollectorSendDataOnExitThreshold { get { return EnvironmentOverrides((uint?)null, "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS") ?? _localConfiguration.service.sendDataOnExitThreshold; } }
         public virtual bool CollectorSendEnvironmentInfo { get { return _localConfiguration.service.sendEnvironmentInfo; } }
         public virtual bool CollectorSyncStartup { get { return _localConfiguration.service.syncStartup; } }
         public virtual uint CollectorTimeout { get { return (_localConfiguration.service.requestTimeout > 0) ? (uint)_localConfiguration.service.requestTimeout : CollectorSendDataOnExit ? 2000u : 60 * 2 * 1000; } }

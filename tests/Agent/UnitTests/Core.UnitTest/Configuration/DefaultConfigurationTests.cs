@@ -345,6 +345,30 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.InstrumentationLoggingEnabled;
         }
 
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("1", false, ExpectedResult = true)]
+        [TestCase("0", true, ExpectedResult = false)]
+        [TestCase("blarg", true, ExpectedResult = true)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        public bool SendDataOnExitIsOverriddenByEnvironment(string environmentSetting, bool localSetting)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SEND_DATA_ON_EXIT")).Returns(environmentSetting);
+            _localConfig.service.sendDataOnExit = localSetting;
+            return _defaultConfig.CollectorSendDataOnExit;
+        }
+
+        [TestCase("100", 500f, ExpectedResult = 100)]
+        [TestCase("blarg", 500f, ExpectedResult = 500f)]
+        [TestCase(null, 500f, ExpectedResult = 500f)]
+        public float SendDataOnExitThresholdIsOverriddenByEnvironment(string environmentSetting, float localSetting)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS")).Returns(environmentSetting);
+            _localConfig.service.sendDataOnExitThreshold = localSetting;
+            return _defaultConfig.CollectorSendDataOnExitThreshold;
+        }
+
         [Test]
         public void DiagnosticsCaptureAgentTimingSetFromLocal
         ([Values(true, false, null)] bool? localIsEnabled,
