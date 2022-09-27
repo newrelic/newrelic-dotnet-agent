@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.Aggregators
         }
 
         protected override TimeSpan HarvestCycle => _configuration.LogEventsHarvestCycle;
-        protected override bool IsEnabled => _configuration.LogEventCollectorEnabled && _configuration.LogEventsMaxSamplesStored > 0;
+        protected override bool IsEnabled => _configuration.LogEventCollectorEnabled;
 
         public override void Dispose()
         {

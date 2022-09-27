@@ -73,9 +73,5 @@ namespace NewRelic.Agent.Core.Aggregators
             _scheduler.StopExecuting(Harvest);
         }
 
-        protected void Stop()
-        {
-            _scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
-        }
     }
 }
