@@ -23,8 +23,14 @@ namespace NewRelic.Agent.Core.Aggregators
             _scheduler = scheduler;
             _processStatic = processStatic;
 
+            _subscriptions.Add<StopHarvestEvent>(OnStopHarvestEvent);
             _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
             _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
+        }
+
+        private void OnStopHarvestEvent(StopHarvestEvent obj)
+        {
+            _scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
         }
 
         public abstract void Collect(T wireModel);
@@ -65,6 +71,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             base.Dispose();
             _scheduler.StopExecuting(Harvest);
+        }
+
+        protected void Stop()
+        {
+            _scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
         }
     }
 }

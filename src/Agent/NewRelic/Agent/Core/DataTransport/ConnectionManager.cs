@@ -207,6 +207,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private void OnRestartAgent(RestartAgentEvent eventData)
         {
+            EventBus<StopHarvestEvent>.Publish(new StopHarvestEvent());
+
             Reconnect();
         }
 
