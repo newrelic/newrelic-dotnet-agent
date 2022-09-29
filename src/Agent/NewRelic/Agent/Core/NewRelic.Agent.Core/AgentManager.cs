@@ -394,11 +394,6 @@ namespace NewRelic.Agent.Core
             if (_isInitialized) Shutdown(false);
         }
 
-        public bool IsAgentShuttingDown()
-        {
-            throw new NotImplementedException();
-        }
-
         #endregion Event handlers
     }
 }
