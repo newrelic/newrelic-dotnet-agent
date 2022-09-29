@@ -335,11 +335,14 @@ namespace NewRelic.Agent.Core
         private void ProcessExit(object sender, EventArgs e)
         {
             Log.Debug("Received a ProcessExit CLR event for the application domain. About to shut down the .NET Agent...");
+            
             Shutdown(true);
         }
 
         private void Shutdown(bool cleanShutdown)
         {
+            Agent.IsAgentShuttingDown = true;
+
             //Not every call to Shutdown will have access to the AgentSingleton, because some of the calls to Shutdown
             //will occur while the Singleton is being created. In those scenarios, the AgentSingleton will handle
             //Swapping out the AgentManager for the DisabledAgentManager.
@@ -389,6 +392,11 @@ namespace NewRelic.Agent.Core
             //the AgentSingleton will check to see if a shutdownEvent was received, and call Shutdown
             //appropriately.
             if (_isInitialized) Shutdown(false);
+        }
+
+        public bool IsAgentShuttingDown()
+        {
+            throw new NotImplementedException();
         }
 
         #endregion Event handlers
