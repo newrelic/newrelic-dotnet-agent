@@ -98,16 +98,17 @@ namespace NewRelic.Agent.Core.JsonConverters
                     writer.WriteValue((byte)value);
                     break;
                 default:
-                    writer.WriteValue(value.ToString());
+                    try
+                    {
+                        writer.WriteValue(value);
+                    }
+                    catch (JsonWriterException exception)
+                    {
+                        var type = value.GetType().FullName;
 
-                    //try
-                    //{
-                    //    writer.WriteValue(value);
-                    //}
-                    //catch (JsonWriterException)
-                    //{
-                    //    writer.WriteValue(value.ToString());
-                    //}
+                        writer.WriteValue($"Unable to serialize type {type}");
+                        Log.Warn($"Failed to serialize property {key} of type {type}: {exception.Message}");
+                    }
                     break;
             }
         }
