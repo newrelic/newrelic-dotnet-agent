@@ -3140,9 +3140,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void ShouldDefaultCodeLevelMetricsEnabledFalse()
+        public void CodeLevelMetricsAreEnabledByDefault()
         {
-            Assert.AreEqual(false, _defaultConfig.CodeLevelMetricsEnabled);
+            Assert.IsTrue(_defaultConfig.CodeLevelMetricsEnabled, "Code Level Metrics should be enabled by default");
         }
 
         [TestCase(true, null, ExpectedResult = true)]
@@ -3161,12 +3161,16 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, "1", ExpectedResult = true)]
         [TestCase(null, "false", ExpectedResult = false)]
         [TestCase(null, "0", ExpectedResult = false)]
-        [TestCase(null, "invalid", ExpectedResult = false)]
-        public bool ShouldUpdateCodeLevelMetricsEnabled(bool localConfigValue, string envConfigValue)
+        [TestCase(null, "invalid", ExpectedResult = true)]
+        [TestCase(null, null, ExpectedResult = true)]
+        public bool ShouldCodeLevelMetricsBeEnabled(bool? localConfigValue, string envConfigValue)
         {
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_CODE_LEVEL_METRICS_ENABLED")).Returns(envConfigValue);
 
-            _localConfig.codeLevelMetrics.enabled = localConfigValue;
+            if(localConfigValue.HasValue)
+            {
+                _localConfig.codeLevelMetrics.enabled = localConfigValue.Value;
+            }
 
             return _defaultConfig.CodeLevelMetricsEnabled;
         }
