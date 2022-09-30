@@ -1797,11 +1797,11 @@
                     </xs:annotation>
 
                     <xs:complexType>
-                        <xs:attribute name="enabled" type="xs:boolean" default="false">
+                        <xs:attribute name="enabled" type="xs:boolean" default="true">
                             <xs:annotation>
                                 <xs:documentation>
-                                    Set this to "true" to capture namespace and function information
-                                    on spans to enable code level metrics in CodeStream.
+                                    Set this to "false" to disable capturing namespace and function information
+                                    on spans for code level metrics in CodeStream.
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>

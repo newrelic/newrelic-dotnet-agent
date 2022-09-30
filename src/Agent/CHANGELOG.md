@@ -8,11 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### New Features
 * Add new environment variables to control SendDataOnExit functionality: `NEW_RELIC_SEND_DATA_ON_EXIT`, `NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS`. [#1250](https://github.com/newrelic/newrelic-dotnet-agent/pull/1250)
+* Enables integration with CodeStream Code-Level Metrics by default. This allows you to see Golden Signals in your IDE through New Relic CodeStream without altering agent configuration. [Learn more here](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/net-codestream-integration). For any issues or direct feedback, please reach out to support@codestream.com. [#1255](https://github.com/newrelic/newrelic-dotnet-agent/pull/1255)
 
 ### Fixes
 * Resolves an issue where the .NET agent incorrectly injects the browser agent script inside Html pages. [#1247](https://github.com/newrelic/newrelic-dotnet-agent/pull/1247)
 * Resolves an issue where some instrumentation was missing for Microsoft.Data.SqlClient in .NET Framework. [#1248](https://github.com/newrelic/newrelic-dotnet-agent/pull/1248)
 * Resolves an issue with local log decoration for NLog where the original log message was not included in the output. [#1249](https://github.com/newrelic/newrelic-dotnet-agent/pull/1249)
+* Includes missing profiler environment variables in debug logs during application startup. [#1255](https://github.com/newrelic/newrelic-dotnet-agent/pull/1255)
 * Resolves an issue where the .NET agent still sends up disabled event types during reconnecting period. [#1251](https://github.com/newrelic/newrelic-dotnet-agent/pull/1251)
 
 ## [10.1.0] - 2022-09-12
