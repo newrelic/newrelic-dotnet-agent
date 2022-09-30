@@ -135,6 +135,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private void Reconnect()
         {
+            EventBus<StopHarvestEvent>.Publish(new StopHarvestEvent());
+
             lock (_syncObject)
             {
                 Disconnect();
