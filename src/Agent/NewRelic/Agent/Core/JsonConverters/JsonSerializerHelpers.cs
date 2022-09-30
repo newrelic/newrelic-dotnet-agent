@@ -102,12 +102,9 @@ namespace NewRelic.Agent.Core.JsonConverters
                     {
                         writer.WriteValue(value);
                     }
-                    catch (JsonWriterException exception)
+                    catch (JsonWriterException)
                     {
-                        var type = value.GetType().FullName;
-
-                        writer.WriteValue($"Unable to serialize type {type}");
-                        Log.Warn($"Failed to serialize property {key} of type {type}: {exception.Message}");
+                        writer.WriteValue(value.ToString());
                     }
                     break;
             }
