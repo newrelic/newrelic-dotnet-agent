@@ -105,6 +105,10 @@ namespace NewRelic.Agent.Core.JsonConverters
                     catch (JsonWriterException)
                     {
                         writer.WriteValue(value.ToString());
+
+                        var type = value.GetType().FullName;
+
+                        Log.Debug($"Unable to properly serialize property {key} of type {type}. The agent will use the value from calling ToString() on the object of {type} type.");
                     }
                     break;
             }
