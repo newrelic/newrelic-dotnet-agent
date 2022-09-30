@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Resolves an issue where the .NET agent incorrectly injects the browser agent script inside Html pages. [#1247](https://github.com/newrelic/newrelic-dotnet-agent/pull/1247)
 * Resolves an issue where some instrumentation was missing for Microsoft.Data.SqlClient in .NET Framework. [#1248](https://github.com/newrelic/newrelic-dotnet-agent/pull/1248)
 * Resolves an issue with local log decoration for NLog where the original log message was not included in the output. [#1249](https://github.com/newrelic/newrelic-dotnet-agent/pull/1249)
+* Resolves an issue where the .NET agent failed to serialize custom attributes containing some non-primtive types. [#1256](https://github.com/newrelic/newrelic-dotnet-agent/pull/1256)
 
 ## [10.1.0] - 2022-09-12
 
