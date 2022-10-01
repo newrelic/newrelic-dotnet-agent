@@ -27,18 +27,7 @@ namespace NewRelic.Agent.Core.JsonConverters
                         continue;
                     }
 
-                    writer.WritePropertyName(attribVal.AttributeDefinition.Name);
-
-                    // Causes an exception since this type is unsupported by the JsonConverter
-                    if (outputValue.GetType().ToString() == "Microsoft.Extensions.Primitives.StringValues")
-                    {
-                        writer.WriteValue(outputValue.ToString());
-                    }
-                    else
-                    {
-                        WriteValueSafe(writer, attribVal.AttributeDefinition.Name, outputValue);
-                    }
-                }
+                    WriteJsonKeyAndValue(writer, attribVal.AttributeDefinition.Name, outputValue);                    }
             }
 
             writer.WriteEndObject();
@@ -54,85 +43,74 @@ namespace NewRelic.Agent.Core.JsonConverters
                     continue;
                 }
 
-                writer.WritePropertyName(kvp.Key);
-
-                if (kvp.Value is string)
-                {
-                    writer.WriteValue((string)kvp.Value);
-                }
-                else if (kvp.Value is long)
-                {
-                    writer.WriteValue((long)kvp.Value);
-                }
-                else if (kvp.Value is int)
-                {
-                    writer.WriteValue((int)kvp.Value);
-                }
-                else if (kvp.Value is bool)
-                {
-                    writer.WriteValue((bool)kvp.Value);
-                }
-                else if (kvp.Value is double)
-                {
-                    writer.WriteValue((double)kvp.Value);
-                }
-                else if (kvp.Value is float)
-                {
-                    writer.WriteValue((float)kvp.Value);
-                }
-                else if (kvp.Value is decimal)
-                {
-                    writer.WriteValue((decimal)kvp.Value);
-                }
-                else if (kvp.Value is char)
-                {
-                    writer.WriteValue((char)kvp.Value);
-                }
-                else if (kvp.Value is ushort)
-                {
-                    writer.WriteValue((ushort)kvp.Value);
-                }
-                else if (kvp.Value is uint)
-                {
-                    writer.WriteValue((uint)kvp.Value);
-                }
-                else if (kvp.Value is ulong)
-                {
-                    writer.WriteValue((ulong)kvp.Value);
-                }
-                else if (kvp.Value is short)
-                {
-                    writer.WriteValue((short)kvp.Value);
-                }
-                else if (kvp.Value is sbyte)
-                {
-                    writer.WriteValue((sbyte)kvp.Value);
-                }
-                else if (kvp.Value is byte)
-                {
-                    writer.WriteValue((byte)kvp.Value);
-                }
-                else
-                {
-                    WriteValueSafe(writer, kvp.Key, kvp.Value);
-                }
+                WriteJsonKeyAndValue(writer, kvp.Key, kvp.Value);
             }
 
             writer.WriteEndObject();
         }
 
-        public static void WriteValueSafe(JsonWriter writer, string key, object value)
+        private static void WriteJsonKeyAndValue(JsonWriter writer, string key, object value)
         {
-            try
-            {
-                writer.WriteValue(value);
-            }
-            catch (JsonWriterException exception)
-            {
-                var type = value.GetType().FullName;
+            writer.WritePropertyName(key);
 
-                writer.WriteValue($"Unable to serialize type {type}");
-                Log.Warn($"Failed to serialize property {key} of type {type}: {exception.Message}");
+            switch (value)
+            {
+                case string _:
+                    writer.WriteValue((string)value);
+                    break;
+                case long _:
+                    writer.WriteValue((long)value);
+                    break;
+                case int _:
+                    writer.WriteValue((int)value);
+                    break;
+                case bool _:
+                    writer.WriteValue((bool)value);
+                    break;
+                case double _:
+                    writer.WriteValue((double)value);
+                    break;
+                case float _:
+                    writer.WriteValue((float)value);
+                    break;
+                case decimal _:
+                    writer.WriteValue((decimal)value);
+                    break;
+                case char _:
+                    writer.WriteValue((char)value);
+                    break;
+                case ushort _:
+                    writer.WriteValue((ushort)value);
+                    break;
+                case uint _:
+                    writer.WriteValue((uint)value);
+                    break;
+                case ulong _:
+                    writer.WriteValue((ulong)value);
+                    break;
+                case short _:
+                    writer.WriteValue((short)value);
+                    break;
+                case sbyte _:
+                    writer.WriteValue((sbyte)value);
+                    break;
+                case byte _:
+                    writer.WriteValue((byte)value);
+                    break;
+                default:
+                    try
+                    {
+                        writer.WriteValue(value);
+                    }
+                    catch (JsonWriterException)
+                    {
+                        writer.WriteValue(value.ToString());
+
+                        var type = value.GetType().FullName;
+
+                        Log.Debug($"Unable to properly serialize property {key} of type {type}. The agent will use the value from calling ToString() on the object of {type} type.");
+                    }
+                    break;
             }
         }
     }
