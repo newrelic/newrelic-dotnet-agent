@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
+
+## [1.3.1] - 2022-10-03
 ### Fixes
 * Span creation logic has been updated to fall back to using `UNKNOWN` for any missing span name components. The previous behavior was to fail span creation. [#1211](https://github.com/newrelic/newrelic-dotnet-agent/pull/1221)
 
@@ -33,7 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **The New Relic AWS Lambda Agent for .NET is now Open Source** <br/>
 * The New Relic AWS Lambda Agent for .NET is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in the repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](https://opensource.newrelic.com/code-of-conduct/) for details on contributing!
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AwsLambdaOpenTracer_v1.3.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AwsLambdaOpenTracer_v1.3.1...HEAD
+[1.3.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AwsLambdaOpenTracer_v1.3.0...AwsLambdaOpenTracer_v1.3.1
 [1.3.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AwsLambdaOpenTracer_v1.2.1...AwsLambdaOpenTracer_v1.3.0
 [1.2.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AwsLambdaOpenTracer_v1.2.0...AwsLambdaOpenTracer_v1.2.1
 [1.2.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AwsLambdaOpenTracer_v1.1.0...AwsLambdaOpenTracer_v1.2.0
