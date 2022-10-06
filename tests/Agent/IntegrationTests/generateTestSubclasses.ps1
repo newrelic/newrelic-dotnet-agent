@@ -17,7 +17,7 @@ $TestName = $BaseClassName.Substring(0, $BaseClassName.IndexOf("Base"))
 
 $NetFrameworkVersions = "FWLatest","FW471","FW462"
 
-$NetCoreVersions = "CoreLatest","Core60","Core50","Core31" 
+$NetCoreVersions = "CoreLatest","Core50","Core31" 
 
 foreach ($NetFrameworkVersion in $NetFrameworkVersions)
 {
