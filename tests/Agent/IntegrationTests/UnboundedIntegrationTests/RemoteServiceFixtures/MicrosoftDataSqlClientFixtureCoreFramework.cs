@@ -11,11 +11,8 @@ using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 {
-    public class MicrosoftDataSqlClientFixture : RemoteApplicationFixture, IMsSqlClientFixture
+    public class MicrosoftDataSqlClientFixtureFramework : RemoteApplicationFixture, IMsSqlClientFixture
     {
-        private const string ApplicationDirectoryName = @"BasicMvcCoreApplication";
-        private const string ExecutableName = "BasicMvcCoreApplication.exe";
-
         private const string CreatePersonTableMsSql = "CREATE TABLE {0} (FirstName varchar(20) NOT NULL, LastName varchar(20) NOT NULL, Email varchar(50) NOT NULL)";
         private const string DropPersonTableMsSql = "IF (OBJECT_ID('{0}') IS NOT NULL) DROP TABLE {0}";
         private const string DropProcedureSql = "IF (OBJECT_ID('{0}') IS NOT NULL) DROP PROCEDURE {0}";
@@ -23,8 +20,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         public string TableName { get; }
         public string ProcedureName { get; }
 
-        public MicrosoftDataSqlClientFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, ApplicationType.Unbounded, createsPidFile: true, isCoreApp: true, publishApp: true))
+        public MicrosoftDataSqlClientFixtureFramework() : base(new RemoteWebApplication("BasicMvcApplication", ApplicationType.Unbounded))
         {
+            //base(new RemoteService(ApplicationDirectoryName, ExecutableName, ApplicationType.Unbounded, createsPidFile: true, isCoreApp: false, publishApp: true))
             TableName = GenerateTableName();
             ProcedureName = GenerateProcedureName();
             CreateTable();

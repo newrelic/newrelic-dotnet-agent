@@ -345,6 +345,30 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.InstrumentationLoggingEnabled;
         }
 
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("1", false, ExpectedResult = true)]
+        [TestCase("0", true, ExpectedResult = false)]
+        [TestCase("blarg", true, ExpectedResult = true)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        public bool SendDataOnExitIsOverriddenByEnvironment(string environmentSetting, bool localSetting)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SEND_DATA_ON_EXIT")).Returns(environmentSetting);
+            _localConfig.service.sendDataOnExit = localSetting;
+            return _defaultConfig.CollectorSendDataOnExit;
+        }
+
+        [TestCase("100", 500f, ExpectedResult = 100)]
+        [TestCase("blarg", 500f, ExpectedResult = 500f)]
+        [TestCase(null, 500f, ExpectedResult = 500f)]
+        public float SendDataOnExitThresholdIsOverriddenByEnvironment(string environmentSetting, float localSetting)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS")).Returns(environmentSetting);
+            _localConfig.service.sendDataOnExitThreshold = localSetting;
+            return _defaultConfig.CollectorSendDataOnExitThreshold;
+        }
+
         [Test]
         public void DiagnosticsCaptureAgentTimingSetFromLocal
         ([Values(true, false, null)] bool? localIsEnabled,
@@ -3116,9 +3140,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void ShouldDefaultCodeLevelMetricsEnabledFalse()
+        public void CodeLevelMetricsAreEnabledByDefault()
         {
-            Assert.AreEqual(false, _defaultConfig.CodeLevelMetricsEnabled);
+            Assert.IsTrue(_defaultConfig.CodeLevelMetricsEnabled, "Code Level Metrics should be enabled by default");
         }
 
         [TestCase(true, null, ExpectedResult = true)]
@@ -3137,12 +3161,16 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, "1", ExpectedResult = true)]
         [TestCase(null, "false", ExpectedResult = false)]
         [TestCase(null, "0", ExpectedResult = false)]
-        [TestCase(null, "invalid", ExpectedResult = false)]
-        public bool ShouldUpdateCodeLevelMetricsEnabled(bool localConfigValue, string envConfigValue)
+        [TestCase(null, "invalid", ExpectedResult = true)]
+        [TestCase(null, null, ExpectedResult = true)]
+        public bool ShouldCodeLevelMetricsBeEnabled(bool? localConfigValue, string envConfigValue)
         {
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_CODE_LEVEL_METRICS_ENABLED")).Returns(envConfigValue);
 
-            _localConfig.codeLevelMetrics.enabled = localConfigValue;
+            if(localConfigValue.HasValue)
+            {
+                _localConfig.codeLevelMetrics.enabled = localConfigValue.Value;
+            }
 
             return _defaultConfig.CodeLevelMetricsEnabled;
         }

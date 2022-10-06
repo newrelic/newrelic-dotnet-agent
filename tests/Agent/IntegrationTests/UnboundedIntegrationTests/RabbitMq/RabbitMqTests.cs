@@ -142,18 +142,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
     }
 
     [NetCoreTest]
-    public class RabbitMqTestsCore31 : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class RabbitMqTestsCoreLatest : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public RabbitMqTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class RabbitMqTestsCore50 : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public RabbitMqTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+        public RabbitMqTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
@@ -169,9 +160,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
     }
 
     [NetCoreTest]
-    public class RabbitMqTestsCoreLatest : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class RabbitMqTestsCore50 : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public RabbitMqTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public RabbitMqTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class RabbitMqTestsCore31 : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public RabbitMqTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

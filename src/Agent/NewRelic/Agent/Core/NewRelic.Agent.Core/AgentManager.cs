@@ -197,9 +197,13 @@ namespace NewRelic.Agent.Core
                     "CORECLR_PROFILER",
                     "CORECLR_NEWRELIC_HOME",
                     "CORECLR_PROFILER_PATH",
+                    "CORECLR_PROFILER_PATH_32",
+                    "CORECLR_PROFILER_PATH_64",
                     "COR_ENABLE_PROFILING",
                     "COR_PROFILER",
                     "COR_PROFILER_PATH",
+                    "COR_PROFILER_PATH_32",
+                    "COR_PROFILER_PATH_64",
                     "NEWRELIC_HOME",
                     "NEWRELIC_INSTALL_PATH",
                     "NEW_RELIC_APP_NAME",
@@ -252,7 +256,9 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_UTILIZATION_BILLING_HOSTNAME",
                     "NEW_RELIC_DISABLE_APPDOMAIN_CACHING",
                     "NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD",
-                    "NEW_RELIC_CODE_LEVEL_METRICS_ENABLED"
+                    "NEW_RELIC_CODE_LEVEL_METRICS_ENABLED",
+                    "NEW_RELIC_SEND_DATA_ON_EXIT",
+                    "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS"
                 };
 
                 List<string> environmentVariablesSensitive = new List<string> {
@@ -335,11 +341,14 @@ namespace NewRelic.Agent.Core
         private void ProcessExit(object sender, EventArgs e)
         {
             Log.Debug("Received a ProcessExit CLR event for the application domain. About to shut down the .NET Agent...");
+            
             Shutdown(true);
         }
 
         private void Shutdown(bool cleanShutdown)
         {
+            Agent.IsAgentShuttingDown = true;
+
             //Not every call to Shutdown will have access to the AgentSingleton, because some of the calls to Shutdown
             //will occur while the Singleton is being created. In those scenarios, the AgentSingleton will handle
             //Swapping out the AgentManager for the DisabledAgentManager.

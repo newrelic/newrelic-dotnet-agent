@@ -37,11 +37,10 @@ namespace NewRelic.OpenTracing.AmazonLambda.Helpers
         /// <returns></returns>
         internal static ISpan CreateSpan(string operationName, string component, string operation)
         {
-            if (string.IsNullOrEmpty(operationName) || string.IsNullOrEmpty(component) || string.IsNullOrEmpty(operation))
-            {
-                Logger.Log("Could not create a span. Creating a span requires an operation name, component, and operation.", true, "ERROR");
-                return null;
-            }
+
+            operationName = string.IsNullOrEmpty(operationName) ? "UNKNOWN" : operationName;
+            component = string.IsNullOrEmpty(component) ? "UNKNOWN" : component;
+            operation = string.IsNullOrEmpty(operation) ? "UNKNOWN" : operation;
 
             var span = GlobalTracer.Instance.BuildSpan(operationName).Start();
             span.SetTag(Tags.SpanKind, Tags.SpanKindClient);

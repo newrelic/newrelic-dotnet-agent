@@ -40,6 +40,7 @@ namespace NewRelic.Agent.Core
         private const int LogExceptionStackLimit = 300;
         internal static Agent Instance;
         private static readonly ITransaction _noOpTransaction = new NoOpTransaction();
+        public static bool IsAgentShuttingDown = false;
 
         // These fields should all be made private. The ones that are currently internal are being used elsewhere in code and require refactoring.
         internal readonly ITransactionService _transactionService;

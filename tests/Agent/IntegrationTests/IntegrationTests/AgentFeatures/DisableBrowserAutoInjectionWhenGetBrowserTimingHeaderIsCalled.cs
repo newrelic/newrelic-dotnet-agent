@@ -11,14 +11,14 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
-    public class GetBrowserTimingHeaderAutoOn : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class DisableBrowserAutoInjectionWhenGetBrowserTimingHeaderIsCalled : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
         private string _browserTimingHeader;
         private string _htmlContentAfterCallToGetBrowserTiming;
 
-        public GetBrowserTimingHeaderAutoOn(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public DisableBrowserAutoInjectionWhenGetBrowserTimingHeaderIsCalled(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
