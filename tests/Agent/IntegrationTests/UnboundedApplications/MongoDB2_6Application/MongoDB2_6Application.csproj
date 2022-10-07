@@ -13,7 +13,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MongoDB2_6Application</RootNamespace>
     <AssemblyName>MongoDB2_6Application</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
     <UseIISExpress>true</UseIISExpress>
     <Use64BitIISExpress />
@@ -80,7 +80,7 @@
       <Version>5.2.6</Version>
     </PackageReference>
     <PackageReference Include="MongoDB.Driver">
-      <Version>2.13.1</Version>
+      <Version>2.17.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>

@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
@@ -9,32 +9,26 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
 {
-    abstract public class MongoDB2_6_DatabaseTests<T> : NewRelicIntegrationTest<T>
-        where T : RemoteServiceFixtures.MongoDB2_6ApplicationFixture
+    public abstract class MongoDBDriverDatabaseTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly RemoteServiceFixtures.MongoDB2_6ApplicationFixture _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
 
-        public MongoDB2_6_DatabaseTests(T fixture, ITestOutputHelper output)  : base(fixture)
+        public MongoDBDriverDatabaseTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _fixture.Actions
-            (
 
-                exerciseApplication: () =>
-                {
-                    _fixture.CreateCollection();
-                    _fixture.CreateCollectionAsync();
-                    _fixture.DropCollection();
-                    _fixture.DropCollectionAsync();
-                    _fixture.ListCollections();
-                    _fixture.ListCollectionsAsync();
-                    _fixture.RenameCollection();
-                    _fixture.RenameCollectionAsync();
-                    _fixture.RunCommand();
-                    _fixture.RunCommandAsync();
-                }
-            );
+            _fixture.AddCommand("CreateCollection");
+            _fixture.AddCommand("CreateCollectionAsync");
+            _fixture.AddCommand("DropCollection");
+            _fixture.AddCommand("DropCollectionAsync");
+            _fixture.AddCommand("ListCollections");
+            _fixture.AddCommand("ListCollectionsAsync");
+            _fixture.AddCommand("RenameCollection");
+            _fixture.AddCommand("RenameCollectionAsync");
+            _fixture.AddCommand("RunCommand");
+            _fixture.AddCommand("RunCommandAsync");
 
             _fixture.Initialize();
         }
@@ -127,19 +121,5 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             Assert.NotNull(m);
         }
     }
-    [NetFrameworkTest]
-    public class MongoDB2_6_FrameworkDatabaseTests : MongoDB2_6_DatabaseTests<RemoteServiceFixtures.MongoDB2_6FrameworkApplicationFixture>
-    {
-        public MongoDB2_6_FrameworkDatabaseTests(RemoteServiceFixtures.MongoDB2_6FrameworkApplicationFixture fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-        }
-    }
 
-    [NetCoreTest]
-    public class MongoDB2_6_CoreDatabaseTests : MongoDB2_6_DatabaseTests<RemoteServiceFixtures.MongoDB2_6CoreApplicationFixture>
-    {
-        public MongoDB2_6_CoreDatabaseTests(RemoteServiceFixtures.MongoDB2_6CoreApplicationFixture fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-        }
-    }
 }
