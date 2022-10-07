@@ -19,16 +19,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _fixture = fixture;
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand("CreateCollection");
-            _fixture.AddCommand("CreateCollectionAsync");
-            _fixture.AddCommand("DropCollection");
-            _fixture.AddCommand("DropCollectionAsync");
-            _fixture.AddCommand("ListCollections");
-            _fixture.AddCommand("ListCollectionsAsync");
-            _fixture.AddCommand("RenameCollection");
-            _fixture.AddCommand("RenameCollectionAsync");
-            _fixture.AddCommand("RunCommand");
-            _fixture.AddCommand("RunCommandAsync");
+            _fixture.AddCommand("MongoDBDriverExerciser CreateCollection");
+            _fixture.AddCommand("MongoDBDriverExerciser CreateCollectionAsync");
+            _fixture.AddCommand("MongoDBDriverExerciser DropCollection");
+            _fixture.AddCommand("MongoDBDriverExerciser DropCollectionAsync");
+            _fixture.AddCommand("MongoDBDriverExerciser ListCollections");
+            _fixture.AddCommand("MongoDBDriverExerciser ListCollectionsAsync");
+            _fixture.AddCommand("MongoDBDriverExerciser RenameCollection");
+            _fixture.AddCommand("MongoDBDriverExerciser RenameCollectionAsync");
+            _fixture.AddCommand("MongoDBDriverExerciser RunCommand");
+            _fixture.AddCommand("MongoDBDriverExerciser RunCommandAsync");
 
             _fixture.Initialize();
         }
@@ -119,6 +119,60 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             var m = _fixture.AgentLog.GetMetricByName("Datastore/operation/MongoDB/RunCommandAsync");
 
             Assert.NotNull(m);
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MongoDBDriverDatabaseTestsFWLatest : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MongoDBDriverDatabaseTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MongoDBDriverDatabaseTestsFW471 : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public MongoDBDriverDatabaseTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MongoDBDriverDatabaseTestsFW462 : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public MongoDBDriverDatabaseTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MongoDBDriverDatabaseTestsCoreLatest : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MongoDBDriverDatabaseTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MongoDBDriverDatabaseTestsCore50 : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public MongoDBDriverDatabaseTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MongoDBDriverDatabaseTestsCore31 : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MongoDBDriverDatabaseTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
         }
     }
 
