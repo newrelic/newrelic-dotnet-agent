@@ -103,7 +103,7 @@
   - name: stackExchangeRedis
     xml-file: ${{ MVS_XML_PATH }}/StackExchangeRedis/Instrumentation.xml
     nuget-packages:
-       - { package-name: StackExchange.Redis, versions: [1.0.488, 1.1.608, 1.2.6, 2.0.601, 2.2.4] }
+       - { package-name: StackExchange.Redis, versions: [1.0.488, 2.0.601, 2.1.58, 2.2.88, 2.6.66] }
        - { package-name: StackExchange.Redis.StrongName, versions: [1.0.488, 1.1.608, 1.2.6] }
     local-assemblies:
 
