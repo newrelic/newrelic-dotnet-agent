@@ -30,6 +30,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
+                    configModifier.SetLogLevel("finest");
                     configModifier.ForceTransactionTraces();
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");

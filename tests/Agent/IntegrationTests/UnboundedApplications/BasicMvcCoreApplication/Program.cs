@@ -25,6 +25,8 @@ namespace BasicMvcCoreApplication
 
         public static void Main(string[] args)
         {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
             var commandLine = string.Join(" ", args);
 
             _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";

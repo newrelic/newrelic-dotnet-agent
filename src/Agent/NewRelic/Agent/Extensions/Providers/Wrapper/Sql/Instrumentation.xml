@@ -116,6 +116,7 @@ SPDX-License-Identifier: Apache-2.0
 
       <!-- Postgres SQL Driver-->
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior,System.Boolean,System.Threading.CancellationToken"/>
         <exactMethodMatcher methodName="ExecuteDbDataReader" parameters="System.Data.CommandBehavior"/>
         <exactMethodMatcher methodName="ExecuteNonQuery" />
         <exactMethodMatcher methodName="ExecuteScalar" />
@@ -244,6 +245,7 @@ SPDX-License-Identifier: Apache-2.0
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader">
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean,System.Threading.CancellationToken" />
       </match>
     </tracerFactory>
 

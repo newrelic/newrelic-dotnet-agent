@@ -11,6 +11,7 @@ using System.Web.Mvc;
 using System.Data;
 using System.Linq;
 using NpgsqlTypes;
+using System.Diagnostics;
 
 namespace BasicMvcApplication.Controllers
 {
@@ -19,24 +20,33 @@ namespace BasicMvcApplication.Controllers
         [HttpGet]
         public string Postgres()
         {
-            var teamMembers = new List<string>();
-
-            var connectionString = PostgresConfiguration.PostgresConnectionString;
-
-            using (var connection = new NpgsqlConnection(connectionString))
-            using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'", connection))
+            try
             {
-                connection.Open();
-                using (var reader = command.ExecuteReader())
+                var teamMembers = new List<string>();
+
+                var connectionString = PostgresConfiguration.PostgresConnectionString;
+
+                using (var connection = new NpgsqlConnection(connectionString))
+                using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'", connection))
                 {
-                    while (reader.Read())
+                    connection.Open();
+                    using (var reader = command.ExecuteReader())
                     {
-                        teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                        while (reader.Read())
+                        {
+                            teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
+                        }
                     }
                 }
-            }
 
-            return string.Join(",", teamMembers);
+                return string.Join(",", teamMembers);
+            } catch (Exception ex)
+            {
+                Debugger.Launch();
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+            
         }
 
         [HttpGet]
