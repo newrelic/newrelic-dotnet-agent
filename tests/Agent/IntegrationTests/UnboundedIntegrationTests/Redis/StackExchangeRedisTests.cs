@@ -26,9 +26,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
             _fixture.AddCommand($"StackExchangeRedisExerciser DoSomeWork");
             _fixture.AddCommand($"StackExchangeRedisExerciser DoSomeWorkAsync");
 
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
+            // Confirm both transaction transforms have completed before moving on to host application shutdown, and final sendDataOnExit harvest
+            _fixture.AddActions(setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
@@ -39,11 +38,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
                     var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
                     CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(
                         instrumentationFilePath, "NewRelic.Agent.Core.Tracer.Factories.Sql.DataReaderTracerFactory", "enabled", "true");
-                }
+                },
+                exerciseApplication: () => _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2)
             );
-
-            // Confirm both transaction transforms have completed before moving on to host application shutdown, and final sendDataOnExit harvest
-            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2));
 
             _fixture.Initialize();
         }
