@@ -42,6 +42,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
                 exerciseApplication: () => _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2)
             );
 
+            // Confirm both transaction transforms have completed before moving on to host application shutdown, and final sendDataOnExit harvest
+            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2));
+
             _fixture.Initialize();
         }
 
