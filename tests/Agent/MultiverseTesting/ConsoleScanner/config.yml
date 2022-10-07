@@ -101,12 +101,12 @@
   #      - { package-name: ServiceStack.Redis, versions: [4.0.40, 4.5.14, 5.10.4] }
   #   local-assemblies:
 
-  # - name: stackExchangeRedis
-  #   xml-file: ${{ MVS_XML_PATH }}/StackExchangeRedis/Instrumentation.xml
-  #   nuget-packages:
-  #      - { package-name: StackExchange.Redis, versions: [1.0.488, 1.1.608, 1.2.6, 2.0.601, 2.2.4] }
-  #      - { package-name: StackExchange.Redis.StrongName, versions: [1.0.488, 1.1.608, 1.2.6] }
-  #   local-assemblies:
+  - name: stackExchangeRedis
+    xml-file: ${{ MVS_XML_PATH }}/StackExchangeRedis/Instrumentation.xml
+    nuget-packages:
+       - { package-name: StackExchange.Redis, versions: [1.0.488, 1.1.608, 1.2.6, 2.0.601, 2.2.4] }
+       - { package-name: StackExchange.Redis.StrongName, versions: [1.0.488, 1.1.608, 1.2.6] }
+    local-assemblies:
 
   # 1 assembly in inst.xml is System.ServiceModel.dll
   # available in commented out package, but typically located in the GAC

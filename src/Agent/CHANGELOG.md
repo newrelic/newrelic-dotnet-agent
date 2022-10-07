@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] changes
+## [Unreleased]
+
+### New Features
+
+### Fixes
+
+## [10.2.0] - 2022-10-03
 
 ### New Features
 * Add new environment variables to control SendDataOnExit functionality: `NEW_RELIC_SEND_DATA_ON_EXIT`, `NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS`. [#1250](https://github.com/newrelic/newrelic-dotnet-agent/pull/1250)
@@ -493,7 +499,8 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.1.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.2.0...HEAD
+[10.2.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.1.0...v10.2.0
 [10.1.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.0.0...v10.1.0
 [10.0.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.9.0...v10.0.0
 [9.9.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.8.1...v9.9.0

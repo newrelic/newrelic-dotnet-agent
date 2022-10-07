@@ -37,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
                     _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEWRELIC_LOG_DIRECTORY", _generalEnvLogDirectory);
                     _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEWRELIC_PROFILER_LOG_DIRECTORY", _profilerEnvLogDirectory);
 
-                    _fixture.AddCommand("HttpClient Get");
+                    _fixture.AddCommand("HttpClientDriver Get");
                 }
             );
             _fixture.Initialize();

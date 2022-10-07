@@ -25,7 +25,7 @@ namespace NewRelic.Agent.IntegrationTests.Configuration
             _fixture = fixture;
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"HttpClient Get");
+            _fixture.AddCommand($"HttpClientDriver Get");
 
             _fixture.Actions
             (
