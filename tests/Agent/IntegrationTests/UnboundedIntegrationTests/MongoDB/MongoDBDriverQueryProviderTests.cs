@@ -9,14 +9,14 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
 {
-    public abstract class MongoDBDriverMongoQueryProviderTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class MongoDBDriverQueryProviderTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
         private readonly string DatastorePath = "Datastore/statement/MongoDB/myCollection";
 
-        public MongoDBDriverMongoQueryProviderTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public MongoDBDriverQueryProviderTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -61,54 +61,54 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     }
 
     [NetFrameworkTest]
-    public class MongoDBDriverMongoQueryProviderTestsFWLatest : MongoDBDriverMongoQueryProviderTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MongoDBDriverQueryProviderTestsFWLatest : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MongoDBDriverMongoQueryProviderTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MongoDBDriverQueryProviderTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class MongoDBDriverMongoQueryProviderTestsFW471 : MongoDBDriverMongoQueryProviderTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class MongoDBDriverQueryProviderTestsFW471 : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public MongoDBDriverMongoQueryProviderTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public MongoDBDriverQueryProviderTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class MongoDBDriverMongoQueryProviderTestsFW462 : MongoDBDriverMongoQueryProviderTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class MongoDBDriverQueryProviderTestsFW462 : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MongoDBDriverMongoQueryProviderTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public MongoDBDriverQueryProviderTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class MongoDBDriverMongoQueryProviderTestsCoreLatest : MongoDBDriverMongoQueryProviderTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MongoDBDriverQueryProviderTestsCoreLatest : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MongoDBDriverMongoQueryProviderTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MongoDBDriverQueryProviderTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class MongoDBDriverMongoQueryProviderTestsCore50 : MongoDBDriverMongoQueryProviderTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class MongoDBDriverQueryProviderTestsCore50 : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public MongoDBDriverMongoQueryProviderTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+        public MongoDBDriverQueryProviderTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class MongoDBDriverMongoQueryProviderTestsCore31 : MongoDBDriverMongoQueryProviderTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class MongoDBDriverQueryProviderTestsCore31 : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public MongoDBDriverMongoQueryProviderTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MongoDBDriverQueryProviderTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
