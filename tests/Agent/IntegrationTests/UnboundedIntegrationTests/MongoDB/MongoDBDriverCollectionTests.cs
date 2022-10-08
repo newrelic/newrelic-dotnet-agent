@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
@@ -9,57 +10,52 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
 {
-    abstract public class MongoDB2_6_MongoCollectionTests<T> : NewRelicIntegrationTest<T>
-        where T : RemoteServiceFixtures.MongoDB2_6ApplicationFixture
+    public abstract class MongoDBDriverCollectionTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly RemoteServiceFixtures.MongoDB2_6ApplicationFixture _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
 
         private readonly string DatastorePath = "Datastore/statement/MongoDB/myCollection";
 
-        public MongoDB2_6_MongoCollectionTests(T fixture, ITestOutputHelper output)  : base(fixture)
+        public MongoDBDriverCollectionTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _fixture.Actions
-            (
-                exerciseApplication: () =>
-                {
-                    _fixture.Count();
-                    _fixture.CountAsync();
-                    _fixture.Distinct();
-                    _fixture.DistinctAsync();
-                    _fixture.MapReduce();
-                    _fixture.MapReduceAsync();
-                    _fixture.Watch();
-                    _fixture.WatchAsync();
 
-                    _fixture.InsertOne();
-                    _fixture.InsertOneAsync();
-                    _fixture.InsertMany();
-                    _fixture.InsertManyAsync();
-                    _fixture.ReplaceOne();
-                    _fixture.ReplaceOneAsync();
-                    _fixture.UpdateOne();
-                    _fixture.UpdateOneAsync();
-                    _fixture.UpdateMany();
-                    _fixture.UpdateManyAsync();
-                    _fixture.DeleteOne();
-                    _fixture.DeleteOneAsync();
-                    _fixture.DeleteMany();
-                    _fixture.DeleteManyAsync();
-                    _fixture.FindSync();
-                    _fixture.FindAsync();
-                    _fixture.FindOneAndDelete();
-                    _fixture.FindOneAndDeleteAsync();
-                    _fixture.FindOneAndReplace();
-                    _fixture.FindOneAndReplaceAsync();
-                    _fixture.FindOneAndUpdate();
-                    _fixture.FindOneAndUpdateAsync();
-                    _fixture.BulkWrite();
-                    _fixture.BulkWriteAsync();
-                    _fixture.Aggregate();
-                }
-            );
+            _fixture.AddCommand("MongoDbDriverExerciser Count");
+            _fixture.AddCommand("MongoDbDriverExerciser CountAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser Distinct");
+            _fixture.AddCommand("MongoDbDriverExerciser DistinctAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser MapReduce");
+            _fixture.AddCommand("MongoDbDriverExerciser MapReduceAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser Watch");
+            _fixture.AddCommand("MongoDbDriverExerciser WatchAsync");
+
+            _fixture.AddCommand("MongoDbDriverExerciser InsertOne");
+            _fixture.AddCommand("MongoDbDriverExerciser InsertOneAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser InsertMany");
+            _fixture.AddCommand("MongoDbDriverExerciser InsertManyAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser ReplaceOne");
+            _fixture.AddCommand("MongoDbDriverExerciser ReplaceOneAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateOne");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateOneAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateMany");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateManyAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteOne");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteOneAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteMany");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteManyAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindSync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndDelete");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndDeleteAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndReplace");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndReplaceAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndUpdate");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndUpdateAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser BulkWrite");
+            _fixture.AddCommand("MongoDbDriverExerciser BulkWriteAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser Aggregate");
 
             _fixture.Initialize();
         }
@@ -306,18 +302,57 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     }
 
     [NetFrameworkTest]
-    public class MongoDB2_6_FrameworkMongoCollectionTests : MongoDB2_6_MongoCollectionTests<RemoteServiceFixtures.MongoDB2_6FrameworkApplicationFixture>
+    public class MongoDBDriverCollectionTestsFWLatest : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MongoDB2_6_FrameworkMongoCollectionTests(RemoteServiceFixtures.MongoDB2_6FrameworkApplicationFixture fixture, ITestOutputHelper output) : base(fixture, output)
+        public MongoDBDriverCollectionTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MongoDBDriverCollectionTestsFW471 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public MongoDBDriverCollectionTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MongoDBDriverCollectionTestsFW462 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public MongoDBDriverCollectionTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class MongoDB2_6_CoreMongoCollectionTests : MongoDB2_6_MongoCollectionTests<RemoteServiceFixtures.MongoDB2_6CoreApplicationFixture>
+    public class MongoDBDriverCollectionTestsCoreLatest : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MongoDB2_6_CoreMongoCollectionTests(RemoteServiceFixtures.MongoDB2_6CoreApplicationFixture fixture, ITestOutputHelper output) : base(fixture, output)
+        public MongoDBDriverCollectionTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
         {
         }
     }
+
+    [NetCoreTest]
+    public class MongoDBDriverCollectionTestsCore50 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public MongoDBDriverCollectionTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MongoDBDriverCollectionTestsCore31 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MongoDBDriverCollectionTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
 }
