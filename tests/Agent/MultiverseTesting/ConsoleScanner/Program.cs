@@ -18,6 +18,24 @@ namespace NewRelic.Agent.ConsoleScanner
 {
     public class Program
     {
+        // This list does not include some specific frameworks as explained below
+        // .NET Framework 4.x.x: these could be the only version in older packages and will still work in apps targeting up to 4.8.x.
+        // .NET Standard: all versions prior to 2.0 support .NET Framework 4.5+ so we they might be used on their own.
+        // Microsoft Store (Windows Store) "netcore" is listed directly in the ShouldScan method since adding it here would block other allowed frameworks.
+        /// <summary>
+        /// This is a list of prefixes to be ignored.  It is meant to be used with string.StartsWith()."
+        /// </summary>
+        private static List<string> _excludedFrameworks = new List<string> {
+            "net1", // .NET Framework 1.x.x
+            "net2", // .NET Framework 2.x.x
+            "net3", // .NET Framework 3.x.x
+            "net3", // .NET Framework 3.x.x
+            "netcoreapp1", // .NET Core 1.x.x (this version of .NET was complete different from 2.x.x)
+            "netcore45", // Microsoft Store (Windows Store) - Windows 8.x
+            "netcore5", // Microsoft Store (Windows Store)
+            "netmf", // .NET MicroFramework
+        };
+
         private static bool _writeLogs = true;
 
         private static List<InstrumentationReport> _instrumentationReports = new List<InstrumentationReport>();
@@ -75,9 +93,9 @@ namespace NewRelic.Agent.ConsoleScanner
                 {
                     foreach (var intrumentedDllFileLocation in downloadedNugetInfo.InstrumentedDllFileLocations)
                     {
-                        // skip unusable frameworks like silverlight
+                        // Checkl for and skip unusable frameworks like silverlight
                         var targetFramework = Path.GetFileName(Path.GetDirectoryName(intrumentedDllFileLocation));
-                        if (!targetFramework.StartsWith("net") || targetFramework.StartsWith("net35"))
+                        if (!ShouldScan(targetFramework))
                         {
                             continue;
                         }
@@ -209,6 +227,24 @@ namespace NewRelic.Agent.ConsoleScanner
             {
                 Console.WriteLine(entry);
             }
+        }
+
+        private static bool ShouldScan(string targetFramework)
+        {
+            if (!targetFramework.StartsWith("net") || targetFramework == "netcore") // "netcore" is a Windows Store framework, but shares a prefix with .NET Core.
+            {
+                return false;
+            }
+
+            foreach (var excludedFramework in _excludedFrameworks)
+            {
+                if (targetFramework.StartsWith(excludedFramework))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
