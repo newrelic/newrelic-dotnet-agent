@@ -44,8 +44,6 @@ namespace ReportBuilder
             // deserialize reports from .yml
             var reports = ReportParser.GetInstrumentationReports(reportFilePath);
             var overview = TransformReport(reports);
-            //var wikiMaker = new WikiMaker();
-            //wikiMaker.UpdateWiki(outputPath, agentVersion, overview);
             var htmlMaker = new HtmlMaker();
             htmlMaker.UpdatePages(outputPath, agentVersion, overview);
             htmlMaker.SaveRawReport(reportFilePath, outputPath, agentVersion);
@@ -63,7 +61,7 @@ namespace ReportBuilder
 
                 if (!overview.Reports.ContainsKey(instrumentationReport.InstrumentationSetName))
                 {
-                // look for existing set in reports, create new with new PO list if needed
+                    // look for existing set in reports, create new with new PO list if needed
                     overview.Reports.Add(instrumentationReport.InstrumentationSetName, new List<PackageOverview>());
                 }
 
@@ -81,11 +79,9 @@ namespace ReportBuilder
                 // add package version if does not exist
                 if (!packageOverview.Versions.ContainsKey(instrumentationReport.PackageVersion))
                 {
-                    //packageOverview.PackageVersions.Add(instrumentationReport.PackageVersion, new Dictionary<string, bool>());
                     packageOverview.Versions.Add(instrumentationReport.PackageVersion, new PackageData(instrumentationReport.TargetFramework));
                 }
 
-                //var methodSignatures = packageOverview.PackageVersions[instrumentationReport.PackageVersion];
                 var packageData = packageOverview.Versions[instrumentationReport.PackageVersion];
                 if (!packageData.MethodSignatures.ContainsKey(instrumentationReport.TargetFramework))
                 {

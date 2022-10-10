@@ -20,7 +20,6 @@ namespace ReportBuilder
         public PackageOverview(string packageName)
         {
             PackageName = packageName;
-            //PackageVersions = new Dictionary<string, Dictionary<string, bool>>();
             Versions = new Dictionary<string, PackageData>();
         }
     }

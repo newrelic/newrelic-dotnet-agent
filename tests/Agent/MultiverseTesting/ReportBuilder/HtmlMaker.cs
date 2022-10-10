@@ -51,12 +51,6 @@ namespace ReportBuilder
             CreateVersionIndexFile(agentVersion, directoryInfo, fileList);
         }
 
-
-
-
-
-
-
         private string CreateFrameworkFile(string agentVersion, DirectoryInfo directoryInfo, KeyValuePair<string, List<PackageOverview>> report)
         {
             var filePath = CreateFile($"{report.Key}.html", directoryInfo.FullName);
