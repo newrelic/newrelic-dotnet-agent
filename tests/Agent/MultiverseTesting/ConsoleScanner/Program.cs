@@ -75,6 +75,13 @@ namespace NewRelic.Agent.ConsoleScanner
                 {
                     foreach (var intrumentedDllFileLocation in downloadedNugetInfo.InstrumentedDllFileLocations)
                     {
+                        // skip unusable frameworks like silverlight
+                        var targetFramework = Path.GetFileName(Path.GetDirectoryName(intrumentedDllFileLocation));
+                        if (!targetFramework.StartsWith("net") || targetFramework.StartsWith("net35"))
+                        {
+                            continue;
+                        }
+
                         // Builds a model from the files
                         WriteLineToConsole($"Starting scan of '{intrumentedDllFileLocation}'");
                         var assemblyAnalyzer = new AssemblyAnalyzer();
@@ -85,8 +92,6 @@ namespace NewRelic.Agent.ConsoleScanner
                         // just some debugging writes
                         WriteLineToConsole($"Found {assemblyAnalysis.ClassesCount} classes");
                         WriteLineToConsole("Scan complete");
-
-                        var targetFramework = Path.GetFileName(Path.GetDirectoryName(intrumentedDllFileLocation));
 
                         // run the validation
                         var report = instrumentationValidator.CheckInstrumentation(instrumentationModel, instrumentationSet.Name, targetFramework, downloadedNugetInfo.PackageVersion, downloadedNugetInfo.PackageName);

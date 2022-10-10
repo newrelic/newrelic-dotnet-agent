@@ -2,7 +2,11 @@
   "profiles": {
     "ReportBuilder": {
       "commandName": "Project",
-      "commandLineArgs": "\"1.4.0\" \".\\reports.yml\" \".\\wikitemp\""
+      "commandLineArgs": "\"10.0.0\"\r\n\"C:\\dev\\github\\newrelic-dotnet-agent\\tests\\Agent\\MultiverseTesting\\ConsoleScanner\\bin\\Debug\\netcoreapp3.1\\reports.yml\"\r\n\"C:\\IntegrationTestWorkingDirectory\\docs\\mvs\""
+    },
+    "main": {
+      "commandName": "Project",
+      "commandLineArgs": "10.0.0\r\n.\\reports.yml\r\nC:\\IntegrationTestWorkingDirectory\\docs\\mvs"
     }
   }
 }

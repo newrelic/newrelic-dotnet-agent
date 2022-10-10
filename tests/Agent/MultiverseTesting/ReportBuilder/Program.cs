@@ -56,9 +56,14 @@ namespace ReportBuilder
             var overview = new InstrumentationOverview();
             foreach (var instrumentationReport in instrumentationReports)
             {
-                // look for existing set in reports, create new with new PO list if needed
+                if (!instrumentationReport.TargetFramework.StartsWith("net") || instrumentationReport.TargetFramework == "net4" || instrumentationReport.TargetFramework == "net4-client")
+                {
+                    continue;
+                }
+
                 if (!overview.Reports.ContainsKey(instrumentationReport.InstrumentationSetName))
                 {
+                // look for existing set in reports, create new with new PO list if needed
                     overview.Reports.Add(instrumentationReport.InstrumentationSetName, new List<PackageOverview>());
                 }
 
@@ -74,12 +79,20 @@ namespace ReportBuilder
                 }
 
                 // add package version if does not exist
-                if (!packageOverview.PackageVersions.ContainsKey(instrumentationReport.PackageVersion))
+                if (!packageOverview.Versions.ContainsKey(instrumentationReport.PackageVersion))
                 {
-                    packageOverview.PackageVersions.Add(instrumentationReport.PackageVersion, new Dictionary<string, bool>());
+                    //packageOverview.PackageVersions.Add(instrumentationReport.PackageVersion, new Dictionary<string, bool>());
+                    packageOverview.Versions.Add(instrumentationReport.PackageVersion, new PackageData(instrumentationReport.TargetFramework));
                 }
 
-                var methodSignatures = packageOverview.PackageVersions[instrumentationReport.PackageVersion];
+                //var methodSignatures = packageOverview.PackageVersions[instrumentationReport.PackageVersion];
+                var packageData = packageOverview.Versions[instrumentationReport.PackageVersion];
+                if (!packageData.MethodSignatures.ContainsKey(instrumentationReport.TargetFramework))
+                {
+                    packageData.MethodSignatures.Add(instrumentationReport.TargetFramework, new Dictionary<string, bool>());
+                }
+
+                var methodSignatures = packageData.MethodSignatures[instrumentationReport.TargetFramework];
                 foreach (var method in instrumentationReport.AssemblyReport.Validations)
                 {
                     foreach (var validation in method.Value)
@@ -87,15 +100,16 @@ namespace ReportBuilder
                         var fqMethodname = $"{method.Key}.{validation.MethodSignature}";
                         if (methodSignatures.TryGetValue(fqMethodname, out var isValid) )
                         {
+                            // checks if the instrumentation changes from one targetFramework to another
                             if(isValid == validation.IsValid)
                             {
                                 continue;
                             }
 
-                            throw new Exception($"ERROR: Method '{fqMethodname}' exists with different validation result. Has {isValid} should be {validation.IsValid}");
+                            throw new Exception($"ERROR: Method '{fqMethodname}' in '{instrumentationReport.PackageName}':'{instrumentationReport.PackageVersion}' exists with different validation result for .NET version '{instrumentationReport.TargetFramework}'. Has {isValid} should be {validation.IsValid}");
                         }
 
-                        methodSignatures.Add(fqMethodname, validation.IsValid);
+                        methodSignatures[fqMethodname] = validation.IsValid;
                     }
                 }
             }
