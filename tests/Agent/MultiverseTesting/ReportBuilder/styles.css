@@ -1,5 +1,6 @@
 ﻿body {
     font-family: arial, sans-serif;
+    font-size: 14px;
 }
 
 table {
@@ -12,10 +13,18 @@ tr:nth-child(even) {
     background-color: #e6e6e6;
 }
 
+tr:hover {
+    background-color: #D6EEEE;
+}
+
 td, th {
     border: 1px solid #e6e6e6;
     text-align: left;
     padding: 5px;
+}
+
+#version-header {
+    width:50px;
 }
 
 #pass {
