@@ -27,10 +27,21 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         private IMongoClient _client;
         private IMongoDatabase _db;
         private IMongoCollection<CustomMongoDbEntity> _collection;
+        private string _mongoUrl;
 
-        public IMongoClient Client => _client ??= new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDb26ConnectionString));
+        public IMongoClient Client => _client ??= new MongoClient(new MongoUrl(_mongoUrl));
         public IMongoDatabase Db => _db ??= Client.GetDatabase(_dbName);
         public IMongoCollection<CustomMongoDbEntity> Collection => _collection ??= GetAddCollection();
+
+        // This method should be called by users of this exerciser before calling any other methods
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void SetMongoUrl(string mongoUrl)
+        {
+            _mongoUrl = mongoUrl;
+        }
+
 
         #region Drop
 
@@ -39,10 +50,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             Client.DropDatabase(databaseName);
         }
 
-        #endregion Drop
+#endregion Drop
 
 
-        #region Insert
+#region Insert
 
         [LibraryMethod]
         [Transaction]
@@ -82,9 +93,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             await Collection.InsertManyAsync(new List<CustomMongoDbEntity>() { document1, document2 });
         }
 
-        #endregion
+#endregion
 
-        #region Replace
+#region Replace
 
         [LibraryMethod]
         [Transaction]
@@ -105,9 +116,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Mr.Slate");
             await Collection.ReplaceOneAsync(filter, new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" });
         }
-        #endregion
+#endregion
 
-        #region Update
+#region Update
 
         [LibraryMethod]
         [Transaction]
@@ -167,9 +178,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return result;
         }
 
-        #endregion
+#endregion
 
-        #region Delete
+#region Delete
 
         [LibraryMethod]
         [Transaction]
@@ -226,9 +237,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return result;
         }
 
-        #endregion
+#endregion
 
-        #region Find
+#region Find
 
         [LibraryMethod]
         [Transaction]
@@ -353,9 +364,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return entity;
         }
 
-        #endregion
+#endregion
 
-        #region Other
+#region Other
 
         [LibraryMethod]
         [Transaction]
@@ -520,6 +531,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return await Collection.MapReduceAsync(map, reduce, options);
         }
 
+#if NET471_OR_GREATER || NETCOREAPP
         //This call will throw exception because the Watch() method only work with MongoDb replica sets, but it is fine as long as the method is executed. 
         [LibraryMethod]
         [Transaction]
@@ -560,10 +572,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
                 return "Got exception but it is ok!";
             }
         }
+#endif
 
-        #endregion
+#endregion
 
-        #region Database
+#region Database
 
         [LibraryMethod]
         [Transaction]
@@ -684,9 +697,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return result.ToString();
         }
 
-        #endregion
+#endregion
 
-        #region IndexManager
+#region IndexManager
 
         [LibraryMethod]
         [Transaction]
@@ -788,9 +801,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return result.Count();
         }
 
-        #endregion
+#endregion
 
-        #region Linq
+#region Linq
 
         [LibraryMethod]
         [Transaction]
@@ -811,9 +824,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return result;
         }
 
-        #endregion
+#endregion
 
-        #region AsyncCursor
+#region AsyncCursor
 
         [LibraryMethod]
         [Transaction]
@@ -861,9 +874,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return result.Count;
         }
 
-        #endregion
+#endregion
 
-        #region Helpers
+#region Helpers
 
         private IMongoCollection<CustomMongoDbEntity> GetAddCollection(string collectionName = null)
         {
@@ -890,7 +903,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             Db.DropCollection(collectionName);
         }
 
-        #endregion
+#endregion
 
     }
 

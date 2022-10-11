@@ -23,12 +23,12 @@ namespace MongoDbApi
 
         public MongoDbApi()
         {
-            _client = new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDb26ConnectionString));
+            _client = new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDb3_6ConnectionString));
         }
 
         public MongoDbApi(string databaseName = "myDb")
         {
-            _client = new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDb26ConnectionString));
+            _client = new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDb3_6ConnectionString));
             _db = _client.GetDatabase(databaseName);
             _defaultCollectionName = CollectionName;
         }
