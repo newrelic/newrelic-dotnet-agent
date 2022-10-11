@@ -80,6 +80,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverAsyncCursorTestsFW462 : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MongoDBDriverAsyncCursorTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            // FW462 is testing MongoDB.Driver version 2.3, which needs to connect to the 3.2 server
             : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString)
         {
         }

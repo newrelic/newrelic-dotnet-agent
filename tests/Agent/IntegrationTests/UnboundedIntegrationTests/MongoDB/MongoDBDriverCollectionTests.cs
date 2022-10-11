@@ -343,6 +343,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverCollectionTestsFW462 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public MongoDBDriverCollectionTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            // FW462 is testing MongoDB.Driver version 2.3, which needs to connect to the 3.2 server
+            // 2.3 doesn't support the Watch/WatchAsync methods
             : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString, false)
         {
         }
