@@ -12,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
     public static class Utilities
     {
 #if DEBUG
-		public static string Configuration = "Debug";
+        public static string Configuration = "Debug";
 #else
         public static string Configuration = "Release";
 #endif
@@ -57,6 +57,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 throw new ArgumentNullException(valueName);
 
             return value;
+        }
+
+        public static string GenerateTableName()
+        {
+            var tableId = Guid.NewGuid().ToString("N").ToLower();
+            return $"person{tableId}";
         }
     }
 }

@@ -23,18 +23,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
         private readonly string _tableName;
 
-        private static string GenerateTableName()
-        {
-            var tableId = Guid.NewGuid().ToString("N").ToLower();
-            return $"person{tableId}";
-        }
-
         public MsSqlAsyncTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlAsync";
-            _tableName = GenerateTableName();
+            _tableName = Utilities.GenerateTableName();
 
             _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
             _fixture.AddCommand($"{excerciserName} MsSqlAsync {_tableName}");

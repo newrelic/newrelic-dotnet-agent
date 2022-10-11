@@ -128,7 +128,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public string MsSql_WithParameterizedQuery(string tableName, bool paramsWithAtSign)
+        public string MsSql_WithParameterizedQuery(bool paramsWithAtSign)
         {
             var teamMembers = new List<string>();
 
