@@ -12,7 +12,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
+namespace NewRelic.Agent.UnboundedIntegrationTests.MsSqlOld
 {
     public abstract class MsSqlQueryParameterCaptureTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : RemoteApplicationFixture, RemoteServiceFixtures.IMsSqlClientFixture

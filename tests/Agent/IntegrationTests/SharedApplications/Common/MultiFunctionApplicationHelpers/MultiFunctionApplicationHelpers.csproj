@@ -31,6 +31,14 @@
     <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net6.0'" />
 
+
+    <!--Microsoft.Data.SqlClient-->
+
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" />
+
+    <!--System.Data.SqlClient-->
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+
     <!-- MySql.Data framework references -->
     <PackageReference Include="MySql.Data" Version="6.10.9" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="MySql.Data" Version="8.0.15" Condition="'$(TargetFramework)' == 'net471'" />
