@@ -191,53 +191,73 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    //[NetFrameworkTest]
-    //public class MsSqlAsyncTestsParameterizedQuery_ParamsWithoutAtSign : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MsSqlBasicMvcFixture>
-    //{
-    //    public MsSqlAsyncTestsParameterizedQuery_ParamsWithoutAtSign(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
-    //        : base(fixture, output, "WebTransaction/MVC/MsSqlController/MsSqlAsync_WithParameterizedQuery", false)
-    //    {
-    //    }
-    //}
+    [NetFrameworkTest]
+    public class MsSqlAsyncTestsParameterizedQuery_ParamsWithoutAtSign : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MsSqlAsyncTestsParameterizedQuery_ParamsWithoutAtSign(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataExerciser",
+                  paramsWithAtSign: false)
+        {
+        }
+    }
 
     #region Microsoft.Data.SqlClient Tests
 
-    //[NetFrameworkTest]
-    //public class MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework>
-    //{
-    //    public MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
 
-    //        : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSqlAsync_WithParameterizedQuery", true)
-    //    {
-    //    }
-    //}
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: true)
+        {
+        }
+    }
 
-    //[NetFrameworkTest]
-    //public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFramework : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework>
-    //{
-    //    public MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFramework(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
-    //        : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSqlAsync_WithParameterizedQuery", false)
-    //    {
-    //    }
-    //}
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFramework : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: false)
+        {
+        }
+    }
 
-    //[NetCoreTest]
-    //public class MicrosoftDataSqlClientAsyncTestsParameterizedQueryCore : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
-    //{
-    //    public MicrosoftDataSqlClientAsyncTestsParameterizedQueryCore(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
-    //        : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSqlAsync_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", true)
-    //    {
-    //    }
-    //}
+    [NetCoreTest]
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQueryCore : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQueryCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: true)
+        {
+        }
+    }
 
-    //[NetCoreTest]
-    //public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignCore : MsSqlAsyncTestsParameterizedQueryBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
-    //{
-    //    public MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignCore(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
-    //        : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSqlAsync_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", false)
-    //    {
-    //    }
-    //}
+    [NetCoreTest]
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignCore : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: false)
+        {
+        }
+    }
 
     #endregion
 }
