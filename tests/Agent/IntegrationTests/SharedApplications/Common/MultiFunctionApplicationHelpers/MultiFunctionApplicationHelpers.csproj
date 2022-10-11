@@ -8,6 +8,10 @@
     <LangVersion>default</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="System.Data" Condition="'$(TargetFramework)' == 'net462'"  />
+    <Reference Include="System.Data" Condition="'$(TargetFramework)' == 'net48'"  />
+  </ItemGroup>
  
   <ItemGroup>
     <PackageReference Include="LibGit2Sharp" Version="0.24.1">
@@ -36,8 +40,9 @@
 
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" />
 
-    <!--System.Data.SqlClient-->
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+    <!--System.Data.SqlClient--><!--
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />-->
+    
 
     <!-- MySql.Data framework references -->
     <PackageReference Include="MySql.Data" Version="6.10.9" Condition="'$(TargetFramework)' == 'net462'" />

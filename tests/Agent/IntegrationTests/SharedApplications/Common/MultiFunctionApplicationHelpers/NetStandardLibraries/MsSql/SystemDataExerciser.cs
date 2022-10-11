@@ -1,6 +1,8 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if NETFRAMEWORK
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -15,7 +17,7 @@ using NewRelic.Api.Agent;
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {
     [Library]
-    public class SystemDataSqlClientExerciser
+    public class SystemDataExerciser
     {
         private const string InsertPersonMsSql = "INSERT INTO {0} (FirstName, LastName, Email) VALUES('Testy', 'McTesterson', 'testy@mctesterson.com')";
         private const string DeletePersonMsSql = "DELETE FROM {0} WHERE Email = 'testy@mctesterson.com'";
@@ -290,3 +292,5 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         }
     }
 }
+
+#endif

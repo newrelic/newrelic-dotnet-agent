@@ -29,11 +29,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             return $"person{tableId}";
         }
 
-        public MsSqlAsyncTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName, string expectedTransactionName) : base(fixture)
+        public MsSqlAsyncTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _expectedTransactionName = expectedTransactionName;
+            _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlAsync";
             _tableName = GenerateTableName();
 
             _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
@@ -178,40 +178,37 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class SystemDataSqlClientAsyncTests : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class SystemDataAsyncTestsFWLatest : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public SystemDataSqlClientAsyncTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public SystemDataAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "SystemDataSqlClientExerciser",
-                  expectedTransactionName: "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.SystemDataSqlClientExerciser/MsSqlAsync")
+                  excerciserName: "SystemDataExerciser")
         {
         }
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientAsyncTestsFramework : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MicrosoftDataSqlClientAsyncTestsFWLatest : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MicrosoftDataSqlClientAsyncTestsFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser",
-                  expectedTransactionName: "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.MicrosoftDataSqlClientExerciser/MsSqlAsync")
+                  excerciserName: "MicrosoftDataSqlClientExerciser")
         {
         }
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientAsyncTestsCore : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MicrosoftDataSqlClientAsyncTestsCoreLatest : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MicrosoftDataSqlClientAsyncTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser",
-                  expectedTransactionName: "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.MicrosoftDataSqlClientExerciser/MsSqlAsync")
+                  excerciserName: "MicrosoftDataSqlClientExerciser")
         {
         }
     }
