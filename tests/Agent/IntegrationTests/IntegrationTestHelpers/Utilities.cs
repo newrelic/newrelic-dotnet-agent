@@ -64,5 +64,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var tableId = Guid.NewGuid().ToString("N").ToLower();
             return $"person{tableId}";
         }
+
+        public static string GenerateProcedureName()
+        {
+            var procId = Guid.NewGuid().ToString("N").ToLower();
+            return $"pTestProc{procId}";
+        }
     }
 }
