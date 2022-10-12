@@ -38,6 +38,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             var mongoUri = new UriBuilder(_mongoUrl);
             var serverHost = CommonUtils.NormalizeHostname(mongoUri.Host);
             var m = _fixture.AgentLog.GetMetricByName($"Datastore/instance/MongoDB/{serverHost}/{mongoUri.Port}");
+            Assert.NotNull(m);
         }
 
         [Fact]
