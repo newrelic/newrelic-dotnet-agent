@@ -163,3 +163,9 @@
         #- { package-name: MySqlConnector, versions: [0.69.10, 1.0.1, 1.2.1] }
         - { package-name: Npgsql, versions: [3.2.7, 4.0.5, 4.1.10, 5.0.11] }
     local-assemblies:
+
+  - name: nlog
+    xml-file: ${{ MVS_XML_PATH }}/NLogLogging/Instrumentation.xml
+    nuget-packages:
+       - { package-name: NLog, versions: [4.1.2, 4.3.11, 4.5.9, 4.5.11, 4.7.15, 5.0.4] }
+    local-assemblies:
