@@ -1,4 +1,4 @@
-// Copyright 2020 New Relic, Inc. All rights reserved.
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -9,342 +9,403 @@ using MongoDB.Bson;
 using MongoDB.Driver.Linq;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
+using System.Runtime.CompilerServices;
+using NewRelic.Api.Agent;
+using System;
 
-namespace MongoDbApi
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 {
-    public class MongoDbApi
+    [Library]
+    public class MongoDBDriverExerciser
     {
-
         const string CollectionName = "myCollection";
 
-        private readonly IMongoDatabase _db;
-        private readonly string _defaultCollectionName;
-        private readonly IMongoClient _client;
+        private readonly string _dbName = Guid.NewGuid().ToString();
+        private readonly string _defaultCollectionName = CollectionName;
 
-        public MongoDbApi()
+        private IMongoClient _client;
+        private IMongoDatabase _db;
+        private IMongoCollection<CustomMongoDbEntity> _collection;
+        private string _mongoUrl;
+
+        public IMongoClient Client => _client ??= new MongoClient(new MongoUrl(_mongoUrl));
+        public IMongoDatabase Db => _db ??= Client.GetDatabase(_dbName);
+        public IMongoCollection<CustomMongoDbEntity> Collection => _collection ??= GetAddCollection();
+
+        // This method should be called by users of this exerciser before calling any other methods
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void SetMongoUrl(string mongoUrl)
         {
-            _client = new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDb26ConnectionString));
+            _mongoUrl = mongoUrl;
         }
 
-        public MongoDbApi(string databaseName = "myDb")
-        {
-            _client = new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDb26ConnectionString));
-            _db = _client.GetDatabase(databaseName);
-            _defaultCollectionName = CollectionName;
-        }
 
         #region Drop
 
         public void DropDatabase(string databaseName)
         {
-            _client.DropDatabase(databaseName);
+            Client.DropDatabase(databaseName);
         }
 
-        #endregion Drop
+#endregion Drop
 
 
-        #region Insert
+#region Insert
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void InsertOne()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task InsertOneAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred 'Async' Flintstone" };
-            await collection.InsertOneAsync(document);
+            await Collection.InsertOneAsync(document);
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void InsertMany()
         {
-            var collection = GetAddCollection();
             var doc1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma Flintstone" };
             var doc2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Pebbles Flintstone" };
-            collection.InsertMany(new List<CustomMongoDbEntity>() { doc1, doc2 });
+            Collection.InsertMany(new List<CustomMongoDbEntity>() { doc1, doc2 });
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task InsertManyAsync()
         {
-            var collection = GetAddCollection();
             var document1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma 'Async' Flintstone" };
             var document2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Pebbles 'Async' Flintstone" };
-            await collection.InsertManyAsync(new List<CustomMongoDbEntity>() { document1, document2 });
+            await Collection.InsertManyAsync(new List<CustomMongoDbEntity>() { document1, document2 });
         }
 
-        #endregion
+#endregion
 
-        #region Replace
+#region Replace
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void ReplaceOne()
         {
-            var collection = GetAddCollection();
-            collection.InsertOne(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" });
+            Collection.InsertOne(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" });
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Mr.Slate");
-            collection.ReplaceOne(filter, new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" });
+            Collection.ReplaceOne(filter, new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" });
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task ReplaceOneAsync()
         {
-            var collection = GetAddCollection();
-            collection.InsertOne(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" });
+            Collection.InsertOne(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" });
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Mr.Slate");
-            await collection.ReplaceOneAsync(filter, new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" });
+            await Collection.ReplaceOneAsync(filter, new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" });
         }
-        #endregion
+#endregion
 
-        #region Update
+#region Update
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public UpdateResult UpdateOne()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Dino Flintstone" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Dino Flintstone");
             var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "Dinosaur Flintstone");
-            var result = collection.UpdateOne(filter, update);
+            var result = Collection.UpdateOne(filter, update);
             return result;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<UpdateResult> UpdateOneAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Dino Flintstone" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Dino 'Async' Flintstone");
             var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "Dinosaur 'Async' Flintstone");
-            var result = await collection.UpdateOneAsync(filter, update);
+            var result = await Collection.UpdateOneAsync(filter, update);
             return result;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public UpdateResult UpdateMany()
         {
-            var collection = GetAddCollection();
             var doc1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma Flintstone" };
             var doc2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Pebbles Flintstone" };
-            collection.InsertMany(new List<CustomMongoDbEntity>() { doc1, doc2 });
+            Collection.InsertMany(new List<CustomMongoDbEntity>() { doc1, doc2 });
 
             var filter = Builders<CustomMongoDbEntity>.Filter.In("Name", new List<string> { "Willma Flintstone", "Pebbles Flintstone" });
             var update = Builders<CustomMongoDbEntity>.Update.Set("familyName", "Flintstone");
-            var result = collection.UpdateMany(filter, update);
+            var result = Collection.UpdateMany(filter, update);
             return result;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<UpdateResult> UpdateManyAsync()
         {
-            var collection = GetAddCollection();
             var doc1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma Flintstone" };
             var doc2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Pebbles Flintstone" };
-            collection.InsertMany(new List<CustomMongoDbEntity>() { doc1, doc2 });
+            Collection.InsertMany(new List<CustomMongoDbEntity>() { doc1, doc2 });
 
             var filter = Builders<CustomMongoDbEntity>.Filter.In("Name", new List<string> { "Willma Flintstone", "Pebbles Flintstone" });
             var update = Builders<CustomMongoDbEntity>.Update.Set("familyName", "Flintstone 'Async'");
-            var result = await collection.UpdateManyAsync(filter, update);
+            var result = await Collection.UpdateManyAsync(filter, update);
             return result;
         }
 
-        #endregion
+#endregion
 
-        #region Delete
+#region Delete
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public DeleteResult DeleteOne()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Barney Rubble" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Barney Rubble");
-            var result = collection.DeleteOne(filter);
+            var result = Collection.DeleteOne(filter);
             return result;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<DeleteResult> DeleteOneAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Barney 'Async' Rubble" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Barney 'Async' Rubble");
-            var result = await collection.DeleteOneAsync(filter);
+            var result = await Collection.DeleteOneAsync(filter);
             return result;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public DeleteResult DeleteMany()
         {
-            var collection = GetAddCollection();
             var document1 = (new CustomMongoDbEntity { Id = new ObjectId(), Name = "Betty Rubble" });
             var document2 = (new CustomMongoDbEntity { Id = new ObjectId(), Name = "BamBam Rubble" });
-            collection.InsertMany(new List<CustomMongoDbEntity>() { document1, document2 });
+            Collection.InsertMany(new List<CustomMongoDbEntity>() { document1, document2 });
 
             var filter = Builders<CustomMongoDbEntity>.Filter.In("Name", new List<string> { "Betty Rubble", "BamBam Rubble" });
-            var result = collection.DeleteMany(filter);
+            var result = Collection.DeleteMany(filter);
             return result;
 
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<DeleteResult> DeleteManyAsync()
         {
-            var collection = GetAddCollection();
             var document1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Betty 'Async' Rubble" };
             var document2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "BamBam 'Async' Rubble" };
-            collection.InsertMany(new List<CustomMongoDbEntity>() { document1, document2 });
+            Collection.InsertMany(new List<CustomMongoDbEntity>() { document1, document2 });
 
             var filter = Builders<CustomMongoDbEntity>.Filter.In("Name", new List<string> { "Betty 'Async' Rubble", "BamBam 'Async' Rubble" });
-            var result = await collection.DeleteManyAsync(filter);
+            var result = await Collection.DeleteManyAsync(filter);
             return result;
         }
 
-        #endregion
+#endregion
 
-        #region Find
+#region Find
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public IAsyncCursor<CustomMongoDbEntity> FindSync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
-            var cursor = collection.FindSync(filter);
+            var cursor = Collection.FindSync(filter);
             return cursor;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<IAsyncCursor<CustomMongoDbEntity>> FindAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
-            var cursor = await collection.FindAsync(filter);
+            var cursor = await Collection.FindAsync(filter);
             return cursor;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public CustomMongoDbEntity FindOneAndDelete()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "The Great Gazoo" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
-            var entity = collection.FindOneAndDelete(filter);
+            var entity = Collection.FindOneAndDelete(filter);
             return entity;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<CustomMongoDbEntity> FindOneAndDeleteAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "The Great 'Async' Gazoo" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
-            var entity = await collection.FindOneAndDeleteAsync(filter);
+            var entity = await Collection.FindOneAndDeleteAsync(filter);
             return entity;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public CustomMongoDbEntity FindOneAndReplace()
         {
-            var collection = GetAddCollection();
 
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Joe Rockhead" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var replaceDoc = new CustomMongoDbEntity { Id = document.Id, Name = "Joe Rockhead's Doppelganger" };
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
 
             var option = new FindOneAndReplaceOptions<CustomMongoDbEntity> { IsUpsert = true };
 
-            collection.FindOneAndReplace<CustomMongoDbEntity>(filter, replaceDoc, option);
+            Collection.FindOneAndReplace<CustomMongoDbEntity>(filter, replaceDoc, option);
 
-            var entity = collection.FindOneAndReplace(filter, replaceDoc, option);
+            var entity = Collection.FindOneAndReplace(filter, replaceDoc, option);
             return entity;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<CustomMongoDbEntity> FindOneAndReplaceAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Joe 'Async' Rockhead" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var replaceDoc = new CustomMongoDbEntity { Id = document.Id, Name = "Joe 'Async' Rockhead's Doppelganger" };
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
 
             var option = new FindOneAndReplaceOptions<CustomMongoDbEntity> { IsUpsert = true };
 
-            var entity = await collection.FindOneAndReplaceAsync(filter, replaceDoc, option);
+            var entity = await Collection.FindOneAndReplaceAsync(filter, replaceDoc, option);
             return entity;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public CustomMongoDbEntity FindOneAndUpdate()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Roxy Rubble" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "Rubble");
 
             var option = new FindOneAndUpdateOptions<CustomMongoDbEntity> { IsUpsert = true };
 
-            var entity = collection.FindOneAndUpdate(filter, update, option);
+            var entity = Collection.FindOneAndUpdate(filter, update, option);
             return entity;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<CustomMongoDbEntity> FindOneAndUpdateAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Roxy 'Async' Rubble" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "'Async' Rubble");
 
             var option = new FindOneAndUpdateOptions<CustomMongoDbEntity> { ReturnDocument = ReturnDocument.Before };
 
-            var entity = await collection.FindOneAndUpdateAsync(filter, update, option);
+            var entity = await Collection.FindOneAndUpdateAsync(filter, update, option);
             return entity;
         }
 
-        #endregion
+#endregion
 
-        #region Other
+#region Other
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public BulkWriteResult BulkWrite()
         {
-            var collection = GetAddCollection();
             var doc1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
             var doc2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma Flintstone" };
 
-            var result = collection.BulkWrite(new WriteModel<CustomMongoDbEntity>[] {
+            var result = Collection.BulkWrite(new WriteModel<CustomMongoDbEntity>[] {
                 new InsertOneModel<CustomMongoDbEntity>(doc1),
                 new InsertOneModel<CustomMongoDbEntity>(doc2)
             });
             return result;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<BulkWriteResult> BulkWriteAsync()
         {
-            var collection = GetAddCollection();
             var doc1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred 'Async' Flintstone" };
             var doc2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma 'Async' Flintstone" };
 
-            var result = await collection.BulkWriteAsync(new WriteModel<CustomMongoDbEntity>[] {
+            var result = await Collection.BulkWriteAsync(new WriteModel<CustomMongoDbEntity>[] {
                 new InsertOneModel<CustomMongoDbEntity>(doc1),
                 new InsertOneModel<CustomMongoDbEntity>(doc2)
             });
             return result;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public IAsyncCursor<CustomMongoDbEntity> Aggregate()
         {
-            var collection = GetAddCollection();
 
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var match = new BsonDocument
             {
@@ -358,55 +419,65 @@ namespace MongoDbApi
             };
 
             var pipeline = new[] { match };
-            var result = collection.Aggregate<CustomMongoDbEntity>(pipeline);
+            var result = Collection.Aggregate<CustomMongoDbEntity>(pipeline);
             return result;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public long Count()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
-            return collection.Count(filter);
+            return Collection.Count(filter);
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<long> CountAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
-            return await collection.CountAsync(filter);
+            return await Collection.CountAsync(filter);
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public IAsyncCursor<string> Distinct()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
-            return collection.Distinct<string>("Name", filter);
+            return Collection.Distinct<string>("Name", filter);
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<IAsyncCursor<string>> DistinctAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
-            return await collection.DistinctAsync<string>("Name", filter);
+            return await Collection.DistinctAsync<string>("Name", filter);
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public IAsyncCursor<BsonDocument> MapReduce()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var mapJs = @"function mapF() {
 							emit(this.name, 1);
@@ -427,14 +498,16 @@ namespace MongoDbApi
                 OutputOptions = MapReduceOutputOptions.Inline
             };
 
-            return collection.MapReduce(map, reduce, options);
+            return Collection.MapReduce(map, reduce, options);
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<IAsyncCursor<BsonDocument>> MapReduceAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
             var mapJs = @"function mapF() {
 							emit(this.name, 1);
@@ -455,18 +528,21 @@ namespace MongoDbApi
                 OutputOptions = MapReduceOutputOptions.Inline
             };
 
-            return await collection.MapReduceAsync(map, reduce, options);
+            return await Collection.MapReduceAsync(map, reduce, options);
         }
 
+#if NET471_OR_GREATER || NETCOREAPP
         //This call will throw exception because the Watch() method only work with MongoDb replica sets, but it is fine as long as the method is executed. 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public string Watch()
         {
             try
             {
-                var collection = GetAddCollection();
                 var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-                collection.InsertOne(document);
-                collection.Watch();
+                Collection.InsertOne(document);
+                Collection.Watch();
 
                 return "Ok";
             }
@@ -477,14 +553,16 @@ namespace MongoDbApi
         }
 
         //This call will throw exception because the Watch() method only work with MongoDb replica sets, but it is fine as long as the method is executed.
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<string> WatchAsync()
         {
             try
             {
-                var collection = GetAddCollection();
                 var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-                collection.InsertOne(document);
-                await collection.WatchAsync();
+                Collection.InsertOne(document);
+                await Collection.WatchAsync();
 
                 return "Ok";
 
@@ -494,212 +572,269 @@ namespace MongoDbApi
                 return "Got exception but it is ok!";
             }
         }
+#endif
 
-        #endregion
+#endregion
 
-        #region Database
+#region Database
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public string CreateCollection()
         {
             var collectionName = "createTestCollection";
-            _db.CreateCollection(collectionName);
-            var collection = _db.GetCollection<BsonDocument>(collectionName);
-            _db.DropCollection(collectionName);
+            Db.CreateCollection(collectionName);
+            var collection = Db.GetCollection<BsonDocument>(collectionName);
+            Db.DropCollection(collectionName);
             return collection.CollectionNamespace.CollectionName;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<string> CreateCollectionAsync()
         {
             var collectionName = "createTestCollectionAsync";
-            await _db.CreateCollectionAsync(collectionName);
-            var collection = _db.GetCollection<BsonDocument>(collectionName);
-            await _db.DropCollectionAsync(collectionName);
+            await Db.CreateCollectionAsync(collectionName);
+            var collection = Db.GetCollection<BsonDocument>(collectionName);
+            await Db.DropCollectionAsync(collectionName);
             return collection.CollectionNamespace.CollectionName;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public string DropCollection()
         {
             var collectionName = "dropTestCollection";
-            _db.CreateCollection(collectionName);
-            var collection = _db.GetCollection<BsonDocument>(collectionName);
-            _db.DropCollection(collectionName);
+            Db.CreateCollection(collectionName);
+            var collection = Db.GetCollection<BsonDocument>(collectionName);
+            Db.DropCollection(collectionName);
             return collection.CollectionNamespace.CollectionName;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<string> DropCollectionAsync()
         {
             var collectionName = "dropTestCollectionAsync";
-            _db.CreateCollection(collectionName);
-            var collection = _db.GetCollection<BsonDocument>(collectionName);
-            await _db.DropCollectionAsync(collectionName);
+            Db.CreateCollection(collectionName);
+            var collection = Db.GetCollection<BsonDocument>(collectionName);
+            await Db.DropCollectionAsync(collectionName);
             return collection.CollectionNamespace.CollectionName;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public int ListCollections()
         {
-            var collections = _db.ListCollections().ToList();
+            var collections = Db.ListCollections().ToList();
             return collections.Count();
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<int> ListCollectionsAsync()
         {
-            var cursor = await _db.ListCollectionsAsync();
+            var cursor = await Db.ListCollectionsAsync();
             var collections = cursor.ToList();
             return collections.Count;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public string RenameCollection()
         {
             var collectionName = "NamedCollection";
             var newName = "RenamedCollection";
 
-            var collection = _db.GetCollection<CustomMongoDbEntity>(collectionName);
+            var collection = Db.GetCollection<CustomMongoDbEntity>(collectionName);
             EnsureCollectionExists(collection);
 
-            _db.RenameCollection(collectionName, newName);
-            var newCollection = _db.GetCollection<BsonDocument>(newName);
+            Db.RenameCollection(collectionName, newName);
+            var newCollection = Db.GetCollection<BsonDocument>(newName);
             return newCollection.CollectionNamespace.CollectionName;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<string> RenameCollectionAsync()
         {
             var collectionName = "NamedCollectionAsync";
             var newName = "RenamedCollectionAsync";
 
-            var collection = _db.GetCollection<CustomMongoDbEntity>(collectionName);
+            var collection = Db.GetCollection<CustomMongoDbEntity>(collectionName);
             EnsureCollectionExists(collection);
 
-            await _db.RenameCollectionAsync(collectionName, newName);
-            var newCollection = _db.GetCollection<BsonDocument>(newName);
+            await Db.RenameCollectionAsync(collectionName, newName);
+            var newCollection = Db.GetCollection<BsonDocument>(newName);
             return newCollection.CollectionNamespace.CollectionName;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public string RunCommand()
         {
             var command = new BsonDocumentCommand<BsonDocument>(new BsonDocument { { "dbStats", 1 }, { "scale", 1 } });
-            var result = _db.RunCommand<BsonDocument>(command);
+            var result = Db.RunCommand<BsonDocument>(command);
             return result.ToString();
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<string> RunCommandAsync()
         {
             var command = new BsonDocumentCommand<BsonDocument>(new BsonDocument { { "dbStats", 1 }, { "scale", 1 } });
-            var result = await _db.RunCommandAsync<BsonDocument>(command);
+            var result = await Db.RunCommandAsync<BsonDocument>(command);
             return result.ToString();
         }
 
-        #endregion
+#endregion
 
-        #region IndexManager
+#region IndexManager
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public int CreateOne()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
-            collection.InsertOne(document);
-            collection.Indexes.CreateOne(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name));
+            Collection.InsertOne(document);
+            Collection.Indexes.CreateOne(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name));
             return 1;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<int> CreateOneAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
-            collection.InsertOne(document);
-            await collection.Indexes.CreateOneAsync(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name));
+            Collection.InsertOne(document);
+            await Collection.Indexes.CreateOneAsync(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name));
             return 1;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public int CreateMany()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
-            var result = collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
+            var result = Collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
             return result.Count();
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<int> CreateManyAsync()
         {
-            var collection = GetAddCollection();
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
-            collection.InsertOne(document);
+            Collection.InsertOne(document);
 
-            var result = await collection.Indexes.CreateManyAsync(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
+            var result = await Collection.Indexes.CreateManyAsync(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
             return result.Count();
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void DropAll()
         {
-            var collection = GetAddCollection();
-            collection.Indexes.DropAll();
+            Collection.Indexes.DropAll();
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task DropAllAsync()
         {
-            var collection = GetAddCollection();
-            await collection.Indexes.DropAllAsync();
+            await Collection.Indexes.DropAllAsync();
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void DropOne()
         {
-            var collection = GetAddCollection();
-            collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
-            collection.Indexes.DropOne("Name_1");
+            Collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
+            Collection.Indexes.DropOne("Name_1");
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task DropOneAsync()
         {
-            var collection = GetAddCollection();
-            collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
-            await collection.Indexes.DropOneAsync("Name_1");
+            Collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
+            await Collection.Indexes.DropOneAsync("Name_1");
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public int List()
         {
-            var collection = GetAddCollection();
-            var cursor = collection.Indexes.List();
+            var cursor = Collection.Indexes.List();
             var result = cursor.ToList();
             return result.Count();
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<int> ListAsync()
         {
-            var collection = GetAddCollection();
-            var cursor = await collection.Indexes.ListAsync();
+            var cursor = await Collection.Indexes.ListAsync();
             var result = cursor.ToList();
             return result.Count();
         }
 
-        #endregion
+#endregion
 
-        #region Linq
+#region Linq
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public int ExecuteModel()
         {
-            var collection = GetAddCollection();
-            var result = collection.AsQueryable().Where(w => w.Name == "Fred Flintstone");
+            var result = Collection.AsQueryable().Where(w => w.Name == "Fred Flintstone");
             return result.Count();
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<int> ExecuteModelAsync()
         {
-            var collection = GetAddCollection();
-            var cursor = await collection.AsQueryable().Where(w => w.Name == "Fred Flintstone").ToCursorAsync();
+            var cursor = await Collection.AsQueryable().Where(w => w.Name == "Fred Flintstone").ToCursorAsync();
             var result = cursor.ToList().Count();
             return result;
         }
 
-        #endregion
+#endregion
 
-        #region AsyncCursor
+#region AsyncCursor
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public int GetNextBatch()
         {
-            var collection = GetAddCollection();
 
-            collection.InsertMany(new[]
+            Collection.InsertMany(new[]
             {
                 new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" },
                 new CustomMongoDbEntity { Id = new ObjectId(), Name = "Alan Flintstone" }
@@ -707,7 +842,7 @@ namespace MongoDbApi
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Exists("Name");
 
-            var cursor = collection.FindSync(filter, new FindOptions<CustomMongoDbEntity, CustomMongoDbEntity>()
+            var cursor = Collection.FindSync(filter, new FindOptions<CustomMongoDbEntity, CustomMongoDbEntity>()
             {
                 BatchSize = 1
             });
@@ -716,11 +851,13 @@ namespace MongoDbApi
             return result.Count;
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<int> GetNextBatchAsync()
         {
-            var collection = GetAddCollection();
 
-            collection.InsertMany(new[]
+            Collection.InsertMany(new[]
             {
                 new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" },
                 new CustomMongoDbEntity { Id = new ObjectId(), Name = "Alan Flintstone" }
@@ -728,7 +865,7 @@ namespace MongoDbApi
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Exists("Name");
 
-            var cursor = await collection.FindAsync(filter, new FindOptions<CustomMongoDbEntity, CustomMongoDbEntity>()
+            var cursor = await Collection.FindAsync(filter, new FindOptions<CustomMongoDbEntity, CustomMongoDbEntity>()
             {
                 BatchSize = 1
             });
@@ -737,20 +874,20 @@ namespace MongoDbApi
             return result.Count;
         }
 
-        #endregion
+#endregion
 
-        #region Helpers
+#region Helpers
 
         private IMongoCollection<CustomMongoDbEntity> GetAddCollection(string collectionName = null)
         {
             collectionName = collectionName ?? _defaultCollectionName;
 
-            var collection = _db.GetCollection<CustomMongoDbEntity>(collectionName);
+            var collection = Db.GetCollection<CustomMongoDbEntity>(collectionName);
 
             if (collection == null)
             {
-                _db.CreateCollection(collectionName);
-                collection = _db.GetCollection<CustomMongoDbEntity>(collectionName);
+                Db.CreateCollection(collectionName);
+                collection = Db.GetCollection<CustomMongoDbEntity>(collectionName);
             }
 
             return collection;
@@ -761,12 +898,13 @@ namespace MongoDbApi
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "collection_exists_document" };
             collection.InsertOne(document);
         }
-
         private void DropCollection(string collectionName)
         {
-            _db.DropCollection(collectionName);
+            Db.DropCollection(collectionName);
         }
 
-        #endregion
+#endregion
+
     }
+
 }

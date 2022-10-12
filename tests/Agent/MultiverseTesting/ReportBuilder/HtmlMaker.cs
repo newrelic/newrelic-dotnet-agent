@@ -72,18 +72,19 @@ namespace ReportBuilder
                 // add header row
                 builder.AppendLine("  <tr>");
                 builder.AppendLine("    <th>Method/Version</th>");
-                foreach (var versionedAssemblyOverview in packageOverview.PackageVersions)
+                foreach (var versionedAssemblyOverview in packageOverview.Versions)
                 {
-                    builder.AppendLine($"    <th>{versionedAssemblyOverview.Key}</th>");
+                    builder.AppendLine($"    <th id=\"version-header\">{versionedAssemblyOverview.Key}</th>");
                 }
 
                 builder.AppendLine("  </tr>");
 
                 // add methods sig rows
                 var rowStore = new Dictionary<string, StringBuilder>();
-                foreach (var versionedAssemblyOverview in packageOverview.PackageVersions)
+                foreach (var versionedAssemblyOverview in packageOverview.Versions)
                 {
-                    var methodSignatures = versionedAssemblyOverview.Value;
+                    var packageData = versionedAssemblyOverview.Value;
+                    var methodSignatures = packageData.MethodSignatures.FirstOrDefault().Value;
 
                     // if no sigs, update all exist ones with false column
                     if (methodSignatures.Count == 0)
@@ -105,7 +106,7 @@ namespace ReportBuilder
                             rowStore[methodSignature.Key] = new StringBuilder();
                             sigBuilder = rowStore[methodSignature.Key];
                             sigBuilder.AppendLine($"  <tr>");
-                            sigBuilder.AppendLine($"    <td>{methodSignature.Key}</td>");
+                            sigBuilder.AppendLine($"    <td>{MultilineMethodSignature(methodSignature.Key)}</td>");
                         }
 
                         // add the isValid to the signature line
@@ -251,6 +252,13 @@ namespace ReportBuilder
             {
                 writer.WriteLine(content);
             }
+        }
+
+        private string MultilineMethodSignature(string methodSignature)
+        {
+            var parts = methodSignature.Split('(');
+            return $"<b>{parts[0]}</b>({parts[1].Replace(",", ", ")}";
+            //return methodSignature.Replace(",",", ");
         }
     }
 }

@@ -4,7 +4,7 @@
 
 using MongoDB.Bson;
 
-namespace MongoDbApi
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 {
     public class CustomMongoDbEntity
     {
