@@ -32,12 +32,12 @@
 
 
     <!--Microsoft.Data.SqlClient-->
-
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" />
-
-    <!--System.Data.SqlClient--><!--
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />-->
-    
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" Condition="'$(TargetFramework)' == 'net5.0'" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" Condition="'$(TargetFramework)' == 'net6.0'" />
 
     <!-- MySql.Data framework references -->
     <PackageReference Include="MySql.Data" Version="6.10.9" Condition="'$(TargetFramework)' == 'net462'" />
