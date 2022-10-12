@@ -4,29 +4,36 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.MsSqlOld
+namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
     public abstract class MsSqlQueryParameterCaptureTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
-        where TFixture : RemoteApplicationFixture, RemoteServiceFixtures.IMsSqlClientFixture
+        where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly RemoteServiceFixtures.IMsSqlClientFixture _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
         private readonly string _expectedTransactionName;
+        private readonly string _tableName;
         private readonly bool _paramsWithAtSigns;
 
-        public MsSqlQueryParameterCaptureTestsBase(TFixture fixture, ITestOutputHelper output, string expectedTransactionName, bool paramsWithAtSigns) : base(fixture)
+        public MsSqlQueryParameterCaptureTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName, bool paramsWithAtSign) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _expectedTransactionName = expectedTransactionName;
-            _paramsWithAtSigns = paramsWithAtSigns;
+            _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSql_WithParameterizedQuery";
+            _tableName = Utilities.GenerateTableName();
+
+            _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
+            _fixture.AddCommand($"{excerciserName} MsSql_WithParameterizedQuery {paramsWithAtSign}");
+            _fixture.AddCommand($"{excerciserName} DropTable {_tableName}");
+
+            _paramsWithAtSigns = paramsWithAtSign;
 
 
             _fixture.Actions
@@ -47,10 +54,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSqlOld
 
                     var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
                     CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.GetMsSql_WithParameterizedQuery(_paramsWithAtSigns);
                 }
             );
             _fixture.Initialize();
@@ -62,9 +65,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSqlOld
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/all", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allWeb", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)}/default", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/teammembers/select", callCount = 1 },
@@ -72,10 +75,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSqlOld
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric { metricName = @"Datastore/allOther"},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther"},
-
 				// The operation metric should not be scoped because the statement metric is scoped instead
 				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", metricScope = _expectedTransactionName },
             };
@@ -146,55 +145,81 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSqlOld
     }
 
     [NetFrameworkTest]
-    public class MsSqlQueryParameterCaptureTests : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MsSqlBasicMvcFixture>
+    public class MsSqlQueryParameterCaptureTests : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MsSqlQueryParameterCaptureTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/MVC/MsSqlController/MsSql_WithParameterizedQuery", true)
+        public MsSqlQueryParameterCaptureTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataExerciser",
+                  paramsWithAtSign: true)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class MsSqlQueryParameterCaptureTests_ParamsWithoutAtSigns : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MsSqlBasicMvcFixture>
+    public class MsSqlQueryParameterCaptureTests_ParamsWithoutAtSigns : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MsSqlQueryParameterCaptureTests_ParamsWithoutAtSigns(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/MVC/MsSqlController/MsSql_WithParameterizedQuery", false)
+        public MsSqlQueryParameterCaptureTests_ParamsWithoutAtSigns(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataExerciser",
+                  paramsWithAtSign: false)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTestsFramework : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework>
+    public class MicrosoftDataSqlClientQueryParameterCaptureTestsFramework : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MicrosoftDataSqlClientQueryParameterCaptureTestsFramework(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSql_WithParameterizedQuery", true)
+        public MicrosoftDataSqlClientQueryParameterCaptureTestsFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: true)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFramework : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework>
+    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFramework : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFramework(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureFramework fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClientController/MsSql_WithParameterizedQuery", false)
+        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: false)
         {
         }
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTestsCore : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
+    public class MicrosoftDataSqlClientQueryParameterCaptureTestsCore : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MicrosoftDataSqlClientQueryParameterCaptureTestsCore(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", true)
+        public MicrosoftDataSqlClientQueryParameterCaptureTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: true)
         {
         }
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsCore : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore>
+    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsCore : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsCore(RemoteServiceFixtures.MicrosoftDataSqlClientFixtureCore fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", false)
+        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: false)
         {
         }
     }
