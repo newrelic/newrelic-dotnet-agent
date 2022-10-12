@@ -12,7 +12,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests.MsSqlOld
+namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
 
     public abstract class MsSqlStoredProcedureUsingOdbcDriverTestsBase : NewRelicIntegrationTest<OdbcBasicMvcFixture>
