@@ -9,7 +9,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
     public class MongoDbConfiguration
     {
         private static string _mongoDb3_2ConnectionString;
-        private static string _mongoDb3_6ConnectionString;
+        private static string _mongoDb6_0ConnectionString;
 
         // example: "mongodb://1.2.3.4:4444"
         public static string MongoDb3_2ConnectionString
@@ -33,17 +33,17 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
-        public static string MongoDb3_6ConnectionString
+        public static string MongoDb6_0ConnectionString
         {
             get
             {
-                if (_mongoDb3_6ConnectionString == null)
+                if (_mongoDb6_0ConnectionString == null)
                 {
                     try
                     {
                         // The name "MongoDB26Tests" is cruft leftover from when the associated tests only tested version 2.6 of the client driver
                         var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("MongoDB26Tests");
-                        _mongoDb3_6ConnectionString = testConfiguration["ConnectionString"];
+                        _mongoDb6_0ConnectionString = testConfiguration["ConnectionString"];
                     }
                     catch (Exception ex)
                     {
@@ -51,7 +51,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                     }
                 }
 
-                return _mongoDb3_6ConnectionString;
+                return _mongoDb6_0ConnectionString;
             }
         }
 
