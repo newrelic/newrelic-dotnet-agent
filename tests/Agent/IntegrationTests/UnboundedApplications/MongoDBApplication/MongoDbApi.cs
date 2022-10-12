@@ -22,7 +22,7 @@ namespace MongoDBApplication
 
         public MongoDbApi()
         {
-            var client = new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDbConnectionString));
+            var client = new MongoClient(new MongoUrl(MongoDbConfiguration.MongoDb3_2ConnectionString));
             var server = client.GetServer();
             _db = server.GetDatabase(DatabaseName);
             _collectionName = CollectionName;
