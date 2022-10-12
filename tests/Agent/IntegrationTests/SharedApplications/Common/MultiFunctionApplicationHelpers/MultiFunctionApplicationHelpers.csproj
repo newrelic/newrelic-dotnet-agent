@@ -7,11 +7,6 @@
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
     <LangVersion>default</LangVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Data" Condition="'$(TargetFramework)' == 'net462'"  />
-    <Reference Include="System.Data" Condition="'$(TargetFramework)' == 'net48'"  />
-  </ItemGroup>
  
   <ItemGroup>
     <PackageReference Include="LibGit2Sharp" Version="0.24.1">
