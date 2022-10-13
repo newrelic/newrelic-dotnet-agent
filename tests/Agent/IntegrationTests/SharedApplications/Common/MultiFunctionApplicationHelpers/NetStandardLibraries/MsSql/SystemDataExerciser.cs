@@ -12,6 +12,7 @@ using System.Data;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
+using System.Threading;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {
@@ -276,6 +277,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                     command.ExecuteNonQuery();
                 }
             }
+        }
+
+        [LibraryMethod]
+        public void Wait(int millisecondsTimeOut)
+        {
+            Thread.Sleep(millisecondsTimeOut);
         }
 
         private void EnsureProcedure(string procedureName, DbParameter[] dbParameters)

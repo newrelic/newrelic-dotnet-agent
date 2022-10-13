@@ -32,6 +32,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
             _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
             _fixture.AddCommand($"{excerciserName} MsSqlAsync {_tableName}");
+            _fixture.AddCommand($"{excerciserName} Wait 5000");
             _fixture.AddCommand($"{excerciserName} DropTable {_tableName}");
 
 

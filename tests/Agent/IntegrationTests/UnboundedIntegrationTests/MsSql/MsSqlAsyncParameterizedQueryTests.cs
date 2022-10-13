@@ -31,6 +31,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
             _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
             _fixture.AddCommand($"{excerciserName} MsSqlAsync_WithParameterizedQuery {_tableName} {paramsWithAtSign}");
+            _fixture.AddCommand($"{excerciserName} Wait 5000");
             _fixture.AddCommand($"{excerciserName} DropTable {_tableName}");
 
             _paramsWithAtSign = paramsWithAtSign;
