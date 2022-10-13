@@ -61,13 +61,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public static string GenerateTableName()
         {
-            var tableId = Guid.NewGuid().ToString("N").ToLower();
+            var tableId = Guid.NewGuid().ToString("N").ToLower().Substring(0, 8);
             return $"person{tableId}";
         }
 
         public static string GenerateProcedureName()
         {
-            var procId = Guid.NewGuid().ToString("N").ToLower();
+            var procId = Guid.NewGuid().ToString("N").ToLower().Substring(0, 8);
             return $"pTestProc{procId}";
         }
     }
