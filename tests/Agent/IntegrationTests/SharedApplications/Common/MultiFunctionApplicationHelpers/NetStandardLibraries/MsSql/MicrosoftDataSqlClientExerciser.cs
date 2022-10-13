@@ -129,7 +129,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public string MsSql_WithParameterizedQuery(bool paramsWithAtSign)
+        public string MsSqlWithParameterizedQuery(bool paramsWithAtSign)
         {
             var teamMembers = new List<string>();
 

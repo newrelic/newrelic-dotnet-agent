@@ -13,6 +13,8 @@ using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using System.Threading;
+using System.Data.OleDb;
+using System.Data.Odbc;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {
@@ -129,7 +131,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public string MsSql_WithParameterizedQuery(bool paramsWithAtSign)
+        public string MsSqlWithParameterizedQuery(bool paramsWithAtSign)
         {
             var teamMembers = new List<string>();
 
@@ -226,6 +228,58 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                         : parameter.ParameterName.TrimStart('@');
 
                     command.Parameters.Add(new SqlParameter(paramName, parameter.Value));
+                }
+
+                return command.ExecuteNonQuery();
+            }
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public int MsSqlParameterizedStoredProcedureUsingOdbcDriver(string procedureName, bool paramsWithAtSign)
+        {
+            EnsureProcedure(procedureName, DbParameterData.OdbcMsSqlParameters);
+
+            var parameterPlaceholder = string.Join(",", DbParameterData.OdbcMsSqlParameters.Select(_ => "?"));
+
+            using (var connection = new OdbcConnection(MsSqlOdbcConfiguration.MsSqlOdbcConnectionString))
+            using (var command = new OdbcCommand($"{{call {procedureName}({parameterPlaceholder})}}", connection))
+            {
+                connection.Open();
+                command.CommandType = CommandType.StoredProcedure;
+                foreach (var parameter in DbParameterData.OdbcMsSqlParameters)
+                {
+                    var paramName = paramsWithAtSign
+                        ? parameter.ParameterName
+                        : parameter.ParameterName.TrimStart('@');
+
+                    command.Parameters.Add(new OdbcParameter(paramName, parameter.Value)); ;
+                }
+
+                return command.ExecuteNonQuery();
+            }
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public int MsSqlParameterizedStoredProcedureUsingOleDbDriver(string procedureName, bool paramsWithAtSign)
+        {
+            EnsureProcedure(procedureName, DbParameterData.OleDbMsSqlParameters);
+
+            using (var connection = new OleDbConnection(MsSqlOleDbConfiguration.MsSqlOleDbConnectionString))
+            using (var command = new OleDbCommand(procedureName, connection))
+            {
+                connection.Open();
+                command.CommandType = CommandType.StoredProcedure;
+                foreach (var parameter in DbParameterData.OleDbMsSqlParameters)
+                {
+                    var paramName = paramsWithAtSign
+                        ? parameter.ParameterName
+                        : parameter.ParameterName.TrimStart('@');
+
+                    command.Parameters.Add(new OleDbParameter(paramName, parameter.Value));
                 }
 
                 return command.ExecuteNonQuery();

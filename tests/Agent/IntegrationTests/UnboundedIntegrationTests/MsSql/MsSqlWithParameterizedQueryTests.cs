@@ -26,11 +26,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSql_WithParameterizedQuery";
+            _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlWithParameterizedQuery";
             _tableName = Utilities.GenerateTableName();
 
             _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
-            _fixture.AddCommand($"{excerciserName} MsSql_WithParameterizedQuery {paramsWithAtSign}");
+            _fixture.AddCommand($"{excerciserName} MsSqlWithParameterizedQuery {paramsWithAtSign}");
             _fixture.AddCommand($"{excerciserName} DropTable {_tableName}");
 
             _paramsWithAtSigns = paramsWithAtSign;

@@ -1,10 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
@@ -14,16 +13,29 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
 
-    public abstract class MsSqlStoredProcedureUsingOdbcDriverTestsBase : NewRelicIntegrationTest<OdbcBasicMvcFixture>
+    public abstract class MsSqlStoredProcedureUsingOdbcDriverTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly OdbcBasicMvcFixture _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
+        private readonly string _expectedTransactionName;
         private readonly bool _paramsWithAtSigns;
-        public MsSqlStoredProcedureUsingOdbcDriverTestsBase(OdbcBasicMvcFixture fixture, ITestOutputHelper output, bool paramsWithAtSigns) : base(fixture)
-        {
-            _paramsWithAtSigns = paramsWithAtSigns;
+        private readonly string _tableName;
+        private readonly string _procedureName;
 
+        public MsSqlStoredProcedureUsingOdbcDriverTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName, bool paramsWithAtSign) : base(fixture)
+        {
             _fixture = fixture;
             _fixture.TestLogger = output;
+            _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlParameterizedStoredProcedureUsingOdbcDriver";
+            _paramsWithAtSigns = paramsWithAtSign;
+
+            _tableName = Utilities.GenerateTableName();
+            _procedureName = Utilities.GenerateProcedureName();
+
+            _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
+            _fixture.AddCommand($"{excerciserName} MsSqlParameterizedStoredProcedureUsingOdbcDriver {_procedureName} {paramsWithAtSign}");
+            _fixture.AddCommand($"{excerciserName} DropTable {_tableName}");
+
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -38,11 +50,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "datastoreTracer", "queryParameters" }, "enabled", "true");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.GetMsSqlParameterizedStoredProcedureUsingOdbcDriver(_paramsWithAtSigns);
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex);
                 }
             );
             _fixture.Initialize();
@@ -52,12 +59,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         public void Test()
         {
             var parameterPlaceholder = string.Join(",", DbParameterData.OdbcMsSqlParameters.Select(_ => "?"));
-            var expectedSqlStatement = $"{{call {_fixture.ProcedureName.ToLower()}({parameterPlaceholder})}}";
+            var expectedSqlStatement = $"{{call {_procedureName.ToLower()}({parameterPlaceholder})}}";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure", callCount = 1, metricScope = "WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOdbcDriver"}
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure", callCount = 1, metricScope = _expectedTransactionName}
             };
 
             var expectedTransactionTraceSegments = new List<string>
@@ -75,16 +82,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             {
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = "WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOdbcDriver",
-                    Sql = $"{{call {_fixture.ProcedureName}({parameterPlaceholder})}}",
+                    TransactionName = _expectedTransactionName,
+                    Sql = $"{{call {_procedureName}({parameterPlaceholder})}}",
                     DatastoreMetricName = $"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure",
                     QueryParameters = expectedQueryParameters
                 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOdbcDriver");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOdbcDriver");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample(_expectedTransactionName);
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_expectedTransactionName);
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
             var logEntries = _fixture.AgentLog.GetFileLines().ToList();
 
@@ -105,17 +112,27 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MsSqlStoredProcedureUsingOdbcDriverTests : MsSqlStoredProcedureUsingOdbcDriverTestsBase
+    public class MsSqlStoredProcedureUsingOdbcDriverTests : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MsSqlStoredProcedureUsingOdbcDriverTests(OdbcBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MsSqlStoredProcedureUsingOdbcDriverTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataExerciser",
+                  paramsWithAtSign: true)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class MsSqlStoredProcedureUsingOdbcDriverTests_ParamsWithoutAtSigns : MsSqlStoredProcedureUsingOdbcDriverTestsBase
+    public class MsSqlStoredProcedureUsingOdbcDriverTests_ParamsWithoutAtSigns : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MsSqlStoredProcedureUsingOdbcDriverTests_ParamsWithoutAtSigns(OdbcBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MsSqlStoredProcedureUsingOdbcDriverTests_ParamsWithoutAtSigns(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataExerciser",
+                  paramsWithAtSign: false)
         {
         }
     }
