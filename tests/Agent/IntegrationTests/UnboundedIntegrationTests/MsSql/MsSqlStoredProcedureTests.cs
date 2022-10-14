@@ -137,9 +137,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientStoredProcedureTestsFramework : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MicrosoftDataSqlClientStoredProcedureTestsFW : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MicrosoftDataSqlClientStoredProcedureTestsFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientStoredProcedureTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -150,9 +150,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFramework : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFW : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -163,9 +163,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientStoredProcedureTestsFramework462 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class MicrosoftDataSqlClientStoredProcedureTestsFW462 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MicrosoftDataSqlClientStoredProcedureTestsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientStoredProcedureTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -176,9 +176,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFramework462 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFW462 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,

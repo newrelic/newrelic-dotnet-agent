@@ -208,9 +208,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     #region Microsoft.Data.SqlClient Tests
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQueryFW : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQueryFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
 
             : base(
                   fixture: fixture,
@@ -222,9 +222,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFramework : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFW : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -235,9 +235,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework462 : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureFW462>
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQueryFW462 : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MicrosoftDataSqlClientAsyncTestsParameterizedQueryFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQueryFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
 
             : base(
                   fixture: fixture,
@@ -249,9 +249,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFramework462 : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureFW462>
+    public class MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFW462 : MsSqlAsyncTestsParameterizedQueryBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFramework462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientAsyncTestsParameterizedQuery_ParamsWithoutAtSignFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
