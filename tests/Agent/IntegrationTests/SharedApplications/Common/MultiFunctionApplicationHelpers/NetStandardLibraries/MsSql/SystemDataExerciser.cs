@@ -1,25 +1,37 @@
-// Copyright 2020 New Relic, Inc. All rights reserved.
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if NETFRAMEWORK
 
-using NewRelic.Agent.IntegrationTests.Shared;
 using System.Collections.Generic;
-using System.Data;
-using Microsoft.Data.SqlClient;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using System.Data.SqlClient;
+using System.Data;
+using NewRelic.Agent.IntegrationTests.Shared;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
+using NewRelic.Api.Agent;
+using System.Threading;
+using System.Data.OleDb;
+using System.Data.Odbc;
 
-namespace BasicMvcApplication.Controllers
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {
-    public class MicrosoftDataSqlClientController : Controller
+    [Library]
+    public class SystemDataExerciser
     {
         private const string InsertPersonMsSql = "INSERT INTO {0} (FirstName, LastName, Email) VALUES('Testy', 'McTesterson', 'testy@mctesterson.com')";
         private const string DeletePersonMsSql = "DELETE FROM {0} WHERE Email = 'testy@mctesterson.com'";
         private const string CountPersonMsSql = "SELECT COUNT(*) FROM {0} WITH(nolock)";
+        private static readonly string CreateProcedureStatement = @"CREATE OR ALTER PROCEDURE [dbo].[{0}] {1} AS RETURN 0";
+        private const string CreatePersonTableMsSql = "CREATE TABLE {0} (FirstName varchar(20) NOT NULL, LastName varchar(20) NOT NULL, Email varchar(50) NOT NULL)";
+        private const string DropPersonTableMsSql = "IF (OBJECT_ID('{0}') IS NOT NULL) DROP TABLE {0}";
+        private const string DropProcedureSql = "IF (OBJECT_ID('{0}') IS NOT NULL) DROP PROCEDURE {0}";
 
-        [HttpGet]
-        [Route("MicrosoftDataSqlClient/MsSql")]
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public string MsSql(string tableName)
         {
             var teamMembers = new List<string>();
@@ -67,8 +79,9 @@ namespace BasicMvcApplication.Controllers
             return string.Join(",", teamMembers);
         }
 
-        [HttpGet]
-        [Route("MicrosoftDataSqlClient/MsSqlAsync")]
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<string> MsSqlAsync(string tableName)
         {
             var teamMembers = new List<string>();
@@ -115,9 +128,10 @@ namespace BasicMvcApplication.Controllers
             return string.Join(",", teamMembers);
         }
 
-        [HttpGet]
-        [Route("MicrosoftDataSqlClient/MsSqlWithParameterizedQuery")]
-        public string MsSqlWithParameterizedQuery(string tableName, bool paramsWithAtSign)
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public string MsSqlWithParameterizedQuery(bool paramsWithAtSign)
         {
             var teamMembers = new List<string>();
 
@@ -140,13 +154,15 @@ namespace BasicMvcApplication.Controllers
                         }
                     }
                 }
+
             }
 
             return string.Join(",", teamMembers);
         }
 
-        [HttpGet]
-        [Route("MicrosoftDataSqlClient/MsSqlAsync_WithParameterizedQuery")]
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task<string> MsSqlAsync_WithParameterizedQuery(string tableName, bool paramsWithAtSign)
         {
             var teamMembers = new List<string>();
@@ -194,12 +210,12 @@ namespace BasicMvcApplication.Controllers
             return string.Join(",", teamMembers);
         }
 
-        [HttpGet]
-        [Route("MicrosoftDataSqlClient/MsSqlParameterizedStoredProcedure")]
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public int MsSqlParameterizedStoredProcedure(string procedureName, bool paramsWithAtSign)
         {
             EnsureProcedure(procedureName, DbParameterData.MsSqlParameters);
-
             using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
             using (var command = new SqlCommand(procedureName, connection))
             {
@@ -218,7 +234,110 @@ namespace BasicMvcApplication.Controllers
             }
         }
 
-        private static readonly string CreateProcedureStatement = @"CREATE OR ALTER PROCEDURE [dbo].[{0}] {1} AS RETURN 0";
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public int MsSqlParameterizedStoredProcedureUsingOdbcDriver(string procedureName, bool paramsWithAtSign)
+        {
+            EnsureProcedure(procedureName, DbParameterData.OdbcMsSqlParameters);
+
+            var parameterPlaceholder = string.Join(",", DbParameterData.OdbcMsSqlParameters.Select(_ => "?"));
+
+            using (var connection = new OdbcConnection(MsSqlOdbcConfiguration.MsSqlOdbcConnectionString))
+            using (var command = new OdbcCommand($"{{call {procedureName}({parameterPlaceholder})}}", connection))
+            {
+                connection.Open();
+                command.CommandType = CommandType.StoredProcedure;
+                foreach (var parameter in DbParameterData.OdbcMsSqlParameters)
+                {
+                    var paramName = paramsWithAtSign
+                        ? parameter.ParameterName
+                        : parameter.ParameterName.TrimStart('@');
+
+                    command.Parameters.Add(new OdbcParameter(paramName, parameter.Value)); ;
+                }
+
+                return command.ExecuteNonQuery();
+            }
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public int MsSqlParameterizedStoredProcedureUsingOleDbDriver(string procedureName, bool paramsWithAtSign)
+        {
+            EnsureProcedure(procedureName, DbParameterData.OleDbMsSqlParameters);
+
+            using (var connection = new OleDbConnection(MsSqlOleDbConfiguration.MsSqlOleDbConnectionString))
+            using (var command = new OleDbCommand(procedureName, connection))
+            {
+                connection.Open();
+                command.CommandType = CommandType.StoredProcedure;
+                foreach (var parameter in DbParameterData.OleDbMsSqlParameters)
+                {
+                    var paramName = paramsWithAtSign
+                        ? parameter.ParameterName
+                        : parameter.ParameterName.TrimStart('@');
+
+                    command.Parameters.Add(new OleDbParameter(paramName, parameter.Value));
+                }
+
+                return command.ExecuteNonQuery();
+            }
+        }
+
+        [LibraryMethod]
+        public void CreateTable(string tableName)
+        {
+            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            {
+                connection.Open();
+
+                var createTable = string.Format(CreatePersonTableMsSql, tableName);
+                using (var command = new SqlCommand(createTable, connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        [LibraryMethod]
+        public void DropTable(string tableName)
+        {
+            var dropTableSql = string.Format(DropPersonTableMsSql, tableName);
+
+            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            {
+                connection.Open();
+
+                using (var command = new SqlCommand(dropTableSql, connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        [LibraryMethod]
+        public void DropProcedure(string procedureName)
+        {
+            var dropProcedureSql = string.Format(DropProcedureSql, procedureName);
+
+            using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
+            {
+                connection.Open();
+
+                using (var command = new SqlCommand(dropProcedureSql, connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        [LibraryMethod]
+        public void Wait(int millisecondsTimeOut)
+        {
+            Thread.Sleep(millisecondsTimeOut);
+        }
 
         private void EnsureProcedure(string procedureName, DbParameter[] dbParameters)
         {
@@ -231,6 +350,7 @@ namespace BasicMvcApplication.Controllers
                 command.ExecuteNonQuery();
             }
         }
-
     }
 }
+
+#endif
