@@ -171,9 +171,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTestsFramework : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MicrosoftDataSqlClientQueryParameterCaptureTestsFW : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MicrosoftDataSqlClientQueryParameterCaptureTestsFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientQueryParameterCaptureTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
 
             : base(
                   fixture: fixture,
@@ -185,9 +185,37 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFramework : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFW : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: false)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientQueryParameterCaptureTestsFW462 : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public MicrosoftDataSqlClientQueryParameterCaptureTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: true)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFW462 : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
 
             : base(
                   fixture: fixture,
@@ -215,6 +243,32 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsCore : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: false)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftDataSqlClientQueryParameterCaptureTestsCore31 : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MicrosoftDataSqlClientQueryParameterCaptureTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: true)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsCore31 : MsSqlQueryParameterCaptureTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSignsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
