@@ -86,7 +86,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log = loggerConfig.CreateLogger();
         }
 
-        // net462 is using Serilgo 1.5.14 - a very old, but supported version of Serilog. This does not have a Console sink that supports Json.
+        // net462 is using Serilog 1.5.14 - a very old, but supported version of Serilog. This does not have a Console sink that supports JSON.
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
 #if !NET462
