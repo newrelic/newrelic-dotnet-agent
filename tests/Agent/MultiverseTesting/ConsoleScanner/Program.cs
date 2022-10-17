@@ -19,7 +19,7 @@ namespace NewRelic.Agent.ConsoleScanner
     public class Program
     {
         // This list does not include some specific frameworks as explained below
-        // .NET Framework 4.x.x: these could be the only version in older packages and will still work in apps targeting up to 4.8.x.
+        // .NET Framework 3/4.x.x: these could be the only version in older packages and will still work in apps targeting up to 4.8.x.
         // .NET Standard: all versions prior to 2.0 support .NET Framework 4.5+ so we they might be used on their own.
         // Microsoft Store (Windows Store) "netcore" is listed directly in the ShouldScan method since adding it here would block other allowed frameworks.
         /// <summary>
@@ -28,9 +28,7 @@ namespace NewRelic.Agent.ConsoleScanner
         private static List<string> _excludedFrameworks = new List<string> {
             "net1", // .NET Framework 1.x.x
             "net2", // .NET Framework 2.x.x
-            "net3", // .NET Framework 3.x.x
-            "net3", // .NET Framework 3.x.x
-            "netcoreapp1", // .NET Core 1.x.x (this version of .NET was complete different from 2.x.x)
+            "netcoreapp1", // .NET Core 1.x.x (this version of .NET was completely different from 2.x.x)
             "netcore45", // Microsoft Store (Windows Store) - Windows 8.x
             "netcore5", // Microsoft Store (Windows Store)
             "netmf", // .NET MicroFramework
@@ -138,14 +136,14 @@ namespace NewRelic.Agent.ConsoleScanner
             {
                 foreach (var nugetPackage in instrumentationSet.NugetPackages)
                 {
-                    downloadedNugetInfoList.AddRange(GetNugetPackages(nugetPackage.PackageName, nugetPackage.Versions, instrumentationAssemblies));
+                    downloadedNugetInfoList.AddRange(GetNugetPackages(nugetPackage.PackageName, nugetPackage.Versions, instrumentationAssemblies, instrumentationSet.DownloadLatest));
                 }
             }
 
             return downloadedNugetInfoList;
         }
 
-        public static List<DownloadedNugetInfo> GetNugetPackages(string packageName, List<string> versions, List<string> instrumentationAssemblies)
+        public static List<DownloadedNugetInfo> GetNugetPackages(string packageName, List<string> versions, List<string> instrumentationAssemblies, bool downloadLatest)
         {
             var downloadedNugetInfos = new List<DownloadedNugetInfo>();
 
@@ -153,7 +151,15 @@ namespace NewRelic.Agent.ConsoleScanner
             {
                 Directory.CreateDirectory(_nugetDataDirectory);
                 var client = new NugetClient(_nugetDataDirectory);
-                versions.Add(client.GetLatestVersion(packageName)); // add current version to versions list
+                if (downloadLatest)
+                {
+                    versions.Add(client.GetLatestVersion(packageName)); // add current version to versions list
+                }
+                else
+                {
+                    Console.WriteLine($"Not downloading latest version of package {packageName} based on config.");
+                }
+                    
                 foreach (var version in versions.Distinct()) // using Distinct to prevent duplicates
                 {
                     var dllFileLocations = new List<string>();
