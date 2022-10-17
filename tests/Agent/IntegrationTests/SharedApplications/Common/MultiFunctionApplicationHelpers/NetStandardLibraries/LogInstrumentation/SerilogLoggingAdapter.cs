@@ -10,7 +10,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 {
     class SerilogLoggingAdapter : ILoggingAdapter
     {
-        private static Logger _log;
+        private static ILogger _log;
 
         public SerilogLoggingAdapter()
         {
@@ -86,8 +86,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log = loggerConfig.CreateLogger();
         }
 
+        // net462 is using Serilog 1.5.14 - a very old, but supported version of Serilog. This does not have a Console sink that supports JSON.
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
+#if !NET462
             var loggerConfig = new LoggerConfiguration();
 
             loggerConfig
@@ -95,6 +97,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 .WriteTo.Console(new JsonFormatter());
 
             _log = loggerConfig.CreateLogger();
+#endif
         }
     }
 }

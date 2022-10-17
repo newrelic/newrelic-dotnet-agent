@@ -137,9 +137,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientStoredProcedureTestsFramework : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MicrosoftDataSqlClientStoredProcedureTestsFW : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MicrosoftDataSqlClientStoredProcedureTestsFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientStoredProcedureTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -150,9 +150,35 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFramework : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFW : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFramework(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: false)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientStoredProcedureTestsFW462 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public MicrosoftDataSqlClientStoredProcedureTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: true)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFW462 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -179,6 +205,32 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsCore : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: false)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftDataSqlClientStoredProcedureTestsCore31 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MicrosoftDataSqlClientStoredProcedureTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  paramsWithAtSign: true)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsCore31 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MicrosoftDataSqlClientStoredProcedureTests_ParamsWithoutAtSignsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
