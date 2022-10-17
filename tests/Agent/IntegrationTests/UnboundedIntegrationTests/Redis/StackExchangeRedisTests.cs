@@ -183,6 +183,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
     }
 
     [NetCoreTest]
+    public class StackExchangeRedisTestsCore60 : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public StackExchangeRedisTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
     public class StackExchangeRedisTestsCoreLatest : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public StackExchangeRedisTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)

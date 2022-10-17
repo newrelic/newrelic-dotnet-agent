@@ -219,6 +219,24 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetCoreTest]
+    public class MySqlStoredProcedureTestsWithAtSignsCore60 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MySqlStoredProcedureTestsWithAtSignsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output, true)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlStoredProcedureTestsWithoutAtSignsCore60 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MySqlStoredProcedureTestsWithoutAtSignsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
     public class MySqlStoredProcedureTestsWithAtSignsCore : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MySqlStoredProcedureTestsWithAtSignsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output, true)

@@ -113,6 +113,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     }
 
     [NetCoreTest]
+    public class MongoDBDriverQueryProviderTestsCore60 : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MongoDBDriverQueryProviderTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class MongoDBDriverQueryProviderTestsCore50 : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public MongoDBDriverQueryProviderTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
