@@ -147,6 +147,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
     }
 
     [NetFrameworkTest]
+    public class StackExchangeRedisTestsFW48 : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public StackExchangeRedisTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
     public class StackExchangeRedisTestsFWLatest : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public StackExchangeRedisTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

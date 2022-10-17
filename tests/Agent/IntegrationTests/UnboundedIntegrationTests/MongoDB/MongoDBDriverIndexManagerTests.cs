@@ -129,6 +129,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     }
 
     [NetFrameworkTest]
+    public class MongoDBDriverIndexManagerTestsFW48 : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MongoDBDriverIndexManagerTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class MongoDBDriverIndexManagerTestsFW471 : MongoDBDriverIndexManagerTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MongoDBDriverIndexManagerTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)

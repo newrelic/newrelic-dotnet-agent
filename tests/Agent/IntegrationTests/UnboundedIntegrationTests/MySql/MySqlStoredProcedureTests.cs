@@ -147,6 +147,24 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
+    public class MySqlStoredProcedureTestsWithAtSignsFW48 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlStoredProcedureTestsWithAtSignsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output, true)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlStoredProcedureTestsWithoutAtSignsFW48 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlStoredProcedureTestsWithoutAtSignsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
     public class MySqlStoredProcedureTestsWithAtSignsFWLatest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlStoredProcedureTestsWithAtSignsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, true)

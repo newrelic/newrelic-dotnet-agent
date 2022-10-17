@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace MultiFunctionApplicationHelpers
 {
-    public class ConsoleDynamicMethodFixtureFWLatest : ConsoleDynamicMethodFixtureFW48
+    public class ConsoleDynamicMethodFixtureFWLatest : ConsoleDynamicMethodFixtureFW481
     {
         public ConsoleDynamicMethodFixtureFWLatest()
         {
@@ -20,7 +20,7 @@ namespace MultiFunctionApplicationHelpers
     /// <summary>
     /// Use this fixture for High Security Mode tests
     /// </summary>
-    public class ConsoleDynamicMethodFixtureFWLatestHSM : ConsoleDynamicMethodFixtureFW48
+    public class ConsoleDynamicMethodFixtureFWLatestHSM : ConsoleDynamicMethodFixtureFW481
     {
         public override string TestSettingCategory { get { return "HSM"; } }
         public ConsoleDynamicMethodFixtureFWLatestHSM()
@@ -31,10 +31,17 @@ namespace MultiFunctionApplicationHelpers
     /// <summary>
     /// Use this fixture for Configurable Security Policy tests
     /// </summary>
-    public class ConsoleDynamicMethodFixtureFWLatestCSP : ConsoleDynamicMethodFixtureFW48
+    public class ConsoleDynamicMethodFixtureFWLatestCSP : ConsoleDynamicMethodFixtureFW481
     {
         public override string TestSettingCategory { get { return "CSP"; } }
         public ConsoleDynamicMethodFixtureFWLatestCSP()
+        {
+        }
+    }
+
+    public class ConsoleDynamicMethodFixtureFW481 : ConsoleDynamicMethodFixtureFWSpecificVersion
+    {
+        public ConsoleDynamicMethodFixtureFW481() : base("net481")
         {
         }
     }

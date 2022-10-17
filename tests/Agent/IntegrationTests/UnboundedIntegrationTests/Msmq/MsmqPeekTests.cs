@@ -97,6 +97,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
     }
 
     [NetFrameworkTest]
+    public class MsmqPeekTestsFW48 : MsmqPeekTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MsmqPeekTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
     public class MsmqPeekTestsFWLatest : MsmqPeekTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MsmqPeekTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

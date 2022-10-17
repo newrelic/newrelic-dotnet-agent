@@ -153,6 +153,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
+    public class MySqlTestsFW48 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
     public class MySqlTestsFWLatest : MySqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)

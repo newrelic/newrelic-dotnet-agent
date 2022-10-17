@@ -163,6 +163,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
+    public class MySqlConnectorExecuteReaderTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorExecuteReaderTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, "ExecuteReader")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class MySqlConnectorExecuteReaderTestFWLatest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlConnectorExecuteReaderTestFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -215,6 +224,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     public class MySqlConnectorExecuteScalarTestFW471 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MySqlConnectorExecuteScalarTestFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, "ExecuteScalar")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorExecuteScalarTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorExecuteScalarTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
             : base(fixture, output, "ExecuteScalar")
         {
         }
@@ -280,6 +298,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
+    public class MySqlConnectorExecuteNonQueryTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorExecuteNonQueryTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, "ExecuteNonQuery")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class MySqlConnectorExecuteNonQueryTestFWLatest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlConnectorExecuteNonQueryTestFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -332,6 +359,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     public class MySqlConnectorExecuteReaderAsyncTestFW471 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MySqlConnectorExecuteReaderAsyncTestFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, "ExecuteReaderAsync")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorExecuteReaderAsyncTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorExecuteReaderAsyncTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
             : base(fixture, output, "ExecuteReaderAsync")
         {
         }
@@ -396,6 +432,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
+    public class MySqlConnectorExecuteScalarAsyncTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorExecuteScalarAsyncTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, "ExecuteScalarAsync")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class MySqlConnectorExecuteScalarAsyncTestFWLatest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlConnectorExecuteScalarAsyncTestFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -448,6 +493,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     public class MySqlConnectorExecuteNonQueryAsyncTestFW471 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MySqlConnectorExecuteNonQueryAsyncTestFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, "ExecuteNonQueryAsync")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorExecuteNonQueryAsyncTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorExecuteNonQueryAsyncTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
             : base(fixture, output, "ExecuteNonQueryAsync")
         {
         }
@@ -512,6 +566,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteReaderTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorDbCommandExecuteReaderTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, "DbCommandExecuteReader")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class MySqlConnectorDbCommandExecuteReaderTestFWLatest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlConnectorDbCommandExecuteReaderTestFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -564,6 +627,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     public class MySqlConnectorDbCommandExecuteScalarTestFW471 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MySqlConnectorDbCommandExecuteScalarTestFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, "DbCommandExecuteScalar")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteScalarTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorDbCommandExecuteScalarTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
             : base(fixture, output, "DbCommandExecuteScalar")
         {
         }
@@ -628,6 +700,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteNonQueryTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorDbCommandExecuteNonQueryTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, "DbCommandExecuteNonQuery")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class MySqlConnectorDbCommandExecuteNonQueryTestFWLatest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlConnectorDbCommandExecuteNonQueryTestFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -680,6 +761,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     public class MySqlConnectorDbCommandExecuteReaderAsyncTestFW471 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MySqlConnectorDbCommandExecuteReaderAsyncTestFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, "DbCommandExecuteReaderAsync")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteReaderAsyncTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorDbCommandExecuteReaderAsyncTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
             : base(fixture, output, "DbCommandExecuteReaderAsync")
         {
         }
@@ -744,6 +834,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteScalarAsyncTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorDbCommandExecuteScalarAsyncTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, "DbCommandExecuteScalarAsync")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class MySqlConnectorDbCommandExecuteScalarAsyncTestFWLatest : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlConnectorDbCommandExecuteScalarAsyncTestFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
@@ -796,6 +895,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     public class MySqlConnectorDbCommandExecuteNonQueryAsyncTestFW471 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MySqlConnectorDbCommandExecuteNonQueryAsyncTestFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, "DbCommandExecuteNonQueryAsync")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteNonQueryAsyncTestFW48 : MySqlConnectorTestBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlConnectorDbCommandExecuteNonQueryAsyncTestFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
             : base(fixture, output, "DbCommandExecuteNonQueryAsync")
         {
         }

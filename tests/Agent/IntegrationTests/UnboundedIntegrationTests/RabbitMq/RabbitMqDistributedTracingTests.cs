@@ -72,6 +72,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
     }
 
     [NetFrameworkTest]
+    public class RabbitMqDistributedTracingTestsFW48 : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public RabbitMqDistributedTracingTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class RabbitMqDistributedTracingTestsFW471 : RabbitMqDistributedTracingTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public RabbitMqDistributedTracingTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
