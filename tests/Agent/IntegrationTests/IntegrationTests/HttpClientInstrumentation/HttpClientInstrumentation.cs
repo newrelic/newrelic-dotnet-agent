@@ -172,9 +172,18 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     }
 
     [NetFrameworkTest]
-    public class HttpClientInstrumentationTests_FW481 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW481>
+    public class HttpClientInstrumentationTests_FW48 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
-        public HttpClientInstrumentationTests_FW481(ConsoleDynamicMethodFixtureFW481 fixture, ITestOutputHelper output)
+        public HttpClientInstrumentationTests_FW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class HttpClientInstrumentationTests_FWLatest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public HttpClientInstrumentationTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

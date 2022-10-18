@@ -19,7 +19,8 @@ namespace NewRelic.Core
         net47,
         net471,
         net472,
-        net48
+        net48,
+        net481
     }
 
     public enum DotnetCoreVersion

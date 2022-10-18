@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net7.0;net462;net471;net48;net481</TargetFrameworks>
@@ -212,9 +212,9 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0" Condition="'$(TargetFramework)' == 'net6.0'" />
 
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0-preview.6.22324.4" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="7.0.0-preview.6.22324.4" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0-preview.6.22324.4" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="6.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1" Condition="'$(TargetFramework)' == 'net7.0'" />
   </ItemGroup>
 
