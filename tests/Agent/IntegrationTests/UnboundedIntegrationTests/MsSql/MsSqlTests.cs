@@ -180,6 +180,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
+    [NetCoreTest]
+    public class SystemDataSqlClientTestsCoreLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public SystemDataSqlClientTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataSqlClientExerciser")
+        {
+        }
+    }
+
     [NetFrameworkTest]
     public class MicrosoftDataSqlClientTestsFWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
