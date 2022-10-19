@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiFunctionApplicationHelpers;
@@ -184,6 +183,30 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     public class SystemDataSqlClientTestsCoreLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public SystemDataSqlClientTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataSqlClientExerciser")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class SystemDataSqlClientTestsCore50 : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public SystemDataSqlClientTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataSqlClientExerciser")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class SystemDataSqlClientTestsCore31 : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public SystemDataSqlClientTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
