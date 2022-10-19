@@ -184,6 +184,42 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
+    [NetCoreTest]
+    public class SystemDataSqlClientAsyncTestsCoreLatest : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public SystemDataSqlClientAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataSqlClientExerciser")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class SystemDataSqlClientAsyncTestsCore50 : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public SystemDataSqlClientAsyncTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataSqlClientExerciser")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class SystemDataSqlClientAsyncTestsCore31 : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public SystemDataSqlClientAsyncTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataSqlClientExerciser")
+        {
+        }
+    }
+
     [NetFrameworkTest]
     public class MicrosoftDataSqlClientAsyncTestsFWLatest : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
