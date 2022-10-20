@@ -234,57 +234,60 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             }
         }
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public int MsSqlParameterizedStoredProcedureUsingOdbcDriver(string procedureName, bool paramsWithAtSign)
-        {
-            EnsureProcedure(procedureName, DbParameterData.OdbcMsSqlParameters);
 
-            var parameterPlaceholder = string.Join(",", DbParameterData.OdbcMsSqlParameters.Select(_ => "?"));
+        #region Currently (as of 2022-10-20) unsupported ODBC/OleDB operations
+        //[LibraryMethod]
+        //[Transaction]
+        //[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        //public int MsSqlParameterizedStoredProcedureUsingOdbcDriver(string procedureName, bool paramsWithAtSign)
+        //{
+        //    EnsureProcedure(procedureName, DbParameterData.OdbcMsSqlParameters);
 
-            using (var connection = new OdbcConnection(MsSqlOdbcConfiguration.MsSqlOdbcConnectionString))
-            using (var command = new OdbcCommand($"{{call {procedureName}({parameterPlaceholder})}}", connection))
-            {
-                connection.Open();
-                command.CommandType = CommandType.StoredProcedure;
-                foreach (var parameter in DbParameterData.OdbcMsSqlParameters)
-                {
-                    var paramName = paramsWithAtSign
-                        ? parameter.ParameterName
-                        : parameter.ParameterName.TrimStart('@');
+        //    var parameterPlaceholder = string.Join(",", DbParameterData.OdbcMsSqlParameters.Select(_ => "?"));
 
-                    command.Parameters.Add(new OdbcParameter(paramName, parameter.Value)); ;
-                }
+        //    using (var connection = new OdbcConnection(MsSqlOdbcConfiguration.MsSqlOdbcConnectionString))
+        //    using (var command = new OdbcCommand($"{{call {procedureName}({parameterPlaceholder})}}", connection))
+        //    {
+        //        connection.Open();
+        //        command.CommandType = CommandType.StoredProcedure;
+        //        foreach (var parameter in DbParameterData.OdbcMsSqlParameters)
+        //        {
+        //            var paramName = paramsWithAtSign
+        //                ? parameter.ParameterName
+        //                : parameter.ParameterName.TrimStart('@');
 
-                return command.ExecuteNonQuery();
-            }
-        }
+        //            command.Parameters.Add(new OdbcParameter(paramName, parameter.Value)); ;
+        //        }
 
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public int MsSqlParameterizedStoredProcedureUsingOleDbDriver(string procedureName, bool paramsWithAtSign)
-        {
-            EnsureProcedure(procedureName, DbParameterData.OleDbMsSqlParameters);
+        //        return command.ExecuteNonQuery();
+        //    }
+        //}
 
-            using (var connection = new OleDbConnection(MsSqlOleDbConfiguration.MsSqlOleDbConnectionString))
-            using (var command = new OleDbCommand(procedureName, connection))
-            {
-                connection.Open();
-                command.CommandType = CommandType.StoredProcedure;
-                foreach (var parameter in DbParameterData.OleDbMsSqlParameters)
-                {
-                    var paramName = paramsWithAtSign
-                        ? parameter.ParameterName
-                        : parameter.ParameterName.TrimStart('@');
+        //[LibraryMethod]
+        //[Transaction]
+        //[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        //public int MsSqlParameterizedStoredProcedureUsingOleDbDriver(string procedureName, bool paramsWithAtSign)
+        //{
+        //    EnsureProcedure(procedureName, DbParameterData.OleDbMsSqlParameters);
 
-                    command.Parameters.Add(new OleDbParameter(paramName, parameter.Value));
-                }
+        //    using (var connection = new OleDbConnection(MsSqlOleDbConfiguration.MsSqlOleDbConnectionString))
+        //    using (var command = new OleDbCommand(procedureName, connection))
+        //    {
+        //        connection.Open();
+        //        command.CommandType = CommandType.StoredProcedure;
+        //        foreach (var parameter in DbParameterData.OleDbMsSqlParameters)
+        //        {
+        //            var paramName = paramsWithAtSign
+        //                ? parameter.ParameterName
+        //                : parameter.ParameterName.TrimStart('@');
 
-                return command.ExecuteNonQuery();
-            }
-        }
+        //            command.Parameters.Add(new OleDbParameter(paramName, parameter.Value));
+        //        }
+
+        //        return command.ExecuteNonQuery();
+        //    }
+        //}
+        #endregion
 
         [LibraryMethod]
         public void CreateTable(string tableName)

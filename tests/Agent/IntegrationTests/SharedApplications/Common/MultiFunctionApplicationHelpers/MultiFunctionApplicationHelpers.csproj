@@ -35,14 +35,6 @@
     <PackageReference Include="System.Data.SqlClient" Version="4.6.1" Condition="'$(TargetFramework)' == 'net5.0'" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.4" Condition="'$(TargetFramework)' == 'net6.0'" />
 
-    <!--System.Data.Odbc/Oledb (.NET Core/5+ only) -->
-    <PackageReference Include="System.Data.Odbc" Version="4.6.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
-    <PackageReference Include="System.Data.Odbc" Version="5.0.0" Condition="'$(TargetFramework)' == 'net5.0'" />
-    <PackageReference Include="System.Data.Odbc" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="System.Data.Oledb" Version="4.6.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
-    <PackageReference Include="System.Data.Oledb" Version="5.0.0" Condition="'$(TargetFramework)' == 'net5.0'" />
-    <PackageReference Include="System.Data.Oledb" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-
     <!--Microsoft.Data.SqlClient-->
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19239.1" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.5" Condition="'$(TargetFramework)' == 'net471'" />
