@@ -57,8 +57,10 @@ namespace NewRelic.Core
 			// Checking the version using >= enables forward compatibility.
 			DotnetFrameworkVersion CheckFor45PlusVersion(int releaseKey)
 			{
-				if (releaseKey >= 528040)
-					return DotnetFrameworkVersion.net48;
+                if (releaseKey >= 533325)
+                    return DotnetFrameworkVersion.net481;
+                if (releaseKey >= 528040)
+                    return DotnetFrameworkVersion.net48;
 				if (releaseKey >= 461808)
 					return DotnetFrameworkVersion.net472;
 				if (releaseKey >= 461308)
