@@ -137,6 +137,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     }
 
     [NetFrameworkTest]
+    public class MongoDBDriverDatabaseTestsFW48 : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MongoDBDriverDatabaseTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class MongoDBDriverDatabaseTestsFW471 : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MongoDBDriverDatabaseTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -159,6 +168,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverDatabaseTestsCoreLatest : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MongoDBDriverDatabaseTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MongoDBDriverDatabaseTestsCore60 : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MongoDBDriverDatabaseTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
         {
         }

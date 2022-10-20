@@ -147,6 +147,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
     }
 
     [NetFrameworkTest]
+    public class StackExchangeRedisTestsFW48 : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public StackExchangeRedisTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
     public class StackExchangeRedisTestsFWLatest : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public StackExchangeRedisTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -168,6 +177,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
     public class StackExchangeRedisTestsCore50 : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public StackExchangeRedisTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class StackExchangeRedisTestsCore60 : StackExchangeRedisTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public StackExchangeRedisTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

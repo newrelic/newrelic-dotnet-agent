@@ -147,6 +147,24 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
+    public class MySqlStoredProcedureTestsWithAtSignsFW48 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlStoredProcedureTestsWithAtSignsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output, true)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlStoredProcedureTestsWithoutAtSignsFW48 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlStoredProcedureTestsWithoutAtSignsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
     public class MySqlStoredProcedureTestsWithAtSignsFWLatest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlStoredProcedureTestsWithAtSignsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output, true)
@@ -195,6 +213,24 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     public class MySqlStoredProcedureTestsWithoutAtSignsCore50 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public MySqlStoredProcedureTestsWithoutAtSignsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlStoredProcedureTestsWithAtSignsCore60 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MySqlStoredProcedureTestsWithAtSignsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output, true)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlStoredProcedureTestsWithoutAtSignsCore60 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MySqlStoredProcedureTestsWithoutAtSignsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output, false)
         {
 
         }

@@ -19,7 +19,8 @@ namespace NewRelic.Core
         net47,
         net471,
         net472,
-        net48
+        net48,
+        net481
     }
 
     public enum DotnetCoreVersion
@@ -29,6 +30,7 @@ namespace NewRelic.Core
         netcoreapp31,
         net5,
         net6,
+        net7,
         Other
     }
 
@@ -55,8 +57,10 @@ namespace NewRelic.Core
 			// Checking the version using >= enables forward compatibility.
 			DotnetFrameworkVersion CheckFor45PlusVersion(int releaseKey)
 			{
-				if (releaseKey >= 528040)
-					return DotnetFrameworkVersion.net48;
+                if (releaseKey >= 533325)
+                    return DotnetFrameworkVersion.net481;
+                if (releaseKey >= 528040)
+                    return DotnetFrameworkVersion.net48;
 				if (releaseKey >= 461808)
 					return DotnetFrameworkVersion.net472;
 				if (releaseKey >= 461308)
@@ -93,6 +97,11 @@ namespace NewRelic.Core
             if (envVer.Major == 3 && envVer.Minor == 1)
             {
                 return DotnetCoreVersion.netcoreapp31;
+            }
+
+            if (envVer.Major == 7)
+            {
+                return DotnetCoreVersion.net7;
             }
 
             if (envVer.Major == 6)

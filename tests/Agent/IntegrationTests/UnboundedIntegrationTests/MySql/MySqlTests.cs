@@ -153,6 +153,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetFrameworkTest]
+    public class MySqlTestsFW48 : MySqlTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
     public class MySqlTestsFWLatest : MySqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MySqlTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
@@ -174,6 +183,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     public class MySqlTestsCore50 : MySqlTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public MySqlTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlTestsCore60 : MySqlTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MySqlTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

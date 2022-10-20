@@ -190,7 +190,7 @@ jobs:
   build-test-fullagent-msi:
     needs: [ build-windows-profiler, build-linux-x64-profiler, build-linux-arm64-profiler ]
     name: Build and Test FullAgent and MSIInstaller
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
@@ -392,11 +392,15 @@ jobs:
         with:
           vs-prerelease: true
 
-      - name: Add .NET 6 SDK
+      - name: Add .NET 7 SDK
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.0.100-rc.2.22477.23'
           include-prerelease: true
+
+      - name: List SDKS
+        run: dotnet --list-sdks
+        shell: powershell
 
       - name: Build IntegrationTests.sln
         run: |
@@ -436,10 +440,10 @@ jobs:
         with:
           vs-prerelease: true
 
-      - name: Add .NET 6 SDK
+      - name: Add .NET 7 SDK
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.0.100-rc.2.22477.23'
           include-prerelease: true
 
       - name: Build UnboundedIntegrationTests.sln
@@ -464,7 +468,7 @@ jobs:
   run-integration-tests:
     needs: [build-integration-tests]
     name: Run IntegrationTests
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
@@ -492,20 +496,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET Core 3.1.100
+      - name: Add .NET 7 SDK
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '3.1.100'
-
-      - name: Setup .NET 5.0
-        uses: actions/setup-dotnet@v1
-        with:
-            dotnet-version: '5.0.100'
-
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.0.100-rc.2.22477.23'
           include-prerelease: true
 
       - name: Set up secrets
@@ -651,7 +645,7 @@ jobs:
   run-unbounded-tests:
     needs: [build-unbounded-tests]
     name: Run Unbounded Tests
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         namespace: [ CosmosDB, Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, NServiceBus5, Oracle, Postgres, RabbitMq, Redis ]
@@ -674,10 +668,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET 6.0
+      - name: Add .NET 7 SDK
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.0.100-rc.2.22477.23'
           include-prerelease: true
 
       - name: Download Agent Home Folders
@@ -904,7 +898,7 @@ jobs:
     needs: [ create-package-rpm, create-package-deb ]
     if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
     name: Run ArtifactBuilder
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     steps:
       - name: Checkout

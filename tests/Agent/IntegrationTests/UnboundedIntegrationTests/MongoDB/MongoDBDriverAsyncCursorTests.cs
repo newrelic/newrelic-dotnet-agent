@@ -69,6 +69,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     }
 
     [NetFrameworkTest]
+    public class MongoDBDriverAsyncCursorTestsFW48 : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MongoDBDriverAsyncCursorTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class MongoDBDriverAsyncCursorTestsFW471 : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MongoDBDriverAsyncCursorTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
@@ -91,6 +100,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverAsyncCursorTestsCoreLatest : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MongoDBDriverAsyncCursorTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MongoDBDriverAsyncCursorTestsCore60 : MongoDBDriverAsyncCursorTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MongoDBDriverAsyncCursorTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
         {
         }

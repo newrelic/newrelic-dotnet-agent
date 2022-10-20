@@ -136,6 +136,15 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     }
 
     [NetCoreTest]
+    public class HttpClientInstrumentationTests_Net60 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public HttpClientInstrumentationTests_Net60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class HttpClientInstrumentationTests_NetCoreLatest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public HttpClientInstrumentationTests_NetCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
@@ -166,6 +175,15 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     public class HttpClientInstrumentationTests_FW48 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public HttpClientInstrumentationTests_FW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class HttpClientInstrumentationTests_FWLatest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public HttpClientInstrumentationTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

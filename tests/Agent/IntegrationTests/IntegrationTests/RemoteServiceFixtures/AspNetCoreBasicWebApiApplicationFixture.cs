@@ -38,4 +38,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         }
     }
 
+    public class AspNetCoreBasicWebApiApplicationFixture_net70 : AspNetCoreBasicWebApiApplicationFixture
+    {
+        public AspNetCoreBasicWebApiApplicationFixture_net70() : base("AspNetCore7BasicWebApiApplication", "AspNetCore7BasicWebApiApplication.exe", "net7.0")
+        {
+        }
+    }
 }
