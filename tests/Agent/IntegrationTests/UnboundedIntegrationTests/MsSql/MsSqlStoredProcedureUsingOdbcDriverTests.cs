@@ -111,6 +111,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
+    // Only tests for System.Data in .NET Framework for ODBC, since the OdbcCommandWrapper is .NET Framework only,
+    // and the instrumentation.xml only matches System.Data as of 2022-10-20
     [NetFrameworkTest]
     public class MsSqlStoredProcedureUsingOdbcDriverTests : MsSqlStoredProcedureUsingOdbcDriverTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {

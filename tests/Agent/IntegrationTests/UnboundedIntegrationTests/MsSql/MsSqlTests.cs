@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiFunctionApplicationHelpers;
@@ -169,9 +168,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class SystemDataTestsFWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class MsSqlTests_SystemData_FWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public SystemDataTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MsSqlTests_SystemData_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -180,10 +179,46 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    [NetFrameworkTest]
-    public class MicrosoftDataSqlClientTestsFWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    [NetCoreTest]
+    public class MsSqlTests_SystemDataSqlClient_CoreLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MicrosoftDataSqlClientTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public MsSqlTests_SystemDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataSqlClientExerciser")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MsSqlTests_SystemDataSqlClient_Core50 : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public MsSqlTests_SystemDataSqlClient_Core50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataSqlClientExerciser")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MsSqlTests_SystemDataSqlClient_Core31 : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MsSqlTests_SystemDataSqlClient_Core31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(
+                  fixture: fixture,
+                  output: output,
+                  excerciserName: "SystemDataSqlClientExerciser")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MsSqlTests_MicrosoftDataSqlClient_FWLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MsSqlTests_MicrosoftDataSqlClient_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -193,9 +228,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MicrosoftDataSqlClientTestsFW462 : MsSqlTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class MsSqlTests_MicrosoftDataSqlClient_FW462 : MsSqlTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MicrosoftDataSqlClientTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public MsSqlTests_MicrosoftDataSqlClient_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -205,9 +240,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientTestsCoreLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MsSqlTests_MicrosoftDataSqlClient_CoreLatest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MicrosoftDataSqlClientTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MsSqlTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -217,9 +252,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientTestsCore31 : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class MsSqlTests_MicrosoftDataSqlClient_Core31 : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public MicrosoftDataSqlClientTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MsSqlTests_MicrosoftDataSqlClient_Core31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,

@@ -33,6 +33,10 @@
     <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net7.0'" />
 
+    <!--System.Data.SqlClient (.NET Core/5+ only) -->
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.6.1" Condition="'$(TargetFramework)' == 'net5.0'" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.4" Condition="'$(TargetFramework)' == 'net6.0'" />
 
     <!--Microsoft.Data.SqlClient-->
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19239.1" Condition="'$(TargetFramework)' == 'net462'" />
