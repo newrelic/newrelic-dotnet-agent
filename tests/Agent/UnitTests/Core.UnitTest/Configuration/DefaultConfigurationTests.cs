@@ -2992,7 +2992,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void CustomEventsMaxSamplesStoredPassesThroughToLocalConfig()
         {
-            Assert.That(_defaultConfig.CustomEventsMaximumSamplesStored, Is.EqualTo(10000));
+            Assert.That(_defaultConfig.CustomEventsMaximumSamplesStored, Is.EqualTo(30000));
 
             _localConfig.customEvents.maximumSamplesStored = 10001;
             Assert.That(_defaultConfig.CustomEventsMaximumSamplesStored, Is.EqualTo(10001));
