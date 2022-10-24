@@ -736,7 +736,7 @@
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>
-                        <xs:attribute name="maximumSamplesStored" type="xs:int" default="10000">
+                        <xs:attribute name="maximumSamplesStored" type="xs:int" default="30000">
                             <xs:annotation>
                                 <xs:documentation>
                                     The maximum number of samples to store in memory at a time.	Default is 10000.

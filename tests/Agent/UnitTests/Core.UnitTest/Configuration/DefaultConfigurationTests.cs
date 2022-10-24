@@ -3021,7 +3021,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, 20, 30, ExpectedResult = 30)]
         [TestCase(null, null, 30, ExpectedResult = 30)]
         [TestCase(null, 20, null, ExpectedResult = 20)]
-        [TestCase(null, null, null, ExpectedResult = 10000)]
+        [TestCase(null, null, null, ExpectedResult = 30000)]
         public int CustomEventsMaxSamplesStoredOverriddenByEnvironment(string environmentSetting, int? localSetting, int? serverSetting)
         {
             Mock.Arrange(() => _environment.GetEnvironmentVariable("MAX_EVENT_SAMPLES_STORED")).Returns(environmentSetting);
