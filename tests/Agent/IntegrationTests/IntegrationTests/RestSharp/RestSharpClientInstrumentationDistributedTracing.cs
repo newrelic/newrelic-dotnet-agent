@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -13,62 +15,65 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.RestSharp
 {
-    [NetFrameworkTest]
-    public class RestSharpInstrumentationDistributedTracing : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
-    {
-        private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public RestSharpInstrumentationDistributedTracing(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
+    public abstract class RestSharpInstrumentationDistributedTracingBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
+    {
+        private readonly TFixture _fixture;
+
+        public RestSharpInstrumentationDistributedTracingBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
-            _fixture.Actions(
+
+            _fixture.AddCommand($"RestSharpService StartService {_fixture.RemoteApplication.Port}");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} GET false");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} PUT false");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} POST false");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} DELETE false");
+            _fixture.AddCommand($"RestSharpExerciser RestSharpClientTaskCancelled {_fixture.RemoteApplication.Port}");
+            _fixture.AddCommand("RestSharpService StopService");
+
+            _fixture.AddActions
+            (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
+                    configModifier.SetLogLevel("finest");
                     configModifier.ForceTransactionTraces();
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.GetRestSharpSyncClient(method: "GET", generic: false);
-                    _fixture.GetRestSharpSyncClient(method: "PUT", generic: false);
-                    _fixture.GetRestSharpSyncClient(method: "POST", generic: false);
-                    _fixture.GetRestSharpSyncClient(method: "DELETE", generic: false);
-                    _fixture.GetRestSharpClientTaskCancelled();
-
-                    //Adding some time for metrics to be fully generated. 
-                    Thread.Sleep(3000);
                 }
             );
+
             _fixture.Initialize();
         }
 
         [Fact]
         public void Test()
         {
-            var myHostname = _fixture.DestinationServerName; // This is needed because we are making "external" calls to ourself to test RestSharp
+            var callerTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp.RestSharpExerciser/SyncClient";
+            var cancelledTrasnsactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp.RestSharpExerciser/RestSharpClientTaskCancelled";
+
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-
                 new Assertions.ExpectedMetric { metricName = "External/all", callCount = 5 },
-                new Assertions.ExpectedMetric { metricName = "External/allWeb", callCount = 5 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/GET", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/PUT", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/POST", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/DELETE", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/GET", metricScope = @"WebTransaction/MVC/RestSharpController/RestSharpClientTaskCancelled", callCount = 1},
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/GET", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/PUT", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/POST", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/DELETE", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/GET", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/PUT", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/POST", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/DELETE", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/GET", metricScope = cancelledTrasnsactionName, callCount = 1},
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/GET", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/PUT", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/POST", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/DELETE", metricScope = callerTransactionName, callCount = 1 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()
-                .Where(sample => sample.Path == @"WebTransaction/MVC/RestSharpController/SyncClient" || sample.Path == @"WebTransaction/WebAPI/RestAPI/Get" || sample.Path == @"WebTransaction/MVC/RestSharpController/RestSharpClientTaskCancelled")
+                .Where(sample => sample.Path == callerTransactionName || sample.Path == @"WebTransaction/WebAPI/RestAPI/Get" || sample.Path == cancelledTrasnsactionName)
                 .FirstOrDefault();
 
             Assert.NotNull(transactionSample);
@@ -96,7 +101,7 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
             void AssertSpanEventsContainHttpStatusCodeForCompletedRequests(SpanEvent spanEvent)
             {
                 var url = (string)spanEvent.AgentAttributes["http.url"];
-                if (url.Contains("/RestAPI/4"))
+                if (url.Contains("/RestAPI/Get/4"))
                 {
                     // When an id of 4 is supplied, the client is supposed to timeout before the server has a chance to respond, so no status code
                     Assert.DoesNotContain("http.statusCode", spanEvent.AgentAttributes.Keys);
@@ -106,6 +111,33 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
                     Assert.Contains("http.statusCode", spanEvent.AgentAttributes.Keys);
                 }
             }
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RestSharpInstrumentationDistributedTracingFWLatest : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public RestSharpInstrumentationDistributedTracingFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RestSharpInstrumentationDistributedTracingFW471 : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public RestSharpInstrumentationDistributedTracingFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RestSharpInstrumentationDistributedTracingFW462 : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public RestSharpInstrumentationDistributedTracingFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
         }
     }
 }

@@ -21,4 +21,19 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Owin
             appBuilder.UseWebApi(config);
         }
     }
+
+    public class FullRoutesStartup : IStartup
+    {
+        public void Configuration(IAppBuilder appBuilder)
+        {
+            var config = new HttpConfiguration();
+            config.MapHttpAttributeRoutes();
+            config.Routes.MapHttpRoute(
+                name: "DefaultApi",
+                routeTemplate: "api/{controller}/{action}/{id}",
+                defaults: new { id = RouteParameter.Optional }
+            );
+            appBuilder.UseWebApi(config);
+        }
+    }
 }
