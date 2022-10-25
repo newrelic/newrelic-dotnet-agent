@@ -104,6 +104,15 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
     }
 
     [NetFrameworkTest]
+    public class RestSharpInstrumentationCATFW48 : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public RestSharpInstrumentationCATFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class RestSharpInstrumentationCATFW471 : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFW471>
     {
         public RestSharpInstrumentationCATFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)

@@ -124,6 +124,15 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
     }
 
     [NetFrameworkTest]
+    public class RestSharpInstrumentationDistributedTracingFW48 : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public RestSharpInstrumentationDistributedTracingFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
     public class RestSharpInstrumentationDistributedTracingFW471 : RestSharpInstrumentationDistributedTracingBase<ConsoleDynamicMethodFixtureFW471>
     {
         public RestSharpInstrumentationDistributedTracingFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
