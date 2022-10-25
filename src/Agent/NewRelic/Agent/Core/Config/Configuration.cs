@@ -2466,7 +2466,7 @@ namespace NewRelic.Agent.Core.Config
         {
             this.attributesField = new configurationCustomEventsAttributes();
             this.enabledField = true;
-            this.maximumSamplesStoredField = 10000;
+            this.maximumSamplesStoredField = 30000;
         }
         
         public configurationCustomEventsAttributes attributes
@@ -2496,7 +2496,7 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute(10000)]
+        [System.ComponentModel.DefaultValueAttribute(30000)]
         public int maximumSamplesStored
         {
             get
