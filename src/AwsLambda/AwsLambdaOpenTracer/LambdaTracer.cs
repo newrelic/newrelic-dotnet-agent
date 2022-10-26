@@ -111,7 +111,7 @@ namespace NewRelic.OpenTracing.AmazonLambda
             {
                 var message = $"{NEWRELIC_TRACE_HEADER} header value was not accepted.";
                 _logger.Log(message, false, "ERROR");
-                throw new ArgumentNullException(message);
+                throw new ArgumentException(message);
             }
 
             var transportDurationInMillis = (DateTimeOffset.UtcNow - distributedTracePayload.Timestamp).TotalMilliseconds;
