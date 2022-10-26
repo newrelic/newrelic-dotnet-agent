@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
+### Fixes
+* Updates the LambdaTracer.Extract exception type. The previous exception type, ArgumentNullException, was incorrect.  The new type, ArgumentException, is better fit.. [#1287](https://github.com/newrelic/newrelic-dotnet-agent/pull/1287)
 
 ## [1.3.1] - 2022-10-03
 ### Fixes
