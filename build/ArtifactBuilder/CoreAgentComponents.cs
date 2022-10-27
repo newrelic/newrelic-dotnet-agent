@@ -149,9 +149,14 @@ namespace ArtifactBuilder
                 };
             }
 
-            AgentInfoJson = Platform == "arm64" ? null : $@"{SourcePath}\..\src\Agent\Miscellaneous\{Platform}\agentinfo.json";
+            var configurationComponents = new List<string> { NewRelicXsd };
+            if (Platform != "arm64")
+            {
+                AgentInfoJson = $@"{SourcePath}\..\src\Agent\Miscellaneous\{Platform}\agentinfo.json";
+                configurationComponents.Add(AgentInfoJson);
+            }
 
-            SetConfigurationComponents(NewRelicXsd, AgentInfoJson);
+            SetConfigurationComponents(configurationComponents.ToArray());
         }
     }
 }
