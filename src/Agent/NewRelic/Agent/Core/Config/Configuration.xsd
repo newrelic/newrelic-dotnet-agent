@@ -1633,7 +1633,7 @@
                                                 <xs:attribute name="include" type="xs:string" default="">
                                                     <xs:annotation>
                                                         <xs:documentation>
-                                                            A comma-separated and case-insensitive string that contains the context attributes that should be added to the log record. Empty means include all
+                                                            A comma-separated and case-insensitive string that contains the context attributes that should be added to the log record. Empty means include all.
                                                         </xs:documentation>
                                                     </xs:annotation>
                                                 </xs:attribute>
