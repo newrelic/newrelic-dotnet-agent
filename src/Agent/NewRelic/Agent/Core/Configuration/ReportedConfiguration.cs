@@ -603,6 +603,13 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("agent.app_settings")]
         public IReadOnlyDictionary<string,string> AppSettings => GetAppSettings();
+
+        public bool ContextDataEnabled => throw new NotImplementedException();
+
+        public IEnumerable<string> ContextDataInclude => throw new NotImplementedException();
+
+        public IEnumerable<string> ContextDataExclude => throw new NotImplementedException();
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return _configuration.GetAppSettings();

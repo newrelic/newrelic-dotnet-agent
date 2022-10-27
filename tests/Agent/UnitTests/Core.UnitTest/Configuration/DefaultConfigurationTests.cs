@@ -2747,6 +2747,50 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(10, _defaultConfig.LogEventsHarvestCycle.Seconds);
         }
 
+        [Test]
+        public void ApplicationLogging_ContextDataEnabled_IsFalseInLocalConfigByDefault()
+        {
+            Assert.IsFalse(_defaultConfig.ContextDataEnabled);
+        }
+
+        [TestCase(null, null, ExpectedResult = new string[] { })]
+        [TestCase("aaa,bbb", "ccc,ddd", ExpectedResult = new[] { "ccc", "ddd" })]
+        [TestCase("aaa,bbb", null, ExpectedResult = new[] { "aaa", "bbb" })]
+        [TestCase(null, "ccc,ddd", ExpectedResult = new[] { "ccc", "ddd" })]
+        public IEnumerable<string> ApplicationLogging_ContextDataInclude_IsOverriddenByEnvironmentVariable(string local, string environment)
+        {
+            if (local != null)
+            {
+                _localConfig.applicationLogging.forwarding.contextData.include = local;
+            }
+
+            if (environment != null)
+            {
+                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_INCLUDE")).Returns(environment);
+            }
+
+            return _defaultConfig.ContextDataInclude;
+        }
+
+        [TestCase(null, null, ExpectedResult = new string[] {})]
+        [TestCase("aaa,bbb", "ccc,ddd", ExpectedResult = new[] { "ccc", "ddd" })]
+        [TestCase("aaa,bbb", null, ExpectedResult = new[] { "aaa", "bbb" })]
+        [TestCase(null, "ccc,ddd", ExpectedResult = new[] { "ccc","ddd" })]
+
+        public IEnumerable<string> ApplicationLogging_ContextDataExclude_IsOverriddenByEnvironmentVariable(string local, string environment)
+        {
+            if(local != null)
+            {
+                _localConfig.applicationLogging.forwarding.contextData.exclude = local;
+            }
+
+            if(environment != null)
+            {
+                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_EXCLUDE")).Returns(environment);
+            }
+
+            return _defaultConfig.ContextDataExclude;
+        }
         #endregion
 
 

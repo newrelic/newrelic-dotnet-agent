@@ -417,6 +417,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool CodeLevelMetricsEnabled => true;
 
+        public bool ContextDataEnabled => throw new NotImplementedException();
+
+        public IEnumerable<string> ContextDataInclude => throw new NotImplementedException();
+
+        public IEnumerable<string> ContextDataExclude => throw new NotImplementedException();
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return new Dictionary<string, string>
