@@ -8,7 +8,18 @@ namespace ArtifactBuilder
         public CoreAgentComponents(string configuration, string platform, string repoRootDirectory, string homeRootPath)
             : base(configuration, platform, repoRootDirectory, homeRootPath) { }
 
-        protected override string SourceHomeBuilderPath => $@"{HomeRootPath}\newrelichome_{Platform}_coreclr";
+        protected override string SourceHomeBuilderPath
+        {
+            get
+            {
+                // arm64 is only supported on linux, so this is a special case
+                if (Platform == "arm64")
+                {
+                    return $@"{HomeRootPath}\newrelichome_arm64_coreclr_linux";
+                }
+                return $@"{HomeRootPath}\newrelichome_{Platform}_coreclr";
+            }
+        }
 
         protected override List<string> IgnoredHomeBuilderFiles => new List<string>() {
             $@"{SourceHomeBuilderPath}\extensions\NewRelic.Core.Instrumentation.xml",
@@ -68,14 +79,6 @@ namespace ArtifactBuilder
             NewRelicLicenseFile = $@"{SourceHomeBuilderPath}\LICENSE.txt";
             NewRelicThirdPartyNoticesFile = $@"{SourceHomeBuilderPath}\THIRD_PARTY_NOTICES.txt";
 
-            WindowsProfiler = $@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll";
-
-            GRPCExtensionsLibWindows = new[]
-            {
-                $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x64.dll",
-                $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x86.dll"
-            };
-
             var installRootFiles = new List<string>()
             {
                 NewRelicLicenseFile,
@@ -85,15 +88,31 @@ namespace ArtifactBuilder
 
             SetRootInstallDirectoryComponents(installRootFiles.ToArray());
 
+            WindowsProfiler = null;
+            GRPCExtensionsLibWindows = new string[0];
+            if (Platform != "arm64")
+            {
+                WindowsProfiler = $@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll";
+                GRPCExtensionsLibWindows = new[]
+                {
+                    $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x64.dll",
+                    $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x86.dll"
+                };
+            }
+
             var agentHomeDirFiles = new List<string>()
             {
                 $@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
                 $@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
                 $@"{SourceHomeBuilderPath}\NewRelic.Api.Agent.dll",
-                WindowsProfiler,
                 NewRelicConfig,
                 NewRelicXsd
             };
+            
+            if (!string.IsNullOrWhiteSpace(WindowsProfiler))
+            {
+                agentHomeDirFiles.Add(WindowsProfiler);
+            }
 
             agentHomeDirFiles.AddRange(GRPCExtensionsLibWindows);
 
@@ -111,16 +130,26 @@ namespace ArtifactBuilder
 
             AgentApiDll = $@"{SourcePath}\..\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll";
 
-            LinuxProfiler = Platform == "x64"
-                ? $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libNewRelicProfiler.so"
-                : null;
-
-            GRPCExtensionsLibLinux = new[]
+            LinuxProfiler = null;
+            GRPCExtensionsLibLinux = new string[0];
+            if (Platform == "x64") 
             {
-                $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libgrpc_csharp_ext.x64.so"
-            };
+                LinuxProfiler = $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libNewRelicProfiler.so";
+                GRPCExtensionsLibLinux = new[]
+                {
+                    $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libgrpc_csharp_ext.x64.so"
+                };
+            } 
+            else if (Platform == "arm64") 
+            {
+                LinuxProfiler = $@"{HomeRootPath}\newrelichome_arm64_coreclr_linux\libNewRelicProfiler.so";
+                GRPCExtensionsLibLinux = new[]
+                {
+                    $@"{HomeRootPath}\newrelichome_arm64_coreclr_linux\libgrpc_csharp_ext.arm64.so"
+                };
+            }
 
-            AgentInfoJson = $@"{SourcePath}\..\src\Agent\Miscellaneous\{Platform}\agentinfo.json";
+            AgentInfoJson = Platform == "arm64" ? null : $@"{SourcePath}\..\src\Agent\Miscellaneous\{Platform}\agentinfo.json";
 
             SetConfigurationComponents(NewRelicXsd, AgentInfoJson);
         }
