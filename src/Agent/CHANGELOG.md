@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### New Features
+* The [NewRelic.Agent NuGet package](https://www.nuget.org/packages/NewRelic.Agent) now includes the Linux Arm64 profiler. This can be found in the `newrelic/linux-arm64` directory. Configure your `CORECLR_PROFILER_PATH` environment variable to use this version of the profiler when deploying to linux ARM64 targets.
+
+### Fixes
+*
+
+## [10.3.0] - 2022-10-26
+
+### New Features
 * Custom Event Limit Increase
   * This version increases the default limit of custom events from 10,000 events per minute to 30,000 events per minute. In the scenario that custom events were being limited, this change will allow more custom events to be sent to New Relic. There is also a new configurable maximum limit of 100,000 events per minute. To change the limits, see the documentation for [max_samples_stored](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#custom_events). To learn more about the change and how to determine if custom events are being dropped, see our Explorers Hub [post](https://discuss.newrelic.com/t/send-more-custom-events-with-the-latest-apm-agents/190497). [#1284](https://github.com/newrelic/newrelic-dotnet-agent/pull/1284)
 
@@ -501,7 +509,8 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.2.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.3.0...HEAD
+[10.3.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.2.0...v10.3.0
 [10.2.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.1.0...v10.2.0
 [10.1.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.0.0...v10.1.0
 [10.0.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.9.0...v10.0.0

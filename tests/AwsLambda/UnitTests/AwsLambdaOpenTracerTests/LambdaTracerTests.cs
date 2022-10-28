@@ -150,9 +150,9 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
         {
             var tracer = LambdaTracer.Instance;
             var tags = new Dictionary<string, string>() { { "newrelic", "fred flintstone" } };
-            Assert.That(() => tracer.Extract(BuiltinFormats.TextMap, new TextMapExtractAdapter(tags)), Throws.Exception.TypeOf<ArgumentNullException>());
-            Assert.That(() => tracer.Extract(BuiltinFormats.HttpHeaders, new TextMapExtractAdapter(tags)), Throws.Exception.TypeOf<ArgumentNullException>());
-            Assert.That(() => tracer.Extract(NewRelicFormats.Payload, new PayloadExtractAdapter("I AM BAD")), Throws.Exception.TypeOf<ArgumentNullException>());
+            Assert.That(() => tracer.Extract(BuiltinFormats.TextMap, new TextMapExtractAdapter(tags)), Throws.Exception.TypeOf<ArgumentException>());
+            Assert.That(() => tracer.Extract(BuiltinFormats.HttpHeaders, new TextMapExtractAdapter(tags)), Throws.Exception.TypeOf<ArgumentException>());
+            Assert.That(() => tracer.Extract(NewRelicFormats.Payload, new PayloadExtractAdapter("I AM BAD")), Throws.Exception.TypeOf<ArgumentException>());
         }
 
         [Test]

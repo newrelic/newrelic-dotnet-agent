@@ -40,16 +40,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var address = $"http://{DestinationServerName}:{Port}/Default/HttpClientTaskCancelled";
             DownloadStringAndAssertEqual(address, "Worked");
         }
-        public void GetRestSharpSyncClient(string method, bool generic)
-        {
-            var address = $"http://{DestinationServerName}:{Port}/RestSharp/SyncClient?method={method}&generic={generic}";
-            DownloadStringAndAssertEqual(address, "Worked");
-        }
-        public void GetRestSharpAsyncAwaitClient(string method, bool generic, bool cancelable)
-        {
-            var address = $"http://{DestinationServerName}:{Port}/RestSharp/AsyncAwaitClient?method={method}&generic={generic}&cancelable={cancelable}";
-            DownloadStringAndAssertEqual(address, "Worked");
-        }
 
         public HttpResponseHeaders GetRestSharpAsyncAwaitClientWithHeaders(string method, bool generic, bool cancelable)
         {
@@ -74,12 +64,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         }
 
-        public void GetRestSharpTaskResultClient(string method, bool generic, bool cancelable)
-        {
-            var address = $"http://{DestinationServerName}:{Port}/RestSharp/TaskResultClient?method={method}&generic={generic}&cancelable={cancelable}";
-            DownloadStringAndAssertEqual(address, "Worked");
-        }
-
         public HttpResponseHeaders GetRestSharpTaskResultClientWithHeaders(string method, bool generic, bool cancelable)
         {
             var address = $"http://{DestinationServerName}:{Port}/RestSharp/TaskResultClient?method={method}&generic={generic}&cancelable={cancelable}";
@@ -101,12 +85,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 return Task.Run(() => httpClient.SendAsync(httpRequestMessage)).Result.Headers;
             }
 
-        }
-
-        public void GetRestSharpClientTaskCancelled()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/RestSharp/RestSharpClientTaskCancelled";
-            DownloadStringAndAssertEqual(address, "Worked");
         }
 
         public void Get404(string Path = "DoesNotExist")

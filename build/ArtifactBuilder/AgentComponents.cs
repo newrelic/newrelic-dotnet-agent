@@ -227,7 +227,11 @@ namespace ArtifactBuilder
 
         private void CheckForRequiredProperties()
         {
-            var requiredProperties = new Dictionary<string, string> { { nameof(WindowsProfiler), WindowsProfiler } };
+            var requiredProperties = new Dictionary<string, string>();
+            if (Platform != "arm64") 
+            { 
+                requiredProperties.Add(nameof(WindowsProfiler), WindowsProfiler);
+            }
             var missingPropertyNames = new List<string>();
 
             foreach (var requiredProperty in requiredProperties)
