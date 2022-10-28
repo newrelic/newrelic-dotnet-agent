@@ -24,10 +24,12 @@ namespace ArtifactBuilder.Artifacts
             var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", RepoRootDirectory, HomeRootDirectory);
             var frameworkAgentX86Components = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x86", RepoRootDirectory, HomeRootDirectory);
             var coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x64", RepoRootDirectory, HomeRootDirectory);
+            var coreAgentArm64Components = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "arm64", RepoRootDirectory, HomeRootDirectory);
             var coreAgentX86Components = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x86", RepoRootDirectory, HomeRootDirectory);
             frameworkAgentComponents.ValidateComponents();
             frameworkAgentX86Components.ValidateComponents();
             coreAgentComponents.ValidateComponents();
+            coreAgentArm64Components.ValidateComponents();
             coreAgentX86Components.ValidateComponents();
 
             var package = new NugetPackage(StagingDirectory, OutputDirectory);
@@ -45,7 +47,9 @@ namespace ArtifactBuilder.Artifacts
             coreAgentComponents.CopyComponents($@"{package.GetContentFilesDirectory("any", "netstandard2.0")}\newrelic");
             FileHelpers.CopyFile(coreAgentX86Components.WindowsProfiler, $@"{package.GetContentFilesDirectory("any", "netstandard2.0")}\newrelic\x86");
             package.CopyToContentFiles(coreAgentComponents.LinuxProfiler, @"any\netstandard2.0\newrelic");
+            package.CopyToContentFiles(coreAgentArm64Components.LinuxProfiler, @"any\netstandard2.0\newrelic\linux-arm64");
             package.CopyToContentFiles(coreAgentComponents.GRPCExtensionsLibLinux, @"any\netstandard2.0\newrelic");
+            package.CopyToContentFiles(coreAgentArm64Components.GRPCExtensionsLibLinux, @"any\netstandard2.0\newrelic");
             Directory.CreateDirectory($@"{StagingDirectory}\contentFiles\any\netstandard2.0\newrelic\logs");
             System.IO.File.Create($@"{StagingDirectory}\contentFiles\any\netstandard2.0\newrelic\logs\placeholder").Dispose();
 
