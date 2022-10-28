@@ -14,13 +14,14 @@ namespace NewRelic.Agent.Core.Utilities
         [Test]
         public void LogEventWireModelCollectionIsJsonSerializable()
         {
+            var _contextData = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
             var sourceObject = new LogEventWireModelCollection(
                 "myApplicationName",
                 "guid",
                 "hostname",
                 new List<LogEventWireModel>()
                 {
-                    new LogEventWireModel(1, "message", "level", "spanId", "traceId")
+                    new LogEventWireModel(1, "message", "level", "spanId", "traceId", _contextData)
                     {
                         Priority = 33.3f
                     }

@@ -445,11 +445,11 @@ namespace NewRelic.Agent.Core
                 {
                     logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel,
                         StackTraces.ScrubAndTruncate(logException, LogExceptionStackLimit), logException.Message, logException.GetType().ToString(),
-                        spanId, traceId);
+                        spanId, traceId, null);
                 }
                 else
                 {
-                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId);
+                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId, null);
                 }
 
                 var transaction = _transactionService.GetCurrentInternalTransaction();

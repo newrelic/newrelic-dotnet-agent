@@ -15,10 +15,12 @@ namespace NewRelic.Agent.Core.Transactions
     [TestFixture]
     internal class TransactionLogEventTests
     {
+        private Dictionary<string, object> _contextData = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+
         [Test]
         public void CanAddAndHarvestLogFromTransaction()
         {
-            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid");
+            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData);
             var transaction = TestTransactions.CreateDefaultTransaction();
 
             transaction.AddLogEvent(logEvent);
@@ -33,7 +35,7 @@ namespace NewRelic.Agent.Core.Transactions
         [Test]
         public void AddLogEventReturnsFalse_AfterLogEventsHarvested()
         {
-            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid");
+            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData);
             var transaction = TestTransactions.CreateDefaultTransaction();
 
             transaction.HarvestLogEvents();
