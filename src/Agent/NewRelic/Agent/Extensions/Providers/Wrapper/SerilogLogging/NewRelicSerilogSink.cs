@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
@@ -38,8 +39,11 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
 
             Func<object, string> getMessageFunc = l => logEvent.RenderMessage();
 
+            // Placeholder until context data (custom attribute) instrumentation is implemented
+            Func<object, Dictionary<string, object>> getContextDataFunc = (logEvent) => null;
+
             var xapi = _agent.GetExperimentalApi();
-            xapi.RecordLogMessage("serilog", logEvent, getDateTimeFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, _agent.TraceMetadata.SpanId, _agent.TraceMetadata.TraceId);
+            xapi.RecordLogMessage("serilog", logEvent, getDateTimeFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, getContextDataFunc, _agent.TraceMetadata.SpanId, _agent.TraceMetadata.TraceId);
         }
     }
 }

@@ -409,7 +409,7 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
         }
 
-        public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException, string spanId, string traceId)
+        public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException,Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId)
         {
             _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
 
@@ -431,6 +431,7 @@ namespace NewRelic.Agent.Core
             {
                 var logMessage = getLogMessage(logEvent);
                 var logException = getLogException(logEvent);
+                var logContextData = _configurationService.Configuration.ContextDataEnabled ? getContextData(logEvent) : null;
 
                 // exit quickly if the message and exception are missing
                 if (string.IsNullOrWhiteSpace(logMessage) && logException is null)
@@ -445,11 +446,11 @@ namespace NewRelic.Agent.Core
                 {
                     logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel,
                         StackTraces.ScrubAndTruncate(logException, LogExceptionStackLimit), logException.Message, logException.GetType().ToString(),
-                        spanId, traceId, null);
+                        spanId, traceId, filterLogContextData(logContextData));
                 }
                 else
                 {
-                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId, null);
+                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId, filterLogContextData(logContextData));
                 }
 
                 var transaction = _transactionService.GetCurrentInternalTransaction();
@@ -550,6 +551,28 @@ namespace NewRelic.Agent.Core
         internal void Detach(bool removeAsync, bool removePrimary)
         {
             _transactionService.RemoveOutstandingInternalTransactions(removeAsync, removePrimary);
+        }
+
+        private Dictionary<string, object> filterLogContextData(Dictionary<string, object> unfilteredContextData)
+        {
+            if (unfilteredContextData == null)
+            {
+                return null;
+            }
+
+            var filteredContextData = new Dictionary<string, object>();
+
+            // first, handle the "includes"
+            if (_configurationService.Configuration.ContextDataInclude.Count() == 0) // empty "include" list, so include everything
+            {
+                filteredContextData = unfilteredContextData;
+            }
+            else
+            {
+                filteredContextData = unfilteredContextData.Where(property => _configurationService.Configuration.ContextDataInclude.Contains(property.Key)).ToDictionary();
+            }
+            // now handle the exclude list - excludes win over includes per the spec
+            return filteredContextData.Where(property => !_configurationService.Configuration.ContextDataExclude.Contains(property.Key)).ToDictionary();
         }
 
         #endregion
