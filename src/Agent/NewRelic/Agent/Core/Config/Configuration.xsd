@@ -1640,7 +1640,7 @@
                                                 <xs:attribute name="exclude" type="xs:string" default="">
                                                     <xs:annotation>
                                                         <xs:documentation>
-                                                            A comma-separated and case-insensitive string that contains the context attributes that should NOT be added to the log record. "exclude" wins over "include".
+                                                            A comma-separated list of case-sensitive strings that define the context attributes that should NOT be added to the log record. "exclude" wins over "include".
                                                         </xs:documentation>
                                                     </xs:annotation>
                                                 </xs:attribute>
