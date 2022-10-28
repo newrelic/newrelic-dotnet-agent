@@ -73,6 +73,25 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(instrumentationPoint == nullptr);
         }
 
+        TEST_METHOD(basic_match_with_version)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"MyAssembly\" className=\"MyNamespace.MyClass\" minVersion=\"1.0.0\" maxVersion=\"2.0.0\">\
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet);
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>());
+            Assert::IsFalse(instrumentationPoint == nullptr);
+        }
         TEST_METHOD(deprecated_instrumentation_xml_is_ignored)
         {
             wchar_t* wrapperNames[2] =

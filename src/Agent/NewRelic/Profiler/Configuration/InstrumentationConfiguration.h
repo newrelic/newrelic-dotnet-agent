@@ -12,6 +12,7 @@
 #include "../MethodRewriter/IFunction.h"
 #include "../SignatureParser/SignatureParser.h"
 #include "../RapidXML/rapidxml.hpp"
+#include "../Common/AssemblyVersion.h"
 
 namespace NewRelic { namespace Profiler { namespace Configuration
 {
@@ -58,7 +59,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
 
             for (auto instrumentationPoint : *instrumentationPoints)
             {
-                (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()] = instrumentationPoint;
+                (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()].insert(instrumentationPoint);
             }
         }
 
@@ -83,9 +84,28 @@ namespace NewRelic { namespace Profiler { namespace Configuration
 
             const auto methodSignature = SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end());
             const auto params = methodSignature->ToString(function->GetTokenResolver());
-            const auto instPoint = TryGetInstrumentationPoint(function->GetAssemblyName(), function->GetTypeName(), function->GetFunctionName(), params);
+            const auto instPoints = TryGetInstrumentationPoints(function->GetAssemblyName(), function->GetTypeName(), function->GetFunctionName(), params);
 
-            return instPoint;
+            // We may have multiple matching instrumentation points that target different assembly versions. See if we can find one that meets
+            // the version requirements
+            AssemblyVersion foundVersion(function->GetAssemblyProps());
+            for (auto instPoint : instPoints)
+            {
+                if ((instPoint->MinVersion != nullptr) && (foundVersion < *instPoint->MinVersion))
+                {
+                    LogDebug(function->GetAssemblyName(), L" version ", foundVersion.ToString(), L" does not meet minimum version ", instPoint->MinVersion->ToString());
+                    continue;
+                }
+
+                if ((instPoint->MaxVersion != nullptr) && (foundVersion >= *instPoint->MaxVersion))
+                {
+                    LogDebug(function->GetAssemblyName(), L" version ", foundVersion.ToString(), L" exceeds maximum version ", instPoint->MaxVersion->ToString());
+                    continue;
+                }
+                // As soon as we find one that passes, return it
+                return instPoint;
+            }
+            return nullptr;
         }
 
     private:
@@ -105,37 +125,37 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return returnValue;
         }
 
-        InstrumentationPointPtr TryGetInstrumentationPoint(
+        InstrumentationPointSet TryGetInstrumentationPoints(
             const xstring_t& assemblyName,
             const xstring_t& className,
             const xstring_t& methodName,
             const xstring_t& parameters) const
         {
             auto matchKey = InstrumentationPoint::GetMatchKey(assemblyName, className, methodName, parameters);
-            auto matchInstrumentation = TryGetInstrumentationPoint(matchKey);
+            auto matchInstrumentation = TryGetInstrumentationPoints(matchKey);
 
-            if (matchInstrumentation != nullptr)
+            if (!matchInstrumentation.empty())
             {
                 return matchInstrumentation;
             }
 
             matchKey = InstrumentationPoint::GetMatchKey(assemblyName, className, methodName);
-            return TryGetInstrumentationPoint(matchKey);
+            return TryGetInstrumentationPoints(matchKey);
         }
 
-        InstrumentationPointPtr TryGetInstrumentationPoint(const InstrumentationPointPtr ipToFind) const
+        InstrumentationPointSet TryGetInstrumentationPoints(const InstrumentationPointPtr ipToFind) const
         {
             auto const key = ipToFind->GetMatchKey();
 
-            return TryGetInstrumentationPoint(key);
+            return TryGetInstrumentationPoints(key);
         }
 
-        InstrumentationPointPtr TryGetInstrumentationPoint(const xstring_t& key) const
+        InstrumentationPointSet TryGetInstrumentationPoints(const xstring_t& key) const
         {
             auto matches = _instrumentationPointsMap->find(key);
             if (matches == _instrumentationPointsMap->end())
             {
-                return nullptr;
+                return InstrumentationPointSet();
             }
 
             return matches->second;
@@ -216,6 +236,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             auto transactionTraceSegmentString = GetAttributeOrEmptyString(tracerNode, _X("transactionTraceSegment"));
             auto transactionNamingPriorityString = GetAttributeOrEmptyString(tracerNode, _X("transactionNamingPriority"));
             instrumentationPoint->AssemblyName = GetAttributeOrEmptyString(matchNode, _X("assemblyName"));
+            instrumentationPoint->MinVersion = std::unique_ptr<AssemblyVersion>(AssemblyVersion::Create(GetAttributeOrEmptyString(matchNode, _X("minVersion"))));
+            instrumentationPoint->MaxVersion = std::unique_ptr<AssemblyVersion>(AssemblyVersion::Create(GetAttributeOrEmptyString(matchNode, _X("maxVersion"))));
             instrumentationPoint->ClassName = GetAttributeOrEmptyString(matchNode, _X("className"));
             instrumentationPoint->MethodName = GetAttributeOrEmptyString(matcherNode, _X("methodName"));
             instrumentationPoint->Parameters = NormalizeParameters(TryGetAttribute(matcherNode, _X("parameters")));
@@ -322,16 +344,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
 
             for (auto iPoint : instrumentationPoints) {
 
-                // check if this method has already been instrumented -- if so, log a warning
-                auto existingInstrumentation = TryGetInstrumentationPoint(iPoint);
-                if (existingInstrumentation != nullptr)
-                {
-                    LogInfo(L"Duplicate instrumentation for ", existingInstrumentation->ToString(), " was found and will be ignored");
-                    continue;
-                }
-
                 // finally add the new instrumentation point(s) to our set of instrumentation points
-                (*_instrumentationPointsMap)[iPoint->GetMatchKey()] = iPoint;
+                // Note that there may be "duplicated" instrumentation points that target different assembly versions
+                (*_instrumentationPointsMap)[iPoint->GetMatchKey()].insert(iPoint);
                 _instrumentationPointsSet->insert(iPoint);
             }
         }
