@@ -603,6 +603,16 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("agent.app_settings")]
         public IReadOnlyDictionary<string,string> AppSettings => GetAppSettings();
+
+        [JsonProperty("application_logging.forwarding.context_data.enabled")]
+        public bool ContextDataEnabled => _configuration.ContextDataEnabled;
+
+        [JsonProperty("application_logging.forwarding.context_data.include")]
+        public IEnumerable<string> ContextDataInclude => _configuration.ContextDataInclude;
+
+        [JsonProperty("application_logging.forwarding.context_data.exclude")]
+        public IEnumerable<string> ContextDataExclude => _configuration.ContextDataExclude;
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return _configuration.GetAppSettings();
