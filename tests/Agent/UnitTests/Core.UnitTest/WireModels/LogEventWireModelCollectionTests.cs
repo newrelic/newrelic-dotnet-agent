@@ -41,33 +41,5 @@ namespace NewRelic.Agent.Core.WireModels
             Assert.AreEqual("TestTraceId", loggingEvent.TraceId);
             Assert.AreEqual(testContextData, loggingEvent.ContextData);
         }
-
-        [Test]
-        public void LogEventWireModelCollection_SerializesCorrectly()
-        {
-            // Arrange
-            const string expected = @"{""common"":{""attributes"":{""entity.name"":""MyApplicationName"",""entity.guid"":""a4edc699-4c47-4599-90b5-3c4c55512e96"",""hostname"":""TestHostname""}},""logs"":[{""timestamp"":1,""message"":""TestMessage1"",""level"":""TestLevel"",""span.id"":""TestSpanId1"",""trace.id"":""TestTraceId1"",""attributes"":{""context.key1"":""value1"",""context.key2"":1}},{""timestamp"":1,""message"":""TestMessage2"",""level"":""TestLevel"",""span.id"":""TestSpanId2"",""trace.id"":""TestTraceId2""},{""timestamp"":1,""message"":""TestMessage3"",""level"":""TestLevel"",""span.id"":""TestSpanId3"",""trace.id"":""TestTraceId3""}]}";
-
-            var entityName = "MyApplicationName";
-            var entityGuid = "a4edc699-4c47-4599-90b5-3c4c55512e96";
-            var hostname = "TestHostname";
-
-            var testContextData = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
-
-            var loggingEvents = new List<LogEventWireModel>
-            {
-                new LogEventWireModel(1, "TestMessage1", "TestLevel", "TestSpanId1", "TestTraceId1", testContextData),
-                new LogEventWireModel(1, "TestMessage2", "TestLevel", "TestSpanId2", "TestTraceId2", null),
-                new LogEventWireModel(1, "TestMessage3", "TestLevel", "TestSpanId3", "TestTraceId3", new Dictionary<string, object>())
-            };
-
-            var objectUnderTest = new LogEventWireModelCollection(entityName, entityGuid, hostname, loggingEvents);
-
-            // Act
-            var actual = JsonConvert.SerializeObject(objectUnderTest);
-
-            // Assert
-            Assert.AreEqual(expected, actual);
-        }
     }
 }
