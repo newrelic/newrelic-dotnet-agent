@@ -446,11 +446,11 @@ namespace NewRelic.Agent.Core
                 {
                     logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel,
                         StackTraces.ScrubAndTruncate(logException, LogExceptionStackLimit), logException.Message, logException.GetType().ToString(),
-                        spanId, traceId, filterLogContextData(logContextData));
+                        spanId, traceId, FilterLogContextData(logContextData));
                 }
                 else
                 {
-                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId, filterLogContextData(logContextData));
+                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId, FilterLogContextData(logContextData));
                 }
 
                 var transaction = _transactionService.GetCurrentInternalTransaction();
@@ -553,7 +553,7 @@ namespace NewRelic.Agent.Core
             _transactionService.RemoveOutstandingInternalTransactions(removeAsync, removePrimary);
         }
 
-        private Dictionary<string, object> filterLogContextData(Dictionary<string, object> unfilteredContextData)
+        private Dictionary<string, object> FilterLogContextData(Dictionary<string, object> unfilteredContextData)
         {
             if (unfilteredContextData == null)
             {

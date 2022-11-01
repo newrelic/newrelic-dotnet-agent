@@ -1763,10 +1763,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
         [TestCase(true, "", "", "key1,key2")]
         [TestCase(true, "key1", "", "key1")]
+        [TestCase(true, "key1,key2", "key2", "key1")]
         [TestCase(true, "", "key1", "key2")]
         [TestCase(true, "", "key1,key2", "")]
         [TestCase(true, "key3", "", "")]
         [TestCase(false, "", "", "")]
+        [TestCase(false, "key1,key2", "key2", "")]
         public void RecordLogMessage_ContextDataConfiguration(bool contextDataEnabled, string includeList, string excludeList, string expectedAttributeNames)
         {
             Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
