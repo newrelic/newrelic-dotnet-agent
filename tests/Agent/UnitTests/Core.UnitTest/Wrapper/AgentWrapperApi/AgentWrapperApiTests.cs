@@ -1766,6 +1766,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         [TestCase(true, "key1,key2", "key2", "key1")]
         [TestCase(true, "", "key1", "key2")]
         [TestCase(true, "", "key1,key2", "")]
+        [TestCase(true, "key*", "", "key1,key2")]
+        [TestCase(true, "key1", "key*", "key1")]
         [TestCase(true, "key3", "", "")]
         [TestCase(false, "", "", "")]
         [TestCase(false, "key1,key2", "key2", "")]
@@ -1786,7 +1788,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var message = "message";
             var exception = NotNewRelic.ExceptionBuilder.BuildException("exception message");
             var fixedStackTrace = string.Join(" \n", StackTraces.ScrubAndTruncate(exception.StackTrace, 300));
-            var contextData = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+            var contextData = new Dictionary<string, object>() {
+                { "key1", "value1" },
+                { "key2", 1 } };
 
             Func<object, string> getLevelFunc = (l) => level;
             Func<object, DateTime> getTimestampFunc = (l) => timestamp;

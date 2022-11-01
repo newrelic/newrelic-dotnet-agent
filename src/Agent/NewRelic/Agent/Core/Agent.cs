@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace NewRelic.Agent.Core
@@ -562,19 +563,72 @@ namespace NewRelic.Agent.Core
 
             var filteredContextData = new Dictionary<string, object>();
 
-            // first, handle the "includes"
-            if (_configurationService.Configuration.ContextDataInclude.Count() == 0) // empty "include" list, so include everything
+            // Pseudocode
+            // Include/exclude rules:
+            // 1. Exclude wins over include
+            // 2. Can have a '*' wildcard at the end of an include/exclude definition
+            // 3. "more specific" rules win over "less specific".  Example: include=AB, exclude=A*, AB would be included but not ABC or AAA
+
+            // Algorithm:
+            // Create list of rules, sorted by least specific to most specific, with includes first and then excludes within each level of specificity
+            // Specificity is just the length of the string
+            // Apply rules in order.  Include rules add attributes to filteredContextData from unfilteredContextData, and exclude rules remove attributes from filteredContextData
+
+            List<LogContextDataFilterRule> includeRuleList = new List<LogContextDataFilterRule>();
+            List<LogContextDataFilterRule> excludeRuleList = new List<LogContextDataFilterRule>();
+
+            foreach (var includeRule in _configurationService.Configuration.ContextDataInclude)
+            {
+                includeRuleList.Add(new LogContextDataFilterRule(includeRule, true));
+            }
+            foreach (var excludeRule in _configurationService.Configuration.ContextDataExclude)
+            {
+                excludeRuleList.Add(new LogContextDataFilterRule(excludeRule, false));
+            }
+
+            // This should work because OrderBy uses a stable sort.  By sorting each list individually, concactating them, and then sorting again, we get a list
+            // of rules ordered by length (specificity), with includes before excludes for each level of specificity
+            var allRulesInOrder = includeRuleList.OrderBy(rule => rule.Specificity).Concat(excludeRuleList.OrderBy(rule => rule.Specificity)).OrderBy(rule => rule.Specificity).ToList();
+
+
+            if (includeRuleList.Count() == 0) // empty "include" list, so include everything
             {
                 filteredContextData = unfilteredContextData;
             }
-            else
+
+            // Now apply the rules in order
+            foreach (var rule in allRulesInOrder)
             {
-                filteredContextData = unfilteredContextData.Where(property => _configurationService.Configuration.ContextDataInclude.Contains(property.Key)).ToDictionary();
+                if (rule.Include)
+                {
+                    filteredContextData = filteredContextData.Concat(unfilteredContextData.Where(x => Regex.IsMatch(x.Key, rule.Text))).ToDictionary();
+                }
+                else
+                {
+                    filteredContextData = filteredContextData.Where(x => !Regex.IsMatch(x.Key, rule.Text)).ToDictionary();
+                }
             }
-            // now handle the exclude list - excludes win over includes per the spec
-            return filteredContextData.Where(property => !_configurationService.Configuration.ContextDataExclude.Contains(property.Key)).ToDictionary();
+            return filteredContextData;
         }
 
         #endregion
+    }
+
+    internal class LogContextDataFilterRule
+    {
+        string _text;
+        bool _include;
+        int _specificity; // just the length, except ignore a trailing wildcard.  I.e. AB is more specific than A*
+
+        internal LogContextDataFilterRule(string text, bool include)
+        {
+            _text = text;
+            _include = include;
+            _specificity = text.TrimEnd('*').Length;
+        }
+
+        public string Text => _text;
+        public bool Include => _include;
+        public int Specificity => _specificity;
     }
 }
