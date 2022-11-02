@@ -1761,16 +1761,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Assert.AreEqual(priority, logEvent.Priority);
         }
 
-        [TestCase(true, "", "", "key1,key2")]
-        [TestCase(true, "key1", "", "key1")]
-        [TestCase(true, "key1,key2", "key2", "key1")]
-        [TestCase(true, "", "key1", "key2")]
-        [TestCase(true, "", "key1,key2", "")]
-        [TestCase(true, "key*", "", "key1,key2")]
-        [TestCase(true, "key1", "key*", "key1")]
-        [TestCase(true, "key3", "", "")]
-        [TestCase(false, "", "", "")]
-        [TestCase(false, "key1,key2", "key2", "")]
+        [TestCase(true, "", "", "key1,key2", TestName = "Empty include and exclude")]
+        [TestCase(true, "key1", "", "key1", TestName = "Explicit include, empty exclude")]
+        [TestCase(true, "key1,key2", "key2", "key1", TestName = "Explicit include and exclude")]
+        [TestCase(true, "", "key1", "key2", TestName = "Empty include, explicit exclude")]
+        [TestCase(true, "", "key1,key2", "", TestName = "Exclude all")]
+        [TestCase(true, "key*", "", "key1,key2", TestName = "Wildcard include, empty exclude")]
+        [TestCase(true, "key1", "key*", "key1", TestName = "More-specific explicit include overrides widlcard exclude")]
+        [TestCase(true, "key3", "", "", TestName = "Explicit include of non-existent key")]
+        [TestCase(false, "", "", "", TestName = "Context data disabled with empty include and exclude")]
+        [TestCase(false, "key1,key2", "key2", "", TestName = "Context data disabled overrides explicit include and exclude")]
         public void RecordLogMessage_ContextDataConfiguration(bool contextDataEnabled, string includeList, string excludeList, string expectedAttributeNames)
         {
             Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)

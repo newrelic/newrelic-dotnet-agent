@@ -99,6 +99,10 @@ namespace NewRelic.Agent.Core
 
         public Extensions.Logging.ILogger Logger => _logger ?? (_logger = new Logger());
 
+        private List<LogContextDataFilterRule> _includeRuleList;
+        private List<LogContextDataFilterRule> _excludeRuleList;
+        private List<LogContextDataFilterRule> _orderedCludeRuleList;
+
         #region Transaction management
 
         private static void NoOpWrapperOnCreate()
@@ -571,32 +575,18 @@ namespace NewRelic.Agent.Core
 
             // Algorithm:
             // Create list of rules, sorted by least specific to most specific, with includes first and then excludes within each level of specificity
-            // Specificity is just the length of the string
-            // Apply rules in order.  Include rules add attributes to filteredContextData from unfilteredContextData, and exclude rules remove attributes from filteredContextData
+            // Specificity is just the length of the string, minus any wildcard character at the end
+            // Apply rules in order. Include rules add attributes to filteredContextData from unfilteredContextData, and exclude rules remove attributes from filteredContextData
 
-            List<LogContextDataFilterRule> includeRuleList = new List<LogContextDataFilterRule>();
-            List<LogContextDataFilterRule> excludeRuleList = new List<LogContextDataFilterRule>();
+            var allRulesInOrder = _orderedCludeRuleList ?? (_orderedCludeRuleList = GetOrderedCludeRuleList()); 
 
-            foreach (var includeRule in _configurationService.Configuration.ContextDataInclude)
-            {
-                includeRuleList.Add(new LogContextDataFilterRule(includeRule, true));
-            }
-            foreach (var excludeRule in _configurationService.Configuration.ContextDataExclude)
-            {
-                excludeRuleList.Add(new LogContextDataFilterRule(excludeRule, false));
-            }
-
-            // This should work because OrderBy uses a stable sort.  By sorting each list individually, concactating them, and then sorting again, we get a list
-            // of rules ordered by length (specificity), with includes before excludes for each level of specificity
-            var allRulesInOrder = includeRuleList.OrderBy(rule => rule.Specificity).Concat(excludeRuleList.OrderBy(rule => rule.Specificity)).OrderBy(rule => rule.Specificity).ToList();
-
-
-            if (includeRuleList.Count() == 0) // empty "include" list, so include everything
+            if (_includeRuleList.Count() == 0) // empty "include" list, so include everything
             {
                 filteredContextData = unfilteredContextData;
             }
 
             // Now apply the rules in order
+            // TODO: maybe optimize by just working with keys as lists of strings until it comes time to return the actual data
             foreach (var rule in allRulesInOrder)
             {
                 if (rule.Include)
@@ -609,6 +599,30 @@ namespace NewRelic.Agent.Core
                 }
             }
             return filteredContextData;
+        }
+
+        private List<LogContextDataFilterRule> GetCludeRulesFromConfig(bool isIncludeRules)
+        {
+            List<LogContextDataFilterRule> rules = new List<LogContextDataFilterRule>();
+            var configRuleList = isIncludeRules ? _configurationService.Configuration.ContextDataInclude : _configurationService.Configuration.ContextDataExclude;
+            foreach (var configRule in configRuleList)
+            {
+                rules.Add(new LogContextDataFilterRule(configRule, isIncludeRules));
+            }
+            return rules;
+        }
+
+        private List<LogContextDataFilterRule> GetOrderedCludeRuleList()
+        {
+            var includeRuleList = _includeRuleList ?? (_includeRuleList = GetCludeRulesFromConfig(true));
+            var excludeRuleList = _excludeRuleList ?? (_excludeRuleList = GetCludeRulesFromConfig(false));
+
+            // This should work because OrderBy uses a stable sort.  By sorting each list individually,
+            // concactating them, and then sorting again, we get a list of rules ordered by length (specificity),
+            // with includes before excludes for each level of specificity
+            return includeRuleList.OrderBy(rule => rule.Specificity).Concat(
+                excludeRuleList.OrderBy(rule => rule.Specificity))
+                .OrderBy(rule => rule.Specificity).ToList();
         }
 
         #endregion
