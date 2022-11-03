@@ -85,8 +85,9 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
             var logEventAggregator = Mock.Create<ILogEventAggregator>();
+            var logContextDataFilter = Mock.Create<ILogContextDataFilter>();
 
-            _agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()), catSupportabilityCounters, logEventAggregator);
+            _agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()), catSupportabilityCounters, logEventAggregator, logContextDataFilter);
 
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
             _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);

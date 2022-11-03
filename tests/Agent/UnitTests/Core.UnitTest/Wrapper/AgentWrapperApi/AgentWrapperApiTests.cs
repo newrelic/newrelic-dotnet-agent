@@ -89,6 +89,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private IMetricNameService _metricNameService;
         private IErrorService _errorService;
         private ILogEventAggregator _logEventAggregator;
+        private ILogContextDataFilter _logContextDataFilter;
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
 
@@ -152,8 +153,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
                 .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
             _logEventAggregator = new LogEventAggregator(Mock.Create<IDataTransportService>(), scheduler, Mock.Create<IProcessStatic>(), _agentHealthReporter);
+            _logContextDataFilter = new LogContextDataFilter(_configurationService);
 
-            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator);
+            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter);
         }
 
         private class CallStackManagerFactory : ICallStackManagerFactory
@@ -611,7 +613,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         public void AcceptDistributedTraceHeaders__ReportsSupportabilityMetric_NullPayload()
         {
             _distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, new AdaptiveSampler());
-            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator);
+            _agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics, _logEventAggregator, _logContextDataFilter);
             SetupTransaction();
 
             Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
