@@ -282,7 +282,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
         private ImmutableTransaction BuildTestTransaction(IEnumerable<Segment> segments = null, DateTime? startTime = null)
         {
-            var transactionMetadata = new TransactionMetadata();
+            var transactionMetadata = new TransactionMetadata("transactionGuid");
 
             var name = TransactionName.ForWebTransaction("foo", "bar");
             segments = segments ?? Enumerable.Empty<Segment>();
