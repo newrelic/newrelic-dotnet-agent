@@ -19,6 +19,7 @@ namespace NewRelic.Providers.Wrapper.Logging
         private static Func<object, DateTime> _getTimestamp;
         private static Func<object, Exception> _getLogException;
         private static Func<object, IDictionary> _getProperties;
+        private static Func<object, IDictionary> _getPropertiesFunc;
 
         public bool IsTransactionRequired => false;
 
@@ -58,12 +59,10 @@ namespace NewRelic.Providers.Wrapper.Logging
 
             var getLogExceptionFunc = _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject");
 
-            // Placeholder until context data (custom attribute) instrumentation is implemented
-            Func <object, Dictionary<string, object>> getContextDataFunc = (logEvent) => null;
-
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
-            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, getContextDataFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+
+            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, GetContextData, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
         private void DecorateLogMessage(object logEvent, Type logEventType, IAgent agent)
@@ -86,6 +85,26 @@ namespace NewRelic.Providers.Wrapper.Logging
 
             // uses underscores to support other frameworks that do not allow hyphens (Serilog)
             propertiesDictionary["NR_LINKING"] = formattedMetadata;
+        }
+
+        private Dictionary<string, object> GetContextData(object logEvent)
+        {
+            _getPropertiesFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEvent.GetType(), "Properties");
+
+            var log4netProperties = _getPropertiesFunc.Invoke(logEvent);
+
+            if (log4netProperties != null && log4netProperties.Count > 0)
+            {
+                var contextData = new Dictionary<string, object>();
+                foreach (var key in log4netProperties.Keys)
+                {
+                    contextData.Add(key.ToString(), log4netProperties[key]);
+                }
+
+                return contextData;
+            }
+
+            return null;
         }
     }
 }
