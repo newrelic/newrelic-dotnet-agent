@@ -2,20 +2,38 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NUnit.Framework;
-using System;
 using System.Linq;
 using System.Collections.Generic;
 using NUnit.Framework.Internal;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Helpers;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.Configuration;
+using NewRelic.SystemInterfaces.Web;
+using NewRelic.Agent.Core.Config;
+using NewRelic.Agent.Core.Configuration.UnitTest;
 
 namespace NewRelic.Agent.Core.Attributes.Tests
 {
     [TestFixture]
     public class LogContextDataFilterTests
     {
+        private IConfiguration _configuration;
         private IConfigurationService _configurationService;
+
+        private configuration _localConfig;
+        private ServerConfiguration _serverConfig;
+        private RunTimeConfiguration _runTimeConfiguration;
+        private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
+
+        private IEnvironment _environment;
+        private IHttpRuntimeStatic _httpRuntimeStatic;
+        private IProcessStatic _processStatic;
+        private IConfigurationManagerStatic _configurationManagerStatic;
+        private IDnsStatic _dnsStatic;
+
         private Dictionary<string, object> _unfilteredContextData =
             new Dictionary<string, object>()
             {
@@ -23,10 +41,27 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                 { "key2", 1 }
             };
 
-    [SetUp]
+        [SetUp]
         public void SetUp()
         {
+            _environment = Mock.Create<IEnvironment>();
+
+            Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>()))
+                .Returns(null as string);
+
+            _processStatic = Mock.Create<IProcessStatic>();
+            _httpRuntimeStatic = Mock.Create<IHttpRuntimeStatic>();
+            _configurationManagerStatic = new ConfigurationManagerStaticMock();
+            _dnsStatic = Mock.Create<IDnsStatic>();
+            _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
+
+            _runTimeConfiguration = new RunTimeConfiguration();
+            _serverConfig = new ServerConfiguration();
+            _localConfig = new configuration();
+
             _configurationService = Mock.Create<IConfigurationService>();
+
+            UpdateConfig();
         }
 
         //        Inlcudes     Excludes     Expected
@@ -47,15 +82,38 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         [TestCase("*",         "*",         "",          TestName = "Exclude wins over include")]
         public void FilterLogContextData(string includeList, string excludeList, string expectedAttributeNames)
         {
-            Mock.Arrange(() => _configurationService.Configuration.ContextDataInclude)
-                .Returns(includeList.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries));
-            Mock.Arrange(() => _configurationService.Configuration.ContextDataExclude)
-                .Returns(excludeList.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries));
+            _localConfig.applicationLogging.forwarding.contextData.include = includeList;
+            _localConfig.applicationLogging.forwarding.contextData.exclude = excludeList;
+            UpdateConfig();
 
             var filter = new LogContextDataFilter(_configurationService);
             var filteredData = filter.FilterLogContextData(_unfilteredContextData);
 
-            Assert.AreEqual(expectedAttributeNames, filteredData == null ? "" : string.Join(",", filteredData.Keys.ToList()));
+            Assert.AreEqual(expectedAttributeNames, string.Join(",", filteredData.Keys.ToList()));
+        }
+
+        [Test]
+        public void HandlesConfigurationUpdates()
+        {
+            // Configure once
+
+            _localConfig.applicationLogging.forwarding.contextData.include = "key1,key2";
+            _localConfig.applicationLogging.forwarding.contextData.exclude = "";
+            UpdateConfig();
+
+            var filter = new LogContextDataFilter(_configurationService);
+            var filteredData = filter.FilterLogContextData(_unfilteredContextData);
+
+            Assert.AreEqual("key1,key2", string.Join(",", filteredData.Keys.ToList()));
+
+            // Update config
+
+            _localConfig.applicationLogging.forwarding.contextData.include = "";
+            _localConfig.applicationLogging.forwarding.contextData.exclude = "key1,key2";
+            UpdateConfig();
+
+            filteredData = filter.FilterLogContextData(_unfilteredContextData);
+            Assert.AreEqual("", string.Join(",", filteredData.Keys.ToList()));
         }
 
         [TestCase("abc", true, "abc", false, 3)]
@@ -70,6 +128,12 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             Assert.AreEqual(isWildcard, rule.IsWildCard);
             Assert.AreEqual(specificity, rule.Specificity);
 
+        }
+        private void UpdateConfig()
+        {
+            _configuration = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
+            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_configuration, ConfigurationUpdateSource.Local));
         }
 
     }

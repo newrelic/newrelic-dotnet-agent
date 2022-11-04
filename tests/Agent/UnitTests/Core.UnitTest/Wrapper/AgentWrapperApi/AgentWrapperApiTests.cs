@@ -1763,26 +1763,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Assert.AreEqual(priority, logEvent.Priority);
         }
 
-        [TestCase(true, "", "", "key1,key2", TestName = "Empty include and exclude")]
-        [TestCase(true, "key1", "", "key1", TestName = "Explicit include, empty exclude")]
-        [TestCase(true, "key1,key2", "key2", "key1", TestName = "Explicit include and exclude")]
-        [TestCase(true, "", "key1", "key2", TestName = "Empty include, explicit exclude")]
-        [TestCase(true, "", "key1,key2", "", TestName = "Exclude all")]
-        [TestCase(true, "key*", "", "key1,key2", TestName = "Wildcard include, empty exclude")]
-        [TestCase(true, "key1", "key*", "key1", TestName = "More-specific explicit include overrides widlcard exclude")]
-        [TestCase(true, "key3", "", "", TestName = "Explicit include of non-existent key")]
-        [TestCase(false, "", "", "", TestName = "Context data disabled with empty include and exclude")]
-        [TestCase(false, "key1,key2", "key2", "", TestName = "Context data disabled overrides explicit include and exclude")]
-        public void RecordLogMessage_ContextDataConfiguration(bool contextDataEnabled, string includeList, string excludeList, string expectedAttributeNames)
+        [Test]
+        public void RecordLogMessage_ContextDataDisabled()
         {
             Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
                 .Returns(true);
             Mock.Arrange(() => _configurationService.Configuration.ContextDataEnabled)
-                .Returns(contextDataEnabled);
-            Mock.Arrange(() => _configurationService.Configuration.ContextDataInclude)
-                .Returns(includeList.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries));
-            Mock.Arrange(() => _configurationService.Configuration.ContextDataExclude)
-                .Returns(excludeList.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries));
+                .Returns(false);
 
             var timestamp = DateTime.Now;
             var timestampUnix = timestamp.ToUnixTimeMilliseconds();
@@ -1818,16 +1805,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var logEvent = logEvents?.FirstOrDefault()?.Data;
             Assert.AreEqual(1, logEvents.Count);
             Assert.IsNotNull(logEvent);
-            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
-            Assert.AreEqual(level, logEvent.Level);
-            Assert.AreEqual(message, logEvent.Message);
-            Assert.AreEqual(spanId, logEvent.SpanId);
-            Assert.AreEqual(traceId, logEvent.TraceId);
-            Assert.AreEqual(fixedStackTrace, logEvent.ErrorStack);
-            Assert.AreEqual(exception.Message, logEvent.ErrorMessage);
-            Assert.AreEqual(exception.GetType().ToString(), logEvent.ErrorClass);
-            Assert.AreEqual(expectedAttributeNames, logEvent.ContextData == null ? "" : string.Join(",", logEvent.ContextData.Keys.ToList()));
-            Assert.AreEqual(priority, logEvent.Priority);
+            Assert.IsNull(logEvent.ContextData);
         }
 
         #endregion
