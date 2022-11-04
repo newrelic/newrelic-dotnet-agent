@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Attributes
 {
@@ -13,14 +16,15 @@ namespace NewRelic.Agent.Core.Attributes
         Dictionary<string, object> FilterLogContextData(Dictionary<string, object> contextData);
     }
 
-    public class LogContextDataFilter : ILogContextDataFilter
+    public class LogContextDataFilter : ConfigurationBasedService, ILogContextDataFilter
     {
         private IConfigurationService _configurationService;
         private List<LogContextDataFilterRule> _includeRuleList;
         private List<LogContextDataFilterRule> _excludeRuleList;
         private List<LogContextDataFilterRule> _orderedCludeRuleList;
 
-        private Dictionary<string, bool> _clusionCache = new Dictionary<string, bool>();
+        private ConcurrentDictionary<string, bool> _clusionCache = new ConcurrentDictionary<string, bool>();
+        private const int MaxCacheSize = 1000;
 
         public LogContextDataFilter(IConfigurationService configurationService)
         {
@@ -52,12 +56,21 @@ namespace NewRelic.Agent.Core.Attributes
 
             foreach (var kvp in unfilteredContextData)
             {
+                bool clusionResult;
                 if (!_clusionCache.ContainsKey(kvp.Key))
                 {
-                    _clusionCache[kvp.Key] = GetClusionResult(kvp.Key);
+                    clusionResult = GetClusionResult(kvp.Key);
+                    if (_clusionCache.Count <= MaxCacheSize)
+                    {
+                        _clusionCache[kvp.Key] = clusionResult;
+                    }
+                }
+                else
+                {
+                    clusionResult = _clusionCache[kvp.Key];
                 }
 
-                if (_clusionCache[kvp.Key])
+                if (clusionResult)
                 {
                     filteredContextData[kvp.Key] = kvp.Value;
                 }
@@ -111,15 +124,22 @@ namespace NewRelic.Agent.Core.Attributes
                 .OrderByDescending(rule => rule.Specificity).ToList();
         }
 
+        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+        {
+            _includeRuleList = null;
+            _excludeRuleList = null;
+            _orderedCludeRuleList = null;
+            _clusionCache = new ConcurrentDictionary<string, bool>();
+        }
     }
-    internal class LogContextDataFilterRule
+    public class LogContextDataFilterRule
     {
         string _text;
         bool _include;
         int _specificity; // just the length, except ignore a trailing wildcard.  I.e. AB is more specific than A*
         bool _isWildCard;
 
-        internal LogContextDataFilterRule(string text, bool include)
+        public LogContextDataFilterRule(string text, bool include)
         {
             _isWildCard = text.EndsWith("*");
             _text = text.TrimEnd('*');
