@@ -4,11 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
-using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Attributes
 {
@@ -23,6 +19,8 @@ namespace NewRelic.Agent.Core.Attributes
         private List<LogContextDataFilterRule> _includeRuleList;
         private List<LogContextDataFilterRule> _excludeRuleList;
         private List<LogContextDataFilterRule> _orderedCludeRuleList;
+
+        private Dictionary<string, bool> _clusionCache = new Dictionary<string, bool>();
 
         public LogContextDataFilter(IConfigurationService configurationService)
         {
@@ -46,31 +44,47 @@ namespace NewRelic.Agent.Core.Attributes
             // 3. "more specific" rules win over "less specific".  Example: include=AB, exclude=A*, AB would be included but not ABC or AAA
 
             // Algorithm:
-            // Create list of rules, sorted by least specific to most specific, with includes first and then excludes within each level of specificity
+            // Create list of rules, sorted by most specific to least specific, with excludes first and then includes within each level of specificity
             // Specificity is just the length of the string, minus any wildcard character at the end
-            // Apply rules in order. Include rules add attributes to filteredContextData from unfilteredContextData, and exclude rules remove attributes from filteredContextData
+            // For each context data key/value pair:
+            //   First, check the "clusion cache" to see if we already know whether or not to include or exclude this key, and if so handle it appropriately
+            //   Otherwise, go through the list of rules and see if we find a matching rule to exclude or include, cache the result, and handle it appropriately
 
+            foreach (var kvp in unfilteredContextData)
+            {
+                if (!_clusionCache.ContainsKey(kvp.Key))
+                {
+                    _clusionCache[kvp.Key] = GetClusionResult(kvp.Key);
+                }
+
+                if (_clusionCache[kvp.Key])
+                {
+                    filteredContextData[kvp.Key] = kvp.Value;
+                }
+            }
+
+            return filteredContextData;
+        }
+
+        private bool GetClusionResult(string key)
+        {
             var allRulesInOrder = _orderedCludeRuleList ?? (_orderedCludeRuleList = GetOrderedCludeRuleList());
 
-            if (_includeRuleList.Count() == 0) // empty "include" list, so include everything
-            {
-                filteredContextData = unfilteredContextData;
-            }
-
-            // Now apply the rules in order
-            // TODO: maybe optimize by just working with keys as lists of strings until it comes time to return the actual data
+            bool clusionResult = _includeRuleList.Count == 0; // An empty include rule list means include everything
             foreach (var rule in allRulesInOrder)
             {
-                if (rule.Include)
+                if (RuleMatches(rule, key))
                 {
-                    filteredContextData = filteredContextData.Concat(unfilteredContextData.Where(x => Regex.IsMatch(x.Key, rule.Text))).ToDictionary();
-                }
-                else
-                {
-                    filteredContextData = filteredContextData.Where(x => !Regex.IsMatch(x.Key, rule.Text)).ToDictionary();
+                    clusionResult = rule.Include;
+                    break; // Because of how the rule list is ordered, we are done checking as soon as we find a match
                 }
             }
-            return filteredContextData;
+            return clusionResult;
+        }
+
+        private bool RuleMatches(LogContextDataFilterRule rule, string text)
+        {
+            return rule.IsWildCard ? text.StartsWith(rule.Text, StringComparison.Ordinal) : text == rule.Text;
         }
 
         private List<LogContextDataFilterRule> GetCludeRulesFromConfig(bool isIncludeRules)
@@ -89,12 +103,12 @@ namespace NewRelic.Agent.Core.Attributes
             var includeRuleList = _includeRuleList ?? (_includeRuleList = GetCludeRulesFromConfig(true));
             var excludeRuleList = _excludeRuleList ?? (_excludeRuleList = GetCludeRulesFromConfig(false));
 
-            // This should work because OrderBy uses a stable sort.  By sorting each list individually,
-            // concactating them, and then sorting again, we get a list of rules ordered by length (specificity),
-            // with includes before excludes for each level of specificity
-            return includeRuleList.OrderBy(rule => rule.Specificity).Concat(
-                excludeRuleList.OrderBy(rule => rule.Specificity))
-                .OrderBy(rule => rule.Specificity).ToList();
+            // This works because OrderBy uses a stable sort.  By sorting each list individually,
+            // concactenating them, and then sorting again, we get a list of rules ordered by length (specificity) descending,
+            // with excludes before includes for each level of specificity
+            return excludeRuleList.OrderByDescending(rule => rule.Specificity).Concat(
+                includeRuleList.OrderByDescending(rule => rule.Specificity))
+                .OrderByDescending(rule => rule.Specificity).ToList();
         }
 
     }
@@ -103,17 +117,20 @@ namespace NewRelic.Agent.Core.Attributes
         string _text;
         bool _include;
         int _specificity; // just the length, except ignore a trailing wildcard.  I.e. AB is more specific than A*
+        bool _isWildCard;
 
         internal LogContextDataFilterRule(string text, bool include)
         {
-            _text = text;
+            _isWildCard = text.EndsWith("*");
+            _text = text.TrimEnd('*');
             _include = include;
-            _specificity = text.TrimEnd('*').Length;
+            _specificity = _text.Length;
         }
 
         public string Text => _text;
         public bool Include => _include;
         public int Specificity => _specificity;
+        public bool IsWildCard => _isWildCard;
     }
 
 }
