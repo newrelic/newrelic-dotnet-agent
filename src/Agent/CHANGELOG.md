@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### New Features
 * The [NewRelic.Agent NuGet package](https://www.nuget.org/packages/NewRelic.Agent) now includes the Linux Arm64 profiler. This can be found in the `newrelic/linux-arm64` directory. Configure your `CORECLR_PROFILER_PATH` environment variable to use this version of the profiler when deploying to linux ARM64 targets.
-* When finest logs is enabled, the transaction guid will be applied to attribute limit log messages, if present.
+* When finest logs are enabled, the transaction guid will be applied to attribute limit log messages, if present.
 
 ### Fixes
 *
