@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
@@ -39,8 +40,33 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
 
             Func<object, string> getMessageFunc = l => logEvent.RenderMessage();
 
-            // Placeholder until context data (custom attribute) instrumentation is implemented
-            Func<object, Dictionary<string, object>> getContextDataFunc = (logEvent) => null;
+            Func<object, Dictionary<string, object>> getContextDataFunc = (o) =>
+            {
+                Dictionary<string, object> context = new Dictionary<string, object>();
+                var properties = logEvent.Properties;
+                if ((properties == null) || (properties.Count == 0))
+                {
+                    return context;
+                }
+                foreach (var pair in properties)
+                {
+                    // We can keep simple types as they are, but complex types are stored in nested LogEventPropertyValue objects, which
+                    // are complicated to serialize as JSON. For those, use Render() to at least format them nicely as a string
+                    if (pair.Value is ScalarValue scalar)
+                    {
+                        context[pair.Key] = scalar.Value;
+                    }
+                    else
+                    {
+                        using (StringWriter sw = new StringWriter())
+                        {
+                            pair.Value.Render(sw);
+                            context[pair.Key] = sw.ToString();
+                        }
+                    }
+                }
+                return context;
+            };
 
             var xapi = _agent.GetExperimentalApi();
             xapi.RecordLogMessage("serilog", logEvent, getDateTimeFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, getContextDataFunc, _agent.TraceMetadata.SpanId, _agent.TraceMetadata.TraceId);
