@@ -660,6 +660,28 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                         continue;
                 }
 
+                if (expectedLogLine.Attributes != null)
+                {
+                    if (expectedLogLine.Attributes.Count != actualLogLine.Attributes.Count)
+                    {
+                        continue;
+                    }
+
+                    foreach(var expectedAttribute in expectedLogLine.Attributes)
+                    {
+                        var key = "context." + expectedAttribute.Key;
+                        if (!actualLogLine.Attributes.ContainsKey(key))
+                        {
+                            continue;
+                        }
+
+                        if(expectedAttribute.Value.Equals(actualLogLine.Attributes[key]))
+                        {
+                            continue;
+                        }
+                    }
+                }
+
                 return actualLogLine;
             }
 
@@ -1062,6 +1084,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             public string ErrorStack = null;
             public string ErrorMessage = null;
             public string ErrorClass = null;
+            public Dictionary<string,string> Attributes = null;
 
             public override string ToString()
             {

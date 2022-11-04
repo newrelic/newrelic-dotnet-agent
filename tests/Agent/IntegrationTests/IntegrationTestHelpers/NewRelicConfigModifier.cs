@@ -321,5 +321,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "codeLevelMetrics" }, "enabled", enabled.ToString().ToLower());
             return this;
         }
+
+        public NewRelicConfigModifier EnableContextData(bool enabled = true)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding" }, "contextData", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding", "contextData" }, "enabled", enabled.ToString().ToLower());
+
+            return this;
+        }
     }
 }

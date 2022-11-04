@@ -4,6 +4,7 @@
 #if NET6_0
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -118,6 +119,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         }
 
         public void ConfigureJsonLayoutAppenderForDecoration()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Info(string message, Dictionary<string, object> context)
         {
             throw new NotImplementedException();
         }

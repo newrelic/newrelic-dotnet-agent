@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
 {
@@ -9,6 +10,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
     {
         public void Debug (string message);
         public void Info(string message);
+        public void Info(string message, Dictionary<string, object> context);
+
         public void Warn(string message);
         public void Error(Exception exception);
 

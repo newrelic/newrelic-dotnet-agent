@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
@@ -71,13 +72,36 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         [LibraryMethod]
         public static void CreateSingleLogMessage(string message, string level)
         {
+            CreateSingleLogMessage(level, message, null);
+        }
+
+        [LibraryMethod]
+        public static void CreateSingleLogMessage(string message, string level, string context = null)
+        {
+            var contextDict = new Dictionary<string, object>();
+
+            if (!string.IsNullOrEmpty(context))
+            {
+                var array = context.Split(',');
+
+                foreach (var item in array)
+                {
+                    var pairs = item.Split('=');
+
+                    if (!contextDict.ContainsKey(pairs[0]))
+                    {
+                        contextDict.Add(pairs[0], pairs[1]);
+                    }
+                }
+            }
+
             switch (level.ToUpper())
             {
                 case "DEBUG":
                     _log.Debug(message);
                     break;
                 case "INFO":
-                    _log.Info(message);
+                    _log.Info(message, contextDict);
                     break;
                 case "WARN":
                 case "WARNING":
