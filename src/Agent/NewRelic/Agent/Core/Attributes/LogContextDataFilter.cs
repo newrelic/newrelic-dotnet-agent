@@ -57,17 +57,13 @@ namespace NewRelic.Agent.Core.Attributes
             foreach (var kvp in unfilteredContextData)
             {
                 bool clusionResult;
-                if (!_clusionCache.ContainsKey(kvp.Key))
+                if (!_clusionCache.TryGetValue(kvp.Key, out clusionResult))
                 {
                     clusionResult = GetClusionResult(kvp.Key);
                     if (_clusionCache.Count <= MaxCacheSize)
                     {
                         _clusionCache[kvp.Key] = clusionResult;
                     }
-                }
-                else
-                {
-                    clusionResult = _clusionCache[kvp.Key];
                 }
 
                 if (clusionResult)
