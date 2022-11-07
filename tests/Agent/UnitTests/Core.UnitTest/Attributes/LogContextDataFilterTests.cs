@@ -14,6 +14,7 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.SystemInterfaces.Web;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration.UnitTest;
+using NUnit.Framework.Constraints;
 
 namespace NewRelic.Agent.Core.Attributes.Tests
 {
@@ -114,6 +115,27 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             filteredData = filter.FilterLogContextData(_unfilteredContextData);
             Assert.AreEqual("", string.Join(",", filteredData.Keys.ToList()));
+        }
+
+        [Test]
+        public void MaxClusionCacheSizeExceededLogsWarning()
+        {
+            // Create context data with >1000 unique key names
+            var unfilteredContextData = new Dictionary<string, object>();
+            for (var i = 1; i <=1001; i++)
+            {
+                unfilteredContextData[$"key{i}"] = $"value{i}";
+            }
+
+            using (var logging = new TestUtilities.Logging())
+            {
+                var filter = new LogContextDataFilter(_configurationService);
+
+                var filteredData = filter.FilterLogContextData(unfilteredContextData);
+
+                Assert.IsTrue(logging.HasMessageThatContains("LogContextDataFilter: max #"));
+            }
+
         }
 
         [TestCase("abc", true, "abc", false, 3)]

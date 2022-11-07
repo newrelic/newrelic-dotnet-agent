@@ -8,6 +8,7 @@ using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Attributes
 {
@@ -25,6 +26,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         private ConcurrentDictionary<string, bool> _clusionCache = new ConcurrentDictionary<string, bool>();
         private const int MaxCacheSize = 1000;
+        private bool _clusionCacheSizeExceededWarningLogged = false;
 
         public LogContextDataFilter(IConfigurationService configurationService)
         {
@@ -60,9 +62,17 @@ namespace NewRelic.Agent.Core.Attributes
                 if (!_clusionCache.TryGetValue(kvp.Key, out clusionResult))
                 {
                     clusionResult = GetClusionResult(kvp.Key);
-                    if (_clusionCache.Count <= MaxCacheSize)
+                    if (_clusionCache.Count < MaxCacheSize)
                     {
                         _clusionCache[kvp.Key] = clusionResult;
+                    }
+                    else
+                    {
+                        if (!_clusionCacheSizeExceededWarningLogged)
+                        {
+                            Log.Warn($"LogContextDataFilter: max # ({MaxCacheSize}) of log context data attribute name inclusion/exclusion results reached.");
+                            _clusionCacheSizeExceededWarningLogged = true;
+                        }
                     }
                 }
 
@@ -126,6 +136,7 @@ namespace NewRelic.Agent.Core.Attributes
             _excludeRuleList = null;
             _orderedCludeRuleList = null;
             _clusionCache = new ConcurrentDictionary<string, bool>();
+            _clusionCacheSizeExceededWarningLogged = false;
         }
     }
     public class LogContextDataFilterRule
