@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Logging;
@@ -23,7 +23,6 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Core.Logging;
-using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
@@ -61,6 +60,7 @@ namespace NewRelic.Agent.Core
         private readonly ICATSupportabilityMetricCounters _catMetricCounters;
         private readonly Api.ITraceMetadataFactory _traceMetadataFactory;
         private readonly ILogEventAggregator _logEventAggregator;
+        private readonly ILogContextDataFilter _logContextDataFilter;
         private Extensions.Logging.ILogger _logger;
 
         public Agent(ITransactionService transactionService, ITransactionTransformer transactionTransformer,
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core
             IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker,
             IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService,
             IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory, ICATSupportabilityMetricCounters catMetricCounters,
-            ILogEventAggregator logEventAggregator)
+            ILogEventAggregator logEventAggregator, ILogContextDataFilter logContextDataFilter)
         {
             _transactionService = transactionService;
             _transactionTransformer = transactionTransformer;
@@ -90,6 +90,7 @@ namespace NewRelic.Agent.Core
             _traceMetadataFactory = traceMetadataFactory;
             _catMetricCounters = catMetricCounters;
             _logEventAggregator = logEventAggregator;
+            _logContextDataFilter = logContextDataFilter;
 
             Instance = this;
         }
@@ -446,11 +447,11 @@ namespace NewRelic.Agent.Core
                 {
                     logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel,
                         StackTraces.ScrubAndTruncate(logException, LogExceptionStackLimit), logException.Message, logException.GetType().ToString(),
-                        spanId, traceId, FilterLogContextData(logContextData));
+                        spanId, traceId, _logContextDataFilter.FilterLogContextData(logContextData));
                 }
                 else
                 {
-                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId, FilterLogContextData(logContextData));
+                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId, _logContextDataFilter.FilterLogContextData(logContextData));
                 }
 
                 var transaction = _transactionService.GetCurrentInternalTransaction();
@@ -553,28 +554,8 @@ namespace NewRelic.Agent.Core
             _transactionService.RemoveOutstandingInternalTransactions(removeAsync, removePrimary);
         }
 
-        private Dictionary<string, object> FilterLogContextData(Dictionary<string, object> unfilteredContextData)
-        {
-            if (unfilteredContextData == null)
-            {
-                return null;
-            }
-
-            var filteredContextData = new Dictionary<string, object>();
-
-            // first, handle the "includes"
-            if (_configurationService.Configuration.ContextDataInclude.Count() == 0) // empty "include" list, so include everything
-            {
-                filteredContextData = unfilteredContextData;
-            }
-            else
-            {
-                filteredContextData = unfilteredContextData.Where(property => _configurationService.Configuration.ContextDataInclude.Contains(property.Key)).ToDictionary();
-            }
-            // now handle the exclude list - excludes win over includes per the spec
-            return filteredContextData.Where(property => !_configurationService.Configuration.ContextDataExclude.Contains(property.Key)).ToDictionary();
-        }
 
         #endregion
     }
+
 }
