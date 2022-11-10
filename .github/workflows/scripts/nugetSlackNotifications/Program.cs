@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NewRelic.Api.Agent;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -31,6 +32,7 @@ namespace nugetSlackNotifications
 
         }
 
+        [Transaction]
         static async Task CheckPackage(string packageName)
         {
             var response = await _client.GetStringAsync($"https://api.nuget.org/v3/registration5-gz-semver2/{packageName}/index.json");
@@ -79,6 +81,7 @@ namespace nugetSlackNotifications
             }
         }
 
+        [Transaction]
         static async Task AlertOnNewVersions()
         {
             var webhook = Environment.GetEnvironmentVariable("DOTTY_WEBHOOK");
