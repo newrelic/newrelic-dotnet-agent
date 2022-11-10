@@ -10,7 +10,7 @@ on:
         default: "1"
         type: string
       testMode:
-        description: "If set to true, no notification message will be sent to the team channel."
+        description: "If checked, no notification message will be sent to the team channel."
         type: boolean
         default: false
 
@@ -37,7 +37,7 @@ jobs:
           if [ ${{ github.event.inputs.daysToSearch }} != "" ]; then
             export DOTTY_DAYS_TO_SEARCH=${{ github.event.inputs.daysToSearch }}
           fi
-          if [ ${{ github.event.inputs.testMode }} == "True" ]; then
+          if [ "${{ github.event.inputs.testMode }}" == "true" ]; then
             export DOTTY_TEST_MODE="True"
           fi
           dotnet run --project ${{ env.scan-tool-path }} ${{ env.nugets }}
