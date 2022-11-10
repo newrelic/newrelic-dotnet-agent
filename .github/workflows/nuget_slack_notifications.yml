@@ -32,6 +32,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Add agent via nuget and then build the tool
+        run: |
+          cd ${{ env.scan-tool-path }}
+          dotnet add nugetSlackNotifications.csproj package NewRelic.Agent
+          dotnet build
+
       - name: Check for updates to core technology packages
         run: |
           if [ ${{ github.event.inputs.daysToSearch }} != "" ]; then
@@ -40,11 +46,19 @@ jobs:
           if [ "${{ github.event.inputs.testMode }}" == "true" ]; then
             export DOTTY_TEST_MODE="True"
           fi
-          dotnet run --project ${{ env.scan-tool-path }} ${{ env.nugets }}
+          cd ${{ env.scan-tool-path }}/bin/Debug/net6.0
+          dotnet ./nugetSlackNotifications.dll ${{ env.nugets }}
         shell: bash
 
         env:
             DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
+            CORECLR_ENABLE_PROFILING: 1
+            CORECLR_NEWRELIC_HOME: ${{ env.scan-tool-path }}/bin/Debug/net6.0/newrelic
+            CORECLR_PROFILER: {36032161-FFC0-4B61-B559-F6C5D41BAE5A}
+            CORECLR_PROFILER_PATH: ${{ env.scan-tool-path }}/bin/Debug/net6.0/newrelic/libNewRelicProfiler.so
+            NEW_RELIC_APP_NAME: Dotty
+            NEW_RELIC_HOST: staging-collector.newrelic.com
+            NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
             nugets:
                  "system.data.sqlclient
                  microsoft.data.sqlclient
