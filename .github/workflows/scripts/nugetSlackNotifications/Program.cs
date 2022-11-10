@@ -17,7 +17,8 @@ namespace nugetSlackNotifications
         private static readonly HttpClient _client = new(new HttpClientHandler() { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
         private static List<NugetVersionData> _newVersions = new();
 
-        private static readonly int DaysToSearch = int.TryParse(Environment.GetEnvironmentVariable("DOTTY_DAYS_TO_SEARCH"), out var days) ? days : 1; // How many days of package release history to scan for changes
+        private static readonly int _daysToSearch = int.TryParse(Environment.GetEnvironmentVariable("DOTTY_DAYS_TO_SEARCH"), out var days) ? days : 1; // How many days of package release history to scan for changes
+        private static readonly bool _testMode = bool.TryParse(Environment.GetEnvironmentVariable("DOTTY_TEST_MODE"), out var testMode) ? testMode : false;
 
         static async Task Main(string[] args)
         {
@@ -67,14 +68,14 @@ namespace nugetSlackNotifications
                 previousCatalogEntry = page.items[^2].catalogEntry;
             }
 
-            if (latestCatalogEntry.published > DateTime.Now.AddDays(-DaysToSearch) && !await latestCatalogEntry.isPrerelease())
+            if (latestCatalogEntry.published > DateTime.Now.AddDays(-_daysToSearch) && !await latestCatalogEntry.isPrerelease())
             {
-                Console.WriteLine($"Package {packageName} has been updated in the past {DaysToSearch} days.");
+                Console.WriteLine($"Package {packageName} has been updated in the past {_daysToSearch} days.");
                 _newVersions.Add(new NugetVersionData(packageName, previousCatalogEntry.version, latestCatalogEntry.version, $"https://www.nuget.org/packages/{packageName}/"));
             }
             else
             {
-                Console.WriteLine($"Package {packageName} has not been updated in the past {DaysToSearch} days.");
+                Console.WriteLine($"Package {packageName} has not been updated in the past {_daysToSearch} days.");
             }
         }
 
@@ -82,7 +83,7 @@ namespace nugetSlackNotifications
         {
             var webhook = Environment.GetEnvironmentVariable("DOTTY_WEBHOOK");
 
-            if (_newVersions.Count > 0 && webhook != null) // only message channel if there's package updates to report AND we have a webhook from the environment
+            if (_newVersions.Count > 0 && webhook != null && !_testMode) // only message channel if there's package updates to report AND we have a webhook from the environment AND we're not in test mode
             {
                 string msg = "Hi team! Dotty here :technologist::pager:\nThere's some new NuGet releases you should know about :arrow_heading_down::sparkles:";
                 foreach (var versionData in _newVersions)
@@ -113,7 +114,7 @@ namespace nugetSlackNotifications
             }
             else
             {
-                Console.WriteLine($"Channel will not be alerted: # of new versions={_newVersions.Count}, webhook available={webhook != null}");
+                Console.WriteLine($"Channel will not be alerted: # of new versions={_newVersions.Count}, webhook available={webhook != null}, test mode = {_testMode}");
             }
         }
     }

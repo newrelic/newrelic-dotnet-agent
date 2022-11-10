@@ -4,6 +4,15 @@ on:
   schedule:
    - cron:  '0 10 * * *'
   workflow_dispatch:
+    inputs:
+      daysToSearch:
+        description: "Days of NuGet history to search for package updates"
+        default: "1"
+        type: string
+      testMode:
+        description: "If set to true, no notification message will be sent to the team channel."
+        type: boolean
+        default: false
 
 env:
   DOTNET_NOLOGO: true
@@ -24,7 +33,16 @@ jobs:
           fetch-depth: 0
 
       - name: Check for updates to core technology packages
-        run: dotnet run --project ${{ env.scan-tool-path }} ${{ env.nugets }}
+        run: |
+          if [ ${{ github.event.inputs.daysToSearch }} != "" ]; then
+            export DOTTY_DAYS_TO_SEARCH=${{ github.event.inputs.daysToSearch }}
+          fi
+          if [ ${{ github.event.inputs.testMode }} == "True" ]; then
+            export DOTTY_TEST_MODE="True"
+          fi
+          dotnet run --project ${{ env.scan-tool-path }} ${{ env.nugets }}
+        shell: bash
+
         env:
             DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
             nugets:
