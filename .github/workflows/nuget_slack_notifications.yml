@@ -26,7 +26,7 @@ jobs:
       - name: Check for updates to core technology packages
         run: dotnet run --project ${{ env.scan-tool-path }} ${{ env.nugets }}
         env:
-            webhook: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
+            DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
             nugets:
                  "system.data.sqlclient
                  microsoft.data.sqlclient

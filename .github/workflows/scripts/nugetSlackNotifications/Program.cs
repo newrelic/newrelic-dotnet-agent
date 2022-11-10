@@ -14,49 +14,84 @@ namespace nugetSlackNotifications
     public class Program
     {
         // the semver2 registration endpoint returns gzip encoded json
-        private static readonly HttpClient client = new(new HttpClientHandler() { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
+        private static readonly HttpClient _client = new(new HttpClientHandler() { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
+        private static List<NugetVersionData> _newVersions = new();
+
+        private static readonly int DaysToSearch = int.TryParse(Environment.GetEnvironmentVariable("DOTTY_DAYS_TO_SEARCH"), out var days) ? days : 1; // How many days of package release history to scan for changes
 
         static async Task Main(string[] args)
         {
-            List<Tuple<string, string, string, string>> newVersions = new();
-            foreach (string package in args)
+            foreach (string packageName in args)
             {
-                string response = await client.GetStringAsync($"https://api.nuget.org/v3/registration5-gz-semver2/{package}/index.json");
-
-                SearchResult? searchResult = JsonSerializer.Deserialize<SearchResult>(response);
-                if (searchResult is null) continue;
-                Item item = searchResult.items[^1]; // get the most recent group
-
-                // need to make another request to get the page with individual release listings
-                Page? page = JsonSerializer.Deserialize<Page>(await client.GetStringAsync(item.id));
-                if (page is null) continue;
-
-                // need to get the most recent and previous catalog entries to display previous and new version
-                Catalogentry latestCatalogEntry;
-                Catalogentry previousCatalogEntry;
-
-                // alternative json structure (see mysql.data)
-                if (page.items[^1].catalogEntry is null)
-                {
-                    latestCatalogEntry = page.items[^1].items[^1].catalogEntry; // latest release
-                    previousCatalogEntry = page.items[^1].items[^2].catalogEntry; // next-latest release
-                }
-                else // standard structure
-                {
-                    latestCatalogEntry = page.items[^1].catalogEntry;
-                    previousCatalogEntry = page.items[^2].catalogEntry;
-                }
-
-                if (latestCatalogEntry.published > DateTime.Now.AddDays(-1) && !(await latestCatalogEntry.isPrerelease()))
-                    newVersions.Add(new Tuple<string, string, string, string>(package, previousCatalogEntry.version, latestCatalogEntry.version, $"https://www.nuget.org/packages/{package}/"));
+                await CheckPackage(packageName);
             }
 
-            if (newVersions.Count > 0) // only message channel if there's package updates to report
+            await AlertOnNewVersions();
+
+        }
+
+        static async Task CheckPackage(string packageName)
+        {
+            var response = await _client.GetStringAsync($"https://api.nuget.org/v3/registration5-gz-semver2/{packageName}/index.json");
+
+            SearchResult? searchResult = JsonSerializer.Deserialize<SearchResult>(response);
+            if (searchResult is null)
+            {
+                Console.WriteLine($"CheckPackage: null search result for package {packageName}");
+                return;
+            }
+
+            Item item = searchResult.items[^1]; // get the most recent group
+
+            // need to make another request to get the page with individual release listings
+            Page? page = JsonSerializer.Deserialize<Page>(await _client.GetStringAsync(item.id));
+            if (page is null)
+            {
+                Console.WriteLine($"CheckPackage: null page result for package {packageName}, item id {item.id}");
+                return;
+            }
+
+            // need to get the most recent and previous catalog entries to display previous and new version
+            Catalogentry latestCatalogEntry;
+            Catalogentry previousCatalogEntry;
+
+            // alternative json structure (see mysql.data)
+            if (page.items[^1].catalogEntry is null)
+            {
+                latestCatalogEntry = page.items[^1].items[^1].catalogEntry; // latest release
+                previousCatalogEntry = page.items[^1].items[^2].catalogEntry; // next-latest release
+            }
+            else // standard structure
+            {
+                latestCatalogEntry = page.items[^1].catalogEntry;
+                previousCatalogEntry = page.items[^2].catalogEntry;
+            }
+
+            if (latestCatalogEntry.published > DateTime.Now.AddDays(-DaysToSearch) && !await latestCatalogEntry.isPrerelease())
+            {
+                Console.WriteLine($"Package {packageName} has been updated in the past {DaysToSearch} days.");
+                _newVersions.Add(new NugetVersionData(packageName, previousCatalogEntry.version, latestCatalogEntry.version, $"https://www.nuget.org/packages/{packageName}/"));
+            }
+            else
+            {
+                Console.WriteLine($"Package {packageName} has not been updated in the past {DaysToSearch} days.");
+            }
+        }
+
+        static async Task AlertOnNewVersions()
+        {
+            var webhook = Environment.GetEnvironmentVariable("DOTTY_WEBHOOK");
+
+            if (_newVersions.Count > 0 && webhook != null) // only message channel if there's package updates to report AND we have a webhook from the environment
             {
                 string msg = "Hi team! Dotty here :technologist::pager:\nThere's some new NuGet releases you should know about :arrow_heading_down::sparkles:";
-                foreach (var t in newVersions)
-                    msg += $"\n\t:package: {char.ToUpper(t.Item1[0]) + t.Item1[1..]} {t.Item2} :point_right: <{t.Item4}|{t.Item3}>";
+                foreach (var versionData in _newVersions)
+                {
+                    msg += $"\n\t:package: {char.ToUpper(versionData.PackageName[0]) + versionData.PackageName[1..]} {versionData.OldVersion} :point_right: <{versionData.Url}|{versionData.NewVersion}>";
+                }
                 msg += $"\nThanks and have a wonderful {DateTime.Now.DayOfWeek}.";
+
+                Console.WriteLine($"Alerting channel with message: {msg}");
 
                 StringContent jsonContent = new(
                     JsonSerializer.Serialize(new
@@ -66,8 +101,36 @@ namespace nugetSlackNotifications
                     Encoding.UTF8,
                     "application/json");
 
-                await client.PostAsync(Environment.GetEnvironmentVariable("webhook"), jsonContent);
+                var webhookResult = await _client.PostAsync(Environment.GetEnvironmentVariable(webhook), jsonContent);
+                if (webhookResult.StatusCode == HttpStatusCode.OK)
+                {
+                    Console.WriteLine("Webhook invoke successfully");
+                }
+                else
+                {
+                    Console.WriteLine($"Error invoking webhook: {webhookResult.StatusCode}");
+                }
             }
+            else
+            {
+                Console.WriteLine($"Channel will not be alerted: # of new versions={_newVersions.Count}, webhook available={webhook != null}");
+            }
+        }
+    }
+
+    public class NugetVersionData
+    {
+        public string PackageName { get; set; }
+        public string OldVersion { get; set; }
+        public string NewVersion { get; set; }
+        public string Url { get; set; }
+
+        public NugetVersionData(string packageName, string oldVersion, string newVersion, string url)
+        {
+            PackageName = packageName;
+            OldVersion = oldVersion;
+            NewVersion = newVersion;
+            Url = url;
         }
     }
 
