@@ -108,10 +108,10 @@ namespace nugetSlackNotifications
                     Encoding.UTF8,
                     "application/json");
 
-                var webhookResult = await _client.PostAsync(Environment.GetEnvironmentVariable(webhook), jsonContent);
+                var webhookResult = await _client.PostAsync(webhook, jsonContent);
                 if (webhookResult.StatusCode == HttpStatusCode.OK)
                 {
-                    Log.Information("Webhook invoke successfully");
+                    Log.Information("Webhook invoked successfully");
                 }
                 else
                 {
@@ -120,7 +120,7 @@ namespace nugetSlackNotifications
             }
             else
             {
-                Log.Information($"Channel will not be alerted: # of new versions={_newVersions.Count}, webhook available={webhook != null}, test mode = {_testMode}");
+                Log.Information($"Channel will not be alerted: # of new versions={_newVersions.Count}, webhook available={webhook != null}, test mode={_testMode}");
             }
         }
     }
