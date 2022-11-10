@@ -1,4 +1,6 @@
 ﻿using NewRelic.Api.Agent;
+using Serilog;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -23,6 +25,7 @@ namespace nugetSlackNotifications
 
         static async Task Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
             foreach (string packageName in args)
             {
                 await CheckPackage(packageName);
@@ -40,7 +43,7 @@ namespace nugetSlackNotifications
             SearchResult? searchResult = JsonSerializer.Deserialize<SearchResult>(response);
             if (searchResult is null)
             {
-                Console.WriteLine($"CheckPackage: null search result for package {packageName}");
+                Log.Warning($"CheckPackage: null search result for package {packageName}");
                 return;
             }
 
@@ -50,7 +53,7 @@ namespace nugetSlackNotifications
             Page? page = JsonSerializer.Deserialize<Page>(await _client.GetStringAsync(item.id));
             if (page is null)
             {
-                Console.WriteLine($"CheckPackage: null page result for package {packageName}, item id {item.id}");
+                Log.Warning($"CheckPackage: null page result for package {packageName}, item id {item.id}");
                 return;
             }
 
@@ -72,12 +75,12 @@ namespace nugetSlackNotifications
 
             if (latestCatalogEntry.published > DateTime.Now.AddDays(-_daysToSearch) && !await latestCatalogEntry.isPrerelease())
             {
-                Console.WriteLine($"Package {packageName} has been updated in the past {_daysToSearch} days.");
+                Log.Information($"Package {packageName} has been updated in the past {_daysToSearch} days.");
                 _newVersions.Add(new NugetVersionData(packageName, previousCatalogEntry.version, latestCatalogEntry.version, $"https://www.nuget.org/packages/{packageName}/"));
             }
             else
             {
-                Console.WriteLine($"Package {packageName} has not been updated in the past {_daysToSearch} days.");
+                Log.Information($"Package {packageName} has not been updated in the past {_daysToSearch} days.");
             }
         }
 
@@ -95,7 +98,7 @@ namespace nugetSlackNotifications
                 }
                 msg += $"\nThanks and have a wonderful {DateTime.Now.DayOfWeek}.";
 
-                Console.WriteLine($"Alerting channel with message: {msg}");
+                Log.Information($"Alerting channel with message: {msg}");
 
                 StringContent jsonContent = new(
                     JsonSerializer.Serialize(new
@@ -108,16 +111,16 @@ namespace nugetSlackNotifications
                 var webhookResult = await _client.PostAsync(Environment.GetEnvironmentVariable(webhook), jsonContent);
                 if (webhookResult.StatusCode == HttpStatusCode.OK)
                 {
-                    Console.WriteLine("Webhook invoke successfully");
+                    Log.Information("Webhook invoke successfully");
                 }
                 else
                 {
-                    Console.WriteLine($"Error invoking webhook: {webhookResult.StatusCode}");
+                    Log.Error($"Error invoking webhook: {webhookResult.StatusCode}");
                 }
             }
             else
             {
-                Console.WriteLine($"Channel will not be alerted: # of new versions={_newVersions.Count}, webhook available={webhook != null}, test mode = {_testMode}");
+                Log.Information($"Channel will not be alerted: # of new versions={_newVersions.Count}, webhook available={webhook != null}, test mode = {_testMode}");
             }
         }
     }
