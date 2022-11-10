@@ -58,6 +58,8 @@ namespace NewRelic.Agent.Core.Attributes
         private int _attribCountAgentAttribs;
         private int _attribCountUserAttribs;
 
+        private readonly string _transactionGuid;
+
         public int Count => _attribCountIntrinsicAttribs + _attribCountAgentAttribs + _attribCountUserAttribs;
 
         public AttributeDestinations[] TargetModelTypes { get; private set; }
@@ -83,13 +85,13 @@ namespace NewRelic.Agent.Core.Attributes
 
             if (classification == AttributeClassification.UserAttributes && attribCount >= MaxCountUserAttrib)
             {
-                Log.Debug($"{classification} Attribute '{name}' was not recorded - A max of {MaxCountUserAttrib} {classification} attributes may be supplied.");
+                LogTransactionIfFinest($"{classification} Attribute '{name}' was not recorded - A max of {MaxCountUserAttrib} {classification} attributes may be supplied.");
                 return false;
             }
 
             if (Count >= MaxCountAllAttrib)
             {
-                Log.Debug($"{classification} Attribute '{name}' was not recorded - A max of {MaxCountAllAttrib} attributes may be supplied.");
+                LogTransactionIfFinest($"{classification} Attribute '{name}' was not recorded - A max of {MaxCountAllAttrib} attributes may be supplied.");
                 return false;
             }
 
@@ -111,6 +113,17 @@ namespace NewRelic.Agent.Core.Attributes
             {
                 TargetModelTypesAsFlags |= targetModelType;
             }
+        }
+
+        protected AttributeValueCollectionBase(string transactionGuid, params AttributeDestinations[] targetModelTypes)
+        {
+            TargetModelTypes = targetModelTypes;
+            foreach (var targetModelType in targetModelTypes)
+            {
+                TargetModelTypesAsFlags |= targetModelType;
+            }
+
+            _transactionGuid = transactionGuid;
         }
 
         public IEnumerable<IAttributeValue> GetAttributeValues(AttributeClassification classification)
@@ -275,6 +288,18 @@ namespace NewRelic.Agent.Core.Attributes
 
             IsImmutable = true;
         }
+
+        private void LogTransactionIfFinest(string message)
+        {
+            if (Log.IsFinestEnabled && !string.IsNullOrWhiteSpace(_transactionGuid))
+            {
+                Log.Finest($"Trx {_transactionGuid}: {message}");
+            }
+            else
+            {
+                Log.Debug(message);
+            }
+        }
     }
 
     public class AttributeValueCollection : AttributeValueCollectionBase<AttributeValue>
@@ -284,6 +309,10 @@ namespace NewRelic.Agent.Core.Attributes
         }
 
         public AttributeValueCollection(params AttributeDestinations[] targetModelTypes) : base(targetModelTypes)
+        {
+        }
+
+        public AttributeValueCollection(string transactionGuid, params AttributeDestinations[] targetModelTypes) : base(transactionGuid, targetModelTypes)
         {
         }
 

@@ -944,7 +944,7 @@ namespace NewRelic.Agent.Core.Transactions
             _configuration = configuration;
             Priority = priority;
             _traceId = configuration.DistributedTracingEnabled ? GuidGenerator.GenerateNewRelicTraceId() : null;
-            TransactionMetadata = new TransactionMetadata();
+            TransactionMetadata = new TransactionMetadata(_guid);
 
             CallStackManager = callStackManager;
             _transactionTracerMaxSegments = configuration.TransactionTracerMaxSegments;

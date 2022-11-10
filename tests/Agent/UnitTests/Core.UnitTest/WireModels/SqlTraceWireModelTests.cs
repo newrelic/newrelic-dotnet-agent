@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.WireModels
         [Test]
         public void multiple_sqlId_does_not_has_9_digits_number()
         {
-            var transactionMetadata = new TransactionMetadata();
+            var transactionMetadata = new TransactionMetadata("transactionGuid");
             var name = TransactionName.ForWebTransaction("foo", "bar");
             var metadata = transactionMetadata.ConvertToImmutableMetadata();
             var duration = TimeSpan.FromSeconds(1);

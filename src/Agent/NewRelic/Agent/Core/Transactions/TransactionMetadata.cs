@@ -90,11 +90,19 @@ namespace NewRelic.Agent.Core.Transactions
         private volatile string _originalUri;
         private volatile string _referrerUri;
 
-        private readonly AttributeValueCollection _transactionAttributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+        private readonly AttributeValueCollection _transactionAttributes;
         public AttributeValueCollection UserAndRequestAttributes => _transactionAttributes;
 
         private readonly ConcurrentHashSet<string> _allCrossApplicationPathHashes = new ConcurrentHashSet<string>();
         private volatile bool _hasResponseCatHeaders;
+
+        private readonly string _transactionGuid;
+
+        public TransactionMetadata(string transactionGuid)
+        {
+            _transactionGuid = transactionGuid;
+            _transactionAttributes = new AttributeValueCollection(transactionGuid, AttributeValueCollection.AllTargetModelTypes);
+        }
 
         public IImmutableTransactionMetadata ConvertToImmutableMetadata()
         {
