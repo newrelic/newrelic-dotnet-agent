@@ -4,6 +4,7 @@
 using NewRelic.Agent.Core.Segments;
 using Grpc.Core;
 using System.Threading;
+using System;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -16,7 +17,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 throw new GrpcWrapperChannelNotAvailableException();
             }
 
-            if (!channel.ConnectAsync().Wait(connectTimeoutMs, cancellationToken))
+            if (!channel.ConnectAsync(DateTime.Now.AddMilliseconds(connectTimeoutMs)).Wait(connectTimeoutMs, cancellationToken))
             {
                 // Ensure channel connection attempt shutdown on timeout
                 channel.ShutdownAsync().Wait();
@@ -40,7 +41,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 throw new GrpcWrapperChannelNotAvailableException();
             }
 
-            if (!channel.ConnectAsync().Wait(connectTimeoutMs, cancellationToken))
+            if (!channel.ConnectAsync(DateTime.Now.AddMilliseconds(connectTimeoutMs)).Wait(connectTimeoutMs, cancellationToken))
             {
                 // Ensure channel connection attempt shutdown on timeout
                 channel.ShutdownAsync().Wait();
