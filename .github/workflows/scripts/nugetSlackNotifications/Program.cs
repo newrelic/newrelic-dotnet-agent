@@ -22,13 +22,24 @@ namespace nugetSlackNotifications
 
         private static readonly int _daysToSearch = int.TryParse(Environment.GetEnvironmentVariable("DOTTY_DAYS_TO_SEARCH"), out var days) ? days : 1; // How many days of package release history to scan for changes
         private static readonly bool _testMode = bool.TryParse(Environment.GetEnvironmentVariable("DOTTY_TEST_MODE"), out var testMode) ? testMode : false;
+        private static readonly string? _webhook = Environment.GetEnvironmentVariable("DOTTY_WEBHOOK");
+
 
         static async Task Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
-            foreach (string packageName in args)
+
+            try
             {
-                await CheckPackage(packageName);
+                foreach (string packageName in args)
+                {
+                    await CheckPackage(packageName);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Caught exception while checking for package updates.");
+                await SendSlackNotification($"Dotty: caught exception while checking for package updates: {ex}");
             }
 
             await AlertOnNewVersions();
@@ -87,9 +98,8 @@ namespace nugetSlackNotifications
         [Transaction]
         static async Task AlertOnNewVersions()
         {
-            var webhook = Environment.GetEnvironmentVariable("DOTTY_WEBHOOK");
 
-            if (_newVersions.Count > 0 && webhook != null && !_testMode) // only message channel if there's package updates to report AND we have a webhook from the environment AND we're not in test mode
+            if (_newVersions.Count > 0 && _webhook != null && !_testMode) // only message channel if there's package updates to report AND we have a webhook from the environment AND we're not in test mode
             {
                 string msg = "Hi team! Dotty here :technologist::pager:\nThere's some new NuGet releases you should know about :arrow_heading_down::sparkles:";
                 foreach (var versionData in _newVersions)
@@ -98,6 +108,20 @@ namespace nugetSlackNotifications
                 }
                 msg += $"\nThanks and have a wonderful {DateTime.Now.DayOfWeek}.";
 
+                await SendSlackNotification(msg);
+
+            }
+            else
+            {
+                Log.Information($"Channel will not be alerted: # of new versions={_newVersions.Count}, webhook available={_webhook != null}, test mode={_testMode}");
+            }
+        }
+
+        [Trace]
+        static async Task SendSlackNotification(string msg)
+        {
+            if (_webhook != null)
+            {
                 Log.Information($"Alerting channel with message: {msg}");
 
                 StringContent jsonContent = new(
@@ -108,7 +132,7 @@ namespace nugetSlackNotifications
                     Encoding.UTF8,
                     "application/json");
 
-                var webhookResult = await _client.PostAsync(webhook, jsonContent);
+                var webhookResult = await _client.PostAsync(_webhook, jsonContent);
                 if (webhookResult.StatusCode == HttpStatusCode.OK)
                 {
                     Log.Information("Webhook invoked successfully");
@@ -120,7 +144,7 @@ namespace nugetSlackNotifications
             }
             else
             {
-                Log.Information($"Channel will not be alerted: # of new versions={_newVersions.Count}, webhook available={webhook != null}, test mode={_testMode}");
+                Log.Error($"SendSlackNotification called but _webhook is null.  msg={msg}");
             }
         }
     }
