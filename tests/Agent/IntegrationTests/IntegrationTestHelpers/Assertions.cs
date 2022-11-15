@@ -662,6 +662,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
                 if (expectedLogLine.Attributes != null)
                 {
+                    if (actualLogLine.Attributes == null && expectedLogLine.Attributes.Count != 0)
+                    {
+                        continue;
+                    }
+
                     if (expectedLogLine.Attributes.Count != actualLogLine.Attributes.Count)
                     {
                         continue;
