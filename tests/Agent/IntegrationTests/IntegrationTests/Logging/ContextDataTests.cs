@@ -22,10 +22,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         private bool _contextDataEnabled;
 
         private const string InfoMessage = "HelloWorld";
+
+        // There are several entries in this dictionary to allow for different methods of adding the values in the test adapter
+        // If you need more entries for your framework, add them
         private Dictionary<string, string> _expectedAttributes = new Dictionary<string, string>()
         {
             { "mycontext1", "foo" },
-            { "mycontext2", "bar" }
+            { "mycontext2", "bar" },
+            { "mycontext3", "test" },
+            { "mycontext4", "value" },
         };
 
 
@@ -72,6 +77,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         [Fact]
         public void Test()
         {
+            
+
             var expectedLogLines = new Assertions.ExpectedLogLine[]
             {
                 new Assertions.ExpectedLogLine
@@ -86,7 +93,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
 
             if (_contextDataEnabled)
             {
-                Assertions.LogLinesExist(expectedLogLines, logLines);
+                // different verions of log4net add varying amounts of default attributes, we ignore the counts becuase of this
+                Assertions.LogLinesExist(expectedLogLines, logLines, ignoreAttributeCount:true);
             }
             else
             {

@@ -561,7 +561,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public static void LogLineExists(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines) => LogLinesExist(new[] { expectedLogLine }, actualLogLines);
 
-        public static void LogLinesExist(IEnumerable<ExpectedLogLine> expectedLogLines, IEnumerable<LogLine> actualLogLines)
+        public static void LogLinesExist(IEnumerable<ExpectedLogLine> expectedLogLines, IEnumerable<LogLine> actualLogLines) => LogLinesExist(expectedLogLines, actualLogLines, false);
+
+        public static void LogLinesExist(IEnumerable<ExpectedLogLine> expectedLogLines, IEnumerable<LogLine> actualLogLines, bool ignoreAttributeCount)
         {
             actualLogLines = actualLogLines.ToList();
 
@@ -577,7 +579,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             {
                 foreach (var expectedLogLine in expectedLogLines)
                 {
-                    var matchedLogLine = TryFindLogLine(expectedLogLine, actualLogLines);
+                    var matchedLogLine = TryFindLogLine(expectedLogLine, actualLogLines, ignoreAttributeCount);
                     if (matchedLogLine == null)
                     {
                         builder.Append($"LogLine `{expectedLogLine}` was not found in the Log payload.");
@@ -619,7 +621,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        private static LogLine TryFindLogLine(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines)
+        private static LogLine TryFindLogLine(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines) => TryFindLogLine(expectedLogLine, actualLogLines, false);
+
+        private static LogLine TryFindLogLine(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines, bool ignoreAttributeCount)
         {
             foreach (var actualLogLine in actualLogLines)
             {
@@ -667,7 +671,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                         continue;
                     }
 
-                    if (expectedLogLine.Attributes.Count != actualLogLine.Attributes.Count)
+                    if (!ignoreAttributeCount && expectedLogLine.Attributes.Count != actualLogLine.Attributes.Count)
                     {
                         continue;
                     }
@@ -1093,6 +1097,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             public override string ToString()
             {
+                if (Attributes != null && Attributes.Count > 0)
+                {
+                    var sb = new StringBuilder();
+                    foreach (var attribute in Attributes)
+                    {
+                        sb.Append($"'{attribute.Key}:{attribute.Value ?? ""}',");
+                    }
+
+                    return $"{{ Level: {Level}, LogMessage: {LogMessage}, HasSpanId: {HasSpanId}, HasTraceId: {HasTraceId} }}, HasException: {HasException}, ErrorStack: {ErrorStack}, ErrorMessage: {ErrorMessage}, ErrorClass: {ErrorClass}, {{ AttributeCount: {Attributes.Count}, Attributes: {sb.ToString()} }}";
+                }
+
                 return $"{{ Level: {Level}, LogMessage: {LogMessage}, HasSpanId: {HasSpanId}, HasTraceId: {HasTraceId} }}, HasException: {HasException}, ErrorStack: {ErrorStack}, ErrorMessage: {ErrorMessage}, ErrorClass: {ErrorClass}";
             }
         }

@@ -19,7 +19,6 @@ namespace NewRelic.Providers.Wrapper.Logging
         private static Func<object, DateTime> _getTimestamp;
         private static Func<object, Exception> _getLogException;
         private static Func<object, IDictionary> _getProperties;
-        private static Func<object, IDictionary> _getPropertiesFunc;
 
         public bool IsTransactionRequired => false;
 
@@ -72,7 +71,7 @@ namespace NewRelic.Providers.Wrapper.Logging
                 return;
             }
 
-            var getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEventType, "Properties");
+            var getProperties = _getProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
             var propertiesDictionary = getProperties(logEvent);
 
             if (propertiesDictionary == null)
@@ -89,16 +88,16 @@ namespace NewRelic.Providers.Wrapper.Logging
 
         private Dictionary<string, object> GetContextData(object logEvent)
         {
-            _getPropertiesFunc ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEvent.GetType(), "Properties");
+            var logEventType = logEvent.GetType();
+            var getProperties = _getProperties ??= = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
+            var propertiesDictionary = getProperties(logEvent);
 
-            var log4netProperties = _getPropertiesFunc.Invoke(logEvent);
-
-            if (log4netProperties != null && log4netProperties.Count > 0)
+            if (propertiesDictionary != null && propertiesDictionary.Count > 0)
             {
                 var contextData = new Dictionary<string, object>();
-                foreach (var key in log4netProperties.Keys)
+                foreach (var key in propertiesDictionary.Keys)
                 {
-                    contextData.Add(key.ToString(), log4netProperties[key]);
+                    contextData.Add(key.ToString(), propertiesDictionary[key]);
                 }
 
                 return contextData;
