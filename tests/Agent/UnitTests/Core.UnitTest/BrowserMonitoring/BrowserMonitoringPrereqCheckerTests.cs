@@ -221,7 +221,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         {
             var name = TransactionName.ForWebTransaction("foo", "bar");
             var segments = Enumerable.Empty<Segment>();
-            var metadata = new TransactionMetadata().ConvertToImmutableMetadata();
+            var metadata = new TransactionMetadata("transactionGuid").ConvertToImmutableMetadata();
             var guid = Guid.NewGuid().ToString();
 
             _internalTransaction = Mock.Create<IInternalTransaction>();

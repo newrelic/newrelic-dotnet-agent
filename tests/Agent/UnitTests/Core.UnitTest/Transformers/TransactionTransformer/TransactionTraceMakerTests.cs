@@ -355,7 +355,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         private ImmutableTransaction BuildTestTransaction(DateTime? startTime = null, TimeSpan? duration = null, TimeSpan? responseTime = null, string uri = null, string guid = null)
         {
-            var transactionMetadata = new TransactionMetadata();
+            var transactionMetadata = new TransactionMetadata(guid);
             if (uri != null)
                 transactionMetadata.SetUri(uri);
 
