@@ -38,17 +38,21 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 Level = Level.Info
             };
 
-            // get keys as a list to allow assigning proprties directly
-            var keys = new List<string>(context.Keys);
-
-            // Direct properties method
             var logEvent = new LoggingEvent(logEventData);
-            logEvent.Properties[keys[0]] = context[keys[0]];
-            logEvent.Properties[keys[1]] = context[keys[1]];
+            if (context.Count > 0)
+            {
+                // get keys as a list to allow assigning proprties directly
+                var keys = new List<string>(context.Keys);
 
-            // other contexts context properties method
-            log4net.GlobalContext.Properties[keys[2]] = context[keys[2]];
-            log4net.ThreadContext.Properties[keys[3]] = context[keys[3]];
+                // Direct properties method
+                
+                logEvent.Properties[keys[0]] = context[keys[0]];
+                logEvent.Properties[keys[1]] = context[keys[1]];
+
+                // other contexts context properties method
+                log4net.GlobalContext.Properties[keys[2]] = context[keys[2]];
+                log4net.ThreadContext.Properties[keys[3]] = context[keys[3]];
+            }
 
             _log.Logger.Log(logEvent);
         }
