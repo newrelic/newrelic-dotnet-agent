@@ -21,6 +21,7 @@
     <PackageReference Include="log4net.Ext.Json" Version="1.2.15.14586" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="log4net" Version="2.0.15" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- log4net .NET core references -->

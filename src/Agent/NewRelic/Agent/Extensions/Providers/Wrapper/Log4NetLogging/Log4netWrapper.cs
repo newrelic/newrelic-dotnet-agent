@@ -18,7 +18,8 @@ namespace NewRelic.Providers.Wrapper.Logging
         private static Func<object, string> _getRenderedMessage;
         private static Func<object, DateTime> _getTimestamp;
         private static Func<object, Exception> _getLogException;
-        private static Func<object, IDictionary> _getProperties;
+        private static Func<object, IDictionary> _getGetProperties; // calls GetProperties method
+        private static Func<object, IDictionary> _getProperties; // getter for Properties property
 
         public bool IsTransactionRequired => false;
 
@@ -71,7 +72,7 @@ namespace NewRelic.Providers.Wrapper.Logging
                 return;
             }
 
-            var getProperties = _getProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
+            var getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEventType, "Properties");
             var propertiesDictionary = getProperties(logEvent);
 
             if (propertiesDictionary == null)
@@ -89,7 +90,7 @@ namespace NewRelic.Providers.Wrapper.Logging
         private Dictionary<string, object> GetContextData(object logEvent)
         {
             var logEventType = logEvent.GetType();
-            var getProperties = _getProperties ??= = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
+            var getProperties = _getGetProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
             var propertiesDictionary = getProperties(logEvent);
 
             if (propertiesDictionary != null && propertiesDictionary.Count > 0)

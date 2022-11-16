@@ -72,7 +72,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         [LibraryMethod]
         public static void CreateSingleLogMessage(string message, string level)
         {
-            CreateSingleLogMessage(level, message, null);
+            CreateSingleLogMessage(message, level, null);
         }
 
         [LibraryMethod]
