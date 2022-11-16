@@ -18,6 +18,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
         private static Func<object, DateTime> _getTimestamp;
         private static Func<object, string> _messageGetter;
         private static Func<object, Exception> _getLogException;
+        private static Func<object, IDictionary<object, object>> _getPropertiesDictionary;
 
         public bool IsTransactionRequired => false;
 
@@ -55,12 +56,9 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
 
             var getLogExceptionFunc = _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "Exception");
 
-            // Placeholder until context data (custom attribute) instrumentation is implemented
-            Func<object, Dictionary<string, object>> getContextDataFunc = (logEvent) => null;
-
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
-            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, getContextDataFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, GetContextData, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
         private void DecorateLogMessage(object logEvent, Type logEventType, IAgent agent)
@@ -84,6 +82,33 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             // this cannot be made a static since it is unique to each logEvent
             var messageSetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(logEvent, "Message");
             messageSetter(originalMessage + " " + formattedMetadata);
+        }
+
+        private Dictionary<string, object> GetContextData(object logEvent)
+        {
+            var contextData = new Dictionary<string, object>();
+
+            var getPropertiesDictionary = _getPropertiesDictionary ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary<object, object>>(logEvent.GetType(), "Properties");
+
+            var properties = getPropertiesDictionary(logEvent);
+            foreach (var property in properties)
+            {
+                if (property.Key is string keyName)
+                {
+                    contextData[keyName] = property.Value;
+                }
+                else if (property.Key is int keyNum)
+                {
+                    contextData[keyNum.ToString()] = property.Value;
+                }
+                else
+                {
+                    // This probably isn't a good idea, should just have an "ignore" fallback
+                    contextData[property.Key.ToString()] = property.Value;
+                }
+            }
+
+            return contextData;
         }
     }
 }
