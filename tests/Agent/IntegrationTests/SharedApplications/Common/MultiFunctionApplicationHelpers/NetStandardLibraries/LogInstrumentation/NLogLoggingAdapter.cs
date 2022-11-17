@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using NLog;
 using NLog.Layouts;
 using NLog.Targets;
@@ -94,6 +95,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             logConfig.LoggingRules.Add(new NLog.Config.LoggingRule("*", minimumLogLevel, logConsole));
             logFactory.Configuration = logConfig;
             return logFactory.GetLogger("NLogLoggingTest");
+        }
+
+        public void Info(string message, Dictionary<string, object> context)
+        {
+            throw new NotImplementedException();
         }
     }
 }
