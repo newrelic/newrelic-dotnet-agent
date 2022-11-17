@@ -27,6 +27,16 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log.Info(message);
         }
 
+        public void Info(string message, Dictionary<string, object> context)
+        {
+            LogEventInfo logEvent = new LogEventInfo(LogLevel.Info, null, message);
+            foreach (var kvp in context)
+            {
+                logEvent.Properties[kvp.Key] = kvp.Value;
+            }
+            _log.Log(logEvent);
+        }
+
         public void Warn(string message)
         {
             _log.Warn(message);
@@ -97,9 +107,5 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             return logFactory.GetLogger("NLogLoggingTest");
         }
 
-        public void Info(string message, Dictionary<string, object> context)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
