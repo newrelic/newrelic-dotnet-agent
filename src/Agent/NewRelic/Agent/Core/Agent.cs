@@ -442,7 +442,7 @@ namespace NewRelic.Agent.Core
 
                 var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
 
-                LogEventWireModel logEventWireModel = null;
+                LogEventWireModel logEventWireModel;
                 if (logException != null)
                 {
                     logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel,

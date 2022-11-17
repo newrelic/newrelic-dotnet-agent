@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using Serilog;
 using Serilog.Core;
 using Serilog.Formatting.Json;
@@ -98,6 +99,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
             _log = loggerConfig.CreateLogger();
 #endif
+        }
+
+        public void Info(string message, Dictionary<string, object> context)
+        {
+            throw new NotImplementedException();
         }
     }
 }

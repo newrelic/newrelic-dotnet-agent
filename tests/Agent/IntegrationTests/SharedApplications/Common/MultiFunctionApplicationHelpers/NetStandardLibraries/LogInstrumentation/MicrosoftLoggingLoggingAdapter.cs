@@ -5,6 +5,7 @@
 #if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
 
 using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Formatting.Json;
@@ -108,6 +109,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 }
             });
             logger = loggerFactory.CreateLogger<LoggingTester>();
+        }
+
+        public void Info(string message, Dictionary<string, object> context)
+        {
+            throw new NotImplementedException();
         }
     }
 }
