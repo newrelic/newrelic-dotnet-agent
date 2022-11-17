@@ -93,20 +93,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             var properties = getPropertiesDictionary(logEvent);
             foreach (var property in properties)
             {
-                if (property.Key is string keyName)
-                {
-                    contextData[keyName] = property.Value;
-                }
-                else if (property.Key is int keyNum)
-                {
-                    contextData[keyNum.ToString()] = property.Value;
-                }
-                else
-                {
-                    // This probably isn't a good idea, should just have an "ignore" fallback
-                    var insertKey = property.Key.ToString();
-                    contextData[insertKey] = property.Value;
-                }
+                contextData[property.Key.ToString()] = property.Value;
             }
 
             return contextData;
