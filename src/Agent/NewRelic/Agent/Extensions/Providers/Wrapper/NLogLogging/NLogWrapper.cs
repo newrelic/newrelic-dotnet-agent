@@ -104,7 +104,8 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
                 else
                 {
                     // This probably isn't a good idea, should just have an "ignore" fallback
-                    contextData[property.Key.ToString()] = property.Value;
+                    var insertKey = property.Key.ToString();
+                    contextData[insertKey] = property.Value;
                 }
             }
 

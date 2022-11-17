@@ -109,7 +109,16 @@ namespace NewRelic.Agent.Core.JsonConverters
                     foreach (var item in logEvent.ContextData)
                     {
                         jsonWriter.WritePropertyName(Context + "." + item.Key);
-                        jsonWriter.WriteValue(item.Value);
+                        string contextValueJson;
+                        try
+                        {
+                            contextValueJson = JsonConvert.SerializeObject(item.Value);
+                        }
+                        catch
+                        {
+                            contextValueJson = item.Value.GetType().ToString();
+                        }
+                        jsonWriter.WriteRawValue(contextValueJson);
                     }
 
                     jsonWriter.WriteEndObject();
