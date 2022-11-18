@@ -15,6 +15,11 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 {
     public class MicrosoftLoggingWrapper : IWrapper
     {
+        // Cached accessor functions
+        private static Func<object, dynamic> _getLoggersArray;
+        private static Func<object, object> _getLoggerProperty;
+        private static Func<object, MEL.IExternalScopeProvider> _getScopeProvider;
+
         public bool IsTransactionRequired => false;
 
         private const string WrapperName = "MicrosoftLogging";
@@ -35,10 +40,6 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
             return DecorateLogMessage(melLoggerInstance, agent);
         }
 
-        private static Func<object, dynamic> _getLoggersArray;
-        private static Func<object, object> _getLoggerProperty;
-        private static Func<object, MEL.IExternalScopeProvider> _getScopeProvider;
-
         private void RecordLogMessage(MethodCall methodCall, MEL.ILogger logger, IAgent agent)
         {
             // We need to manually check if each log message is enabled since our MEL instrumentation takes place before
@@ -52,7 +53,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
                 Func<object, string> getLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
                 Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
                 Func<object, Exception> getLogExceptionFunc = mc => ((MethodCall)mc).MethodArguments[3] as Exception; // using "as" since we want a null if missing
-                Func<object, Dictionary<string, object>> getContextDataFunc = (logEvent) => GetContextData(logger);
+                Func<object, Dictionary<string, object>> getContextDataFunc = nothx => GetContextData(logger);
 
                 var xapi = agent.GetExperimentalApi();
                 xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, getContextDataFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
@@ -61,10 +62,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
         private static Dictionary<string, object> GetContextData(MEL.ILogger logger)
         {
-            // Scope information is obtained by getting access to a ScopeProvider from the logger instead of the log event itself
-        
             // We are trying to access this property:
-            // ((Microsoft.Extensions.Logging.Console.ConsoleLogger)((Microsoft.Extensions.Logging.Logger)logger).Loggers[0].Logger).ScopeProvider
             // logger.Loggers[0].Logger.ScopeProvider
 
             // Get the array of Loggers (logger.Loggers[])
