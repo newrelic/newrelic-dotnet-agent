@@ -118,7 +118,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
             var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
 
             // get the handle so we can end the scope properly
-            var handle = logger.BeginScope(new Dictionary<string, object>()
+            var handle = logger.BeginScope(new Dictionary<string, string>()
             {
                 // using an underscore here to ensure we support serilog
                 { "NR_LINKING", formattedMetadata }
