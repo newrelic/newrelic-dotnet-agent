@@ -2772,19 +2772,19 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ContextDataInclude;
         }
 
-        [TestCase(null, null, ExpectedResult = new string[] {})]
+        [TestCase(null, null, ExpectedResult = new string[] { "SpanId", "TraceId", "ParentId" })]
         [TestCase("aaa,bbb", "ccc,ddd", ExpectedResult = new[] { "ccc", "ddd" })]
         [TestCase("aaa,bbb", null, ExpectedResult = new[] { "aaa", "bbb" })]
-        [TestCase(null, "ccc,ddd", ExpectedResult = new[] { "ccc","ddd" })]
+        [TestCase(null, "ccc,ddd", ExpectedResult = new[] { "ccc", "ddd" })]
 
         public IEnumerable<string> ApplicationLogging_ContextDataExclude_IsOverriddenByEnvironmentVariable(string local, string environment)
         {
-            if(local != null)
+            if (local != null)
             {
                 _localConfig.applicationLogging.forwarding.contextData.exclude = local;
             }
 
-            if(environment != null)
+            if (environment != null)
             {
                 Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_EXCLUDE")).Returns(environment);
             }
@@ -3211,7 +3211,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_CODE_LEVEL_METRICS_ENABLED")).Returns(envConfigValue);
 
-            if(localConfigValue.HasValue)
+            if (localConfigValue.HasValue)
             {
                 _localConfig.codeLevelMetrics.enabled = localConfigValue.Value;
             }
