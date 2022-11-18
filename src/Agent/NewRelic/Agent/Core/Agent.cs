@@ -432,14 +432,14 @@ namespace NewRelic.Agent.Core
             {
                 var logMessage = getLogMessage(logEvent);
                 var logException = getLogException(logEvent);
-                var logContextData = _configurationService.Configuration.ContextDataEnabled ? getContextData(logEvent) : null;
-
+                
                 // exit quickly if the message and exception are missing
                 if (string.IsNullOrWhiteSpace(logMessage) && logException is null)
                 {
                     return;
                 }
 
+                var logContextData = _configurationService.Configuration.ContextDataEnabled ? getContextData(logEvent) : null;
                 var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
 
                 LogEventWireModel logEventWireModel;

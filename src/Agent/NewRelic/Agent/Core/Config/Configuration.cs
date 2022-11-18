@@ -5156,7 +5156,7 @@ namespace NewRelic.Agent.Core.Config
         {
             this.enabledField = false;
             this.includeField = "";
-            this.excludeField = "";
+            this.excludeField = "SpanId,TraceId,ParentId";
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -5188,7 +5188,7 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute("")]
+        [System.ComponentModel.DefaultValueAttribute("SpanId,TraceId,ParentId")]
         public string exclude
         {
             get

@@ -1,12 +1,10 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using MongoDB.Bson;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -77,8 +75,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         [Fact]
         public void Test()
         {
-            
-
             var expectedLogLines = new Assertions.ExpectedLogLine[]
             {
                 new Assertions.ExpectedLogLine
@@ -242,4 +238,243 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
 
     #endregion
 
+    #region NLog
+
+    #region ContextData Enabled
+
+    [NetFrameworkTest]
+    public class NLogContextDataEnabledFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public NLogContextDataEnabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class NLogContextDataEnabledFW471Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public NLogContextDataEnabledFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class NLogContextDataEnabledFW462Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public NLogContextDataEnabledFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogContextDataEnabledNetCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public NLogContextDataEnabledNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogContextDataEnabledNetCore60Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public NLogContextDataEnabledNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogContextDataEnabledNetCore50Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public NLogContextDataEnabledNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogContextDataEnabledNetCore31Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public NLogContextDataEnabledNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    #endregion
+
+    #region ContextData Disabled
+
+    [NetFrameworkTest]
+    public class NLogContextDataDisabledFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public NLogContextDataDisabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class NLogContextDataDisabledFW471Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public NLogContextDataDisabledFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class NLogContextDataDisabledFW462Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public NLogContextDataDisabledFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogContextDataDisabledNetCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public NLogContextDataDisabledNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogContextDataDisabledNetCore60Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public NLogContextDataDisabledNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogContextDataDisabledNetCore50Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public NLogContextDataDisabledNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogContextDataDisabledNetCore31Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public NLogContextDataDisabledNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    #endregion
+
+    #endregion
+
+    #region MEL
+
+    #region ContextData Enabled
+
+    [NetFrameworkTest]
+    public class MELContextDataEnabledFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MELContextDataEnabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MELContextDataEnabledNetCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MELContextDataEnabledNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MELContextDataEnabledNetCore60Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MELContextDataEnabledNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MELContextDataEnabledNetCore50Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public MELContextDataEnabledNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MELContextDataEnabledNetCore31Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MELContextDataEnabledNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    #endregion
+
+    #region ContextData Disabled
+
+    [NetFrameworkTest]
+    public class MELContextDataDisabledFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MELContextDataDisabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MELContextDataDisabledNetCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MELContextDataDisabledNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MELContextDataDisabledNetCore60Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MELContextDataDisabledNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MELContextDataDisabledNetCore50Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public MELContextDataDisabledNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MELContextDataDisabledNetCore31Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MELContextDataDisabledNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    #endregion
+
+    #endregion
 }
