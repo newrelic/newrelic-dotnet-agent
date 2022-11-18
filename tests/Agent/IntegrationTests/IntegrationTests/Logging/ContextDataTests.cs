@@ -442,7 +442,16 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SerilogContextDataEnabledNetCore31Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public SerilogContextDataEnabledNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, LoggingFramework.Log4net)
+            : base(fixture, output, true, LoggingFramework.Serilog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class SerilogWebContextDataEnabledNetCore60Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public SerilogWebContextDataEnabledNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LoggingFramework.SerilogWeb)
         {
         }
     }
@@ -509,7 +518,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class SerilogContextDataDisabledNetCore31Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public SerilogContextDataDisabledNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, false, LoggingFramework.Log4net)
+            : base(fixture, output, false, LoggingFramework.Serilog)
         {
         }
     }
