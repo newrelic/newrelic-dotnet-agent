@@ -30,6 +30,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             logger.LogInformation(message);
         }
 
+        public void Info(string message, Dictionary<string, object> context)
+        {
+            using (logger.BeginScope(context))
+            {
+                logger.LogInformation(message);
+            }
+        }
+
         public void Warn(string message)
         {
             logger.LogWarning(message);
@@ -65,7 +73,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             CreateMelLogger(LogLevel.Information);
         }
 
-        
+
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
             // NOTE: This is a serilog logger we are setting up
@@ -111,10 +119,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             logger = loggerFactory.CreateLogger<LoggingTester>();
         }
 
-        public void Info(string message, Dictionary<string, object> context)
-        {
-            throw new NotImplementedException();
-        }
+
     }
 }
 
