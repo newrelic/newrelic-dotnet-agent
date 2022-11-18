@@ -116,7 +116,16 @@ namespace NewRelic.Agent.Core.JsonConverters
                         }
                         catch
                         {
-                            contextValueJson = item.Value.GetType().ToString();
+                            // If JsonConvert can't serialize it, maybe it has a ToString()
+                            try
+                            {
+                                contextValueJson = item.Value.ToString();
+                            }
+                            catch
+                            {
+                                // If that didn't work, just use the type name
+                                contextValueJson = item.Value.GetType().ToString();
+                            }
                         }
                         jsonWriter.WriteRawValue(contextValueJson);
                     }

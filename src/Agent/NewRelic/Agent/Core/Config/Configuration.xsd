@@ -1637,7 +1637,7 @@
                                                         </xs:documentation>
                                                     </xs:annotation>
                                                 </xs:attribute>
-                                                <xs:attribute name="exclude" type="xs:string" default="">
+                                                <xs:attribute name="exclude" type="xs:string" default="SpanId,TraceId,ParentId">
                                                     <xs:annotation>
                                                         <xs:documentation>
                                                             A comma-separated list of case-sensitive strings that define the context attributes that should NOT be added to the log record. "exclude" wins over "include".
