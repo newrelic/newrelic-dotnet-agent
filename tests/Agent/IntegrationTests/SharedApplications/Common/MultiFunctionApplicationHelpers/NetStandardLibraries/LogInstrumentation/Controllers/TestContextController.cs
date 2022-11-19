@@ -44,9 +44,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         private Dictionary<string, object> GetDictionaryFromString(string data)
         {
             var dict = new Dictionary<string, object>();
-            foreach (var item in data.Split(','))
+            if (data != null)
             {
-                dict[item.Split('=')[0]] = item.Split('=')[1];
+                foreach (var item in data.Split(','))
+                {
+                    dict[item.Split('=')[0]] = item.Split('=')[1];
+                }
             }
             return dict;
         }

@@ -129,10 +129,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            foreach (var kvp in _contextData)
+            if (_contextData != null)
             {
-                var property = propertyFactory.CreateProperty(kvp.Key, kvp.Value);
-                logEvent.AddPropertyIfAbsent(property);
+                foreach (var kvp in _contextData)
+                {
+                    var property = propertyFactory.CreateProperty(kvp.Key, kvp.Value);
+                    logEvent.AddPropertyIfAbsent(property);
+                }
             }
         }
     }
