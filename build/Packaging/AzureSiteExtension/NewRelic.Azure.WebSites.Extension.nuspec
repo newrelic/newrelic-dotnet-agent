@@ -3,14 +3,14 @@
   <metadata>
     <id>NewRelic.Azure.WebSites.Extension</id>
     <version>REPLACE_WITH_VERSION</version>
-    <title>New Relic</title>
+    <title>New Relic .NET Agent</title>
     <authors>New Relic</authors>
     <license type="expression">Apache-2.0</license>
     <projectUrl>https://docs.newrelic.com/docs/apm/agents/net-agent/azure-installation/install-net-agent-azure-web-apps</projectUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>This extension adds the New Relic .NET Agent to your Azure WebSite.</description>
     <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
-    <copyright>New Relic, Inc., 2020</copyright>
+    <copyright>New Relic, Inc., 2023</copyright>
     <tags>AzureSiteExtension</tags>
     <packageTypes>
       <packageType name="AzureSiteExtension" />
