@@ -10,7 +10,7 @@
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>This extension adds the New Relic .NET Agent to your Azure WebSite.</description>
     <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
-    <copyright>New Relic, Inc., 2023</copyright>
+    <copyright>New Relic, Inc., 2022</copyright>
     <tags>AzureSiteExtension</tags>
     <packageTypes>
       <packageType name="AzureSiteExtension" />
