@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 ### Fixes
 
+## [1.5.4] - 2022-011-29
+### Changed
+* Updates the title of this NuGet package from "New Relic" to "New Relic .NET Agent" to align with the newly released Java Agent NuGet package.  The ID of this package, "NewRelic.Azure.WebSites.Extension", is not changing at this time.
+
 ## [1.5.3] - 2022-04-13
 ### Fixes
 * Fixes Issue [#1005](https://github.com/newrelic/newrelic-dotnet-agent/issues/1005): site extension did not work when the the web app was set to run from a package, and broke after deployment of customer applications in some cases due to the agent being deployed to the site directory. [#1021](https://github.com/newrelic/newrelic-dotnet-agent/pull/1021)
@@ -16,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 * Fixes Issue [#399](https://github.com/newrelic/newrelic-dotnet-agent/issues/399): site extension did not clean up after installation ([#478](https://github.com/newrelic/newrelic-dotnet-agent/pull/478))
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.3...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.4...HEAD
+[1.5.4]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.3...AzureSiteExtension_v1.5.4
 [1.5.3]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.2...AzureSiteExtension_v1.5.3
 [1.5.2]: https://github.com/newrelic/newrelic-dotnet-agent/compare/AzureSiteExtension_v1.5.1...AzureSiteExtension_v1.5.2
