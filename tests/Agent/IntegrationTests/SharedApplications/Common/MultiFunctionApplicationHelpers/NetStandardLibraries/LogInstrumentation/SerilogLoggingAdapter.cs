@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using Serilog;
 using Serilog.Core;
+using Serilog.Events;
 using Serilog.Formatting.Json;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
@@ -25,6 +26,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void Info(string message)
         {
             _log.Information(message);
+        }
+
+        public void Info(string message, Dictionary<string, object> context)
+        {
+            var loggerConfig = new LoggerConfiguration();
+
+            loggerConfig
+                .MinimumLevel.Information()
+                .Enrich.With(new ContextDataEnricher(context))
+                .WriteTo.Console();
+
+            var logger = loggerConfig.CreateLogger();
+
+            logger.Information(message);
         }
 
         public void Warn(string message)
@@ -101,9 +116,27 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 #endif
         }
 
-        public void Info(string message, Dictionary<string, object> context)
+    }
+
+    public class ContextDataEnricher : ILogEventEnricher
+    {
+        private readonly Dictionary<string, object> _contextData;
+
+        public ContextDataEnricher(Dictionary<string, object> contextData)
         {
-            throw new NotImplementedException();
+            _contextData = contextData;
+        }
+
+        public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
+        {
+            if (_contextData != null)
+            {
+                foreach (var kvp in _contextData)
+                {
+                    var property = propertyFactory.CreateProperty(kvp.Key, kvp.Value);
+                    logEvent.AddPropertyIfAbsent(property);
+                }
+            }
         }
     }
 }

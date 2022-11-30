@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -35,6 +36,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         {
             var result = _client.GetStringAsync(_uriBase + "test?logLevel=INFO&message=" + message).Result;
         }
+        public void Info(string message, Dictionary<string, object> context)
+        {
+            var contextString = string.Join(", ", context.Select(c => c.Key + "=" + c.Value));
+
+            var result = _client.GetStringAsync(_uriBase + "testContext?message=" + message + "&contextData=" + contextString).Result;
+        }
+
 
         public void Warn(string message)
         {
@@ -123,10 +131,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             throw new NotImplementedException();
         }
 
-        public void Info(string message, Dictionary<string, object> context)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public class Startup
