@@ -411,6 +411,8 @@ namespace NewRelic.Agent.Core
 
         public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException, string spanId, string traceId)
         {
+            _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
+
             var normalizedLevel = string.Empty;
             if (_configurationService.Configuration.LogMetricsCollectorEnabled ||
                 _configurationService.Configuration.LogEventCollectorEnabled)
@@ -427,7 +429,7 @@ namespace NewRelic.Agent.Core
             // IOC container defaults to singleton so this will access the same aggregator
             if (_configurationService.Configuration.LogEventCollectorEnabled)
             {
-                _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
+                _agentHealthReporter.ReportLogForwardingEnabledWithFramework(frameworkName);
 
                 var logMessage = getLogMessage(logEvent);
                 var logException = getLogException(logEvent);
