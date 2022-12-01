@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [10.1.0] - 2022-09-12
 
-**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice,  please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
 
 ### New Features
 * Support of setting up labels via appsettings.json and app/web.config file. [#1204](https://github.com/newrelic/newrelic-dotnet-agent/pull/1204)
@@ -56,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [10.0.0] - 2022-07-19
 
-**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice,  please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
 
 ### New Features
 * Adds support for forwarding application logs to New Relic for .NET Framework 4.6.2 and newer applications using Microsoft.Extensions.Logging. [#1172](https://github.com/newrelic/newrelic-dotnet-agent/pull/1172)
@@ -77,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [9.9.0] - 2022-06-08
 
-**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice,  please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
 
 ### New Features
 * Adds support for logging metrics, forwarding application logs, and enriching application logs written to disk or standard out for NLog versions v5 and v4. [#1087](https://github.com/newrelic/newrelic-dotnet-agent/pull/1087)
@@ -94,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [9.8.1] - 2022-05-19
 
-**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice,  please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
 
 ### Fixes
 * Fixes an [issue with log forwarding](https://github.com/newrelic/newrelic-dotnet-agent/issues/1088) where an agent could momentarily forward logs even if the feature had been disabled at an account level. ([#1097](https://github.com/newrelic/newrelic-dotnet-agent/pull/1097))
@@ -103,7 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [9.8.0] - 2022-05-05
 
-**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice,  please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
 
 ### APM logs in context
 Automatic application log forwarding is now enabled by default. This version of the agent will automatically send enriched application logs to New Relic. To learn more about about this feature see [here](https://docs.newrelic.com/docs/apm/new-relic-apm/getting-started/get-started-logs-context/), and additional configuration options are available [here](https://docs.newrelic.com/docs/logs/logs-context/net-configure-logs-context-all). To learn about how to toggle log ingestion on or off by account see [here](https://docs.newrelic.com/docs/logs/logs-context/disable-automatic-logging).
@@ -125,7 +125,7 @@ The informational blog can be found [here](https://devblogs.microsoft.com/dotnet
 
 ## [9.7.1] - 2022-04-13
 
-**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice,  please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
 
 ### Fixes
 * Adds missing instrumentation for application logging feature when using the MSI installer ([#1055](https://github.com/newrelic/newrelic-dotnet-agent/pull/1055))
@@ -135,7 +135,7 @@ The informational blog can be found [here](https://devblogs.microsoft.com/dotnet
 
 **Notice:** For the new application logging features, if you install using the MSI, please update to version 9.7.1 or later.
 
-**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice,  please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
 
 ### New Features
 * Adds support for logging metrics which shows the rate of log message by severity in the Logs chart in the APM Summary view for Log4net, Serilog, and Microsoft.Extensions.Logging. This is enabled by default in this release. ([#1034](https://github.com/newrelic/newrelic-dotnet-agent/pull/1034))
