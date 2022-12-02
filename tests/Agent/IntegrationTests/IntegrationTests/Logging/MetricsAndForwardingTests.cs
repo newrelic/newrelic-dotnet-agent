@@ -154,6 +154,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             SupportabilityForwardingConfigurationMetricExists();
             SupportabilityMetricsConfigurationMetricExists();
             SupportabilityLoggingFrameworkMetricExists();
+            SupportabilityLoggingForwardingEnabledWithFrameworkMetricExists();
             CountsAndValuesAreAsExpected();
             LoggingWorksWithTraceAttributeOutsideTransaction();
             LoggingWorksWithDifferentTraceAttributesInsideTransaction();
@@ -220,6 +221,21 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             var expectedFrameworkName = LogUtils.GetFrameworkName(_loggingFramework);
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             Assert.Contains(actualMetrics, x => x.MetricSpec.Name == $"Supportability/Logging/DotNET/{expectedFrameworkName}/enabled");
+        }
+
+        private void SupportabilityLoggingForwardingEnabledWithFrameworkMetricExists()
+        {
+            var expectedFrameworkName = LogUtils.GetFrameworkName(_loggingFramework);
+            var actualMetrics = _fixture.AgentLog.GetMetrics();
+
+            if (_forwardingEnabled)
+            {
+                Assert.Contains(actualMetrics, x => x.MetricSpec.Name == $"Supportability/Logging/Forwarding/DotNET/{expectedFrameworkName}/enabled");
+            }
+            else
+            {
+                Assert.DoesNotContain(actualMetrics, x => x.MetricSpec.Name == $"Supportability/Logging/Forwarding/DotNET/{expectedFrameworkName}/enabled");
+            }
         }
 
         private void CountsAndValuesAreAsExpected()

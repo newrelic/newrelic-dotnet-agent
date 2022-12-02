@@ -429,6 +429,8 @@ namespace NewRelic.Agent.Core
             // IOC container defaults to singleton so this will access the same aggregator
             if (_configurationService.Configuration.LogEventCollectorEnabled)
             {
+                _agentHealthReporter.ReportLogForwardingEnabledWithFramework(frameworkName);
+
                 var logMessage = getLogMessage(logEvent);
                 var logException = getLogException(logEvent);
 
