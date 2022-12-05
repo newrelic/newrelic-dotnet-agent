@@ -42,7 +42,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.InitializePublicAgent({nameof(publicAgent)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.InitializePublicAgent({nameof(publicAgent)})");
             }
             catch
             {
@@ -86,7 +86,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.RecordMetric({nameof(name)},{nameof(value)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.RecordMetric({nameof(name)},{nameof(value)})");
             }
             catch
             {
@@ -114,7 +114,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.RecordResponseTimeMetric({nameof(name)},{nameof(millis)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.RecordResponseTimeMetric({nameof(name)},{nameof(millis)})");
             }
             catch
             {
@@ -138,7 +138,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.IncrementCounter({nameof(name)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.IncrementCounter({nameof(name)})");
             }
             catch
             {
@@ -189,7 +189,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(exception)},{nameof(parameters)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.NoticeError({nameof(exception)},{nameof(parameters)})");
             }
             catch
             {
@@ -236,7 +236,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(exception)},{nameof(parameters)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.NoticeError({nameof(exception)},{nameof(parameters)})");
             }
             catch
             {
@@ -273,7 +273,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(exception)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.NoticeError({nameof(exception)})");
             }
             catch
             {
@@ -321,7 +321,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)})");
             }
             catch
             {
@@ -369,7 +369,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)})");
             }
             catch
             {
@@ -420,7 +420,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)},{nameof(isExpected)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)},{nameof(isExpected)})");
             }
             catch
             {
@@ -471,7 +471,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)},{nameof(isExpected)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.NoticeError({nameof(message)},{nameof(parameters)},{nameof(isExpected)})");
             }
             catch
             {
@@ -504,7 +504,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.SetTransactionName({nameof(category)},{nameof(name)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.SetTransactionName({nameof(category)},{nameof(name)})");
             }
             catch
             {
@@ -521,7 +521,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.SetUri({nameof(uri)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.SetUri({nameof(uri)})");
             }
             catch
             {
@@ -543,7 +543,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine("NewRelic.IgnoreTransaction()");
+                System.Diagnostics.Debug.WriteLine("NewRelic.IgnoreTransaction()");
             }
             catch
             {
@@ -565,7 +565,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine("NewRelic.IgnoreApdex()");
+                System.Diagnostics.Debug.WriteLine("NewRelic.IgnoreApdex()");
             }
             catch
             {
@@ -597,7 +597,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine("NewRelic.GetBrowserTimingHeader()");
+                System.Diagnostics.Debug.WriteLine("NewRelic.GetBrowserTimingHeader()");
             }
             catch
             {
@@ -625,7 +625,7 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static string GetBrowserTimingHeader(string nonce)
         {
-            System.Diagnostics.Trace.WriteLine("NewRelic.GetBrowserTimingHeader(nonce)");
+            System.Diagnostics.Debug.WriteLine("NewRelic.GetBrowserTimingHeader(nonce)");
             return "<!-- New Relic Header -->";
         }
 
@@ -646,7 +646,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.DisableBrowserMonitoring({nameof(overrideManual)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.DisableBrowserMonitoring({nameof(overrideManual)})");
             }
             catch
             {
@@ -673,7 +673,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.SetUserParameters({nameof(userName)},{nameof(accountName)},{nameof(productName)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.SetUserParameters({nameof(userName)},{nameof(accountName)},{nameof(productName)})");
             }
             catch
             {
@@ -699,7 +699,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.RecordCustomEvent({nameof(eventType)},{nameof(attributes)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.RecordCustomEvent({nameof(eventType)},{nameof(attributes)})");
             }
             catch
             {
@@ -726,7 +726,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine("NewRelic.StartAgent()");
+                System.Diagnostics.Debug.WriteLine("NewRelic.StartAgent()");
             }
             catch
             {
@@ -753,7 +753,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine($"NewRelic.SetApplicationName({nameof(applicationName)},{nameof(applicationName2)},{nameof(applicationName3)})");
+                System.Diagnostics.Debug.WriteLine($"NewRelic.SetApplicationName({nameof(applicationName)},{nameof(applicationName2)},{nameof(applicationName3)})");
             }
             catch
             {
@@ -784,7 +784,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine("NewRelic.GetRequestMetadata()");
+                System.Diagnostics.Debug.WriteLine("NewRelic.GetRequestMetadata()");
             }
             catch
             {
@@ -819,7 +819,7 @@ namespace NewRelic.Api.Agent
         {
             try
             {
-                System.Diagnostics.Trace.WriteLine("NewRelic.GetResponseMetadata()");
+                System.Diagnostics.Debug.WriteLine("NewRelic.GetResponseMetadata()");
             }
             catch
             {
