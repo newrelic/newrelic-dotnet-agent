@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * When finest logs are enabled, the transaction guid will be applied to attribute limit log messages, if present.
 
 ### Fixes
-*
+* Resolves potential crash when using Infinite Tracing. [#1319](https://github.com/newrelic/newrelic-dotnet-agent/issues/1319)
 
 ## [10.3.0] - 2022-10-26
 
