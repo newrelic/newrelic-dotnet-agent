@@ -37,6 +37,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         private const string TimeStampKey = "timestamp";
 
+        private Dictionary<string, object> _contextData = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+
         [SetUp]
         public void SetUp()
         {
@@ -77,7 +79,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 .DoInstead<LogEventWireModelCollection>(events => sentEvents = events);
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData)
             };
 
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
@@ -102,9 +104,9 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid"),
-                new LogEventWireModel(2, "message1", "info", "spanid", "traceid"),
-                new LogEventWireModel(3, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData),
+                new LogEventWireModel(2, "message1", "info", "spanid", "traceid", _contextData),
+                new LogEventWireModel(3, "message1", "info", "spanid", "traceid", _contextData)
             };
 
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
@@ -123,7 +125,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Act
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData)
             };
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
 
@@ -138,7 +140,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData)
             };
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
 
@@ -183,7 +185,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData)
             };
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
             _harvestAction();
@@ -210,7 +212,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData)
             };
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
             _harvestAction();
@@ -237,8 +239,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid"),
-                new LogEventWireModel(2, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData),
+                new LogEventWireModel(2, "message1", "info", "spanid", "traceid", _contextData)
             };
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
             _harvestAction();
@@ -265,8 +267,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid"),
-                new LogEventWireModel(2, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData),
+                new LogEventWireModel(2, "message1", "info", "spanid", "traceid", _contextData)
             };
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
             _harvestAction();
@@ -293,7 +295,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData)
             };
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
             _harvestAction();
@@ -323,7 +325,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Act
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData)
             };
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
 
@@ -337,9 +339,9 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid"),
-                new LogEventWireModel(2, "message1", "info", "spanid", "traceid"),
-                new LogEventWireModel(3, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData),
+                new LogEventWireModel(2, "message1", "info", "spanid", "traceid", _contextData),
+                new LogEventWireModel(3, "message1", "info", "spanid", "traceid", _contextData)
             };
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
 
@@ -359,7 +361,7 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 var logEventsInner = new List<LogEventWireModel>
                 {
-                    new LogEventWireModel(1, "message1", "info", "spanid", "traceid")
+                    new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData)
                 };
                 _logEventAggregator.CollectWithPriority(logEventsInner, 1.0F);
             }
@@ -384,7 +386,7 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 var logEventsInner = new List<LogEventWireModel>
                 {
-                    new LogEventWireModel(1, "message1", "info", "spanid", "traceid")
+                    new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData)
                 };
                 _logEventAggregator.CollectWithPriority(logEventsInner, 1.0F);
             }
@@ -407,7 +409,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var logEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "message1", "info", "spanid", "traceid")
+                new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData)
             };
             _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
 

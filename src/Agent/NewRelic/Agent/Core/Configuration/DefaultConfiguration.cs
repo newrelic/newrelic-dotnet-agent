@@ -1881,6 +1881,35 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public bool ContextDataEnabled
+        {
+            get
+            {
+                return LogEventCollectorEnabled &&
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.contextData.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_ENABLED");
+            }
+        }
+
+        public IEnumerable<string> ContextDataInclude
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.contextData.include,
+                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_INCLUDE")
+                    .Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            }
+        }
+
+        public IEnumerable<string> ContextDataExclude
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.contextData.exclude,
+                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_EXCLUDE")
+                    .Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            }
+        }
+
         public TimeSpan LogEventsHarvestCycle
         {
             get

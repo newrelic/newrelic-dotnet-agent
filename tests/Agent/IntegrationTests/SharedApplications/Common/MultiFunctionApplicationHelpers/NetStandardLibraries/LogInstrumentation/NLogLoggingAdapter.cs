@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using NLog;
 using NLog.Layouts;
 using NLog.Targets;
@@ -24,6 +25,16 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void Info(string message)
         {
             _log.Info(message);
+        }
+
+        public void Info(string message, Dictionary<string, object> context)
+        {
+            LogEventInfo logEvent = new LogEventInfo(LogLevel.Info, null, message);
+            foreach (var kvp in context)
+            {
+                logEvent.Properties[kvp.Key] = kvp.Value;
+            }
+            _log.Log(logEvent);
         }
 
         public void Warn(string message)
@@ -95,5 +106,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             logFactory.Configuration = logConfig;
             return logFactory.GetLogger("NLogLoggingTest");
         }
+
     }
 }

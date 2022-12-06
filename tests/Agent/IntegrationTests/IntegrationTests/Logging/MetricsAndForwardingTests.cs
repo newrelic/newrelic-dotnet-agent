@@ -1,7 +1,6 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,7 +40,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         private const string InTransactionInfoMessage = "InTransactionInfoLogMessage";
         private const string InTransactionErrorMessage = "InTransactionErrorLogMessage";
-        
+
         private const string AsyncInTransactionDebugMessage = "AsyncInTransactionDebugLogMessage";
         private const string AsyncInTransactionInfoMessage = "AsyncInTransactionInfoLogMessage";
         private const string AsyncInTransactionWarningMessage = "AsyncInTransactionWarningLogMessage";
@@ -166,7 +165,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             AsyncNoAwaitLoggingWorksOutsideTransaction();
             AsyncNoAwaitWithDelayLoggingWorksInsideTransaction();
         }
-        
+
         private void LogLinesPerLevelMetricsExist()
         {
             var loggingMetrics = new List<Assertions.ExpectedMetric>

@@ -5,6 +5,7 @@
 #if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
 
 using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Formatting.Json;
@@ -27,6 +28,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void Info(string message)
         {
             logger.LogInformation(message);
+        }
+
+        public void Info(string message, Dictionary<string, object> context)
+        {
+            using (logger.BeginScope(context))
+            {
+                logger.LogInformation(message);
+            }
         }
 
         public void Warn(string message)
@@ -64,7 +73,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             CreateMelLogger(LogLevel.Information);
         }
 
-        
+
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
             // NOTE: This is a serilog logger we are setting up
@@ -109,6 +118,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             });
             logger = loggerFactory.CreateLogger<LoggingTester>();
         }
+
+
     }
 }
 

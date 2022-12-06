@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using log4net;
 using log4net.Appender;
@@ -27,6 +28,33 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void Info(string message)
         {
             _log.Info(message);
+        }
+
+        public void Info(string message, Dictionary<string, object> context)
+        {
+            var logEventData = new LoggingEventData()
+            {
+                Message = message,
+                Level = Level.Info
+            };
+
+            var logEvent = new LoggingEvent(logEventData);
+            if (context.Count > 0)
+            {
+                // get keys as a list to allow assigning proprties directly
+                var keys = new List<string>(context.Keys);
+
+                // Direct properties method
+                
+                logEvent.Properties[keys[0]] = context[keys[0]];
+                logEvent.Properties[keys[1]] = context[keys[1]];
+
+                // other contexts context properties method
+                log4net.GlobalContext.Properties[keys[2]] = context[keys[2]];
+                log4net.ThreadContext.Properties[keys[3]] = context[keys[3]];
+            }
+
+            _log.Logger.Log(logEvent);
         }
 
         public void Warn(string message)

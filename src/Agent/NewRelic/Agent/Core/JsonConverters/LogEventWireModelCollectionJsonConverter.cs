@@ -24,6 +24,7 @@ namespace NewRelic.Agent.Core.JsonConverters
         private const string ErrorStack = "error.stack";
         private const string ErrorMessage = "error.message";
         private const string ErrorClass = "error.class";
+        private const string Context = "context";
 
         public override LogEventWireModelCollection ReadJson(JsonReader reader, Type objectType, LogEventWireModelCollection existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
@@ -98,6 +99,38 @@ namespace NewRelic.Agent.Core.JsonConverters
                 {
                     jsonWriter.WritePropertyName(TraceId);
                     jsonWriter.WriteValue(logEvent.TraceId);
+                }
+
+                if (logEvent.ContextData?.Count > 0)
+                {
+                    jsonWriter.WritePropertyName(Attributes);
+                    jsonWriter.WriteStartObject();
+
+                    foreach (var item in logEvent.ContextData)
+                    {
+                        jsonWriter.WritePropertyName(Context + "." + item.Key);
+                        string contextValueJson;
+                        try
+                        {
+                            contextValueJson = JsonConvert.SerializeObject(item.Value);
+                        }
+                        catch
+                        {
+                            // If JsonConvert can't serialize it, maybe it has a ToString()
+                            try
+                            {
+                                contextValueJson = item.Value.ToString();
+                            }
+                            catch
+                            {
+                                // If that didn't work, just use the type name
+                                contextValueJson = item.Value.GetType().ToString();
+                            }
+                        }
+                        jsonWriter.WriteRawValue(contextValueJson);
+                    }
+
+                    jsonWriter.WriteEndObject();
                 }
 
                 jsonWriter.WriteEndObject();

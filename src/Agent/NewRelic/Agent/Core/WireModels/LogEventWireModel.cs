@@ -48,9 +48,15 @@ namespace NewRelic.Agent.Core.WireModels
         public string ErrorMessage { get; }
 
         /// <summary>
-        /// If present, exception class name the exception.
+        /// If present, the exception class name of the exception.
         /// </summary>
         public string ErrorClass { get; }
+
+        /// <summary>
+        /// A dictionary of log message context key/value pairs
+        /// </summary>
+        public Dictionary<string, object> ContextData { get; }
+
 
         private float _priority;
         public float Priority
@@ -68,44 +74,48 @@ namespace NewRelic.Agent.Core.WireModels
             }
         }
 
-        public LogEventWireModel(long unixTimestampMS, string message, string level, string spanId, string traceId)
+        public LogEventWireModel(long unixTimestampMS, string message, string level, string spanId, string traceId, Dictionary<string, object> contextData)
         {
             TimeStamp = unixTimestampMS;
             Message = message.TruncateUnicodeStringByBytes(MaxMessageLengthInBytes);
             Level = level;
             SpanId = spanId;
             TraceId = traceId;
+            ContextData = contextData;
         }
 
-        public LogEventWireModel(long unixTimestampMS, string message, string level, string spanId, string traceId, float priority)
+        public LogEventWireModel(long unixTimestampMS, string message, string level, string spanId, string traceId, Dictionary<string, object> contextData, float priority)
         {
             TimeStamp = unixTimestampMS;
             Message = message.TruncateUnicodeStringByBytes(MaxMessageLengthInBytes);
             Level = level;
             SpanId = spanId;
             TraceId = traceId;
+            ContextData = contextData;
             Priority = priority;
         }
 
-        public LogEventWireModel(long unixTimestampMS, string message, string level, ICollection<string> errorStack, string errorMessage, string errorClass, string spanId, string traceId)
+        public LogEventWireModel(long unixTimestampMS, string message, string level, ICollection<string> errorStack, string errorMessage, string errorClass, string spanId, string traceId, Dictionary<string, object> contextData)
         {
             TimeStamp = unixTimestampMS;
             Message = message.TruncateUnicodeStringByBytes(MaxMessageLengthInBytes);
             Level = level;
             SpanId = spanId;
             TraceId = traceId;
+            ContextData = contextData;
             ErrorStack = string.Join(" \n", errorStack);
             ErrorMessage = errorMessage;
             ErrorClass = errorClass;
         }
 
-        public LogEventWireModel(long unixTimestampMS, string message, string level, ICollection<string> errorStack, string errorMessage, string errorClass, string spanId, string traceId, float priority)
+        public LogEventWireModel(long unixTimestampMS, string message, string level, ICollection<string> errorStack, string errorMessage, string errorClass, string spanId, string traceId, Dictionary<string, object> contextData, float priority)
         {
             TimeStamp = unixTimestampMS;
             Message = message.TruncateUnicodeStringByBytes(MaxMessageLengthInBytes);
             Level = level;
             SpanId = spanId;
             TraceId = traceId;
+            ContextData = contextData;
             Priority = priority;
             ErrorStack = string.Join(" \n", errorStack);
             ErrorMessage = errorMessage;

@@ -74,5 +74,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
         [JsonProperty("error.class", NullValueHandling = NullValueHandling.Ignore)]
         public string ErrorClass { get; set; }
+
+        [JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string, string> Attributes { get; set; }
     }
 }
