@@ -5,7 +5,6 @@
     <version>TO_BE_REPLACED</version>
     <title>New Relic .NET Agent</title>
     <authors>New Relic</authors>
-    <owners>New Relic</owners>
     <license type="expression">Apache-2.0</license>
     <projectUrl>https://github.com/newrelic/newrelic-dotnet-agent</projectUrl>
     <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>

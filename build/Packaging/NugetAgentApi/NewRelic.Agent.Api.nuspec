@@ -5,7 +5,6 @@
     <version>REPLACE_WITH_VERSION</version>
     <title>NewRelic.Agent.Api</title>
     <authors>New Relic</authors>
-    <owners>New Relic</owners>
     <license type="expression">Apache-2.0</license>
     <projectUrl>https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/guide-using-net-agent-api</projectUrl>
     <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>

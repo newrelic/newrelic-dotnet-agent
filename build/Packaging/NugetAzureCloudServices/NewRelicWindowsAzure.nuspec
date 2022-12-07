@@ -5,7 +5,6 @@
     <version>REPLACE_WITH_VERSION</version>
     <title>New Relic x64 for Windows Azure</title>
     <authors>New Relic</authors>
-    <owners>New Relic</owners>
     <license type="expression">Apache-2.0</license>
     <projectUrl>https://github.com/newrelic/nuget-azure-cloud-services</projectUrl>
     <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>

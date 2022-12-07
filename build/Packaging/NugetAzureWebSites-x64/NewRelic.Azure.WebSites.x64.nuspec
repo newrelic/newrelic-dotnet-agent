@@ -5,7 +5,6 @@
     <version>REPLACE_WITH_VERSION</version>
     <title>New Relic for Windows Azure Web Sites (x64)</title>
     <authors>New Relic</authors>
-    <owners>New Relic</owners>
     <license type="expression">Apache-2.0</license>
     <projectUrl>https://docs.newrelic.com/docs/apm/agents/net-agent/azure-installation/install-net-agent-azure-web-apps</projectUrl>
     <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
