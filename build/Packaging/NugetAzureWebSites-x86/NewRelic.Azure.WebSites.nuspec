@@ -18,5 +18,6 @@
     <file src="content\**" target="content" />
     <file src="lib\**" target="lib" />
     <file src="tools\**" target="tools" />
+    <file src="..\..\icon.png" target="images\" />
   </files>
 </package>

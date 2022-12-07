@@ -7,6 +7,7 @@
     <authors>New Relic</authors>
     <projectUrl>https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/monitoring-aws-lambda-serverless-monitoring/</projectUrl>
     <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
+    <icon>images\icon.png</icon>
     <license type="expression">Apache-2.0</license>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <tags>NewRelic Amazon AWS Lambda OpenTracing</tags>
@@ -21,5 +22,6 @@
     <file src="lib/**/*.*" target="" />
     <file src="../../../licenses/NewRelic.OpenTracing.AmazonLambda.Tracer/LICENSE.txt" target="" />
     <file src="../../../licenses/NewRelic.OpenTracing.AmazonLambda.Tracer/THIRD_PARTY_NOTICES.txt" target="" />
+    <file src="../../icon.png" target="images/" />
   </files>
 </package>
