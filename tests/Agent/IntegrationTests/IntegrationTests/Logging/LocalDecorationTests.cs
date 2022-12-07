@@ -1,6 +1,8 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
 using MultiFunctionApplicationHelpers;
@@ -24,6 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
         private const string _primaryApplicationName = "Local Decoration Test App Name";
         private const string _secondaryApplicationName = "Some other testing application name";
         private const string _compositeApplicationName = _primaryApplicationName + ", " + _secondaryApplicationName;
+        private const string _testMessage = "DecorateMe";
 
         public LocalDecorationTestsBase(TFixture fixture, ITestOutputHelper output, bool decorationEnabled, LayoutType layoutType, LoggingFramework loggingFramework) : base(fixture)
         {
@@ -34,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
 
             _fixture.AddCommand($"LoggingTester SetFramework {loggingFramework}");
             _fixture.AddCommand($"LoggingTester Configure{layoutType}LayoutAppenderForDecoration");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction DecorateMe DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {_testMessage} DEBUG");
 
             _fixture.RemoteApplication.AppName = _compositeApplicationName;
 
@@ -57,12 +60,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
         [Fact]
         public void LogIsDecorated()
         {
+            var testOutput = _fixture.RemoteApplication.CapturedOutput.StandardOutput;
+            // Make sure the original message is there
+            var commandResults = Regex.Split(testOutput, System.Environment.NewLine).Where(l => !l.Contains("EXECUTING"));
+            Assert.Contains(_testMessage, string.Join(System.Environment.NewLine, commandResults));
+
             // Sample decorated data we are looking for:
             // "NR-LINKING|MjczMDcwfEFQTXxBUFBMSUNBVElPTnwxODQyMg|blah.hsd1.ca.comcast.net|45f120972d61834b96fb890d2a8f97e7|840d9a82e8bc18a8|myApplicationName|"
             var regex = new Regex(@"NR-LINKING\|([a-zA-Z0-9]*)\|([a-zA-Z0-9._-]*)\|([a-zA-Z0-9]*)\|([a-zA-Z0-9]*)\|(.+?)\|");
             if (_decorationEnabled)
             {
-                var match = regex.Match(_fixture.RemoteApplication.CapturedOutput.StandardOutput);
+                // Make sure the added metadata is there
+                var match = regex.Match(testOutput);
                 Assert.True(match.Success);
                 Assert.NotEmpty(match.Groups);
                 var entityGuid = match.Groups[1].Value;
@@ -76,6 +85,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
                 Assert.NotNull(traceId);
                 Assert.NotNull(spanId);
                 Assert.Equal(_primaryApplicationName, entityName);
+
             }
             else
             {
@@ -110,6 +120,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     public class Log4netJsonLayoutDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public Log4netJsonLayoutDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.Log4net)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class Log4netJsonLayoutDecorationEnabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public Log4netJsonLayoutDecorationEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, true, LayoutType.Json, LoggingFramework.Log4net)
         {
         }
@@ -165,6 +184,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     }
 
     [NetCoreTest]
+    public class Log4netJsonLayoutDecorationDisabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public Log4netJsonLayoutDecorationDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Json, LoggingFramework.Log4net)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class Log4netJsonLayoutDecorationDisabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public Log4netJsonLayoutDecorationDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -214,6 +242,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     }
 
     [NetCoreTest]
+    public class Log4netPatternLayoutDecorationEnabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public Log4netPatternLayoutDecorationEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.Log4net)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class Log4netPatternLayoutDecorationEnabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public Log4netPatternLayoutDecorationEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -257,6 +294,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     public class Log4netPatternLayoutDecorationDisabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public Log4netPatternLayoutDecorationDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.Log4net)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class Log4netPatternLayoutDecorationDisabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public Log4netPatternLayoutDecorationDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.Log4net)
         {
         }
@@ -315,6 +361,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     }
 
     [NetCoreTest]
+    public class SerilogJsonLayoutDecorationEnabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public SerilogJsonLayoutDecorationEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.Serilog)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class SerilogJsonLayoutDecorationEnabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public SerilogJsonLayoutDecorationEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -357,6 +412,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     public class SerilogJsonLayoutDecorationDisabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public SerilogJsonLayoutDecorationDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Json, LoggingFramework.Serilog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class SerilogJsonLayoutDecorationDisabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public SerilogJsonLayoutDecorationDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, false, LayoutType.Json, LoggingFramework.Serilog)
         {
         }
@@ -406,6 +470,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     public class SerilogPatternLayoutDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public SerilogPatternLayoutDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.Serilog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class SerilogPatternLayoutDecorationEnabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public SerilogPatternLayoutDecorationEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.Serilog)
         {
         }
@@ -462,6 +535,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     }
 
     [NetCoreTest]
+    public class SerilogPatternLayoutDecorationDisabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public SerilogPatternLayoutDecorationDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.Serilog)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class SerilogPatternLayoutDecorationDisabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public SerilogPatternLayoutDecorationDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -492,6 +574,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     public class MicrosoftLoggingJsonLayoutDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MicrosoftLoggingJsonLayoutDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftLoggingJsonLayoutDecorationEnabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MicrosoftLoggingJsonLayoutDecorationEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, true, LayoutType.Json, LoggingFramework.MicrosoftLogging)
         {
         }
@@ -538,6 +629,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     }
 
     [NetCoreTest]
+    public class MicrosoftLoggingJsonLayoutDecorationDisabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MicrosoftLoggingJsonLayoutDecorationDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Json, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class MicrosoftLoggingJsonLayoutDecorationDisabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public MicrosoftLoggingJsonLayoutDecorationDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -578,6 +678,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     }
 
     [NetCoreTest]
+    public class MicrosoftLoggingPatternLayoutDecorationEnabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MicrosoftLoggingPatternLayoutDecorationEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class MicrosoftLoggingPatternLayoutDecorationEnabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public MicrosoftLoggingPatternLayoutDecorationEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -612,6 +721,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     public class MicrosoftLoggingPatternLayoutDecorationDisabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MicrosoftLoggingPatternLayoutDecorationDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftLoggingPatternLayoutDecorationDisabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MicrosoftLoggingPatternLayoutDecorationDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.MicrosoftLogging)
         {
         }
@@ -680,6 +798,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     }
 
     [NetCoreTest]
+    public class NLogJsonLayoutDecorationEnabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public NLogJsonLayoutDecorationEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class NLogJsonLayoutDecorationEnabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public NLogJsonLayoutDecorationEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -723,6 +850,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     public class NLogJsonLayoutDecorationDisabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NLogJsonLayoutDecorationDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogJsonLayoutDecorationDisabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public NLogJsonLayoutDecorationDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, false, LayoutType.Json, LoggingFramework.NLog)
         {
         }
@@ -778,6 +914,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     }
 
     [NetCoreTest]
+    public class NLogPatternLayoutDecorationEnabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public NLogPatternLayoutDecorationEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class NLogPatternLayoutDecorationEnabledTestsNetCore50Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public NLogPatternLayoutDecorationEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -821,6 +966,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     public class NLogPatternLayoutDecorationDisabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NLogPatternLayoutDecorationDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogPatternLayoutDecorationDisabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public NLogPatternLayoutDecorationDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, false, LayoutType.Pattern, LoggingFramework.NLog)
         {
         }

@@ -53,7 +53,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 // (On a development machine, the Extensions directory of the New Relic Home may contain
                 // custom instrumentation, too, which can get copied over and cause confusing test results;
                 // but there's no easy solution to this one, so ... don't do that.)
-                if (subdirectory.Name == "Logs")
+                if (subdirectory.Name.ToLower() == "logs")
                     continue;
                 var destinationSubdirectoryPath = Path.Combine(destinationDirectoryPath, subdirectory.Name);
                 CopyDirectory(subdirectory.FullName, destinationSubdirectoryPath, searchPattern);

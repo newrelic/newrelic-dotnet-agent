@@ -39,6 +39,7 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
                     _fixture.ThrowException();
 
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
             _fixture.Initialize();

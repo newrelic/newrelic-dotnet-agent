@@ -108,6 +108,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleMultiFunctionApplicationCore", "SharedApplications\ConsoleMultiFunctionApplicationCore\ConsoleMultiFunctionApplicationCore.csproj", "{4213F281-732C-4447-B347-1C46E3609986}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MultiFunctionApplicationHelpers", "SharedApplications\Common\MultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj", "{882747A5-5B57-4AD9-B209-D1F03A657DB9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B187563A-795B-4C70-A525-6470B88AD341} = {B187563A-795B-4C70-A525-6470B88AD341}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCoreMvcCoreFrameworkApplication", "Applications\AspNetCoreMvcCoreFrameworkApplication\AspNetCoreMvcCoreFrameworkApplication.csproj", "{63EC546C-650D-4CF4-94C4-A350D1D491FD}"
 EndProject
@@ -130,6 +133,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore5BasicWebApiApplication", "Applications\AspNetCore5BasicWebApiApplication\AspNetCore5BasicWebApiApplication.csproj", "{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore6BasicWebApiApplication", "Applications\AspNetCore6BasicWebApiApplication\AspNetCore6BasicWebApiApplication.csproj", "{66138A9F-0B28-4CB3-9DF9-D22C19641043}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore7BasicWebApiApplication", "Applications\AspNetCore7BasicWebApiApplication\AspNetCore7BasicWebApiApplication.csproj", "{2788F29F-C87A-46DF-AE7D-9091F3099FEE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Api.Agent", "..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj", "{B187563A-795B-4C70-A525-6470B88AD341}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -349,6 +355,14 @@ Global
 		{66138A9F-0B28-4CB3-9DF9-D22C19641043}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66138A9F-0B28-4CB3-9DF9-D22C19641043}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66138A9F-0B28-4CB3-9DF9-D22C19641043}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2788F29F-C87A-46DF-AE7D-9091F3099FEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2788F29F-C87A-46DF-AE7D-9091F3099FEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2788F29F-C87A-46DF-AE7D-9091F3099FEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2788F29F-C87A-46DF-AE7D-9091F3099FEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B187563A-795B-4C70-A525-6470B88AD341}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B187563A-795B-4C70-A525-6470B88AD341}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B187563A-795B-4C70-A525-6470B88AD341}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B187563A-795B-4C70-A525-6470B88AD341}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -402,6 +416,7 @@ Global
 		{3C182E17-0085-4B30-8AA9-B229ABED7A39} = {CB5B7DCD-F949-4435-BC39-C34F4F3D2009}
 		{D11C4843-B0B9-4FB0-8D2F-DBE8604298D9} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{66138A9F-0B28-4CB3-9DF9-D22C19641043} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
+		{2788F29F-C87A-46DF-AE7D-9091F3099FEE} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3830ABDF-4AEA-4D91-83A2-13F091D1DF5F}

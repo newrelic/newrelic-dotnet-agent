@@ -4,6 +4,8 @@
 #if NET6_0
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -18,7 +20,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 {
     class SerilogLoggingWebAdapter : ILoggingAdapter
     {
-        private HttpClient _client;
+        private static readonly HttpClient _client = new HttpClient();
         private string _uriBase;
 
         public SerilogLoggingWebAdapter()
@@ -34,15 +36,33 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         {
             var result = _client.GetStringAsync(_uriBase + "test?logLevel=INFO&message=" + message).Result;
         }
+        public void Info(string message, Dictionary<string, object> context)
+        {
+            var contextString = string.Join(", ", context.Select(c => c.Key + "=" + c.Value));
+
+            var result = _client.GetStringAsync(_uriBase + "testContext?message=" + message + "&contextData=" + contextString).Result;
+        }
+
 
         public void Warn(string message)
         {
             var result = _client.GetStringAsync(_uriBase + "test?logLevel=WARN&message=" + message).Result;
         }
 
-        public void Error(string message)
+        public void Error(Exception exception)
         {
-            var result = _client.GetStringAsync(_uriBase + "test?logLevel=ERROR&message=" + message).Result;
+            // In this case we are not passing the exact Exception to the test app, just the message.
+            // The test app will create an Exception for us.
+            // As long as it has the same message and class with a stacktrace of any kind, its good for test.
+            var result = _client.GetStringAsync(_uriBase + "test?logLevel=ERROR&message=" + exception.Message).Result;
+        }
+
+        public void ErrorNoMessage(Exception exception)
+        {
+            // In this case we are not passing the exact Exception to the test app, just the message.
+            // The test app will create an Exception for us.
+            // As long as it has the same message and class with a stacktrace of any kind, its good for test.
+            var result = _client.GetStringAsync(_uriBase + "test?logLevel=NOMESSAGE&message=" + string.Empty).Result;
         }
 
         public void Fatal(string message)
@@ -50,19 +70,37 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             var result = _client.GetStringAsync(_uriBase + "test?logLevel=FATAL&message=" + message).Result;
         }
 
+        public void NoMessage()
+        {
+            var result = _client.GetStringAsync(_uriBase + "test?logLevel=FATAL&message=EMPTY").Result;
+        }
+
         public void Configure()
         {
-            _client = new HttpClient();
 
-            var loggerConfig = new LoggerConfiguration();
-
-            loggerConfig
+            var loggerConfig = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Fatal)
                 .MinimumLevel.Debug()
                 .WriteTo.Console();
 
-            Log.Logger = loggerConfig.CreateLogger();
+            RunApplication(loggerConfig);
+        }
+
+        public void ConfigureWithInfoLevelEnabled()
+        {
+            var loggerConfig = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Fatal)
+                .MinimumLevel.Information()
+                .WriteTo.Console();
+
+            RunApplication(loggerConfig);
+        }
+
+        private void RunApplication(LoggerConfiguration loggerConfig)
+        { 
+            var logger = loggerConfig.CreateLogger();
 
             var port = RandomPortGenerator.NextPort();
             _uriBase = "http://localhost:" + port + "/";
@@ -74,7 +112,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             IHostBuilder CreateHostBuilder(string uriBase)
             {
                 return Host.CreateDefaultBuilder()
-                .UseSerilog()
+                .UseSerilog(logger)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                 webBuilder.UseStartup<Startup>();
@@ -92,6 +130,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         {
             throw new NotImplementedException();
         }
+
     }
 
     public class Startup
@@ -106,7 +145,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllers();
         }
 

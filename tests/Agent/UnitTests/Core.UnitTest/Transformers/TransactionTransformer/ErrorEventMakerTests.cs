@@ -269,7 +269,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var segments = Enumerable.Empty<Segment>();
 
-            var placeholderMetadataBuilder = new TransactionMetadata();
+            var placeholderMetadataBuilder = new TransactionMetadata(guid);
             var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 
             var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));

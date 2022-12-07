@@ -199,7 +199,15 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private static void Restart()
         {
-            EventBus<RestartAgentEvent>.Publish(new RestartAgentEvent());
+            if(!Agent.IsAgentShuttingDown)
+            {
+                EventBus<RestartAgentEvent>.Publish(new RestartAgentEvent());
+            }
+            else
+            {
+                Log.Info("Agent was requested to restart, ignoring because shutdown is already in progress.");
+            }
+            
         }
 
         private void LogErrorResponse(Exception exception, string method, DateTime startTime, HttpStatusCode? httpStatusCode)

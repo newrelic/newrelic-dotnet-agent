@@ -5,13 +5,14 @@
 using System;
 using System.Data.SqlClient;
 using System.Net;
+using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 {
-    public class MsSqlBasicMvcFixture : RemoteApplicationFixture, IMsSqlClientFixture
+    public class MsSqlBasicMvcFixture : RemoteApplicationFixture
     {
 
         private const string CreatePersonTableMsSql = "CREATE TABLE {0} (FirstName varchar(20) NOT NULL, LastName varchar(20) NOT NULL, Email varchar(50) NOT NULL)";
@@ -24,55 +25,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         public MsSqlBasicMvcFixture() : base(new RemoteWebApplication("BasicMvcApplication", ApplicationType.Unbounded))
         {
-            TableName = GenerateTableName();
-            ProcedureName = GenerateProcedureName();
+            TableName = Utilities.GenerateTableName();
+            ProcedureName = Utilities.GenerateProcedureName();
 
             CreateTable();
             //The procedure is created in the controller action
-        }
-
-        public void GetMsSql()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/MsSql/MsSql?tableName={TableName}";
-
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
-        }
-
-        public void GetMsSqlAsync()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/MsSql/MsSqlAsync?tableName={TableName}";
-
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
-        }
-
-        public void GetMsSql_WithParameterizedQuery(bool paramsWithAtSign)
-        {
-            var address = $"http://{DestinationServerName}:{Port}/MsSql/MsSql_WithParameterizedQuery?tableName={TableName}&paramsWithAtSign={paramsWithAtSign}";
-
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
-        }
-
-        public void GetMsSqlAsync_WithParameterizedQuery(bool paramsWithAtSign)
-        {
-            var address = $"http://{DestinationServerName}:{Port}/MsSql/MsSqlAsync_WithParameterizedQuery?tableName={TableName}&paramsWithAtSign={paramsWithAtSign}";
-
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
         }
 
         public void GetEnterpriseLibraryMsSql()
@@ -85,30 +42,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
                 Assert.NotNull(responseBody);
             }
         }
-
-        public void GetMsSqlParameterizedStoredProcedure(bool paramsWithAtSign)
-        {
-            var address = $"http://{DestinationServerName}:{Port}/MsSql/MsSqlParameterizedStoredProcedure?procedureName={ProcedureName}&paramsWithAtSign={paramsWithAtSign}";
-
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
-        }
-
-        private static string GenerateTableName()
-        {
-            var tableId = Guid.NewGuid().ToString("N").ToLower();
-            return $"person{tableId}";
-        }
-
-        private static string GenerateProcedureName()
-        {
-            var procId = Guid.NewGuid().ToString("N").ToLower();
-            return $"pTestProc{procId}";
-        }
-
 
         private void CreateTable()
         {

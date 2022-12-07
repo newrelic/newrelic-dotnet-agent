@@ -4,13 +4,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] changes
+## [Unreleased]
 
 ### New Features
+* Support for .NET 7 has been verified with the GA version of the .NET 7 SDK. Please note that if you use [dynamically-created assemblies](https://learn.microsoft.com/en-us/dotnet/framework/reflection-and-codedom/emitting-dynamic-methods-and-assemblies), there is a [bug in .NET 7](https://github.com/dotnet/runtime/issues/76016) that prevents them from being instrumented at this time.
+* Application log fowarding can now be configured to capture and forward context data (also referred to as "custom attributes") to New Relic.  Details (including how to enable and configure this new feature) can be found [here](https://docs.newrelic.com/docs/logs/logs-context/net-configure-logs-context-all/).
+* The [NewRelic.Agent NuGet package](https://www.nuget.org/packages/NewRelic.Agent) now includes the Linux Arm64 profiler. This can be found in the `newrelic/linux-arm64` directory. Configure your `CORECLR_PROFILER_PATH` environment variable to use this version of the profiler when deploying to linux ARM64 targets.
+* When finest logs are enabled, the transaction guid will be applied to attribute limit log messages, if present.
+
+### Fixes
+* Resolves potential crash when using Infinite Tracing. [#1319](https://github.com/newrelic/newrelic-dotnet-agent/issues/1319)
+
+## [10.3.0] - 2022-10-26
+
+### New Features
+* Custom Event Limit Increase
+  * This version increases the default limit of custom events from 10,000 events per minute to 30,000 events per minute. In the scenario that custom events were being limited, this change will allow more custom events to be sent to New Relic. There is also a new configurable maximum limit of 100,000 events per minute. To change the limits, see the documentation for [max_samples_stored](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#custom_events). To learn more about the change and how to determine if custom events are being dropped, see our Explorers Hub [post](https://discuss.newrelic.com/t/send-more-custom-events-with-the-latest-apm-agents/190497). [#1284](https://github.com/newrelic/newrelic-dotnet-agent/pull/1284)
 
 ### Fixes
 
+## [10.2.0] - 2022-10-03
+
+### New Features
+* Add new environment variables to control SendDataOnExit functionality: `NEW_RELIC_SEND_DATA_ON_EXIT`, `NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS`. [#1250](https://github.com/newrelic/newrelic-dotnet-agent/pull/1250)
+* Enables integration with CodeStream Code-Level Metrics by default. This allows you to see Golden Signals in your IDE through New Relic CodeStream without altering agent configuration. [Learn more here](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/net-codestream-integration). For any issues or direct feedback, please reach out to support@codestream.com. [#1255](https://github.com/newrelic/newrelic-dotnet-agent/pull/1255)
+
+### Fixes
+* Resolves an issue where the .NET Core agent could crash during application shutdown when SendDataOnExit functionality was triggered. [#1254](https://github.com/newrelic/newrelic-dotnet-agent/pull/1254)
+* Resolves an issue where the .NET agent incorrectly injects the browser agent script inside Html pages. [#1247](https://github.com/newrelic/newrelic-dotnet-agent/pull/1247)
+* Resolves an issue where some instrumentation was missing for Microsoft.Data.SqlClient in .NET Framework. [#1248](https://github.com/newrelic/newrelic-dotnet-agent/pull/1248)
+* Resolves an issue with local log decoration for NLog where the original log message was not included in the output. [#1249](https://github.com/newrelic/newrelic-dotnet-agent/pull/1249)
+* Resolves an issue where the .NET agent failed to serialize custom attributes containing some non-primtive types. [#1256](https://github.com/newrelic/newrelic-dotnet-agent/pull/1256)
+* Includes missing profiler environment variables in debug logs during application startup. [#1255](https://github.com/newrelic/newrelic-dotnet-agent/pull/1255)
+* Resolves an issue where the .NET agent still sends up disabled event types during reconnecting period. [#1251](https://github.com/newrelic/newrelic-dotnet-agent/pull/1251)
+
+## [10.1.0] - 2022-09-12
+
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
+
+### New Features
+* Support of setting up labels via appsettings.json and app/web.config file. [#1204](https://github.com/newrelic/newrelic-dotnet-agent/pull/1204)
+* Additional DEBUG-level logging of all environment variables.
+* Forwarded application logs now capture exception details including, error message, error stack, and error class. [#1228](https://github.com/newrelic/newrelic-dotnet-agent/pull/1228)
+  * Log events with no message will now be accepted if an exception is present in the log event.
+  * The error stack is created using the stack of the inner exception, up to 5 levels deep, just like existing Agent error reporting.
+* Adds a new `SetName()` method to the Agent API for spans which allows customization of segment/span/metric names. [#1238](https://github.com/newrelic/newrelic-dotnet-agent/pull/1238)
+
+### Fixes
+* Resolves an issue where log forwarding could drop logs in async scenarios. [#1174](https://github.com/newrelic/newrelic-dotnet-agent/pull/1201)
+* Resolves an issue where more logs were forwarded than expected from Microsoft.Extensions.Logging. [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237)
+* Resolves an agent configuration bug where values set in the `MAX_EVENT_SAMPLES_STORED` and `MAX_TRANSACTION_SAMPLES_STORED` environment variables, which configure the maximum samples stored per one-minute harvest interval, were not being properly converted to apply to the five-second harvest interval for those data types. [#1239](https://github.com/newrelic/newrelic-dotnet-agent/pull/1239)
+
 ## [10.0.0] - 2022-07-19
+
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
 
 ### New Features
 * Adds support for forwarding application logs to New Relic for .NET Framework 4.6.2 and newer applications using Microsoft.Extensions.Logging. [#1172](https://github.com/newrelic/newrelic-dotnet-agent/pull/1172)
@@ -31,6 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [9.9.0] - 2022-06-08
 
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
+
 ### New Features
 * Adds support for logging metrics, forwarding application logs, and enriching application logs written to disk or standard out for NLog versions v5 and v4. [#1087](https://github.com/newrelic/newrelic-dotnet-agent/pull/1087)
 * Adds integration with CodeStream, introducing Code-Level Metrics! Golden Signals visible in your IDE through New Relic CodeStream. [Learn more here](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/net-codestream-integration). For any issues or direct feedback, please reach out to support@codestream.com
@@ -46,12 +95,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [9.8.1] - 2022-05-19
 
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
+
 ### Fixes
 * Fixes an [issue with log forwarding](https://github.com/newrelic/newrelic-dotnet-agent/issues/1088) where an agent could momentarily forward logs even if the feature had been disabled at an account level. ([#1097](https://github.com/newrelic/newrelic-dotnet-agent/pull/1097))
 * Adds an internal list of deprecated instrumentation xml files which will cause the profiler to ignore deprecated instrumentation. This feature avoids an issue where orphaned deprecated log forwarding instrumentation could conflict with newer instrumentation. ([#1097](https://github.com/newrelic/newrelic-dotnet-agent/pull/1097))
 * Serilog instrumentation is now performed by injecting a custom sink in to the logging chain. ([#1084](https://github.com/newrelic/newrelic-dotnet-agent/pull/1084))
 
 ## [9.8.0] - 2022-05-05
+
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
 
 ### APM logs in context
 Automatic application log forwarding is now enabled by default. This version of the agent will automatically send enriched application logs to New Relic. To learn more about about this feature see [here](https://docs.newrelic.com/docs/apm/new-relic-apm/getting-started/get-started-logs-context/), and additional configuration options are available [here](https://docs.newrelic.com/docs/logs/logs-context/net-configure-logs-context-all). To learn about how to toggle log ingestion on or off by account see [here](https://docs.newrelic.com/docs/logs/logs-context/disable-automatic-logging).
@@ -72,6 +125,9 @@ Microsoft has officially EOL .NET Framework versions 4.5.1, 4.5.2, and 4.6.1 on 
 The informational blog can be found [here](https://devblogs.microsoft.com/dotnet/net-framework-4-5-2-4-6-4-6-1-will-reach-end-of-support-on-april-26-2022).  The official product lifecycle start and end dates can be found [here](https://docs.microsoft.com/en-us/lifecycle/products/microsoft-net-framework).  The dotnet agent support of these framework versions is will continue as is with the released versions.  In a future major release, we will target .NET framework 4.6.2 onwards.
 
 ## [9.7.1] - 2022-04-13
+
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
+
 ### Fixes
 * Adds missing instrumentation for application logging feature when using the MSI installer ([#1055](https://github.com/newrelic/newrelic-dotnet-agent/pull/1055))
 * Fixes [issue on Linux](https://github.com/newrelic/newrelic-dotnet-agent/issues/763) when specifying a non-default profiler log directory with non-existent intermediate directories. ([#1051](https://github.com/newrelic/newrelic-dotnet-agent/pull/1051))
@@ -79,6 +135,8 @@ The informational blog can be found [here](https://devblogs.microsoft.com/dotnet
 ## [9.7.0] - 2022-04-04
 
 **Notice:** For the new application logging features, if you install using the MSI, please update to version 9.7.1 or later.
+
+**Notice:** If using Microsoft.Extensions.Logging as your logging framework of choice, please use .NET agent version 10.1.0 or newer.  We encourage you to adopt the newer version due to bug [#1230](https://github.com/newrelic/newrelic-dotnet-agent/issues/1230), which we fixed in [#1237](https://github.com/newrelic/newrelic-dotnet-agent/pull/1237), that was resolved in .NET agent version 10.1.0.
 
 ### New Features
 * Adds support for logging metrics which shows the rate of log message by severity in the Logs chart in the APM Summary view for Log4net, Serilog, and Microsoft.Extensions.Logging. This is enabled by default in this release. ([#1034](https://github.com/newrelic/newrelic-dotnet-agent/pull/1034))
@@ -469,7 +527,10 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.0.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.3.0...HEAD
+[10.3.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.2.0...v10.3.0
+[10.2.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.1.0...v10.2.0
+[10.1.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.0.0...v10.1.0
 [10.0.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.9.0...v10.0.0
 [9.9.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.8.1...v9.9.0
 [9.8.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v9.8.0...v9.8.1

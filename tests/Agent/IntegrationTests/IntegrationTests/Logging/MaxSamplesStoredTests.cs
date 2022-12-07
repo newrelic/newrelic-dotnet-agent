@@ -110,6 +110,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
     }
 
     [NetCoreTest]
+    public class Log4netMaxSamplesStoredTestsNetCore60Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public Log4netMaxSamplesStoredTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.Log4net)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class Log4netMaxSamplesStoredTestsNetCore50Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public Log4netMaxSamplesStoredTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -135,6 +144,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
     public class MicrosoftLoggingMaxSamplesStoredTestsNetCoreLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MicrosoftLoggingMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.MicrosoftLogging)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class MicrosoftLoggingMaxSamplesStoredTestsNetCore60Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MicrosoftLoggingMaxSamplesStoredTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
@@ -208,6 +226,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
     }
 
     [NetCoreTest]
+    public class SerilogMaxSamplesStoredTestsNetCore60Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public SerilogMaxSamplesStoredTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.Serilog)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class SerilogMaxSamplesStoredTestsNetCore50Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public SerilogMaxSamplesStoredTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -260,6 +287,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
     public class NLogMaxSamplesStoredTestsNetCoreLatestTests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public NLogMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogMaxSamplesStoredTestsNetCore60Tests : MaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public NLogMaxSamplesStoredTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
         }

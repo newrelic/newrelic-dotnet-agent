@@ -60,7 +60,7 @@
 
   <PropertyGroup>
     <WindowsSdkPathBin>$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSDKLocation('Windows', '10.0'))bin</WindowsSdkPathBin>
-    <WindowsSdkPath>$(WindowsSdkPathBin)\10.0.18362.0</WindowsSdkPath>
+    <WindowsSdkPath>$(WindowsSdkPathBin)\10.0.19041.0</WindowsSdkPath>
     <SignToolPath>$(WindowsSdkPath)\x64\signtool.exe</SignToolPath>
   </PropertyGroup>
 

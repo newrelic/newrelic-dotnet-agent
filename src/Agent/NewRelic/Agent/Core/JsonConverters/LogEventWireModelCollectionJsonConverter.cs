@@ -21,6 +21,10 @@ namespace NewRelic.Agent.Core.JsonConverters
         private const string Level = "level";
         private const string SpanId = "span.id";
         private const string TraceId = "trace.id";
+        private const string ErrorStack = "error.stack";
+        private const string ErrorMessage = "error.message";
+        private const string ErrorClass = "error.class";
+        private const string Context = "context";
 
         public override LogEventWireModelCollection ReadJson(JsonReader reader, Type objectType, LogEventWireModelCollection existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
@@ -57,10 +61,33 @@ namespace NewRelic.Agent.Core.JsonConverters
                 jsonWriter.WriteStartObject();
                 jsonWriter.WritePropertyName(TimeStamp);
                 jsonWriter.WriteValue(logEvent.TimeStamp);
-                jsonWriter.WritePropertyName(Message);
-                jsonWriter.WriteValue(logEvent.Message);
+
+                if (!string.IsNullOrEmpty(logEvent.Message))
+                {
+                    jsonWriter.WritePropertyName(Message);
+                    jsonWriter.WriteValue(logEvent.Message);
+                }
+
                 jsonWriter.WritePropertyName(Level);
                 jsonWriter.WriteValue(logEvent.Level);
+
+                if (!string.IsNullOrWhiteSpace(logEvent.ErrorStack))
+                {
+                    jsonWriter.WritePropertyName(ErrorStack);
+                    jsonWriter.WriteValue(logEvent.ErrorStack);
+                }
+
+                if (!string.IsNullOrWhiteSpace(logEvent.ErrorMessage))
+                {
+                    jsonWriter.WritePropertyName(ErrorMessage);
+                    jsonWriter.WriteValue(logEvent.ErrorMessage);
+                }
+
+                if (!string.IsNullOrWhiteSpace(logEvent.ErrorClass))
+                {
+                    jsonWriter.WritePropertyName(ErrorClass);
+                    jsonWriter.WriteValue(logEvent.ErrorClass);
+                }
 
                 if (!string.IsNullOrWhiteSpace(logEvent.SpanId))
                 {
@@ -72,6 +99,38 @@ namespace NewRelic.Agent.Core.JsonConverters
                 {
                     jsonWriter.WritePropertyName(TraceId);
                     jsonWriter.WriteValue(logEvent.TraceId);
+                }
+
+                if (logEvent.ContextData?.Count > 0)
+                {
+                    jsonWriter.WritePropertyName(Attributes);
+                    jsonWriter.WriteStartObject();
+
+                    foreach (var item in logEvent.ContextData)
+                    {
+                        jsonWriter.WritePropertyName(Context + "." + item.Key);
+                        string contextValueJson;
+                        try
+                        {
+                            contextValueJson = JsonConvert.SerializeObject(item.Value);
+                        }
+                        catch
+                        {
+                            // If JsonConvert can't serialize it, maybe it has a ToString()
+                            try
+                            {
+                                contextValueJson = item.Value.ToString();
+                            }
+                            catch
+                            {
+                                // If that didn't work, just use the type name
+                                contextValueJson = item.Value.GetType().ToString();
+                            }
+                        }
+                        jsonWriter.WriteRawValue(contextValueJson);
+                    }
+
+                    jsonWriter.WriteEndObject();
                 }
 
                 jsonWriter.WriteEndObject();

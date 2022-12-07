@@ -44,9 +44,12 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteXmlReader" />
       </match>
 
-      <!-- MS SQL flagship data access driver -->
+      <!-- MS SQL flagship data access driver (core & framework via nuget) -->
       <match assemblyName="Microsoft.Data.SqlClient" className="Microsoft.Data.SqlClient.SqlCommand">
+        <!-- This form of ExecuteReader works for the .NET Core/Platform implementation -->
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <!-- This form of ExecuteReader works for the .NET Framework implementation -->
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior,System.String" />
         <exactMethodMatcher methodName="ExecuteNonQuery" />
         <exactMethodMatcher methodName="ExecuteScalar" />
         <exactMethodMatcher methodName="ExecuteXmlReader" />
@@ -137,9 +140,12 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteXmlReaderAsync" parameters="System.Threading.CancellationToken" />
       </match>
 
-      <!-- MS SQL flagship data access driver -->
+      <!-- MS SQL flagship data access driver (core & framework via nuget) -->
       <match assemblyName="Microsoft.Data.SqlClient" className="Microsoft.Data.SqlClient.SqlCommand">
+        <!-- This form of ExecuteReaderAsync works for the .NET Core/Platform implementation -->
         <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
+        <!-- This form of (Internal)ExecuteReaderAsync works for the .NET Framework implementation -->
+        <exactMethodMatcher methodName="InternalExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ExecuteXmlReaderAsync" parameters="System.Threading.CancellationToken" />

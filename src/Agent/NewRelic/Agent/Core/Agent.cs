@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Logging;
@@ -15,6 +15,7 @@ using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
@@ -22,7 +23,6 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Core.Logging;
-using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
@@ -36,8 +36,10 @@ namespace NewRelic.Agent.Core
     public class Agent : IAgent // any changes to api, update the interface in extensions and re-import, then implement in legacy api as NotImplementedException
     {
         public const int QueryParameterMaxStringLength = 256;
+        private const int LogExceptionStackLimit = 300;
         internal static Agent Instance;
         private static readonly ITransaction _noOpTransaction = new NoOpTransaction();
+        public static bool IsAgentShuttingDown = false;
 
         // These fields should all be made private. The ones that are currently internal are being used elsewhere in code and require refactoring.
         internal readonly ITransactionService _transactionService;
@@ -58,6 +60,7 @@ namespace NewRelic.Agent.Core
         private readonly ICATSupportabilityMetricCounters _catMetricCounters;
         private readonly Api.ITraceMetadataFactory _traceMetadataFactory;
         private readonly ILogEventAggregator _logEventAggregator;
+        private readonly ILogContextDataFilter _logContextDataFilter;
         private Extensions.Logging.ILogger _logger;
 
         public Agent(ITransactionService transactionService, ITransactionTransformer transactionTransformer,
@@ -67,7 +70,7 @@ namespace NewRelic.Agent.Core
             IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker,
             IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService,
             IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory, ICATSupportabilityMetricCounters catMetricCounters,
-            ILogEventAggregator logEventAggregator)
+            ILogEventAggregator logEventAggregator, ILogContextDataFilter logContextDataFilter)
         {
             _transactionService = transactionService;
             _transactionTransformer = transactionTransformer;
@@ -87,6 +90,7 @@ namespace NewRelic.Agent.Core
             _traceMetadataFactory = traceMetadataFactory;
             _catMetricCounters = catMetricCounters;
             _logEventAggregator = logEventAggregator;
+            _logContextDataFilter = logContextDataFilter;
 
             Instance = this;
         }
@@ -406,7 +410,7 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
         }
 
-        public void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLevel, Func<object,string> getLogMessage, string spanId, string traceId)
+        public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException,Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId)
         {
             _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
 
@@ -424,28 +428,55 @@ namespace NewRelic.Agent.Core
             }
 
             // IOC container defaults to singleton so this will access the same aggregator
-            if (_configurationService.Configuration.LogEventCollectorEnabled) 
+            if (_configurationService.Configuration.LogEventCollectorEnabled)
             {
+                _agentHealthReporter.ReportLogForwardingEnabledWithFramework(frameworkName);
+
                 var logMessage = getLogMessage(logEvent);
-                if (string.IsNullOrWhiteSpace(logMessage))
+                var logException = getLogException(logEvent);
+                
+                // exit quickly if the message and exception are missing
+                if (string.IsNullOrWhiteSpace(logMessage) && logException is null)
                 {
                     return;
                 }
+
+                var logContextData = _configurationService.Configuration.ContextDataEnabled ? getContextData(logEvent) : null;
                 var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
+
+                LogEventWireModel logEventWireModel;
+                if (logException != null)
+                {
+                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel,
+                        StackTraces.ScrubAndTruncate(logException, LogExceptionStackLimit), logException.Message, logException.GetType().ToString(),
+                        spanId, traceId, _logContextDataFilter.FilterLogContextData(logContextData));
+                }
+                else
+                {
+                    logEventWireModel = new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId, _logContextDataFilter.FilterLogContextData(logContextData));
+                }
 
                 var transaction = _transactionService.GetCurrentInternalTransaction();
                 if (transaction != null && transaction.IsValid)
                 {
                     // use transaction batching for messages in transactions
-                    transaction.LogEvents.Add(new LogEventWireModel(timestamp, logMessage, normalizedLevel, spanId, traceId));
+                    if (!transaction.AddLogEvent(logEventWireModel))
+                    {
+                        // AddLogEvent returns false in the case that logs have already been harvested by transaction transform.
+                        // Fall back to collecting the log based on the information we have. Since the transaction was finalized,
+                        // the Priority should be correct.
+                        logEventWireModel.Priority = transaction.Priority;
+                        _logEventAggregator.Collect(logEventWireModel);
+
+                    }
+
                     return;
                 }
 
                 // non-transaction messages with proper sanitized priority value
-                _logEventAggregator.Collect(new LogEventWireModel(timestamp,
-                    logMessage, normalizedLevel, spanId, traceId, _transactionService.CreatePriority()));
+                logEventWireModel.Priority = _transactionService.CreatePriority();
+                _logEventAggregator.Collect(logEventWireModel);
             }
-
         }
 
         #endregion
@@ -525,6 +556,8 @@ namespace NewRelic.Agent.Core
             _transactionService.RemoveOutstandingInternalTransactions(removeAsync, removePrimary);
         }
 
+
         #endregion
     }
+
 }

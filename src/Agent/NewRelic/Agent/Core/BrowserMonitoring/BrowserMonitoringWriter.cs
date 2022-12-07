@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             return bodyWithJsHeader;
         }
 
-        // Specification for Javascript insertion: https://newrelic.atlassian.net/wiki/display/eng/JavaScript+Agent+Auto-Instrumentation
+        // Specification for Javascript insertion: https://newrelic.atlassian.net/wiki/spaces/eng/pages/50299103/BAM+Agent+Auto-Instrumentation
         public string WriteScriptHeaders(string content)
         {
             var openingHeadTagIndex = FindFirstOpeningHeadTag(content);
@@ -68,9 +68,16 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             // Check if we found the tags and based on which comes last AND that this happens INSIDE the HEAD tag - do a replace on that.
             if ((xUaCompatibleFilterMatch.Success || charsetFilterMatch.Success) && (xUaCompatibleFilterMatch.Index < closingHeadTagIndex || charsetFilterMatch.Index > closingHeadTagIndex))
             {
-                var contentSubString = xUaCompatibleFilterMatch.Index > charsetFilterMatch.Index ? content.Substring(xUaCompatibleFilterMatch.Index, xUaCompatibleFilterMatch.Length) : content.Substring(charsetFilterMatch.Index, charsetFilterMatch.Length);
+                var match = charsetFilterMatch;
+                if(xUaCompatibleFilterMatch.Index > charsetFilterMatch.Index)
+                {
+                    match = xUaCompatibleFilterMatch;
+                }
+
+                var contentSubString = content.Substring(match.Index, match.Length);
                 var jsScriptWithContentSubString = string.Format("{0}{1}", contentSubString, _getJsScript());
-                return xUaCompatibleFilterMatch.Index > charsetFilterMatch.Index ? XUaCompatibleFilter.Replace(content, jsScriptWithContentSubString, 1) : CharsetFilter.Replace(content, jsScriptWithContentSubString, 1);
+
+                return content.Remove(match.Index, match.Length).Insert(match.Index, jsScriptWithContentSubString);
             }
 
             // Found both HEAD tags, no  meta tags, get index immediately after the <HEAD>. Find first '>' which will be end of head opening tag.

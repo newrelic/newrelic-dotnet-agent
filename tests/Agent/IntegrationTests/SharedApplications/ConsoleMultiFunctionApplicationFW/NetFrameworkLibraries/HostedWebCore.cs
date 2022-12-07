@@ -120,7 +120,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries
             var bindingNode = l.SelectSingleNode("configuration/system.applicationHost/sites/site/bindings/binding");
             bindingNode.Attributes["bindingInformation"].Value = $"*:{port}:";
 
-            var appPoolName = $"HWCTest{port}";
+            var appPoolName = $"HWCTest{port}-{Guid.NewGuid()}";
 
             var appPoolNode = l.SelectSingleNode("configuration/system.applicationHost/applicationPools/add");
             appPoolNode.Attributes["name"].Value = appPoolName;

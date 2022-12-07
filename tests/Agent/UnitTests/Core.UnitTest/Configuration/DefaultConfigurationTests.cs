@@ -190,8 +190,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(10, _defaultConfig.TransactionEventsMaximumSamplesStored);
         }
 
-        [TestCase("10", 20, 30, ExpectedResult = 10)]
-        [TestCase("10", null, 30, ExpectedResult = 10)]
+        [TestCase("10", 20, 30, ExpectedResult = 30)]
+        [TestCase("10", null, 30, ExpectedResult = 30)]
         [TestCase("10", 20, null, ExpectedResult = 10)]
         [TestCase("10", null, null, ExpectedResult = 10)]
         [TestCase(null, 20, 30, ExpectedResult = 30)]
@@ -343,6 +343,30 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.instrumentation.log = local;
 
             return _defaultConfig.InstrumentationLoggingEnabled;
+        }
+
+        [TestCase("true", false, ExpectedResult = true)]
+        [TestCase("false", true, ExpectedResult = false)]
+        [TestCase("1", false, ExpectedResult = true)]
+        [TestCase("0", true, ExpectedResult = false)]
+        [TestCase("blarg", true, ExpectedResult = true)]
+        [TestCase(null, true, ExpectedResult = true)]
+        [TestCase(null, false, ExpectedResult = false)]
+        public bool SendDataOnExitIsOverriddenByEnvironment(string environmentSetting, bool localSetting)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SEND_DATA_ON_EXIT")).Returns(environmentSetting);
+            _localConfig.service.sendDataOnExit = localSetting;
+            return _defaultConfig.CollectorSendDataOnExit;
+        }
+
+        [TestCase("100", 500f, ExpectedResult = 100)]
+        [TestCase("blarg", 500f, ExpectedResult = 500f)]
+        [TestCase(null, 500f, ExpectedResult = 500f)]
+        public float SendDataOnExitThresholdIsOverriddenByEnvironment(string environmentSetting, float localSetting)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS")).Returns(environmentSetting);
+            _localConfig.service.sendDataOnExitThreshold = localSetting;
+            return _defaultConfig.CollectorSendDataOnExitThreshold;
         }
 
         [Test]
@@ -925,8 +949,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings;
         }
 
-        [TestCase("401-404", new string[] { "401.5", "402.3"}, new bool[] { false, false})] //does not support full status codes
-        [TestCase("400,401,404", new string[]{"400", "401", "402", "403", "404"},  new bool[] { true, true, false, false, true })]
+        [TestCase("401-404", new string[] { "401.5", "402.3" }, new bool[] { false, false })] //does not support full status codes
+        [TestCase("400,401,404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]
         [TestCase("400, 401 ,404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]
         [TestCase("400, 401,404, ", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]
         [TestCase("400,401-404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, true, true, true })]
@@ -948,7 +972,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             }
 
             CollectionAssert.AreEqual(expected, actual);
-            
+
         }
 
         [TestCase(true, ExpectedResult = "server,server")]
@@ -999,7 +1023,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _localConfig.service.proxy.password = password;
             _localConfig.service.obscuringKey = localConfigObscuringKey;
             _localConfig.service.proxy.passwordObfuscated = passwordObfuscated;
-            
+
             CreateDefaultConfiguration();
 
             return _defaultConfig.ProxyPassword;
@@ -1296,16 +1320,32 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsTrue(_defaultConfig.TransactionEventsAttributesEnabled);
         }
 
-        [TestCase(null, null, ExpectedResult = null)]
-        [TestCase(null, "Foo", ExpectedResult = "Foo")]
-        [TestCase("Foo", null, ExpectedResult = "Foo")]
-        [TestCase("Foo", "Bar", ExpectedResult = "Foo")]
-        public string LabelsEnvironmentOverridesLocal(string environment, string local)
+        [TestCase(null, null, null, ExpectedResult = null)]
+        [TestCase(null, null, "Foo", ExpectedResult = "Foo")]
+        [TestCase(null, "Foo", null, ExpectedResult = "Foo")]
+        [TestCase(null, "Foo", "Bar", ExpectedResult = "Foo")]
+        [TestCase("appConfigValue", null, null, ExpectedResult = "appConfigValue")]
+        [TestCase("appConfigValue", null, "Foo", ExpectedResult = "appConfigValue")]
+        [TestCase("appConfigValue", "Foo", null, ExpectedResult = "appConfigValue")]
+        [TestCase("appConfigValue", "Foo", "Bar", ExpectedResult = "appConfigValue")]
+        public string LabelsAreOverriddenProperlyAndAreCached(string appConfigValue, string environment, string local)
         {
             _localConfig.labels = local;
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.Labels")).Returns(appConfigValue);
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LABELS")).Returns(environment);
 
-            return _defaultConfig.Labels;
+            // call Labels accessor multiple times to verify caching behavior
+            string result = _defaultConfig.Labels;
+            for (var i = 0; i < 10; ++i)
+            {
+                result = _defaultConfig.Labels;
+            }
+
+            // Checking that the underlying abstractions are only ever called once verifies caching behavior
+            Mock.Assert(() => _configurationManagerStatic.GetAppSetting("NewRelic.Labels"), Occurs.AtMost(1));
+            Mock.Assert(() => _environment.GetEnvironmentVariable("NEW_RELIC_LABELS"), Occurs.AtMost(1));
+
+            return result;
         }
 
         [TestCase(null, null, ExpectedResult = null)]
@@ -2707,6 +2747,50 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(10, _defaultConfig.LogEventsHarvestCycle.Seconds);
         }
 
+        [Test]
+        public void ApplicationLogging_ContextDataEnabled_IsFalseInLocalConfigByDefault()
+        {
+            Assert.IsFalse(_defaultConfig.ContextDataEnabled);
+        }
+
+        [TestCase(null, null, ExpectedResult = new string[] { })]
+        [TestCase("aaa,bbb", "ccc,ddd", ExpectedResult = new[] { "ccc", "ddd" })]
+        [TestCase("aaa,bbb", null, ExpectedResult = new[] { "aaa", "bbb" })]
+        [TestCase(null, "ccc,ddd", ExpectedResult = new[] { "ccc", "ddd" })]
+        public IEnumerable<string> ApplicationLogging_ContextDataInclude_IsOverriddenByEnvironmentVariable(string local, string environment)
+        {
+            if (local != null)
+            {
+                _localConfig.applicationLogging.forwarding.contextData.include = local;
+            }
+
+            if (environment != null)
+            {
+                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_INCLUDE")).Returns(environment);
+            }
+
+            return _defaultConfig.ContextDataInclude;
+        }
+
+        [TestCase(null, null, ExpectedResult = new string[] { "SpanId", "TraceId", "ParentId" })]
+        [TestCase("aaa,bbb", "ccc,ddd", ExpectedResult = new[] { "ccc", "ddd" })]
+        [TestCase("aaa,bbb", null, ExpectedResult = new[] { "aaa", "bbb" })]
+        [TestCase(null, "ccc,ddd", ExpectedResult = new[] { "ccc", "ddd" })]
+
+        public IEnumerable<string> ApplicationLogging_ContextDataExclude_IsOverriddenByEnvironmentVariable(string local, string environment)
+        {
+            if (local != null)
+            {
+                _localConfig.applicationLogging.forwarding.contextData.exclude = local;
+            }
+
+            if (environment != null)
+            {
+                Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_EXCLUDE")).Returns(environment);
+            }
+
+            return _defaultConfig.ContextDataExclude;
+        }
         #endregion
 
 
@@ -2731,7 +2815,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.allowAllHeaders.enabled = enabled;
             _localConfig.highSecurity.enabled = true;
-        
+
             Assert.AreEqual(expectedResult, _defaultConfig.AllowAllRequestHeaders);
             Assert.AreEqual(0, _defaultConfig.CaptureAttributesIncludes.Count());
         }
@@ -2952,7 +3036,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void CustomEventsMaxSamplesStoredPassesThroughToLocalConfig()
         {
-            Assert.That(_defaultConfig.CustomEventsMaximumSamplesStored, Is.EqualTo(10000));
+            Assert.That(_defaultConfig.CustomEventsMaximumSamplesStored, Is.EqualTo(30000));
 
             _localConfig.customEvents.maximumSamplesStored = 10001;
             Assert.That(_defaultConfig.CustomEventsMaximumSamplesStored, Is.EqualTo(10001));
@@ -2974,14 +3058,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(10, _defaultConfig.CustomEventsMaximumSamplesStored);
         }
 
-        [TestCase("10", 20, 30, ExpectedResult = 10)]
-        [TestCase("10", null, 30, ExpectedResult = 10)]
+        [TestCase("10", 20, 30, ExpectedResult = 30)]
+        [TestCase("10", null, 30, ExpectedResult = 30)]
         [TestCase("10", 20, null, ExpectedResult = 10)]
         [TestCase("10", null, null, ExpectedResult = 10)]
         [TestCase(null, 20, 30, ExpectedResult = 30)]
         [TestCase(null, null, 30, ExpectedResult = 30)]
         [TestCase(null, 20, null, ExpectedResult = 20)]
-        [TestCase(null, null, null, ExpectedResult = 10000)]
+        [TestCase(null, null, null, ExpectedResult = 30000)]
         public int CustomEventsMaxSamplesStoredOverriddenByEnvironment(string environmentSetting, int? localSetting, int? serverSetting)
         {
             Mock.Arrange(() => _environment.GetEnvironmentVariable("MAX_EVENT_SAMPLES_STORED")).Returns(environmentSetting);
@@ -3100,9 +3184,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void ShouldDefaultCodeLevelMetricsEnabledFalse()
+        public void CodeLevelMetricsAreEnabledByDefault()
         {
-            Assert.AreEqual(false, _defaultConfig.CodeLevelMetricsEnabled);
+            Assert.IsTrue(_defaultConfig.CodeLevelMetricsEnabled, "Code Level Metrics should be enabled by default");
         }
 
         [TestCase(true, null, ExpectedResult = true)]
@@ -3121,12 +3205,16 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, "1", ExpectedResult = true)]
         [TestCase(null, "false", ExpectedResult = false)]
         [TestCase(null, "0", ExpectedResult = false)]
-        [TestCase(null, "invalid", ExpectedResult = false)]
-        public bool ShouldUpdateCodeLevelMetricsEnabled(bool localConfigValue, string envConfigValue)
+        [TestCase(null, "invalid", ExpectedResult = true)]
+        [TestCase(null, null, ExpectedResult = true)]
+        public bool ShouldCodeLevelMetricsBeEnabled(bool? localConfigValue, string envConfigValue)
         {
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_CODE_LEVEL_METRICS_ENABLED")).Returns(envConfigValue);
 
-            _localConfig.codeLevelMetrics.enabled = localConfigValue;
+            if (localConfigValue.HasValue)
+            {
+                _localConfig.codeLevelMetrics.enabled = localConfigValue.Value;
+            }
 
             return _defaultConfig.CodeLevelMetricsEnabled;
         }

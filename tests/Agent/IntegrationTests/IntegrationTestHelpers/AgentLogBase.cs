@@ -29,28 +29,31 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string HarvestFinishedLogLineRegex = DebugLogLinePrefixRegex + @"Metric harvest finished.";
         public const string AgentReportingToLogLineRegex = InfoLogLinePrefixRegex + @"Reporting to: (.*)";
         public const string AgentConnectedLogLineRegex = InfoLogLinePrefixRegex + @"Agent fully connected.";
-        public const string ConnectLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""connect"" with : (.*)";
-        public const string ReceivedLogLineRegex = DebugLogLinePrefixRegex + @"Received : {""return_value""(.*)";
-        public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Received : {""return_value"":{""agent_run_id""(.*)";
-        public const string TransactionSampleLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""transaction_sample_data"" with : (.*)";
-        public const string MetricDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""metric_data"" with : (.*)";
-        public const string LogDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""log_event_data"" with : (.*)";
-        public const string ErrorTraceDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""error_data"" with : (.*)";
-        public const string SqlTraceDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""sql_trace_data"" with : (.*)";
-        public const string AnalyticsEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""analytic_event_data"" with : (.*)";
-        public const string AgentWrapperApiCallLogLineRegex = DebugLogLinePrefixRegex + @"AgentWrapperApi call: (.*)\((.*)\)(?: - (.*))?";
-        public const string ErrorEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""error_event_data"" with : (.*)";
-        public const string AgentInvokingMethodErrorLineRegex = DebugLogLinePrefixRegex + @"An error occurred invoking method";
-        public const string AgentConnectionErrorLineRegex = ErrorLogLinePrefixRegex + @"Unable to connect to the New Relic service at";
+
+        // Collector request data capture regex's after successful response
+        public const string ConnectLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""connect"" with : (.*)";
+        public const string TransactionSampleLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""transaction_sample_data"" with : (.*)";
+        public const string MetricDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""metric_data"" with : (.*)";
+        public const string LogDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""log_event_data"" with : (.*)";
+        public const string ErrorTraceDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""error_data"" with : (.*)";
+        public const string SqlTraceDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""sql_trace_data"" with : (.*)";
+        public const string AnalyticsEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""analytic_event_data"" with : (.*)";
+        public const string SpanEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""span_event_data"" with : (.*)";
+        public const string ErrorEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""error_event_data"" with : (.*)";
+        public const string ThreadProfileDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""profile_data"" with : (.*)";
+
+        // Collector responses
+        public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":{""agent_run_id""(.*)";
+        public const string ErrorResponseLogLinePrefixRegex = ErrorLogLinePrefixRegex + @"Request\(.{36}\): ";
+
         public const string ThreadProfileStartingLogLineRegex = InfoLogLinePrefixRegex + @"Starting a thread profiling session";
-        public const string ThreadProfileDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""profile_data"" with : (.*)";
+        public const string AgentWrapperApiCallLogLineRegex = DebugLogLinePrefixRegex + @"AgentWrapperApi call: (.*)\((.*)\)(?: - (.*))?";
         public const string InstrumentationUpdateCommandLogLineRegex = DebugLogLinePrefixRegex + @"instrumentation_update command complete.";
         public const string RejitInstrumentationFileChanged = InfoLogLinePrefixRegex + @"Instrumentation change detected:(.*)";
         public const string InstrumentationRefreshFileWatcherStarted = InfoLogLinePrefixRegex + @"Starting instrumentation refresh from InstrumentationWatcher";
         public const string InstrumentationRefreshFileWatcherComplete = InfoLogLinePrefixRegex + @"Completed instrumentation refresh from InstrumentationWatcher";
         public const string ShutdownLogLineRegex = InfoLogLinePrefixRegex + @"The New Relic .NET Agent v.* has shutdown";
         public const string TransactionTransformCompletedLogLineRegex = FinestLogLinePrefixRegex + @"Transaction (.*) \((.*)\) transform completed.";
-        public const string SpanEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Invoking ""span_event_data"" with : (.*)";
         public const string TransactionEndedByGCFinalizerLogLineRegEx = DebugLogLinePrefixRegex + @"Transaction was garbage collected without ever ending(.*)";
         public const string TransactionHasAlreadyCapturedResponseTimeLogLineRegEx = FinestLogLinePrefixRegex + @"Transaction has already captured the response time(.*)";
 

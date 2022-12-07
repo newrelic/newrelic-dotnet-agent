@@ -411,26 +411,27 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private  T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
         {
+            var requestGuid = Guid.NewGuid();
             try
             {
                 var serializedData = _serializer.Serialize(data);
-                var responseBody = wire.SendData(method, _connectionInfo, serializedData);
+                var responseBody = wire.SendData(method, _connectionInfo, serializedData, requestGuid);
                 return ParseResponse<T>(responseBody);
             }
             catch (Exceptions.HttpException ex)
             {
-                Log.DebugFormat("Received a {0} {1} response invoking method \"{2}\"", (int)ex.StatusCode, ex.StatusCode, method);
+                Log.DebugFormat("Request({0}): Received a {1} {2} response invoking method \"{3}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method);
 
                 if (ex.StatusCode == HttpStatusCode.Gone)
                 {
-                    Log.Info("The server has requested that the agent disconnect. The agent is shutting down.");
+                    Log.InfoFormat("Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
                 }
 
                 throw;
             }
             catch (Exception ex)
             {
-                Log.DebugFormat("An error occurred invoking method \"{0}\": {1}", method, ex);
+                Log.DebugFormat("Request({0}): An error occurred invoking method \"{1}\": {2}", requestGuid, method, ex);
                 throw;
             }
         }

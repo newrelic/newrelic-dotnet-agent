@@ -24,12 +24,6 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
             _fixture.TestLogger = output;
             _fixture.Actions
             (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.SetCodeLevelMetricsEnabled();
-                },
                 exerciseApplication: () =>
                 {
                     _fixture.Get();

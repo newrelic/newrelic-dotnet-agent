@@ -867,8 +867,26 @@ namespace NewRelic.Agent.Core.Transactions
             return this;
         }
 
-        private readonly ConcurrentList<LogEventWireModel> _logEvents = new ConcurrentList<LogEventWireModel>();
-        public IList<LogEventWireModel> LogEvents { get => _logEvents; }
+        private ConcurrentList<LogEventWireModel> _logEvents = new ConcurrentList<LogEventWireModel>();
+
+        public IList<LogEventWireModel> HarvestLogEvents()
+        {
+            return Interlocked.Exchange(ref _logEvents, null);
+        }
+
+        public bool AddLogEvent(LogEventWireModel logEvent)
+        {
+            try
+            {
+                _logEvents.Add(logEvent);
+                return true;
+            }
+            catch (Exception)
+            {
+                // We will hit this if logs have been harvested from the transaction already...
+            }
+            return false;
+        }
 
         private readonly ConcurrentList<Segment> _segments = new ConcurrentList<Segment>();
         public IList<Segment> Segments { get => _segments; }
@@ -926,7 +944,7 @@ namespace NewRelic.Agent.Core.Transactions
             _configuration = configuration;
             Priority = priority;
             _traceId = configuration.DistributedTracingEnabled ? GuidGenerator.GenerateNewRelicTraceId() : null;
-            TransactionMetadata = new TransactionMetadata();
+            TransactionMetadata = new TransactionMetadata(_guid);
 
             CallStackManager = callStackManager;
             _transactionTracerMaxSegments = configuration.TransactionTracerMaxSegments;

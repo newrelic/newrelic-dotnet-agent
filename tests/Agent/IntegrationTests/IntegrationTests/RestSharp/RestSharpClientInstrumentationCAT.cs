@@ -4,73 +4,75 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
+using System;
+using MultiFunctionApplicationHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.RestSharp
 {
-    [NetFrameworkTest]
-    public class RestSharpInstrumentationCAT : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public abstract class RestSharpInstrumentationCATBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
+        private readonly TFixture _fixture;
 
-        public RestSharpInstrumentationCAT(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
+        public RestSharpInstrumentationCATBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
-            _fixture.Actions(
+
+            _fixture.AddCommand($"RestSharpService StartService {_fixture.RemoteApplication.Port}");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} GET false");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} PUT false");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} POST false");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} DELETE false");
+            _fixture.AddCommand($"RestSharpExerciser RestSharpClientTaskCancelled {_fixture.RemoteApplication.Port}");
+            _fixture.AddCommand("RestSharpService StopService");
+
+            _fixture.AddActions
+            (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
+                    configModifier.SetLogLevel("finest");
                     configModifier.EnableCat();
                     configModifier.ForceTransactionTraces();
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.GetRestSharpSyncClient(method: "GET", generic: false);
-                    _fixture.GetRestSharpSyncClient(method: "PUT", generic: false);
-                    _fixture.GetRestSharpSyncClient(method: "POST", generic: false);
-                    _fixture.GetRestSharpSyncClient(method: "DELETE", generic: false);
-                    _fixture.GetRestSharpClientTaskCancelled();
-
-                    //Adding some time for metrics to be fully generated. 
-                    Thread.Sleep(3000);
                 }
             );
+
             _fixture.Initialize();
         }
 
         [Fact]
         public void Test()
         {
-            var myHostname = _fixture.DestinationServerName; // This is needed because we are making "external" calls to ourself to test RestSharp
             var crossProcessId = _fixture.AgentLog.GetCrossProcessId();
+            var callerTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp.RestSharpExerciser/SyncClient";
+            var cancelledTrasnsactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp.RestSharpExerciser/RestSharpClientTaskCancelled";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-
                 new Assertions.ExpectedMetric { metricName = "External/all", callCount = 5 },
-                new Assertions.ExpectedMetric { metricName = "External/allWeb", callCount = 5 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/GET", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/PUT", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/POST", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/DELETE", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/GET", metricScope = @"WebTransaction/MVC/RestSharpController/RestSharpClientTaskCancelled", callCount = 1},
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Get", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Put", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Post", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Delete", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/GET", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/PUT", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/POST", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/DELETE", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/GET", metricScope = cancelledTrasnsactionName, callCount = 1},
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/localhost/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Get", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/localhost/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Put", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/localhost/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Post", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/localhost/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Delete", metricScope = callerTransactionName, callCount = 1 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()
-                .Where(sample => sample.Path == @"WebTransaction/MVC/RestSharpController/SyncClient" || sample.Path == @"WebTransaction/WebAPI/RestAPI/Get" || sample.Path == @"WebTransaction/MVC/RestSharpController/RestSharpClientTaskCancelled")
+                .Where(sample => sample.Path == callerTransactionName || sample.Path == @"WebTransaction/WebAPI/RestAPI/Get" || sample.Path == cancelledTrasnsactionName)
                 .FirstOrDefault();
 
             Assert.NotNull(transactionSample);
@@ -89,6 +91,42 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
             var wrapperError = _fixture.AgentLog.TryGetLogLine(agentWrapperErrorRegex);
 
             Assert.Null(wrapperError);
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RestSharpInstrumentationCATFWLatest : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public RestSharpInstrumentationCATFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RestSharpInstrumentationCATFW48 : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public RestSharpInstrumentationCATFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RestSharpInstrumentationCATFW471 : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public RestSharpInstrumentationCATFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class RestSharpInstrumentationCATFW462 : RestSharpInstrumentationCATBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public RestSharpInstrumentationCATFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
         }
     }
 }

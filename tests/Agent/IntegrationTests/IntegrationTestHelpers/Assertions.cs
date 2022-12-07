@@ -527,7 +527,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        private static Metric TryFindMetric(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
+        public static Metric TryFindMetric(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
         {
             foreach (var actualMetric in actualMetrics)
             {
@@ -544,7 +544,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return null;
         }
 
-        private static List<Metric> TryFindMetrics(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
+        public static List<Metric> TryFindMetrics(ExpectedMetric expectedMetric, IEnumerable<Metric> actualMetrics)
         {
             var foundMetrics = actualMetrics
                 .Where(actualMetric => (expectedMetric.IsRegexName && Regex.IsMatch(actualMetric.MetricSpec.Name, expectedMetric.metricName)) ||
@@ -557,18 +557,20 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #endregion Metrics
 
-        #region Log Lines
+        #region In Agent Log Forwarding Log Lines Assertions
 
         public static void LogLineExists(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines) => LogLinesExist(new[] { expectedLogLine }, actualLogLines);
 
-        public static void LogLinesExist(IEnumerable<ExpectedLogLine> expectedLogLines, IEnumerable<LogLine> actualLogLines)
+        public static void LogLinesExist(IEnumerable<ExpectedLogLine> expectedLogLines, IEnumerable<LogLine> actualLogLines) => LogLinesExist(expectedLogLines, actualLogLines, false);
+
+        public static void LogLinesExist(IEnumerable<ExpectedLogLine> expectedLogLines, IEnumerable<LogLine> actualLogLines, bool ignoreAttributeCount)
         {
             actualLogLines = actualLogLines.ToList();
 
             var succeeded = true;
             var builder = new StringBuilder();
 
-            if (!actualLogLines.Any() && actualLogLines.Any())
+            if (!actualLogLines.Any() && expectedLogLines.Any())
             {
                 builder.AppendLine("Unable to validate expected Log Lines because actualLogLines has no items.");
                 succeeded = false;
@@ -577,7 +579,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             {
                 foreach (var expectedLogLine in expectedLogLines)
                 {
-                    var matchedLogLine = TryFindLogLine(expectedLogLine, actualLogLines);
+                    var matchedLogLine = TryFindLogLine(expectedLogLine, actualLogLines, ignoreAttributeCount);
                     if (matchedLogLine == null)
                     {
                         builder.Append($"LogLine `{expectedLogLine}` was not found in the Log payload.");
@@ -590,11 +592,38 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 }
             }
 
+            Assert.True(succeeded, builder.ToString());
+        }
+
+        public static void LogLineDoesntExist(ExpectedLogLine unexpectedLogLine, IEnumerable<LogLine> actualLogLines) => LogLinesDontExist(new[] { unexpectedLogLine }, actualLogLines);
+
+        public static void LogLinesDontExist(IEnumerable<ExpectedLogLine> unexpectedLogLines, IEnumerable<LogLine> actualLogLines)
+        {
+            actualLogLines = actualLogLines.ToList();
+
+            var succeeded = true;
+            var builder = new StringBuilder();
+
+            foreach (var unexpectedLogLine in unexpectedLogLines)
+            {
+                var matchedLogLine = TryFindLogLine(unexpectedLogLine, actualLogLines);
+                if (matchedLogLine != null)
+                {
+                    builder.Append($"Unexpected LogLine `{unexpectedLogLine}` was found in the Log payload.");
+                    builder.AppendLine();
+                    builder.AppendLine();
+
+                    succeeded = false;
+                    continue;
+                }
+            }
 
             Assert.True(succeeded, builder.ToString());
         }
 
-        private static LogLine TryFindLogLine(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines)
+        private static LogLine TryFindLogLine(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines) => TryFindLogLine(expectedLogLine, actualLogLines, false);
+
+        private static LogLine TryFindLogLine(ExpectedLogLine expectedLogLine, IEnumerable<LogLine> actualLogLines, bool ignoreAttributeCount)
         {
             foreach (var actualLogLine in actualLogLines)
             {
@@ -611,12 +640,63 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 if (expectedLogLine.HasTraceId.HasValue && !expectedLogLine.HasTraceId.Value && !string.IsNullOrWhiteSpace(actualLogLine.Traceid))
                     continue;
 
+                if (expectedLogLine.HasException.HasValue && expectedLogLine.HasException.Value)
+                {
+                    if (string.IsNullOrWhiteSpace(actualLogLine.ErrorStack)
+                    || string.IsNullOrWhiteSpace(actualLogLine.ErrorMessage)
+                    || string.IsNullOrWhiteSpace(actualLogLine.ErrorClass)
+                    )
+                        continue;
+
+                    if (!actualLogLine.ErrorStack.Contains(expectedLogLine.ErrorStack))
+                        continue;
+                    if (expectedLogLine.ErrorMessage != actualLogLine.ErrorMessage)
+                        continue;
+                    if (expectedLogLine.ErrorClass != actualLogLine.ErrorClass)
+                        continue;
+                }
+
+                if (expectedLogLine.HasException.HasValue && !expectedLogLine.HasException.Value)
+                {
+                    if (!string.IsNullOrWhiteSpace(actualLogLine.ErrorStack)
+                    || !string.IsNullOrWhiteSpace(actualLogLine.ErrorMessage)
+                    || !string.IsNullOrWhiteSpace(actualLogLine.ErrorClass))
+                        continue;
+                }
+
+                if (expectedLogLine.Attributes != null)
+                {
+                    if (actualLogLine.Attributes == null && expectedLogLine.Attributes.Count != 0)
+                    {
+                        continue;
+                    }
+
+                    if (!ignoreAttributeCount && expectedLogLine.Attributes.Count != actualLogLine.Attributes.Count)
+                    {
+                        continue;
+                    }
+
+                    foreach(var expectedAttribute in expectedLogLine.Attributes)
+                    {
+                        var key = "context." + expectedAttribute.Key;
+                        if (!actualLogLine.Attributes.ContainsKey(key))
+                        {
+                            continue;
+                        }
+
+                        if(expectedAttribute.Value.Equals(actualLogLine.Attributes[key]))
+                        {
+                            continue;
+                        }
+                    }
+                }
+
                 return actualLogLine;
             }
 
             return null;
         }
-        
+
         #endregion
 
         #region Transaction Events
@@ -861,7 +941,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #endregion Sql Traces
 
-        #region Log lines
+        #region Generic Agent Log Lines Assertions
 
         public static void LogLinesExist(IEnumerable<string> expectedLogLineRegexes, IEnumerable<string> actualLogLines)
         {
@@ -895,7 +975,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(errorMessages == string.Empty, errorMessages);
         }
 
-        #endregion Log lines
+        #endregion
 
         private static bool ValidateAttributeValues(KeyValuePair<string, object> expectedAttribute, object rawActualValue, StringBuilder builder, string wireModelTypeName)
         {
@@ -1009,9 +1089,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             public bool? HasSpanId = null;
             public bool? HasTraceId = null;
 
+            public bool? HasException = null;
+            public string ErrorStack = null;
+            public string ErrorMessage = null;
+            public string ErrorClass = null;
+            public Dictionary<string,string> Attributes = null;
+
             public override string ToString()
             {
-                return $"{{ Level: {Level}, LogMessage: {LogMessage}, HasSpanId: {HasSpanId}, HasTraceId: {HasTraceId} }}";
+                if (Attributes != null && Attributes.Count > 0)
+                {
+                    var sb = new StringBuilder();
+                    foreach (var attribute in Attributes)
+                    {
+                        sb.Append($"'{attribute.Key}:{attribute.Value ?? ""}',");
+                    }
+
+                    return $"{{ Level: {Level}, LogMessage: {LogMessage}, HasSpanId: {HasSpanId}, HasTraceId: {HasTraceId} }}, HasException: {HasException}, ErrorStack: {ErrorStack}, ErrorMessage: {ErrorMessage}, ErrorClass: {ErrorClass}, {{ AttributeCount: {Attributes.Count}, Attributes: {sb.ToString()} }}";
+                }
+
+                return $"{{ Level: {Level}, LogMessage: {LogMessage}, HasSpanId: {HasSpanId}, HasTraceId: {HasTraceId} }}, HasException: {HasException}, ErrorStack: {ErrorStack}, ErrorMessage: {ErrorMessage}, ErrorClass: {ErrorClass}";
             }
         }
 

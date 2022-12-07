@@ -1084,7 +1084,12 @@ namespace NewRelic.Agent.Core.Metric
             return SupportabilityLogFrameworkPs + loggingFramework + PathSeparator + Enabled;
         }
 
-        
+        private const string SupportabilityLogForwardingEnabledWithFrameworkNamePs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNet + PathSeparator;
+        public static string GetSupportabilityLogForwardingEnabledWithFrameworkName(string loggingFramework)
+        {
+            return SupportabilityLogForwardingEnabledWithFrameworkNamePs + loggingFramework + PathSeparator + Enabled;
+        }
+
         #endregion
     }
 }

@@ -1405,10 +1405,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [Test]
         public void PrioritizeAndCollectLogEvents_PriorityMatchesTransaction()
         {
-            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid");
+            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid", new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } });
 
             var transaction = TestTransactions.CreateDefaultTransaction();
-            transaction.LogEvents.Add(logEvent);
+            transaction.AddLogEvent(logEvent);
 
             _transactionTransformer.Transform(transaction);
 
@@ -1420,6 +1420,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.AreEqual(1, logEvents.Count);
             Assert.IsNotNull(handledLogEvent);
             Assert.AreEqual(transaction.Priority, handledLogEvent.Priority, $"{transaction.Priority} vs {handledLogEvent.Priority}");
+        }
+
+        [Test]
+        public void CannotAddLogEventsToTransaction_AfterTransform()
+        {
+            var logEvent = new LogEventWireModel(1, "message1", "info", "spanid", "traceid", new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } });
+            var transaction = TestTransactions.CreateDefaultTransaction();
+
+            _transactionTransformer.Transform(transaction);
+
+            Assert.False(transaction.AddLogEvent(logEvent));
         }
 
         #endregion

@@ -39,13 +39,13 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
                     _fixture.Get();
                     _fixture.AgentLog.WaitForLogLine(AgentLogFile.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
 
-                    // Span events, transaction traces and metric data are currently harvested once a minute.
-                    // If we've seen span events sent and metrics finished sending, the mock collector is more
-                    // likely to have processed all the potential requests. Metric finish is not enough because there
-                    // may be a metric harvest prior to all the data being sent.
+                    // The test queries the mock collector to verify that all 4 of these data types have been sent, so wait for them.
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
                     _fixture.AgentLog.WaitForLogLine(AgentLogFile.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(2));
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
 
+                    // Query mock collector
                     _collectedRequests = _fixture.GetCollectedRequests();
                     _requestHeaderMapValidationData = _fixture.GetRequestHeaderMapValidationData();
                 }
@@ -64,10 +64,10 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
             var connectResponseData = _fixture.AgentLog.GetConnectResponseData();
             _fixture.TestLogger.WriteLine(JsonConvert.SerializeObject(connectResponseData));
 
-            Assert.True(_requestHeaderMapValidationData.MetricDataHasMap);
-            Assert.True(_requestHeaderMapValidationData.AnalyticEventDataHasMap);
-            Assert.True(_requestHeaderMapValidationData.TransactionSampleDataHasMap);
-            Assert.True(_requestHeaderMapValidationData.SpanEventDataHasMap);
+            Assert.True(_requestHeaderMapValidationData.MetricDataHasMap, "Metric data was missing.");
+            Assert.True(_requestHeaderMapValidationData.AnalyticEventDataHasMap, "Analytic event data was missing.");
+            Assert.True(_requestHeaderMapValidationData.TransactionSampleDataHasMap, "Transaction data was missing.");
+            Assert.True(_requestHeaderMapValidationData.SpanEventDataHasMap, "Span event data was missing.");
         }
     }
 }

@@ -9,29 +9,35 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
+using MultiFunctionApplicationHelpers;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
 {
-    [NetFrameworkTest]
-    public class MsmqPurgeTests : NewRelicIntegrationTest<RemoteServiceFixtures.MSMQBasicMVCApplicationFixture>
+    public abstract class MsmqPurgeTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly RemoteServiceFixtures.MSMQBasicMVCApplicationFixture _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
+        private readonly int _queueNum = MsmqHelper.GetNextQueueNum();
 
-        public MsmqPurgeTests(RemoteServiceFixtures.MSMQBasicMVCApplicationFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public MsmqPurgeTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _fixture.Actions
+
+            _fixture.AddCommand($"MSMQExerciser Create {_queueNum}");
+            _fixture.AddCommand($"MSMQExerciser Send {_queueNum} true");
+            _fixture.AddCommand($"MSMQExerciser Purge {_queueNum}");
+
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.ForceTransactionTraces();
+                    configModifier.ForceTransactionTraces()
+                    .SetLogLevel("finest");
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.GetMessageQueue_Msmq_Send(true);
-                    _fixture.GetMessageQueue_Msmq_Purge();
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
             _fixture.Initialize();
@@ -40,19 +46,23 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
         [Fact]
         public void Test()
         {
+            string transactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MSMQExerciser/Purge";
+            string metricName = @"MessageBroker/Msmq/Queue/Purge/Named/private$\nrtestqueue" + _queueNum.ToString();
+            string segmentName = @"MessageBroker/Msmq/Queue/Purge/Named/private$\nrtestqueue" + _queueNum.ToString();
+
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Purge/Named/private$\nrtestqueue", callCount = 1},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Purge/Named/private$\nrtestqueue", callCount = 1, metricScope = "WebTransaction/MVC/MSMQController/Msmq_Purge"},
+                new Assertions.ExpectedMetric { metricName = metricName, callCount = 1},
+                new Assertions.ExpectedMetric { metricName = metricName, callCount = 1, metricScope = transactionName},
             };
             var expectedTransactionTraceSegments = new List<string>
             {
-                @"MessageBroker/Msmq/Queue/Purge/Named/private$\nrtestqueue"
+                segmentName
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/MSMQController/Msmq_Purge");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/MSMQController/Msmq_Purge");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample(transactionName);
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(transactionName);
 
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
@@ -67,4 +77,41 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
         }
 
     }
+
+    [NetFrameworkTest]
+    public class MsmqPurgeTestsFW462 : MsmqPurgeTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public MsmqPurgeTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MsmqPurgeTestsFW471 : MsmqPurgeTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public MsmqPurgeTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MsmqPurgeTestsFW48 : MsmqPurgeTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MsmqPurgeTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MsmqPurgeTestsFWLatest : MsmqPurgeTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MsmqPurgeTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
 }

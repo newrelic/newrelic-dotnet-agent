@@ -1,6 +1,8 @@
-// Copyright 2020 New Relic, Inc. All rights reserved.
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Xml.Linq;
+using System;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
@@ -9,7 +11,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
     public class Class_BrowserMonitoringWriter
     {
         private readonly string _jsScript =
-                            "<script type=\"text/javascript\">window.NREUM||(NREUM={});NREUM.info = {\"beacon\":\"staging-beacon-N.newrelic.com\",\"errorBeacon:\":\"staging-jserror.newrelic.com\",\"licenseKey\":\"a4fa192fe5\",\"applicationID\":\"48102\",\"transactionName\":\"ZlIAbEACVxFYVkBbDV8YJldGLVwWelpaRhBeWw5dQExxDVRQG3sMVVIa\",\"queueTime\":\"0\",\"applicationTime\":\"37\",\"ttGuid\":\"BD0436479135FF3F\",\"agent\":\"js-agent.newrelic.com/nr-248.min.js\"}</script>";
+                    "<script type=\"text/javascript\">window.NREUM||(NREUM={});NREUM.info = {\"beacon\":\"staging-beacon-N.newrelic.com\",\"errorBeacon:\":\"staging-jserror.newrelic.com\",\"licenseKey\":\"a4fa192fe5\",\"applicationID\":\"48102\",\"transactionName\":\"ZlIAbEACVxFYVkBbDV8YJldGLVwWelpaRhBeWw5dQExxDVRQG3sMVVIa\",\"queueTime\":\"0\",\"applicationTime\":\"37\", \"customString\":\"$1\", \"ttGuid\":\"BD0436479135FF3F\",\"agent\":\"js-agent.newrelic.com/nr-248.min.js\"}</script>";
+
         [Test]
         public void empty_input_results_in_empty_output()
         {
@@ -238,6 +241,34 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var data = "<html><head /><body>im some body text</body></html>";
             var expected = "<html><head />EXPECTED_RUM_LOADER_LOCATION<body>im some body text</body></html>";
             var writer = new BrowserMonitoringWriter(() => "EXPECTED_RUM_LOADER_LOCATION");
+            var result = writer.WriteScriptHeaders(data);
+            Assert.AreEqual(expected, result);
+        }
+
+        [Test]
+        public void cross_agent_browser_monitor_injection_from_insane_text()
+        {
+            var angelicText = @"
+                // c# special - verbatim
+                @if(1)@""c:\\documents\x0041\\\files\\\\u0066.txt""@\""{{This}} is the last \u0063hance\x0021\""
+                // c# special - interpolation
+                $""Hello, {DateTime.Now:F3,-7}!""$"" \""\{X}, {Y}\\""\\ is {Math.Sqrt(X * X + Y * Y)}""$$""""""{{{X}}, {{Y}}} is {{Math.Sqrt(X * X + Y * Y)}}""""""
+                // combo
+                @$""@${var}$@{{var}}\{var\}\{\""var""{\}\}\\{\\{{var\}}\\}${}$${}${{}}""$@""@${var}$@{{var}}\{var\}\{\""var""{\}\}\\{\\{{var\}}\\}${}$${}${{}}""
+                // some bad chars
+                ÁáĆćǴ ǵíĹĺŃńŔŕŚ śÝý€ƒ   ©®™œ£¶•
+
+                ¿¡\0\x0\u0000
+                // .net regex && substitutions
+                $1$2$9$13${name}${c}${re}$$$&$`$'$+$_\p{Sc}*(\s?\d+[.,]?\d*)\p{Sc}*\$&\
+                // .net escape chars
+                .$^{[(|)*+?\\a\b\t\r\v\f\n\e\040\x9f\cC\cD\*\G(.+)[\t\u007c](.+)\r?\n\$\\$\\\$\$$\$$$\@\\@\\\@\@@\@@@
+                ";
+
+
+            var data = "<html><head /><body>im some body text</body></html>";
+            var expected = $"<html><head />{angelicText}<body>im some body text</body></html>";
+            var writer = new BrowserMonitoringWriter(() => angelicText);
             var result = writer.WriteScriptHeaders(data);
             Assert.AreEqual(expected, result);
         }

@@ -54,7 +54,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         [JsonProperty("timestamp")]
         public long Timestamp { get; set; }
 
-        [JsonProperty("message")]
+        [JsonProperty("message", NullValueHandling = NullValueHandling.Ignore)]
         public string Message { get; set; }
 
         [JsonProperty("level")]
@@ -65,5 +65,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
         [JsonProperty("trace.id", NullValueHandling = NullValueHandling.Ignore)]
         public string Traceid { get; set; }
+
+        [JsonProperty("error.stack", NullValueHandling = NullValueHandling.Ignore)]
+        public string ErrorStack { get; set; }
+
+        [JsonProperty("error.message", NullValueHandling = NullValueHandling.Ignore)]
+        public string ErrorMessage { get; set; }
+
+        [JsonProperty("error.class", NullValueHandling = NullValueHandling.Ignore)]
+        public string ErrorClass { get; set; }
+
+        [JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string, string> Attributes { get; set; }
     }
 }

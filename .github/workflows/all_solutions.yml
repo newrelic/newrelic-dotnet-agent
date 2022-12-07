@@ -80,7 +80,7 @@ jobs:
   build-linux-x64-profiler:
     needs: cancel-previous-workflow-runs
     name: Build Linux x64 Profiler
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
@@ -124,7 +124,7 @@ jobs:
   build-linux-arm64-profiler:
     needs: cancel-previous-workflow-runs
     name: Build Linux ARM64 Profiler
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
@@ -190,7 +190,7 @@ jobs:
   build-test-fullagent-msi:
     needs: [ build-windows-profiler, build-linux-x64-profiler, build-linux-arm64-profiler ]
     name: Build and Test FullAgent and MSIInstaller
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
@@ -392,11 +392,14 @@ jobs:
         with:
           vs-prerelease: true
 
-      - name: Add .NET 6 SDK
-        uses: actions/setup-dotnet@v1
+      - name: Add .NET 7 SDK
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'
-          include-prerelease: true
+          dotnet-version: '7.0.100'
+
+      - name: List SDKS
+        run: dotnet --list-sdks
+        shell: powershell
 
       - name: Build IntegrationTests.sln
         run: |
@@ -436,11 +439,10 @@ jobs:
         with:
           vs-prerelease: true
 
-      - name: Add .NET 6 SDK
-        uses: actions/setup-dotnet@v1
+      - name: Add .NET 7 SDK
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'
-          include-prerelease: true
+          dotnet-version: '7.0.100'
 
       - name: Build UnboundedIntegrationTests.sln
         run: |
@@ -464,7 +466,7 @@ jobs:
   run-integration-tests:
     needs: [build-integration-tests]
     name: Run IntegrationTests
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
@@ -472,7 +474,8 @@ jobs:
           HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Owin, ReJit.NetCore, 
           Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.ZeroMaxSamplesStored,
           Logging.MetricsAndForwarding.log4net, Logging.MetricsAndForwarding.MicrosoftLogging, 
-          Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog,
+          Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog, Logging.LogLevelDetection,
+          Logging.ContextData,
           ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
           WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
           RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, 
@@ -481,8 +484,7 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
-      integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net462/NewRelic.Agent.IntegrationTests.dll
+      integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net462
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
@@ -493,21 +495,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@v1
+      - name: Add .NET 7 SDK
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '3.1.100'
-
-      - name: Setup .NET 5.0
-        uses: actions/setup-dotnet@v1
-        with:
-            dotnet-version: '5.0.100'
-
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x'
-          include-prerelease: true
+          dotnet-version: '7.0.100'
 
       - name: Set up secrets
         env:
@@ -542,15 +533,18 @@ jobs:
           }
 
           Write-Host "Run tests"
-          $parallelXunitOption = "none" 
 
           # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
+          $json = Get-Content "${{ env.integration_tests_path }}/xunit.runner.json" | ConvertFrom-Json
+          $json | Add-Member -Name "parallelizeAssembly" -Value $false -MemberType NoteProperty
+          $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
           # if ("${{ matrix.namespace }}" -like "Logging.*" ) {
-          #   Write-Host "Logging tests detected, running xunit tests in parallel."
-          #   $parallelXunitOption = "all"
+          #   $json.parallelizeAssembly = $true
+          #   $json.parallelizeTestCollections = $true
           # }
+          $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
-          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel $parallelXunitOption -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+          dotnet test ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.dll --filter FullyQualifiedName~NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
           
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
@@ -576,13 +570,13 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           name: integration-test-artifacts
-          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
+          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
   run-integration-tests-linux-arm64:
     needs: build-test-fullagent-msi
     name: Run IntegrationTests linux-arm64
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     if: false
 
     env:
@@ -649,7 +643,7 @@ jobs:
   run-unbounded-tests:
     needs: [build-unbounded-tests]
     name: Run Unbounded Tests
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         namespace: [ CosmosDB, Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, NServiceBus5, Oracle, Postgres, RabbitMq, Redis ]
@@ -657,8 +651,7 @@ jobs:
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
-      xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
-      unbounded_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net462/NewRelic.Agent.UnboundedIntegrationTests.dll
+      unbounded_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net462
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
@@ -673,11 +666,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
+      - name: Add .NET 7 SDK
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'
-          include-prerelease: true
+          dotnet-version: '7.0.100'
 
       - name: Download Agent Home Folders
         uses: actions/download-artifact@v2
@@ -754,7 +746,13 @@ jobs:
             netstat -no  
           }
 
-          ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel none -xml C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
+          # Test parallelization is disabled until we can solve concurrent dotnet publish issues with ConsoleMF usage
+          $json = Get-Content "${{ env.unbounded_tests_path }}/xunit.runner.json" | ConvertFrom-Json
+          $json | Add-Member -Name "parallelizeAssembly" -Value $false -MemberType NoteProperty
+          $json | Add-Member -Name "parallelizeTestCollections" -Value $false -MemberType NoteProperty
+          $json | ConvertTo-Json | Out-File "${{ env.unbounded_tests_path }}/xunit.runner.json"
+
+          dotnet test ${{ env.unbounded_tests_path }}/NewRelic.Agent.UnboundedIntegrationTests.dll --filter FullyQualifiedName~NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
 
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
@@ -780,14 +778,14 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           name: integration-test-artifacts
-          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
+          path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
           if-no-files-found: error
 
   create-package-rpm:
     needs: build-test-fullagent-msi
     if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
     name: Create RPM Package
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -849,7 +847,7 @@ jobs:
     needs: build-test-fullagent-msi
     if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
     name: Create Debian package
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -897,7 +895,7 @@ jobs:
     needs: [ create-package-rpm, create-package-deb ]
     if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
     name: Run ArtifactBuilder
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     steps:
       - name: Checkout

@@ -1300,7 +1300,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var segments = Enumerable.Empty<Segment>();
 
-            var placeholderMetadataBuilder = new TransactionMetadata();
+            var placeholderMetadataBuilder = new TransactionMetadata(guid);
             var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 
             var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, priority, sampled, traceId, BuildMockTracingState(guidInPayload: guidInPayload, parentIdInPayload: parentIdInPayload, hasFatalError), _attribDefs);

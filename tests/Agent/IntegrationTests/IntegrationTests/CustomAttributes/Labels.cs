@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
@@ -31,6 +32,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
                 exerciseApplication: () =>
                 {
                     _fixture.Get();
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();
@@ -39,18 +41,17 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
         [Fact]
         public void Test()
         {
-            var connectMatch = _fixture.AgentLog.TryGetLogLine(AgentLogBase.DebugLogLinePrefixRegex + @"Invoking ""connect"" with : (?<payload>.*)");
-            Assert.NotNull(connectMatch);
-            var connectPayloadJson = connectMatch.Groups["payload"].Value;
-            var connectPayload = JArray.Parse(connectPayloadJson);
+            var connectPayload = _fixture.AgentLog.GetConnectData();
+            Assert.NotNull(connectPayload);
+
 
             NrAssert.Multiple
             (
-                () => Assert.Equal(2, connectPayload[0]["labels"].AsJEnumerable().Count()),
-                () => Assert.Equal("foo", connectPayload[0]["labels"][0]["label_type"]),
-                () => Assert.Equal("bar", connectPayload[0]["labels"][0]["label_value"]),
-                () => Assert.Equal("zip", connectPayload[0]["labels"][1]["label_type"]),
-                () => Assert.Equal("zap", connectPayload[0]["labels"][1]["label_value"])
+                () => Assert.Equal(2, connectPayload.Labels.Count()),
+                () => Assert.Equal("foo", (connectPayload.Labels.ElementAt(0) as JObject)["label_type"]),
+                () => Assert.Equal("bar", (connectPayload.Labels.ElementAt(0) as JObject)["label_value"]),
+                () => Assert.Equal("zip", (connectPayload.Labels.ElementAt(1) as JObject)["label_type"]),
+                () => Assert.Equal("zap", (connectPayload.Labels.ElementAt(1) as JObject)["label_value"])
             );
         }
     }

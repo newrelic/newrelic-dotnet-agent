@@ -133,7 +133,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         private ImmutableTransaction BuildTestTransaction(string uri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null, IAttributeDefinitions attribDefs = null)
         {
-            var txMetadata = new TransactionMetadata();
+            var txMetadata = new TransactionMetadata(guid);
             if (uri != null)
                 txMetadata.SetUri(uri);
             if (statusCode != null)

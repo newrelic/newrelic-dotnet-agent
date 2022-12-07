@@ -780,8 +780,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual string CollectorHost { get { return EnvironmentOverrides(_localConfiguration.service.host, @"NEW_RELIC_HOST"); } }
         public virtual int CollectorPort => EnvironmentOverrides(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : (int?)null, "NEW_RELIC_PORT") ?? DefaultSslPort;
-        public virtual bool CollectorSendDataOnExit { get { return _localConfiguration.service.sendDataOnExit; } }
-        public virtual float CollectorSendDataOnExitThreshold { get { return _localConfiguration.service.sendDataOnExitThreshold; } }
+        public virtual bool CollectorSendDataOnExit { get { return EnvironmentOverrides(_localConfiguration.service.sendDataOnExit, "NEW_RELIC_SEND_DATA_ON_EXIT"); } }
+        public virtual float CollectorSendDataOnExitThreshold { get { return EnvironmentOverrides((uint?)null, "NEW_RELIC_SEND_DATA_ON_EXIT_THRESHOLD_MS") ?? _localConfiguration.service.sendDataOnExitThreshold; } }
         public virtual bool CollectorSendEnvironmentInfo { get { return _localConfiguration.service.sendEnvironmentInfo; } }
         public virtual bool CollectorSyncStartup { get { return _localConfiguration.service.syncStartup; } }
         public virtual uint CollectorTimeout { get { return (_localConfiguration.service.requestTimeout > 0) ? (uint)_localConfiguration.service.requestTimeout : CollectorSendDataOnExit ? 2000u : 60 * 2 * 1000; } }
@@ -893,6 +893,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public int? SamplingTarget => _serverConfiguration.SamplingTarget;
 
+        // Faster Event Harvest configuration rules apply here, which is why ServerOverrides takes precedence over EnvironmentOverrides
         public int SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestLimit,
            EnvironmentOverrides(_localConfiguration.spanEvents.maximumSamplesStored, "NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED").GetValueOrDefault());
 
@@ -1124,6 +1125,8 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
+                // Faster Event Harvest configuration rules apply here, if/when we add an environment variable for this property we need to make sure that
+                // ServerOverrides takes precedence over EnvironmentOverrides
                 return ServerOverrides(_serverConfiguration.EventHarvestConfig?.ErrorEventHarvestLimit(), _localConfiguration.errorCollector.maxEventSamplesStored);
             }
         }
@@ -1290,11 +1293,27 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Labels
 
+        private string _labels;
+        private bool _labelsChecked;
         public virtual string Labels
         {
             get
             {
-                return EnvironmentOverrides(_localConfiguration.labels, @"NEW_RELIC_LABELS");
+                if (!_labelsChecked)
+                {
+                    var labels = _configurationManagerStatic.GetAppSetting("NewRelic.Labels");
+                    if (labels != null)
+                    {
+                        Log.Info("Application labels from web.config, app.config, or appsettings.json.");
+                        _labels = labels;
+                    }
+                    else
+                    {
+                        _labels = EnvironmentOverrides(_localConfiguration.labels, @"NEW_RELIC_LABELS");
+                    }
+                    _labelsChecked = true;
+                }
+                return _labels;
             }
         }
 
@@ -1512,10 +1531,9 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return (int)EnvironmentOverrides(
-                    ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(),
-                        _localConfiguration.customEvents.maximumSamplesStored),
-                    "MAX_EVENT_SAMPLES_STORED");
+                // Faster Event Harvest configuration rules apply here, which is why ServerOverrides takes precedence over EnvironmentOverrides
+                var maxValue = _localConfiguration.customEvents.maximumSamplesStored;
+                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(), (int)EnvironmentOverrides(maxValue, "MAX_EVENT_SAMPLES_STORED"));
             }
         }
 
@@ -1583,10 +1601,10 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
+                // Faster Event Harvest configuration rules apply here, which is why ServerOverrides takes precedence over EnvironmentOverrides
                 var maxValue = _localConfiguration.transactionEvents.maximumSamplesStored;
-                return (int)EnvironmentOverrides(
-                    ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), maxValue),
-                    "MAX_TRANSACTION_SAMPLES_STORED");
+
+                return ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), (int)EnvironmentOverrides(maxValue, "MAX_TRANSACTION_SAMPLES_STORED"));
             }
         }
 
@@ -1845,7 +1863,7 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual bool LogMetricsCollectorEnabled
         {
             get
-            { 
+            {
                 return ApplicationLoggingEnabled &&
                     EnvironmentOverrides(_localConfiguration.applicationLogging.metrics.enabled, "NEW_RELIC_APPLICATION_LOGGING_METRICS_ENABLED");
             }
@@ -1860,6 +1878,35 @@ namespace NewRelic.Agent.Core.Configuration
                     !SecurityPoliciesTokenExists &&
                     HighSecurityModeOverrides(false,
                     EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED"));
+            }
+        }
+
+        public bool ContextDataEnabled
+        {
+            get
+            {
+                return LogEventCollectorEnabled &&
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.contextData.enabled, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_ENABLED");
+            }
+        }
+
+        public IEnumerable<string> ContextDataInclude
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.contextData.include,
+                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_INCLUDE")
+                    .Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            }
+        }
+
+        public IEnumerable<string> ContextDataExclude
+        {
+            get
+            {
+                return EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.contextData.exclude,
+                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_EXCLUDE")
+                    .Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries);
             }
         }
 

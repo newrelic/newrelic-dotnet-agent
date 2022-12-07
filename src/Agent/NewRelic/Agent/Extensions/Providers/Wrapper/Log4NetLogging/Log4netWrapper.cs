@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
@@ -16,7 +17,9 @@ namespace NewRelic.Providers.Wrapper.Logging
         private static Func<object, object> _getLevel;
         private static Func<object, string> _getRenderedMessage;
         private static Func<object, DateTime> _getTimestamp;
-        private static Func<object, IDictionary> _getProperties;
+        private static Func<object, Exception> _getLogException;
+        private static Func<object, IDictionary> _getGetProperties; // calls GetProperties method
+        private static Func<object, IDictionary> _getProperties; // getter for Properties property
 
         public bool IsTransactionRequired => false;
 
@@ -54,9 +57,12 @@ namespace NewRelic.Providers.Wrapper.Logging
             // Older versions of log4net only allow access to a timestamp in local time
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
 
+            var getLogExceptionFunc = _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject");
+
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
-            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+
+            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, GetContextData, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
         private void DecorateLogMessage(object logEvent, Type logEventType, IAgent agent)
@@ -79,6 +85,26 @@ namespace NewRelic.Providers.Wrapper.Logging
 
             // uses underscores to support other frameworks that do not allow hyphens (Serilog)
             propertiesDictionary["NR_LINKING"] = formattedMetadata;
+        }
+
+        private Dictionary<string, object> GetContextData(object logEvent)
+        {
+            var logEventType = logEvent.GetType();
+            var getProperties = _getGetProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
+            var propertiesDictionary = getProperties(logEvent);
+
+            if (propertiesDictionary != null && propertiesDictionary.Count > 0)
+            {
+                var contextData = new Dictionary<string, object>();
+                foreach (var key in propertiesDictionary.Keys)
+                {
+                    contextData.Add(key.ToString(), propertiesDictionary[key]);
+                }
+
+                return contextData;
+            }
+
+            return null;
         }
     }
 }

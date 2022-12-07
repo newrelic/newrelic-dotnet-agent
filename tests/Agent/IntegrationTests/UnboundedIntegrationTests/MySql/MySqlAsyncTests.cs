@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -14,15 +15,17 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
-    [NetFrameworkTest]
-    public class MySqlAsyncTests : NewRelicIntegrationTest<RemoteServiceFixtures.MySqlBasicMvcFixture>
+    public abstract class MySqlAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly RemoteServiceFixtures.MySqlBasicMvcFixture _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
 
-        public MySqlAsyncTests(RemoteServiceFixtures.MySqlBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public MySqlAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
+
+            _fixture.AddCommand($"MySqlExerciser SingleDateQueryAsync");
+
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -30,46 +33,48 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
-                    configModifier.ForceTransactionTraces();
+                    configModifier.ForceTransactionTraces()
+                    .SetLogLevel("finest");
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
                     var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
-                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(
-                       instrumentationFilePath,
-                        "", "enabled", "true");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.GetMySqlAsync();
+                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
                 }
             );
+
+            // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
+            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
+
             _fixture.Initialize();
         }
 
         [Fact]
         public void Test()
         {
+            var transactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser/SingleDateQueryAsync";
+
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
+
                 new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1, metricScope = "WebTransaction/MVC/MySqlController/MySqlAsync"},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1, metricScope = transactionName }
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = 1 },
+                // The datastore operation happened inside a console app so there should be no allWeb metrics
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
 
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1, metricScope = "WebTransaction/MVC/MySqlController/MySqlAsync" }
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1, metricScope = transactionName }
             };
             var expectedTransactionTraceSegments = new List<string>
             {
@@ -85,7 +90,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             {
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = "WebTransaction/MVC/MySqlController/MySqlAsync",
+                    TransactionName = transactionName,
                     Sql = "SELECT _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?",
                     DatastoreMetricName = "Datastore/statement/MySQL/dates/select",
 
@@ -104,14 +109,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/MySqlController/MySqlAsync");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/MySqlController/MySqlAsync");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample(transactionName);
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(transactionName);
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
 
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
                 () => Assert.NotNull(transactionEvent)
-                );
+            );
 
             NrAssert.Multiple
             (
@@ -123,6 +128,78 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces),
                 () => Assertions.TransactionTraceSegmentParametersExist(expectedTransactionTraceSegmentParameters, transactionSample)
             );
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlAsyncTestsFW462 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public MySqlAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlAsyncTestsFW471 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public MySqlAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlAsyncTestsFW48 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public MySqlAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlAsyncTestsFWLatest : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MySqlAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlAsyncTestsCore31 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public MySqlAsyncTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlAsyncTestsCore50 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public MySqlAsyncTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlAsyncTestsCore60 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MySqlAsyncTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class MySqlAsyncTestsCore : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MySqlAsyncTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
         }
     }
 }

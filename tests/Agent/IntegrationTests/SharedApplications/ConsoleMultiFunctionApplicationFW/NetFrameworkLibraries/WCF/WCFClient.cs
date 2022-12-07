@@ -389,8 +389,6 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
                 {
                     throw;
                 }
-
-
                 ConsoleMFLogger.Info("Ignoring TergetInvocationException -> WCF Fault Exception<ExceptionDetail>!");
             }
             catch (ProtocolException)
@@ -408,7 +406,11 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
         private WcfClient CreateClientWithWebHttpBinding(Uri endpointAddress)
         {
             var webHttpBehavior = new WebHttpBehavior { DefaultBodyStyle = WebMessageBodyStyle.Bare, DefaultOutgoingRequestFormat = WebMessageFormat.Xml, DefaultOutgoingResponseFormat = WebMessageFormat.Xml };
-            var binding = new WebHttpBinding();
+            var binding = new WebHttpBinding
+            {
+                ReceiveTimeout = TimeSpan.FromMinutes(2)
+            };
+
             var endpoint = new EndpointAddress(endpointAddress);
             var client = new WcfClient(binding, endpoint);
             client.ChannelFactory.Endpoint.EndpointBehaviors.Add(webHttpBehavior);
@@ -418,14 +420,21 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
 
         private WcfClient CreateClientWithHttpBinding(Uri endpointAddress)
         {
-            var binding = new BasicHttpBinding();
+            var binding = new BasicHttpBinding()
+            {
+                ReceiveTimeout = TimeSpan.FromMinutes(2)
+            };
+
             var endpoint = new EndpointAddress(endpointAddress);
             return new WcfClient(binding, endpoint);
         }
 
         private WcfClient CreateClientWithWSHttpBinding(Uri endpointAddress, SecurityMode? securityMode = null)
         {
-            var binding = new WSHttpBinding();
+            var binding = new WSHttpBinding()
+            {
+                ReceiveTimeout = TimeSpan.FromMinutes(2)
+            };
 
             if (securityMode.HasValue)
                 binding.Security.Mode = securityMode.Value;
@@ -437,7 +446,11 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
 
         private WcfClient CreateClientWithNetTCPBinding(Uri endpointAddress)
         {
-            var binding = new NetTcpBinding();
+            var binding = new NetTcpBinding()
+            {
+                ReceiveTimeout = TimeSpan.FromMinutes(2)
+            };
+
             var endpoint = new EndpointAddress(endpointAddress);
 
             return new WcfClient(binding, endpoint);
@@ -446,6 +459,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
         private WcfClient CreateClientWithCustomBinding(Uri endpointAddress, string configurationName = null)
         {
             var binding = WCFLibraryHelpers.GetCustomBinding(configurationName);
+            binding.ReceiveTimeout = TimeSpan.FromMinutes(2);
             var endpoint = new EndpointAddress(endpointAddress);
             return new WcfClient(binding, endpoint);
         }

@@ -736,7 +736,7 @@
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>
-                        <xs:attribute name="maximumSamplesStored" type="xs:int" default="10000">
+                        <xs:attribute name="maximumSamplesStored" type="xs:int" default="30000">
                             <xs:annotation>
                                 <xs:documentation>
                                     The maximum number of samples to store in memory at a time.	Default is 10000.
@@ -1615,6 +1615,38 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="contextData" minOccurs="0" maxOccurs="1">
+                                            <xs:annotation>
+                                                <xs:documentation>
+                                                    Log context attributes filtering.
+                                                </xs:documentation>
+                                            </xs:annotation>
+                                            <xs:complexType>
+                                                <xs:attribute name="enabled" type="xs:boolean" default="false">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            Controls whether or not context attributes filtering is used. Defaults to false.
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                                <xs:attribute name="include" type="xs:string" default="">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            A comma-separated list of case-sensitive strings that define the context attributes that should be added to the log record. Empty means include all.
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                                <xs:attribute name="exclude" type="xs:string" default="SpanId,TraceId,ParentId">
+                                                    <xs:annotation>
+                                                        <xs:documentation>
+                                                            A comma-separated list of case-sensitive strings that define the context attributes that should NOT be added to the log record. "exclude" wins over "include".
+                                                        </xs:documentation>
+                                                    </xs:annotation>
+                                                </xs:attribute>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
                                     <xs:attribute name="enabled" type="xs:boolean" default="true">
                                         <xs:annotation>
                                             <xs:documentation>
@@ -1797,11 +1829,11 @@
                     </xs:annotation>
 
                     <xs:complexType>
-                        <xs:attribute name="enabled" type="xs:boolean" default="false">
+                        <xs:attribute name="enabled" type="xs:boolean" default="true">
                             <xs:annotation>
                                 <xs:documentation>
-                                    Set this to "true" to capture namespace and function information
-                                    on spans to enable code level metrics in CodeStream.
+                                    Set this to "false" to disable capturing namespace and function information
+                                    on spans for code level metrics in CodeStream.
                                 </xs:documentation>
                             </xs:annotation>
                         </xs:attribute>

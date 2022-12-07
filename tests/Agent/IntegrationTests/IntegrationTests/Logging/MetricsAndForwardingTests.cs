@@ -1,7 +1,6 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,50 +21,51 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         private LoggingFramework _loggingFramework;
         private bool _canHaveLogsOutsideTransaction;
 
-        private const string OutsideTransactionDebugMessage = "OutsideTransactionDebugLogMessage";
+        // Non-async messages don't need to test more than one line
+        // Async messages should be tested to make sure more than one works
+        // Errors use exceptions so those need to be tested along with regular messages
+
         private const string OutsideTransactionInfoMessage = "OutsideTransactionInfoLogMessage";
-        private const string OutsideTransactionWarningMessage = "OutsideTransactionWarningLogMessage";
         private const string OutsideTransactionErrorMessage = "OutsideTransactionErrorLogMessage";
-        private const string OutsideTransactionFatalMessage = "OutsideTransactionFatalLogMessage";
 
         private const string AsyncOutsideTransactionDebugMessage = "AsyncOutsideTransactionDebugLogMessage";
         private const string AsyncOutsideTransactionInfoMessage = "AsyncOutsideTransactionInfoLogMessage";
         private const string AsyncOutsideTransactionWarningMessage = "AsyncOutsideTransactionWarningLogMessage";
         private const string AsyncOutsideTransactionErrorMessage = "AsyncOutsideTransactionErrorLogMessage";
-        private const string AsyncOutsideTransactionFatalMessage = "AsyncOutsideTransactionFatalLogMessage";
 
         private const string AsyncNoAwaitOutsideTransactionDebugMessage = "AsyncNoAwaitOutsideTransactionDebugLogMessage";
         private const string AsyncNoAwaitOutsideTransactionInfoMessage = "AsyncNoAwaitOutsideTransactionInfoLogMessage";
         private const string AsyncNoAwaitOutsideTransactionWarningMessage = "AsyncNoAwaitOutsideTransactionWarningLogMessage";
         private const string AsyncNoAwaitOutsideTransactionErrorMessage = "AsyncNoAwaitOutsideTransactionErrorLogMessage";
-        private const string AsyncNoAwaitOutsideTransactionFatalMessage = "AsyncNoAwaitOutsideTransactionFatalLogMessage";
 
-        private const string InTransactionDebugMessage = "InTransactionDebugLogMessage";
         private const string InTransactionInfoMessage = "InTransactionInfoLogMessage";
-        private const string InTransactionWarningMessage = "InTransactionWarningLogMessage";
         private const string InTransactionErrorMessage = "InTransactionErrorLogMessage";
-        private const string InTransactionFatalMessage = "InTransactionFatalLogMessage";
 
         private const string AsyncInTransactionDebugMessage = "AsyncInTransactionDebugLogMessage";
         private const string AsyncInTransactionInfoMessage = "AsyncInTransactionInfoLogMessage";
         private const string AsyncInTransactionWarningMessage = "AsyncInTransactionWarningLogMessage";
         private const string AsyncInTransactionErrorMessage = "AsyncInTransactionErrorLogMessage";
-        private const string AsyncInTransactionFatalMessage = "AsyncInTransactionFatalLogMessage";
 
         private const string AsyncNoAwaitInTransactionDebugMessage = "AsyncNoAwaitInTransactionDebugLogMessage";
         private const string AsyncNoAwaitInTransactionInfoMessage = "AsyncNoAwaitInTransactionInfoLogMessage";
         private const string AsyncNoAwaitInTransactionWarningMessage = "AsyncNoAwaitInTransactionWarningLogMessage";
         private const string AsyncNoAwaitInTransactionErrorMessage = "AsyncNoAwaitInTransactionErrorLogMessage";
-        private const string AsyncNoAwaitInTransactionFatalMessage = "AsyncNoAwaitInTransactionFatalLogMessage";
 
         private const string AsyncNoAwaitWithDelayInTransactionDebugMessage = "AsyncNoAwaitWithDelayInTransactionDebugLogMessage";
         private const string AsyncNoAwaitWithDelayInTransactionInfoMessage = "AsyncNoAwaitWithDelayInTransactionInfoLogMessage";
         private const string AsyncNoAwaitWithDelayInTransactionWarningMessage = "AsyncNoAwaitWithDelayInTransactionWarningLogMessage";
         private const string AsyncNoAwaitWithDelayInTransactionErrorMessage = "AsyncNoAwaitWithDelayInTransactionErrorLogMessage";
-        private const string AsyncNoAwaitWithDelayInTransactionFatalMessage = "AsyncNoAwaitWithDelayInTransactionFatalLogMessage";
 
         private const string TraceAttributeOutsideTransactionLogMessage = "TraceAttributeOutsideTransactionLogMessage";
         private const string DifferentTraceAttributesInsideTransactionLogMessage = "DifferentTraceAttributesInsideTransactionLogMessage";
+
+        private const string OutsideTransactionErrorNoMessage = "OutsideTransactionErrorLogNoMessage";
+        private const string InTransactionErrorNoMessage = "InTransactionErrorLogNoMessage";
+        private const string SerilogWebErrorNoMessage = "Exception of type 'System.Exception' was thrown.";
+
+        private const string ErrorStackValue = "at MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation.ExceptionBuilder.BuildException(String message)";
+
+        private const string ErrorClassValue = "System.Exception";
 
         public MetricsAndForwardingTestsBase(TFixture fixture, ITestOutputHelper output, bool metricsEnabled, bool forwardingEnabled, bool canHaveLogsOutsideTransaction, LoggingFramework loggingFramework) : base(fixture)
         {
@@ -80,51 +80,44 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework}");
             _fixture.AddCommand($"LoggingTester Configure");
 
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionDebugMessage} DEBUG");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionInfoMessage} INFO");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionWarningMessage} WARN");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionFatalMessage} FATAL");
 
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsync {AsyncOutsideTransactionDebugMessage} DEBUG");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsync {AsyncOutsideTransactionInfoMessage} INFO");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsync {AsyncOutsideTransactionWarningMessage} WARN");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsync {AsyncOutsideTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsync {AsyncOutsideTransactionFatalMessage} FATAL");
 
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionDebugMessage} DEBUG");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionInfoMessage} INFO");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionWarningMessage} WARN");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageAsyncNoAwait {AsyncNoAwaitOutsideTransactionFatalMessage} FATAL");
 
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {InTransactionDebugMessage} DEBUG");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {InTransactionInfoMessage} INFO");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {InTransactionWarningMessage} WARN");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {InTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {InTransactionFatalMessage} FATAL");
 
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionDebugMessage} DEBUG");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionInfoMessage} INFO");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionWarningMessage} WARN");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsync {AsyncInTransactionFatalMessage} FATAL");
 
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionDebugMessage} DEBUG");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionInfoMessage} INFO");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionWarningMessage} WARN");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwait {AsyncNoAwaitInTransactionFatalMessage} FATAL");
 
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionDebugMessage} DEBUG");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionInfoMessage} INFO");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionWarningMessage} WARN");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionErrorMessage} ERROR");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay {AsyncNoAwaitWithDelayInTransactionFatalMessage} FATAL");
 
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageWithTraceAttribute {TraceAttributeOutsideTransactionLogMessage} INFO");
 
             _fixture.AddCommand($"LoggingTester CreateTwoLogMessagesInTransactionWithDifferentTraceAttributes {DifferentTraceAttributesInsideTransactionLogMessage} INFO");
+
+            // These tests will have an exception, but no message
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessage {OutsideTransactionErrorNoMessage} NOMESSAGE");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {InTransactionErrorNoMessage} NOMESSAGE");
 
             // Give the unawaited async logs some time to catch up
             _fixture.AddCommand($"RootCommands DelaySeconds 10");
@@ -160,6 +153,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             SupportabilityForwardingConfigurationMetricExists();
             SupportabilityMetricsConfigurationMetricExists();
             SupportabilityLoggingFrameworkMetricExists();
+            SupportabilityLoggingForwardingEnabledWithFrameworkMetricExists();
             CountsAndValuesAreAsExpected();
             LoggingWorksWithTraceAttributeOutsideTransaction();
             LoggingWorksWithDifferentTraceAttributesInsideTransaction();
@@ -171,18 +165,17 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             AsyncNoAwaitLoggingWorksOutsideTransaction();
             AsyncNoAwaitWithDelayLoggingWorksInsideTransaction();
         }
-        
+
         private void LogLinesPerLevelMetricsExist()
         {
             var loggingMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "DEBUG"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "INFO"), callCount = 10 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "WARN"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "ERROR"), callCount = 7 },
-                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + GetLevelName(_loggingFramework, "FATAL"), callCount = 7 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), callCount = 5 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), callCount = 10 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "WARN"), callCount = 5 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), callCount = 9 },
 
-                new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 38 },
+                new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 29 },
             };
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();
@@ -224,9 +217,24 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         private void SupportabilityLoggingFrameworkMetricExists()
         {
-            var expectedFrameworkName = GetFrameworkName(_loggingFramework);
+            var expectedFrameworkName = LogUtils.GetFrameworkName(_loggingFramework);
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             Assert.Contains(actualMetrics, x => x.MetricSpec.Name == $"Supportability/Logging/DotNET/{expectedFrameworkName}/enabled");
+        }
+
+        private void SupportabilityLoggingForwardingEnabledWithFrameworkMetricExists()
+        {
+            var expectedFrameworkName = LogUtils.GetFrameworkName(_loggingFramework);
+            var actualMetrics = _fixture.AgentLog.GetMetrics();
+
+            if (_forwardingEnabled)
+            {
+                Assert.Contains(actualMetrics, x => x.MetricSpec.Name == $"Supportability/Logging/Forwarding/DotNET/{expectedFrameworkName}/enabled");
+            }
+            else
+            {
+                Assert.DoesNotContain(actualMetrics, x => x.MetricSpec.Name == $"Supportability/Logging/Forwarding/DotNET/{expectedFrameworkName}/enabled");
+            }
         }
 
         private void CountsAndValuesAreAsExpected()
@@ -249,13 +257,29 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
             if (_forwardingEnabled)
             {
-                Assert.Equal(38, logLines.Length);
+                Assert.Equal(29, logLines.Length);
 
                 foreach (var logLine in logLines)
                 {
-                    Assert.False(string.IsNullOrWhiteSpace(logLine.Message));
+                    if (LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE") == logLine.Level &&
+                        (logLine.ErrorMessage.EndsWith("NoMessage") || logLine.ErrorMessage.StartsWith("Exception of type"))) // SerilogWeb uses MEL (built in) and that handles exception messages differently
+                    {
+                        Assert.True(string.IsNullOrWhiteSpace(logLine.Message));
+                    }
+                    else
+                    {
+                        Assert.False(string.IsNullOrWhiteSpace(logLine.Message));
+                    }
+
                     Assert.False(string.IsNullOrWhiteSpace(logLine.Level));
                     Assert.NotEqual(0, logLine.Timestamp);
+
+                    if (logLine.Level == LogUtils.GetLevelName(_loggingFramework, "ERROR"))
+                    {
+                        Assert.False(string.IsNullOrWhiteSpace(logLine.ErrorStack));
+                        Assert.False(string.IsNullOrWhiteSpace(logLine.ErrorMessage));
+                        Assert.False(string.IsNullOrWhiteSpace(logLine.ErrorClass));
+                    }
                 }
             }
             else
@@ -270,14 +294,14 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = TraceAttributeOutsideTransactionLogMessage, HasTraceId = false, HasSpanId = false }
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = TraceAttributeOutsideTransactionLogMessage, HasTraceId = false, HasSpanId = false, HasException = false }
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
 
                 Assertions.LogLinesExist(expectedLogLines, logLines);
 
-                Assert.Equal(expectedLogLines.Length, logLines.Where(x => x.Message.StartsWith("TraceAttributeOutsideTransaction")).Count());
+                Assert.Equal(expectedLogLines.Length, logLines.Where(x => !string.IsNullOrWhiteSpace(x.Message) && x.Message.StartsWith("TraceAttributeOutsideTransaction")).Count());
             }
         }
 
@@ -287,14 +311,14 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = DifferentTraceAttributesInsideTransactionLogMessage, HasTraceId = true, HasSpanId = true }
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = DifferentTraceAttributesInsideTransactionLogMessage, HasTraceId = true, HasSpanId = true, HasException = false }
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
 
                 Assertions.LogLinesExist(expectedLogLines, logLines);
 
-                var logsOfInterest = logLines.Where(x => x.Message.StartsWith("DifferentTraceAttributesInsideTransaction")).ToArray();
+                var logsOfInterest = logLines.Where(x => !string.IsNullOrWhiteSpace(x.Message) && x.Message.StartsWith("DifferentTraceAttributesInsideTransaction")).ToArray();
 
                 Assert.Equal(2, logsOfInterest.Length);
                 Assert.NotEqual(logsOfInterest[0].Spanid, logsOfInterest[1].Spanid);
@@ -305,20 +329,39 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             if (_forwardingEnabled)
             {
+                Assertions.ExpectedLogLine inTransactionExpectedLogLine;
+                Assertions.ExpectedLogLine OutsideTransactionExpectedLogLine;
+                if (_canHaveLogsOutsideTransaction)
+                {
+                    inTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : InTransactionErrorNoMessage, ErrorClass = ErrorClassValue };
+                    OutsideTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = false, HasSpanId = false, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : OutsideTransactionErrorNoMessage, ErrorClass = ErrorClassValue };
+                }
+                else
+                {
+                    // Serilog always exists in a transaction
+                    inTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : InTransactionErrorNoMessage, ErrorClass = ErrorClassValue };
+                    OutsideTransactionExpectedLogLine = new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : OutsideTransactionErrorNoMessage, ErrorClass = ErrorClassValue };
+                }
+
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = InTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = InTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = InTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = InTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = InTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = InTransactionInfoMessage, HasTraceId = true, HasSpanId = true, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = InTransactionErrorMessage, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = InTransactionErrorMessage, ErrorClass = ErrorClassValue },
+
+                    // 2 expected NOMESSAGE log lines since there is no way to tell the inside transaction line from the outside transaction line
+                    // One line needs to have HasTraceId and HasSpanId set to false
+                    inTransactionExpectedLogLine,
+                    OutsideTransactionExpectedLogLine,
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
 
                 Assertions.LogLinesExist(expectedLogLines, logLines);
 
-                Assert.Equal(expectedLogLines.Length, logLines.Where(x => x.Message.StartsWith("InTransaction")).Count());
+                Assert.Equal(expectedLogLines.Length, logLines.Where(x =>
+                    (!string.IsNullOrWhiteSpace(x.Message) && x.Message.StartsWith("InTransaction"))
+                    || string.IsNullOrWhiteSpace(x.Message)
+                ).Count());
             }
         }
 
@@ -328,18 +371,19 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncInTransactionDebugMessage, HasTraceId = true, HasSpanId = true, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncInTransactionInfoMessage, HasTraceId = true, HasSpanId = true, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncInTransactionWarningMessage, HasTraceId = true, HasSpanId = true, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncInTransactionErrorMessage, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = AsyncInTransactionErrorMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
 
                 Assertions.LogLinesExist(expectedLogLines, logLines);
 
-                Assert.Equal(expectedLogLines.Length, logLines.Where(x => x.Message.StartsWith("AsyncInTransaction")).Count());
+                Assert.Equal(expectedLogLines.Length, logLines.Where(x =>
+                    !string.IsNullOrWhiteSpace(x.Message) && x.Message.StartsWith("AsyncInTransaction")
+                ).Count());
             }
         }
 
@@ -351,18 +395,19 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 // Because of this the spanId/traceId members are not checked by not specifying true/false in the ExpectedLogLines
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitInTransactionDebugMessage},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitInTransactionInfoMessage},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitInTransactionWarningMessage},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitInTransactionErrorMessage},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitInTransactionFatalMessage},
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitInTransactionDebugMessage, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitInTransactionInfoMessage, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitInTransactionWarningMessage, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitInTransactionErrorMessage, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = AsyncNoAwaitInTransactionErrorMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
 
                 Assertions.LogLinesExist(expectedLogLines, logLines);
 
-                Assert.Equal(expectedLogLines.Length, logLines.Where(x => x.Message.StartsWith("AsyncNoAwaitInTransaction")).Count());
+                Assert.Equal(expectedLogLines.Length, logLines.Where(x =>
+                    !string.IsNullOrWhiteSpace(x.Message) && x.Message.StartsWith("AsyncNoAwaitInTransaction")
+                ).Count());
             }
         }
 
@@ -372,18 +417,23 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = OutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = OutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = OutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = OutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = OutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = OutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = OutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = OutsideTransactionErrorMessage, ErrorClass = ErrorClassValue },
+
+                    // 2 expected NOMESSAGE log lines since there is no way to tell the inside transaction line from the outside transaction line
+                    // One line needs to have HasTraceId and HasSpanId set to true
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasSpanId = true, HasTraceId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : InTransactionErrorNoMessage, ErrorClass = ErrorClassValue },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "NOMESSAGE"), LogMessage = null, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = _loggingFramework == LoggingFramework.SerilogWeb ? SerilogWebErrorNoMessage : OutsideTransactionErrorNoMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
 
                 Assertions.LogLinesExist(expectedLogLines, logLines);
 
-                Assert.Equal(expectedLogLines.Length, logLines.Where(x => x.Message.StartsWith("OutsideTransaction")).Count());
+                Assert.Equal(expectedLogLines.Length, logLines.Where(x =>
+                    (!string.IsNullOrWhiteSpace(x.Message) && x.Message.StartsWith("OutsideTransaction"))
+                    || string.IsNullOrWhiteSpace(x.Message)
+                ).Count());
             }
         }
 
@@ -393,18 +443,19 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = AsyncOutsideTransactionErrorMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
 
                 Assertions.LogLinesExist(expectedLogLines, logLines);
 
-                Assert.Equal(expectedLogLines.Length, logLines.Where(x => x.Message.StartsWith("AsyncOutsideTransaction")).Count());
+                Assert.Equal(expectedLogLines.Length, logLines.Where(x =>
+                    !string.IsNullOrWhiteSpace(x.Message) && x.Message.StartsWith("AsyncOutsideTransaction")
+                ).Count());
             }
         }
 
@@ -414,18 +465,19 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false},
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitOutsideTransactionFatalMessage, HasSpanId = false, HasTraceId = false},
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitOutsideTransactionDebugMessage, HasSpanId = false, HasTraceId = false, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitOutsideTransactionInfoMessage, HasSpanId = false, HasTraceId = false, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitOutsideTransactionWarningMessage, HasSpanId = false, HasTraceId = false, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitOutsideTransactionErrorMessage, HasSpanId = false, HasTraceId = false, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = AsyncNoAwaitOutsideTransactionErrorMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
 
                 Assertions.LogLinesExist(expectedLogLines, logLines);
 
-                Assert.Equal(expectedLogLines.Length, logLines.Where(x => x.Message.StartsWith("AsyncNoAwaitOutsideTransaction")).Count());
+                Assert.Equal(expectedLogLines.Length, logLines.Where(x =>
+                    !string.IsNullOrWhiteSpace(x.Message) && x.Message.StartsWith("AsyncNoAwaitOutsideTransaction")
+                ).Count());
             }
         }
 
@@ -435,87 +487,21 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             {
                 var expectedLogLines = new Assertions.ExpectedLogLine[]
                 {
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitWithDelayInTransactionDebugMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitWithDelayInTransactionInfoMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitWithDelayInTransactionWarningMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, HasTraceId = true, HasSpanId = true },
-                new Assertions.ExpectedLogLine { Level = GetLevelName(_loggingFramework, "FATAL"), LogMessage = AsyncNoAwaitWithDelayInTransactionFatalMessage, HasTraceId = true, HasSpanId = true },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "DEBUG"), LogMessage = AsyncNoAwaitWithDelayInTransactionDebugMessage, HasTraceId = true, HasSpanId = true, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "INFO"), LogMessage = AsyncNoAwaitWithDelayInTransactionInfoMessage, HasTraceId = true, HasSpanId = true, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "WARN"), LogMessage = AsyncNoAwaitWithDelayInTransactionWarningMessage, HasTraceId = true, HasSpanId = true, HasException = false },
+                    new Assertions.ExpectedLogLine { Level = LogUtils.GetLevelName(_loggingFramework, "ERROR"), LogMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, HasTraceId = true, HasSpanId = true, HasException = true, ErrorStack = ErrorStackValue, ErrorMessage = AsyncNoAwaitWithDelayInTransactionErrorMessage, ErrorClass = ErrorClassValue },
                 };
 
                 var logLines = _fixture.AgentLog.GetLogEventDataLogLines();
 
                 Assertions.LogLinesExist(expectedLogLines, logLines);
 
-                Assert.Equal(expectedLogLines.Length, logLines.Where(x => x.Message.StartsWith("AsyncNoAwaitWithDelayInTransaction")).Count());
+                Assert.Equal(expectedLogLines.Length, logLines.Where(x =>
+                    !string.IsNullOrWhiteSpace(x.Message) && x.Message.StartsWith("AsyncNoAwaitWithDelayInTransaction")
+                ).Count());
             }
         }
-
-        private string GetFrameworkName(LoggingFramework loggingFramework)
-        {
-            switch (loggingFramework)
-            {
-                case LoggingFramework.Log4net:
-                    return "log4net";
-                case LoggingFramework.MicrosoftLogging:
-                    return "MicrosoftLogging";
-                case LoggingFramework.SerilogWeb:
-                case LoggingFramework.Serilog:
-                    return "serilog";
-                case LoggingFramework.NLog:
-                    return "nlog";
-                default:
-                    return "unknown";
-            }
-        }
-
-        private string GetLevelName(LoggingFramework loggingFramework, string level)
-        {
-            switch (loggingFramework)
-            {
-                // log4net names are the same as our internal names
-                case LoggingFramework.Log4net:
-                    return level;
-                case LoggingFramework.MicrosoftLogging:
-                    switch (level)
-                    {
-                        case "DEBUG":
-                            return "DEBUG";
-                        case "INFO":
-                            return "INFORMATION";
-                        case "WARN":
-                            return "WARNING";
-                        case "ERROR":
-                            return "ERROR";
-                        case "FATAL":
-                            return "TRACE";
-                        default:
-                            return level;
-                    }
-                case LoggingFramework.SerilogWeb:
-                case LoggingFramework.Serilog:
-                    switch (level)
-                    {
-                        case "DEBUG":
-                            return "DEBUG";
-                        case "INFO":
-                            return "INFORMATION";
-                        case "WARN":
-                            return "WARNING";
-                        case "ERROR":
-                            return "ERROR";
-                        case "FATAL":
-                            return "FATAL";
-                        default:
-                            return level;
-                    }
-                case LoggingFramework.NLog:
-                    return level;
-            }
-
-            return string.Empty;
-        }
-
-
     }
 
     #region log4net
@@ -554,6 +540,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         public class Log4NetMetricsAndForwardingEnabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
         {
             public Log4NetMetricsAndForwardingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Log4net)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class Log4NetMetricsAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore60>
+        {
+            public Log4NetMetricsAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
                 : base(fixture, output, true, true, true, LoggingFramework.Log4net)
             {
             }
@@ -617,6 +612,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
 
         [NetCoreTest]
+        public class Log4NetMetricsAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore60>
+        {
+            public Log4NetMetricsAndForwardingDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Log4net)
+            {
+            }
+        }
+
+        [NetCoreTest]
         public class Log4NetMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
         {
             public Log4NetMetricsAndForwardingDisabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -668,6 +672,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
         {
             public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Log4net)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore60>
+        {
+            public Log4NetMetricsEnabledAndForwardingDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
                 : base(fixture, output, true, false, true, LoggingFramework.Log4net)
             {
             }
@@ -731,6 +744,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
 
         [NetCoreTest]
+        public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore60>
+        {
+            public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Log4net)
+            {
+            }
+        }
+
+        [NetCoreTest]
         public class Log4netMetricsDisabledAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
         {
             public Log4netMetricsDisabledAndForwardingEnabledTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
@@ -766,6 +788,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCoreLatestTests(
                 ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public MicrosoftLoggingMetricsAndForwardingEnabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
                 : base(fixture, output, true, true, true, LoggingFramework.MicrosoftLogging)
             {
             }
@@ -825,6 +859,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             MicrosoftLoggingMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -877,6 +923,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             MicrosoftLoggingMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -922,6 +980,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(
                 ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
+            MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public MicrosoftLoggingMetricsDisabledAndForwardingEnabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
                 : base(fixture, output, false, true, true, LoggingFramework.MicrosoftLogging)
             {
             }
@@ -1024,6 +1094,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            SerilogMetricsAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public SerilogMetricsAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.Serilog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             SerilogMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -1112,6 +1194,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            SerilogMetricsAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public SerilogMetricsAndForwardingDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.Serilog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             SerilogMetricsAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -1188,6 +1282,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            SerilogMetricsEnabledAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public SerilogMetricsEnabledAndForwardingDisabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.Serilog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             SerilogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -1257,6 +1363,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public SerilogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(
                 ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.Serilog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
+            SerilogMetricsDisabledAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public SerilogMetricsDisabledAndForwardingEnabledTestsNetCore60Tests(
+                ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
                 : base(fixture, output, false, true, true, LoggingFramework.Serilog)
             {
             }
@@ -1347,6 +1465,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            NLogMetricsAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public NLogMetricsAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, true, true, LoggingFramework.NLog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             NLogMetricsAndForwardingEnabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -1416,6 +1546,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public NLogMetricsAndForwardingDisabledTestsNetCoreLatestTests(
                 ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, false, true, LoggingFramework.NLog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
+            NLogMetricsAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public NLogMetricsAndForwardingDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
                 : base(fixture, output, false, false, true, LoggingFramework.NLog)
             {
             }
@@ -1499,6 +1641,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         [NetCoreTest]
         public class
+            NLogMetricsEnabledAndForwardingDisabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public NLogMetricsEnabledAndForwardingDisabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
+                : base(fixture, output, true, false, true, LoggingFramework.NLog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
             NLogMetricsEnabledAndForwardingDisabledTestsNetCore50Tests : MetricsAndForwardingTestsBase<
                 ConsoleDynamicMethodFixtureCore50>
         {
@@ -1568,6 +1722,18 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         {
             public NLogMetricsDisabledAndForwardingEnabledTestsNetCoreLatestTests(
                 ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+                : base(fixture, output, false, true, true, LoggingFramework.NLog)
+            {
+            }
+        }
+
+        [NetCoreTest]
+        public class
+            NLogMetricsDisabledAndForwardingEnabledTestsNetCore60Tests : MetricsAndForwardingTestsBase<
+                ConsoleDynamicMethodFixtureCore60>
+        {
+            public NLogMetricsDisabledAndForwardingEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+                ITestOutputHelper output)
                 : base(fixture, output, false, true, true, LoggingFramework.NLog)
             {
             }

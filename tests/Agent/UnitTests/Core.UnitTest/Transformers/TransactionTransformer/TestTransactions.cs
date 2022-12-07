@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             segments = segments ?? Enumerable.Empty<Segment>();
 
-            var placeholderMetadataBuilder = new TransactionMetadata();
+            var placeholderMetadataBuilder = new TransactionMetadata(guid);
             var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 
             var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null, _attribDefSvc.AttributeDefs);
@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         {
             var uri = "sqlTrace/Uri";
 
-            var transactionMetadata = new TransactionMetadata();
+            var transactionMetadata = new TransactionMetadata("transactionGuid");
             transactionMetadata.SetUri(uri);
 
             var name = TransactionName.ForWebTransaction("TxsWithSegments", "TxWithSegmentX");

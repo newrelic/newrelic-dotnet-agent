@@ -107,6 +107,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         }
     }
 
+    [NetFrameworkTest]
+    public class NsbThrowingHandlerTestsFWLatest : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public NsbThrowingHandlerTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
     [NetCoreTest]
     public class NsbThrowingHandlerTestsCore31 : NsbThrowingHandlerTestsBase<ConsoleDynamicMethodFixtureCore31>
     {

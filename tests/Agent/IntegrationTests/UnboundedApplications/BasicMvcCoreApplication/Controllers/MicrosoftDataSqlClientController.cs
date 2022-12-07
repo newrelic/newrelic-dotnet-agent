@@ -116,8 +116,8 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        [Route("MicrosoftDataSqlClient/MsSql_WithParameterizedQuery")]
-        public string MsSql_WithParameterizedQuery(string tableName, bool paramsWithAtSign)
+        [Route("MicrosoftDataSqlClient/MsSqlWithParameterizedQuery")]
+        public string MsSqlWithParameterizedQuery(string tableName, bool paramsWithAtSign)
         {
             var teamMembers = new List<string>();
 

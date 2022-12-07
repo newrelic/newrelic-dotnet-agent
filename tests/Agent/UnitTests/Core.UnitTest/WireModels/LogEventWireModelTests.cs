@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Collections;
@@ -13,6 +14,7 @@ namespace NewRelic.Agent.Core.WireModels
     [TestFixture]
     public class LogEventWireModelTests
     {
+        private Dictionary<string, object> _testContextData = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
         [Test]
         public void ConstructorTest()
         {
@@ -23,7 +25,7 @@ namespace NewRelic.Agent.Core.WireModels
             var expectedTraceId = "ExpectedTraceId";
             float expectedPriority = 0;
 
-            var objectUnderTest = new LogEventWireModel(expectedTimestamp, expectedMessage, expectedLevel, expectedSpanId, expectedTraceId);
+            var objectUnderTest = new LogEventWireModel(expectedTimestamp, expectedMessage, expectedLevel, expectedSpanId, expectedTraceId, _testContextData);
 
             Assert.NotNull(objectUnderTest);
             Assert.AreEqual(expectedTimestamp, objectUnderTest.TimeStamp);
@@ -32,13 +34,14 @@ namespace NewRelic.Agent.Core.WireModels
             Assert.AreEqual(expectedSpanId, objectUnderTest.SpanId);
             Assert.AreEqual(expectedTraceId, objectUnderTest.TraceId);
             Assert.AreEqual(expectedPriority, objectUnderTest.Priority);
+            Assert.AreEqual(_testContextData, objectUnderTest.ContextData);
         }
 
         [Test]
         public void ImplementsIHasPriority()
         {
             var expectedPriority = 33.3f;
-            var baseObject = new LogEventWireModel(0, "", "", "", "");
+            var baseObject = new LogEventWireModel(0, "", "", "", "", _testContextData);
             baseObject.Priority = expectedPriority;
 
             var objectUnderTest = baseObject as IHasPriority;
@@ -55,7 +58,7 @@ namespace NewRelic.Agent.Core.WireModels
         public void InvalidPriorityThrowsAndRetainsPreviousValue(float priority)
         {
             var startingPriority = 33.3f;
-            var objectUnderTest = new LogEventWireModel(0, "", "", "", "")
+            var objectUnderTest = new LogEventWireModel(0, "", "", "", "", _testContextData)
             {
                 Priority = startingPriority
             };
@@ -71,7 +74,7 @@ namespace NewRelic.Agent.Core.WireModels
             var reallyLongMessageString = new string('a', maxLogMessageLengthInBytes);
             var tooLongMessageString = reallyLongMessageString + "a few too many chars";
 
-            var logEvent = new LogEventWireModel(0, tooLongMessageString, "INFO", "", "");
+            var logEvent = new LogEventWireModel(0, tooLongMessageString, "INFO", "", "", _testContextData);
 
             var messageStringFromLogEvent = logEvent.Message;
 
