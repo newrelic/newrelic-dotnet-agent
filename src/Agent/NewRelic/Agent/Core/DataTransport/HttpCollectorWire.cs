@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core.DataTransport
             try
             {
                 var uri = GetUri(method, connectionInfo);
-                
+
                 Log.DebugFormat("Request({0}): About to Invoke \"{1}\" with : {2}", requestGuid, method, serializedData);
                 AuditLog(Direction.Sent, Source.InstrumentedApp, uri.ToString());
                 AuditLog(Direction.Sent, Source.InstrumentedApp, serializedData);
@@ -127,12 +127,13 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
 
                 var response = httpClient.SendAsync(request).GetAwaiter().GetResult();
+                var responseContent = GetResponseContent(response);
 
                 _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response.Content.ToString()).Length);
 
                 // Possibly combine these logs? makes parsing harder in tests...
                 Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
-                Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, response);
+                Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
 
                 AuditLog(Direction.Received, Source.Collector, response.Content.ToString());
                 if (!response.IsSuccessStatusCode)
@@ -140,32 +141,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     ThrowExceptionFromHttpWebResponse(serializedData, response, requestGuid);
                 }
 
-                var responseStream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
-
-                if (responseStream == null)
-                    throw new NullReferenceException("responseStream");
-                if (response.Headers == null)
-                    throw new NullReferenceException("response.Headers");
-
-                var contentTypeEncoding = response.Content.Headers.ContentEncoding;
-                if (contentTypeEncoding.Contains("gzip"))
-                    responseStream = new GZipStream(responseStream, CompressionMode.Decompress);
-
-                using (responseStream)
-                using (var reader = new StreamReader(responseStream, Encoding.UTF8))
-                {
-                    var responseBody = reader.ReadLine();
-
-                    if (responseBody != null)
-                    {
-                        return responseBody;
-                    }
-                    else
-                    {
-                        return EmptyResponseBody;
-                    }
-                }
-
+                return responseContent;
             }
             catch (HttpRequestException)
             {
@@ -216,6 +192,35 @@ namespace NewRelic.Agent.Core.DataTransport
             var payload = new CollectorRequestPayload(shouldCompress, compressionType, bytes);
 
             return payload;
+        }
+
+        private string GetResponseContent(HttpResponseMessage response)
+        {
+            var responseStream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+
+            if (responseStream == null)
+                throw new NullReferenceException("responseStream");
+            if (response.Headers == null)
+                throw new NullReferenceException("response.Headers");
+
+            var contentTypeEncoding = response.Content.Headers.ContentEncoding;
+            if (contentTypeEncoding.Contains("gzip"))
+                responseStream = new GZipStream(responseStream, CompressionMode.Decompress);
+
+            using (responseStream)
+            using (var reader = new StreamReader(responseStream, Encoding.UTF8))
+            {
+                var responseBody = reader.ReadLine();
+
+                if (responseBody != null)
+                {
+                    return responseBody;
+                }
+                else
+                {
+                    return EmptyResponseBody;
+                }
+            }
         }
 
         private static void ThrowExceptionFromHttpWebResponse(string serializedData, HttpResponseMessage response, Guid requestGuid)
