@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
 
                 var response = httpClient.SendAsync(request).GetAwaiter().GetResult();
-                var responseContent = GetResponseContent(response);
+                var responseContent = GetResponseContent(response, requestGuid);
 
                 _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response.Content.ToString()).Length);
 
@@ -138,7 +138,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 AuditLog(Direction.Received, Source.Collector, response.Content.ToString());
                 if (!response.IsSuccessStatusCode)
                 {
-                    ThrowExceptionFromHttpWebResponse(serializedData, response, requestGuid);
+                    ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);
                 }
 
                 return responseContent;
@@ -194,59 +194,60 @@ namespace NewRelic.Agent.Core.DataTransport
             return payload;
         }
 
-        private string GetResponseContent(HttpResponseMessage response)
+        private string GetResponseContent(HttpResponseMessage response, Guid requestGuid)
         {
-            var responseStream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
-
-            if (responseStream == null)
-                throw new NullReferenceException("responseStream");
-            if (response.Headers == null)
-                throw new NullReferenceException("response.Headers");
-
-            var contentTypeEncoding = response.Content.Headers.ContentEncoding;
-            if (contentTypeEncoding.Contains("gzip"))
-                responseStream = new GZipStream(responseStream, CompressionMode.Decompress);
-
-            using (responseStream)
-            using (var reader = new StreamReader(responseStream, Encoding.UTF8))
+            try
             {
-                var responseBody = reader.ReadLine();
+                var responseStream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
 
-                if (responseBody != null)
+                if (responseStream == null)
                 {
-                    return responseBody;
+                    throw new NullReferenceException("responseStream");
                 }
-                else
+                if (response.Headers == null)
                 {
-                    return EmptyResponseBody;
+                    throw new NullReferenceException("response.Headers");
                 }
+
+                var contentTypeEncoding = response.Content.Headers.ContentEncoding;
+                if (contentTypeEncoding.Contains("gzip"))
+                {
+                    responseStream = new GZipStream(responseStream, CompressionMode.Decompress);
+                }
+
+                using (responseStream)
+                using (var reader = new StreamReader(responseStream, Encoding.UTF8))
+                {
+                    var responseBody = reader.ReadLine();
+
+                    if (responseBody != null)
+                    {
+                        return responseBody;
+                    }
+                    else
+                    {
+                        return EmptyResponseBody;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.ErrorFormat("Request({0}): Unable to parse response body with exception: {1}", requestGuid, ex.Message);
+                return EmptyResponseBody;
             }
         }
 
-        private static void ThrowExceptionFromHttpWebResponse(string serializedData, HttpResponseMessage response, Guid requestGuid)
+        private static void ThrowExceptionFromHttpResponseMessage(string serializedData, HttpStatusCode statusCode, string responseText, Guid requestGuid)
         {
-            var responseText = string.Empty;
-
-            if (response.StatusCode == HttpStatusCode.UnsupportedMediaType)
+            if (statusCode == HttpStatusCode.UnsupportedMediaType)
             {
-                Log.ErrorFormat("Request({0}): Had invalid json: {1}.  Please report to support@newrelic.com", requestGuid, serializedData);
+                Log.ErrorFormat("Request({0}): Had invalid json: {1}. Please report to support@newrelic.com", requestGuid, serializedData);
             }
 
             // P17: Not supposed to read/use the exception message in the connect response body. We are still going to log it, carefully, since it is very useful for support.
-            try
-            {
-                using (var reader = new StreamReader(response.Content.ReadAsStreamAsync().GetAwaiter().GetResult(), Encoding.ASCII))
-                {
-                    responseText = reader.ReadToEnd();
-                    Log.ErrorFormat("Received HTTP status code {0} with message {1}", response.StatusCode.ToString(), responseText);
-                }
-            }
-            catch (Exception exception)
-            {
-                Log.ErrorFormat("Request({0}): Unable to parse response body with {1}", requestGuid, exception.Message);
-            }
+            Log.ErrorFormat("Request({0}): Received HTTP status code {1} with message {2}", requestGuid, statusCode.ToString(), responseText);
 
-            throw new HttpException(response.StatusCode, responseText);
+            throw new HttpException(statusCode, responseText);
         }
 
         private void DiagnoseConnectionError(ConnectionInfo connectionInfo)
