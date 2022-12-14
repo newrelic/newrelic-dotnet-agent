@@ -21,10 +21,4 @@
     <ProjectReference Include="..\..\Models\Models.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="testcert.pfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>
