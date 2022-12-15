@@ -270,6 +270,7 @@ sudo mkdir -p /usr/share/dotnet
 sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
 sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
 sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
+sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/7.0.100/dotnet-sdk-7.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
 
 sudo ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
 dotnet --list-sdks
