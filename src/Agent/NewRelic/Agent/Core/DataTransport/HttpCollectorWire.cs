@@ -126,32 +126,32 @@ namespace NewRelic.Agent.Core.DataTransport
                     request.Method = HttpMethod.Post;
                 }
 
-                var response = httpClient.SendAsync(request).GetAwaiter().GetResult();
-                var responseContent = GetResponseContent(response, requestGuid);
-
-                _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response.Content.ToString()).Length);
-
-                // Possibly combine these logs? makes parsing harder in tests...
-                Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
-                Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
-
-                AuditLog(Direction.Received, Source.Collector, response.Content.ToString());
-                if (!response.IsSuccessStatusCode)
+                using (var response = httpClient.SendAsync(request).GetAwaiter().GetResult())
                 {
-                    ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);
-                }
+                    var responseContent = GetResponseContent(response, requestGuid);
 
-                return responseContent;
+                    _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response.Content.ToString()).Length);
+
+                    // Possibly combine these logs? makes parsing harder in tests...
+                    Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
+                    Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
+
+                    AuditLog(Direction.Received, Source.Collector, response.Content.ToString());
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);
+                    }
+
+                    return responseContent;
+                }
             }
             catch (HttpRequestException)
             {
                 if (_diagnoseConnectionError)
+                {
                     DiagnoseConnectionError(connectionInfo);
+                }
                 throw;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
         }
 
