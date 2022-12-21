@@ -94,12 +94,12 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
-        public void SendXyz_ReturnsSuccessful_IfRequestSuccessful()
+        public async Task SendXyz_ReturnsSuccessful_IfRequestSuccessfulAsync()
         {
             Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
-                .Returns<string, object[]>(null);
+                .Returns<string, object[]>((x,y) => Task.FromResult((object)null));
 
-            var result = ExecuteRequestAsync(_dataTransportService);
+            var result = await ExecuteRequestAsync(_dataTransportService);
 
             Assert.AreEqual(DataTransportResponseStatus.RequestSuccessful, result);
         }
@@ -125,56 +125,56 @@ namespace NewRelic.Agent.Core.DataTransport
         [TestCase((HttpStatusCode)333, DataTransportResponseStatus.Discard)]
         [TestCase((HttpStatusCode)444, DataTransportResponseStatus.Discard)]
         [TestCase((HttpStatusCode)555, DataTransportResponseStatus.Discard)]
-        public void SendXyz_ReturnsCorrectRetention_IfHttpException(HttpStatusCode statusCode, DataTransportResponseStatus expected)
+        public async Task SendXyz_ReturnsCorrectRetention_IfHttpExceptionAsync(HttpStatusCode statusCode, DataTransportResponseStatus expected)
         {
             Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new HttpException(statusCode, null));
 
-            var actual = ExecuteRequestAsync(_dataTransportService);
+            var actual = await ExecuteRequestAsync(_dataTransportService);
 
             Assert.AreEqual(expected, actual);
         }
 
         [Test]
-        public void SendXyz_ReturnsCommunicationError_IfSocketException()
+        public async Task SendXyz_ReturnsCommunicationError_IfSocketExceptionAsync()
         {
             Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new SocketException(-1));
 
-            var result = ExecuteRequestAsync(_dataTransportService);
+            var result = await ExecuteRequestAsync(_dataTransportService);
 
             Assert.AreEqual(DataTransportResponseStatus.Retain, result);
         }
 
         [Test]
-        public void SendXyz_ReturnsCommunicationError_IfWebException()
+        public async Task SendXyz_ReturnsCommunicationError_IfWebExceptionAsync()
         {
             Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new WebException());
 
-            var result = ExecuteRequestAsync(_dataTransportService);
+            var result = await ExecuteRequestAsync(_dataTransportService);
 
             Assert.AreEqual(DataTransportResponseStatus.Retain, result);
         }
 
         [Test]
-        public void SendXyz_ReturnsCorrectRetention_IfOperationCanceledException()
+        public async Task SendXyz_ReturnsCorrectRetention_IfOperationCanceledExceptionAsync()
         {
             Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new OperationCanceledException());
 
-            var result = ExecuteRequestAsync(_dataTransportService);
+            var result = await ExecuteRequestAsync(_dataTransportService);
 
             Assert.AreEqual(DataTransportResponseStatus.Retain, result);
         }
 
         [Test]
-        public void SendXyz_ReturnsOtherError_IfOtherException()
+        public async Task SendXyz_ReturnsOtherError_IfOtherExceptionAsync()
         {
             Mock.Arrange(() => _connectionManager.SendDataRequestAsync<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new Exception());
 
-            var result = ExecuteRequestAsync(_dataTransportService);
+            var result = await ExecuteRequestAsync(_dataTransportService);
 
             Assert.AreEqual(DataTransportResponseStatus.Discard, result);
         }

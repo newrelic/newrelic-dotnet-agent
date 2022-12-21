@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // calling Disconnect on Shutdown is crashing on Linux.  This is probably a CLR bug, but we have to work around it.
             // The Shutdown call is actually not very important (agent runs time out after 5 minutes anyway) so just don't call it.
 #if NETFRAMEWORK
-			_subscriptions.Add<CleanShutdownEvent>(OnCleanShutdownAsyncEventHandler);
+            _subscriptions.Add<CleanShutdownEvent>(OnCleanShutdownAsyncEventHandler);
 #endif
         }
 
@@ -75,7 +75,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     return;
 
                 if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
-                    await ConnectAsync();
+                    await ConnectInternalAsync();
                 else
                     _scheduler.ExecuteOnce(ConnectAsyncEventHandler, TimeSpan.Zero);
 
@@ -83,7 +83,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             finally
             {
-                _syncSemaphore.Release();   
+                _syncSemaphore.Release();
             }
         }
 
@@ -91,20 +91,24 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private async Task ConnectAsync()
         {
+            await _syncSemaphore.WaitAsync();
+
             try
             {
-                await _syncSemaphore.WaitAsync();
+                await ConnectInternalAsync();
+            }
+            finally
+            {
+                _syncSemaphore.Release();
+            }
+        }
 
-                try
-                {
-                    await _connectionHandler.ConnectAsync();
-                }
-                finally
-                {
-                    _syncSemaphore.Release();
-                }
-
-                _connectionAttempt = 0;
+        // For use when _syncSemaphore has already been acquired
+        private async Task ConnectInternalAsync()
+        {
+            try
+            {
+                await _connectionHandler.ConnectAsync();
             }
             // This exception is thrown when the agent receives an unexpected HTTP error
             // This is also the parent type of some of the more specific HTTP errors that we handle
@@ -145,12 +149,18 @@ namespace NewRelic.Agent.Core.DataTransport
             await _syncSemaphore.WaitAsync();
             try
             {
-                await _connectionHandler.DisconnectAsync();
+                await DisconnectInternalAsync();
             }
             finally
             {
                 _syncSemaphore.Release();
             }
+        }
+
+        // For use when _syncSemaphore has already been acquired
+        private async Task DisconnectInternalAsync()
+        {
+            await _connectionHandler.DisconnectAsync();
         }
 
         private async Task ReconnectAsync()
@@ -160,8 +170,8 @@ namespace NewRelic.Agent.Core.DataTransport
             await _syncSemaphore.WaitAsync();
             try
             {
-                await DisconnectAsync();
-                await ConnectAsync();
+                await DisconnectInternalAsync();
+                await ConnectInternalAsync();
             }
             finally
             {
