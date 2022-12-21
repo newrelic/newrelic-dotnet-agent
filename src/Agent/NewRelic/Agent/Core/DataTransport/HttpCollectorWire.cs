@@ -12,6 +12,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -67,7 +68,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _httpClientFactory = httpClientFactory;
         }
 
-        public string SendData(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid)
+        public async Task<string> SendDataAsync(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid)
         {
             try
             {
@@ -126,9 +127,9 @@ namespace NewRelic.Agent.Core.DataTransport
                     request.Method = HttpMethod.Post;
                 }
 
-                using (var response = httpClient.SendAsync(request).GetAwaiter().GetResult())
+                using (var response = await httpClient.SendAsync(request))
                 {
-                    var responseContent = GetResponseContent(response, requestGuid);
+                    var responseContent = await GetResponseContentAsync(response, requestGuid);
 
                     _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response.Content.ToString()).Length);
 
@@ -194,11 +195,11 @@ namespace NewRelic.Agent.Core.DataTransport
             return payload;
         }
 
-        private string GetResponseContent(HttpResponseMessage response, Guid requestGuid)
+        private async Task<string> GetResponseContentAsync(HttpResponseMessage response, Guid requestGuid)
         {
             try
             {
-                var responseStream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+                var responseStream = await response.Content.ReadAsStreamAsync();
 
                 if (responseStream == null)
                 {
@@ -218,7 +219,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 using (responseStream)
                 using (var reader = new StreamReader(responseStream, Encoding.UTF8))
                 {
-                    var responseBody = reader.ReadLine();
+                    var responseBody = await reader.ReadLineAsync();
 
                     if (responseBody != null)
                     {

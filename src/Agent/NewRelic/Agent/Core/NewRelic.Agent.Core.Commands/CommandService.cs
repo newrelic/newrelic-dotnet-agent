@@ -9,6 +9,7 @@ using NewRelic.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Commands
 {
@@ -25,12 +26,12 @@ namespace NewRelic.Agent.Core.Commands
             _dataTransportService = dataTransportService;
             _scheduler = scheduler;
 
-            _scheduler.ExecuteEvery(GetAndExecuteAgentCommands, TimeSpan.FromMinutes(1));
+            _scheduler.ExecuteEvery(GetAndExecuteAgentCommandsAsyncEventHandler, TimeSpan.FromMinutes(1));
         }
 
         public override void Dispose()
         {
-            _scheduler.StopExecuting(GetAndExecuteAgentCommands);
+            _scheduler.StopExecuting(GetAndExecuteAgentCommandsAsyncEventHandler);
         }
 
         public void AddCommands(params ICommand[] commands)
@@ -44,14 +45,21 @@ namespace NewRelic.Agent.Core.Commands
             }
         }
 
-        private void GetAndExecuteAgentCommands()
+        // async void is usually a no-no, but this method is an event handler callback for the Timer
+        // and Stephen Cleary says it's ok... https://stackoverflow.com/a/38918443
+        private async void GetAndExecuteAgentCommandsAsyncEventHandler()
         {
-            var commands = _dataTransportService.GetAgentCommands();
+            await GetAndExecuteAgentCommandsAsync();
+        }
+
+        private async Task GetAndExecuteAgentCommandsAsync()
+        {
+            var commands = await _dataTransportService.GetAgentCommandsAsync();
             var commandResults = ProcessCommands(commands);
             if (commandResults.Count < 1)
                 return;
 
-            _dataTransportService.SendCommandResults(commandResults);
+            await _dataTransportService.SendCommandResultsAsync(commandResults);
         }
 
         public IDictionary<string, object> ProcessCommands(IEnumerable<CommandModel> commandModels)

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -82,7 +83,7 @@ namespace NewRelic.Agent.Core.Aggregators
         public void Harvest_SendsTracesFromCollectors()
         {
             var sentTraces = Enumerable.Empty<TransactionTraceWireModel>();
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
                 .DoInstead<IEnumerable<TransactionTraceWireModel>>(traces => sentTraces = traces);
 
             var trace1 = Mock.Create<TransactionTraceWireModel>();
@@ -115,11 +116,11 @@ namespace NewRelic.Agent.Core.Aggregators
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
             var sentTraces = Enumerable.Empty<TransactionTraceWireModel>();
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
                 .Returns<IEnumerable<TransactionTraceWireModel>>(traces =>
                 {
                     sentTraces = traces;
-                    return DataTransportResponseStatus.Retain;
+                    return Task.FromResult(DataTransportResponseStatus.Retain);
                 });
 
             var trace = new TransactionTraceWireModelComponents(new TransactionMetricName(), TimeSpan.FromSeconds(5), false, () => Mock.Create<TransactionTraceWireModel>());
@@ -142,7 +143,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             EventBus<PreCleanShutdownEvent>.Publish(new PreCleanShutdownEvent());
 
-            Mock.Assert(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()), Occurs.Once());
+            Mock.Assert(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()), Occurs.Once());
         }
 
         [Test]

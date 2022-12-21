@@ -10,6 +10,8 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -34,59 +36,72 @@ namespace NewRelic.Agent.Core.DataTransport
         private readonly IScheduler _scheduler;
         private int _connectionAttempt = 0;
         private bool _started;
-        private readonly object _syncObject = new object();
+        private readonly SemaphoreSlim _syncSemaphore = new SemaphoreSlim(1);
 
         public ConnectionManager(IConnectionHandler connectionHandler, IScheduler scheduler)
         {
             _connectionHandler = connectionHandler;
             _scheduler = scheduler;
 
-            _subscriptions.Add<StartAgentEvent>(OnStartAgent);
-            _subscriptions.Add<RestartAgentEvent>(OnRestartAgent);
+            _subscriptions.Add<StartAgentEvent>(OnStartAgentAsyncEventHandler);
+            _subscriptions.Add<RestartAgentEvent>(OnRestartAgentAsyncEventHandler);
 
             // calling Disconnect on Shutdown is crashing on Linux.  This is probably a CLR bug, but we have to work around it.
             // The Shutdown call is actually not very important (agent runs time out after 5 minutes anyway) so just don't call it.
 #if NETFRAMEWORK
-			_subscriptions.Add<CleanShutdownEvent>(OnCleanShutdown);
+			_subscriptions.Add<CleanShutdownEvent>(OnCleanShutdownAsyncEventHandler);
 #endif
         }
 
-        public void AttemptAutoStart()
+        public async Task AttemptAutoStartAsync()
         {
             if (_configuration.AutoStartAgent)
-                Start();
+                await StartAsync();
         }
 
         #region Synchronized methods
 
-        private void Start()
+        private async Task StartAsync()
         {
             // First, a quick happy path check which won't force callers to wait around to find out that we've already started a long time ago
             if (_started)
                 return;
 
-            lock (_syncObject)
+            await _syncSemaphore.WaitAsync();
+            try
             {
                 // Second, a thread-safe check inside the blocking code block that ensures we'll never start more than once
                 if (_started)
                     return;
 
                 if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
-                    Connect();
+                    await ConnectAsync();
                 else
-                    _scheduler.ExecuteOnce(Connect, TimeSpan.Zero);
+                    _scheduler.ExecuteOnce(ConnectAsyncEventHandler, TimeSpan.Zero);
 
                 _started = true;
             }
+            finally
+            {
+                _syncSemaphore.Release();   
+            }
         }
 
-        private void Connect()
+        private async void ConnectAsyncEventHandler() => await ConnectAsync();
+
+        private async Task ConnectAsync()
         {
             try
             {
-                lock (_syncObject)
+                await _syncSemaphore.WaitAsync();
+
+                try
                 {
-                    _connectionHandler.Connect();
+                    await _connectionHandler.ConnectAsync();
+                }
+                finally
+                {
+                    _syncSemaphore.Release();
                 }
 
                 _connectionAttempt = 0;
@@ -125,30 +140,47 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private void Disconnect()
+        private async Task DisconnectAsync()
         {
-            lock (_syncObject)
+            await _syncSemaphore.WaitAsync();
+            try
             {
-                _connectionHandler.Disconnect();
+                await _connectionHandler.DisconnectAsync();
+            }
+            finally
+            {
+                _syncSemaphore.Release();
             }
         }
 
-        private void Reconnect()
+        private async Task ReconnectAsync()
         {
             EventBus<StopHarvestEvent>.Publish(new StopHarvestEvent());
 
-            lock (_syncObject)
+            await _syncSemaphore.WaitAsync();
+            try
             {
-                Disconnect();
-                Connect();
+                await DisconnectAsync();
+                await ConnectAsync();
+            }
+            finally
+            {
+                _syncSemaphore.Release();
             }
         }
 
-        public T SendDataRequest<T>(string method, params object[] data)
+        private async void ReconnectAsyncEventHandler() => await ReconnectAsync();
+
+        public async Task<T> SendDataRequestAsync<T>(string method, params object[] data)
         {
-            lock (_syncObject)
+            await _syncSemaphore.WaitAsync();
+            try
             {
-                return _connectionHandler.SendDataRequest<T>(method, data);
+                return await _connectionHandler.SendDataRequestAsync<T>(method, data);
+            }
+            finally
+            {
+                _syncSemaphore.Release();
             }
         }
 
@@ -166,7 +198,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var _retryTime = ConnectionRetryBackoffSequence[_connectionAttempt];
             Log.InfoFormat("Will attempt to reconnect in {0} seconds", _retryTime.TotalSeconds);
-            _scheduler.ExecuteOnce(Connect, _retryTime);
+            _scheduler.ExecuteOnce(ConnectAsyncEventHandler, _retryTime);
 
             _connectionAttempt = Math.Min(_connectionAttempt + 1, ConnectionRetryBackoffSequence.Length - 1);
         }
@@ -199,23 +231,16 @@ namespace NewRelic.Agent.Core.DataTransport
 
             Log.Info("Reconnecting due to configuration change");
 
-            _scheduler.ExecuteOnce(Reconnect, TimeSpan.Zero);
+            _scheduler.ExecuteOnce(ReconnectAsyncEventHandler, TimeSpan.Zero);
         }
 
-        private void OnStartAgent(StartAgentEvent eventData)
-        {
-            Start();
-        }
+        private async Task OnStartAgentAsync(StartAgentEvent eventData) => await StartAsync();
 
-        private void OnRestartAgent(RestartAgentEvent eventData)
-        {
-            Reconnect();
-        }
+        private async void OnStartAgentAsyncEventHandler(StartAgentEvent eventData) => await OnStartAgentAsync(eventData);
 
-        private void OnCleanShutdown(CleanShutdownEvent eventData)
-        {
-            Disconnect();
-        }
+        private async void OnRestartAgentAsyncEventHandler(RestartAgentEvent eventData) => await ReconnectAsync();
+
+        private async void OnCleanShutdownAsyncEventHandler(CleanShutdownEvent eventData) => await DisconnectAsync();
 
         #endregion Event handlers
     }

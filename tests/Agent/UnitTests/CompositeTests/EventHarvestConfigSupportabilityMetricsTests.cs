@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Configuration;
@@ -37,8 +38,8 @@ namespace CompositeTests
             var agentEnvironment = new NewRelic.Agent.Core.Environment(systemInfo, processStatic, configurationService);
 
             Mock.Arrange(() => collectorWireFactory.GetCollectorWire(null, Arg.IsAny<IAgentHealthReporter>())).IgnoreArguments().Returns(_collectorWire);
-            Mock.Arrange(() => _collectorWire.SendData("preconnect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
-                .Returns("{'return_value': { 'redirect_host': ''}}");
+            Mock.Arrange(() => _collectorWire.SendDataAsync("preconnect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
+                .Returns(Task.FromResult("{'return_value': { 'redirect_host': ''}}"));
 
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
@@ -53,17 +54,17 @@ namespace CompositeTests
         }
 
         [Test]
-        public void MissingEventHarvestConfig_ShouldNotGenerateSupportabilityMetrics()
+        public async Task MissingEventHarvestConfig_ShouldNotGenerateSupportabilityMetricsAsync()
         {
             ConnectRespondsWithEventHarvestConfig(null);
 
-            _connectionHandler.Connect();
+            await _connectionHandler.ConnectAsync();
 
             ShouldNotGenerateAnyEventHarvestSupportabilityMetrics();
         }
 
         [Test]
-        public void MissingReportPeriod_ShouldNotGenerateSupportabilityMetrics()
+        public async Task MissingReportPeriod_ShouldNotGenerateSupportabilityMetricsAsync()
         {
             var eventHarvestConfig = new EventHarvestConfig
             {
@@ -71,13 +72,13 @@ namespace CompositeTests
             };
             ConnectRespondsWithEventHarvestConfig(eventHarvestConfig);
 
-            _connectionHandler.Connect();
+            await _connectionHandler.ConnectAsync();
 
             ShouldNotGenerateAnyEventHarvestSupportabilityMetrics();
         }
 
         [Test]
-        public void ShouldGenerateReportPeriodSupportabilityMetric()
+        public async Task ShouldGenerateReportPeriodSupportabilityMetricAsync()
         {
             var eventHarvestConfig = new EventHarvestConfig
             {
@@ -85,13 +86,13 @@ namespace CompositeTests
             };
             ConnectRespondsWithEventHarvestConfig(eventHarvestConfig);
 
-            _connectionHandler.Connect();
+            await _connectionHandler.ConnectAsync();
 
             ShouldGenerateSupportabilityMetric(MetricNames.SupportabilityEventHarvestReportPeriod, 5);
         }
 
         [Test]
-        public void MissingHarvestLimit_ShouldNotGenerateHarvestLimitMetrics()
+        public async Task MissingHarvestLimit_ShouldNotGenerateHarvestLimitMetricsAsync()
         {
             var eventHarvestConfig = new EventHarvestConfig
             {
@@ -99,13 +100,13 @@ namespace CompositeTests
             };
             ConnectRespondsWithEventHarvestConfig(eventHarvestConfig);
 
-            _connectionHandler.Connect();
+            await _connectionHandler.ConnectAsync();
 
             ShouldNotGenerateAnyEventHarvestSupportabilityMetrics();
         }
 
         [Test]
-        public void MissingReportPeriod_ShouldNotGenerateHarvestLimitMetrics()
+        public async Task MissingReportPeriod_ShouldNotGenerateHarvestLimitMetricsAsync()
         {
             var eventHarvestConfig = new EventHarvestConfig
             {
@@ -118,7 +119,7 @@ namespace CompositeTests
             };
             ConnectRespondsWithEventHarvestConfig(eventHarvestConfig);
 
-            _connectionHandler.Connect();
+            await _connectionHandler.ConnectAsync();
 
             ShouldNotGenerateAnyEventHarvestSupportabilityMetrics();
         }
@@ -127,7 +128,7 @@ namespace CompositeTests
         [TestCase("custom_event_data", MetricNames.SupportabilityEventHarvestCustomEventHarvestLimit)]
         [TestCase("analytic_event_data", MetricNames.SupportabilityEventHarvestTransactionEventHarvestLimit)]
         [TestCase("span_event_data", MetricNames.SupportabilitySpanEventsLimit)]
-        public void ShouldGenerateHarvestLimitSupportabilityMetric(string eventType, string expectedMetricName)
+        public async Task ShouldGenerateHarvestLimitSupportabilityMetricAsync(string eventType, string expectedMetricName)
         {
             var eventHarvestConfig = new EventHarvestConfig
             {
@@ -136,7 +137,7 @@ namespace CompositeTests
             };
             ConnectRespondsWithEventHarvestConfig(eventHarvestConfig);
 
-            _connectionHandler.Connect();
+            await _connectionHandler.ConnectAsync();
 
             ShouldGenerateSupportabilityMetric(MetricNames.SupportabilityEventHarvestReportPeriod, 5000);
             ShouldGenerateSupportabilityMetric(expectedMetricName, 10);
@@ -160,8 +161,8 @@ namespace CompositeTests
             }
 
             var serverConfigJson = Newtonsoft.Json.JsonConvert.SerializeObject(_compositeTestAgent.ServerConfiguration);
-            Mock.Arrange(() => _collectorWire.SendData("connect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
-                .Returns($"{{'return_value': {serverConfigJson} }}");
+            Mock.Arrange(() => _collectorWire.SendDataAsync("connect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
+                .Returns(Task.FromResult($"{{'return_value': {serverConfigJson} }}"));
         }
 
         private static bool HasEventHarvestMetricPrefix(string metricName)

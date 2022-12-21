@@ -5,6 +5,7 @@ using NewRelic.Core.Logging;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
@@ -39,7 +40,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             bool createWorker = 0 == Interlocked.CompareExchange(ref _workerRunning, 1, 0);
             if (createWorker)
             {
-                _samplingWorker = new Thread(() => InternalPolling_WaitCallback(frequencyInMsec, durationInMsec, sampleSink, nativeMethods))
+                _samplingWorker = new Thread(async () => await InternalPolling_WaitCallbackAsync(frequencyInMsec, durationInMsec, sampleSink, nativeMethods))
                 {
                     IsBackground = true
                 };
@@ -70,7 +71,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         /// <summary>
         /// Polls for profiled threads.
         /// </summary>
-        private void InternalPolling_WaitCallback(uint frequencyInMsec, uint durationInMsec, ISampleSink sampleSink, INativeMethods nativeMethods)
+        private async Task InternalPolling_WaitCallbackAsync(uint frequencyInMsec, uint durationInMsec, ISampleSink sampleSink, INativeMethods nativeMethods)
         {
             int samples = 0;
 
@@ -113,7 +114,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             {
                 Log.Info($"samples ({samples})");
 
-                sampleSink.SamplingComplete();
+                await sampleSink.SamplingCompleteAsync();
 
                 nativeMethods.ShutdownNativeThreadProfiler();
                 _workerRunning = 0;

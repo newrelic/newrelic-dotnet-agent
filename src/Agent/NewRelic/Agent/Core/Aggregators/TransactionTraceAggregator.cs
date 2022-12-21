@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Core.Logging;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -41,7 +42,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void Harvest()
+        protected override async Task HarvestAsync()
         {
             var traceSamples = _transactionCollectors
                 .Where(t => t != null)
@@ -58,7 +59,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             LogUnencodedTraceData(traceWireModels);
 
-            var responseStatus = DataTransportService.Send(traceWireModels);
+            var responseStatus = await DataTransportService.SendAsync(traceWireModels);
             HandleResponse(responseStatus, traceSamples);
         }
 

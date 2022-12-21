@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -64,7 +65,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void Harvest()
+        protected override async Task HarvestAsync()
         {
             var originalLogEvents = GetAndResetLogEvents(GetReservoirSize());
             var aggregatedEvents = originalLogEvents.Where(node => node != null).Select(node => node.Data).ToList();
@@ -89,7 +90,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 hostname,
                 aggregatedEvents);
 
-            var responseStatus = DataTransportService.Send(modelsCollection);
+            var responseStatus = await DataTransportService.SendAsync(modelsCollection);
 
             HandleResponse(responseStatus, aggregatedEvents);
         }

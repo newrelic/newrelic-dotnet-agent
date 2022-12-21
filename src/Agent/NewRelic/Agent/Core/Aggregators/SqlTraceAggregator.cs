@@ -9,6 +9,7 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -41,7 +42,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void Harvest()
+        protected override async Task HarvestAsync()
         {
             IDictionary<long, SqlTraceWireModel> oldSqlTraces;
             lock (_sqlTraceLock)
@@ -59,7 +60,7 @@ namespace NewRelic.Agent.Core.Aggregators
             if (!slowestTraces.Any())
                 return;
 
-            var responseStatus = DataTransportService.Send(slowestTraces);
+            var responseStatus = await DataTransportService.SendAsync(slowestTraces);
 
             HandleResponse(responseStatus, slowestTraces);
         }

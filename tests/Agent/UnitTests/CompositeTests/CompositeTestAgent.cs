@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Telerik.JustMock;
 
 namespace CompositeTests
@@ -185,21 +186,21 @@ namespace CompositeTests
             _attribDefSvc = _container.Resolve<IAttributeDefinitionService>();
 
             // Redirect the mock DataTransportService to capture harvested wire models
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>()))
+            Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<IEnumerable<MetricWireModel>>()))
                 .Returns(SaveDataAndReturnSuccess(Metrics));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+            Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
                 .Returns(SaveDataAndReturnSuccess(CustomEvents));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
+            Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
                 .Returns(SaveDataAndReturnSuccess(TransactionTraces));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
                 .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, TransactionEvents));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
                 .Returns(SaveDataAndReturnSuccess(ErrorTraces));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
+            Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
                 .Returns(SaveDataAndReturnSuccess(SqlTraces));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+            Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
                 .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, ErrorEvents));
-            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+            Mock.Arrange(() => dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
                 .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, SpanEvents));
 
             EnableAggregators();
@@ -215,7 +216,7 @@ namespace CompositeTests
             propInfo.SetValue(null, new Action(() => { }));
         }
 
-        private static Func<IEnumerable<T>, DataTransportResponseStatus> SaveDataAndReturnSuccess<T>(List<T> dataBucket)
+        private static Func<IEnumerable<T>, Task<DataTransportResponseStatus>> SaveDataAndReturnSuccess<T>(List<T> dataBucket)
         {
             return datas =>
             {
@@ -224,7 +225,7 @@ namespace CompositeTests
                     dataBucket.AddRange(datas);
                 }
 
-                return DataTransportResponseStatus.RequestSuccessful;
+                return Task.FromResult(DataTransportResponseStatus.RequestSuccessful);
             };
         }
 

@@ -18,6 +18,7 @@ using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core
 {
@@ -142,8 +143,22 @@ namespace NewRelic.Agent.Core
             var agentApi = _container.Resolve<IAgentApi>();
             _wrapperService = _container.Resolve<IWrapperService>();
 
+
             //We need to attempt to auto start the agent once all services have resolved
-            _container.Resolve<IConnectionManager>().AttemptAutoStart();
+            //await _container.Resolve<IConnectionManager>().AttemptAutoStartAsync();
+            var t = new Task(async () => await _container.Resolve<IConnectionManager>().AttemptAutoStartAsync());
+            try
+            {
+                t.Wait(); // potential deadlock if the task never completes ??
+                if (t.IsFaulted)
+                {
+                    throw t.Exception; //??
+                }
+            }
+            catch
+            {
+                throw; //??
+            }
 
             AgentServices.StartServices(_container);
 

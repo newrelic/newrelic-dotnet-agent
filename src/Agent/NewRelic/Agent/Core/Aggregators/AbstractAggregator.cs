@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
@@ -35,7 +36,14 @@ namespace NewRelic.Agent.Core.Aggregators
 
         public abstract void Collect(T wireModel);
 
-        protected abstract void Harvest();
+        protected abstract Task HarvestAsync();
+
+        // async void is usually a no-no, but this method is an event handler callback for the Timer
+        // and Stephen Cleary says it's ok... https://stackoverflow.com/a/38918443
+        private async void Harvest()
+        {
+            await HarvestAsync();
+        }
 
         protected abstract bool IsEnabled { get; }
 
