@@ -316,27 +316,34 @@ namespace NewRelic.Agent.Core.Attributes
         {
         }
 
-        private List<AttributeValue> _attribValuesIntrinsicAttribs;
-        private List<AttributeValue> _attribValuesAgentAttribs;
-        private List<AttributeValue> _attribValuesUserAttribs;
+        private readonly Dictionary<AttributeClassification, object> _lockObjects = new Dictionary<AttributeClassification, object>
+        {
+            { AttributeClassification.AgentAttributes, new object() },
+            { AttributeClassification.Intrinsics, new object() },
+            { AttributeClassification.UserAttributes, new object() }
+        };
 
-        private List<AttributeValue> GetAttribValues(AttributeClassification classification, bool withCreate)
+        private Dictionary<string, AttributeValue> _attribValuesIntrinsicAttribs;
+        private Dictionary<string, AttributeValue> _attribValuesAgentAttribs;
+        private Dictionary<string, AttributeValue> _attribValuesUserAttribs;
+
+        private Dictionary<string, AttributeValue> GetAttribValuesInternal(AttributeClassification classification, bool withCreate)
         {
             switch (classification)
             {
                 case AttributeClassification.Intrinsics:
                     return withCreate
-                        ? _attribValuesIntrinsicAttribs ?? (_attribValuesIntrinsicAttribs = new List<AttributeValue>())
+                        ? _attribValuesIntrinsicAttribs ?? (_attribValuesIntrinsicAttribs = new Dictionary<string, AttributeValue>())
                         : _attribValuesIntrinsicAttribs;
 
                 case AttributeClassification.AgentAttributes:
                     return withCreate
-                        ? _attribValuesAgentAttribs ?? (_attribValuesAgentAttribs = new List<AttributeValue>())
+                        ? _attribValuesAgentAttribs ?? (_attribValuesAgentAttribs = new Dictionary<string, AttributeValue>())
                         : _attribValuesAgentAttribs;
 
                 case AttributeClassification.UserAttributes:
                     return withCreate
-                        ? _attribValuesUserAttribs ?? (_attribValuesUserAttribs = new List<AttributeValue>())
+                        ? _attribValuesUserAttribs ?? (_attribValuesUserAttribs = new Dictionary<string, AttributeValue>())
                         : _attribValuesUserAttribs;
             }
 
@@ -345,29 +352,40 @@ namespace NewRelic.Agent.Core.Attributes
 
         protected override IEnumerable<AttributeValue> GetAttribValuesImpl(AttributeClassification classification)
         {
-            var dic = GetAttribValues(classification, false);
+            var dic = GetAttribValuesInternal(classification, false);
 
             return dic == null
                 ? Enumerable.Empty<AttributeValue>()
-                : dic;
+                : dic.Values;
         }
 
         protected override void RemoveItemsImpl(IEnumerable<AttributeValue> itemsToRemove)
         {
-
-            if (_attribValuesIntrinsicAttribs != null)
+            foreach (var lockObjKVP in _lockObjects)
             {
-                Interlocked.Exchange(ref _attribValuesIntrinsicAttribs, new List<AttributeValue>(_attribValuesIntrinsicAttribs.Except(itemsToRemove)));
-            }
+                var keysToRemoveForClassification = itemsToRemove
+                    .Where(x => x.AttributeDefinition.Classification == lockObjKVP.Key)
+                    .Select(x => x.AttributeDefinition.Name)
+                    .ToArray();
 
-            if (_attribValuesAgentAttribs != null)
-            {
-                Interlocked.Exchange(ref _attribValuesAgentAttribs, new List<AttributeValue>(_attribValuesAgentAttribs.Except(itemsToRemove)));
-            }
+                if (keysToRemoveForClassification.Length == 0)
+                {
+                    continue;
+                }
 
-            if (_attribValuesUserAttribs != null)
-            {
-                Interlocked.Exchange(ref _attribValuesUserAttribs, new List<AttributeValue>(_attribValuesUserAttribs.Except(itemsToRemove)));
+                var dicForClassification = GetAttribValuesInternal(lockObjKVP.Key, false);
+                if (dicForClassification == null)
+                {
+                    continue;
+                }
+
+                lock (lockObjKVP.Value)
+                {
+                    foreach (var keyToRemove in keysToRemoveForClassification)
+                    {
+                        dicForClassification.Remove(keyToRemove);
+                    }
+                }
             }
         }
 
@@ -418,8 +436,6 @@ namespace NewRelic.Agent.Core.Attributes
             return SetValueImplInternal(attribVal);
         }
 
-        private object syncObj = new object();
-
         private bool SetValueImplInternal(AttributeValue attribVal)
         {
             if (IsImmutable)
@@ -427,13 +443,15 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            lock (syncObj)
+            var lockObj = _lockObjects[attribVal.AttributeDefinition.Classification];
+            lock (lockObj)
             {
-                var dic = GetAttribValues(attribVal.AttributeDefinition.Classification, true);
-                dic.Add(attribVal);
-            }
+                var dic = GetAttribValuesInternal(attribVal.AttributeDefinition.Classification, true);
+                var hasItem = dic.ContainsKey(attribVal.AttributeDefinition.Name);
+                dic.Add(attribVal.AttributeDefinition.Name, attribVal);
 
-            return true;
+                return !hasItem;
+            }
         }
     }
 
@@ -483,5 +501,4 @@ namespace NewRelic.Agent.Core.Attributes
             return _emptyAttribDic;
         }
     }
-
 }
