@@ -448,7 +448,7 @@ namespace NewRelic.Agent.Core.Attributes
             {
                 var dic = GetAttribValuesInternal(attribVal.AttributeDefinition.Classification, true);
                 var hasItem = dic.ContainsKey(attribVal.AttributeDefinition.Name);
-                dic.Add(attribVal.AttributeDefinition.Name, attribVal);
+                dic[attribVal.AttributeDefinition.Name] = attribVal;
 
                 return !hasItem;
             }
