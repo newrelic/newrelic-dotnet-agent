@@ -71,6 +71,8 @@ namespace NewRelic.Agent.Core.Attributes
         {
             var returnValue = true;
 
+            // JODO: only log if we are NOT going to allow a new attribute
+
             if (attrDef.Classification == AttributeClassification.UserAttributes && _userAttributeCount >= MaxCountUserAttrib)
             {
                 LogTransactionIfFinest($"User Attribute '{attrDef.Name}' was not recorded - A max of {MaxCountUserAttrib} User Attributes may be supplied.");
@@ -193,6 +195,8 @@ namespace NewRelic.Agent.Core.Attributes
 
         public bool TrySetValue(IAttributeValue attribValue)
         {
+            // JODO: investigate eliminating this sequential logic.. just get the lock once and add/update if appropriate.
+
             if (!ValidateCollectionLimits(attribValue.AttributeDefinition))
             {
                 return false;
