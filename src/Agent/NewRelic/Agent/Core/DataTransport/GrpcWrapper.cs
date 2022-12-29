@@ -9,6 +9,14 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
 using System.Threading.Tasks;
 
+#if LEGACY_GRPC
+using GrpcChannel = Grpc.Core.Channel;
+#else
+using Grpc.Net.Client;
+using System.Net.Http;
+using NewRelic.Agent.Core.Segments;
+#endif
+
 namespace NewRelic.Agent.Core.DataTransport
 {
 
@@ -60,17 +68,21 @@ namespace NewRelic.Agent.Core.DataTransport
 
     public abstract class GrpcWrapper<TRequest, TResponse> : IGrpcWrapper<TRequest, TResponse>
     {
-        private readonly List<ChannelState> _notConnectedStates = new List<ChannelState> { ChannelState.TransientFailure, ChannelState.Shutdown };
-
         protected GrpcWrapper()
         {
         }
 
-        private Channel _channel { get; set; }
+        private GrpcChannel _channel { get; set; }
 
-        protected abstract AsyncDuplexStreamingCall<TRequest, TResponse> CreateStreamsImpl(Channel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken);
-
+#if LEGACY_GRPC
+        private readonly List<ChannelState> _notConnectedStates = new List<ChannelState> { ChannelState.TransientFailure, ChannelState.Shutdown };
         public bool IsConnected => _channel != null && !_notConnectedStates.Contains(_channel.State);
+#else
+        public bool IsConnected => _channel != null;
+#endif
+
+        protected abstract AsyncDuplexStreamingCall<TRequest, TResponse> CreateStreamsImpl(GrpcChannel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken);
+
 
         public bool CreateChannel(string host, int port, bool ssl, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
         {
@@ -80,7 +92,25 @@ namespace NewRelic.Agent.Core.DataTransport
                 Shutdown();
 
                 var credentials = ssl ? new SslCredentials() : ChannelCredentials.Insecure;
+#if LEGACY_GRPC
                 var channel = new Channel(host, port, credentials);
+#else
+                var grpcChannelOptions = new GrpcChannelOptions();
+                grpcChannelOptions.Credentials = credentials;
+
+                var uriBuilder = new UriBuilder
+                {
+                    Scheme = "https",
+                    Host = host,
+                    Port = port
+                };
+
+
+                grpcChannelOptions.HttpHandler = new HttpClientHandler();
+                grpcChannelOptions.DisposeHttpClient = true;
+
+                var channel = GrpcChannel.ForAddress(uriBuilder.Uri, grpcChannelOptions);
+#endif
 
                 if (TestChannel(channel, headers, connectTimeoutMs, cancellationToken))
                 {
@@ -107,10 +137,11 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private bool TestChannel(Channel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
+        private bool TestChannel(GrpcChannel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
         {
             try
             {
+#if LEGACY_GRPC
                 if (channel.ConnectAsync().Wait(connectTimeoutMs, cancellationToken) && !_notConnectedStates.Contains(channel.State))
                 {
                     using (CreateStreamsImpl(channel, headers, connectTimeoutMs, cancellationToken))
@@ -118,6 +149,13 @@ namespace NewRelic.Agent.Core.DataTransport
                         return true;
                     }
                 }
+#else
+                var client = new IngestService.IngestServiceClient(channel);
+                using (client.RecordSpan(headers: headers, cancellationToken: cancellationToken, deadline: DateTime.UtcNow.AddMilliseconds(connectTimeoutMs)))
+                {
+                    return true;
+                }
+#endif
             }
             catch (Exception) { }
 
