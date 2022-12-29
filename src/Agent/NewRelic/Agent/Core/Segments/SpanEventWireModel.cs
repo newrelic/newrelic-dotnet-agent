@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.Segments
     {
         public float Priority { get; set; }
 
-        //Since the Map Field may not be concurrrent, we need to lock the objects when performing operations around them
+        //Since the Map Field may not be concurrent, we need to lock the objects when performing operations around them
         private readonly Dictionary<AttributeClassification, object> _lockObjects = new Dictionary<AttributeClassification, object>
         {
             { AttributeClassification.AgentAttributes, new object() },
@@ -57,37 +57,55 @@ namespace NewRelic.Agent.Core.Segments
             return GetAttribValuesInternal(classification).Values;
         }
 
+        public override bool CollectionContainsAttribute(AttributeDefinition attrDef)
+        {
+            var dic = GetAttribValuesInternal(attrDef.Classification);
+            if (dic == null)
+            {
+                return false;
+            }
+
+            var lockObj = _lockObjects[attrDef.Classification];
+            lock (lockObj)
+            {
+                // Grumble... Different attributes can have the same name, so this is kind of problematic...
+                return dic.ContainsKey(attrDef.Name);
+            }
+        }
+
         protected override bool SetValueImpl(IAttributeValue value)
         {
-            var attribVal = value is AttributeValue
-                        ? (AttributeValue)value
-                        : new AttributeValue(value);
+            var attribVal = value as AttributeValue ?? new AttributeValue(value);
 
             return SetValueInternal(attribVal);
         }
 
         protected override bool SetValueImpl(AttributeDefinition attribDef, object value)
         {
-            var attribVal = new AttributeValue(attribDef);
-            attribVal.Value = value;
+            var attribVal = new AttributeValue(attribDef)
+            {
+                Value = value
+            };
 
             return SetValueInternal(attribVal);
         }
 
         protected override bool SetValueImpl(AttributeDefinition attribDef, Lazy<object> lazyValue)
         {
-            var attribVal = new AttributeValue(attribDef);
-            attribVal.LazyValue = lazyValue;
+            var attribVal = new AttributeValue(attribDef)
+            {
+                LazyValue = lazyValue
+            };
 
             return SetValueInternal(attribVal);
         }
 
         protected override void RemoveItemsImpl(IEnumerable<AttributeValue> itemsToRemove)
         {
-            foreach (var lockObjKVP in _lockObjects)
+            foreach (var lockObjKvp in _lockObjects)
             {
                 var keysToRemoveForClassification = itemsToRemove
-                    .Where(x => x.AttributeDefinition.Classification == lockObjKVP.Key)
+                    .Where(x => x.AttributeDefinition.Classification == lockObjKvp.Key)
                     .Select(x => x.AttributeDefinition.Name)
                     .ToArray();
 
@@ -96,9 +114,9 @@ namespace NewRelic.Agent.Core.Segments
                     continue;
                 }
 
-                var dicForClassification = GetAttribValuesInternal(lockObjKVP.Key);
+                var dicForClassification = GetAttribValuesInternal(lockObjKvp.Key);
 
-                lock (lockObjKVP.Value)
+                lock (lockObjKvp.Value)
                 {
                     foreach (var keyToRemove in keysToRemoveForClassification)
                     {

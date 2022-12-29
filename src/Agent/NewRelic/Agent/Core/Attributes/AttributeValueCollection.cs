@@ -13,7 +13,7 @@ namespace NewRelic.Agent.Core.Attributes
     public interface IAttributeValueCollection
     {
         /// <summary>
-        /// Even this enum is Flags, this should only be one attributedestination
+        /// Even this enum is Flags, this should only be one attribute destination
         /// </summary>
         AttributeDestinations[] TargetModelTypes { get; }
 
@@ -54,48 +54,36 @@ namespace NewRelic.Agent.Core.Attributes
 
         protected static readonly AttributeClassification[] _allClassifications = new[] { AttributeClassification.Intrinsics, AttributeClassification.AgentAttributes, AttributeClassification.UserAttributes };
 
-        private int _attribCountIntrinsicAttribs;
-        private int _attribCountAgentAttribs;
-        private int _attribCountUserAttribs;
+        private int _intrinsicAttributeCount;
+        private int _agentAttributeCount;
+        private int _userAttributeCount;
 
         private readonly string _transactionGuid;
 
-        public int Count => _attribCountIntrinsicAttribs + _attribCountAgentAttribs + _attribCountUserAttribs;
+        public int Count => _intrinsicAttributeCount + _agentAttributeCount + _userAttributeCount;
 
         public AttributeDestinations[] TargetModelTypes { get; private set; }
         public AttributeDestinations TargetModelTypesAsFlags { get; private set; }
 
-        private bool ValidateCollectionLimits(AttributeClassification classification, string name)
+        public abstract bool CollectionContainsAttribute(AttributeDefinition attrDef);
+
+        private bool ValidateCollectionLimits(AttributeDefinition attrDef)
         {
-            int attribCount = 0;
-            switch (classification)
+            var returnValue = true;
+
+            if (attrDef.Classification == AttributeClassification.UserAttributes && _userAttributeCount >= MaxCountUserAttrib)
             {
-                case AttributeClassification.Intrinsics:
-                    attribCount = _attribCountIntrinsicAttribs;
-                    break;
-
-                case AttributeClassification.AgentAttributes:
-                    attribCount = _attribCountAgentAttribs;
-                    break;
-
-                case AttributeClassification.UserAttributes:
-                    attribCount = _attribCountUserAttribs;
-                    break;
+                LogTransactionIfFinest($"User Attribute '{attrDef.Name}' was not recorded - A max of {MaxCountUserAttrib} User Attributes may be supplied.");
+                returnValue = false;
+            }
+            else if (Count >= MaxCountAllAttrib)
+            {
+                LogTransactionIfFinest($"{attrDef.Classification} Attribute '{attrDef.Name}' was not recorded - A max of {MaxCountAllAttrib} attributes may be supplied.");
+                returnValue = false;
             }
 
-            if (classification == AttributeClassification.UserAttributes && attribCount >= MaxCountUserAttrib)
-            {
-                LogTransactionIfFinest($"{classification} Attribute '{name}' was not recorded - A max of {MaxCountUserAttrib} {classification} attributes may be supplied.");
-                return false;
-            }
-
-            if (Count >= MaxCountAllAttrib)
-            {
-                LogTransactionIfFinest($"{classification} Attribute '{name}' was not recorded - A max of {MaxCountAllAttrib} attributes may be supplied.");
-                return false;
-            }
-
-            return true;
+            // Only check for existence if we have hit a limit
+            return returnValue || CollectionContainsAttribute(attrDef);
         }
 
         private AttributeValueCollectionBase() { }
@@ -171,15 +159,15 @@ namespace NewRelic.Agent.Core.Attributes
             switch (classification)
             {
                 case AttributeClassification.Intrinsics:
-                    Interlocked.Increment(ref _attribCountIntrinsicAttribs);
+                    Interlocked.Increment(ref _intrinsicAttributeCount);
                     break;
 
                 case AttributeClassification.AgentAttributes:
-                    Interlocked.Increment(ref _attribCountAgentAttribs);
+                    Interlocked.Increment(ref _agentAttributeCount);
                     break;
 
                 case AttributeClassification.UserAttributes:
-                    Interlocked.Increment(ref _attribCountUserAttribs);
+                    Interlocked.Increment(ref _userAttributeCount);
                     break;
 
             }
@@ -187,7 +175,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         public bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, TOutput val)
         {
-            if (!ValidateCollectionLimits(attribDef.Classification, attribDef.Name))
+            if (!ValidateCollectionLimits(attribDef))
             {
                 return false;
             }
@@ -205,7 +193,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         public bool TrySetValue(IAttributeValue attribValue)
         {
-            if (!ValidateCollectionLimits(attribValue.AttributeDefinition.Classification, attribValue.AttributeDefinition.Name))
+            if (!ValidateCollectionLimits(attribValue.AttributeDefinition))
             {
                 return false;
             }
@@ -223,7 +211,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         public bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, Lazy<object> lazyValueImpl)
         {
-            if (!ValidateCollectionLimits(attribDef.Classification, attribDef.Name) || lazyValueImpl == null)
+            if (lazyValueImpl == null || !ValidateCollectionLimits(attribDef))
             {
                 return false;
             }
@@ -323,9 +311,9 @@ namespace NewRelic.Agent.Core.Attributes
             { AttributeClassification.UserAttributes, new object() }
         };
 
-        private Dictionary<Guid, AttributeValue> _attribValuesIntrinsicAttribs;
-        private Dictionary<Guid, AttributeValue> _attribValuesAgentAttribs;
-        private Dictionary<Guid, AttributeValue> _attribValuesUserAttribs;
+        private Dictionary<Guid, AttributeValue> _intrinsicAttributes;
+        private Dictionary<Guid, AttributeValue> _agentAttributes;
+        private Dictionary<Guid, AttributeValue> _userAttributes;
 
         private Dictionary<Guid, AttributeValue> GetAttribValuesInternal(AttributeClassification classification, bool withCreate)
         {
@@ -333,18 +321,18 @@ namespace NewRelic.Agent.Core.Attributes
             {
                 case AttributeClassification.Intrinsics:
                     return withCreate
-                        ? _attribValuesIntrinsicAttribs ?? (_attribValuesIntrinsicAttribs = new Dictionary<Guid, AttributeValue>())
-                        : _attribValuesIntrinsicAttribs;
+                        ? _intrinsicAttributes ??= new Dictionary<Guid, AttributeValue>()
+                        : _intrinsicAttributes;
 
                 case AttributeClassification.AgentAttributes:
                     return withCreate
-                        ? _attribValuesAgentAttribs ?? (_attribValuesAgentAttribs = new Dictionary<Guid, AttributeValue>())
-                        : _attribValuesAgentAttribs;
+                        ? _agentAttributes ??= new Dictionary<Guid, AttributeValue>()
+                        : _agentAttributes;
 
                 case AttributeClassification.UserAttributes:
                     return withCreate
-                        ? _attribValuesUserAttribs ?? (_attribValuesUserAttribs = new Dictionary<Guid, AttributeValue>())
-                        : _attribValuesUserAttribs;
+                        ? _userAttributes ??= new Dictionary<Guid, AttributeValue>()
+                        : _userAttributes;
             }
 
             return null;
@@ -354,34 +342,32 @@ namespace NewRelic.Agent.Core.Attributes
         {
             var dic = GetAttribValuesInternal(classification, false);
 
-            return dic == null
-                ? Enumerable.Empty<AttributeValue>()
-                : dic.Values;
+            return dic?.Values ?? Enumerable.Empty<AttributeValue>();
         }
 
         protected override void RemoveItemsImpl(IEnumerable<AttributeValue> itemsToRemove)
         {
-            foreach (var lockObjKVP in _lockObjects)
+            foreach (var lockObjKvp in _lockObjects)
             {
-                var GuidsToRemoveForClassification = itemsToRemove
-                    .Where(x => x.AttributeDefinition.Classification == lockObjKVP.Key)
+                var guidsToRemove = itemsToRemove
+                    .Where(x => x.AttributeDefinition.Classification == lockObjKvp.Key)
                     .Select(x => x.AttributeDefinition.Guid)
                     .ToArray();
 
-                if (GuidsToRemoveForClassification.Length == 0)
+                if (guidsToRemove.Length == 0)
                 {
                     continue;
                 }
 
-                var dicForClassification = GetAttribValuesInternal(lockObjKVP.Key, false);
+                var dicForClassification = GetAttribValuesInternal(lockObjKvp.Key, false);
                 if (dicForClassification == null)
                 {
                     continue;
                 }
 
-                lock (lockObjKVP.Value)
+                lock (lockObjKvp.Value)
                 {
-                    foreach (var guidToRemove in GuidsToRemoveForClassification)
+                    foreach (var guidToRemove in guidsToRemove)
                     {
                         dicForClassification.Remove(guidToRemove);
                     }
@@ -389,10 +375,20 @@ namespace NewRelic.Agent.Core.Attributes
             }
         }
 
+        public override bool CollectionContainsAttribute(AttributeDefinition attrDef)
+        {
+            var lockObj = _lockObjects[attrDef.Classification];
+            lock (lockObj)
+            {
+                var dic = GetAttribValuesInternal(attrDef.Classification, false);
+                var hasItem = dic?.ContainsKey(attrDef.Guid);
+                return hasItem.HasValue && hasItem.Value;
+            }
+        }
+
         protected override bool SetValueImpl(IAttributeValue attribVal)
         {
-            var attribValTyped = attribVal as AttributeValue;
-            if (attribValTyped != null)
+            if (attribVal is AttributeValue attribValTyped)
             {
                 return SetValueImplInternal(attribValTyped);
             }
@@ -417,8 +413,10 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            var attribVal = new AttributeValue(attribDef);
-            attribVal.Value = value;
+            var attribVal = new AttributeValue(attribDef)
+            {
+                Value = value
+            };
 
             return SetValueImplInternal(attribVal);
         }
@@ -430,8 +428,10 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            var attribVal = new AttributeValue(attribDef);
-            attribVal.LazyValue = lazyValue;
+            var attribVal = new AttributeValue(attribDef)
+            {
+                LazyValue = lazyValue
+            };
 
             return SetValueImplInternal(attribVal);
         }
@@ -449,7 +449,7 @@ namespace NewRelic.Agent.Core.Attributes
                 var dic = GetAttribValuesInternal(attribVal.AttributeDefinition.Classification, true);
                 var hasItem = dic.ContainsKey(attribVal.AttributeDefinition.Guid);
                 dic[attribVal.AttributeDefinition.Guid] = attribVal;
-                
+
                 return !hasItem;
             }
         }
