@@ -323,27 +323,27 @@ namespace NewRelic.Agent.Core.Attributes
             { AttributeClassification.UserAttributes, new object() }
         };
 
-        private Dictionary<string, AttributeValue> _attribValuesIntrinsicAttribs;
-        private Dictionary<string, AttributeValue> _attribValuesAgentAttribs;
-        private Dictionary<string, AttributeValue> _attribValuesUserAttribs;
+        private Dictionary<Guid, AttributeValue> _attribValuesIntrinsicAttribs;
+        private Dictionary<Guid, AttributeValue> _attribValuesAgentAttribs;
+        private Dictionary<Guid, AttributeValue> _attribValuesUserAttribs;
 
-        private Dictionary<string, AttributeValue> GetAttribValuesInternal(AttributeClassification classification, bool withCreate)
+        private Dictionary<Guid, AttributeValue> GetAttribValuesInternal(AttributeClassification classification, bool withCreate)
         {
             switch (classification)
             {
                 case AttributeClassification.Intrinsics:
                     return withCreate
-                        ? _attribValuesIntrinsicAttribs ?? (_attribValuesIntrinsicAttribs = new Dictionary<string, AttributeValue>())
+                        ? _attribValuesIntrinsicAttribs ?? (_attribValuesIntrinsicAttribs = new Dictionary<Guid, AttributeValue>())
                         : _attribValuesIntrinsicAttribs;
 
                 case AttributeClassification.AgentAttributes:
                     return withCreate
-                        ? _attribValuesAgentAttribs ?? (_attribValuesAgentAttribs = new Dictionary<string, AttributeValue>())
+                        ? _attribValuesAgentAttribs ?? (_attribValuesAgentAttribs = new Dictionary<Guid, AttributeValue>())
                         : _attribValuesAgentAttribs;
 
                 case AttributeClassification.UserAttributes:
                     return withCreate
-                        ? _attribValuesUserAttribs ?? (_attribValuesUserAttribs = new Dictionary<string, AttributeValue>())
+                        ? _attribValuesUserAttribs ?? (_attribValuesUserAttribs = new Dictionary<Guid, AttributeValue>())
                         : _attribValuesUserAttribs;
             }
 
@@ -363,12 +363,12 @@ namespace NewRelic.Agent.Core.Attributes
         {
             foreach (var lockObjKVP in _lockObjects)
             {
-                var keysToRemoveForClassification = itemsToRemove
+                var GuidsToRemoveForClassification = itemsToRemove
                     .Where(x => x.AttributeDefinition.Classification == lockObjKVP.Key)
-                    .Select(x => x.AttributeDefinition.Name)
+                    .Select(x => x.AttributeDefinition.Guid)
                     .ToArray();
 
-                if (keysToRemoveForClassification.Length == 0)
+                if (GuidsToRemoveForClassification.Length == 0)
                 {
                     continue;
                 }
@@ -381,9 +381,9 @@ namespace NewRelic.Agent.Core.Attributes
 
                 lock (lockObjKVP.Value)
                 {
-                    foreach (var keyToRemove in keysToRemoveForClassification)
+                    foreach (var guidToRemove in GuidsToRemoveForClassification)
                     {
-                        dicForClassification.Remove(keyToRemove);
+                        dicForClassification.Remove(guidToRemove);
                     }
                 }
             }
@@ -447,9 +447,9 @@ namespace NewRelic.Agent.Core.Attributes
             lock (lockObj)
             {
                 var dic = GetAttribValuesInternal(attribVal.AttributeDefinition.Classification, true);
-                var hasItem = dic.ContainsKey(attribVal.AttributeDefinition.Name);
-                dic[attribVal.AttributeDefinition.Name] = attribVal;
-
+                var hasItem = dic.ContainsKey(attribVal.AttributeDefinition.Guid);
+                dic[attribVal.AttributeDefinition.Guid] = attribVal;
+                
                 return !hasItem;
             }
         }
