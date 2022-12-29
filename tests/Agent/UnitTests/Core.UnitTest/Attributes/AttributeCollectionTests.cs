@@ -44,6 +44,8 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             );
         }
 
+        // JODO: Write additional unit tests to cover use cases where limits are hit
+
         [Test]
         public void DuplicateAttibuteKeepsLastValue()
         {
@@ -61,11 +63,11 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(4, allAttribs.Count),
+                () => Assert.AreEqual(2, allAttribs.Count),
                 () => Assert.AreEqual(1, agentAttribsDic.Count()),
-                () => Assert.AreEqual("banana2", agentAttribsDic["original_url"]),
+                () => Assert.AreEqual("banana2", agentAttribsDic[_attribDefs.OriginalUrl.Name]),
                 () => Assert.AreEqual(1, userAttribsDic.Count()),
-                () => Assert.AreEqual("cake2", userAttribsDic["pie"])
+                () => Assert.AreEqual("cake2", userAttribsDic[_attribDefs.GetCustomAttributeForTransaction("pie").Name])
             );
         }
 
