@@ -131,22 +131,13 @@ namespace ArtifactBuilder
             AgentApiDll = $@"{SourcePath}\..\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll";
 
             LinuxProfiler = null;
-            GRPCExtensionsLibLinux = new string[0];
             if (Platform == "x64") 
             {
                 LinuxProfiler = $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libNewRelicProfiler.so";
-                GRPCExtensionsLibLinux = new[]
-                {
-                    $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libgrpc_csharp_ext.x64.so"
-                };
             } 
             else if (Platform == "arm64") 
             {
                 LinuxProfiler = $@"{HomeRootPath}\newrelichome_arm64_coreclr_linux\libNewRelicProfiler.so";
-                GRPCExtensionsLibLinux = new[]
-                {
-                    $@"{HomeRootPath}\newrelichome_arm64_coreclr_linux\libgrpc_csharp_ext.arm64.so"
-                };
             }
 
             var configurationComponents = new List<string> { NewRelicXsd };

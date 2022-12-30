@@ -166,14 +166,6 @@ function InstallNewAgent($newRelicNugetContentPath, $newRelicInstallPath, $newRe
 	###Restore saved newrelic.config and custom instrumemtation files###
 	RestoreCustomerRelatedFiles $newRelicInstallPath $newRelicLegacyInstallPath
 
-	###Remove Linux Grpc library since it won't be used.
-	$linuxGrpcLib = "$newRelicInstallPath\libgrpc_csharp_ext.x64.so"
-	if(Test-Path $linuxGrpcLib)
-	{
-		WriteToInstallLog "Remove Linux Grpc library since it won't be used"
-		Remove-Item $linuxGrpcLib
-	}
-
 	###Remove Linux profiler since it won't be used.
 	$linuxProfiler = "$newRelicInstallPath\libNewRelicProfiler.so"
 	if(Test-Path $linuxProfiler)
