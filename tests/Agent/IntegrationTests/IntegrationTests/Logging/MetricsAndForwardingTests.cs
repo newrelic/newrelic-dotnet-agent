@@ -1,7 +1,6 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,7 +40,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         private const string InTransactionInfoMessage = "InTransactionInfoLogMessage";
         private const string InTransactionErrorMessage = "InTransactionErrorLogMessage";
-        
+
         private const string AsyncInTransactionDebugMessage = "AsyncInTransactionDebugLogMessage";
         private const string AsyncInTransactionInfoMessage = "AsyncInTransactionInfoLogMessage";
         private const string AsyncInTransactionWarningMessage = "AsyncInTransactionWarningLogMessage";
@@ -154,6 +153,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             SupportabilityForwardingConfigurationMetricExists();
             SupportabilityMetricsConfigurationMetricExists();
             SupportabilityLoggingFrameworkMetricExists();
+            SupportabilityLoggingForwardingEnabledWithFrameworkMetricExists();
             CountsAndValuesAreAsExpected();
             LoggingWorksWithTraceAttributeOutsideTransaction();
             LoggingWorksWithDifferentTraceAttributesInsideTransaction();
@@ -165,7 +165,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             AsyncNoAwaitLoggingWorksOutsideTransaction();
             AsyncNoAwaitWithDelayLoggingWorksInsideTransaction();
         }
-        
+
         private void LogLinesPerLevelMetricsExist()
         {
             var loggingMetrics = new List<Assertions.ExpectedMetric>
@@ -220,6 +220,21 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             var expectedFrameworkName = LogUtils.GetFrameworkName(_loggingFramework);
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             Assert.Contains(actualMetrics, x => x.MetricSpec.Name == $"Supportability/Logging/DotNET/{expectedFrameworkName}/enabled");
+        }
+
+        private void SupportabilityLoggingForwardingEnabledWithFrameworkMetricExists()
+        {
+            var expectedFrameworkName = LogUtils.GetFrameworkName(_loggingFramework);
+            var actualMetrics = _fixture.AgentLog.GetMetrics();
+
+            if (_forwardingEnabled)
+            {
+                Assert.Contains(actualMetrics, x => x.MetricSpec.Name == $"Supportability/Logging/Forwarding/DotNET/{expectedFrameworkName}/enabled");
+            }
+            else
+            {
+                Assert.DoesNotContain(actualMetrics, x => x.MetricSpec.Name == $"Supportability/Logging/Forwarding/DotNET/{expectedFrameworkName}/enabled");
+            }
         }
 
         private void CountsAndValuesAreAsExpected()

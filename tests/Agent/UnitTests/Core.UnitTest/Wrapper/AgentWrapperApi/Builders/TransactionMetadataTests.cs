@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void Build_HasEmptyPathHashIfNeverSet()
         {
-            var transactionMetadata = new TransactionMetadata();
+            var transactionMetadata = new TransactionMetadata("transactionGuid");
             var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
 
             NrAssert.Multiple(
@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void Getters_HttpResponseStatusCode()
         {
-            var metadata = new TransactionMetadata();
+            var metadata = new TransactionMetadata("transactionGuid");
             Assert.IsNull(metadata.HttpResponseStatusCode);
 
             metadata.SetHttpResponseStatusCode(200, null, Mock.Create<IErrorService>());
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void Getters_QueueTime()
         {
-            var metadata = new TransactionMetadata();
+            var metadata = new TransactionMetadata("transactionGuid");
             Assert.IsNull(metadata.QueueTime);
 
             metadata.SetQueueTime(TimeSpan.FromSeconds(20));
@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void Getters_CATContentLength()
         {
-            var metadata = new TransactionMetadata();
+            var metadata = new TransactionMetadata("transactionGuid");
             Assert.AreEqual(-1, metadata.GetCrossApplicationReferrerContentLength());
 
             metadata.SetCrossApplicationReferrerContentLength(44444);
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void Build_HasZeroAlternatePathHashesIfSetOnce()
         {
-            var metadata = new TransactionMetadata();
+            var metadata = new TransactionMetadata("transactionGuid");
             metadata.SetCrossApplicationPathHash("pathHash1");
             var immutableMetadata = metadata.ConvertToImmutableMetadata();
 
@@ -93,7 +93,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void Build_PutsAllPathHashesIntoAlternatePathHashes_ExceptLatest()
         {
-            var metadata = new TransactionMetadata();
+            var metadata = new TransactionMetadata("transactionGuid");
             metadata.SetCrossApplicationPathHash("pathHash1");
             metadata.SetCrossApplicationPathHash("pathHash2");
             metadata.SetCrossApplicationPathHash("pathHash3");
@@ -110,7 +110,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void Build_DoesNotKeepDuplicatesOfPathHashes()
         {
-            var metadata = new TransactionMetadata();
+            var metadata = new TransactionMetadata("transactionGuid");
             metadata.SetCrossApplicationPathHash("pathHash1");
             metadata.SetCrossApplicationPathHash("pathHash2");
             metadata.SetCrossApplicationPathHash("pathHash1");
@@ -131,7 +131,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         {
             var maxPathHashes = PathHashMaker.AlternatePathHashMaxSize;
 
-            var transactionMetadata = new TransactionMetadata();
+            var transactionMetadata = new TransactionMetadata("transactionGuid");
             Enumerable.Range(0, maxPathHashes + 2).ForEach(number => transactionMetadata.SetCrossApplicationPathHash($"pathHash{number}"));
             var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
 

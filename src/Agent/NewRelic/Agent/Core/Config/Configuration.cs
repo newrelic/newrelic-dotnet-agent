@@ -5069,6 +5069,8 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationApplicationLoggingForwarding
     {
         
+        private configurationApplicationLoggingForwardingContextData contextDataField;
+        
         private bool enabledField;
         
         private int maxSamplesStoredField;
@@ -5078,8 +5080,21 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configurationApplicationLoggingForwarding()
         {
+            this.contextDataField = new configurationApplicationLoggingForwardingContextData();
             this.enabledField = true;
             this.maxSamplesStoredField = 10000;
+        }
+        
+        public configurationApplicationLoggingForwardingContextData contextData
+        {
+            get
+            {
+                return this.contextDataField;
+            }
+            set
+            {
+                this.contextDataField = value;
+            }
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -5117,6 +5132,82 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationApplicationLoggingForwarding Clone()
         {
             return ((configurationApplicationLoggingForwarding)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class configurationApplicationLoggingForwardingContextData
+    {
+        
+        private bool enabledField;
+        
+        private string includeField;
+        
+        private string excludeField;
+        
+        /// <summary>
+        /// configurationApplicationLoggingForwardingContextData class constructor
+        /// </summary>
+        public configurationApplicationLoggingForwardingContextData()
+        {
+            this.enabledField = false;
+            this.includeField = "";
+            this.excludeField = "SpanId,TraceId,ParentId";
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("")]
+        public string include
+        {
+            get
+            {
+                return this.includeField;
+            }
+            set
+            {
+                this.includeField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute("SpanId,TraceId,ParentId")]
+        public string exclude
+        {
+            get
+            {
+                return this.excludeField;
+            }
+            set
+            {
+                this.excludeField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this configurationApplicationLoggingForwardingContextData object
+        /// </summary>
+        public virtual configurationApplicationLoggingForwardingContextData Clone()
+        {
+            return ((configurationApplicationLoggingForwardingContextData)(this.MemberwiseClone()));
         }
         #endregion
     }

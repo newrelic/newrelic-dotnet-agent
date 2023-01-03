@@ -531,10 +531,18 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #region Log Events and Metrics
 
+        // Used to report a logging framework is being instrumented for log forwarding, it does not take into account if forwarding was enabled or not.
         private ConcurrentDictionary<string, bool> _loggingFrameworksReported = new ConcurrentDictionary<string, bool>();
         public void ReportLogForwardingFramework(string logFramework)
         {
             _loggingFrameworksReported.TryAdd(logFramework, false);
+        }
+
+        // Used to report that both log forwarding is enabled and that a logging framework is being instrumented for logforwarding.
+        private ConcurrentDictionary<string, bool> _loggingForwardingEnabledWithFrameworksReported = new ConcurrentDictionary<string, bool>();
+        public void ReportLogForwardingEnabledWithFramework(string logFramework)
+        {
+            _loggingForwardingEnabledWithFrameworksReported.TryAdd(logFramework, false);
         }
 
         public void CollectLoggingMetrics()
@@ -560,6 +568,15 @@ namespace NewRelic.Agent.Core.AgentHealth
                 {
                     ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogFrameworkName(kvp.Key));
                     _loggingFrameworksReported[kvp.Key] = true;
+                }
+            }
+
+            foreach (var kvp in _loggingForwardingEnabledWithFrameworksReported)
+            {
+                if (kvp.Value == false)
+                {
+                    ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogForwardingEnabledWithFrameworkName(kvp.Key));
+                    _loggingForwardingEnabledWithFrameworksReported[kvp.Key] = true;
                 }
             }
         }

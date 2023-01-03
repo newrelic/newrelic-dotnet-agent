@@ -39,7 +39,7 @@ function CheckIfAppIs35
 	
 	}catch
 	{
-		WriteToInstallLog "Unable to detect if CLR 2.0 is being used. Failed to install .NET Agent."
+		WriteToInstallLog "Unable to detect if CLR 2.0 is being used. Failed to install New Relic .NET Agent."
 		exit 1
 	}
 }
@@ -221,7 +221,7 @@ function CopyAgentInfo($agentInfoDestination)
 
 function RemoveNewRelicInstallArtifacts($fromDirectory)
 {
-	WriteToInstallLog "Removing New Relic install artifacts"
+	WriteToInstallLog "Removing New Relic .NET Agent install artifacts"
 
 	try
 	{
@@ -350,7 +350,7 @@ try
 
 		if($packageName -eq "NewRelic.Agent" -and [System.Version]$agentVersion -lt [System.Version]"8.17.438")
 		{
-			WriteToInstallLog "New Relic Site Extension does not install .NET Core Agent version less than 8.17.438"
+			WriteToInstallLog "New Relic .NET Agent Site Extension does not install .NET Core Agent version less than 8.17.438"
 			Break
 		}
 

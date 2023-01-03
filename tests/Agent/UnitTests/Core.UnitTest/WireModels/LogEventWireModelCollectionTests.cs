@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.WireModels
@@ -17,9 +18,11 @@ namespace NewRelic.Agent.Core.WireModels
             var entityGuid = Guid.NewGuid().ToString();
             var hostname = "TestHostname";
 
+            var testContextData = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+
             var loggingEvents = new List<LogEventWireModel>
             {
-                new LogEventWireModel(1, "TestMessage", "TestLevel", "TestSpanId", "TestTraceId")
+                new LogEventWireModel(1, "TestMessage", "TestLevel", "TestSpanId", "TestTraceId", testContextData)
             };
 
             var objectUnderTest = new LogEventWireModelCollection(entityName, entityGuid, hostname, loggingEvents);
@@ -36,6 +39,7 @@ namespace NewRelic.Agent.Core.WireModels
             Assert.AreEqual("TestLevel", loggingEvent.Level);
             Assert.AreEqual("TestSpanId", loggingEvent.SpanId);
             Assert.AreEqual("TestTraceId", loggingEvent.TraceId);
+            Assert.AreEqual(testContextData, loggingEvent.ContextData);
         }
     }
 }

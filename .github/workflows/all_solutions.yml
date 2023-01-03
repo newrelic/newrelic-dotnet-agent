@@ -393,10 +393,9 @@ jobs:
           vs-prerelease: true
 
       - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.100-rc.2.22477.23'
-          include-prerelease: true
+          dotnet-version: '7.0.100'
 
       - name: List SDKS
         run: dotnet --list-sdks
@@ -441,10 +440,9 @@ jobs:
           vs-prerelease: true
 
       - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.100-rc.2.22477.23'
-          include-prerelease: true
+          dotnet-version: '7.0.100'
 
       - name: Build UnboundedIntegrationTests.sln
         run: |
@@ -477,6 +475,7 @@ jobs:
           Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.ZeroMaxSamplesStored,
           Logging.MetricsAndForwarding.log4net, Logging.MetricsAndForwarding.MicrosoftLogging, 
           Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog, Logging.LogLevelDetection,
+          Logging.ContextData,
           ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
           WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
           RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, 
@@ -497,10 +496,9 @@ jobs:
           fetch-depth: 0
 
       - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.100-rc.2.22477.23'
-          include-prerelease: true
+          dotnet-version: '7.0.100'
 
       - name: Set up secrets
         env:
@@ -669,10 +667,9 @@ jobs:
           fetch-depth: 0
 
       - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.100-rc.2.22477.23'
-          include-prerelease: true
+          dotnet-version: '7.0.100'
 
       - name: Download Agent Home Folders
         uses: actions/download-artifact@v2
