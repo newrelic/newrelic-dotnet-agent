@@ -62,6 +62,12 @@ make_unique(Args &&...) = delete;
 typedef std::u16string::value_type xchar_t;
 typedef std::u16string xstring_t;
 
+
+inline xstring_t to_xstring(unsigned short val)
+{
+    auto str = std::to_string(val);
+    return xstring_t(str.begin(), str.end());
+}
 inline xstring_t to_xstring(unsigned int val) 
 { 
     auto str = std::to_string(val);
@@ -104,6 +110,7 @@ inline int gmtime_s(struct tm* _tm, const time_t* time)
 typedef wchar_t xchar_t;
 typedef std::basic_string<xchar_t> xstring_t; 
 
+inline xstring_t to_xstring(unsigned short val) { return std::to_wstring(val); }
 inline xstring_t to_xstring(unsigned int val) { return std::to_wstring(val); }
 inline xstring_t to_xstring(unsigned long val) { return std::to_wstring(val); }
 inline int xstoi(xstring_t str)

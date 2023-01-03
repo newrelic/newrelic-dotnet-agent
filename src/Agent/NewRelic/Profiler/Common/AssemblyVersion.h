@@ -7,6 +7,7 @@
 #include <vector>
 #include <sstream>
 #include <cor.h>
+#include "../Logging/Logger.h"
 
 namespace NewRelic { namespace Profiler
 {
@@ -81,10 +82,10 @@ namespace NewRelic { namespace Profiler
 
             try
             {
-                if (identifiers.size() > 0) major = (unsigned short)stoi(identifiers[0]);
-                if (identifiers.size() > 1) minor = (unsigned short)stoi(identifiers[1]);
-                if (identifiers.size() > 2) build = (unsigned short)stoi(identifiers[2]);
-                if (identifiers.size() > 3) revision = (unsigned short)stoi(identifiers[3]);
+                if (identifiers.size() > 0) major = (unsigned short)xstoi(identifiers[0]);
+                if (identifiers.size() > 1) minor = (unsigned short)xstoi(identifiers[1]);
+                if (identifiers.size() > 2) build = (unsigned short)xstoi(identifiers[2]);
+                if (identifiers.size() > 3) revision = (unsigned short)xstoi(identifiers[3]);
             }
             catch (...)
             {
@@ -161,7 +162,7 @@ namespace NewRelic { namespace Profiler
 
         xstring_t ToString()
         {
-            return std::to_wstring(Major) + _X(".") + std::to_wstring(Minor) + _X(".") + std::to_wstring(Build) + _X(".") + std::to_wstring(Revision);
+            return to_xstring(Major) + _X(".") + to_xstring(Minor) + _X(".") + to_xstring(Build) + _X(".") + to_xstring(Revision);
         }
     };
 }}
