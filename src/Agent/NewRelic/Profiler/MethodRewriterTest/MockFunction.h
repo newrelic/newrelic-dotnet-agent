@@ -34,7 +34,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
     struct MockFunction : IFunction
     {
-        MockFunction(bool isGeneric = false) :
+        MockFunction(bool isGeneric = false, std::wstring version = std::wstring()) :
             _functionId(0x12345678),
             _assemblyName(L"MyAssembly"),
             _moduleName(L"MyModule"),
@@ -49,6 +49,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             _isGenericType(false),
             _typeToken(0x045612345)
         {
+            if (version.empty())
+            {
+                version = L"1.2.3.4";
+            }
+            _version = version;
+
             _signature = std::make_shared<ByteVector>();
             _tokenSignature = std::make_shared<ByteVector>();
 
@@ -152,14 +158,16 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return false;
         }
 
+        std::wstring _version;
         virtual ASSEMBLYMETADATA GetAssemblyProps() override
         {
+            auto pVersion = std::unique_ptr<AssemblyVersion>(AssemblyVersion::Create(_version));
             return ASSEMBLYMETADATA
             {
-                1, // major
-                2, // minor
-                3, // build
-                4 // rev
+                pVersion->Major,
+                pVersion->Minor,
+                pVersion->Build,
+                pVersion->Revision
             };
         }
 

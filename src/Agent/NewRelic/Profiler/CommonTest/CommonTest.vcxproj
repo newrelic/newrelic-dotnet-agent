@@ -172,6 +172,7 @@
     </ClCompile>
     <ClCompile Include="StringsTest.cpp" />
     <ClCompile Include="TestModuleAttributes.cpp" />
+    <ClCompile Include="VersionTest.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

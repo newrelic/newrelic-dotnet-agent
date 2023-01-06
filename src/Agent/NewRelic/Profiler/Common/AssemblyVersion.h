@@ -7,6 +7,7 @@
 #include <vector>
 #include <sstream>
 #include <cor.h>
+#include <limits>
 #include "../Logging/Logger.h"
 
 namespace NewRelic { namespace Profiler
@@ -75,17 +76,24 @@ namespace NewRelic { namespace Profiler
                 return nullptr;
             }
             auto identifiers = Configuration::Strings::Split(version, '.');
-            unsigned short major = 0;
-            unsigned short minor = 0;
-            unsigned short build = 0;
-            unsigned short revision = 0;
+            int major = 0;
+            int minor = 0;
+            int build = 0;
+            int revision = 0;
+
+            // We could just take the first four numbers but safer to treat as an error
+            if (identifiers.size() > 4)
+            {
+                LogWarn(version, L" is not a valid version");
+                return nullptr;
+            }
 
             try
             {
-                if (identifiers.size() > 0) major = (unsigned short)xstoi(identifiers[0]);
-                if (identifiers.size() > 1) minor = (unsigned short)xstoi(identifiers[1]);
-                if (identifiers.size() > 2) build = (unsigned short)xstoi(identifiers[2]);
-                if (identifiers.size() > 3) revision = (unsigned short)xstoi(identifiers[3]);
+                if (identifiers.size() > 0) major = xstoi(identifiers[0]);
+                if (identifiers.size() > 1) minor = xstoi(identifiers[1]);
+                if (identifiers.size() > 2) build = xstoi(identifiers[2]);
+                if (identifiers.size() > 3) revision = xstoi(identifiers[3]);
             }
             catch (...)
             {
@@ -94,12 +102,28 @@ namespace NewRelic { namespace Profiler
                 return nullptr;
             }
 
+            // Negative numbers aren't valid
+            if ((major < 0) || (minor < 0) || (build < 0) || (revision < 0))
+            {
+                LogWarn(version, L" is not a valid version");
+                return nullptr;
+            }
+
+            // Nor is anything over 65535
+            constexpr int maxValid = (std::numeric_limits<unsigned short>::max)();
+            if ((major > maxValid) || (minor > maxValid) || (build > maxValid) || (revision > maxValid))
+            {
+                LogWarn(version, L" is not a valid version");
+                return nullptr;
+            }
+
+            // Or 0.0.0.0
             if ((major == 0) && (minor == 0) && (build == 0) && (revision == 0))
             {
                 return nullptr;
             }
 
-            return new AssemblyVersion(major, minor, build, revision);
+            return new AssemblyVersion((unsigned short)major, (unsigned short)minor, (unsigned short)build, (unsigned short)revision);
         }
 
         /// <summary>
