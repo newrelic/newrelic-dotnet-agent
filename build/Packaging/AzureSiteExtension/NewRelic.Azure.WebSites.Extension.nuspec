@@ -1,5 +1,5 @@
-<?xml version="1.0"?>
-<package>
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>NewRelic.Azure.WebSites.Extension</id>
     <version>REPLACE_WITH_VERSION</version>
@@ -10,6 +10,7 @@
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>This extension adds the New Relic .NET Agent to your Azure WebSite.</description>
     <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
+    <icon>images\icon.png</icon>
     <copyright>New Relic, Inc., 2022</copyright>
     <tags>AzureSiteExtension</tags>
     <packageTypes>
@@ -18,5 +19,6 @@
   </metadata>
   <files>
     <file src="content\**\*.*" target="content" />
+    <file src="..\..\icon.png" target="images\" />
   </files>
 </package>

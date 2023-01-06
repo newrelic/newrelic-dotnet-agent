@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>NewRelicWindowsAzure</id>
     <version>REPLACE_WITH_VERSION</version>
     <title>New Relic x64 for Windows Azure</title>
     <authors>New Relic</authors>
-    <owners>New Relic</owners>
     <license type="expression">Apache-2.0</license>
     <projectUrl>https://github.com/newrelic/nuget-azure-cloud-services</projectUrl>
     <iconUrl>https://newrelic.com/static-assets/images/icons/avatar-newrelic.png</iconUrl>
+    <icon>images\icon.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Make sure you go to New Relic first to sign up and get your key at https://newrelic.com. Performance monitoring will never be the same after you do!  
             The package is available through your NuGet package manager and on the web at https://nuget.org/packages/NewRelicWindowsAzure  
@@ -25,4 +25,7 @@
     <summary>Includes the latest New Relic x64 installer, so that you can easily include New Relic in your Azure deployment.</summary>
     <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/</releaseNotes>
   </metadata>
+  <files>
+    <file src="..\..\icon.png" target="images\" />
+  </files>
 </package>
