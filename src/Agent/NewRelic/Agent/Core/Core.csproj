@@ -87,7 +87,6 @@
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Google.Protobuf'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Grpc.Core.Api'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Grpc.Core'" />
-      
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net462'">

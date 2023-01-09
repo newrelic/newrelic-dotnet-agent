@@ -500,6 +500,15 @@ jobs:
         with:
           dotnet-version: '7.0.100'
 
+      - name: Create and trust .NET development SSL certificate
+        run: |
+          dotnet dev-certs https --clean
+          dotnet dev-certs https --export-path ./devcert.pfx --password "password1"
+          $pwd = ConvertTo-SecureString -String "password1" -Force -AsPlainText
+          Import-PfxCertificate -FilePath ./devcert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $pwd
+          dotnet dev-certs https --check --trust
+        shell: powershell
+
       - name: Set up secrets
         env:
           INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}

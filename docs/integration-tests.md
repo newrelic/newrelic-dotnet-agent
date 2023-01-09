@@ -25,7 +25,10 @@ Depending on which version of Visual Studio you are using, you may have to insta
 * .NET Core 3.1
 * .NET 5
 * .NET 6
+* .NET 7
 * .NET Framework 4.7.1 targeting pack
+* .NET Framework 4.8.0 targeting pack
+* .NET Framework 4.8.1 targeting pack
 
 #### Windows features
 
@@ -103,12 +106,16 @@ Enable-WindowsOptionalFeature -Online -FeatureName  WCF-Services45
 Enable-WindowsOptionalFeature -Online -FeatureName  WCF-TCP-PortSharing45
 ```
 
-#### IBM DB2 Data Server Client
+#### Trusting the .NET SDK Development SSL Certificate
 
-We use the IBM Data Server Driver from the IBM Data Server Client installer in our unbounded integration tests for DB2. Unfortunately, simply referencing the appropriate dll in our tests is insufficient. A full install of Data Server Client is required on any machine running our unbounded integration test suite.
+Some integration tests use a "mock collector" to simulate agent commands being sent from the real New Relic backend.  This service requires the use of https, and is configured to use the .NET SDK localhost development SSL certificate, which needs to be trusted on the system for the agent to connect to the mock collector successfully.
 
-The data server client installer can be downloaded from [here](https://www.ibm.com/support/pages/ibm-data-server-client-packages-version-111-mod-4-fix-pack-4).
+On Windows, run the following command:
+`dotnet dev-certs https --trust`
 
+and click "Yes" when prompted to install the certificate.  See https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-dev-certs for more details.
+
+For Linux, you'll need to perform distro-specific steps to trust the development certificate.
 
 #### Python and dependencies
 
@@ -254,7 +261,7 @@ We recommend using [WSL](https://docs.microsoft.com/en-us/windows/wsl/about) to 
 
 ### Linux system setup
 
-You will need to install the .NET Core/5+ SDKs for .NET Core 3.1, .NET 5, and .NET 6.
+You will need to install the .NET SDKs for .NET Core 3.1, .NET 5, .NET 6, and .NET 7.
 
 ```
 sudo apt-get update -q -y && sudo apt-get install -q -y curl
@@ -263,6 +270,7 @@ sudo mkdir -p /usr/share/dotnet
 sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.414/dotnet-sdk-3.1.414-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
 sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/5.0.401/dotnet-sdk-5.0.401-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
 sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
+sudo curl -sSL https://dotnetcli.azureedge.net/dotnet/Sdk/7.0.100/dotnet-sdk-7.0.100-linux-x64.tar.gz | sudo tar -xzC /usr/share/dotnet
 
 sudo ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
 dotnet --list-sdks
