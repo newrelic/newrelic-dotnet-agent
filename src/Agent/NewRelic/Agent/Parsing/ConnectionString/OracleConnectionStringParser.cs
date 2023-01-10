@@ -23,7 +23,7 @@ namespace NewRelic.Parsing.ConnectionString
             _connectionStringBuilder = new DbConnectionStringBuilder { ConnectionString = connectionString };
         }
 
-        public ConnectionInfo GetConnectionInfo()
+        public ConnectionInfo GetConnectionInfo(string utilizationHostName)
         {
             var host = ParseHost();
             var portPathOrId = ParsePortPathOrId();

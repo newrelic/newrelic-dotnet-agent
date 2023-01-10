@@ -40,6 +40,7 @@ namespace NewRelic.Agent.Core.Segments
 		
         public void End() { }
         public void End(Exception ex) { }
+        public void EndStackExchangeRedis() { }
         public void MakeCombinable() { }
 
         public ISegmentExperimental MakeLeaf()

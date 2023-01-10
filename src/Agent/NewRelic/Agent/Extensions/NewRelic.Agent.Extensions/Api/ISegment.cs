@@ -50,6 +50,11 @@ namespace NewRelic.Agent.Api
         void End();
 
         /// <summary>
+        /// Ends this transaction StackExchange.Redis segment.
+        /// </summary>
+        void EndStackExchangeRedis();
+
+        /// <summary>
         /// Ends this transaction segment in the exception case.
         /// </summary>
         void End(Exception ex);

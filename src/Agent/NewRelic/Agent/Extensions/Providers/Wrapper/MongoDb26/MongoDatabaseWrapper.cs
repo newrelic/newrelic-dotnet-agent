@@ -29,7 +29,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
             var model = TryGetModelName(instrumentedMethodCall);
 
             var caller = instrumentedMethodCall.MethodCall.InvocationTarget;
-            ConnectionInfo connectionInfo = MongoDbHelper.GetConnectionInfoFromDatabase(caller);
+            ConnectionInfo connectionInfo = MongoDbHelper.GetConnectionInfoFromDatabase(caller, agent.Configuration.UtilizationHostName);
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
                 new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true, connectionInfo: connectionInfo);
