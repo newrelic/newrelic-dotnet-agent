@@ -2,13 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
-using NewRelic.Reflection;
 using StackExchange.Redis;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
 using System.Net;
 
 namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
