@@ -1,0 +1,33 @@
+name: .NET Agent Run Unit Tests
+
+# Does not run on PUSH since we have already ran all the test
+on:
+  push:
+    branches: 
+    - 'tippmar-nr**'
+
+env:
+  DOTNET_NOLOGO: true
+
+jobs:
+
+  run-unit-tests:
+    name: Run Unit Tests
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        dotnet-version: ['3.0', '3.1.x', '5.0.x', '6.0.x', '7.0.x']
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal --collect: "XPlat Code Coverage"
+      - name: Upload coverage reports to Codecov with GitHub Action
+        uses: codecov/codecov-action@v3
