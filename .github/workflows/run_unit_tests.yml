@@ -28,6 +28,6 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Test
-        run: dotnet test --no-restore --verbosity normal --collect: "XPlat Code Coverage"
+        run: dotnet test --no-restore --verbosity normal --collect:"XPlat Code Coverage"
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v3
