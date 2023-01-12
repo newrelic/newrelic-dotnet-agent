@@ -139,6 +139,44 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
+        public static void TransactionTraceSegmentExists(string expectedClass, string expectedMethod, TransactionSample sample)
+        {
+            var allSegments = sample.TraceData.RootSegment.Flatten(node => node.ChildSegments);
+
+            var succeeded = true;
+            var builder = new StringBuilder();
+            if (!allSegments.Any(
+                segment => (segment.ClassName == expectedClass) &&
+                    (segment.MethodName == expectedMethod)
+                ))
+            {
+                builder.AppendFormat("Segment from class {0} method {1} was not found in the transaction sample.", expectedClass, expectedMethod);
+                builder.AppendLine();
+                succeeded = false;
+            }
+
+            Assert.True(succeeded, builder.ToString());
+        }
+
+        public static void TransactionTraceSegmentDoesNotExist(string unexpectedClass, string unexpectedMethod, TransactionSample sample)
+        {
+            var allSegments = sample.TraceData.RootSegment.Flatten(node => node.ChildSegments);
+
+            var succeeded = true;
+            var builder = new StringBuilder();
+            if (allSegments.Any(
+                segment => (segment.ClassName == unexpectedClass) &&
+                    (segment.MethodName == unexpectedMethod)
+                ))
+            {
+                builder.AppendFormat("Segment from class {0} method {1} was found in the transaction sample but should not be there.", unexpectedClass, unexpectedMethod);
+                builder.AppendLine();
+                succeeded = false;
+            }
+
+            Assert.True(succeeded, builder.ToString());
+        }
+
         public static void TransactionTraceSegmentsNotExist(IEnumerable<string> unexpectedTraceSegmentNames, TransactionSample sample, bool areRegexNames = false)
         {
             var allSegments = sample.TraceData.RootSegment.Flatten(node => node.ChildSegments);
