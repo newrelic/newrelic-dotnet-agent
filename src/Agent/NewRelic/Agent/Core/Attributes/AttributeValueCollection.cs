@@ -4,6 +4,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System;
+using System.Collections.ObjectModel;
 using NewRelic.Core.Logging;
 using System.Linq;
 using System.Threading;
@@ -69,23 +70,28 @@ namespace NewRelic.Agent.Core.Attributes
 
         private bool ValidateCollectionLimits(AttributeDefinition attrDef)
         {
-            var returnValue = true;
-
-            // JODO: only log if we are NOT going to allow a new attribute
+            var attributeLimitReached = false;
+            string message = string.Empty;
 
             if (attrDef.Classification == AttributeClassification.UserAttributes && _userAttributeCount >= MaxCountUserAttrib)
             {
-                LogTransactionIfFinest($"User Attribute '{attrDef.Name}' was not recorded - A max of {MaxCountUserAttrib} User Attributes may be supplied.");
-                returnValue = false;
+                message = $"User Attribute '{attrDef.Name}' was not recorded - A max of {MaxCountUserAttrib} User Attributes may be supplied.";
+                attributeLimitReached = true;
             }
             else if (Count >= MaxCountAllAttrib)
             {
-                LogTransactionIfFinest($"{attrDef.Classification} Attribute '{attrDef.Name}' was not recorded - A max of {MaxCountAllAttrib} attributes may be supplied.");
-                returnValue = false;
+                message = $"{attrDef.Classification} Attribute '{attrDef.Name}' was not recorded - A max of {MaxCountAllAttrib} attributes may be supplied.";
+                attributeLimitReached = true;
             }
 
-            // Only check for existence if we have hit a limit
-            return returnValue || CollectionContainsAttribute(attrDef);
+            // Log a message and return false if we hit an attribute limit but don't currently contain the attribute
+            if (attributeLimitReached && !CollectionContainsAttribute(attrDef))
+            {
+                LogTransactionIfFinest(message);
+                return false;
+            }
+
+            return true;
         }
 
         private AttributeValueCollectionBase() { }
@@ -190,13 +196,10 @@ namespace NewRelic.Agent.Core.Attributes
             IncrementAttribCount(attribDef.Classification);
 
             return true;
-
         }
 
         public bool TrySetValue(IAttributeValue attribValue)
         {
-            // JODO: investigate eliminating this sequential logic.. just get the lock once and add/update if appropriate.
-
             if (!ValidateCollectionLimits(attribValue.AttributeDefinition))
             {
                 return false;
@@ -210,7 +213,6 @@ namespace NewRelic.Agent.Core.Attributes
             IncrementAttribCount(attribValue.AttributeDefinition.Classification);
 
             return true;
-
         }
 
         public bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, Lazy<object> lazyValueImpl)

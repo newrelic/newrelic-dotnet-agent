@@ -61,7 +61,6 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             attrToUpdate.TrySetValue(_attribValues, 0);
 
             // add values until we hit the type specific limit
-            // JODO: Look in to using a defined constant for the limits
             for (int i = 1; i < 500; i++)
             {
                 var attribDef = AttributeDefinitionBuilder
@@ -124,8 +123,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
             Assert.NotNull(attributeUnderTest);
             Assert.AreEqual(9001, attributeUnderTest.Value);
         }
-
-        // JODO: refactor limit constants out of AttributeValueCollectionBase so they can be used here
+        
         [TestCase(AttributeClassification.Intrinsics, 255)]
         [TestCase(AttributeClassification.AgentAttributes, 255)]
         [TestCase(AttributeClassification.UserAttributes, 64)]
