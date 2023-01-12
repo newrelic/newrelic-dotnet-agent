@@ -7,6 +7,8 @@ on:
     - 'tippmar-nr**'
 
 env:
+  scripts_path: ${{ github.workspace }}\build\scripts
+  tools_path: ${{ github.workspace }}\build\Tools
   DOTNET_NOLOGO: true
 
 jobs:
@@ -16,7 +18,8 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        dotnet-version: ['3.0', '3.1.x', '5.0.x', '6.0.x', '7.0.x']
+#        dotnet-version: ['3.0', '3.1.x', '5.0.x', '6.0.x', '7.0.x']
+        dotnet-version: ['6.0.x']
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
@@ -24,7 +27,7 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore -f
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Test
