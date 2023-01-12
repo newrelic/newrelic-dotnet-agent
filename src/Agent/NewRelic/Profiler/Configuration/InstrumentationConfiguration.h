@@ -75,13 +75,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration
 
         InstrumentationPointPtr TryGetInstrumentationPoint(const MethodRewriter::IFunctionPtr function) const
         {
-            // Temporarily specifically ignore System.Net.Http.HttpClient instrumentation for .Net 5 and greater, and System.Net.Http.SocketsHttpHandler for framework less than .Net 5
-            // until version checking from instrumentation xml is supported.
-            if (IsHttpClient5OrGreater(function) || IsSocketsHttpHandlerLessThan5(function))
-            {
-                return nullptr;
-            }
-
             const auto methodSignature = SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end());
             const auto params = methodSignature->ToString(function->GetTokenResolver());
             const auto instPoints = TryGetInstrumentationPoints(function->GetAssemblyName(), function->GetTypeName(), function->GetFunctionName(), params);
@@ -159,16 +152,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             }
 
             return matches->second;
-        }
-
-        bool IsHttpClient5OrGreater(const MethodRewriter::IFunctionPtr function) const
-        {
-            return Strings::AreEqualCaseInsensitive(function->GetAssemblyName(), _X("System.Net.Http")) && function->GetAssemblyProps().usMajorVersion >= 5 && Strings::AreEqualCaseInsensitive(function->GetTypeName(), _X("System.Net.Http.HttpClient"));
-        }
-
-        bool IsSocketsHttpHandlerLessThan5(const MethodRewriter::IFunctionPtr function) const
-        {
-            return Strings::AreEqualCaseInsensitive(function->GetAssemblyName(), _X("System.Net.Http")) && function->GetAssemblyProps().usMajorVersion < 5 && Strings::AreEqualCaseInsensitive(function->GetTypeName(), _X("System.Net.Http.SocketsHttpHandler"));
         }
 
         void GetInstrumentationPoints(xstring_t instrumentationXml)
