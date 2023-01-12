@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 ### Fixes
-
+* Resolves [#1130](https://github.com/newrelic/newrelic-dotnet-agent/issues/1130). Attribute collections in the agent will now more reliably track the number of attributes contained, and allow updates to attributes that already exist in the collection when collection limits have been reached (255 global attributes, 65 custom attributes). ([#1335](https://github.com/newrelic/newrelic-dotnet-agent/pull/1335))
 * The agent has been updated to use System.Net.Http.HTTPClient to send data to New Relic instead of System.Net.WebRequest, in order to fix issue [#897](https://github.com/newrelic/newrelic-dotnet-agent/issues/897), as well as remove use of a deprecated library. ([#1325](https://github.com/newrelic/newrelic-dotnet-agent/pull/1325))
 
 ## [10.4.0]
