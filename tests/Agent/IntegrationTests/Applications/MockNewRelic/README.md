@@ -6,33 +6,12 @@ It is a very naive implementation and not meant to serve as a proper "mock colle
 
 ## SSL
 
-To support protocol 15+ this has been updated to use SSL. A self-signed cert has been generated and leveraged.
+To support protocol 15+ this has been updated to use SSL. The app uses the self-signed development certificate installed by the .NET Core SDK.
 
-Applications using this mock New Relic application will need to override their certificate validation to allow for the untrusted cert. This is so we don't have to install a custom root as trusted on all of the dev and build machines. This is OK because **we are not testing SSL** but just leveraging the mock endpoints for validating things that are hard to test without a round trip that we want to cover via integration tests.
+In order for agent to be able to communicate with this mock collector successfully, the self-signed certificate must be trusted on the system by the
+user the integration tests run as (which should be Administrator on a Windows system).
 
-Applications may also need to add additional TLS settings. 
+This requires a one-time step of running the command "dotnet dev-certs https --trust" from a command prompt or Powershell running as the same
+user the integration tests are run as (again, Administrator on Windows).
 
-Examples 
-
-```cs
-ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-ServicePointManager.ServerCertificateValidationCallback = delegate
-{
-    //force trust on all certificates for simplicity
-    return true;
-};
-```
-
-The cert was generated in the following fashion...
-
-```powershell
-$cert = New-SelfSignedCertificate -certstorelocation cert:\localmachine\my -dnsname ".NET Agent Test Certificate Authority"
-Write-Host $cert
-
-$pwd = ConvertTo-SecureString -String "password1" -Force -AsPlainText
-
-$path = "cert:\localMachine\my\" + $cert.Thumbprint 
-Export-PfxCertificate -cert $path -FilePath testcert.pfx -Password $pwd
-```
-
-The cert also needs to be set to copy to the output directory. I set to "copy always" to be safe.
+For more information please see https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-dev-certs
