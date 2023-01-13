@@ -81,7 +81,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMq", "src\Agent\NewRe
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{BADDAE10-27A9-4452-9432-BFDBC3C62E87}"
 	ProjectSection(SolutionItems) = preProject
-		tests\CodeCoverage.runsettings = tests\CodeCoverage.runsettings
+		tests\UnitTests.runsettings = tests\UnitTests.runsettings
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarking", "tests\Agent\Benchmarking\Benchmarking\Benchmarking.csproj", "{FBD561F5-BA22-46D5-85D4-3BB24B82A85F}"
