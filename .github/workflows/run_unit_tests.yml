@@ -39,9 +39,9 @@ jobs:
 
       - name: Unit Tests
         run: |
+          cd ${{ github.workspace }}
           Write-Host "Creating TestResults directory to temporarily get around nunit limitation"
-          mkdir ${{ github.workspace }}\TestResults
-          #mkdir .\TestResults
+          mkdir .\TestResults
           $testDllPatterns = @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll')
           Write-Host "Finding files for Framework NUnit tests"
           $frameworkTestPaths = @('Tests\Agent\UnitTests', 'Tests\NewRelic.Core.Tests')
@@ -54,7 +54,7 @@ jobs:
           { $frameworkFiles | ForEach-Object { if ($_.Name -eq $frameworkTestFileNames[$i].Name) { $frameworkUnitTestPaths += $_.FullName; Continue } } }
 
           $frameworkUnitTestPaths | ForEach-Object { $_ }
-          Write-Host "Executing: vstest.console.exe " $frameworkUnitTestPaths " --parallel --logger:'html;LogFileName=agent-results.html'"
+          Write-Host "Executing: vstest.console.exe " $frameworkUnitTestPaths " --parallel --logger:'html;LogFileName=agent-results.html' --collect:'XPlat Code Coverage' /testadapterpath:$env:USERPROFILE\.nuget\packages\coverlet.collector\3.2.0\build\netstandard1.0"
           vstest.console.exe $frameworkUnitTestPaths --parallel --logger:"html;LogFileName=agent-results.html" --collect:"XPlat Code Coverage" /testadapterpath:$env:USERPROFILE\.nuget\packages\coverlet.collector\3.2.0\build\netstandard1.0
 
           if ($LastExitCode -ne 0)
@@ -71,7 +71,7 @@ jobs:
 
           Write-Host "Executing .NET Core NUnit Tests:"
           $netCoreUnitTestPaths | ForEach-Object { $_ }
-          Write-Host "Executing: dotnet test " $netCoreUnitTestPaths " --parallel --logger:'html;LogFileName=lambda-results.html'"
+          Write-Host "Executing: dotnet test " $netCoreUnitTestPaths " --logger:'html;LogFileName=lambda-results.html' --collect:'XPlat Code Coverage'  /testadapterpath:$env:USERPROFILE\.nuget\packages\coverlet.collector\3.2.0\build\netstandard1.0"
           dotnet test $netCoreUnitTestPaths --logger:"html;LogFileName=lambda-results.html" --collect:"XPlat Code Coverage"  /testadapterpath:$env:USERPROFILE\.nuget\packages\coverlet.collector\3.2.0\build\netstandard1.0
 
           if ($LastExitCode -ne 0)
