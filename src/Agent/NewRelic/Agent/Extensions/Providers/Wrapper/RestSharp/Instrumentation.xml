@@ -6,14 +6,21 @@ SPDX-License-Identifier: Apache-2.0
 <extension xmlns="urn:newrelic-extension">
   <instrumentation>
     <tracerFactory name="NewRelic.Providers.Wrapper.RestSharp.ExecuteTaskAsync">
-      <match assemblyName="RestSharp" className="RestSharp.RestClient">
+      <match assemblyName="RestSharp" className="RestSharp.RestClient" maxVersion="106.7.0">
         <exactMethodMatcher methodName="ExecuteTaskAsync" parameters="RestSharp.IRestRequest,System.Threading.CancellationToken" />
       </match>
     </tracerFactory>
+    <tracerFactory name="NewRelic.Providers.Wrapper.RestSharp.ExecuteTaskAsync">
+      <match assemblyName="RestSharp" className="RestSharp.RestClient" minVersion="106.7.0" maxVersion="107.0.0">
+        <exactMethodMatcher methodName="ExecuteAsync" parameters="RestSharp.IRestRequest,System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
+
     <tracerFactory name="NewRelic.Providers.Wrapper.RestSharp.AppendHeaders">
-      <match assemblyName="RestSharp" className="RestSharp.Http">
+      <match assemblyName="RestSharp" className="RestSharp.Http" maxVersion="106.7.0">
         <exactMethodMatcher methodName="AppendHeaders" parameters="System.Net.HttpWebRequest" />
       </match>
     </tracerFactory>
+
   </instrumentation>
 </extension>

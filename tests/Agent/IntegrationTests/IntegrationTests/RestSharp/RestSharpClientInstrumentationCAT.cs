@@ -29,6 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
             _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} PUT false");
             _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} POST false");
             _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} DELETE false");
+            //_fixture.AddCommand($"RootCommands DelaySeconds 30"); // allow agent debugger attach
             _fixture.AddCommand($"RestSharpExerciser RestSharpClientTaskCancelled {_fixture.RemoteApplication.Port}");
             _fixture.AddCommand("RestSharpService StopService");
 

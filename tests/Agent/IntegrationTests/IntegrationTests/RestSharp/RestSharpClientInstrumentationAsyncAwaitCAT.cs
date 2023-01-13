@@ -39,6 +39,7 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
                     var configModifier = new NewRelicConfigModifier(configPath);
 
                     configModifier.EnableCat();
+                    configModifier.SetLogLevel("finest");
                     configModifier.ForceTransactionTraces();
                 }
             );
