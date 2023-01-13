@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 ### Fixes
+* Resolves an issue where some NuGet packages were incomplete for the 10.5.0 release. Impacted packages have been delisted from NuGet. ([#1347](https://github.com/newrelic/newrelic-dotnet-agent/pull/1347))
 
 ## [10.5.0]
 
