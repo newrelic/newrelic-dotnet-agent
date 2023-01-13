@@ -148,4 +148,4 @@ src/Agent/_profilerBuild/*Debug
 # Ignore any signing keys used in Linux packaging
 build/Linux/keys
 
-tests/**/coverage.cobertura.xml
+tests/TestResults/*

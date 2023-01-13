@@ -7,8 +7,6 @@ on:
     - 'tippmar-nr**'
 
 env:
-  scripts_path: ${{ github.workspace }}\build\scripts
-  tools_path: ${{ github.workspace }}\build\Tools
   DOTNET_NOLOGO: true
 
 jobs:
@@ -18,7 +16,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
+      test_results_path: tests\TestResults
 
     steps:
       - uses: actions/checkout@v3
@@ -35,15 +33,15 @@ jobs:
         run: dotnet restore
 
       - name: Build & Test (only builds unit test projects and their dependencies)
-        run: dotnet test --verbosity minimal --no-restore --settings tests\UnitTests.runsettings
+        run: dotnet test --verbosity minimal --no-restore --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
 
       - name: Upload coverage reports to Codecov.io
         uses: codecov/codecov-action@v3
         with:
-            directory: tests\TestResults
+            directory: ${{ env.test_results_path }}
 
       - name: Upload coverage report artifact
         uses: actions/upload-artifact@v2.2.3
         with:
             name: UnitTestResults # Artifact name        
-            path: tests\TestResults # Directory containing files to upload
+            path: ${{ env.test_results_path }} # Directory containing files to upload
