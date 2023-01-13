@@ -16,8 +16,14 @@ jobs:
   run-unit-tests:
     name: Run Unit Tests
     runs-on: windows-latest
+
+    env:
+      fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
+
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v3
@@ -28,20 +34,22 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1
 
-      #- name: Setup NuGet
-      #  uses: NuGet/setup-nuget@v1.0.2
-
       - name: Setup VSTest Path
         uses: darenm/Setup-VSTest@v1
 
-      - name: Restore NuGet Packages
-        run: dotnet restore -f
+      - name: Build FullAgent.sln
+        run: |
+          Write-Host "List NuGet Sources"
+          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true" ${{ env.fullagent_solution_path }}
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
+        shell: powershell
 
       - name: Unit Tests
         run: |
-          cd ${{ github.workspace }}
           Write-Host "Creating TestResults directory to temporarily get around nunit limitation"
-          mkdir .\TestResults
+          mkdir ${{ github.workspace }}\TestResults
+
           $testDllPatterns = @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll')
           Write-Host "Finding files for Framework NUnit tests"
           $frameworkTestPaths = @('Tests\Agent\UnitTests', 'Tests\NewRelic.Core.Tests')
@@ -80,6 +88,14 @@ jobs:
 
       - name: Upload coverage reports to Codecov.io
         uses: codecov/codecov-action@v3
+
+      - name: Archive Test Results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: test-results
+          path: ${{ github.workspace }}\TestResults
+          if-no-files-found: error
 
 
       #- name: Install dependencies
