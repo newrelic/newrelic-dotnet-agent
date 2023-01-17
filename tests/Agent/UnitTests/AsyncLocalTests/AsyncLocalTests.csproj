@@ -5,7 +5,7 @@
     <AssemblyName>NewRelic.Providers.CallStack.AsyncLocalTests</AssemblyName>
     <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>
     <RunSettingsFilePath>$(SolutionDir)test.runsettings</RunSettingsFilePath>
-    <Configurations>Debug;Release;Unit Tests</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

@@ -4,7 +4,7 @@
     <AssemblyName>ConcurrentBenchmarking</AssemblyName>
     <RootNamespace>ConcurrentBenchmarking</RootNamespace>
     <Description></Description>
-    <Configurations>Debug;Release;Unit Tests</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   
   <ItemGroup>
@@ -12,6 +12,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="NBench" Version="0.3.4.0" />
     <PackageReference Include="NBench.Runner" Version="0.3.4.0" />
   </ItemGroup>
   

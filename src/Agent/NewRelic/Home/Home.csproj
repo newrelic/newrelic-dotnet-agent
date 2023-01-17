@@ -5,7 +5,7 @@
     <RootNamespace>NewRelic.Home</RootNamespace>
     <AssemblyName>NewRelic.Home</AssemblyName>
     <Description>This project is used to run build_home.ps1 to create the home folders.  It is empty on purpose.</Description>
-    <Configurations>Debug;Release;Unit Tests</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

@@ -4,7 +4,7 @@
     <RootNamespace>NewRelic.Providers.Wrapper.SerilogLogging</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.SerilogLogging</AssemblyName>
     <Description>Serilog Wrapper Provider for New Relic .NET Agent</Description>
-    <Configurations>Debug;Release;Unit Tests</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <Reference Include="System" />

@@ -4,7 +4,7 @@
         <AssemblyName>NewRelic.Providers.Wrapper.ScriptHandlerFactory</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.ScriptHandlerFactory</RootNamespace>
         <Description>ScriptHandlerFactory Wrapper Provider for New Relic .NET Agent</Description>
-        <Configurations>Debug;Release;Unit Tests</Configurations>
+        <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="System" />

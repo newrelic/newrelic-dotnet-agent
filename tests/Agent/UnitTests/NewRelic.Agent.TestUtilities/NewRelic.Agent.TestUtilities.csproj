@@ -3,7 +3,7 @@
     <TargetFrameworks>net462</TargetFrameworks>
     <RootNamespace>NewRelic.Agent.TestUtilities</RootNamespace>
     <AssemblyName>NewRelic.Agent.TestUtilities</AssemblyName>
-    <Configurations>Debug;Release;Unit Tests</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="3.2.0">

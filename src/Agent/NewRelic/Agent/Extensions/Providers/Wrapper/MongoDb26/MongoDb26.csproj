@@ -4,7 +4,7 @@
 		<AssemblyName>NewRelic.Providers.Wrapper.MongoDb26</AssemblyName>
 		<RootNamespace>NewRelic.Providers.Wrapper.MongoDb26</RootNamespace>
 		<Description>MongoDb 2.6 Wrapper Provider for New Relic .NET Agent</Description>
-		<Configurations>Debug;Release;Unit Tests</Configurations>
+		<Configurations>Debug;Release</Configurations>
 	</PropertyGroup>
 	<ItemGroup>
 	  <Content Include="Instrumentation.xml">

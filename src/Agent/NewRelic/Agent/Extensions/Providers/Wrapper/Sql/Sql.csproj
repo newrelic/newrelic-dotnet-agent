@@ -4,7 +4,7 @@
     <RootNamespace>NewRelic.Providers.Wrapper.Sql</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.Sql</AssemblyName>
     <Description>Sql Wrapper Provider for New Relic .NET Agent</Description>
-    <Configurations>Debug;Release;Unit Tests</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <Reference Include="System" />

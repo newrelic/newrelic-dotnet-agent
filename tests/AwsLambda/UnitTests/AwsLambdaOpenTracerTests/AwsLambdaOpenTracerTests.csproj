@@ -6,7 +6,7 @@
     <AssemblyName>NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests</AssemblyName>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <SignAssembly>true</SignAssembly>
-    <Configurations>Debug;Release;Unit Tests</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

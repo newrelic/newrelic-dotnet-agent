@@ -8,7 +8,7 @@
     <Product>NewRelic.Testing.Assertions.UnitTests</Product>
     <Copyright>Copyright ©  2014</Copyright>
     <OutputPath>bin\$(Configuration)\</OutputPath>
-    <Configurations>Debug;Release;Unit Tests</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>

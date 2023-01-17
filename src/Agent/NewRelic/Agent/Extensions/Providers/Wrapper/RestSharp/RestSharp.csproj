@@ -4,7 +4,7 @@
     <RootNamespace>NewRelic.Providers.Wrapper.RestSharp</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.RestSharp</AssemblyName>
     <Description>RestSharp Wrapper Provider for New Relic .NET Agent</Description>
-    <Configurations>Debug;Release;Unit Tests</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

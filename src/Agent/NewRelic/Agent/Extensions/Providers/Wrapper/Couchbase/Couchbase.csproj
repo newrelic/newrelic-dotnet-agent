@@ -4,7 +4,7 @@
         <AssemblyName>NewRelic.Providers.Wrapper.Couchbase</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.Couchbase</RootNamespace>
         <Description>Couchbase Wrapper Provider for New Relic .NET Agent</Description>
-        <Configurations>Debug;Release;Unit Tests</Configurations>
+        <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="System" />
