@@ -17,6 +17,10 @@
     <tags>New Relic</tags>
   </metadata>
   <files>
+    <file src="lib\**" target="lib" />
+    <file src="tools\**" target="tools" />
+    <file src="LICENSE.txt" target="." />
+    <file src="THIRD_PARTY_NOTICES.txt" target="." />
     <file src="..\..\icon.png" target="images\" />
   </files>
 </package>
