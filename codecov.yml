@@ -1,0 +1,24 @@
+codecov:
+  max_report_age: 24
+  disable_default_path_fixes: no
+  require_ci_to_pass: no
+  notify:
+    wait_for_ci: yes
+coverage:
+  status:
+    project:
+      default:
+        # basic
+        target: auto
+        threshold: 0%
+        base: auto 
+        flags: 
+          - unit
+        paths: 
+          - "src"
+       # advanced settings
+        branches: 
+          - master
+        if_ci_failed: success #success, failure, error, ignore
+        informational: false
+        only_pulls: false
