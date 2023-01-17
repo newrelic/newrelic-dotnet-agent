@@ -1,6 +1,5 @@
 name: .NET Agent Unit Tests and Code Coverage
 
-# Does not run on PUSH since we have already ran all the test
 on:
   push:
     branches: 
@@ -33,7 +32,7 @@ jobs:
         run: dotnet restore
 
       - name: Build & Test (only builds unit test projects and their dependencies)
-        run: dotnet test --verbosity minimal --no-restore --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
+        run: dotnet test --verbosity detailed --no-restore --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
 
       - name: Upload coverage reports to Codecov.io
         uses: codecov/codecov-action@v3
