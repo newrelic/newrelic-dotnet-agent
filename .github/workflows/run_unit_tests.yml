@@ -35,7 +35,7 @@ jobs:
         run: dotnet build --configuration "Unit Tests"
 
       - name: Run Unit Tests
-        run: dotnet test --verbosity normal --no-build --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
+        run: dotnet test  --configuration "Unit Tests" --verbosity normal --no-build --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
 
       - name: Upload coverage reports to Codecov.io
         uses: codecov/codecov-action@v3
