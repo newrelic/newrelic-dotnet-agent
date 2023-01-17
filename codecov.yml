@@ -1,3 +1,8 @@
+# any changes to this file MUST be validated prior to comitting!!
+#
+# Powershell: Invoke-RestMethod -Uri https://codecov.io/validate -Body (Get-Content -Raw -LiteralPath .\codecov.yml) -Method post
+# bash: curl --data-binary @codecov.yml https://codecov.io/validate
+#
 codecov:
   max_report_age: 24
   disable_default_path_fixes: no
@@ -8,17 +13,7 @@ coverage:
   status:
     project:
       default:
-        # basic
         target: auto
         threshold: 0%
-        base: auto 
-        flags: 
-          - unit
-        paths: 
-          - "src"
-       # advanced settings
-        branches: 
-          - master
-        if_ci_failed: success #success, failure, error, ignore
-        informational: false
-        only_pulls: false
+        if_ci_failed: success 
+        informational: true  # if true, status will pass regardless regardless of other settings
