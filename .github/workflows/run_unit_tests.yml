@@ -7,7 +7,7 @@ on:
 
 env:
   DOTNET_NOLOGO: true
-
+  NR_DEV_BUILD_HOME: false
 jobs:
 
   run-unit-tests:
