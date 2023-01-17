@@ -8,7 +8,6 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <IntermediateOutputPath>$(MSBuildThisFileDirectory)\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
         <OutputPath>$(MSBuildThisFileDirectory)\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
-        <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="ILRepack" Version="2.0.16" />

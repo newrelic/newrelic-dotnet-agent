@@ -5,7 +5,6 @@
     <RootNamespace>NewRelic.Providers.Wrapper.NLogLogging</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.NLogLogging</AssemblyName>
     <Description>NLog Logging Wrapper Provider for New Relic .NET Agent</Description>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">

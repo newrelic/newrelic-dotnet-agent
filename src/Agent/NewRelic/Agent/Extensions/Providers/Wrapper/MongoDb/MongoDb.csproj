@@ -4,7 +4,6 @@
         <AssemblyName>NewRelic.Providers.Wrapper.MongoDb</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.MongoDb</RootNamespace>
         <Description>MongoDb Wrapper Provider for New Relic .NET Agent</Description>
-        <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="mongocsharpdriver" Version="1.10.0" />

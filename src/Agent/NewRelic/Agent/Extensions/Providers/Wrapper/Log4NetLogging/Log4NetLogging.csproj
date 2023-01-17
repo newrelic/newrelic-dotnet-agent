@@ -4,7 +4,6 @@
     <RootNamespace>NewRelic.Providers.Wrapper.Log4NetLogging</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.Log4NetLogging</AssemblyName>
     <Description>Log4net Wrapper Provider for New Relic .NET Agent</Description>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <Reference Include="System" />

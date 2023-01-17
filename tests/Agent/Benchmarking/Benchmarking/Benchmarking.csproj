@@ -4,7 +4,6 @@
     <AssemblyName>Benchmarking</AssemblyName>
     <RootNamespace>Benchmarking</RootNamespace>
     <Description></Description>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   
   <ItemGroup>

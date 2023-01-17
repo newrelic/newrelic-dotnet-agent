@@ -4,7 +4,6 @@
     <AssemblyName>ConcurrentBenchmarking</AssemblyName>
     <RootNamespace>ConcurrentBenchmarking</RootNamespace>
     <Description></Description>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   
   <ItemGroup>

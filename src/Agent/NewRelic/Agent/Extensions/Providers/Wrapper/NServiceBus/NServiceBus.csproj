@@ -4,7 +4,6 @@
         <AssemblyName>NewRelic.Providers.Wrapper.NServiceBus</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.NServiceBus</RootNamespace>
         <Description>NServiceBus Wrapper Provider for New Relic .NET Agent</Description>
-        <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
         <Reference Include="System" />

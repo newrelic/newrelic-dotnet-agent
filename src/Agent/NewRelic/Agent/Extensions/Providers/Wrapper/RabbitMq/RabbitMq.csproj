@@ -4,7 +4,6 @@
         <AssemblyName>NewRelic.Providers.Wrapper.RabbitMq</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.RabbitMq</RootNamespace>
         <Description>RabbitMq Wrapper Provider for New Relic .NET Agent</Description>
-        <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
     <ItemGroup>
         <Content Include="Instrumentation.xml">

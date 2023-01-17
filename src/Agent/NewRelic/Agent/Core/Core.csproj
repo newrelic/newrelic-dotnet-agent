@@ -10,7 +10,6 @@
     <OutputPath>$(MSBuildThisFileDirectory)\..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

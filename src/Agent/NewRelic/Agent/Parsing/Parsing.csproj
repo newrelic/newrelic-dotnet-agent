@@ -4,7 +4,6 @@
     <AssemblyName>NewRelic.Parsing</AssemblyName>
     <RootNamespace>NewRelic.Parsing</RootNamespace>
     <Description>Parsing library for New Relic .NET Agent</Description>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <Reference Include="System" />

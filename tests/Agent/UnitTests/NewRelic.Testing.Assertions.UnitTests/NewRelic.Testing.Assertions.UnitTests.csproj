@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{A6AE0190-AEAB-4B3A-B671-95C2D5123BF9}</ProjectGuid>
@@ -8,7 +8,6 @@
     <Product>NewRelic.Testing.Assertions.UnitTests</Product>
     <Copyright>Copyright ©  2014</Copyright>
     <OutputPath>bin\$(Configuration)\</OutputPath>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>

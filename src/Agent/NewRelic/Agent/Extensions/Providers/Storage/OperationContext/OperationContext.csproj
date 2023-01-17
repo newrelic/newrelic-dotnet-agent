@@ -4,7 +4,6 @@
     <AssemblyName>NewRelic.Providers.Storage.OperationContext</AssemblyName>
     <RootNamespace>NewRelic.Providers.Storage.OperationContext</RootNamespace>
     <Description>WCF 3 Transaction Context Provider for New Relic .NET Agent</Description>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

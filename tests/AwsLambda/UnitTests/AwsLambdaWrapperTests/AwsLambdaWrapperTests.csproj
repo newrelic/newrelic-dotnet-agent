@@ -6,7 +6,6 @@
     <AssemblyName>NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests</AssemblyName>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <SignAssembly>true</SignAssembly>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>7.3</LangVersion>

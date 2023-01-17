@@ -4,7 +4,6 @@
         <AssemblyName>NewRelic.Providers.Wrapper.Msmq</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.Msmq</RootNamespace>
         <Description>Msmq Wrapper Provider for New Relic .NET Agent</Description>
-        <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="System" />

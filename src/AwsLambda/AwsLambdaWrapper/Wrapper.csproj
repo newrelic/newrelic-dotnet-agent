@@ -5,7 +5,6 @@
     <AssemblyName>NewRelic.OpenTracing.AmazonLambda.Wrapper</AssemblyName>
     <RootNamespace>NewRelic.OpenTracing.AmazonLambda</RootNamespace>
     <Description></Description>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

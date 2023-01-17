@@ -4,7 +4,6 @@
     <AssemblyName>NewRelic.Providers.Wrapper.Asp35</AssemblyName>
     <RootNamespace>NewRelic.Providers.Wrapper.Asp35</RootNamespace>
     <Description>ASP.NET 3.5 Wrapper Provider for New Relic .NET Agent</Description>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

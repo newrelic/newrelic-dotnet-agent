@@ -4,7 +4,6 @@
         <AssemblyName>NewRelic.Providers.Wrapper.Mvc3</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.Mvc3</RootNamespace>
         <Description>Mvc3 Wrapper Provider for New Relic .NET Agent</Description>
-        <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="System" />
