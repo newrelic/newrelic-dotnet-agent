@@ -29,13 +29,13 @@ jobs:
           dotnet-quality: 'ga'
 
       - name: Restore NuGet Packages
-        run: dotnet restore -f
+        run: dotnet restore #-f
 
-      - name: Build the solution
-        run: dotnet build --configuration "Unit Tests"
+#      - name: Build the solution
+#        run: dotnet build 
 
       - name: Run Unit Tests
-        run: dotnet test  --configuration "Unit Tests" --verbosity normal --no-build --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
+        run: dotnet test --verbosity normal --no-restore --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
 
       - name: Upload coverage reports to Codecov.io
         uses: codecov/codecov-action@v3
