@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

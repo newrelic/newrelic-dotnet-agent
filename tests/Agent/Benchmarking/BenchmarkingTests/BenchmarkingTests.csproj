@@ -5,6 +5,7 @@
     <AssemblyName>NewRelic.Agent.Core.BenchmarkingTests</AssemblyName>
     <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>
     <RunSettingsFilePath>$(SolutionDir)test.runsettings</RunSettingsFilePath>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.11.3" />

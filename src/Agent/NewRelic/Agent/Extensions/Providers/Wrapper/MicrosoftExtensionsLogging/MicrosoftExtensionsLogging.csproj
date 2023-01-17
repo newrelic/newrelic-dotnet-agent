@@ -5,6 +5,7 @@
     <RootNamespace>NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging</AssemblyName>
     <Description>Microsoft.Extensions.Logging Wrapper Provider for New Relic .NET Agent</Description>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

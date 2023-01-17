@@ -5,6 +5,7 @@
     <RootNamespace>NewRelic.Agent.Extensions</RootNamespace>
     <Description>Extensions for the New Relic .NET Agent</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />

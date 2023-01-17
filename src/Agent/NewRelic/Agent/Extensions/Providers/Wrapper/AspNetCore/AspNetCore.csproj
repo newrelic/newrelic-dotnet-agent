@@ -3,6 +3,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>NewRelic.Providers.Wrapper.AspNetCore</AssemblyName>
     <RootNamespace>NewRelic.Providers.Wrapper.AspNetCore</RootNamespace>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.Abstractions" Version="2.0.0" />

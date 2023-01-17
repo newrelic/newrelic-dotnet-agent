@@ -4,6 +4,7 @@
     <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
     <AssemblyName>NewRelic.Providers.Wrapper.CosmosDb</AssemblyName>
     <RootNamespace>NewRelic.Providers.Wrapper.CosmosDb</RootNamespace>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

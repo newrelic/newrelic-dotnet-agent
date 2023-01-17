@@ -7,8 +7,12 @@
     <Product>NewRelic.NuGetHelper</Product>
     <Copyright>Copyright © 2022</Copyright>
     <OutputPath>bin\</OutputPath>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unit Tests|AnyCPU'">
     <DebugType>full</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

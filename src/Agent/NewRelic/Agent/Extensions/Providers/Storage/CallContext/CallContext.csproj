@@ -4,6 +4,7 @@
     <AssemblyName>NewRelic.Providers.Storage.CallContext</AssemblyName>
     <RootNamespace>NewRelic.Providers.Storage.CallContext</RootNamespace>
     <Description>AsyncLocal Call Stack Tracking Provider for New Relic .NET Agent</Description>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

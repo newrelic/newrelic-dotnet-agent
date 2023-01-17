@@ -4,6 +4,7 @@
     <RootNamespace>NewRelic.Providers.Wrapper.StackExchangeRedis</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.StackExchangeRedis</AssemblyName>
     <Description>StackExchange.Redis Wrapper Provider for New Relic .NET Agent</Description>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <Reference Include="System" />

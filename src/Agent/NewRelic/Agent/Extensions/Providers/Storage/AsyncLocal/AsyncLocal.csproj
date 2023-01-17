@@ -5,6 +5,7 @@
       <AssemblyName>NewRelic.Providers.Storage.AsyncLocal</AssemblyName>
       <RootNamespace>NewRelic.Providers.Storage.AsyncLocal</RootNamespace>
       <Description>Async call stack and transaction tracking for New Relic .NET Agent</Description>
+      <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

@@ -4,6 +4,7 @@
         <AssemblyName>NewRelic.Providers.Wrapper.OpenRasta</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.OpenRasta</RootNamespace>
         <Description>OpenRasta Wrapper Provider for New Relic .NET Agent</Description>
+        <Configurations>Debug;Release;Unit Tests</Configurations>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="System.Web" />

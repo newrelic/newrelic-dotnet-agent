@@ -4,6 +4,7 @@
         <AssemblyName>NewRelic.Providers.Wrapper.HttpWebRequest</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.HttpWebRequest</RootNamespace>
         <Description>HttpWebRequest Wrapper Provider for New Relic .NET Agent</Description>
+        <Configurations>Debug;Release;Unit Tests</Configurations>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="System" />

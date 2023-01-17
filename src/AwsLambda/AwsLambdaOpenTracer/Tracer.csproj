@@ -5,6 +5,7 @@
     <RootNamespace>NewRelic.OpenTracing.AmazonLambda</RootNamespace>
     <Description></Description>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

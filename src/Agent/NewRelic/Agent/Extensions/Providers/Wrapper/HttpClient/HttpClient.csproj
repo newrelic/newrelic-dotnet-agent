@@ -4,6 +4,7 @@
     <RootNamespace>NewRelic.Providers.Wrapper.HttpClient</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.HttpClient</AssemblyName>
     <Description>HttpClient Wrapper Provider for New Relic .NET Agent</Description>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <Reference Include="System" />

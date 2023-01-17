@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <Configurations>Debug;Release;Unit Tests</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="3.2.0">
