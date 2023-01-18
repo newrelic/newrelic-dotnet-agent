@@ -21,6 +21,7 @@ coverage:
         target: auto
         threshold: 1% # code coverage can drop by 1% and still be successful
         if_ci_failed: success 
+        informational: true  # if true, status will pass regardless regardless of other settings
 comment:
   layout: "reach, diff, files" # change to "reach, diff, flags, files" if we start using flags
   behavior: default # new comment will be posted or existing comment will be edited
