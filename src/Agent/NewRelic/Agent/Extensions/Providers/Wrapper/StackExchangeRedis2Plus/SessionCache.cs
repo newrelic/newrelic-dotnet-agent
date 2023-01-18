@@ -3,12 +3,14 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Parsing.ConnectionString;
 using StackExchange.Redis.Profiling;
 
 namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
@@ -17,18 +19,17 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
     {
         private readonly EventWaitHandle _stopHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-        private readonly ConcurrentDictionary<string, ProfilingSession> _sessionCache = new ConcurrentDictionary<string, ProfilingSession>();
+        private readonly ConcurrentDictionary<string, (ITransaction Transaction, ProfilingSession Session)> _sessionCache = new ConcurrentDictionary<string, (ITransaction Transaction, ProfilingSession Session)>();
 
         private readonly IAgent _agent;
 
-        private readonly ConnectionInfo _connectionInfo;
+        private ConnectionInfo _connectionInfo = null;
 
         private readonly int _invocationTargetHashCode;
 
-        public SessionCache(IAgent agent, ConnectionInfo connectionInfo, int invocationTargetHashCode)
+        public SessionCache(IAgent agent, int invocationTargetHashCode)
         {
             _agent = agent;
-            _connectionInfo = connectionInfo;
 
             // Since the methodcall will not change, it is passed in from the instrumentation for reuse later.
             _invocationTargetHashCode = invocationTargetHashCode;
@@ -38,18 +39,22 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
         /// Finishes a profiling session for the segment indicated by the span id and creates a child DataStoreSegment for each command in the session.
         /// </summary>
         /// <param name="spanId">Span ID of the segment being finalized.</param>
-        /// <param name="transaction">The currently active transaction for the given context.</param>
-        public void Harvest(string spanId, Agent.Api.ITransaction transaction)
+        public void Harvest(string spanId)
         {
             // If we can't remove the session, it doesn't exist, so do nothing and return.
-            if (!_sessionCache.TryRemove(spanId, out var session))
+            if (!_sessionCache.TryRemove(spanId, out var sessionData))
             {
                 return;
             }
 
-            var commands = session.FinishProfiling();
+            var commands = sessionData.Session.FinishProfiling();
+            if (sessionData.Transaction.IsFinished)
+            {
+                // log here?
+                return;
+            }
 
-            var xTransaction = (ITransactionExperimental)transaction;
+            var xTransaction = (ITransactionExperimental)sessionData.Transaction;
             var startTime = xTransaction.StartTime;
             foreach (var command in commands)
             {
@@ -58,15 +63,50 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                 var relativeEndTime = relativeStartTime + command.ElapsedTime;
                 var operation = command.Command;
 
+                // avoid creating a new ConnectionInfo for each command.
+                var connectionInfo = _connectionInfo ??= GetConnectionInfo(command.EndPoint); 
+
                 // This new segment maker accepts relative start and stop times since we will be starting and ending(RemoveSegmentFromCallStack) the segment immediately.
                 // This also sets the segment as a Leaf.
                 var segment = xTransaction.StartStackExchangeRedisSegment(_invocationTargetHashCode, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation),
-                    _connectionInfo, relativeStartTime, relativeEndTime);
+                    connectionInfo, relativeStartTime, relativeEndTime);
 
                 // This version of End does not set the end time or check for redis Harvests
                 // This calls Finish and removes the segment from the callstack.
                 segment.EndStackExchangeRedis();
             }
+        }
+
+        /// <summary>
+        /// This will be called once when the first command is handled since it will have all the data to build the ConnctionInfo.  This data is not present at the newer instrumentation points.
+        /// </summary>
+        /// <param name="endpoint"></param>
+        /// <returns></returns>
+        private ConnectionInfo GetConnectionInfo(EndPoint endpoint)
+        {
+            var dnsEndpoint = endpoint as DnsEndPoint;
+            var ipEndpoint = endpoint as IPEndPoint;
+
+            string port = null;
+            string host = null;
+
+            if (dnsEndpoint != null)
+            {
+                port = dnsEndpoint.Port.ToString();
+                host = ConnectionStringParserHelper.NormalizeHostname(dnsEndpoint.Host, _agent.Configuration.UtilizationHostName);
+            }
+            else if (ipEndpoint != null)
+            {
+                port = ipEndpoint.Port.ToString();
+                host = ConnectionStringParserHelper.NormalizeHostname(ipEndpoint.Address.ToString(), _agent.Configuration.UtilizationHostName);
+            }
+
+            if (host == null)
+            {
+                return null;
+            }
+
+            return new ConnectionInfo(host, port, null);
         }
 
         /// <summary>
@@ -82,25 +122,43 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                     return null;
                 }
 
+                // Don't want to save data to a session outside of a transaction or to a NoOp - no way to clean it up easily or reliably.
                 var transaction = _agent.CurrentTransaction;
-
-                // Don't want to save data to a session outside of a transaction - no way to clean it up easily or reliably.
                 if (!transaction.IsValid)
                 {
                     return null;
                 }
 
-                // Use the spanid of the segment as the key for the cache.
+                // Don't want to save data to a session to a NoOp - no way to clean it up easily or reliably.
                 var segment = transaction.CurrentSegment;
-                var spanId = segment.SpanId;
-                if (!_sessionCache.TryGetValue(spanId, out var session))
+                if (!segment.IsValid)
                 {
-                    session = new ProfilingSession(segment);
-                    _sessionCache.TryAdd(spanId, session);
+                    return null;
                 }
 
-                return session;
+                // Use the spanid of the segment as the key for the cache.
+                var spanId = segment.SpanId;
+                if (string.IsNullOrWhiteSpace(spanId))
+                {
+                    return null;
+                }
+
+                if (!_sessionCache.TryGetValue(spanId, out var sessionData))
+                {
+                    sessionData = (transaction, new ProfilingSession(segment));
+                    _sessionCache.TryAdd(spanId, sessionData);
+                }
+
+                return sessionData.Session;
             };
+        }
+
+        public int Count
+        {
+            get
+            {
+                return _sessionCache.Count;
+            }
         }
 
         public void Dispose()

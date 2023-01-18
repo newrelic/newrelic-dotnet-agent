@@ -35,9 +35,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
                     configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
 
-                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
-                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(
-                        instrumentationFilePath, "NewRelic.Agent.Core.Tracer.Factories.Sql.DataReaderTracerFactory", "enabled", "true");
                 },
                 exerciseApplication: () => _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2), 2)
             );

@@ -12,6 +12,8 @@ namespace NewRelic.Agent.Extensions.Helpers
     /// </summary>
     public interface IStackExchangeRedisCache : IDisposable
     {
-        void Harvest(string spanId, ITransaction transaction);
+        void Harvest(string spanId);
+
+        int Count { get; }
     }
 }
