@@ -4,7 +4,6 @@
 # shell: curl --data-binary @codecov.yml https://codecov.io/validate
 #
 codecov:
-  token: b335bdf5-0a12-4d24-a9e4-d6686485d654
   branch: main
   require_ci_to_pass: no
   notify:

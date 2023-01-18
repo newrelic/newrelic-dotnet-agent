@@ -9,7 +9,6 @@ on:
 env:
   DOTNET_NOLOGO: true
   NR_DEV_BUILD_HOME: false
-  CODECOV_TOKEN: b335bdf5-0a12-4d24-a9e4-d6686485d654
 
 jobs:
 

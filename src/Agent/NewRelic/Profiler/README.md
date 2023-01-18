@@ -119,5 +119,6 @@ The bytecode we inject into CoreCLR applications does not reference `System.Cann
 
 ### Links
 
+* ECMA-335, CIL specification: https://www.ecma-international.org/publications-and-standards/standards/ecma-335/
 * CIL Instruction List: https://en.wikipedia.org/wiki/List_of_CIL_instructions
 * Broman post on ReJIT.  Note that the approach he suggests for implementing rejitting did not work well for us.  https://blogs.msdn.microsoft.com/davbr/2011/10/12/rejit-a-how-to-guide/
