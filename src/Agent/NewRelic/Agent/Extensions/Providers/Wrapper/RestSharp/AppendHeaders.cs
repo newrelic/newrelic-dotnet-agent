@@ -9,7 +9,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 namespace NewRelic.Providers.Wrapper.RestSharp
 {
     /// <summary>
-    /// This instrumentation is used for CAT support on outbound RestClient requests.
+    /// This instrumentation is used for CAT/DT support on outbound RestClient requests.
     /// Data is added to the Http Headers to be read by the receiving agent.
     /// </summary>
     public class AppendHeaders : IWrapper

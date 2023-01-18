@@ -5,6 +5,10 @@ SPDX-License-Identifier: Apache-2.0
 -->
 <extension xmlns="urn:newrelic-extension">
   <instrumentation>
+
+    <!-- This is the main RestSharp instrumentation wrapper that creates the external segments.
+    The instrumentation point moved from "ExecuteTaskAsync" to "ExecuteAsync" after version 106.6.10,
+    but the wrapper behavior is the same for both methods.-->
     <tracerFactory name="NewRelic.Providers.Wrapper.RestSharp.ExecuteTaskAsync">
       <match assemblyName="RestSharp" className="RestSharp.RestClient" maxVersion="106.7.0">
         <exactMethodMatcher methodName="ExecuteTaskAsync" parameters="RestSharp.IRestRequest,System.Threading.CancellationToken" />
@@ -16,6 +20,10 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
+    <!-- These wrappers insert our tracing (CAT or DT) headers into the outbound HttpWebRequest that
+    RestSharp is sending.  After version 106.6.10, the AppendHeaders method was made a local method without
+    an HttpWebRequest argument, so instead we instrument the parent ConfigureWebRequest method and
+    do the work on the HttpWebRequest being returned. -->
     <tracerFactory name="NewRelic.Providers.Wrapper.RestSharp.AppendHeaders">
       <match assemblyName="RestSharp" className="RestSharp.Http" maxVersion="106.7.0">
         <exactMethodMatcher methodName="AppendHeaders" parameters="System.Net.HttpWebRequest" />

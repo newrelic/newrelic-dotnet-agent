@@ -11,6 +11,9 @@ namespace NewRelic.Providers.Wrapper.RestSharp
     /// <summary>
     /// This instrumentation is used for CAT/DT support on outbound RestClient requests.
     /// Data is added to the Http Headers to be read by the receiving agent.
+    ///
+    /// The HttpWebRequest object is created and returned from this instrumented method, so the work
+    /// is performed in the AfterWrappedMethodDelegate.
     /// </summary>
     public class ConfigureWebRequest : IWrapper
     {
@@ -37,7 +40,6 @@ namespace NewRelic.Providers.Wrapper.RestSharp
                     },
                     onFailure: exception =>
                     {
-                        // log some kind of error message?
                     });
         }
     }
