@@ -23,8 +23,6 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
 
         private readonly IAgent _agent;
 
-        private ConnectionInfo _connectionInfo = null;
-
         private readonly int _invocationTargetHashCode;
 
         public SessionCache(IAgent agent, int invocationTargetHashCode)
@@ -47,29 +45,24 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                 return;
             }
 
+            // We want to make sure to finish the session even if the transaction is done so that it is not orphaned.
             var commands = sessionData.Session.FinishProfiling();
             if (sessionData.Transaction.IsFinished)
             {
-                // log here?
                 return;
             }
 
             var xTransaction = (ITransactionExperimental)sessionData.Transaction;
-            var startTime = xTransaction.StartTime;
             foreach (var command in commands)
             {
                 // We need to build the relative start and stop time based on the transaction start time.
-                var relativeStartTime = command.CommandCreated - startTime;
+                var relativeStartTime = command.CommandCreated - xTransaction.StartTime;
                 var relativeEndTime = relativeStartTime + command.ElapsedTime;
-                var operation = command.Command;
-
-                // avoid creating a new ConnectionInfo for each command.
-                var connectionInfo = _connectionInfo ??= GetConnectionInfo(command.EndPoint); 
 
                 // This new segment maker accepts relative start and stop times since we will be starting and ending(RemoveSegmentFromCallStack) the segment immediately.
                 // This also sets the segment as a Leaf.
-                var segment = xTransaction.StartStackExchangeRedisSegment(_invocationTargetHashCode, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation),
-                    connectionInfo, relativeStartTime, relativeEndTime);
+                var segment = xTransaction.StartStackExchangeRedisSegment(_invocationTargetHashCode, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, command.Command),
+                    GetConnectionInfo(command.EndPoint), relativeStartTime, relativeEndTime);
 
                 // This version of End does not set the end time or check for redis Harvests
                 // This calls Finish and removes the segment from the callstack.
@@ -77,36 +70,23 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
             }
         }
 
-        /// <summary>
-        /// This will be called once when the first command is handled since it will have all the data to build the ConnctionInfo.  This data is not present at the newer instrumentation points.
-        /// </summary>
-        /// <param name="endpoint"></param>
-        /// <returns></returns>
         private ConnectionInfo GetConnectionInfo(EndPoint endpoint)
         {
-            var dnsEndpoint = endpoint as DnsEndPoint;
-            var ipEndpoint = endpoint as IPEndPoint;
-
-            string port = null;
-            string host = null;
-
-            if (dnsEndpoint != null)
+            if (endpoint is DnsEndPoint dnsEndpoint)
             {
-                port = dnsEndpoint.Port.ToString();
-                host = ConnectionStringParserHelper.NormalizeHostname(dnsEndpoint.Host, _agent.Configuration.UtilizationHostName);
-            }
-            else if (ipEndpoint != null)
-            {
-                port = ipEndpoint.Port.ToString();
-                host = ConnectionStringParserHelper.NormalizeHostname(ipEndpoint.Address.ToString(), _agent.Configuration.UtilizationHostName);
+                var port = dnsEndpoint.Port.ToString();
+                var host = ConnectionStringParserHelper.NormalizeHostname(dnsEndpoint.Host, _agent.Configuration.UtilizationHostName);
+                return new ConnectionInfo(host, port, null);
             }
 
-            if (host == null)
+            if (endpoint is IPEndPoint ipEndpoint)
             {
-                return null;
+                var port = ipEndpoint.Port.ToString();
+                var host = ConnectionStringParserHelper.NormalizeHostname(ipEndpoint.Address.ToString(), _agent.Configuration.UtilizationHostName);
+                return new ConnectionInfo(host, port, null);
             }
 
-            return new ConnectionInfo(host, port, null);
+            return null;
         }
 
         /// <summary>
@@ -143,6 +123,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                     return null;
                 }
 
+                // During async operations, the transaction can get lost and report as NoOp so we store a reference to it in the cache.
                 if (!_sessionCache.TryGetValue(spanId, out var sessionData))
                 {
                     sessionData = (transaction, new ProfilingSession(segment));
@@ -161,10 +142,17 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
             }
         }
 
+        // Clean up the handles, sessions, and wipe the dictionary.
         public void Dispose()
         {
-            this._stopHandle.Set();
-            this._stopHandle.Dispose();
+            _stopHandle.Set();
+            _stopHandle.Dispose();
+            foreach (var cachedSession in _sessionCache.Values)
+            {
+                _ = cachedSession.Session.FinishProfiling();
+            }
+
+            _sessionCache.Clear();
         }
     }
 }

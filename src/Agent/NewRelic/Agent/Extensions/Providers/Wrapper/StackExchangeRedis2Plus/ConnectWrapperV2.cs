@@ -13,8 +13,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
     {
         public bool IsTransactionRequired => true;
 
-        private const string WrapperName = "stackexchangeredis-connect-v2";
-        //private const string SyncMethodName = "ConnectImpl";
+        private const string WrapperName = "stackexchangeredis-connect";
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {

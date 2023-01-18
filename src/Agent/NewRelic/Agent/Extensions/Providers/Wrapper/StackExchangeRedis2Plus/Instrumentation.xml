@@ -5,14 +5,8 @@ SPDX-License-Identifier: Apache-2.0
 -->
 <extension xmlns="urn:newrelic-extension">
   <instrumentation>
-    <tracerFactory name="stackexchangeredis-connect-v25">
-      <match assemblyName="StackExchange.Redis" className="StackExchange.Redis.Configuration.DefaultOptionsProvider" minVersion="2.5.0.0">
-        <exactMethodMatcher methodName="AfterConnectAsync" />
-      </match>
-    </tracerFactory>
-
-    <tracerFactory name="stackexchangeredis-connect-v2">
-      <match assemblyName="StackExchange.Redis" className="StackExchange.Redis.ConnectionMultiplexer" minVersion="2.0.0.0" maxersion="2.5.0.0">
+    <tracerFactory name="stackexchangeredis-connect">
+      <match assemblyName="StackExchange.Redis" className="StackExchange.Redis.ConnectionMultiplexer" minVersion="2.0.0.0">
         <exactMethodMatcher methodName="CreateMultiplexer" />
       </match>
     </tracerFactory>
