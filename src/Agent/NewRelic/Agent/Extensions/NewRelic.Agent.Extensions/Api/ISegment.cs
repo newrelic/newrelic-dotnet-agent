@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Api
         void End();
 
         /// <summary>
-        /// Ends this transaction StackExchange.Redis segment.
+        /// Ends this StackExchange.Redis transaction segment.
         /// </summary>
         void EndStackExchangeRedis();
 

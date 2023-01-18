@@ -55,7 +55,7 @@ namespace NewRelic.Agent.Core.Segments
         }
 
         /// <summary>
-        /// This .ctor is used when we need to specify both a start time and end time due to a segment being create as part of a batch.  USed mainly in StackExchange.Redis.
+        /// This .ctor is used when we need to specify both a start time and end time due to a segment being create as part of a batch.  Used mainly in StackExchange.Redis.
         /// </summary>
         /// <param name="transactionSegmentState"></param>
         /// <param name="methodCallData"></param>
