@@ -22,5 +22,11 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
+    <tracerFactory name="NewRelic.Providers.Wrapper.RestSharp.ConfigureWebRequest">
+      <match assemblyName="RestSharp" className="RestSharp.Http" minVersion="106.7.0" maxVersion="107.0.0">
+        <exactMethodMatcher methodName="ConfigureWebRequest" parameters="System.String,System.Uri" />
+      </match>
+    </tracerFactory>
+
   </instrumentation>
 </extension>
