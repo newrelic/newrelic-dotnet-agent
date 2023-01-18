@@ -1,9 +1,10 @@
 # any changes to this file MUST be validated prior to comitting!!
 #
 # Powershell: Invoke-RestMethod -Uri https://codecov.io/validate -Body (Get-Content -Raw -LiteralPath .\codecov.yml) -Method post
-# bash: curl --data-binary @codecov.yml https://codecov.io/validate
+# shell: curl --data-binary @codecov.yml https://codecov.io/validate
 #
 codecov:
+  token: b335bdf5-0a12-4d24-a9e4-d6686485d654
   max_report_age: 24
   disable_default_path_fixes: no
   require_ci_to_pass: no
