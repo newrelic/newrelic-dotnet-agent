@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### New Features
+* RestSharp client instrumentation support has been extended to include the following versions: 106.11.x, 106.12.0, 106.13.0, and 106.15.0. [#1352](https://github.com/newrelic/newrelic-dotnet-agent/pull/1352)
+
 ## [10.4.0]
 
 ### New Features
