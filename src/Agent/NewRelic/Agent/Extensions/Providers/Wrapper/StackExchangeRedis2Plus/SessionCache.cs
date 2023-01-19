@@ -19,7 +19,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
     {
         private readonly EventWaitHandle _stopHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-        private readonly ConcurrentDictionary<string, (ITransaction Transaction, ProfilingSession Session)> _sessionCache = new ConcurrentDictionary<string, (ITransaction Transaction, ProfilingSession Session)>();
+        private readonly ConcurrentDictionary<string, ProfilingSession> _sessionCache = new ConcurrentDictionary<string, ProfilingSession>();
 
         private readonly IAgent _agent;
 
@@ -45,14 +45,17 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                 return;
             }
 
+            // Get the transaction from the session
+            var transaction = sessionData.UserToken as ITransaction;
+
             // We want to make sure to finish the session even if the transaction is done so that it is not orphaned.
-            var commands = sessionData.Session.FinishProfiling();
-            if (sessionData.Transaction.IsFinished)
+            var commands = sessionData.FinishProfiling();
+            if (transaction.IsFinished)
             {
                 return;
             }
 
-            var xTransaction = (ITransactionExperimental)sessionData.Transaction;
+            var xTransaction = (ITransactionExperimental)transaction;
             foreach (var command in commands)
             {
                 // We need to build the relative start and stop time based on the transaction start time.
@@ -123,14 +126,14 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                     return null;
                 }
 
-                // During async operations, the transaction can get lost and report as NoOp so we store a reference to it in the cache.
+                // During async operations, the transaction can get lost and report as NoOp so we store a reference to it in the session.
                 if (!_sessionCache.TryGetValue(spanId, out var sessionData))
                 {
-                    sessionData = (transaction, new ProfilingSession(segment));
+                    sessionData = new ProfilingSession(transaction);
                     _sessionCache.TryAdd(spanId, sessionData);
                 }
 
-                return sessionData.Session;
+                return sessionData;
             };
         }
 
@@ -149,7 +152,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
             _stopHandle.Dispose();
             foreach (var cachedSession in _sessionCache.Values)
             {
-                _ = cachedSession.Session.FinishProfiling();
+                _ = cachedSession.FinishProfiling();
             }
 
             _sessionCache.Clear();

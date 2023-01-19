@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using NewRelic.Agent.Api;
 
 namespace NewRelic.Agent.Extensions.Helpers
 {
