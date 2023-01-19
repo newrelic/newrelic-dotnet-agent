@@ -409,7 +409,7 @@ namespace NewRelic.Agent.Core.DataTransport
             return SendDataOverWire<T>(wire, method, data);
         }
 
-        private T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
+        private  T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
         {
             var requestGuid = Guid.NewGuid();
             try
