@@ -5,6 +5,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using System;
 using System.Linq;
 
 namespace CompositeTests
@@ -27,6 +28,8 @@ namespace CompositeTests
         {
             _compositeTestAgent.Dispose();
         }
+
+        #region SQL
 
         [Test]
         public void DatastoreInstance_AllAttributes_OnSqlTrace_When_InstanceReportingIsEnabled_And_DatabaseNameReportingIsEnabled()
@@ -160,5 +163,88 @@ namespace CompositeTests
             tx.End();
             _compositeTestAgent.Harvest();
         }
+
+        #endregion SQL
+
+        #region Redis
+
+        [Test]
+        public void DatastoreInstance_Redis_AllAttributes_OnTransactionTrace_WhenInstanceReportingIsEnabled_And_WhenDatabaseNameReportingIsEnabled()
+        {
+            CreateATransactionWithStackExchangeRedisDatastoreSegmentAndHarvest(true, true);
+
+            var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+            var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("myhost", parameters["host"]),
+                () => Assert.AreEqual("myport", parameters["port_path_or_id"]),
+                () => Assert.AreEqual("mydatabase", parameters["database_name"])
+            );
+        }
+
+        [Test]
+        public void DatastoreInstance_Redis_DatabaseName_OnTransactionTrace_WhenInstanceReportingIsDisabled()
+        {
+            CreateATransactionWithDatastoreSegmentAndHarvest(false, true);
+
+            var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+            var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
+
+            NrAssert.Multiple(
+                () => Assert.IsTrue(!parameters.ContainsKey("host")),
+                () => Assert.IsTrue(!parameters.ContainsKey("port_path_or_id")),
+                () => Assert.AreEqual("mydatabase", parameters["database_name"])
+            );
+        }
+
+        [Test]
+        public void DatastoreInstance_Redis_Host_PortPathOrId_OnTransactionTrace_WhenDatabaseNameReportingIsDisabled()
+        {
+            CreateATransactionWithDatastoreSegmentAndHarvest(true, false);
+
+            var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+            var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("myhost", parameters["host"]),
+                () => Assert.AreEqual("myport", parameters["port_path_or_id"]),
+                () => Assert.IsTrue(!parameters.ContainsKey("database_name"))
+            );
+        }
+
+        [Test]
+        public void DatastoreInstance_Redis_NoAttributes_OnTransactionTrace_WhenInstanceReportingIsDisabled_And_WhenDatabaseNameReportingIsDisabled()
+        {
+            CreateATransactionWithDatastoreSegmentAndHarvest(false, false);
+
+            var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+            var parameters = transactionTrace.TransactionTraceData.RootSegment.Children[0].Children[0].Parameters;
+
+            NrAssert.Multiple(
+                () => Assert.IsTrue(!parameters.ContainsKey("host")),
+                () => Assert.IsTrue(!parameters.ContainsKey("port_path_or_id")),
+                () => Assert.IsTrue(!parameters.ContainsKey("database_name"))
+            );
+        }
+
+        private void CreateATransactionWithStackExchangeRedisDatastoreSegmentAndHarvest(bool instanceReportingEnabled, bool databaseNameReportingEnabled, DatastoreVendor vendor = DatastoreVendor.Redis, string host = "myhost", string portPathOrId = "myport", string databaseName = "mydatabase")
+        {
+            _compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0;
+            _compositeTestAgent.LocalConfiguration.datastoreTracer.instanceReporting.enabled = instanceReportingEnabled;
+            _compositeTestAgent.LocalConfiguration.datastoreTracer.databaseNameReporting.enabled = databaseNameReportingEnabled;
+            _compositeTestAgent.PushConfiguration();
+            var tx = _agent.CreateTransaction(
+                isWeb: true,
+                category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+                transactionDisplayName: "name",
+                doNotTrackAsUnitOfWork: true);
+            var segment = _agent.StartStackExchangeRedisDatastoreRequestSegmentOrThrow("GET", vendor, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(200), null, host, portPathOrId, databaseName);
+            segment.End();
+            tx.End();
+            _compositeTestAgent.Harvest();
+        }
+
+        #endregion Redis
     }
 }

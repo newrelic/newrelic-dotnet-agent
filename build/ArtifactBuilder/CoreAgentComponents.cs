@@ -52,6 +52,7 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RabbitMq.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Sql.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis2Plus.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.NServiceBus.dll",
             };
 
@@ -69,6 +70,7 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis2Plus.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml",
             };
 

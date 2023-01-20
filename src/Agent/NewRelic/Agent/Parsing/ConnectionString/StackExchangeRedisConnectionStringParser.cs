@@ -16,7 +16,7 @@ namespace NewRelic.Parsing.ConnectionString
             _connectionString = connectionString;
         }
 
-        public ConnectionInfo GetConnectionInfo()
+        public ConnectionInfo GetConnectionInfo(string utilizationHostName)
         {
             // Other than the hosts, these are MOST of the other possibilities.
             // Not since they all contain and "=" I am filtering by that.
@@ -40,7 +40,7 @@ namespace NewRelic.Parsing.ConnectionString
                 // We can only capture the first server we detect.  It could be that there are many....
                 var hostPortPair = section.Split(StringSeparators.Colon);
                 var port = hostPortPair.Length == 2 ? hostPortPair[1] : null;
-                return new ConnectionInfo(ConnectionStringParserHelper.NormalizeHostname(hostPortPair[0]), port, null);
+                return new ConnectionInfo(ConnectionStringParserHelper.NormalizeHostname(hostPortPair[0], utilizationHostName), port, null);
             }
 
             return new ConnectionInfo(null, null, null);
