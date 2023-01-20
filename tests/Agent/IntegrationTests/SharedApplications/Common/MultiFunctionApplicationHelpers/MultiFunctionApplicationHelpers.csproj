@@ -43,7 +43,7 @@
     <!-- Postgres SQL .NET core references -->
     <PackageReference Include="npgsql" Version="4.0.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="npgsql" Version="4.0.5" Condition="'$(TargetFramework)' == 'net5.0'" />
-    <PackageReference Include="npgsql" Version="4.0.7" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="npgsql" Version="4.0.10" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="npgsql" Version="4.0.13" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!--System.Data.SqlClient (.NET Core/5+ only) -->

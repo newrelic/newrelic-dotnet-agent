@@ -16,11 +16,11 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
-    public abstract class PostgresSqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    public abstract class PostgresSqlSimpleQueryTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        public PostgresSqlTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        public PostgresSqlSimpleQueryTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -44,8 +44,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                 }
             );
 
-            // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
-            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
+            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(2)));
 
             _fixture.Initialize();
         }
@@ -119,72 +118,72 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlTestsFW462 : PostgresSqlTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class PostgresSqlSimpleQueryTestsFW462 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public PostgresSqlTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlTestsFW471 : PostgresSqlTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class PostgresSqlSimpleQueryTestsFW471 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public PostgresSqlTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlTestsFW48 : PostgresSqlTestsBase<ConsoleDynamicMethodFixtureFW48>
+    public class PostgresSqlSimpleQueryTestsFW48 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
-        public PostgresSqlTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlTestsFWLatest : PostgresSqlTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class PostgresSqlSimpleQueryTestsFWLatest : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public PostgresSqlTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlTestsCore31 : PostgresSqlTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class PostgresSqlSimpleQueryTestsCore31 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public PostgresSqlTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlTestsCore50 : PostgresSqlTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class PostgresSqlSimpleQueryTestsCore50 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public PostgresSqlTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlTestsCore60 : PostgresSqlTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class PostgresSqlSimpleQueryTestsCore60 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureCore60>
     {
-        public PostgresSqlTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlTestsCore : PostgresSqlTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class PostgresSqlSimpleQueryTestsCoreLatest : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public PostgresSqlTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
