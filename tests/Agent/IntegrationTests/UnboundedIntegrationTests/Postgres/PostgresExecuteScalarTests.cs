@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -15,15 +16,17 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
-    [NetFrameworkTest]
-    public class PostgresExecuteScalarTests : NewRelicIntegrationTest<PostgresBasicMvcFixture>
+    public abstract class PostgresSqlExecuteScalarTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly PostgresBasicMvcFixture _fixture;
+        private readonly ConsoleDynamicMethodFixture _fixture;
 
-        public PostgresExecuteScalarTests(PostgresBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public PostgresSqlExecuteScalarTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
+
+            _fixture.AddCommand($"PostgresSqlExerciser ExecuteScalar");
+
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -31,50 +34,48 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
-                    configModifier.ForceTransactionTraces();
+                    configModifier.ForceTransactionTraces()
+                    .SetLogLevel("finest");
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.PostgresExecuteScalar();
-                    _fixture.PostgresExecuteScalarAsync();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
+                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
                 }
             );
+
+            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(2)));
+
+
             _fixture.Initialize();
         }
 
         [Fact]
         public void Test()
         {
-            var expectedSyncTransactionName = "WebTransaction/MVC/PostgresController/PostgresExecuteScalar";
-            var expectedAsyncTransactionName = "WebTransaction/MVC/PostgresController/PostgresExecuteScalarAsync";
-            var expectedDatastoreCallCount = 2;
+            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/ExecuteScalar";
+            var expectedDatastoreCallCount = 1;
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = expectedDatastoreCallCount },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allWeb", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open", callCount = 2},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", callCount = expectedDatastoreCallCount },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", callCount = expectedDatastoreCallCount},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = expectedSyncTransactionName},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = expectedAsyncTransactionName},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = expectedTransactionName},
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", callCount = 1 },
+				// The datastore operation happened outside a web transaction so there should be no allWeb metrics
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = expectedDatastoreCallCount },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allWeb", callCount = expectedDatastoreCallCount },
 
 				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedSyncTransactionName },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedAsyncTransactionName }
+				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedTransactionName },
             };
             var expectedTransactionTraceSegments = new List<string>
             {
@@ -89,7 +90,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
             {
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = expectedSyncTransactionName,
+                    TransactionName = expectedTransactionName,
                     Sql = "SELECT lastname FROM newrelic.teammembers WHERE firstname = ?",
                     DatastoreMetricName = "Datastore/statement/Postgres/teammembers/select",
                     HasExplainPlan = false
@@ -97,28 +98,97 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var syncTransactionSample = _fixture.AgentLog.TryGetTransactionSample(expectedSyncTransactionName);
-            var syncTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedSyncTransactionName);
-            var asyncTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedAsyncTransactionName);
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample(expectedTransactionName);
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
 
             NrAssert.Multiple(
-                () => Assert.NotNull(syncTransactionSample),
-                () => Assert.NotNull(syncTransactionEvent),
-                () => Assert.NotNull(asyncTransactionEvent),
+                () => Assert.NotNull(transactionSample),
+                () => Assert.NotNull(transactionEvent),
                 () => Assert.NotNull(sqlTraces),
-                () => Assert.Equal(2, sqlTraces.Count())
+                () => Assert.Single(sqlTraces)
                 );
 
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
-                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, syncTransactionSample),
-                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, syncTransactionEvent),
-                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, asyncTransactionEvent),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, transactionEvent),
                 () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
             );
+        }
+    }
+
+    [NetFrameworkTest]
+    public class PostgresSqlExecuteScalarTestsFW462 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public PostgresSqlExecuteScalarTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class PostgresSqlExecuteScalarTestsFW471 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public PostgresSqlExecuteScalarTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class PostgresSqlExecuteScalarTestsFW48 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public PostgresSqlExecuteScalarTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class PostgresSqlExecuteScalarTestsFWLatest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public PostgresSqlExecuteScalarTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class PostgresSqlExecuteScalarTestsCore31 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public PostgresSqlExecuteScalarTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class PostgresSqlExecuteScalarTestsCore50 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public PostgresSqlExecuteScalarTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class PostgresSqlExecuteScalarTestsCore60 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public PostgresSqlExecuteScalarTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class PostgresSqlExecuteScalarTestsCore : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public PostgresSqlExecuteScalarTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
         }
     }
 }
