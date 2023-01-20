@@ -5,6 +5,7 @@ on:
     branches: 
     - main
     - '**-feature-branch'
+  workflow_dispatch:
 
 env:
   DOTNET_NOLOGO: true
