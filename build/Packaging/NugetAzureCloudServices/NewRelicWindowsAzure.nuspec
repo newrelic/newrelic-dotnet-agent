@@ -26,6 +26,9 @@
     <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/</releaseNotes>
   </metadata>
   <files>
+    <file src="content\**" target="content" />
+    <file src="lib\**" target="lib" />
+    <file src="tools\**" target="tools" />
     <file src="..\..\icon.png" target="images\" />
   </files>
 </package>

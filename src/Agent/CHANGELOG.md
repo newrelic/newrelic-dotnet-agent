@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### New Features
+### Fixes
+
+## [10.5.1]
+
+### Fixes
+* Resolves [#1346](https://github.com/newrelic/newrelic-dotnet-agent/issues/1346) where some NuGet packages were incomplete for the 10.5.0 release. Impacted packages have been delisted from NuGet. ([#1347](https://github.com/newrelic/newrelic-dotnet-agent/pull/1347))
+
+## [10.5.0]
+
+### Fixes
+* Resolves [#1130](https://github.com/newrelic/newrelic-dotnet-agent/issues/1130). Attribute collections in the agent will now more reliably track the number of attributes contained, and allow updates to attributes that already exist in the collection when collection limits have been reached (255 global attributes, 65 custom attributes). ([#1335](https://github.com/newrelic/newrelic-dotnet-agent/pull/1335))
+* The agent has been updated to use System.Net.Http.HTTPClient to send data to New Relic instead of System.Net.WebRequest, in order to fix issue [#897](https://github.com/newrelic/newrelic-dotnet-agent/issues/897), as well as remove use of a deprecated library. ([#1325](https://github.com/newrelic/newrelic-dotnet-agent/pull/1325))
+
 ## [10.4.0]
 
 ### New Features
@@ -529,7 +543,9 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.4.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.5.1...HEAD
+[10.5.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.5.0...v10.5.1
+[10.5.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.4.0...v10.5.0
 [10.4.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.3.0...v10.4.0
 [10.3.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.2.0...v10.3.0
 [10.2.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.1.0...v10.2.0

@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+**Notice:** <br/>We are deprecating the New Relic .NET AWS Lambda agent on Dec 31st, 2022. This agent was built on the [OpenTrace Standard](https://opentracing.io/); however, the OpenTrace standard migrated to OpenTelemetry. Additionally, it was verified with .NET Core 3.1. On Dec 13th, 2022, Microsoft ended the support of [.NET Core 3.1](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core). Therefore, with the migration of OpenTrace to Open Telemetry and the EOL of .NET Core 3.1, we've decided to deprecate this agent and encourage our customers to review the New Relic Open Telemetry offering for AWS Lambda support. 
+
 ## [Unreleased]
 ### New Features
 ### Fixes

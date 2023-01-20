@@ -294,6 +294,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         private const int _attribNameMaxLengthBytes = 255;
 
+        public readonly Guid Guid = Guid.NewGuid();
         public readonly string Name;
         public readonly AttributeClassification Classification;
         public readonly AttributeDestinations AttributeDestinations;

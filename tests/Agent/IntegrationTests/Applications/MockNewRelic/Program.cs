@@ -1,15 +1,11 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
 using System.Net;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using ApplicationLifecycle;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Https;
 
 namespace MockNewRelic
 {
@@ -40,11 +36,7 @@ namespace MockNewRelic
                 {
                     options.Listen(IPAddress.Loopback, int.Parse(_port), listenOptions =>
                     {
-                        listenOptions.UseHttps(new HttpsConnectionAdapterOptions()
-                        {
-                            ServerCertificate = new X509Certificate2("testcert.pfx", "password1"),
-                            SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls
-                        });
+                        listenOptions.UseHttps();
                     });
                 })
                 .Build();

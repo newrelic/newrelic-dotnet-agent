@@ -255,7 +255,7 @@ namespace NewRelic.Agent.Core.Attributes
             return _requestHeadersAttributes.GetOrAdd(paramName, CreateRequestHeadersAttribute);
         }
 
-        public AttributeDefinition<TypeAttributeValue, string> CreateTypeAttribute(TypeAttributeValue tm)
+        private AttributeDefinition<TypeAttributeValue, string> CreateTypeAttribute(TypeAttributeValue tm)
         {
             var val = EnumNameCache<TypeAttributeValue>.GetName(tm);
 

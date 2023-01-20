@@ -26,6 +26,8 @@
     </contentFiles>
   </metadata>
   <files>
+    <file src="**\newrelic\**\*" target="." />
+    <file src="tools\**" target="tools" />
     <file src="..\..\icon.png" target="images\" />
   </files>
 </package>
