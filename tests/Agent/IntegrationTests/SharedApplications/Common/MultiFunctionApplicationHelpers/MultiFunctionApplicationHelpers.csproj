@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net7.0;net462;net471;net48;net481</TargetFrameworks>
@@ -246,9 +246,10 @@
   <!-- RestSharp -->
   <ItemGroup>
     <PackageReference Include="RestSharp" Version="105.2.3" Condition="'$(TargetFramework)' == 'net462'" />
-    <PackageReference Include="RestSharp" Version="106.0.0" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="RestSharp" Version="106.6.10" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="RestSharp" Version="107.1.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="RestSharp" Version="106.15.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="RestSharp" Version="107.3.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="RestSharp" Version="108.0.3" Condition="'$(TargetFramework)' == 'net481'" />
+    
     <!-- Not testing these versions, but it simplfies the RestSharpExerciser class by not needing if directives -->
     <PackageReference Include="RestSharp" Version="106.6.10" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="RestSharp" Version="106.6.10" Condition="'$(TargetFramework)' == 'net5.0'" />
