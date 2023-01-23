@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <TreatNoTestsAsError>true</TreatNoTestsAsError>
+    </RunConfiguration>
+    <LoggerRunSettings>
+        <Loggers>
+            <Logger friendlyName="html" enabled="True">
+                <Configuration>
+                    <LogFilePrefix>testResults</LogFilePrefix>
+                </Configuration>
+            </Logger>
+        </Loggers>
+    </LoggerRunSettings>
+    <DataCollectionRunSettings>
+        <DataCollectors>
+            <DataCollector friendlyName="XPlat code coverage">
+                <Configuration>
+                    <Format>cobertura</Format>
+                    <ExcludeByFile>**/tests/**/*</ExcludeByFile>
+                </Configuration>
+            </DataCollector>
+        </DataCollectors>
+    </DataCollectionRunSettings>
+</RunSettings>

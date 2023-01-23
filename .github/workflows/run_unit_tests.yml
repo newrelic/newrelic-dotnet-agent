@@ -1,0 +1,49 @@
+name: .NET Agent Unit Tests and Code Coverage
+
+on:
+  pull_request:
+    branches: 
+    - main
+    - '**-feature-branch'
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  NR_DEV_BUILD_HOME: false
+
+jobs:
+
+  run-unit-tests:
+    name: Run Unit Tests
+    runs-on: windows-latest
+
+    env:
+      test_results_path: tests\TestResults
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.x
+          dotnet-quality: 'ga'
+
+      - name: Restore NuGet Packages
+        run: dotnet restore
+
+      - name: Build & Run Unit Tests
+        run: dotnet test --verbosity minimal --no-restore --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
+
+      - name: Upload coverage reports to Codecov.io
+        uses: codecov/codecov-action@v3
+        with:
+            directory: ${{ env.test_results_path }}
+
+      - name: Upload coverage report artifact
+        uses: actions/upload-artifact@v2.2.3
+        with:
+            name: UnitTestResults # Artifact name        
+            path: ${{ env.test_results_path }} # Directory containing files to upload
