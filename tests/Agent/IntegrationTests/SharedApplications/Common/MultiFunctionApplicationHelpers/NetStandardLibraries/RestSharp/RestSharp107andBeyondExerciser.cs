@@ -12,7 +12,7 @@ using NewRelic.Api.Agent;
 using System.Runtime.CompilerServices;
 
 // .NET 4.8 and 4.8.1 test v107+ of RestSharp which has a different API than older versions
-#if !NET48_OR_GREATER
+#if NET48_OR_GREATER
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
 {
@@ -40,7 +40,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
             var requests = GetRequests(endpoint, id);
             if (generic)
             {
-                var response = client.Execute<Bird>(requests[method]);
+                // This may cause hangs...
+                var response = client.ExecuteAsync<Bird>(requests[method]).GetAwaiter().GetResult();
                 if (method == "GET")
                 {
                     var bird = response.Data;
@@ -54,7 +55,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
             }
             else
             {
-                var response = client.Execute(requests[method]);
+                var response = client.ExecuteAsync(requests[method]).GetAwaiter().GetResult();
                 if ((response.StatusCode != System.Net.HttpStatusCode.OK) && (response.StatusCode != System.Net.HttpStatusCode.NoContent))
                 {
                     return $"Unexpected HTTP status code {response.StatusCode}";
@@ -77,7 +78,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
             var id = 1;
 
             var requests = GetRequests(endpoint, id);
-            IRestResponse response;
+            RestResponse response;
             if (generic)
             {
                 if (cancelable)
@@ -125,7 +126,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
             var id = 1;
 
             var requests = GetRequests(endpoint, id);
-            IRestResponse response;
+            RestResponse response;
             if (generic)
             {
                 if (cancelable)
@@ -176,9 +177,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
 
             try
             {
-                var client = new RestClient($"http://{myHost}:{myPort}");
-                client.Timeout = 1;
-                var response = await client.ExecuteTaskAsync(new RestRequest(endpoint + "Get/" + id));
+                var options = new RestClientOptions($"http://{myHost}:{myPort}")
+                {
+                    Timeout = 1
+                };
+                var client = new RestClient(options);
+
+                var response = await client.ExecuteAsync(new RestRequest(endpoint + "Get/" + id));
             }
             catch (Exception)
             {
@@ -190,38 +195,39 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
 
 #region Helpers
 
-        private Dictionary<string, IRestRequest> GetRequests(string endpoint, int id)
+        private Dictionary<string, RestRequest> GetRequests(string endpoint, int id)
         {
-            var requests = new Dictionary<string, IRestRequest>();
+            var requests = new Dictionary<string, RestRequest>();
             requests.Add("GET", new RestRequest(endpoint + "Get/" + id));
-            requests.Add("PUT", new RestRequest(endpoint + "Put/" + id, Method.PUT).AddJsonBody(new { CommonName = "Painted Bunting", BandingCode = "PABU" }));
-            requests.Add("DELETE", new RestRequest(endpoint + "Delete/" + id, Method.DELETE));
-            requests.Add("POST", new RestRequest(endpoint + "Post/", Method.POST).AddJsonBody(new { CommonName = "Painted Bunting", BandingCode = "PABU" }));
+            requests.Add("PUT", new RestRequest(endpoint + "Put/" + id, Method.Put).AddJsonBody(new { CommonName = "Painted Bunting", BandingCode = "PABU" }));
+            requests.Add("DELETE", new RestRequest(endpoint + "Delete/" + id, Method.Delete));
+            requests.Add("POST", new RestRequest(endpoint + "Post/", Method.Post).AddJsonBody(new { CommonName = "Painted Bunting", BandingCode = "PABU" }));
             return requests;
         }
 
-        private Task<IRestResponse<T>> ExecuteAsyncGeneric<T>(RestClient client, IRestRequest request, CancellationTokenSource cancellationTokenSource = null)
+        private Task<RestResponse<T>> ExecuteAsyncGeneric<T>(RestClient client, RestRequest request, CancellationTokenSource cancellationTokenSource = null)
         {
             if (cancellationTokenSource == null)
             {
-                return client.ExecuteTaskAsync<T>(request);
+                return client.ExecuteAsync<T>(request);
             }
 
-            return client.ExecuteTaskAsync<T>(request, cancellationTokenSource.Token);
+            return client.ExecuteAsync<T>(request, cancellationTokenSource.Token);
         }
 
-        private Task<IRestResponse> ExecuteAsync(RestClient client, IRestRequest request, CancellationTokenSource cancellationTokenSource = null)
+        private Task<RestResponse> ExecuteAsync(RestClient client, RestRequest request, CancellationTokenSource cancellationTokenSource = null)
         {
             if (cancellationTokenSource == null)
             {
-                return client.ExecuteTaskAsync(request);
+                return client.ExecuteAsync(request);
             }
 
-            return client.ExecuteTaskAsync(request, cancellationTokenSource.Token);
+            return client.ExecuteAsync(request, cancellationTokenSource.Token);
         }
 
 #endregion
 
     }
 }
+
 #endif
