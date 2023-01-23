@@ -16,16 +16,16 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
-    public abstract class PostgresSqlExecuteScalarTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    public abstract class PostgresSqlSimpleQueryTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        public PostgresSqlExecuteScalarTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        public PostgresSqlSimpleQueryTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"PostgresSqlExerciser ExecuteScalar");
+            _fixture.AddCommand($"PostgresSqlExerciser SimpleQuery");
 
             _fixture.Actions
             (
@@ -50,7 +50,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         [Fact]
         public void Test()
         {
-            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/ExecuteScalar";
+            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/SimpleQuery";
             var expectedDatastoreCallCount = 1;
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
@@ -59,11 +59,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open", callCount = 1},
+                new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open", callCount = expectedDatastoreCallCount},
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", callCount = expectedDatastoreCallCount},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = expectedTransactionName},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = expectedDatastoreCallCount },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = expectedDatastoreCallCount },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = expectedDatastoreCallCount, metricScope = expectedTransactionName},
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -72,7 +72,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allWeb" },
 
 				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedTransactionName },
+				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedTransactionName }
             };
             var expectedTransactionTraceSegments = new List<string>
             {
@@ -88,7 +88,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                 new Assertions.ExpectedSqlTrace
                 {
                     TransactionName = expectedTransactionName,
-                    Sql = "SELECT lastname FROM newrelic.teammembers WHERE firstname = ?",
+                    Sql = "SELECT * FROM newrelic.teammembers WHERE firstname = ?",
                     DatastoreMetricName = "Datastore/statement/Postgres/teammembers/select",
                     HasExplainPlan = false
                 }
@@ -101,9 +101,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
-                () => Assert.NotNull(transactionEvent),
-                () => Assert.NotNull(sqlTraces),
-                () => Assert.Single(sqlTraces)
+                () => Assert.NotNull(transactionEvent)
                 );
 
             NrAssert.Multiple
@@ -118,72 +116,72 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlExecuteScalarTestsFW462 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class PostgresSqlSimpleQueryTestsFW462 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public PostgresSqlExecuteScalarTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlExecuteScalarTestsFW471 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class PostgresSqlSimpleQueryTestsFW471 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public PostgresSqlExecuteScalarTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlExecuteScalarTestsFW48 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW48>
+    public class PostgresSqlSimpleQueryTestsFW48 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
-        public PostgresSqlExecuteScalarTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlExecuteScalarTestsFWLatest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class PostgresSqlSimpleQueryTestsFWLatest : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public PostgresSqlExecuteScalarTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlExecuteScalarTestsCore31 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class PostgresSqlSimpleQueryTestsCore31 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public PostgresSqlExecuteScalarTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlExecuteScalarTestsCore50 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class PostgresSqlSimpleQueryTestsCore50 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public PostgresSqlExecuteScalarTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlExecuteScalarTestsCore60 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class PostgresSqlSimpleQueryTestsCore60 : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureCore60>
     {
-        public PostgresSqlExecuteScalarTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlExecuteScalarTestsCoreLatest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class PostgresSqlSimpleQueryTestsCoreLatest : PostgresSqlSimpleQueryTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public PostgresSqlExecuteScalarTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlSimpleQueryTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

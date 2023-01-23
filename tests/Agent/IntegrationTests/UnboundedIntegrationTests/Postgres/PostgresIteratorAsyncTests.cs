@@ -14,16 +14,16 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
-    public abstract class PostgresSqlIteratorTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    public abstract class PostgresSqlIteratorAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        public PostgresSqlIteratorTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        public PostgresSqlIteratorAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"PostgresSqlExerciser IteratorTest");
+            _fixture.AddCommand($"PostgresSqlExerciser AsyncIteratorTest");
 
             _fixture.Actions
             (
@@ -51,7 +51,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         [Fact]
         public void Test()
         {
-            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/IteratorTest";
+            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/AsyncIteratorTest";
             var expectedDatastoreCallCount = 1;
 
             //These values are dictated by the queries that are being run as part of this test.
@@ -93,72 +93,72 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlIteratorTestsFW462 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class PostgresSqlIteratorAsyncTestsFW462 : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public PostgresSqlIteratorTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlIteratorAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlIteratorTestsFW471 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class PostgresSqlIteratorAsyncTestsFW471 : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public PostgresSqlIteratorTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlIteratorAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlIteratorTestsFW48 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFW48>
+    public class PostgresSqlIteratorAsyncTestsFW48 : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
-        public PostgresSqlIteratorTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlIteratorAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlIteratorTestsFWLatest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class PostgresSqlIteratorAsyncTestsFWLatest : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public PostgresSqlIteratorTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlIteratorAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlIteratorTestsCore31 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class PostgresSqlIteratorAsyncTestsCore31 : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public PostgresSqlIteratorTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlIteratorAsyncTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlIteratorTestsCore50 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class PostgresSqlIteratorAsyncTestsCore50 : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public PostgresSqlIteratorTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlIteratorAsyncTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlIteratorTestsCore60 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class PostgresSqlIteratorAsyncTestsCore60 : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureCore60>
     {
-        public PostgresSqlIteratorTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlIteratorAsyncTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlIteratorTestsCoreLatest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class PostgresSqlIteratorAsyncTestsCoreLatest : PostgresSqlIteratorAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public PostgresSqlIteratorTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlIteratorAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

@@ -1,4 +1,4 @@
-// Copyright 2020 New Relic, Inc. All rights reserved.
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -9,23 +9,22 @@ using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.Shared;
-using NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
-    public abstract class PostgresSqlExecuteScalarTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    public abstract class PostgresSqlExecuteScalarAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        public PostgresSqlExecuteScalarTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        public PostgresSqlExecuteScalarAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"PostgresSqlExerciser ExecuteScalar");
+            _fixture.AddCommand($"PostgresSqlExerciser ExecuteScalarAsync");
 
             _fixture.Actions
             (
@@ -50,7 +49,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         [Fact]
         public void Test()
         {
-            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/ExecuteScalar";
+            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/ExecuteScalarAsync";
             var expectedDatastoreCallCount = 1;
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
@@ -88,7 +87,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                 new Assertions.ExpectedSqlTrace
                 {
                     TransactionName = expectedTransactionName,
-                    Sql = "SELECT lastname FROM newrelic.teammembers WHERE firstname = ?",
+                    Sql = "SELECT firstname FROM newrelic.teammembers WHERE lastname = ?",
                     DatastoreMetricName = "Datastore/statement/Postgres/teammembers/select",
                     HasExplainPlan = false
                 }
@@ -118,74 +117,75 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlExecuteScalarTestsFW462 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class PostgresSqlExecuteScalarAsyncTestsFW462 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public PostgresSqlExecuteScalarTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlExecuteScalarAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlExecuteScalarTestsFW471 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class PostgresSqlExecuteScalarAsyncTestsFW471 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public PostgresSqlExecuteScalarTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlExecuteScalarAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlExecuteScalarTestsFW48 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFW48>
+    public class PostgresSqlExecuteScalarAsyncTestsFW48 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
-        public PostgresSqlExecuteScalarTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlExecuteScalarAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetFrameworkTest]
-    public class PostgresSqlExecuteScalarTestsFWLatest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class PostgresSqlExecuteScalarAsyncTestsFWLatest : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public PostgresSqlExecuteScalarTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlExecuteScalarAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlExecuteScalarTestsCore31 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class PostgresSqlExecuteScalarAsyncTestsCore31 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
-        public PostgresSqlExecuteScalarTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlExecuteScalarAsyncTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlExecuteScalarTestsCore50 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class PostgresSqlExecuteScalarAsyncTestsCore50 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
-        public PostgresSqlExecuteScalarTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlExecuteScalarAsyncTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlExecuteScalarTestsCore60 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class PostgresSqlExecuteScalarAsyncTestsCore60 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureCore60>
     {
-        public PostgresSqlExecuteScalarTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlExecuteScalarAsyncTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class PostgresSqlExecuteScalarTestsCoreLatest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class PostgresSqlExecuteScalarAsyncTestsCoreLatest : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public PostgresSqlExecuteScalarTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlExecuteScalarAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }
     }
+
 }

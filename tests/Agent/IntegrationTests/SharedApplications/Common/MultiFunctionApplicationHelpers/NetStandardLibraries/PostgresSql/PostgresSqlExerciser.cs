@@ -1,25 +1,27 @@
-// Copyright 2020 New Relic, Inc. All rights reserved.
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Data;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared;
-using Microsoft.AspNetCore.Mvc;
+using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
+using NewRelic.Api.Agent;
 using Npgsql;
 using NpgsqlTypes;
 
-namespace BasicMvcCoreApplication.Controllers
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql
 {
-    public class PostgresController : Controller
+    [Library]
+    internal class PostgresSqlExerciser
     {
-
-        [HttpGet]
-        [Route("Postgres/Postgres")]
-        public string Postgres()
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void SimpleQuery()
         {
             var teamMembers = new List<string>();
 
@@ -38,12 +40,13 @@ namespace BasicMvcCoreApplication.Controllers
                 }
             }
 
-            return string.Join(",", teamMembers);
+            ConsoleMFLogger.Info(string.Join(",", teamMembers));
         }
 
-        [HttpGet]
-        [Route("Postgres/PostgresAsync")]
-        public async Task<string> PostgresAsync()
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task SimpleQueryAsync()
         {
             var teamMembers = new List<string>();
 
@@ -62,12 +65,13 @@ namespace BasicMvcCoreApplication.Controllers
                 }
             }
 
-            return string.Join(",", teamMembers);
+            ConsoleMFLogger.Info(string.Join(",", teamMembers));
         }
 
-        [HttpGet]
-        [Route("Postgres/PostgresParameterizedStoredProcedure")]
-        public void PostgresParameterizedStoredProcedure(string procedureName)
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void ParameterizedStoredProcedure(string procedureName)
         {
             CreateProcedure(procedureName);
 
@@ -96,9 +100,10 @@ namespace BasicMvcCoreApplication.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("Postgres/PostgresParameterizedStoredProcedureAsync")]
-        public async Task PostgresParameterizedStoredProcedureAsync(string procedureName)
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task ParameterizedStoredProcedureAsync(string procedureName)
         {
             CreateProcedure(procedureName);
 
@@ -118,7 +123,7 @@ namespace BasicMvcCoreApplication.Controllers
                             command.Parameters.AddWithValue(p.ParameterName, p.Value);
                     }
 
-                    await command.ExecuteNonQueryAsync();
+                    ConsoleMFLogger.Info((await command.ExecuteNonQueryAsync()).ToString());
                 }
             }
             finally
@@ -127,57 +132,66 @@ namespace BasicMvcCoreApplication.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("Postgres/PostgresExecuteScalar")]
-        public string PostgresExecuteScalar()
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void ExecuteScalar()
         {
             using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
-            using (var command = new NpgsqlCommand("SELECT lastname FROM newrelic.teammembers WHERE firstname = 'Matthew'", connection))
+            using (var command =
+                   new NpgsqlCommand("SELECT lastname FROM newrelic.teammembers WHERE firstname = 'Matthew'",
+                       connection))
             {
                 connection.Open();
-                var result = (string)(command.ExecuteScalar());
-                return result;
+                var result = (string)command.ExecuteScalar();
+                ConsoleMFLogger.Info(result);
             }
         }
 
-        [HttpGet]
-        [Route("Postgres/PostgresExecuteScalarAsync")]
-        public async Task<string> PostgresExecuteScalarAsync()
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task ExecuteScalarAsync()
         {
             using (var connection = new NpgsqlConnection(PostgresConfiguration.PostgresConnectionString))
-            using (var command = new NpgsqlCommand("SELECT firstname FROM newrelic.teammembers WHERE lastname = 'Sneeden'", connection))
+            using (var command =
+                   new NpgsqlCommand("SELECT firstname FROM newrelic.teammembers WHERE lastname = 'Sneeden'",
+                       connection))
             {
                 await connection.OpenAsync();
-                var result = (string)(await (command.ExecuteScalarAsync()));
-                return result;
+                var result = (string)await command.ExecuteScalarAsync();
+                ConsoleMFLogger.Info(result);
             }
         }
 
-        [HttpGet]
-        [Route("Postgres/PostgresIteratorTest")]
-        public void PostgresIteratorTest()
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void IteratorTest()
         {
             var teamMembers = new List<string>();
 
             var connectionString = PostgresConfiguration.PostgresConnectionString;
 
             using (var connection = new NpgsqlConnection(connectionString))
-            using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'", connection))
+            using (var command = new NpgsqlCommand("SELECT * FROM newrelic.teammembers WHERE firstname = 'Matthew'",
+                       connection))
             {
                 connection.Open();
-                using (var reader = command.ExecuteReader())
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
                 {
-                    while (reader.Read())
-                    {
-                        teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
-                    }
+                    teamMembers.Add(reader.GetString(reader.GetOrdinal("FirstName")));
                 }
             }
+
+            ConsoleMFLogger.Info(string.Join(",", teamMembers));
         }
 
-        [HttpGet]
-        [Route("Postgres/PostgresAsyncIteratorTest")]
-        public async Task<List<string>> PostgresAsyncIteratorTest()
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task AsyncIteratorTest()
         {
             var teamMembers = new List<string>();
 
@@ -196,11 +210,12 @@ namespace BasicMvcCoreApplication.Controllers
                 }
             }
 
-            return teamMembers;
+            ConsoleMFLogger.Info(string.Join(",", teamMembers));
         }
 
-        private readonly string createProcedureStatement = @"CREATE FUNCTION {0} ({1}) RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;";
-        private readonly string dropProcedureStatement = @"DROP FUNCTION {0} ({1});";
+
+        private const string createProcedureStatement = @"CREATE FUNCTION {0} ({1}) RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;";
+        private const string dropProcedureStatement = @"DROP FUNCTION {0} ({1});";
 
         private void CreateProcedure(string procedureName)
         {

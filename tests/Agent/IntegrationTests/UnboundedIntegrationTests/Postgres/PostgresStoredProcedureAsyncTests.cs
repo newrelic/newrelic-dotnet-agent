@@ -5,25 +5,27 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared;
-using NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
-    [NetFrameworkTest]
-    public class PostgresStoredProcedureAsyncTests : NewRelicIntegrationTest<PostgresBasicMvcFixture>
+    public abstract class PostgresSqlStoredProcedureAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
-        private readonly PostgresBasicMvcFixture _fixture;
-        private readonly string _procedureName = $"PostgresTestStoredProcAsync{Guid.NewGuid():N}";
+        private readonly ConsoleDynamicMethodFixture _fixture;
+        private readonly string _procedureName = $"PostgresTestStoredProc{Guid.NewGuid():N}";
 
-        public PostgresStoredProcedureAsyncTests(PostgresBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
+        public PostgresSqlStoredProcedureAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
+
+            _fixture.AddCommand($"PostgresSqlExerciser ParameterizedStoredProcedureAsync {_procedureName}");
+
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -31,27 +33,27 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
 
-                    configModifier.ForceTransactionTraces();
-                    configModifier.SetLogLevel("finest");
+                    configModifier.ForceTransactionTraces()
+                    .SetLogLevel("finest");
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "datastoreTracer", "queryParameters" }, "enabled", "true");
-                },
-                exerciseApplication: () =>
-                {
-                    _fixture.PostgresParameterizedStoredProcedureAsync(_procedureName);
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex);
                 }
             );
+
+            // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
+            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
+
             _fixture.Initialize();
         }
 
         [Fact]
         public void Test()
         {
-            var expectedTransactionName = "WebTransaction/MVC/PostgresController/PostgresParameterizedStoredProcedureAsync";
+            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql.PostgresSqlExerciser/ParameterizedStoredProcedureAsync";
+
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
@@ -96,6 +98,78 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                 () => Assertions.TransactionTraceSegmentQueryParametersExist(expectedTransactionTraceQueryParameters, transactionSample),
                 () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
             );
+        }
+    }
+
+    [NetFrameworkTest]
+    public class PostgresSqlStoredProcedureAsyncTestsFW462 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public PostgresSqlStoredProcedureAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class PostgresSqlStoredProcedureAsyncTestsFW471 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public PostgresSqlStoredProcedureAsyncTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class PostgresSqlStoredProcedureAsyncTestsFW48 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public PostgresSqlStoredProcedureAsyncTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetFrameworkTest]
+    public class PostgresSqlStoredProcedureAsyncTestsFWLatest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public PostgresSqlStoredProcedureAsyncTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class PostgresSqlStoredProcedureAsyncTestsCore31 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public PostgresSqlStoredProcedureAsyncTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class PostgresSqlStoredProcedureAsyncTestsCore50 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public PostgresSqlStoredProcedureAsyncTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class PostgresSqlStoredProcedureAsyncTestsCore60 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public PostgresSqlStoredProcedureAsyncTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
+        }
+    }
+
+    [NetCoreTest]
+    public class PostgresSqlStoredProcedureAsyncTestsCoreLatest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public PostgresSqlStoredProcedureAsyncTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output) : base(fixture, output)
+        {
+
         }
     }
 }
