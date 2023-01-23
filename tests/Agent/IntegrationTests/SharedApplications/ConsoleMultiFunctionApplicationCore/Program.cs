@@ -3,7 +3,6 @@
 
 
 using MultiFunctionApplicationHelpers;
-using System;
 
 namespace ConsoleMultiFunctionApplicationCore
 {
@@ -11,7 +10,6 @@ namespace ConsoleMultiFunctionApplicationCore
     {
         static void Main(string[] args)
         {
-//            System.Diagnostics.Debugger.Launch();
             MultiFunctionApplication.Execute(args);
         }
     }

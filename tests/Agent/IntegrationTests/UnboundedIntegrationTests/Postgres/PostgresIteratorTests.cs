@@ -42,7 +42,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                 }
             );
 
-            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(2)));
+            // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
+            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
 
             _fixture.Initialize();
         }
@@ -54,9 +55,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
             var expectedDatastoreCallCount = 1;
 
             //These values are dictated by the queries that are being run as part of this test.
-            //There are two application endpoints being exercised by the test, each of which runs a query that returns a single row.
             //The typical pattern in this case is for there to be a call to Read(), followed by a call to NextResult(), followed by a final call to
-            //Read() which returns false to exit the loop.  Each of these roll up to Iterate for a total of 3 for each endpoint.
+            //Read() which returns false to exit the loop.  Each of these roll up to Iterate for a total of 3
             var expectedIterationCount = 3;
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>

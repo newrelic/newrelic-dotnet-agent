@@ -38,13 +38,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                     .SetLogLevel("finest");
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
-
-                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
-                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
                 }
             );
 
-            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(2)));
+            // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
+            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
 
             _fixture.Initialize();
         }
@@ -70,8 +68,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
 				// The datastore operation happened outside a web transaction so there should be no allWeb metrics
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allWeb", callCount = expectedDatastoreCallCount },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb" },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allWeb" },
 
 				// The operation metric should not be scoped because the statement metric is scoped instead
 				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedTransactionName }
