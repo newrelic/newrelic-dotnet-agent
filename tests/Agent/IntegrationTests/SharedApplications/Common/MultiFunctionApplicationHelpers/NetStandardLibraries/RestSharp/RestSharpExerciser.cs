@@ -44,7 +44,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
                 if (method == "GET")
                 {
                     var bird = response.Data;
-                    System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"SyncClient method={method}, generic={generic} got Bird {bird.CommonName} ({bird.BandingCode})" + Environment.NewLine);
+                    ConsoleMFLogger.Info($"SyncClient method={method}, generic={generic} got Bird {bird.CommonName} ({bird.BandingCode})");
                 }
 
                 if ((response.StatusCode != System.Net.HttpStatusCode.OK) && (response.StatusCode != System.Net.HttpStatusCode.NoContent))
