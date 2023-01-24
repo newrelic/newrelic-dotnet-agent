@@ -6,5 +6,6 @@
     <ClInclude Include="Strings.h" />
     <ClInclude Include="OnDestruction.h" />
     <ClInclude Include="xplat.h" />
+    <ClInclude Include="AssemblyVersion.h" />
   </ItemGroup>
 </Project>

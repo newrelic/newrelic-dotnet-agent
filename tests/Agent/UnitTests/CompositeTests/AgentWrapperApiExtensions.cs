@@ -3,10 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
+using System.Runtime.CompilerServices;
 
 namespace CompositeTests
 {
@@ -62,12 +63,11 @@ namespace CompositeTests
             return segment;
         }
 
-        public static ISegment StartDatastoreRequestSegmentOrThrow(this IAgent agent, DatastoreVendor vendor, CommandType commandType, string commandText = null, MethodCall methodCall = null, string host = null, string portPathOrId = null, string databaseName = null, IDictionary<string, IConvertible> queryParameters = null)
+        public static ISegment StartStackExchangeRedisDatastoreRequestSegmentOrThrow(this IAgent agent, string operation, DatastoreVendor vendor, TimeSpan relativeStartTime, TimeSpan relativeEndTime, MethodCall methodCall = null, string host = null, string portPathOrId = null, string databaseName = null)
         {
             methodCall = methodCall ?? GetDefaultMethodCall(agent);
-            var parsedStatement = agent.CurrentTransaction.GetParsedDatabaseStatement(vendor, commandType, commandText);
-
-            var segment = agent.CurrentTransaction.StartDatastoreSegment(methodCall, parsedStatement, new ConnectionInfo(host, portPathOrId, databaseName), commandText, queryParameters);
+            var xTransaction = (ITransactionExperimental)agent.CurrentTransaction;
+            var segment = xTransaction.StartStackExchangeRedisSegment(RuntimeHelpers.GetHashCode(methodCall), ParsedSqlStatement.FromOperation(vendor, operation), new ConnectionInfo(host, portPathOrId, databaseName), relativeStartTime, relativeEndTime);
             if (segment == null)
                 throw new NullReferenceException("segment");
 

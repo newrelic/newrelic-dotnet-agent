@@ -11,26 +11,31 @@
 #include <map>
 #include "Strings.h"
 #include "../Logging/Logger.h"
+#include "../Common/AssemblyVersion.h"
 
 namespace NewRelic { namespace Profiler { namespace Configuration
 {
     class InstrumentationPoint
     {
     public:
-        xstring_t TracerFactoryName;              // represented by 'name' on the <tracerFactory> node
-        xstring_t AssemblyName;                // on the <match> node
-        xstring_t ClassName;                   // on the <match> node
-        xstring_t MethodName;                  // on the <exactMethodMatcher> node
-        std::unique_ptr<xstring_t> Parameters; // on the <exactMethodMatcher> node
-        xstring_t MetricType;                  // represented by 'metric' on the <tracerFactory> node
-        xstring_t MetricName;                  // on the <tracerFactory> node
+        xstring_t TracerFactoryName;                    // represented by 'name' on the <tracerFactory> node
+        xstring_t AssemblyName;                         // on the <match> node
+        xstring_t ClassName;                            // on the <match> node
+        xstring_t MethodName;                           // on the <exactMethodMatcher> node
+        std::unique_ptr<xstring_t> Parameters;          // on the <exactMethodMatcher> node
+        xstring_t MetricType;                           // represented by 'metric' on the <tracerFactory> node
+        xstring_t MetricName;                           // on the <tracerFactory> node
         uint32_t TracerFactoryArgs;
+        std::unique_ptr<AssemblyVersion> MinVersion;    // on the <match> node
+        std::unique_ptr<AssemblyVersion> MaxVersion;    // on the <match> node
 
         InstrumentationPoint() {}
 
         InstrumentationPoint(const InstrumentationPoint& other) :
             TracerFactoryName(other.TracerFactoryName),
             AssemblyName(other.AssemblyName),
+            MinVersion((other.MinVersion == nullptr) ? nullptr : new AssemblyVersion(*other.MinVersion)),
+            MaxVersion((other.MaxVersion == nullptr) ? nullptr : new AssemblyVersion(*other.MaxVersion)),
             ClassName(other.ClassName),
             MethodName(other.MethodName),
             Parameters((other.Parameters == nullptr) ? nullptr : new xstring_t(*other.Parameters)),
@@ -102,7 +107,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
     typedef std::set<InstrumentationPointPtr> InstrumentationPointSet;
     typedef std::shared_ptr<InstrumentationPointSet> InstrumentationPointSetPtr;
 
-    typedef std::map<xstring_t, InstrumentationPointPtr> InstrumentationPointMap;
+    typedef std::map<xstring_t, InstrumentationPointSet> InstrumentationPointMap;
     typedef std::shared_ptr<InstrumentationPointMap> InstrumentationPointMapPtr;
 
     inline bool operator==(std::nullptr_t /*leftSide*/, InstrumentationPointPtr rightSide)

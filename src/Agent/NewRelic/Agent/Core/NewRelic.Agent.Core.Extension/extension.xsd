@@ -40,6 +40,30 @@
 														</xs:documentation>
 													</xs:annotation>
 												</xs:attribute>
+												<xs:attribute name="minVersion" use="optional">
+													<xs:annotation>
+														<xs:documentation>
+															The minimum version (inclusive) for this assembly to match. e.g. "1.2.3.4"
+														</xs:documentation>
+													</xs:annotation>
+													<xs:simpleType>
+														<xs:restriction base="xs:string">
+														  <xs:pattern value="[0-9]+(\.[0-9]+)?(\.[0-9]+)?(\.[0-9]+)?"></xs:pattern>
+														</xs:restriction>
+													</xs:simpleType>
+												</xs:attribute>
+												<xs:attribute name="maxVersion" use="optional">
+													<xs:annotation>
+														<xs:documentation>
+															The maximum version (exclusive) for this assembly to mach. e.g. "1.2.3.4" 
+														</xs:documentation>
+													</xs:annotation>
+													<xs:simpleType>
+														<xs:restriction base="xs:string">
+														  <xs:pattern value="[0-9]+(\.[0-9]+)?(\.[0-9]+)?(\.[0-9]+)?"></xs:pattern>
+														</xs:restriction>
+													</xs:simpleType>
+												</xs:attribute>
 												<xs:attribute name="className" type="xs:string" use="required">
 													<xs:annotation>
 														<xs:documentation>

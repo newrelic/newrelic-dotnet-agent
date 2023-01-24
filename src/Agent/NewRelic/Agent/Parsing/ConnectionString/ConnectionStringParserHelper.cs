@@ -18,7 +18,7 @@ namespace NewRelic.Parsing.ConnectionString
             return new KeyValuePair<string, string>(key, value);
         }
 
-        public static string NormalizeHostname(string host)
+        public static string NormalizeHostname(string host, string utilizationHostName)
         {
             var localhost = new[] { ".", "localhost" };
             var hostIsLocalhost = localhost.Contains(host);
@@ -29,7 +29,7 @@ namespace NewRelic.Parsing.ConnectionString
                 hostIsLocalhost = isIpAddress && IPAddress.IsLoopback(ipAddress);
             }
 
-            var resolvedHostName = hostIsLocalhost ? Dns.GetHostName() : host;
+            var resolvedHostName = hostIsLocalhost ? utilizationHostName : host;
             return resolvedHostName;
         }
     }

@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 <extension xmlns="urn:newrelic-extension">
 	<instrumentation>
 		<tracerFactory>
-			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.ProfiledMethods">
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.ProfiledMethods" minVersion="1.0.0.0" maxVersion="2.0.0.0">
 				<exactMethodMatcher methodName="EmptyMethod"/>
 				<exactMethodMatcher methodName="ClassParameter"/>
 				<exactMethodMatcher methodName="ClassReturn"/>

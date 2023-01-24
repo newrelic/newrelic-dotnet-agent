@@ -86,7 +86,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
             return _commandNameCache.GetOrAdd(command, GetCommandNameFromEnumValue);
         }
 
-        public static ConnectionInfo GetConnectionInfoFromConnectionMultiplexer(MethodCall methodCall, string assemblyName)
+        public static ConnectionInfo GetConnectionInfoFromConnectionMultiplexer(MethodCall methodCall, string assemblyName, string utilizationHostName)
         {
             var connectionMultiplexer = methodCall.InvocationTarget;
             var rawConfig = GetRawConfigAccessor(assemblyName)(connectionMultiplexer);
@@ -108,13 +108,13 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
             if (dnsEndpoint != null)
             {
                 port = dnsEndpoint.Port.ToString();
-                host = ConnectionStringParserHelper.NormalizeHostname(dnsEndpoint.Host);
+                host = ConnectionStringParserHelper.NormalizeHostname(dnsEndpoint.Host, utilizationHostName);
             }
 
             if (ipEndpoint != null)
             {
                 port = ipEndpoint.Port.ToString();
-                host = ConnectionStringParserHelper.NormalizeHostname(ipEndpoint.Address.ToString());
+                host = ConnectionStringParserHelper.NormalizeHostname(ipEndpoint.Address.ToString(), utilizationHostName);
             }
 
             if (host == null)

@@ -9,7 +9,7 @@ namespace NewRelic.Parsing.ConnectionString
 {
     public interface IConnectionStringParser
     {
-        ConnectionInfo GetConnectionInfo();
+        ConnectionInfo GetConnectionInfo(string utilizationHostName);
     }
 
     public static class ConnectionInfoParser
@@ -19,12 +19,12 @@ namespace NewRelic.Parsing.ConnectionString
 
         private static readonly ConnectionInfo Empty = new ConnectionInfo(null, null, null);
 
-        public static ConnectionInfo FromConnectionString(DatastoreVendor vendor, string connectionString)
+        public static ConnectionInfo FromConnectionString(DatastoreVendor vendor, string connectionString, string utilizationHostName)
         {
             return _connectionInfoCache.GetOrAdd(connectionString, () =>
             {
                 IConnectionStringParser parser = GetConnectionParser(vendor, connectionString);
-                return parser?.GetConnectionInfo() ?? Empty;
+                return parser?.GetConnectionInfo(utilizationHostName) ?? Empty;
             });
         }
 
