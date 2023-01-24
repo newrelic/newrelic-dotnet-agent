@@ -73,6 +73,205 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             Assert::IsFalse(instrumentationPoint == nullptr);
         }
 
+        TEST_METHOD(basic_match_with_version)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"MyAssembly\" className=\"MyNamespace.MyClass\" minVersion=\"1.0.0\" maxVersion=\"2.0.0\">\
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet);
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.2.3.4"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.0.0.0"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.9"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.9.9.9"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.0.5.2"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+        }
+
+        TEST_METHOD(basic_mismatch_with_version)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"MyAssembly\" className=\"MyNamespace.MyClass\" minVersion=\"1.0.0\" maxVersion=\"2.0.0\">\
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet);
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"3.0.0.0"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"0.1.0.0"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"2.0.3.0"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"9.0.0.0"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"0.9.9.9"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"2.0.0.0"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+        }
+
+        TEST_METHOD(basic_match_with_minversion)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"MyAssembly\" className=\"MyNamespace.MyClass\" minVersion=\"1.0.0\">\
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet);
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.0"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.2.3.4"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"3.0.0.0"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"5.0.0.0"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"7.4.12.0"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+        }
+
+        TEST_METHOD(basic_match_with_maxversion)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"MyAssembly\" className=\"MyNamespace.MyClass\" maxVersion=\"2.5.0\"> \
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet);
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"2.2"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"2.0.0.0"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"2.4.9.9"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.2"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"0.2.9"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.0.0.2"));
+            Assert::IsFalse(instrumentationPoint == nullptr);
+        }
+
+        TEST_METHOD(basic_mismatch_with_minversion)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"MyAssembly\" className=\"MyNamespace.MyClass\" minVersion=\"4.0.0.0\">\
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet);
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.2.0.0"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"1.9.9.9"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"0.1.0.0"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"3.5.0.66"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"2.22.333.6"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+        }
+
+        TEST_METHOD(basic_mismatch_with_maxversion)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"MyAssembly\" className=\"MyNamespace.MyClass\" maxVersion=\"3.0.0\">\
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet);
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"3.0.0.0"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"3.1"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"3.0.0.1"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"4.5.78.1"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+
+            instrumentationPoint = instrumentation.TryGetInstrumentationPoint(std::make_shared<MethodRewriter::Test::MockFunction>(false, L"3"));
+            Assert::IsTrue(instrumentationPoint == nullptr);
+        }
+
+
         TEST_METHOD(deprecated_instrumentation_xml_is_ignored)
         {
             wchar_t* wrapperNames[2] =

@@ -6,11 +6,11 @@ SPDX-License-Identifier: Apache-2.0
 <extension xmlns="urn:newrelic-extension">
   <instrumentation>
     <tracerFactory>
-      <match assemblyName="StackExchange.Redis" className="StackExchange.Redis.ConnectionMultiplexer">
+      <match assemblyName="StackExchange.Redis" className="StackExchange.Redis.ConnectionMultiplexer" minVersion="1.0.0.0" maxVersion="2.0.0.0">
         <exactMethodMatcher methodName="ExecuteSyncImpl" />
         <exactMethodMatcher methodName="ExecuteAsyncImpl" />
       </match>
-      <match assemblyName="StackExchange.Redis.StrongName" className="StackExchange.Redis.ConnectionMultiplexer">
+      <match assemblyName="StackExchange.Redis.StrongName" className="StackExchange.Redis.ConnectionMultiplexer" minVersion="1.0.0.0" maxVersion="2.0.0.0">
         <exactMethodMatcher methodName="ExecuteSyncImpl" />
         <exactMethodMatcher methodName="ExecuteAsyncImpl" />
       </match>

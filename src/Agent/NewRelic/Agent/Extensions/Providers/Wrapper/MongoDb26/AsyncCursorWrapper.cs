@@ -28,7 +28,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
             var collectionNamespace = MongoDbHelper.GetCollectionNamespaceFieldFromGeneric(caller);
             var model = MongoDbHelper.GetCollectionName(collectionNamespace);
 
-            var connectionInfo = MongoDbHelper.GetConnectionInfoFromCursor(caller, collectionNamespace);
+            var connectionInfo = MongoDbHelper.GetConnectionInfoFromCursor(caller, collectionNamespace, agent.Configuration.UtilizationHostName);
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
                 new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true,

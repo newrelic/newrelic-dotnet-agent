@@ -84,7 +84,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 
             var sql = sqlCommand.CommandText ?? string.Empty;
             var vendor = SqlWrapperHelper.GetVendorName(sqlCommand);
-            object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString);
+            object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString, agent.Configuration.UtilizationHostName);
             var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);
 
             var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, sqlCommand.CommandType, sql);

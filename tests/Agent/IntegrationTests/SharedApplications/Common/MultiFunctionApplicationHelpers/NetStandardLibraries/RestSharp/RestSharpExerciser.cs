@@ -11,6 +11,9 @@ using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using System.Runtime.CompilerServices;
 
+// .NET 4.8 and 4.8.1 test v107+ of RestSharp which has a different API than older versions
+#if !NET48_OR_GREATER
+
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
 {
     [Library]
@@ -41,7 +44,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
                 if (method == "GET")
                 {
                     var bird = response.Data;
-                    System.IO.File.AppendAllText(@"C:\IntegrationTestWorkingDirectory\RestAPIController.log", $"SyncClient method={method}, generic={generic} got Bird {bird.CommonName} ({bird.BandingCode})" + Environment.NewLine);
+                    ConsoleMFLogger.Info($"SyncClient method={method}, generic={generic} got Bird {bird.CommonName} ({bird.BandingCode})");
                 }
 
                 if ((response.StatusCode != System.Net.HttpStatusCode.OK) && (response.StatusCode != System.Net.HttpStatusCode.NoContent))
@@ -221,3 +224,4 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
 
     }
 }
+#endif

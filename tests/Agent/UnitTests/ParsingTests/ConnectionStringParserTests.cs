@@ -53,12 +53,7 @@ namespace ParsingTests
 
         public void TestConnectionStringParsing(DatastoreVendor vendor, string expectedHost, string expectedPathPortOrId, string expectedDatabaseName, string expectedInstanceName, string connectionString)
         {
-            if (expectedHost == "hostname_of_localhost")
-            {
-                expectedHost = Dns.GetHostName();
-            }
-
-            var connectionInfo = ConnectionInfoParser.FromConnectionString(vendor, connectionString);
+            var connectionInfo = ConnectionInfoParser.FromConnectionString(vendor, connectionString, "hostname_of_localhost");
             Assert.True(connectionInfo.Host == expectedHost);
             Assert.True(connectionInfo.PortPathOrId == expectedPathPortOrId);
             Assert.True(connectionInfo.DatabaseName == expectedDatabaseName);
@@ -71,8 +66,8 @@ namespace ParsingTests
             var connectionString1 = @"Server=win-database.pdx.vm.datanerd.us\SQLEXPRESS;Database=NewRelic;";
             var connectionString2 = @"Server=win-database.pdx.vm.datanerd.us\SQLEXPRESS;Database=NewRelic;";
 
-            var connectionInfo1 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString1);
-            var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2);
+            var connectionInfo1 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString1, "localhost");
+            var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2, "localhost");
 
             Assert.AreSame(connectionInfo1, connectionInfo2);
         }
@@ -83,8 +78,8 @@ namespace ParsingTests
             var connectionString1 = @"Server=win-database.pdx.vm.datanerd.us\SQLEXPRESS;Database=NewRelic;";
             var connectionString2 = @"Server=win-database.pdx.vm.datanerd.us,1433\SQLEXPRESS;Database=NewRelic;";
 
-            var connectionInfo1 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString1);
-            var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2);
+            var connectionInfo1 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString1, "localhost");
+            var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2, "localhost");
 
             Assert.AreNotSame(connectionInfo1, connectionInfo2);
         }

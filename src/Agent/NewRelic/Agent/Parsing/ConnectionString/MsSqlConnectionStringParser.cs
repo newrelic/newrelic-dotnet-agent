@@ -20,10 +20,10 @@ namespace NewRelic.Parsing.ConnectionString
             _connectionStringBuilder = new DbConnectionStringBuilder { ConnectionString = connectionString };
         }
 
-        public ConnectionInfo GetConnectionInfo()
+        public ConnectionInfo GetConnectionInfo(string utilizationHostName)
         {
             var host = ParseHost();
-            if (host != null) host = ConnectionStringParserHelper.NormalizeHostname(host);
+            if (host != null) host = ConnectionStringParserHelper.NormalizeHostname(host, utilizationHostName);
             var portPathOrId = ParsePortPathOrId();
             var databaseName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _databaseNameKeys)?.Value;
             var instanceName = ParseInstanceName();

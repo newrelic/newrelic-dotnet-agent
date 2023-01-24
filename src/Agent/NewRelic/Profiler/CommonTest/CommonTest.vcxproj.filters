@@ -8,5 +8,9 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="TestModuleAttributes.cpp" />
     <ClCompile Include="StringsTest.cpp" />
+    <ClCompile Include="VersionTest.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)newrelic-icon.png" />
   </ItemGroup>
 </Project>

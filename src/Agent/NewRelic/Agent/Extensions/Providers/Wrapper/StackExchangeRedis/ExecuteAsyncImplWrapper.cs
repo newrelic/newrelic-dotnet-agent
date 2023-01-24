@@ -34,7 +34,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
             }
 
             var operation = Common.GetRedisCommand(instrumentedMethodCall.MethodCall, AssemblyName);
-            var connectionInfo = Common.GetConnectionInfoFromConnectionMultiplexer(instrumentedMethodCall.MethodCall, AssemblyName);
+            var connectionInfo = Common.GetConnectionInfoFromConnectionMultiplexer(instrumentedMethodCall.MethodCall, AssemblyName, agent.Configuration.UtilizationHostName);
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
 

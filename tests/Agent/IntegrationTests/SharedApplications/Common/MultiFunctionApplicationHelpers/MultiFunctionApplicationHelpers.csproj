@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net7.0;net462;net471;net48;net481</TargetFrameworks>
@@ -104,13 +104,13 @@
     <PackageReference Include="StackExchange.Redis.StrongName" Version="1.1.608" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.601" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="StackExchange.Redis" Version="2.2.88" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.2.88" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.90" Condition="'$(TargetFramework)' == 'net481'" />
     
     <!-- StackExchange.Redis .NET/Core references -->
     <PackageReference Include="StackExchange.Redis.StrongName" Version="1.2.6" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="StackExchange.Redis" Version="2.1.58" Condition="'$(TargetFramework)' == 'net5.0'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.6.66" Condition="'$(TargetFramework)' == 'net6.0'" />
-	<PackageReference Include="StackExchange.Redis" Version="2.6.66" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.5.61" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.90" Condition="'$(TargetFramework)' == 'net7.0'" />
   
     <!-- Serilog .NET framework references -->
     <PackageReference Include="Serilog" Version="1.5.14" Condition="'$(TargetFramework)' == 'net462'" />
@@ -258,9 +258,10 @@
   <!-- RestSharp -->
   <ItemGroup>
     <PackageReference Include="RestSharp" Version="105.2.3" Condition="'$(TargetFramework)' == 'net462'" />
-    <PackageReference Include="RestSharp" Version="106.0.0" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="RestSharp" Version="106.6.10" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="RestSharp" Version="106.6.10" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="RestSharp" Version="106.15.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="RestSharp" Version="107.3.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="RestSharp" Version="108.0.3" Condition="'$(TargetFramework)' == 'net481'" />
+    
     <!-- Not testing these versions, but it simplfies the RestSharpExerciser class by not needing if directives -->
     <PackageReference Include="RestSharp" Version="106.6.10" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="RestSharp" Version="106.6.10" Condition="'$(TargetFramework)' == 'net5.0'" />
