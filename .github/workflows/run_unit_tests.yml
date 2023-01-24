@@ -1,11 +1,11 @@
 name: .NET Agent Unit Tests and Code Coverage
 
 on:
-  pull_request:
-    branches: 
-    - main
-    - '**-feature-branch'
-  workflow_dispatch:
+  push:
+    branches:
+      - main # runs after a completed PR to main
+  pull_request: # runs on a PR to any branch
+  workflow_dispatch: # allows for manual trigger
 
 env:
   DOTNET_NOLOGO: true
