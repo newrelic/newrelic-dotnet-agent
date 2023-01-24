@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### New Features
+* .NET TLS options are now logged during startup. [#1357](https://github.com/newrelic/newrelic-dotnet-agent/pull/1357)
+
 ### Fixes
 
 ## [10.5.1]
