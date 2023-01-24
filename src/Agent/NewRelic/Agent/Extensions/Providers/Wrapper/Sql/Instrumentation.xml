@@ -280,7 +280,7 @@ SPDX-License-Identifier: Apache-2.0
       <!-- Postgres data provider -->
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader">
         <exactMethodMatcher methodName="NextResultAsync" />
-        <exactMethodMatcher methodName="ReadAsync" />
+        <!--<exactMethodMatcher methodName="ReadAsync" />-->
       </match>
     </tracerFactory>
     
