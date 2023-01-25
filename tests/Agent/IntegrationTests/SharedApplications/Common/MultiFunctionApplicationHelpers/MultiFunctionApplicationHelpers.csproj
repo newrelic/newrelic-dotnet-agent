@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net7.0;net462;net471;net48;net481</TargetFrameworks>
@@ -37,14 +37,14 @@
     <!-- Postgres SQL .NET framework references -->
     <PackageReference Include="npgsql" Version="4.0.0" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="npgsql" Version="4.0.5" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="npgsql" Version="4.0.10" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="npgsql" Version="4.0.13" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="npgsql" Version="6.0.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="npgsql" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- Postgres SQL .NET core references -->
     <PackageReference Include="npgsql" Version="4.0.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="npgsql" Version="4.0.5" Condition="'$(TargetFramework)' == 'net5.0'" />
-    <PackageReference Include="npgsql" Version="4.0.10" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="npgsql" Version="4.0.13" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="npgsql" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="npgsql" Version="7.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!--System.Data.SqlClient (.NET Core/5+ only) -->
     <PackageReference Include="System.Data.SqlClient" Version="4.4.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />

@@ -23,6 +23,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
             _fixture = fixture;
             _fixture.TestLogger = output;
 
+            //_fixture.AddCommand("RootCommands LaunchDebugger");
             _fixture.AddCommand($"PostgresSqlExerciser IteratorTest");
 
             _fixture.Actions
@@ -37,6 +38,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
+                    // intentionally *only* enables the sync DataReaderTracer, not *all* tracers
                     var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
                     CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "DataReaderTracer", "enabled", "true");
                 }
