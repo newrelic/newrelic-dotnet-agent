@@ -31,5 +31,7 @@ namespace NewRelic.Agent.Api.Experimental
         /// <param name="spanId">The span ID of the segment the log message occured within.</param>
         /// <param name="traceId">The trace ID of the transaction the log message occured within.</param>
         void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLogLevel, Func<object,string> getLogMessage, Func<object, Exception> getLogException, Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId);
+
+        Extensions.Helpers.IStackExchangeRedisCache StackExchangeRedisCache { get; set; }
     }
 }

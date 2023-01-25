@@ -125,6 +125,11 @@ namespace NewRelic { namespace Profiler
                     tracerFlags |= NewRelic::Profiler::Configuration::TracerFlags::AttributeInstrumentation;
                 }
             }
+            else
+            {
+                LogTrace(ToStdWString(assemblyName.get()), L" is an ignored assembly");
+            }
+
 
             bool logAll = nrlog::Level::LEVEL_TRACE >= nrlog::StdLog.GetLevel();
             // Normally we bail out of looking up function information as soon as we determine that we have not been
@@ -153,6 +158,7 @@ namespace NewRelic { namespace Profiler
             StaticThrowOnError(metaDataImport->GetMethodProps(metaDataToken, &typeDefinitionToken, functionName.get(), functionNameLength, nullptr, nullptr, &signature, &signatureSize, nullptr, nullptr));
 
             if (!skipShouldInstrumentChecks && !methodRewriter.get()->ShouldInstrumentFunction(ToStdWString(functionName.get()))) {
+                LogTrace(ToStdWString(functionName.get()), L" is not an instrumented function");
                 assemblyName.release();
                 functionName.release();
                 return nullptr;
@@ -183,9 +189,10 @@ namespace NewRelic { namespace Profiler
             }
 
             if (!skipShouldInstrumentChecks && !methodRewriter.get()->ShouldInstrumentType(typeName)) {
+                LogTrace(typeName, L" is not an instrumented type");
+
                 assemblyName.release();
                 functionName.release();
-
                 return nullptr;
             }
 

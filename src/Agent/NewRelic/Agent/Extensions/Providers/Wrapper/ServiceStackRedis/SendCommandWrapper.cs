@@ -75,7 +75,7 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
                 throw new NullReferenceException(nameof(contextObject));
 
             var host = TryGetPropertyName(PropertyHost, contextObject) ?? "unknown";
-            host = ConnectionStringParserHelper.NormalizeHostname(host);
+            host = ConnectionStringParserHelper.NormalizeHostname(host, agent.Configuration.UtilizationHostName);
             var portPathOrId = TryGetPropertyName(PropertyPortPathOrId, contextObject);
             var databaseName = TryGetPropertyName(PropertyDatabaseName, contextObject);
             var connectionInfo = new ConnectionInfo(host, portPathOrId, databaseName);

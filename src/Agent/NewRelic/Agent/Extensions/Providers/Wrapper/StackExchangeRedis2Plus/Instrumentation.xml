@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory name="stackexchangeredis-connect">
+      <match assemblyName="StackExchange.Redis" className="StackExchange.Redis.ConnectionMultiplexer" minVersion="2.0.0.0">
+        <exactMethodMatcher methodName="CreateMultiplexer" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

@@ -20,6 +20,7 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
+using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Core.Logging;
@@ -62,6 +63,7 @@ namespace NewRelic.Agent.Core
         private readonly ILogEventAggregator _logEventAggregator;
         private readonly ILogContextDataFilter _logContextDataFilter;
         private Extensions.Logging.ILogger _logger;
+        private IStackExchangeRedisCache _stackExchangeRedisCache;
 
         public Agent(ITransactionService transactionService, ITransactionTransformer transactionTransformer,
             IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker,
@@ -404,6 +406,12 @@ namespace NewRelic.Agent.Core
         #endregion GetLinkingMetadata
 
         #region ExperimentalApi
+
+        public IStackExchangeRedisCache StackExchangeRedisCache
+        {
+            get { return _stackExchangeRedisCache; }
+            set { _stackExchangeRedisCache = value; }
+        }
 
         public void RecordSupportabilityMetric(string metricName, int count)
         {

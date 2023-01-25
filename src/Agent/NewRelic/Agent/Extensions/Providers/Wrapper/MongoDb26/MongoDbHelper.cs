@@ -101,7 +101,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
             return getter(owner);
         }
 
-        public static ConnectionInfo GetConnectionInfoFromCursor(object asyncCursor, object collectionNamespace)
+        public static ConnectionInfo GetConnectionInfoFromCursor(object asyncCursor, object collectionNamespace, string utilizationHostName)
         {
             string host = null;
             string port = null;
@@ -116,13 +116,13 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
             if (dnsEndpoint != null)
             {
                 port = dnsEndpoint.Port.ToString();
-                host = ConnectionStringParserHelper.NormalizeHostname(dnsEndpoint.Host);
+                host = ConnectionStringParserHelper.NormalizeHostname(dnsEndpoint.Host, utilizationHostName);
             }
 
             if (ipEndpoint != null)
             {
                 port = ipEndpoint.Port.ToString();
-                host = ConnectionStringParserHelper.NormalizeHostname(ipEndpoint.Address.ToString());
+                host = ConnectionStringParserHelper.NormalizeHostname(ipEndpoint.Address.ToString(), utilizationHostName);
             }
 
             var databaseName = GetDatabaseNameFromCollectionNamespace(collectionNamespace);
@@ -130,7 +130,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
             return new ConnectionInfo(host, port, databaseName);
         }
 
-        public static ConnectionInfo GetConnectionInfoFromDatabase(object database)
+        public static ConnectionInfo GetConnectionInfoFromDatabase(object database, string utilizationHostName)
         {
             var databaseName = GetDatabaseNameFromDatabase(database);
             var servers = GetServersFromDatabase(database);
@@ -142,7 +142,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
             {
                 GetHostAndPortFromServer(servers[0], out var rawHost, out var rawPort);
                 port = rawPort.ToString();
-                host = ConnectionStringParserHelper.NormalizeHostname(rawHost);
+                host = ConnectionStringParserHelper.NormalizeHostname(rawHost, utilizationHostName);
             }
 
             return new ConnectionInfo(host, port, databaseName);

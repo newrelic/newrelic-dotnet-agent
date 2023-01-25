@@ -32,7 +32,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             auto instrumentationPoint = instrumentationSettings->GetInstrumentationConfiguration()->TryGetInstrumentationPoint(function);
             if (instrumentationPoint == nullptr)
             {
-                if (!function->ShouldTrace()) return false;
+                if (!function->ShouldTrace())
+                {
+                    LogTrace(L"No instrumentation point for ", function->ToString());
+                    return false;
+                }
 
                 instrumentationPoint = std::make_shared<Configuration::InstrumentationPoint>();
                 instrumentationPoint->AssemblyName = function->GetAssemblyName();

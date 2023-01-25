@@ -21,6 +21,8 @@ namespace NewRelic.Agent.Core.Transactions
         public bool IsFinished => false;
         public ISegment CurrentSegment => Segment.NoOpSegment;
 
+        public DateTime StartTime => DateTime.UtcNow;
+
         private object _wrapperToken;
 
         private static readonly IExternalSegmentData _noOpExternalSegmentData = new ExternalSegmentData(new Uri("https://www.newrelic.com/"), string.Empty);
@@ -276,6 +278,12 @@ namespace NewRelic.Agent.Core.Transactions
         public ITransaction SetRequestHeaders<T>(T headers, IEnumerable<string> keysToCapture, Func<T, string, string> getter)
         {
             return this;
+        }
+
+        public ISegment StartStackExchangeRedisSegment(int invocationTargetHashCode, ParsedSqlStatement parsedSqlStatement, ConnectionInfo connectionInfo, TimeSpan relativeStartTime, TimeSpan relativeEndTime)
+        {
+            // no log here since this could be called many thousands of times.
+            return Segment.NoOpSegment;
         }
     }
 }

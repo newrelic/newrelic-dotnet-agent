@@ -18,6 +18,11 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
+        protected abstract string ExpectedClassName { get; }
+        protected abstract string UnexpectedClassName { get; }
+        protected const string LEGACY_CLASS_NAME = "System.Net.Http.HttpClient";
+        protected const string CLASS_NAME = "System.Net.Http.SocketsHttpHandler";
+        protected const string METHOD_NAME = "SendAsync";
 
         protected HttpClientInstrumentationTestsBase(TFixture fixture, ITestOutputHelper output)
             : base(fixture)
@@ -93,6 +98,8 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+                () => Assertions.TransactionTraceSegmentExists(ExpectedClassName, METHOD_NAME, transactionSample),
+                () => Assertions.TransactionTraceSegmentDoesNotExist(UnexpectedClassName, METHOD_NAME, transactionSample),
                 () => Assert.True(externalSpanEvents[0].IntrinsicAttributes.TryGetValue("component", out var value) && value.ToString().StartsWith("System.Net.Http.")),
                 () => Assert.All(externalSpanEvents, AssertSpanEventsContainHttpStatusCodeForCompletedRequests)
             );
@@ -120,6 +127,9 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     [NetCoreTest]
     public class HttpClientInstrumentationTests_Net31 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
+        protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
+        protected override string UnexpectedClassName { get { return CLASS_NAME; } }
+
         public HttpClientInstrumentationTests_Net31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
@@ -129,6 +139,9 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     [NetCoreTest]
     public class HttpClientInstrumentationTests_Net50 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
+        protected override string ExpectedClassName { get { return CLASS_NAME; } }
+        protected override string UnexpectedClassName { get { return LEGACY_CLASS_NAME; } }
+
         public HttpClientInstrumentationTests_Net50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
@@ -138,6 +151,9 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     [NetCoreTest]
     public class HttpClientInstrumentationTests_Net60 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCore60>
     {
+        protected override string ExpectedClassName { get { return CLASS_NAME; } }
+        protected override string UnexpectedClassName { get { return LEGACY_CLASS_NAME; } }
+
         public HttpClientInstrumentationTests_Net60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
@@ -147,6 +163,9 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     [NetCoreTest]
     public class HttpClientInstrumentationTests_NetCoreLatest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
+        protected override string ExpectedClassName { get { return CLASS_NAME; } }
+        protected override string UnexpectedClassName { get { return LEGACY_CLASS_NAME; } }
+
         public HttpClientInstrumentationTests_NetCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
@@ -156,6 +175,9 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     [NetFrameworkTest]
     public class HttpClientInstrumentationTests_FW462 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
+        protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
+        protected override string UnexpectedClassName { get { return CLASS_NAME; } }
+
         public HttpClientInstrumentationTests_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
@@ -165,6 +187,9 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     [NetFrameworkTest]
     public class HttpClientInstrumentationTests_FW471 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
+        protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
+        protected override string UnexpectedClassName { get { return CLASS_NAME; } }
+
         public HttpClientInstrumentationTests_FW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
@@ -174,6 +199,9 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     [NetFrameworkTest]
     public class HttpClientInstrumentationTests_FW48 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
+        protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
+        protected override string UnexpectedClassName { get { return CLASS_NAME; } }
+
         public HttpClientInstrumentationTests_FW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
@@ -183,6 +211,9 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     [NetFrameworkTest]
     public class HttpClientInstrumentationTests_FWLatest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
+        protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
+        protected override string UnexpectedClassName { get { return CLASS_NAME; } }
+
         public HttpClientInstrumentationTests_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {

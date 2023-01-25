@@ -187,6 +187,14 @@ namespace NewRelic.Agent.Core.Transactions
             return new Segment(this, methodCallData);
         }
 
+        // Used for StackExchange.Redis since we will not be instrumenting any methods when creating the many DataStore segments
+        private Segment StartSegmentImpl(string typeName, string methodName, int invocationTargetHashCode, TimeSpan relativeStartTime, TimeSpan relativeEndTime)
+        {
+            var methodCallData = GetMethodCallData(typeName, methodName, invocationTargetHashCode);
+
+            return new Segment(this, methodCallData, relativeStartTime, relativeEndTime);
+        }
+
         public ISegment StartCustomSegment(MethodCall methodCall, string segmentName)
         {
             if (Ignored)
@@ -249,6 +257,32 @@ namespace NewRelic.Agent.Core.Transactions
             return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action);
         }
 
+        /// <summary>
+        /// This creates a Datastore segment based on data gathered using the built-in StackExchange.Redis profiling system.
+        /// </summary>
+        /// <param name="invocationTargetHashCode"></param>
+        /// <param name="parsedSqlStatement"></param>
+        /// <param name="connectionInfo"></param>
+        /// <param name="relativeStartTime"></param>
+        /// <param name="relativeEndTime"></param>
+        /// <returns></returns>
+        public ISegment StartStackExchangeRedisSegment(int invocationTargetHashCode, ParsedSqlStatement parsedSqlStatement, ConnectionInfo connectionInfo, TimeSpan relativeStartTime, TimeSpan relativeEndTime)
+        {
+            if (Ignored)
+                return Segment.NoOpSegment;
+
+            // Since we are not instrumenting a specific method when making these segments, this creates a stand-in method that aligns with our previous instrumentation.
+            var segment = StartSegmentImpl("StackExchange.Redis.IConnectionMultiplexer", "Execute", invocationTargetHashCode, relativeStartTime, relativeEndTime);
+            segment.IsLeaf = true;
+            var datastoreSegmentData = CreateDatastoreSegmentData(parsedSqlStatement, connectionInfo, null, null);
+
+            segment.SetSegmentData(datastoreSegmentData);
+
+            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+
+            return segment;
+        }
+
         public ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, ConnectionInfo connectionInfo, string commandText, IDictionary<string, IConvertible> queryParameters = null, bool isLeaf = false)
         {
             if (Ignored)
@@ -287,6 +321,12 @@ namespace NewRelic.Agent.Core.Transactions
             var typeName = methodCall.Method.Type.FullName ?? "[unknown]";
             var methodName = methodCall.Method.MethodName;
             var invocationTargetHashCode = RuntimeHelpers.GetHashCode(methodCall.InvocationTarget);
+            return new MethodCallData(typeName, methodName, invocationTargetHashCode);
+        }
+
+        // Used for StackExchange.Redis since we will not be instrumenting any methods when creating the many DataStore segments
+        private static MethodCallData GetMethodCallData(string typeName, string methodName, int invocationTargetHashCode)
+        {
             return new MethodCallData(typeName, methodName, invocationTargetHashCode);
         }
 

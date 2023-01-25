@@ -30,7 +30,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
             var collection = MongoDbHelper.GetCollectionFieldFromGeneric(caller);
             var database = MongoDbHelper.GetDatabaseFromGeneric(collection);
 
-            ConnectionInfo connectionInfo = MongoDbHelper.GetConnectionInfoFromDatabase(database);
+            ConnectionInfo connectionInfo = MongoDbHelper.GetConnectionInfoFromDatabase(database, agent.Configuration.UtilizationHostName);
             var collectionNamespace = MongoDbHelper.GetCollectionNamespacePropertyFromGeneric(caller);
             var model = MongoDbHelper.GetCollectionName(collectionNamespace);
 
