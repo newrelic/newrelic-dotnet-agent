@@ -8,6 +8,7 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
@@ -40,7 +41,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             _connectionHandler = connectionHandler;
             _scheduler = scheduler;
-
+            
             _subscriptions.Add<StartAgentEvent>(OnStartAgent);
             _subscriptions.Add<RestartAgentEvent>(OnRestartAgent);
 
@@ -84,12 +85,20 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             try
             {
+                var preconnectAppName = _configuration.ApplicationNames.FirstOrDefault();
                 lock (_syncObject)
                 {
                     _connectionHandler.Connect();
                 }
 
                 _connectionAttempt = 0;
+                if (!preconnectAppName.Equals(_configuration.ApplicationNames.FirstOrDefault()))
+                {
+                    Log.Warn("Configured application name mismatch detected, agent will reconnect. " +
+                        "Connected name was '" + preconnectAppName +"', but should have been '" + _configuration.ApplicationNames.FirstOrDefault() + "'.");
+                    Reconnect();
+                    return;
+                }
             }
             // This exception is thrown when the agent receives an unexpected HTTP error
             // This is also the parent type of some of the more specific HTTP errors that we handle
