@@ -12,14 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [10.6.0]
 
-### Fixes
-* StackExchange.Redis versions 2 and above use a new wrapper with improved performance and reduced network overhead. [#1351](https://github.com/newrelic/newrelic-dotnet-agent/pull/1351)
-
 ### New Features
 * Custom instrumentation now supports targeting specific assembly versions. See [the documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/custom-instrumentation/add-detail-transactions-xml-net/#procedures)  for more details. [#1342](https://github.com/newrelic/newrelic-dotnet-agent/pull/1342)
 * RestSharp client instrumentation support has been extended to include the following versions: 106.11.x, 106.12.0, 106.13.0, and 106.15.0. [#1352](https://github.com/newrelic/newrelic-dotnet-agent/pull/1352)
 * RestSharp client instrumentation has been verified for versions 107.x and 108.x. For newer versions of RestSharp, external segments/spans are actually generated via our instrumentation of HttpClient. [#1356](https://github.com/newrelic/newrelic-dotnet-agent/pull/1356)
 * .NET TLS options are now logged during startup. [#1357](https://github.com/newrelic/newrelic-dotnet-agent/pull/1357)
+
+### Fixes
+* StackExchange.Redis versions 2 and above use a new wrapper with improved performance and reduced network overhead. [#1351](https://github.com/newrelic/newrelic-dotnet-agent/pull/1351)
 
 ## [10.5.1]
 
