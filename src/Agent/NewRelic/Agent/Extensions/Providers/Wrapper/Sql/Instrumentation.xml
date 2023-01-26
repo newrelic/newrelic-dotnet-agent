@@ -179,7 +179,8 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteDbDataReaderAsync"/>
       </match>
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand" minVersion="4.1.0">
-        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken"/>
+        <exactMethodMatcher methodName="ExecuteReaderAsync"/>
+        <!--<exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken"/>-->
       </match>
     </tracerFactory>
 
@@ -287,12 +288,11 @@ SPDX-License-Identifier: Apache-2.0
 
       <!-- Postgres data provider -->
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader">
-        <exactMethodMatcher methodName="NextResultAsync" />
-        <!--<exactMethodMatcher methodName="ReadAsync" />-->
+        <exactMethodMatcher methodName="NextResult" parameters="System.Boolean,System.Boolean"/>
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean"/>
       </match>
 
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="4.1.0">
-        <!--<exactMethodMatcher methodName="ReadAsync" parameters="System.Threading.CancellationToken" />-->
         <exactMethodMatcher methodName="Read" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="NextResult" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="TryFastRead" />

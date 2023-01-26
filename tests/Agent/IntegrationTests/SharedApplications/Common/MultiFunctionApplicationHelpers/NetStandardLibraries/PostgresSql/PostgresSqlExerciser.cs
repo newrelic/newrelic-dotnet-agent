@@ -73,6 +73,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void ParameterizedStoredProcedure(string procedureName)
         {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            AppContext.SetSwitch("Npgsql.EnableStoredProcedureCompatMode", true);
+
             CreateProcedure(procedureName);
 
             try
@@ -105,6 +108,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task ParameterizedStoredProcedureAsync(string procedureName)
         {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            AppContext.SetSwitch("Npgsql.EnableStoredProcedureCompatMode", true);
+
             CreateProcedure(procedureName);
 
             try
@@ -123,8 +129,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql
                             command.Parameters.AddWithValue(p.ParameterName, p.Value);
                     }
 
+
                     ConsoleMFLogger.Info((await command.ExecuteNonQueryAsync()).ToString());
                 }
+            }
+            catch (Exception e)
+            {
+                ConsoleMFLogger.Error(e);
             }
             finally
             {
