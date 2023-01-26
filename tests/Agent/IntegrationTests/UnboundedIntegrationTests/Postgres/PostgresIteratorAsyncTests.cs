@@ -37,7 +37,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
-                    // intentionally *only* enables the async DataReaderTracer, not *all* tracers
                     var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
                     CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "DataReaderTracerAsync", "enabled", "true");
                 }

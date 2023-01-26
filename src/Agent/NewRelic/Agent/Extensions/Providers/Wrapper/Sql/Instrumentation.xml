@@ -174,13 +174,12 @@ SPDX-License-Identifier: Apache-2.0
 
       <!-- Postgres SQL Driver-->
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand">
-        <exactMethodMatcher methodName="ExecuteScalarAsync"/>
-        <exactMethodMatcher methodName="ExecuteNonQueryAsync"/>
         <exactMethodMatcher methodName="ExecuteDbDataReaderAsync"/>
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync"/>
+        <exactMethodMatcher methodName="ExecuteScalarAsync"/>
       </match>
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand" minVersion="4.1.0">
         <exactMethodMatcher methodName="ExecuteReaderAsync"/>
-        <!--<exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken"/>-->
       </match>
     </tracerFactory>
 
