@@ -247,11 +247,17 @@ SPDX-License-Identifier: Apache-2.0
       </match>
 
       <!-- Postgres data provider -->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="4.0.0" maxVersion="4.0.99">
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
       </match>
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="4.1.0">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="4.1.0" maxVersion="4.1.99">
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
+        <exactMethodMatcher methodName="TryFastRead" />
+      </match>
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="5.0.0">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
         <exactMethodMatcher methodName="TryFastRead" />
       </match>
     </tracerFactory>
@@ -287,12 +293,16 @@ SPDX-License-Identifier: Apache-2.0
       </match>
 
       <!-- Postgres data provider -->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="4.0.0" maxVersion="4.0.99">
         <exactMethodMatcher methodName="NextResult" parameters="System.Boolean,System.Boolean"/>
         <exactMethodMatcher methodName="Read" parameters="System.Boolean"/>
       </match>
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="4.1.0" maxVersion="4.1.99">
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean"/>
+        <exactMethodMatcher methodName="TryFastRead" />
+      </match>
 
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="4.1.0">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="5.0.0">
         <exactMethodMatcher methodName="Read" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="NextResult" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="TryFastRead" />
