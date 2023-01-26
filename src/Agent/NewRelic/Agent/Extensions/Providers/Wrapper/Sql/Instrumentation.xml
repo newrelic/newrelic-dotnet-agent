@@ -303,8 +303,8 @@ SPDX-License-Identifier: Apache-2.0
       </match>
 
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="5.0.0">
-        <exactMethodMatcher methodName="Read" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="NextResult" parameters="System.Boolean,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean,System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="TryFastRead" />
       </match>
     </tracerFactory>
