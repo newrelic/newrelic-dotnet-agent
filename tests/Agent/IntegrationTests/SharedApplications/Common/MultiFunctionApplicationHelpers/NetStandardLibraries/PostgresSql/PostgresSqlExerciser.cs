@@ -95,7 +95,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.PostgresSql
                             command.Parameters.AddWithValue(p.ParameterName, p.Value);
                     }
 
-                    ConsoleMFLogger.Info(command.ExecuteNonQueryAsync().ToString());
+                    ConsoleMFLogger.Info(command.ExecuteNonQuery().ToString());
                 }
             }
             finally

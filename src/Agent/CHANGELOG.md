@@ -5,9 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-* Postgres client instrumentation support has been extended to include the following versions: 4.0.x, 4.1.x, 5.0.x, 6.0.x and 7.0.x [#1363](https://github.com/newrelic/newrelic-dotnet-agent/pull/1363)
 
 ### New Features
+* Postgres client instrumentation support has been extended to include the following versions: 4.0.x, 4.1.x, 5.0.x, 6.0.x and 7.0.x [#1363](https://github.com/newrelic/newrelic-dotnet-agent/pull/1363)
 
 ### Fixes
 
