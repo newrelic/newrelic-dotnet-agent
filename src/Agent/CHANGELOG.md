@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 
 ### Fixes
+* Fix a race condition when using SetApplicationName [#1361](https://github.com/newrelic/newrelic-dotnet-agent/pull/1361)
 
 ## [10.6.0]
 
