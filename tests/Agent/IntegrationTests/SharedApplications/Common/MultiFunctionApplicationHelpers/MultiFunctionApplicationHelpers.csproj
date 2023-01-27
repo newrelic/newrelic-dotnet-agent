@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net7.0;net462;net471;net48;net481</TargetFrameworks>
@@ -35,8 +35,8 @@
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!-- Postgres SQL .NET framework references -->
-    <PackageReference Include="npgsql" Version="4.0.0" Condition="'$(TargetFramework)' == 'net462'" />
-    <PackageReference Include="npgsql" Version="4.0.13" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="npgsql" Version="4.0.13" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="npgsql" Version="5.0.15" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="npgsql" Version="6.0.7" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="npgsql" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
 
