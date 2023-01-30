@@ -20,5 +20,15 @@ namespace ArtifactBuilder.Artifacts
             package.SetVersionFromDll(component);
             package.Pack();
         }
+
+        protected override string Unpack()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override void ValidateContent()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

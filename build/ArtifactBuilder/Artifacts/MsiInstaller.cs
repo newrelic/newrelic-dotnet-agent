@@ -288,5 +288,15 @@ namespace ArtifactBuilder.Artifacts
         {
             return new HashSet<string>(items);
         }
+
+        protected override void ValidateContent()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override string Unpack()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

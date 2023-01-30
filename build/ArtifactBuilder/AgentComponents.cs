@@ -57,7 +57,7 @@ namespace ArtifactBuilder
         public string[] GRPCExtensionsLibWindows;
         public string[] GRPCExtensionsLibLinux;
 
-        private List<string> AllComponents
+        public List<string> AllComponents
         {
             get
             {

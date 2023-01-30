@@ -31,8 +31,13 @@ namespace ArtifactBuilder.Artifacts
                 FileHelpers.DeleteDirectories(OutputDirectory);
 
             InternalBuild();
+            ValidateContent();
         }
 
         protected abstract void InternalBuild();
+
+        protected abstract string Unpack();
+
+        protected abstract void ValidateContent();
     }
 }
