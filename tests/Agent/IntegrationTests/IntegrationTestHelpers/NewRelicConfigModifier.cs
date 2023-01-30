@@ -110,10 +110,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
-        public NewRelicConfigModifier EnableInfinteTracing(string traceObserverUrl)
+        public NewRelicConfigModifier EnableInfinteTracing(string traceObserverUrl, string traceObserverPort)
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
                new[] { "configuration", "infiniteTracing", "trace_observer" }, "host", traceObserverUrl);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
+                    new[] { "configuration", "infiniteTracing", "trace_observer" }, "port", traceObserverPort);
             return this;
         }
 

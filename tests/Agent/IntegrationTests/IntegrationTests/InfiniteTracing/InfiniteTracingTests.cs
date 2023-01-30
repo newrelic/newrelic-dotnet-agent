@@ -33,7 +33,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
 
                     configModifier.ForceTransactionTraces()
                     .EnableDistributedTrace()
-                    .EnableInfinteTracing(_fixture.TestConfiguration.TraceObserverUrl)
+                    .EnableInfinteTracing(_fixture.TestConfiguration.TraceObserverUrl, _fixture.TestConfiguration.TraceObserverPort)
                     .SetLogLevel("finest");
                 }
             );
