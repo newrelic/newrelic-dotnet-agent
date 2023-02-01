@@ -55,7 +55,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 if (Log.IsEnabledFor(logLevel))
                 {
-                    Log.LogMessage(logLevel, $"GRPC RpcException encountered while handling gRPC server responses: {rpcEx.Status}");
+                    Log.LogMessage(logLevel, $"ResponseStreamWrapper: consumer {ConsumerID} - GRPC RpcException encountered while handling gRPC server responses: {rpcEx.Status}");
                 }
             }
             catch (Exception ex)
@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 if (Log.IsEnabledFor(logLevel))
                 {
-                    Log.LogMessage(logLevel, $"Unknown exception encountered while handling gRPC server responses: {ex}");
+                    Log.LogMessage(logLevel, $"ResponseStreamWrapper: consumer {ConsumerID} - Unknown exception encountered while handling gRPC server responses: {ex}");
                 }
             }
 

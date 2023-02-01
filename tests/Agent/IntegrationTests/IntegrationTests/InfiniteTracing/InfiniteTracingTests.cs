@@ -1,6 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -21,21 +22,28 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"InfiniteTracingTester StartAgent");
+
+            _fixture.AddCommand("RootCommands DelaySeconds 5"); // give the agent time to warm up
+
             _fixture.AddCommand($"InfiniteTracingTester Make8TSpan");
-            _fixture.AddCommand($"InfiniteTracingTester Wait");
 
+            _fixture.AddCommand("RootCommands DelaySeconds 65"); // wait for a metric harvest cycle to run
 
-            _fixture.Actions
-            (
+            _fixture.AddActions(
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
                     configModifier.ForceTransactionTraces()
                     .EnableDistributedTrace()
-                    .EnableInfinteTracing(_fixture.TestConfiguration.TraceObserverUrl, _fixture.TestConfiguration.TraceObserverPort)
+                    .EnableInfiniteTracing(_fixture.TestConfiguration.TraceObserverUrl, _fixture.TestConfiguration.TraceObserverPort)
                     .SetLogLevel("finest");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
+
             );
 
             _fixture.Initialize();

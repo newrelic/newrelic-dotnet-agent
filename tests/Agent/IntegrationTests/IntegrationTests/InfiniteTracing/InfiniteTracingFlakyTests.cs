@@ -1,0 +1,160 @@
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using Grpc.Core;
+using MultiFunctionApplicationHelpers;
+using NewRelic.Agent.IntegrationTestHelpers;
+using NServiceBus.Features;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
+{
+    public abstract class InfiniteTracingFlakyTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : ConsoleDynamicMethodFixture
+    {
+        private readonly TFixture _fixture;
+
+        public InfiniteTracingFlakyTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.SetTimeout(System.TimeSpan.FromMinutes(5));
+
+            // set a 75% chance that the trace observer will throw an error
+            _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY", "80");
+
+            // set the code to be returned when the trace observer throws an error
+            // must be a value from 0 to 16 as per https://github.com/grpc/grpc/blob/master/doc/statuscodes.md
+            _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY_CODE",
+                ((int)StatusCode.Internal).ToString());
+
+            //_fixture.AddCommand("RootCommands LaunchDebugger");
+
+            _fixture.AddCommand("InfiniteTracingTester StartAgent");
+
+            _fixture.AddCommand("RootCommands DelaySeconds 5"); // give the agent time to warm up
+
+            _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
+            _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
+            _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
+            _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
+            _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
+            _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
+
+            //_fixture.AddCommand("RootCommands DelaySeconds 70"); // wait a full harvest cycle plus a little bit
+
+            _fixture.AddActions
+            (
+                setupConfiguration: () =>
+                {
+                    var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
+
+                    configModifier
+                        .ForceTransactionTraces()
+                        .EnableDistributedTrace()
+                        .EnableInfiniteTracing(_fixture.TestConfiguration.TraceObserverUrl, _fixture.TestConfiguration.TraceObserverPort)
+                        .SetLogLevel("finest");
+                }
+                ,
+                exerciseApplication: () =>
+                {
+                    // wait up to 65 seconds for the harvest cycle to complete and emit the supportability metrics we're expecting
+                    var startTime = DateTime.Now;
+                    while (DateTime.Now <= startTime.AddSeconds(65) && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name.StartsWith("Supportability/InfiniteTracing/Span/gRPC")))
+                    {
+                        Thread.Sleep(TimeSpan.FromSeconds(5));
+                    }
+                }
+            );
+
+            _fixture.Initialize();
+        }
+
+        [SkipOnAlpineFact("See https://github.com/newrelic/newrelic-dotnet-agent/issues/289")]
+        public void Test()
+        {
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                // can't look for specific counts, as errors will cause the counts to vary
+                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen" },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent" },
+
+                // these two, however, should reliably appear
+                new Assertions.ExpectedMetric() { metricName = "Supportability/InfiniteTracing/Span/Response/Error"},
+                new Assertions.ExpectedMetric() { metricName = "Supportability/InfiniteTracing/Span/gRPC/INTERNAL"}
+            };
+
+            var actualMetrics = _fixture.AgentLog.GetMetrics();
+            Assertions.MetricsExist(expectedMetrics, actualMetrics);
+        }
+    }
+
+    [NetFrameworkTest]
+    public class InfiniteTracingFlakyFWLatestTests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public InfiniteTracingFlakyFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+
+    [NetFrameworkTest]
+    public class InfiniteTracingFlakyFW471Tests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public InfiniteTracingFlakyFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class InfiniteTracingFlakyFW462Tests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public InfiniteTracingFlakyFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class InfiniteTracingFlakyNetCoreLatestTests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public InfiniteTracingFlakyNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class InfiniteTracingFlakyNetCore60Tests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public InfiniteTracingFlakyNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class InfiniteTracingFlakyNetCore50Tests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureCore50>
+    {
+        public InfiniteTracingFlakyNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class InfiniteTracingFlakyNetCore31Tests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public InfiniteTracingFlakyNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+}
