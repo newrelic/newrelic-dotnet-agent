@@ -48,5 +48,11 @@ namespace MultiFunctionApplicationHelpers.Libraries
                 ConsoleMFLogger.Info($"key: {item.Key}, value:{item.Value}");
             }
         }
+
+        [LibraryMethod]
+        public static void TestSetApplicationName(string applicationName)
+        {
+            NewRelic.Api.Agent.NewRelic.SetApplicationName(applicationName);
+        }
     }
 }

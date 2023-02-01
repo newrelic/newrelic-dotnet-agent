@@ -8,6 +8,7 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
@@ -35,19 +36,20 @@ namespace NewRelic.Agent.Core.DataTransport
         private int _connectionAttempt = 0;
         private bool _started;
         private readonly object _syncObject = new object();
+        private bool _runtimeConfigurationUpdated = false;
 
         public ConnectionManager(IConnectionHandler connectionHandler, IScheduler scheduler)
         {
             _connectionHandler = connectionHandler;
             _scheduler = scheduler;
-
+            
             _subscriptions.Add<StartAgentEvent>(OnStartAgent);
             _subscriptions.Add<RestartAgentEvent>(OnRestartAgent);
 
             // calling Disconnect on Shutdown is crashing on Linux.  This is probably a CLR bug, but we have to work around it.
             // The Shutdown call is actually not very important (agent runs time out after 5 minutes anyway) so just don't call it.
 #if NETFRAMEWORK
-			_subscriptions.Add<CleanShutdownEvent>(OnCleanShutdown);
+            _subscriptions.Add<CleanShutdownEvent>(OnCleanShutdown);
 #endif
         }
 
@@ -86,10 +88,17 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 lock (_syncObject)
                 {
+                    _runtimeConfigurationUpdated = false;
                     _connectionHandler.Connect();
                 }
 
-                _connectionAttempt = 0;
+                // If the runtime configuration has changed, the app names have updated, so we schedule a restart
+                // This uses the existing ScheduleRestart logic so the current Connect can finish and we follow the backoff pattern and don't spam reconnect attempts.
+                if (_runtimeConfigurationUpdated)
+                {
+                    Log.Warn("The runtime configuration was updated during connect");
+                    ScheduleRestart();
+                }
             }
             // This exception is thrown when the agent receives an unexpected HTTP error
             // This is also the parent type of some of the more specific HTTP errors that we handle
@@ -193,9 +202,24 @@ namespace NewRelic.Agent.Core.DataTransport
             // If we receive a non-server config update while connected then we need to reconnect.
             // Receiving a server config update implies that we just connected or disconnected so there's no need to do anything.
             if (configurationUpdateSource == ConfigurationUpdateSource.Server)
+            {
                 return;
+            }
+
+            // Runtime updates only occur if the app names are changed via SetApplicationName API.  This should not return since we want it to fall through to the other check.
+            // _runtimeConfigurationUpdated should only be false if:
+            // - Connect has not been called yet
+            // - We are in the Connect method
+            // - The SetApplicationName API has not be used so Connect would always end with it being false
+            if (configurationUpdateSource == ConfigurationUpdateSource.RunTime && !_runtimeConfigurationUpdated)
+            {
+                _runtimeConfigurationUpdated = true;
+            }
+
             if (_configuration.AgentRunId == null)
+            {
                 return;
+            }
 
             Log.Info("Reconnecting due to configuration change");
 
