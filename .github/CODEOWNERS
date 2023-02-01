@@ -1,0 +1,11 @@
+# This is a comment.
+# Each line is a file pattern followed by one or more owners.
+
+# These owners will be the default owners for everything in
+# the repo. Unless a later match takes precedence,
+# the users listed below will be requested for
+# review when someone opens a pull request.
+# We could use a team alias, but we currently only have one team 
+# defined named "@newrelic/dotnet" that contains more people than 
+# this subset that we want automatically added as reviewers to PRs
+*       @nr-ahemsath @jaffinito @nrcventura @JcolemanNR @chynesNR @tippmar-nr
