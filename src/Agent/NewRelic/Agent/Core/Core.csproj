@@ -13,11 +13,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
-    <DefineConstants>LEGACY_GRPC</DefineConstants>
+    <DefineConstants>TRACE;LEGACY_GRPC</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
-    <DefineConstants>LEGACY_GRPC</DefineConstants>
+    <DefineConstants>TRACE;LEGACY_GRPC</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
