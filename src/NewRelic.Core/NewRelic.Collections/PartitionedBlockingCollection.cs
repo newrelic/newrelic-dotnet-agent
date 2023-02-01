@@ -25,8 +25,7 @@ namespace NewRelic.Collections
             Capacity = capacity;
             var collections = new List<BlockingCollection<T>>();
             var proposedPartitionSize = Convert.ToInt32(Math.Ceiling(Convert.ToSingle(capacity) / partitionCount));
-            var totalTaken = 0;
-
+            
             for (var i = 0; i < partitionCount; i++)
             {
                 var actualPartitionSize = Math.Min(capacity, proposedPartitionSize);
