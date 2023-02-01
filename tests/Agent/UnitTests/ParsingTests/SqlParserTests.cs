@@ -701,7 +701,7 @@ namespace ParsingTests
             var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
             var sqlCommand = new SqlCommand(originalSql, emptyConnection);
 
-            sqlCommand.Parameters.AddWithValue(sqlParameterName, DbType.Boolean); // this is more specific than allowing the class to infer the type.
+            sqlCommand.Parameters.Add(sqlParameterName, SqlDbType.Bit); // this is more specific than allowing the class to infer the type.
             sqlCommand.Parameters[sqlParameterName].Value = sqlParameterValue;
 
             // execute
@@ -723,8 +723,7 @@ namespace ParsingTests
             var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
             var sqlCommand = new SqlCommand(originalSql, emptyConnection);
 
-            sqlCommand.Parameters.AddWithValue(sqlParameterName, DbType.Object); // this is more specific than allowing the class to infer the type.
-            sqlCommand.Parameters[sqlParameterName].Value = sqlParameterValue;
+            sqlCommand.Parameters.AddWithValue(sqlParameterName, sqlParameterValue);
 
             // execute
             var shouldGeneratePlan = SqlParser.FixParameterizedSql(sqlCommand);
@@ -741,7 +740,7 @@ namespace ParsingTests
             var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
             var sqlCommand = new SqlCommand(originalSql, emptyConnection);
 
-            sqlCommand.Parameters.AddWithValue(sqlParameterName, DbType.Binary); // this is more specific than allowing the class to infer the type.
+            sqlCommand.Parameters.Add(sqlParameterName, SqlDbType.Binary); // this is more specific than allowing the class to infer the type.
             sqlCommand.Parameters[sqlParameterName].Value = sqlParameterValue;
 
             // execute
@@ -759,7 +758,7 @@ namespace ParsingTests
             var emptyConnection = new SqlConnection("Server=falsehost;Database=fakedb;User Id=afakeuser;Password=notarealpasword;"); // not used for anything
             var sqlCommand = new SqlCommand(originalSql, emptyConnection);
 
-            sqlCommand.Parameters.AddWithValue(sqlParameterName, SqlDbType.Structured); // translates to DbType.Object but allows more object types
+            sqlCommand.Parameters.Add(sqlParameterName, SqlDbType.Structured); // translates to DbType.Object but allows more object types
             sqlCommand.Parameters[sqlParameterName].Value = sqlParameterValue;
 
             // execute
