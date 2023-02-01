@@ -91,15 +91,9 @@ namespace ArtifactBuilder
             SetRootInstallDirectoryComponents(installRootFiles.ToArray());
 
             WindowsProfiler = null;
-            GRPCExtensionsLibWindows = new string[0];
             if (Platform != "arm64")
             {
                 WindowsProfiler = $@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll";
-                GRPCExtensionsLibWindows = new[]
-                {
-                    $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x64.dll",
-                    $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x86.dll"
-                };
             }
 
             var agentHomeDirFiles = new List<string>()
@@ -115,9 +109,6 @@ namespace ArtifactBuilder
             {
                 agentHomeDirFiles.Add(WindowsProfiler);
             }
-
-            agentHomeDirFiles.AddRange(GRPCExtensionsLibWindows);
-
 
             SetAgentHomeDirComponents(agentHomeDirFiles.ToArray());
 
