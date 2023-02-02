@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Grpc.Core;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NServiceBus.Features;
@@ -25,13 +24,14 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
             _fixture.TestLogger = output;
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(5));
 
-            // set a 75% chance that the trace observer will throw an error
+            // set an 80% chance that the trace observer will throw an error
             _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY", "80");
 
             // set the code to be returned when the trace observer throws an error
             // must be a value from 0 to 16 as per https://github.com/grpc/grpc/blob/master/doc/statuscodes.md
+            // use the StatusCode enum from gRPC 
             _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY_CODE",
-                ((int)StatusCode.Internal).ToString());
+                ((int)Grpc.Core.StatusCode.Internal).ToString());
 
             //_fixture.AddCommand("RootCommands LaunchDebugger");
 
@@ -45,8 +45,6 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
             _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
             _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
             _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
-
-            //_fixture.AddCommand("RootCommands DelaySeconds 70"); // wait a full harvest cycle plus a little bit
 
             _fixture.AddActions
             (
@@ -126,15 +124,6 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
     public class InfiniteTracingFlakyNetCoreLatestTests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public InfiniteTracingFlakyNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class InfiniteTracingFlakyNetCore60Tests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public InfiniteTracingFlakyNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
