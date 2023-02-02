@@ -25,7 +25,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(5));
 
             // set an 80% chance that the trace observer will throw an error
-            _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY", "80");
+            _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY", "90");
 
             // set the code to be returned when the trace observer throws an error
             // must be a value from 0 to 16 as per https://github.com/grpc/grpc/blob/master/doc/statuscodes.md
@@ -63,7 +63,9 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                 {
                     // wait up to 65 seconds for the harvest cycle to complete and emit the supportability metrics we're expecting
                     var startTime = DateTime.Now;
-                    while (DateTime.Now <= startTime.AddSeconds(65) && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name.StartsWith("Supportability/InfiniteTracing/Span/gRPC")))
+                    while (DateTime.Now <= startTime.AddSeconds(65)
+                           && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/gRPC/INTERNAL")
+                           && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/Response/Error"))
                     {
                         Thread.Sleep(TimeSpan.FromSeconds(5));
                     }
