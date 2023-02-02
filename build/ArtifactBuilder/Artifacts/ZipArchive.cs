@@ -65,51 +65,63 @@ namespace ArtifactBuilder.Artifacts
         {
             var unpackDir = Unpack();
 
-            //        var list = RootInstallDirectoryComponents
-            //.Concat(AgentHomeDirComponents)
-            //.Concat(ExtensionDirectoryComponents)
-            //.Concat(WrapperXmlFiles)
-            //.Append(ExtensionXsd)
-            //.Append(AgentApiDll)
-            //.ToList();
+            // framework agent
 
-            //        if (!string.IsNullOrEmpty(LinuxProfiler))
-            //        {
-            //            list.Add(LinuxProfiler);
-            //        }
-
-            //        if (GRPCExtensionsLibLinux != null)
-            //        {
-            //            list.AddRange(GRPCExtensionsLibLinux);
-            //        }
-
-            //        return list;
-
-            var allFrameworkComponents = _frameworkAgentComponents.AllComponents;
-            var allFrameworkComponentsNormalized = new List<string>();
             var frameworkSourceHomeBuilderPath = $@"{_frameworkAgentComponents.HomeRootPath}\newrelichome_{_frameworkAgentComponents.Platform}";
-            foreach (var component in allFrameworkComponents)
+
+            var rootInstallDirComponents = RemoveSourceHomeBuilderPath(_frameworkAgentComponents.RootInstallDirectoryComponents, frameworkSourceHomeBuilderPath);
+            var frameworkAgentHomeDirComponents = RemoveSourceHomeBuilderPath(_frameworkAgentComponents.AgentHomeDirComponents, frameworkSourceHomeBuilderPath);
+            var frameworkExtensionDirComponents = RemoveSourceHomeBuilderPath(_frameworkAgentComponents.ExtensionDirectoryComponents, frameworkSourceHomeBuilderPath);
+            var frameworkWrapperXmlFiles = RemoveSourceHomeBuilderPath(_frameworkAgentComponents.WrapperXmlFiles, frameworkSourceHomeBuilderPath);
+
+            VerifyComponentsExist(rootInstallDirComponents, unpackDir, null);
+            VerifyComponentsExist(frameworkAgentHomeDirComponents, unpackDir, FrameworkSubDirectoryName);
+            VerifyComponentsExist(frameworkExtensionDirComponents, unpackDir, FrameworkSubDirectoryName);
+            VerifyComponentsExist(frameworkWrapperXmlFiles, unpackDir, FrameworkSubDirectoryName);
+
+            // core agent
+
+            var coreSourceHomeBuilderPath = $@"{_coreAgentComponents.HomeRootPath}\newrelichome_{_coreAgentComponents.Platform}_coreclr";
+
+            var rootCoreInstallDirComponents = RemoveSourceHomeBuilderPath(_coreAgentComponents.RootInstallDirectoryComponents, coreSourceHomeBuilderPath);
+            var coreAgentHomeDirComponents = RemoveSourceHomeBuilderPath(_coreAgentComponents.AgentHomeDirComponents, coreSourceHomeBuilderPath);
+            var coreExtensionDirComponents = RemoveSourceHomeBuilderPath(_coreAgentComponents.ExtensionDirectoryComponents, coreSourceHomeBuilderPath);
+            var coreWrapperXmlFiles = RemoveSourceHomeBuilderPath(_coreAgentComponents.WrapperXmlFiles, coreSourceHomeBuilderPath);
+
+            VerifyComponentsExist(rootCoreInstallDirComponents, unpackDir, null);
+            VerifyComponentsExist(coreAgentHomeDirComponents, unpackDir, CoreSubDirectoryName);
+            VerifyComponentsExist(coreExtensionDirComponents, unpackDir, CoreSubDirectoryName);
+            VerifyComponentsExist(coreWrapperXmlFiles, unpackDir, CoreSubDirectoryName);
+
+            // Open questions
+            // 1. Why does the Agent API DLL get placed in the home dir for the core agent, but not the framework agent?
+            // 2. Why do the RootInstallDirectoryComponents differ between framework and core?
+            // 3. How to account for "agentInfo.json" in the home dir (both framework and core)?
+
+            // cleanup
+            FileHelpers.DeleteDirectories(unpackDir);
+        }
+
+        private List<string> RemoveSourceHomeBuilderPath(IReadOnlyCollection<string> components, string sourceHomeBuilderPath)
+        {
+            var returnList = new List<string>();
+            foreach (var component in components)
             {
-                var normalized = component.Remove(0, frameworkSourceHomeBuilderPath.Length);
-                allFrameworkComponentsNormalized.Add(normalized);
+                returnList.Add(component.Remove(0, sourceHomeBuilderPath.Length));
             }
+            return returnList;
+        }
 
-
-
-
-            foreach (var component in allFrameworkComponentsNormalized)
+        private void VerifyComponentsExist(List<string> components, string root, string subdir)
+        {
+            foreach(var component in components)
             {
-                var expectedComponent = Path.Join(unpackDir, component);
-
+                var expectedComponent = Path.Join(root, subdir, component);
                 if (!File.Exists(expectedComponent))
                 {
                     throw new PackagingException($"Expected component {expectedComponent} is missing.");
                 }
             }
-
-
-            // cleanup
-            FileHelpers.DeleteDirectories(unpackDir);
         }
     }
 }
