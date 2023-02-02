@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: 
     - main
-    - '**-feature-branch'
+    - 'feature/**'
   release:
     types: [ published ]
   workflow_dispatch:

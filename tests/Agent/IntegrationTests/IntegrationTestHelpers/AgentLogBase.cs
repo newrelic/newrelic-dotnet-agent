@@ -57,6 +57,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string TransactionEndedByGCFinalizerLogLineRegEx = DebugLogLinePrefixRegex + @"Transaction was garbage collected without ever ending(.*)";
         public const string TransactionHasAlreadyCapturedResponseTimeLogLineRegEx = FinestLogLinePrefixRegex + @"Transaction has already captured the response time(.*)";
 
+        // SetApplicationName related messages
+        public const string SetApplicationnameAPICalledDuringCollectMethodLogLineRegex = WarnLogLinePrefixRegex + "The runtime configuration was updated during connect";
+        public const string AttemptReconnectLogLineRegex = InfoLogLinePrefixRegex + "Will attempt to reconnect in \\d{2,3} seconds";
+
         public abstract IEnumerable<string> GetFileLines();
 
         public string GetAccountId(TimeSpan? timeoutOrZero = null)

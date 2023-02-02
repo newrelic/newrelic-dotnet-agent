@@ -331,5 +331,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             return this;
         }
+
+        public NewRelicConfigModifier SetSendDataOnExit(bool enabled = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "sendDataOnExit", enabled.ToString().ToLower());
+            return this;
+        }
     }
 }
