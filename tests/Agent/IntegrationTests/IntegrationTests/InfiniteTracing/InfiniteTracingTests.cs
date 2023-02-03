@@ -49,7 +49,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                     while (DateTime.Now < waitUntil)
                     {
                         var successCount = 0;
-                        var matches = _fixture.AgentLog.WaitForLogLines(AgentLogBase.SpanStreamingSuccessLogLingRegex, TimeSpan.FromMinutes(2));
+                        var matches = _fixture.AgentLog.WaitForLogLines(AgentLogBase.SpanStreamingSuccessLogLineRegex, TimeSpan.FromMinutes(2));
                         foreach (var match in matches)
                         {
                             if (match.Success && int.TryParse(match.Groups[1].Value, out var matchValue))
