@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -15,7 +16,9 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
     {
         private readonly TFixture _fixture;
 
-        public InfiniteTracingTestsBase(TFixture fixture, ITestOutputHelper output):base(fixture)
+        const int ExpectedSentCount = 2;
+
+        public InfiniteTracingTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
@@ -41,7 +44,25 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
+                    // wait up to 2 minutes for the correct number of "success" messages to appear in the logs
+                    var waitUntil = DateTime.Now.AddMinutes(2);
+                    while (DateTime.Now < waitUntil)
+                    {
+                        var successCount = 0;
+                        var matches = _fixture.AgentLog.WaitForLogLines(AgentLogBase.SpanStreamingSuccessLogLingRegex, TimeSpan.FromMinutes(2));
+                        foreach (var match in matches)
+                        {
+                            if (match.Success && int.TryParse(match.Groups[1].Value, out var matchValue))
+                                successCount += matchValue;
+                        }
+
+                        // kick out of the loop if we found the right number of successes
+                        if (successCount == ExpectedSentCount)
+                            break;
+
+                        // wait a bit before checking again
+                        Thread.Sleep(1000);
+                    }
                 }
 
             );
@@ -54,13 +75,12 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         {
             //1 span count for the Make8TSpan method, another span count for the root span.
             var expectedSeenCount = 2;
-            var expectedSentCount = 2;
             var expectedReceivedCount = 2;
 
             var actualMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", callCount = expectedSeenCount },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", callCount = expectedSentCount },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", callCount = ExpectedSentCount },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Received", callCount = expectedReceivedCount }
             };
 

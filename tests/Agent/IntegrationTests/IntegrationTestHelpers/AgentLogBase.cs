@@ -61,6 +61,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string SetApplicationnameAPICalledDuringCollectMethodLogLineRegex = WarnLogLinePrefixRegex + "The runtime configuration was updated during connect";
         public const string AttemptReconnectLogLineRegex = InfoLogLinePrefixRegex + "Will attempt to reconnect in \\d{2,3} seconds";
 
+        // Infinite trace
+        public const string SpanStreamingSuccessLogLingRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Attempting to send (\d+) item\(s\) - Success";
+
         public abstract IEnumerable<string> GetFileLines();
 
         public string GetAccountId(TimeSpan? timeoutOrZero = null)
