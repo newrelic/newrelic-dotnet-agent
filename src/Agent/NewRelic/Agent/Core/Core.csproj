@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
@@ -113,6 +113,8 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+      <!-- While we don't use Microsoft.Extensions.Logging.Abstractions in core agent code, it is ILRepacked as it is a dependency of grpc-dotnet -->
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Microsoft.Extensions.Logging.Abstractions'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Grpc.Net.Common'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Grpc.Net.Client'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Autofac'" />
@@ -123,7 +125,7 @@
 
     <PropertyGroup>
       <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">14</ILRepackIncludeCount>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">10</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">11</ILRepackIncludeCount>
     </PropertyGroup>
 
     <Error Text="ILRepack of $(AssemblyName) ($(TargetFramework)) failed. A dependency is missing. Expected $(ILRepackIncludeCount) dependencies but found @(ILRepackInclude-&gt;Count())." Condition="@(ILRepackInclude-&gt;Count()) != $(ILRepackIncludeCount)" />
