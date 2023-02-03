@@ -35,7 +35,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
 
             _fixture.AddCommand("InfiniteTracingTester StartAgent");
 
-            _fixture.AddCommand("RootCommands DelaySeconds 5"); // give the agent time to warm up
+            _fixture.AddCommand("RootCommands DelaySeconds 15"); // give the agent time to warm up
 
             _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
             _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
@@ -59,8 +59,8 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                 ,
                 exerciseApplication: () =>
                 {
-                    // wait up to 65 seconds for the harvest cycle to complete and emit the supportability metrics we're expecting
-                    var waitUntil = DateTime.Now.AddSeconds(65);
+                    // wait up to 75 seconds for the harvest cycle to complete and emit the supportability metrics we're expecting
+                    var waitUntil = DateTime.Now.AddSeconds(75);
                     while (DateTime.Now <= waitUntil
                            && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/gRPC/INTERNAL")
                            && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/Response/Error"))
