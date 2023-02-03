@@ -24,16 +24,14 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
             _fixture.TestLogger = output;
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(5));
 
-            // set an 80% chance that the trace observer will throw an error
-            _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY", "90");
+            // Ensure the trace observer will throw an error on every request
+            _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY", "100");
 
             // set the code to be returned when the trace observer throws an error
             // must be a value from 0 to 16 as per https://github.com/grpc/grpc/blob/master/doc/statuscodes.md
             // use the StatusCode enum from gRPC 
             _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY_CODE",
                 ((int)Grpc.Core.StatusCode.Internal).ToString());
-
-            //_fixture.AddCommand("RootCommands LaunchDebugger");
 
             _fixture.AddCommand("InfiniteTracingTester StartAgent");
 
@@ -62,8 +60,8 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                 exerciseApplication: () =>
                 {
                     // wait up to 65 seconds for the harvest cycle to complete and emit the supportability metrics we're expecting
-                    var startTime = DateTime.Now;
-                    while (DateTime.Now <= startTime.AddSeconds(65)
+                    var waitUntil = DateTime.Now.AddSeconds(65);
+                    while (DateTime.Now <= waitUntil
                            && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/gRPC/INTERNAL")
                            && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/Response/Error"))
                     {

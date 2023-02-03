@@ -27,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
 
             _fixture.AddCommand($"InfiniteTracingTester Make8TSpan");
 
-            _fixture.AddCommand("RootCommands DelaySeconds 65"); // wait for a metric harvest cycle to run
+            _fixture.AddCommand("RootCommands DelaySeconds 5"); // brief wait for the infinite trace response to come back
 
             _fixture.AddActions(
                 setupConfiguration: () =>
@@ -41,7 +41,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
                 }
 
             );
