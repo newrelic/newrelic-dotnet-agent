@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
+* Adds a new environment variable to capture the app service name at startup. [#1377] [https://github.com/newrelic/newrelic-dotnet-agent/pull/1377]
 ### Fixes
 
 ## [1.5.4] - 2022-011-29
