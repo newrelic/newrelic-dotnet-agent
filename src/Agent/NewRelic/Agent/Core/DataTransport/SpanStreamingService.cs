@@ -27,10 +27,9 @@ namespace NewRelic.Agent.Core.DataTransport
 
         protected override void HandleServerResponse(RecordStatus responseModel, int consumerId)
         {
-            LogMessage(LogLevel.Finest, consumerId, $"Received gRPC Server response: {responseModel.MessagesSeen}");
+            LogMessage(LogLevel.Finest, consumerId, $"Received gRPC Server response messages: {responseModel.MessagesSeen}");
 
             RecordReceived(responseModel.MessagesSeen);
-
         }
 
         private void RecordReceived(ulong countItems)
@@ -65,5 +64,4 @@ namespace NewRelic.Agent.Core.DataTransport
             return batch;
         }
     }
-
 }
