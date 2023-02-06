@@ -28,14 +28,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         public static void StartAgent()
         {
             NewRelic.Api.Agent.NewRelic.StartAgent();
-            //Get everything started up and time for initial Sample().
-            Thread.Sleep(TimeSpan.FromSeconds(10));
-        }
-
-        [LibraryMethod]
-        public static void Wait()
-        {
-            Thread.Sleep(TimeSpan.FromSeconds(70));
         }
     }
 }
