@@ -17,16 +17,14 @@ using System.Net;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
-
     public class ResponseStreamWrapper<TResponse>
     {
+        private const string NoStatusMessage = "No grpc-status found on response.";
         public readonly int ConsumerID;
-        
         private bool _isInvalid = false;
         public bool IsInvalid => _streamCancellationToken.IsCancellationRequested || _isInvalid || (_task?.IsFaulted).GetValueOrDefault(false);
 
         public RpcException ResponseRpcException = null;
-
 
         private readonly IAsyncStreamReader<TResponse> _responseStream;
         private readonly CancellationToken _streamCancellationToken;
@@ -55,7 +53,15 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 if (Log.IsEnabledFor(logLevel))
                 {
-                    Log.LogMessage(logLevel, $"ResponseStreamWrapper: consumer {ConsumerID} - GRPC RpcException encountered while handling gRPC server responses: {rpcEx.Status}");
+                    if (rpcEx.Status.StatusCode == StatusCode.Cancelled && rpcEx.Status.Detail == NoStatusMessage)
+                    {
+                        Log.LogMessage(logLevel, $"ResponseStreamWrapper: consumer {ConsumerID} - gRPC RpcException encountered marking the response stream as cancelled. This occurs when a stream has been inactive for period of time.  A new stream will be created when needed. {rpcEx.Status}");
+                    }
+                    else
+                    {
+                        Log.LogMessage(logLevel, $"ResponseStreamWrapper: consumer {ConsumerID} - gRPC RpcException encountered while handling gRPC server responses: {rpcEx.Status}");
+                    }
+                    
                 }
             }
             catch (Exception ex)
