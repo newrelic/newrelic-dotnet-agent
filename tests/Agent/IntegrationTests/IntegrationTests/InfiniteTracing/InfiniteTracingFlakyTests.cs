@@ -62,8 +62,8 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                     // wait up to 75 seconds for the harvest cycle to complete and emit the supportability metrics we're expecting
                     var waitUntil = DateTime.Now.AddSeconds(75);
                     while (DateTime.Now <= waitUntil
-                           && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/gRPC/INTERNAL")
-                           && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/Response/Error"))
+                           && !(_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/gRPC/INTERNAL")
+                           && _fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/Response/Error")))
                     {
                         Thread.Sleep(TimeSpan.FromSeconds(5));
                     }
