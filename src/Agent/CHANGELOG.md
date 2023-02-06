@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 * Resolved several static code analysis warnings relating to unused variables and outdated api usage [#1369](https://github.com/newrelic/newrelic-dotnet-agent/pull/1369)
+* Update gRPC log message when a response stream is automatically cancelled due to no messages in a time period [#1376](https://github.com/newrelic/newrelic-dotnet-agent/pull/1376)
 
 ## [10.6.0]
 
