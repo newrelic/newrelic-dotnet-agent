@@ -21,16 +21,15 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         public InfiniteTracingTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"InfiniteTracingTester StartAgent");
 
-            _fixture.AddCommand("RootCommands DelaySeconds 5"); // give the agent time to warm up
+            // Give the agent time to warm up... If we send a span too soon, it will be sent via DT (span_event_data) instead of 8T (gRPC)
+            _fixture.AddCommand("RootCommands DelaySeconds 15"); 
 
             _fixture.AddCommand($"InfiniteTracingTester Make8TSpan");
-
-            _fixture.AddCommand("RootCommands DelaySeconds 5"); // brief wait for the infinite trace response to come back
 
             _fixture.AddActions(
                 setupConfiguration: () =>
@@ -44,25 +43,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                 },
                 exerciseApplication: () =>
                 {
-                    // wait up to 2 minutes for the correct number of "success" messages to appear in the logs
-                    var waitUntil = DateTime.Now.AddMinutes(2);
-                    while (DateTime.Now < waitUntil)
-                    {
-                        var successCount = 0;
-                        var matches = _fixture.AgentLog.WaitForLogLines(AgentLogBase.SpanStreamingSuccessLogLineRegex, TimeSpan.FromMinutes(2));
-                        foreach (var match in matches)
-                        {
-                            if (match.Success && int.TryParse(match.Groups[1].Value, out var matchValue))
-                                successCount += matchValue;
-                        }
-
-                        // kick out of the loop if we found the right number of successes
-                        if (successCount == ExpectedSentCount)
-                            break;
-
-                        // wait a bit before checking again
-                        Thread.Sleep(1000);
-                    }
+                    _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
                 }
 
             );

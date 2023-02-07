@@ -14,6 +14,7 @@ using NewRelic.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -21,6 +22,7 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         private const string NoStatusMessage = "No grpc-status found on response.";
         public readonly int ConsumerID;
+        
         private bool _isInvalid = false;
         public bool IsInvalid => _streamCancellationToken.IsCancellationRequested || _isInvalid || (_task?.IsFaulted).GetValueOrDefault(false);
 
@@ -28,14 +30,17 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private readonly IAsyncStreamReader<TResponse> _responseStream;
         private readonly CancellationToken _streamCancellationToken;
+        private readonly IAgentHealthReporter _healthReporter;
 
         private Task<int> _task;
 
-        public ResponseStreamWrapper(int consumerID, IAsyncStreamReader<TResponse> responseStream, CancellationToken streamCancellationToken)
+        public ResponseStreamWrapper(int consumerID, IAsyncStreamReader<TResponse> responseStream,
+            CancellationToken streamCancellationToken, IAgentHealthReporter agentHealthReporter)
         {
             ConsumerID = consumerID;
             _responseStream = responseStream;
             _streamCancellationToken = streamCancellationToken;
+            _healthReporter = agentHealthReporter;
         }
 
         private async Task<int> WaitForResponse()
@@ -47,10 +52,11 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (RpcException rpcEx)
             {
-                var logLevel = LogLevel.Finest;
-
                 ResponseRpcException = rpcEx;
+                _healthReporter.ReportInfiniteTracingSpanResponseError();
+                _healthReporter.ReportInfiniteTracingSpanGrpcError(EnumNameCache<StatusCode>.GetNameToUpperSnakeCase(rpcEx.StatusCode));
 
+                var logLevel = LogLevel.Finest;
                 if (Log.IsEnabledFor(logLevel))
                 {
                     if (rpcEx.Status.StatusCode == StatusCode.Cancelled && rpcEx.Status.Detail == NoStatusMessage)
@@ -66,8 +72,9 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                var logLevel = LogLevel.Debug;
+                _healthReporter.ReportInfiniteTracingSpanResponseError();
 
+                var logLevel = LogLevel.Debug;
                 if (Log.IsEnabledFor(logLevel))
                 {
                     Log.LogMessage(logLevel, $"ResponseStreamWrapper: consumer {ConsumerID} - Unknown exception encountered while handling gRPC server responses: {ex}");
@@ -394,7 +401,7 @@ namespace NewRelic.Agent.Core.DataTransport
             while (!serviceCancellationToken.IsCancellationRequested)
             {
                 //Remove anything that should not be there
-                foreach(var x in _responseStreamsDic.Values.Where(x=>x.IsInvalid).ToList())
+                foreach (var x in _responseStreamsDic.Values.Where(x => x.IsInvalid).ToList())
                 {
                     LogMessage(LogLevel.Finest, x.ConsumerID, "Response Stream Manager - Removing Stream");
                     _responseStreamsDic.TryRemove(x.ConsumerID, out _);
@@ -410,7 +417,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     .Select(x => x.GetAwaiter())
                     .ToArray();
 
-                if(tasksToWaitFor.Length == 0)
+                if (tasksToWaitFor.Length == 0)
                 {
                     Thread.Sleep(_responseStreamResponseInterval);
                     continue;
@@ -420,14 +427,14 @@ namespace NewRelic.Agent.Core.DataTransport
                 var taskIdx = Task.WaitAny(tasksToWaitFor, _responseStreamResponseInterval);
 
                 //Service is being shutdown
-                if(serviceCancellationToken.IsCancellationRequested)
+                if (serviceCancellationToken.IsCancellationRequested)
                 {
                     LogMessage(LogLevel.Debug, "Response Stream Manager - Shutting Down");
                     break;
                 }
 
                 //None of the tasks completed, no results to process
-                if(taskIdx < 0)
+                if (taskIdx < 0)
                 {
                     continue;
                 }
@@ -436,7 +443,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 if (task.IsFaulted)
                 {
-                    LogMessage(LogLevel.Debug, $"Response Stream Manager - Task {taskIdx} Faulted",task.Exception);
+                    LogMessage(LogLevel.Debug, $"Response Stream Manager - Task {taskIdx} Faulted", task.Exception);
                     continue;
                 }
 
@@ -550,8 +557,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
                 catch (Exception ex)
                 {
-                    LogMessage(LogLevel.Debug, $"Error creating gRPC channel to endpoint {EndpointHost}:{EndpointPort}. (attempt {attemptId})", ex);
                     RecordResponseError();
+                    LogMessage(LogLevel.Debug, $"Error creating gRPC channel to endpoint {EndpointHost}:{EndpointPort}. (attempt {attemptId})", ex);
 
                     var grpcWrapperEx = ex as GrpcWrapperException;
                     if (grpcWrapperEx != null && !string.IsNullOrWhiteSpace(grpcWrapperEx.Status))
@@ -662,8 +669,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
                 catch (Exception ex)
                 {
-                    LogMessage(LogLevel.Debug, consumerId, $"Error creating gRPC request stream. (attempt {attemptId})", ex);
                     RecordResponseError();
+                    LogMessage(LogLevel.Debug, consumerId, $"Error creating gRPC request stream. (attempt {attemptId})", ex);
 
                     var grpcWrapperEx = ex as GrpcWrapperException;
                     if (grpcWrapperEx != null && !string.IsNullOrWhiteSpace(grpcWrapperEx.Status))
@@ -792,12 +799,12 @@ namespace NewRelic.Agent.Core.DataTransport
         private bool DequeueItems(PartitionedBlockingCollection<TRequest> collection, int maxBatchSize, CancellationToken cancellationToken, out IList<TRequest> items)
         {
             items = null;
-            if(!collection.Take(out var firstItem, cancellationToken))
+            if (!collection.Take(out var firstItem, cancellationToken))
             {
                 return false;
             }
 
-            if(cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested)
             {
                 return false;
             }
@@ -805,12 +812,12 @@ namespace NewRelic.Agent.Core.DataTransport
             items = new List<TRequest>();
             items.Add(firstItem);
 
-            for(var i = 0; i < maxBatchSize-1 && !cancellationToken.IsCancellationRequested && collection.TryTake(out var item); i++)
+            for (var i = 0; i < maxBatchSize - 1 && !cancellationToken.IsCancellationRequested && collection.TryTake(out var item); i++)
             {
                 items.Add(item);
             }
 
-            if(cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested)
             {
                 ProcessFailedItems(items, collection);
                 return false;
@@ -847,12 +854,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 _hasAnyStreamStarted = true;
 
-                _responseStreamsDic[consumerId] = new ResponseStreamWrapper<TResponse>(consumerId, responseStream, serviceAndStreamCancellationTokenSource.Token);
+                _responseStreamsDic[consumerId] = new ResponseStreamWrapper<TResponse>(consumerId, responseStream, serviceAndStreamCancellationTokenSource.Token, _agentHealthReporter);
 
                 while (!serviceCancellationToken.IsCancellationRequested && _grpcWrapper.IsConnected)
                 {
 
-                    if(!DequeueItems(collection, BatchSizeConfigValue, serviceCancellationToken, out var items))
+                    if (!DequeueItems(collection, BatchSizeConfigValue, serviceCancellationToken, out var items))
                     {
                         return false;
                     }
@@ -921,8 +928,8 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (GrpcWrapperStreamNotAvailableException streamNotAvailEx)
             {
-                LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Request stream closed.", streamNotAvailEx);
                 RecordResponseError();
+                LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Request stream closed.", streamNotAvailEx);
             }
             catch (GrpcWrapperException grpcEx) when (!string.IsNullOrWhiteSpace(grpcEx.Status))
             {
@@ -957,8 +964,8 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                LogMessage(LogLevel.Debug, consumerId, $"Unknown exception attempting to send {items.Count} item(s)", ex);
                 RecordResponseError();
+                LogMessage(LogLevel.Debug, consumerId, $"Unknown exception attempting to send {items.Count} item(s)", ex);
             }
 
             return TrySendStatus.Error;
