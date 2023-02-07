@@ -20,6 +20,8 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
         private static Func<object, object> _getLoggerProperty;
         private static Func<object, MEL.IExternalScopeProvider> _getScopeProvider;
 
+        private static bool _contextDataNotSupported = false;
+
         public bool IsTransactionRequired => false;
 
         private const string WrapperName = "MicrosoftLogging";
@@ -53,52 +55,64 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
                 Func<object, string> getLevelFunc = mc => ((MethodCall)mc).MethodArguments[0].ToString();
                 Func<object, string> getRenderedMessageFunc = mc => ((MethodCall)mc).MethodArguments[2].ToString();
                 Func<object, Exception> getLogExceptionFunc = mc => ((MethodCall)mc).MethodArguments[3] as Exception; // using "as" since we want a null if missing
-                Func<object, Dictionary<string, object>> getContextDataFunc = nothx => GetContextData(logger);
+                Func<object, Dictionary<string, object>> getContextDataFunc = nothx => GetContextData(logger, agent);
 
                 var xapi = agent.GetExperimentalApi();
                 xapi.RecordLogMessage(WrapperName, methodCall, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, getContextDataFunc, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
             }
         }
 
-        private static Dictionary<string, object> GetContextData(MEL.ILogger logger)
+        private static Dictionary<string, object> GetContextData(MEL.ILogger logger, IAgent agent)
         {
-            // We are trying to access this property:
-            // logger.Loggers[0].Logger.ScopeProvider
+            if (_contextDataNotSupported) // short circuit if we previously got an exception trying to access context data
+                return null;
 
-            // Get the array of Loggers (logger.Loggers[])
-            var getLoggersArrayFunc = _getLoggersArray ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<dynamic>(logger.GetType(), "Loggers");
-            var loggers = getLoggersArrayFunc(logger);
-
-            // Get the first logger in the array (logger.Loggers[0])
-            object firstLogger = loggers.GetValue(0);
-
-            // Get the internal logger (logger.Loggers[0].Logger)
-            var getLoggerPropertyFunc = _getLoggerProperty ??= firstLogger.GetType().GetProperty("Logger").GetValue;
-            object internalLogger = getLoggerPropertyFunc(firstLogger);
-
-            // Get the scope provider from that logger (logger.Loggers[0].Logger.ScopeProvider)
-            var getScopeProviderFunc = _getScopeProvider ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<MEL.IExternalScopeProvider>(internalLogger.GetType(), "ScopeProvider");
-            var scopeProvider = getScopeProviderFunc(internalLogger);
-
-            // Get the context data
-            var harvestedKvps = new Dictionary<string, object>();
-            scopeProvider.ForEachScope((scopeObject, accumulatedKvps) =>
+            try
             {
-                if (scopeObject is IEnumerable<KeyValuePair<string, object>> kvps)
+                // We are trying to access this property:
+                // logger.Loggers[0].Logger.ScopeProvider
+
+                // Get the array of Loggers (logger.Loggers[])
+                var getLoggersArrayFunc = _getLoggersArray ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<dynamic>(logger.GetType(), "Loggers");
+                var loggers = getLoggersArrayFunc(logger);
+
+                // Get the first logger in the array (logger.Loggers[0])
+                object firstLogger = loggers.GetValue(0);
+
+                // Get the internal logger (logger.Loggers[0].Logger)
+                var getLoggerPropertyFunc = _getLoggerProperty ??= firstLogger.GetType().GetProperty("Logger").GetValue;
+                object internalLogger = getLoggerPropertyFunc(firstLogger);
+
+                // Get the scope provider from that logger (logger.Loggers[0].Logger.ScopeProvider)
+                var getScopeProviderFunc = _getScopeProvider ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<MEL.IExternalScopeProvider>(internalLogger.GetType(), "ScopeProvider");
+                var scopeProvider = getScopeProviderFunc(internalLogger);
+
+                // Get the context data
+                var harvestedKvps = new Dictionary<string, object>();
+                scopeProvider.ForEachScope((scopeObject, accumulatedKvps) =>
                 {
-                    foreach (var kvp in kvps)
+                    if (scopeObject is IEnumerable<KeyValuePair<string, object>> kvps)
+                    {
+                        foreach (var kvp in kvps)
+                        {
+                            accumulatedKvps.Add(kvp.Key, kvp.Value);
+                        }
+                    }
+                    else if (scopeObject is KeyValuePair<string, object> kvp)
                     {
                         accumulatedKvps.Add(kvp.Key, kvp.Value);
                     }
-                }
-                else if (scopeObject is KeyValuePair<string, object> kvp)
-                {
-                    accumulatedKvps.Add(kvp.Key, kvp.Value);
-                }
-                // Possibly handle case of IEnumerable<KeyValuePair<object, object>>, etc (not now though)
-            }, harvestedKvps);
+                    // Possibly handle case of IEnumerable<KeyValuePair<object, object>>, etc (not now though)
+                }, harvestedKvps);
 
-            return harvestedKvps;
+                return harvestedKvps;
+            }
+            catch (Exception e)
+            {
+                agent.Logger.Log(Level.Debug, $"Unexpected exception while attempting to get context data. Context data is not supported for this logging framework. Exception: {e}");
+                _contextDataNotSupported = true;
+                return null;
+            }
         }
 
         private AfterWrappedMethodDelegate DecorateLogMessage(MEL.ILogger logger, IAgent agent)

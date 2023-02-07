@@ -9,7 +9,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         Serilog,
         MicrosoftLogging,
         SerilogWeb,
-        NLog
+        NLog,
+        DummyMEL
     }
 
     public class LogUtils
@@ -27,6 +28,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     return "serilog";
                 case LoggingFramework.NLog:
                     return "nlog";
+                case LoggingFramework.DummyMEL:
+                    return "DummyMEL";
                 default:
                     return "unknown";
             }
