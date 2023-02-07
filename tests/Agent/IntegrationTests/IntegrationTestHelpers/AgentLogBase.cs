@@ -64,7 +64,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         // Infinite trace
         public const string SpanStreamingSuccessfullySentLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Attempting to send (\d+) item\(s\) - Success";
         public const string SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Received gRPC Server response: (\d+)";
-
+        public const string SpanStreamingResponseGrpcError = FinestLogLinePrefixRegex + @"ResponseStreamWrapper: consumer \d+ - GRPC RpcException encountered while handling gRPC server responses: (.*)";
+        
         public abstract IEnumerable<string> GetFileLines();
 
         public string GetAccountId(TimeSpan? timeoutOrZero = null)
@@ -104,6 +105,33 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         }
 
         #region Log Lines
+
+        public IEnumerable<Match> WaitForLogLinesCapturedIntCount(string regularExpression, TimeSpan timeout, int minimumCapturedCount)
+        {
+            var deadline = DateTime.Now + timeout;
+            while (DateTime.Now < deadline)
+            {
+                var matches = WaitForLogLines(regularExpression, deadline - DateTime.Now).ToArray();
+                var capturedIntCount = 0;
+                foreach (var match in matches)
+                {
+                    if (match.Success && int.TryParse(match.Groups[1].Value, out var matchValue))
+                    {
+                        capturedIntCount += matchValue;
+                    }
+                }
+
+                if (capturedIntCount >= minimumCapturedCount)
+                {
+                    return matches;
+                }
+
+                Thread.Sleep(100);
+            }
+
+            var message = $"Log line with an int capture group did not reach a minimum of {minimumCapturedCount} times within {timeout.TotalSeconds} seconds.  Expected line expression: {regularExpression}";
+            throw new Exception(message);
+        }
 
         public IEnumerable<Match> WaitForLogLines(string regularExpression, TimeSpan? timeoutOrZero = null)
         {

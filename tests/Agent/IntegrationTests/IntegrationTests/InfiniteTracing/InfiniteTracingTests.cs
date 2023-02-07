@@ -21,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         public InfiniteTracingTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(3));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"InfiniteTracingTester StartAgent");
@@ -43,25 +43,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                 },
                 exerciseApplication: () =>
                 {
-                    // wait up to 2 minutes for the correct number of server response "success" messages
-                    var waitUntil = DateTime.Now.AddMinutes(2);
-                    while (DateTime.Now < waitUntil)
-                    {
-                        var successCount = 0;
-                        var matches = _fixture.AgentLog.WaitForLogLines(AgentLogBase.SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex, TimeSpan.FromMinutes(2));
-                        foreach (var match in matches)
-                        {
-                            if (match.Success && int.TryParse(match.Groups[1].Value, out var matchValue))
-                                successCount += matchValue;
-                        }
-
-                        // kick out of the loop if we found the right number of successes
-                        if (successCount == ExpectedSentCount)
-                            break;
-
-                        // wait a bit before checking again
-                        Thread.Sleep(1000);
-                    }
+                    _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
                 }
 
             );

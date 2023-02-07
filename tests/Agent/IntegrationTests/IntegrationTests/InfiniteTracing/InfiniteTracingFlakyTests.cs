@@ -3,12 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NServiceBus.Features;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
@@ -22,7 +18,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _fixture.SetTimeout(System.TimeSpan.FromMinutes(5));
+            _fixture.SetTimeout(System.TimeSpan.FromMinutes(3));
 
             // Ensure the trace observer will throw an error on every request
             _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY", "100");
@@ -35,7 +31,8 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
 
             _fixture.AddCommand("InfiniteTracingTester StartAgent");
 
-            _fixture.AddCommand("RootCommands DelaySeconds 15"); // give the agent time to warm up
+            // Give the agent time to warm up... If we send a span too soon, it will be sent via DT (span_event_data) instead of 8T (gRPC)
+            _fixture.AddCommand("RootCommands DelaySeconds 15");
 
             _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
             _fixture.AddCommand("InfiniteTracingTester Make8TSpan");
@@ -59,14 +56,8 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                 ,
                 exerciseApplication: () =>
                 {
-                    // wait up to 75 seconds for the harvest cycle to complete and emit the supportability metrics we're expecting
-                    var waitUntil = DateTime.Now.AddSeconds(75);
-                    while (DateTime.Now <= waitUntil
-                           && !(_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/gRPC/INTERNAL")
-                           && _fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/InfiniteTracing/Span/Response/Error")))
-                    {
-                        Thread.Sleep(TimeSpan.FromSeconds(5));
-                    }
+                    _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullySentLogLineRegex, TimeSpan.FromSeconds(45), 12);
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.SpanStreamingResponseGrpcError, TimeSpan.FromSeconds(45));
                 }
             );
 
@@ -78,13 +69,15 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                // can't look for specific counts, as errors will cause the counts to vary
-                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen" },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent" },
+                // Flaky mode accepts data, but errors out on the server responses. These metrics are for upload, not response, so we can expect counts
+                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", CallCountAllHarvests = 12 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", CallCountAllHarvests = 12 },
 
-                // these two, however, should reliably appear
-                new Assertions.ExpectedMetric() { metricName = "Supportability/InfiniteTracing/Span/Response/Error"},
-                new Assertions.ExpectedMetric() { metricName = "Supportability/InfiniteTracing/Span/gRPC/INTERNAL"}
+                // The response error metric is dependant on the number of consumers that claim spans, so we can not check count
+                new Assertions.ExpectedMetric() { metricName = "Supportability/InfiniteTracing/Span/Response/Error" },
+
+                // TODO: This error metric needs to be investigated.. What code path generates this? It seems to vary greatly..
+                new Assertions.ExpectedMetric() { metricName = "Supportability/InfiniteTracing/Span/gRPC/INTERNAL" }
             };
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();
