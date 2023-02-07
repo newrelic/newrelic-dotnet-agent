@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixes
 * Fix a race condition when using SetApplicationName [#1361](https://github.com/newrelic/newrelic-dotnet-agent/pull/1361)
+* Add missing supportability metrics to gRPC response streams and improve Infinite Tracing integration test reliability [https://github.com/newrelic/newrelic-dotnet-agent/pull/1379]
 
 ### Other
 * Resolved several static code analysis warnings relating to unused variables and outdated api usage [#1369](https://github.com/newrelic/newrelic-dotnet-agent/pull/1369)
