@@ -190,6 +190,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 headers.Add(new Metadata.Entry("flaky_code", EndpointTestFlakyCode.ToString()));
             }
 
+            headers.Add("grpc-internal-encoding-request", "gzip");
+
             if (Log.IsFinestEnabled)
             {
                 var parametersString = string.Join(",", headers.Select(x => $"{x.Key}={x.Value}"));

@@ -93,10 +93,16 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 var credentials = ssl ? new SslCredentials() : ChannelCredentials.Insecure;
 #if LEGACY_GRPC
-                var channel = new Channel(host, port, credentials);
+                var channelOptions = new List<ChannelOption>
+                {
+                    new ChannelOption("grpc.default_compression_algorithm", 2 /*gzip*/),
+                    new ChannelOption("grpc.default_compression_level", 1 /*low*/)
+                };
+                var channel = new Channel(host, port, credentials, channelOptions);
 #else
                 var grpcChannelOptions = new GrpcChannelOptions();
                 grpcChannelOptions.Credentials = credentials;
+                grpcChannelOptions.CompressionProviders = new List<Grpc.Net.Compression.ICompressionProvider>() { new GrpcGzipCompressionProvider(System.IO.Compression.CompressionLevel.Fastest) };
 
                 var uriBuilder = new UriBuilder
                 {
