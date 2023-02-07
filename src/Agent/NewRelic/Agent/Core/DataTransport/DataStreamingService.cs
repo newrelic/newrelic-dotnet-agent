@@ -550,8 +550,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
                 catch (Exception ex)
                 {
-                    // TODO: I don't think this is actually a response error...
-                    //RecordResponseError();
+                    RecordResponseError();
                     LogMessage(LogLevel.Debug, $"Error creating gRPC channel to endpoint {EndpointHost}:{EndpointPort}. (attempt {attemptId})", ex);
 
                     var grpcWrapperEx = ex as GrpcWrapperException;
@@ -663,8 +662,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
                 catch (Exception ex)
                 {
-                    // TODO: I don't think this is actually a response error...
-                    //RecordResponseError();
+                    RecordResponseError();
                     LogMessage(LogLevel.Debug, consumerId, $"Error creating gRPC request stream. (attempt {attemptId})", ex);
 
                     var grpcWrapperEx = ex as GrpcWrapperException;
@@ -923,14 +921,12 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (GrpcWrapperStreamNotAvailableException streamNotAvailEx)
             {
-                // TODO: I don't think this is actually a response error...
-                //RecordResponseError();
+                RecordResponseError();
                 LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Request stream closed.", streamNotAvailEx);
             }
             catch (GrpcWrapperException grpcEx) when (!string.IsNullOrWhiteSpace(grpcEx.Status))
             {
-                // TODO: I don't think this is actually a response error...
-                //RecordResponseError();
+                RecordResponseError();
                 RecordGrpcError(grpcEx.Status);
 
                 switch (grpcEx.Status)
@@ -961,8 +957,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                // TODO: I don't think this is actually a response error...
-                //RecordResponseError();
+                RecordResponseError();
                 LogMessage(LogLevel.Debug, consumerId, $"Unknown exception attempting to send {items.Count} item(s)", ex);
             }
 

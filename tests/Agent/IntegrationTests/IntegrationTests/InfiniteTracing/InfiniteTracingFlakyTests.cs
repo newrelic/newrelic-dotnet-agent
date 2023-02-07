@@ -18,7 +18,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _fixture.SetTimeout(System.TimeSpan.FromMinutes(3));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(3));
 
             // Ensure the trace observer will throw an error on every request
             _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY", "100");
@@ -73,10 +73,8 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                 new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", CallCountAllHarvests = 12 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", CallCountAllHarvests = 12 },
 
-                // The response error metric is dependant on the number of consumers that claim spans, so we can not check count
-                new Assertions.ExpectedMetric() { metricName = "Supportability/InfiniteTracing/Span/Response/Error" },
-
-                // TODO: This error metric needs to be investigated.. What code path generates this? It seems to vary greatly..
+                // The response error metrics are dependant on the number of consumers that claim spans, so we can not check count
+                new Assertions.ExpectedMetric() { metricName = "Supportability/InfiniteTracing/Span/Response/Error" },                
                 new Assertions.ExpectedMetric() { metricName = "Supportability/InfiniteTracing/Span/gRPC/INTERNAL" }
             };
 
