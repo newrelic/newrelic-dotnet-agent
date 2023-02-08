@@ -2491,6 +2491,25 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(expectedResult, defaultConfig.InfiniteTracingTraceCountConsumers);
         }
 
+        [TestCase("true", "false", ExpectedResult = true)]
+        [TestCase("false", "true", ExpectedResult = false)]
+        [TestCase(null, "false", ExpectedResult = false)]
+        [TestCase("", "false", ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = true)]
+        public bool InfiniteTracing_Compression(string envConfigVal, bool? localConfigVal)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_COMPRESSION")).Returns(envConfigVal);
+
+            if (localConfigVal.HasValue)
+            {
+                _localConfig.infiniteTracing.compression = localConfigVal.Value;
+            }
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            return defaultConfig.InfiniteTracingCompression;
+        }
+
 
 
         #endregion

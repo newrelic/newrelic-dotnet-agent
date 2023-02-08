@@ -148,6 +148,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Mock.Arrange(() => config.RequestHeadersMap).Returns(() => TestRequestHeadersMap);
             Mock.Arrange(() => config.InfiniteTracingBatchSizeSpans).Returns(1);
             Mock.Arrange(() => config.InfiniteTracingPartitionCountSpans).Returns(62);
+            Mock.Arrange(() => config.InfiniteTracingCompression).Returns(() => TestCompressionSetting);
 
             return config;
         }
@@ -195,6 +196,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         protected float? TestFlakyValue;
         protected int? TestDelayValue;
         protected Dictionary<string, string> TestRequestHeadersMap;
+        protected bool TestCompressionSetting = true;
         protected readonly string _requestObjectTypeName;
 
         private MockGrpcWrapper<TRequestBatch, TResponse> _grpcWrapper;
@@ -290,12 +292,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Assert.AreEqual(expectedIsServiceAvailable, _streamingSvc.IsServiceAvailable, $"If IsServiceEnabled={isServiceEnabled} and IsGrpcChannelConnected={isChannelConnected}, IsServiceAvailable should be {expectedIsServiceAvailable}");
         }
 
-        [TestCase(false, false, false)]
-        [TestCase(true, false, false)]
-        [TestCase(false, true, false)]
-        [TestCase(false, false, true)]
-        [TestCase(true, true, true)]
-        public void ShouldHaveCorrectConnectionMetadata(bool includeFlaky, bool includeDelay, bool includeRequestHeadersMap)
+        [TestCase(false, false, false, false)]
+        [TestCase(true, false, false, false)]
+        [TestCase(false, true, false, false)]
+        [TestCase(false, false, true, false)]
+        [TestCase(false, false, false, true)]
+        [TestCase(true, true, true, true)]
+        public void ShouldHaveCorrectConnectionMetadata(bool includeFlaky, bool includeDelay, bool includeRequestHeadersMap, bool enableCompression)
         {
             var expectedMetadata = new Dictionary<string, string>
             {
@@ -324,6 +327,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 };
                 expectedMetadata["rhm_key1"] = "rhm_value1";
                 expectedMetadata["rhm_key2"] = "Rhm_Value2"; //The key is expected to be lower-cased, but the value should be unmodified
+            }
+
+            TestCompressionSetting = enableCompression;
+            if (enableCompression)
+            {
+                expectedMetadata["grpc-internal-encoding-request"] = "gzip";
             }
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);

@@ -196,6 +196,11 @@ namespace NewRelic.Agent.Core.DataTransport
                 headers.Add(new Metadata.Entry("flaky_code", EndpointTestFlakyCode.ToString()));
             }
 
+            if (CompressionEnabled)
+            {
+                headers.Add("grpc-internal-encoding-request", "gzip");
+            }
+
             if (Log.IsFinestEnabled)
             {
                 var parametersString = string.Join(",", headers.Select(x => $"{x.Key}={x.Value}"));
@@ -216,6 +221,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public int? EndpointTestFlakyCode { get; private set; }
         public int? EndpointTestDelayMs { get; private set; }
         public abstract int BatchSizeConfigValue { get; }
+        public bool CompressionEnabled { get; private set; }
 
         protected abstract string EndpointHostConfigValue { get; }
         protected abstract string EndpointPortConfigValue { get; }
@@ -266,6 +272,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             TimeoutConnectMs = _configuration.InfiniteTracingTraceTimeoutMsConnect;
             TimeoutSendDataMs = _configuration.InfiniteTracingTraceTimeoutMsSendData;
+            CompressionEnabled = _configuration.InfiniteTracingCompression;
 
             var configHost = EndpointHostConfigValue;
             var configPortStr = EndpointPortConfigValue;
@@ -511,6 +518,7 @@ namespace NewRelic.Agent.Core.DataTransport
             LogMessage(LogLevel.Info, $"Configuration Setting - Host - {EndpointHost}");
             LogMessage(LogLevel.Info, $"Configuration Setting - Port - {EndpointPort}");
             LogMessage(LogLevel.Finest, $"Configuration Setting - SSL - {EndpointSsl}");
+            LogMessage(LogLevel.Info, $"Configuration Setting - Compression - {CompressionEnabled}");
             LogMessage(LogLevel.Info, $"Configuration Setting - Consumers - {_configuration.InfiniteTracingTraceCountConsumers}");
             LogMessage(LogLevel.Finest, $"Configuration Setting - Test Flaky - {EndpointTestFlaky?.ToString() ?? "NULL"}");
             LogMessage(LogLevel.Finest, $"Configuration Setting - Test Flaky Code - {EndpointTestFlakyCode?.ToString() ?? "NULL"}");
