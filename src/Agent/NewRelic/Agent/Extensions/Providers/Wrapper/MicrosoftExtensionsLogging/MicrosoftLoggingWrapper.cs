@@ -65,7 +65,9 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
         private static Dictionary<string, object> GetContextData(MEL.ILogger logger, IAgent agent)
         {
             if (_contextDataNotSupported) // short circuit if we previously got an exception trying to access context data
+            {
                 return null;
+            }
 
             try
             {
@@ -109,7 +111,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
             }
             catch (Exception e)
             {
-                agent.Logger.Log(Level.Debug, $"Unexpected exception while attempting to get context data. Context data is not supported for this logging framework. Exception: {e}");
+                agent.Logger.Log(Level.Warn, $"Unexpected exception while attempting to get context data. Context data is not supported for this logging framework. Exception: {e}");
                 _contextDataNotSupported = true;
                 return null;
             }

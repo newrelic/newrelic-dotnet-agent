@@ -17,7 +17,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     {
         private readonly TFixture _fixture;
         private LoggingFramework _loggingFramework;
-        private bool _contextDataEnabled;
 
         private const string InfoMessage = "HelloWorld";
 
@@ -32,11 +31,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         };
 
 
-        public ContextDataNotSupportedTestsBase(TFixture fixture, ITestOutputHelper output, bool contextDataEnabled, LoggingFramework loggingFramework) : base(fixture)
+        public ContextDataNotSupportedTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework) : base(fixture)
         {
             _fixture = fixture;
             _loggingFramework = loggingFramework;
-            _contextDataEnabled = contextDataEnabled;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
@@ -57,10 +55,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
 
                     configModifier
-                    .EnableLogMetrics(true)
-                    .EnableLogForwarding(true)
-                    .EnableContextData(_contextDataEnabled)
-                    .EnableDistributedTrace()
+                    .EnableContextData()
                     .SetLogLevel("finest");
                 },
                 exerciseApplication: () =>
@@ -75,8 +70,22 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         [Fact]
         public void Test()
         {
+            // verify the "not supported" warning was logged
             var match = _fixture.AgentLog.TryGetLogLines(AgentLogBase.ContextDataNotSupportedLogLineRegex);
             Assert.Single(match);
+
+            // verify the log data was forwarded, but *without* the attributes
+            var expectedLogLines = new[]
+            {
+                new Assertions.ExpectedLogLine
+                {
+                    Level = LogUtils.GetLevelName(_loggingFramework, "INFO"),
+                    LogMessage = InfoMessage
+                }
+            };
+
+            var logLines = _fixture.AgentLog.GetLogEventDataLogLines().ToArray();
+            Assertions.LogLinesExist(expectedLogLines, logLines, ignoreAttributeCount: true);
         }
     }
 
@@ -84,7 +93,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class ContextDataNotSupportedFWLatestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ContextDataNotSupportedFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, LoggingFramework.DummyMEL)
+            : base(fixture, output, LoggingFramework.DummyMEL)
         {
         }
     }
@@ -93,7 +102,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class ContextDataNotSupportedNetCoreLatestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ContextDataNotSupportedNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, LoggingFramework.DummyMEL)
+            : base(fixture, output, LoggingFramework.DummyMEL)
         {
         }
     }
@@ -102,7 +111,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class ContextDataNotSupportedNetCore60Tests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCore60>
     {
         public ContextDataNotSupportedNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, LoggingFramework.DummyMEL)
+            : base(fixture, output, LoggingFramework.DummyMEL)
         {
         }
     }
@@ -111,7 +120,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class ContextDataNotSupportedNetCore50Tests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCore50>
     {
         public ContextDataNotSupportedNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, LoggingFramework.DummyMEL)
+            : base(fixture, output, LoggingFramework.DummyMEL)
         {
         }
     }
@@ -120,7 +129,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     public class ContextDataNotSupportedNetCore31Tests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCore31>
     {
         public ContextDataNotSupportedNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, LoggingFramework.DummyMEL)
+            : base(fixture, output, LoggingFramework.DummyMEL)
         {
         }
     }

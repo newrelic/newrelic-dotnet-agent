@@ -49,6 +49,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                             return level;
                     }
                 case LoggingFramework.MicrosoftLogging:
+                case LoggingFramework.DummyMEL:
                     switch (level)
                     {
                         case "DEBUG":
