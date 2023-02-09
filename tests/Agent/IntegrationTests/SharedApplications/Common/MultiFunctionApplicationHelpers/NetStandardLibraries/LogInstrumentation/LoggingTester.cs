@@ -36,6 +36,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     _log = new MicrosoftLoggingLoggingAdapter();
 #endif
                     break;
+                case "DUMMYMEL":
+#if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
+                    _log = new DummyMELAdapter();
+#endif
+                    break;
                 case "NLOG":
                     _log = new NLogLoggingAdapter();
                     break;
