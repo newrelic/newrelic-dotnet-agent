@@ -4,10 +4,8 @@
 using System;
 using Grpc.Core;
 using System.Threading;
-using System.Collections.Generic;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
-using System.Threading.Tasks;
 
 #if LEGACY_GRPC
 using GrpcChannel = Grpc.Core.Channel;

@@ -953,13 +953,16 @@ namespace NewRelic.Agent.Core.DataTransport
                     case UnavailableStatus:
                         LogMessage(LogLevel.Info, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart");
                         Shutdown(true);
+                        // TODO: If this was a TCP error, return a connection error status
                         return TrySendStatus.Error;
                     case FailedPreconditionStatus:
                         LogMessage(LogLevel.Debug, consumerId, $"Attempting to send {items.Count} item(s) - Channel has been moved, requesting restart");
                         Shutdown(true);
                         return TrySendStatus.Error;
                     case InternalStatus:
+                        // TODO: This is not neccesarily a stream being reset due to inactivity... this error case is triggered when SSL negotiation fails
                         LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - A stream was reset due to inactivity. New stream requested and data will be resent immediately.");
+                        // TODO: If this was a TCP error, return a connection error status
                         return TrySendStatus.ErrorWithImmediateRetry;
                     case OkStatus:
                         LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - A stream was closed due to connection rebalance. New stream requested and data will be resent immediately.");
