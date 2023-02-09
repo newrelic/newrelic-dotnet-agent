@@ -507,6 +507,11 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
         }
 
+        private void ReportInfiniteTracingOneTimeMetrics()
+        {
+            ReportSupportabilityCountMetric(MetricNames.SupportabilityInfiniteTracingCompression(_configuration.InfiniteTracingCompression));
+        }
+
         #endregion
 
         public void ReportAgentTimingMetric(string suffix, TimeSpan time)
@@ -622,6 +627,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             ReportLogForwardingConfiguredValues();
             ReportIfAppDomainCachingDisabled();
+            ReportInfiniteTracingOneTimeMetrics();
         }
 
         public void CollectMetrics()

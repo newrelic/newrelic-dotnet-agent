@@ -320,5 +320,13 @@ namespace NewRelic.Agent.Core.Metrics
         {
             return MetricNames.SupportabilityInfiniteTracingSpanGrpcError(EnumNameCache<StatusCode>.GetNameToUpperSnakeCase(statusCode));
         }
+
+        // The supportability prefix is added automatically by the call to GetSupportabilityName
+        [TestCase(true, ExpectedResult = "InfiniteTracing/Compression/enabled")]
+        [TestCase(false, ExpectedResult = "InfiniteTracing/Compression/disabled")]
+        public string MetricNamesTest_SupportabilityInfiniteTracingCompression(bool compressionEnabled)
+        {
+            return MetricNames.SupportabilityInfiniteTracingCompression(compressionEnabled);
+        }
     }
 }
