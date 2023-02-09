@@ -51,6 +51,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             Mock.Arrange(() => configuration.LogEventCollectorEnabled).Returns(true);
             Mock.Arrange(() => configuration.LogDecoratorEnabled).Returns(true);
             Mock.Arrange(() => configuration.LogMetricsCollectorEnabled).Returns(true);
+            Mock.Arrange(() => configuration.InfiniteTracingCompression).Returns(true);
             return configuration;
         }
 
@@ -174,6 +175,23 @@ namespace NewRelic.Agent.Core.AgentHealth
             var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
 
             CollectionAssert.IsSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
+        }
+
+        [Test]
+        public void ReportsInfiniteTracingOneTimeMetricsOnlyOnce()
+        {
+            var expectedOneTimeMetrics = new Dictionary<string, long>
+            {
+                { "Supportability/InfiniteTracing/Compression/enabled", 1 }
+            };
+
+            _agentHealthReporter.CollectMetrics();
+            var firstCollectionMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+            CollectionAssert.IsSubsetOf(expectedOneTimeMetrics, firstCollectionMetricNamesAndValues);
+
+            _agentHealthReporter.CollectMetrics();
+            var secondCollectionMetricNames = _publishedMetrics.Select(x => x.MetricName);
+            CollectionAssert.IsNotSubsetOf(expectedOneTimeMetrics.Keys, secondCollectionMetricNames);
         }
 
         [Test]
