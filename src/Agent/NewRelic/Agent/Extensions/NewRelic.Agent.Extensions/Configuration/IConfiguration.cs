@@ -80,6 +80,7 @@ namespace NewRelic.Agent.Configuration
         int InfiniteTracingTraceTimeoutMsConnect { get; }
         int InfiniteTracingTraceTimeoutMsSendData { get; }
         int InfiniteTracingExitTimeoutMs { get; }
+        bool InfiniteTracingCompression { get; }
         string PrimaryApplicationId { get; }
         string TrustedAccountKey { get; }
         string AccountId { get; }

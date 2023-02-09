@@ -150,6 +150,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public int InfiniteTracingExitTimeoutMs => 1234;
 
+        public bool InfiniteTracingCompression => true;
+
         public string PrimaryApplicationId => "PrimaryApplicationId";
 
         public string TrustedAccountKey => "TrustedAccountKey";
