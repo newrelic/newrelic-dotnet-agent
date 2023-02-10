@@ -6,6 +6,7 @@ using Grpc.Core;
 using System.Threading;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
+using System.Collections.Generic;
 
 #if LEGACY_GRPC
 using GrpcChannel = Grpc.Core.Channel;
@@ -103,13 +104,13 @@ namespace NewRelic.Agent.Core.DataTransport
                     Port = port
                 };
 
-
                 grpcChannelOptions.HttpHandler = new HttpClientHandler();
                 grpcChannelOptions.DisposeHttpClient = true;
 
                 var channel = GrpcChannel.ForAddress(uriBuilder.Uri, grpcChannelOptions);
 #endif
 
+                // **IMPORTANT** This call will always return true for grpc-dotnet since there is no way to test connections without sending data
                 if (TestChannel(channel, headers, connectTimeoutMs, cancellationToken))
                 {
                     _channel = channel;
