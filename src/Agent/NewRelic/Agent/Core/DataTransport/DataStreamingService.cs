@@ -394,7 +394,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             if (!string.IsNullOrWhiteSpace(grpcProxyValue) && string.IsNullOrWhiteSpace(httpsProxyValue))
             {
-                LogMessage(LogLevel.Warn, "The 'grpc_proxy' environment variable is deprecated/no longer supported. Please use 'https_proxy' instead.");
+                LogMessage(LogLevel.Warn, "The 'grpc_proxy' environment variable is deprecated. Please use 'https_proxy' instead.");
             }
         }
 
