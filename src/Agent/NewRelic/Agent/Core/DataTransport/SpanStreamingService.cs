@@ -7,13 +7,14 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
+using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
     public class SpanStreamingService : DataStreamingService<Span, SpanBatch, RecordStatus>
     {
-        public SpanStreamingService(IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
-            : base(grpcWrapper, delayer, configSvc, agentHealthReporter, agentTimerService)
+        public SpanStreamingService(IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService, IEnvironment environment)
+            : base(grpcWrapper, delayer, configSvc, agentHealthReporter, agentTimerService, environment)
         {
         }
 

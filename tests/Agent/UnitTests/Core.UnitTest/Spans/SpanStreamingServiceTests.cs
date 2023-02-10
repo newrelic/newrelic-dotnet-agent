@@ -155,7 +155,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         protected override SpanStreamingService GetService(IDelayer delayer, IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter)
         {
-            return new SpanStreamingService(grpcWrapper, delayer, configSvc, agentHealthReporter, _agentTimerService);
+            return new SpanStreamingService(grpcWrapper, delayer, configSvc, agentHealthReporter, _agentTimerService, _environment);
         }
 
         protected override Span GetRequestModel()
@@ -206,6 +206,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         private TService _streamingSvc;
         protected IAgentHealthReporter _agentHealthReporter;
         protected IAgentTimerService _agentTimerService;
+        protected IEnvironment _environment;
 
         private StatusCode[] _grpcErrorStatusCodes;
 
@@ -239,6 +240,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _agentTimerService = Mock.Create<IAgentTimerService>();
             _configSvc = Mock.Create<IConfigurationService>();
+            _environment = Mock.Create<IEnvironment>();
 
             var defaultConfig = GetDefaultConfiguration();
             Mock.Arrange(() => _configSvc.Configuration).Returns(defaultConfig);
@@ -370,6 +372,58 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
                 () => CollectionAssert.AreEquivalent(expectedMetadata, actualConnectionMetadata, "connection metadata did not match")
             );
+        }
+
+        [TestCase(null, null, false)]
+        [TestCase(null, "", false)]
+        [TestCase(null, "something", false)]
+        [TestCase("", null, false)]
+        [TestCase("", "", false)]
+        [TestCase("", "something", false)]
+        [TestCase("something", null, true)]
+        [TestCase("something", "", true)]
+        [TestCase("something", "something", false)]
+        public void ShouldLogProxyWarningIfOnlyTheLegacyProxyIsDetected(string grpcProxyValue, string httpsProxyValue, bool expectWarningInLogs)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("grpc_proxy")).Returns(grpcProxyValue);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("https_proxy")).Returns(httpsProxyValue);
+
+            using (var logger = new TestUtilities.Logging())
+            {
+                _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
+
+                Dictionary<string, string> actualConnectionMetadata = new Dictionary<string, string>();
+                _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, headers, token) =>
+                {
+                    //Throw the unimplemented exception so that the service will shutdown
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unimplemented, "Test gRPC Exception");
+                    return false;
+                };
+
+                var countShutdowns = 0;
+                var signalIsDone = new ManualResetEventSlim();
+                // When starting the channel, a shutdown is initiated to reset everything
+                // Ignore this in our determination of svc.stop
+                _grpcWrapper.WithShutdownImpl = () =>
+                {
+                    countShutdowns++;
+
+                    if (countShutdowns > 1)
+                    {
+                        signalIsDone.Set();
+                    }
+                };
+
+                var sourceCollection = new PartitionedBlockingCollection<TRequest>(10, 3);
+
+                _streamingSvc.StartConsumingCollection(sourceCollection);
+
+                NrAssert.Multiple
+                (
+                    () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
+                    () => Assert.AreEqual(expectWarningInLogs, logger.HasMessageThatContains("'grpc_proxy'"))
+                );
+            }
         }
 
         private const int _expectedDelayAfterErrorSendingASpan = 15000;
