@@ -961,7 +961,7 @@ namespace NewRelic.Agent.Core.DataTransport
                         Shutdown(true);
                         return TrySendStatus.Error;
                     case UnavailableStatus:
-                        // **Important** this can be a TCP or GRPC layer error, but we don't currently have a way to tell the difference but this restarts everything anyways so it's not so important
+                        // **Important** this can be a TCP or GRPC layer error, but we don't currently have a way to tell the difference. This restarts everything anyways so it's not so important
                         LogMessage(LogLevel.Info, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart", (Exception)rpcEx ?? grpcEx);
                         Shutdown(true);
                         return TrySendStatus.Error;
