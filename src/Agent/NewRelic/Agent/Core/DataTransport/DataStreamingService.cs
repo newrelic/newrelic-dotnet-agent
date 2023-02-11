@@ -678,7 +678,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
                 catch (Exception ex)
                 {
-                    // **IMPORTANT** None of this error handling logic is hit for grpc-dotnet since the we fake out creating/testing streams
+                    // **IMPORTANT** None of this error handling logic is hit for grpc-dotnet since we fake out creating/testing streams
                     RecordResponseError();
                     LogMessage(LogLevel.Debug, consumerId, $"Error creating gRPC request stream. (attempt {attemptId})", ex);
 
