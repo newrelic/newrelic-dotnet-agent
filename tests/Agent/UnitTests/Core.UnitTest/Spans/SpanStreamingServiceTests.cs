@@ -1573,9 +1573,85 @@ namespace NewRelic.Agent.Core.Spans.Tests
             );
         }
 
-        [TestCase(StatusCode.OK)]
         [TestCase(StatusCode.Internal)]
-        public void GrpcOkOrInternalDuringTrySendDataCreatesNewStreamImmediately(StatusCode statusCode)
+        public void GrpcInternalDuringTrySendDataCreatesNewStreamDelayed(StatusCode statusCode)
+        {
+            var actualCountGrpcErrors = 0;
+            var actualCountGeneralErrors = 0;
+            var actualCountSpansSent = 0L;
+
+            var expectedCountGrpcErrors = 3;
+            var expectedCountGeneralErrors = 3;
+            var expectedCountSpansSent = 1;
+
+            var signalIsDone = new ManualResetEventSlim();
+
+            var actualDelays = new List<int>();
+
+            Mock.Arrange(() => _delayer.Delay(Arg.IsAny<int>(), Arg.IsAny<CancellationToken>()))
+                .DoInstead<int, CancellationToken>((delay, token) =>
+                {
+                    actualDelays.Add(delay);
+                });
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanGrpcError(Arg.IsAny<string>()))
+                .DoInstead<string>((sc) =>
+                {
+                    actualCountGrpcErrors++;
+                });
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanResponseError())
+                .DoInstead(() =>
+                {
+                    actualCountGeneralErrors++;
+                });
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent(Arg.IsAny<long>()))
+                            .DoInstead<long>((cnt) =>
+                            {
+                                actualCountSpansSent += cnt;
+                                signalIsDone.Set();
+                            });
+
+
+            var invocationId = 0;
+            _grpcWrapper.WithTrySendDataImpl = (stream, item, timeoutMs, token) =>
+            {
+                var localInvocationId = Interlocked.Increment(ref invocationId);
+
+                if (localInvocationId < 2 || localInvocationId == 3)
+                {
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unknown, "Test gRPC Exception");
+                    return false;
+                }
+
+                if (localInvocationId == 2)
+                {
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(statusCode, "Test gRPC Exception");
+                    return false;
+                }
+
+                return true;
+            };
+
+            var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
+            queue.TryAdd(GetRequestModel());
+
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
+            _streamingSvc.StartConsumingCollection(queue);
+
+            NrAssert.Multiple
+            (
+                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
+                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
+                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
+                () => Assert.AreEqual(expectedCountSpansSent, actualCountSpansSent, "Span Sent Events"),
+                () => CollectionAssert.AreEqual(new[] { _expectedDelayAfterErrorSendingASpan, _expectedDelayAfterErrorSendingASpan, _expectedDelayAfterErrorSendingASpan }, actualDelays, "The expected delay sequence did not match")
+            );
+        }
+
+        [TestCase(StatusCode.OK)]
+        public void GrpcOkDuringTrySendDataCreatesNewStreamImmediately(StatusCode statusCode)
         {
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;

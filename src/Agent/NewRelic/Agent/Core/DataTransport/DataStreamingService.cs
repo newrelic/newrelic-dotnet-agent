@@ -946,30 +946,29 @@ namespace NewRelic.Agent.Core.DataTransport
                 // **IMPORTANT** Grpc.Core error handling has two other layers of exception handling to catch connectivity errors, but Grpc.Net experiences connection errors in this handler
                 RecordResponseError();
                 RecordGrpcError(grpcEx.Status);
-
+                var rpcEx = grpcEx.InnerException as RpcException;
                 switch (grpcEx.Status)
                 {
                     case OkStatus:
                         LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - A stream was closed due to connection rebalance. New stream requested and data will be resent immediately.");
                         return TrySendStatus.ErrorWithImmediateRetry;
                     case UnimplementedStatus:
-                        LogMessage(LogLevel.Error, consumerId, $"Attempting to send {items.Count} item(s) - Trace observer is no longer available, shutting down infinite tracing service.");
+                        LogMessage(LogLevel.Error, consumerId, $"Attempting to send {items.Count} item(s) - Trace observer is no longer available, shutting down infinite tracing service.", (Exception)rpcEx ?? grpcEx);
                         Shutdown(false);
                         return TrySendStatus.Error;
                     case FailedPreconditionStatus:
-                        LogMessage(LogLevel.Debug, consumerId, $"Attempting to send {items.Count} item(s) - Channel has been moved, requesting restart");
+                        LogMessage(LogLevel.Debug, consumerId, $"Attempting to send {items.Count} item(s) - Channel has been moved, requesting restart", (Exception)rpcEx ?? grpcEx);
                         Shutdown(true);
                         return TrySendStatus.Error;
                     case UnavailableStatus:
                         // **Imporant** this can be a TCP or GRPC layer error, but we don't currently have a way to tell the difference but this restarts everything anyways so it's not so important
-                        LogMessage(LogLevel.Info, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart");
+                        LogMessage(LogLevel.Info, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart", (Exception)rpcEx ?? grpcEx);
                         Shutdown(true);
                         return TrySendStatus.Error;
                     case InternalStatus:
                         // **Imporant** this can be a TCP or GRPC layer error, but we don't currently have a way to tell the difference so fall through to generic error handling
                     default:
-                        var rpcEx = grpcEx.InnerException as RpcException;
-                        LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s)", (Exception) rpcEx ?? grpcEx);
+                        LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s)", (Exception)rpcEx ?? grpcEx);
                         break;
                 }
             }
