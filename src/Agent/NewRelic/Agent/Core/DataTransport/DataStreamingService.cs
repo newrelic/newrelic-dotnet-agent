@@ -15,6 +15,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -133,6 +134,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private readonly IDelayer _delayer;
         protected readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IAgentTimerService _agentTimerService;
+        private readonly IEnvironment _environment;
 
         private readonly IConfigurationService _configSvc;
         protected IConfiguration _configuration => _configSvc?.Configuration;
@@ -256,12 +258,13 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private PartitionedBlockingCollection<TRequest> _collection;
 
-        protected DataStreamingService(IGrpcWrapper<TRequestBatch, TResponse> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
+        protected DataStreamingService(IGrpcWrapper<TRequestBatch, TResponse> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService, IEnvironment environment)
         {
             _grpcWrapper = grpcWrapper;
             _delayer = delayer;
             _configSvc = configSvc;
             _agentTimerService = agentTimerService;
+            _environment = environment;
 
             _cancellationTokenSource = new CancellationTokenSource();
             _agentHealthReporter = agentHealthReporter;
@@ -325,6 +328,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 EndpointTestFlakyCode = EndpointTestFlakyCodeConfigValue;
                 EndpointTestDelayMs = EndpointTestDelayMsConfigValue;
 
+                CheckForLegacyProxyAndDisplayWarning();
+
                 return true;
             }
 
@@ -380,6 +385,17 @@ namespace NewRelic.Agent.Core.DataTransport
             }
 
             return false;
+        }
+
+        private void CheckForLegacyProxyAndDisplayWarning()
+        {
+            var grpcProxyValue = _environment.GetEnvironmentVariable("grpc_proxy");
+            var httpsProxyValue = _environment.GetEnvironmentVariable("https_proxy");
+
+            if (!string.IsNullOrWhiteSpace(grpcProxyValue) && string.IsNullOrWhiteSpace(httpsProxyValue))
+            {
+                LogMessage(LogLevel.Warn, "The 'grpc_proxy' environment variable is deprecated. Please use 'https_proxy' instead.");
+            }
         }
 
         private void Restart(PartitionedBlockingCollection<TRequest> collection)
