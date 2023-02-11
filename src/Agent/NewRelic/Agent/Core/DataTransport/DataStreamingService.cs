@@ -966,7 +966,7 @@ namespace NewRelic.Agent.Core.DataTransport
                         Shutdown(true);
                         return TrySendStatus.Error;
                     case InternalStatus:
-                        // **Imporant** this can be a TCP or GRPC layer error, but we don't currently have a way to tell the difference so fall through to generic error handling
+                        // **Important** this can be a TCP or GRPC layer error, but we don't currently have a way to tell the difference so fall through to generic error handling
                     default:
                         LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s)", (Exception)rpcEx ?? grpcEx);
                         break;
