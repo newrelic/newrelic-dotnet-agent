@@ -189,7 +189,7 @@ namespace NewRelic.Agent.Core
 
         private void LogTlsConfiguration()
         {
-            Log.Info($"TLS Configuration (System.Net.ServicePointManager.SecurityProtocol): {System.Net.ServicePointManager.SecurityProtocol}");
+            Log.Info($"TLS Configuration (System.Net.ServicePointManager.SecurityProtocol): {System.Net.ServicePointManager.SecurityProtocol.ToFriendlyString()}");
         }
 
         private void LogInitialized()
