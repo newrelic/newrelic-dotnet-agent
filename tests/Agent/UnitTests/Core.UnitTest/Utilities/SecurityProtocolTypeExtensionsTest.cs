@@ -13,6 +13,7 @@ namespace NewRelic.Agent.Core.Utils
     public class SecurityProtocolTypeExtensionsTest
     {
         [TestCase(0x0, ExpectedResult = "Using System Default Settings")] // because .SystemDefault enum value doesn't exist for some platforms
+        [TestCase(0x000C, ExpectedResult = "SSL 2")] // because .Ssl2 enum value doesn't exist for some platforms
         [TestCase(SecurityProtocolType.Ssl3, ExpectedResult = "SSL 3")]
         [TestCase(SecurityProtocolType.Tls, ExpectedResult = "TLS 1.0")]
         [TestCase(SecurityProtocolType.Tls11, ExpectedResult = "TLS 1.1")]
