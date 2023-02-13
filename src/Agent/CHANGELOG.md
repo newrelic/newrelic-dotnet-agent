@@ -8,12 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### New Features
 * Postgres client instrumentation support has been extended to include the following versions: 4.0.x, 4.1.x, 5.0.x, 6.0.x and 7.0.x [#1363](https://github.com/newrelic/newrelic-dotnet-agent/pull/1363)
-* Enables gzip compression by default for infinite tracing [#1383](https://github.com/newrelic/newrelic-dotnet-agent/pull/1383)
+* Enables gzip compression by default for Infinite Tracing [#1383](https://github.com/newrelic/newrelic-dotnet-agent/pull/1383)
 
 ### Fixes
 * Fix a race condition when using SetApplicationName [#1361](https://github.com/newrelic/newrelic-dotnet-agent/pull/1361)
 * Resolves [#1374](https://github.com/newrelic/newrelic-dotnet-agent/issues/1374) related to enabling Context Data for some loggers [#1381](https://github.com/newrelic/newrelic-dotnet-agent/pull/1381)
 * Add missing supportability metrics to gRPC response streams and improve Infinite Tracing integration test reliability [#1379](https://github.com/newrelic/newrelic-dotnet-agent/pull/1379)
+
+### Deprecations
+* Infinite Tracing for .NET Framework applications will be deprecated in May 2023. The Infinite Tracing feature depends on the gRPC framework to send streaming data to New Relic. The gRPC library currently in use, [gRPC Core](https://github.com/grpc/grpc/tree/master/src/csharp), has been in the maintenance-only phase since May 2021, and will be deprecated as of May 2023.  The .NET Agent on .NET Core has been migrated to [gRPC for .NET](https://github.com/grpc/grpc-dotnet) per the guidance from grpc.io. However, this library does not have the full functionality that is required for Infinite Tracing on .NET Framework applications.  Those applications will continue to use [gRPC Core](https://github.com/grpc/grpc/tree/master/src/csharp) until May 2023, at which time we will end support for Infinite Tracing for .NET Framework. We may revisit this decision in the future if the situation changes. [#1367](https://github.com/newrelic/newrelic-dotnet-agent/pull/1367)
 
 ### Other
 * Resolved several static code analysis warnings relating to unused variables and outdated api usage [#1369](https://github.com/newrelic/newrelic-dotnet-agent/pull/1369)
