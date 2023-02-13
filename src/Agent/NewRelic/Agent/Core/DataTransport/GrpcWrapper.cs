@@ -149,11 +149,9 @@ namespace NewRelic.Agent.Core.DataTransport
                     }
                 }
 #else
-                var client = new IngestService.IngestServiceClient(channel);
-                using (client.RecordSpan(headers: headers, cancellationToken: cancellationToken, deadline: DateTime.UtcNow.AddMilliseconds(connectTimeoutMs)))
-                {
-                    return true;
-                }
+                // In grpc-dotnet the only way to validate a connection is to send data over it. We don't want to do that, so assume
+                // the connection is valid for now
+                return true;
 #endif
             }
             catch (Exception) { }
