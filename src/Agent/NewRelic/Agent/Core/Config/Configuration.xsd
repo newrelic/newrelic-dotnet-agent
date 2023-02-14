@@ -1112,6 +1112,13 @@
                                 </xs:complexType>
                             </xs:element>
                         </xs:all>
+                        <xs:attribute name="compression" type="xs:boolean" default="true">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    Set this to false to disable compression of data being transmitted to the trace observer. Compression is enabled by default.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
                     </xs:complexType>
                 </xs:element>
 

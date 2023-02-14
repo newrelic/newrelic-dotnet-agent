@@ -148,13 +148,14 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Mock.Arrange(() => config.RequestHeadersMap).Returns(() => TestRequestHeadersMap);
             Mock.Arrange(() => config.InfiniteTracingBatchSizeSpans).Returns(1);
             Mock.Arrange(() => config.InfiniteTracingPartitionCountSpans).Returns(62);
+            Mock.Arrange(() => config.InfiniteTracingCompression).Returns(() => TestCompressionSetting);
 
             return config;
         }
 
         protected override SpanStreamingService GetService(IDelayer delayer, IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter)
         {
-            return new SpanStreamingService(grpcWrapper, delayer, configSvc, agentHealthReporter, _agentTimerService);
+            return new SpanStreamingService(grpcWrapper, delayer, configSvc, agentHealthReporter, _agentTimerService, _environment);
         }
 
         protected override Span GetRequestModel()
@@ -195,6 +196,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         protected float? TestFlakyValue;
         protected int? TestDelayValue;
         protected Dictionary<string, string> TestRequestHeadersMap;
+        protected bool TestCompressionSetting = true;
         protected readonly string _requestObjectTypeName;
 
         private MockGrpcWrapper<TRequestBatch, TResponse> _grpcWrapper;
@@ -204,6 +206,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         private TService _streamingSvc;
         protected IAgentHealthReporter _agentHealthReporter;
         protected IAgentTimerService _agentTimerService;
+        protected IEnvironment _environment;
 
         private StatusCode[] _grpcErrorStatusCodes;
 
@@ -237,6 +240,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _agentTimerService = Mock.Create<IAgentTimerService>();
             _configSvc = Mock.Create<IConfigurationService>();
+            _environment = Mock.Create<IEnvironment>();
 
             var defaultConfig = GetDefaultConfiguration();
             Mock.Arrange(() => _configSvc.Configuration).Returns(defaultConfig);
@@ -290,12 +294,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Assert.AreEqual(expectedIsServiceAvailable, _streamingSvc.IsServiceAvailable, $"If IsServiceEnabled={isServiceEnabled} and IsGrpcChannelConnected={isChannelConnected}, IsServiceAvailable should be {expectedIsServiceAvailable}");
         }
 
-        [TestCase(false, false, false)]
-        [TestCase(true, false, false)]
-        [TestCase(false, true, false)]
-        [TestCase(false, false, true)]
-        [TestCase(true, true, true)]
-        public void ShouldHaveCorrectConnectionMetadata(bool includeFlaky, bool includeDelay, bool includeRequestHeadersMap)
+        [TestCase(false, false, false, false)]
+        [TestCase(true, false, false, false)]
+        [TestCase(false, true, false, false)]
+        [TestCase(false, false, true, false)]
+        [TestCase(false, false, false, true)]
+        [TestCase(true, true, true, true)]
+        public void ShouldHaveCorrectConnectionMetadata(bool includeFlaky, bool includeDelay, bool includeRequestHeadersMap, bool enableCompression)
         {
             var expectedMetadata = new Dictionary<string, string>
             {
@@ -324,6 +329,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 };
                 expectedMetadata["rhm_key1"] = "rhm_value1";
                 expectedMetadata["rhm_key2"] = "Rhm_Value2"; //The key is expected to be lower-cased, but the value should be unmodified
+            }
+
+            TestCompressionSetting = enableCompression;
+            if (enableCompression)
+            {
+                expectedMetadata["grpc-internal-encoding-request"] = "gzip";
             }
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
@@ -361,6 +372,58 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
                 () => CollectionAssert.AreEquivalent(expectedMetadata, actualConnectionMetadata, "connection metadata did not match")
             );
+        }
+
+        [TestCase(null, null, false)]
+        [TestCase(null, "", false)]
+        [TestCase(null, "something", false)]
+        [TestCase("", null, false)]
+        [TestCase("", "", false)]
+        [TestCase("", "something", false)]
+        [TestCase("something", null, true)]
+        [TestCase("something", "", true)]
+        [TestCase("something", "something", false)]
+        public void ShouldLogProxyWarningIfOnlyTheLegacyProxyIsDetected(string grpcProxyValue, string httpsProxyValue, bool expectWarningInLogs)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("grpc_proxy")).Returns(grpcProxyValue);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("https_proxy")).Returns(httpsProxyValue);
+
+            using (var logger = new TestUtilities.Logging())
+            {
+                _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
+
+                Dictionary<string, string> actualConnectionMetadata = new Dictionary<string, string>();
+                _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, headers, token) =>
+                {
+                    //Throw the unimplemented exception so that the service will shutdown
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unimplemented, "Test gRPC Exception");
+                    return false;
+                };
+
+                var countShutdowns = 0;
+                var signalIsDone = new ManualResetEventSlim();
+                // When starting the channel, a shutdown is initiated to reset everything
+                // Ignore this in our determination of svc.stop
+                _grpcWrapper.WithShutdownImpl = () =>
+                {
+                    countShutdowns++;
+
+                    if (countShutdowns > 1)
+                    {
+                        signalIsDone.Set();
+                    }
+                };
+
+                var sourceCollection = new PartitionedBlockingCollection<TRequest>(10, 3);
+
+                _streamingSvc.StartConsumingCollection(sourceCollection);
+
+                NrAssert.Multiple
+                (
+                    () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
+                    () => Assert.AreEqual(expectWarningInLogs, logger.HasMessageThatContains("'grpc_proxy'"))
+                );
+            }
         }
 
         private const int _expectedDelayAfterErrorSendingASpan = 15000;
@@ -1564,9 +1627,85 @@ namespace NewRelic.Agent.Core.Spans.Tests
             );
         }
 
-        [TestCase(StatusCode.OK)]
         [TestCase(StatusCode.Internal)]
-        public void GrpcOkOrInternalDuringTrySendDataCreatesNewStreamImmediately(StatusCode statusCode)
+        public void GrpcInternalDuringTrySendDataCreatesNewStreamDelayed(StatusCode statusCode)
+        {
+            var actualCountGrpcErrors = 0;
+            var actualCountGeneralErrors = 0;
+            var actualCountSpansSent = 0L;
+
+            var expectedCountGrpcErrors = 3;
+            var expectedCountGeneralErrors = 3;
+            var expectedCountSpansSent = 1;
+
+            var signalIsDone = new ManualResetEventSlim();
+
+            var actualDelays = new List<int>();
+
+            Mock.Arrange(() => _delayer.Delay(Arg.IsAny<int>(), Arg.IsAny<CancellationToken>()))
+                .DoInstead<int, CancellationToken>((delay, token) =>
+                {
+                    actualDelays.Add(delay);
+                });
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanGrpcError(Arg.IsAny<string>()))
+                .DoInstead<string>((sc) =>
+                {
+                    actualCountGrpcErrors++;
+                });
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanResponseError())
+                .DoInstead(() =>
+                {
+                    actualCountGeneralErrors++;
+                });
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent(Arg.IsAny<long>()))
+                            .DoInstead<long>((cnt) =>
+                            {
+                                actualCountSpansSent += cnt;
+                                signalIsDone.Set();
+                            });
+
+
+            var invocationId = 0;
+            _grpcWrapper.WithTrySendDataImpl = (stream, item, timeoutMs, token) =>
+            {
+                var localInvocationId = Interlocked.Increment(ref invocationId);
+
+                if (localInvocationId < 2 || localInvocationId == 3)
+                {
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unknown, "Test gRPC Exception");
+                    return false;
+                }
+
+                if (localInvocationId == 2)
+                {
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(statusCode, "Test gRPC Exception");
+                    return false;
+                }
+
+                return true;
+            };
+
+            var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
+            queue.TryAdd(GetRequestModel());
+
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
+            _streamingSvc.StartConsumingCollection(queue);
+
+            NrAssert.Multiple
+            (
+                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
+                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
+                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
+                () => Assert.AreEqual(expectedCountSpansSent, actualCountSpansSent, "Span Sent Events"),
+                () => CollectionAssert.AreEqual(new[] { _expectedDelayAfterErrorSendingASpan, _expectedDelayAfterErrorSendingASpan, _expectedDelayAfterErrorSendingASpan }, actualDelays, "The expected delay sequence did not match")
+            );
+        }
+
+        [TestCase(StatusCode.OK)]
+        public void GrpcOkDuringTrySendDataCreatesNewStreamImmediately(StatusCode statusCode)
         {
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;

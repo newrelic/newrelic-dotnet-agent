@@ -964,6 +964,11 @@ namespace NewRelic.Agent.Core.Metric
             return SupportabilityInfiniteTracingSpan + "gRPC" + PathSeparator + error;
         }
 
+        public static string SupportabilityInfiniteTracingCompression(bool compressionEnabled)
+        {
+            return SupportabilityInfiniteTracing + "Compression" + PathSeparator + (compressionEnabled? "enabled" : "disabled");
+        }
+
         #endregion
 
         #region Performance Metrics

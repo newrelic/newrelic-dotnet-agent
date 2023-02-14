@@ -3514,6 +3514,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationInfiniteTracingSpan_events span_eventsField;
         
+        private bool compressionField;
+        
         /// <summary>
         /// configurationInfiniteTracing class constructor
         /// </summary>
@@ -3521,6 +3523,7 @@ namespace NewRelic.Agent.Core.Config
         {
             this.span_eventsField = new configurationInfiniteTracingSpan_events();
             this.trace_observerField = new configurationInfiniteTracingTrace_observer();
+            this.compressionField = true;
         }
         
         public configurationInfiniteTracingTrace_observer trace_observer
@@ -3544,6 +3547,20 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.span_eventsField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool compression
+        {
+            get
+            {
+                return this.compressionField;
+            }
+            set
+            {
+                this.compressionField = value;
             }
         }
         

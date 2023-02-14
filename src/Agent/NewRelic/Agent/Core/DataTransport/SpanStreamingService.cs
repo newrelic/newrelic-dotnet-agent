@@ -7,13 +7,14 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
+using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
     public class SpanStreamingService : DataStreamingService<Span, SpanBatch, RecordStatus>
     {
-        public SpanStreamingService(IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
-            : base(grpcWrapper, delayer, configSvc, agentHealthReporter, agentTimerService)
+        public SpanStreamingService(IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService, IEnvironment environment)
+            : base(grpcWrapper, delayer, configSvc, agentHealthReporter, agentTimerService, environment)
         {
         }
 
@@ -27,7 +28,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         protected override void HandleServerResponse(RecordStatus responseModel, int consumerId)
         {
-            LogMessage(LogLevel.Finest, consumerId, $"Received gRPC Server response: {responseModel.MessagesSeen}");
+            LogMessage(LogLevel.Finest, consumerId, $"Received gRPC Server response messages: {responseModel.MessagesSeen}");
 
             RecordReceived(responseModel.MessagesSeen);
 
@@ -65,5 +66,4 @@ namespace NewRelic.Agent.Core.DataTransport
             return batch;
         }
     }
-
 }

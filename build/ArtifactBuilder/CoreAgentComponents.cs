@@ -91,15 +91,9 @@ namespace ArtifactBuilder
             SetRootInstallDirectoryComponents(installRootFiles.ToArray());
 
             WindowsProfiler = null;
-            GRPCExtensionsLibWindows = new string[0];
             if (Platform != "arm64")
             {
                 WindowsProfiler = $@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll";
-                GRPCExtensionsLibWindows = new[]
-                {
-                    $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x64.dll",
-                    $@"{SourceHomeBuilderPath}\grpc_csharp_ext.x86.dll"
-                };
             }
 
             var agentHomeDirFiles = new List<string>()
@@ -116,9 +110,6 @@ namespace ArtifactBuilder
                 agentHomeDirFiles.Add(WindowsProfiler);
             }
 
-            agentHomeDirFiles.AddRange(GRPCExtensionsLibWindows);
-
-
             SetAgentHomeDirComponents(agentHomeDirFiles.ToArray());
 
             var extensions = agentDllsForExtensionDirectory
@@ -133,22 +124,13 @@ namespace ArtifactBuilder
             AgentApiDll = $@"{SourcePath}\..\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll";
 
             LinuxProfiler = null;
-            GRPCExtensionsLibLinux = new string[0];
             if (Platform == "x64") 
             {
                 LinuxProfiler = $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libNewRelicProfiler.so";
-                GRPCExtensionsLibLinux = new[]
-                {
-                    $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libgrpc_csharp_ext.x64.so"
-                };
             } 
             else if (Platform == "arm64") 
             {
                 LinuxProfiler = $@"{HomeRootPath}\newrelichome_arm64_coreclr_linux\libNewRelicProfiler.so";
-                GRPCExtensionsLibLinux = new[]
-                {
-                    $@"{HomeRootPath}\newrelichome_arm64_coreclr_linux\libgrpc_csharp_ext.arm64.so"
-                };
             }
 
             var configurationComponents = new List<string> { NewRelicXsd };

@@ -1093,6 +1093,19 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private bool? _infiniteTracingCompression;
+        public bool InfiniteTracingCompression
+        {
+            get
+            {
+                if (!_infiniteTracingCompression.HasValue)
+                {
+                    _infiniteTracingCompression = EnvironmentOverrides(_localConfiguration.infiniteTracing.compression, "NEW_RELIC_INFINITE_TRACING_COMPRESSION");
+                }
+                return _infiniteTracingCompression.Value;
+            }
+        }
+
 
 
 
