@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [10.7.0]
+
 ### New Features
 * Postgres client instrumentation support has been extended to include the following versions: 4.0.x, 4.1.x, 5.0.x, 6.0.x and 7.0.x [#1363](https://github.com/newrelic/newrelic-dotnet-agent/pull/1363)
 * Enables gzip compression by default for Infinite Tracing [#1383](https://github.com/newrelic/newrelic-dotnet-agent/pull/1383)
@@ -568,7 +570,8 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.6.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.7.0...HEAD
+[10.7.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.6.0...v10.7.0
 [10.6.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.5.1...v10.6.0
 [10.5.1]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.5.0...v10.5.1
 [10.5.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.4.0...v10.5.0
