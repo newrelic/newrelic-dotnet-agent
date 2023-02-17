@@ -171,15 +171,15 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 });
         }
 
-        bool ShouldInstrument(xstring_t const& processPath, xstring_t const& appPoolId, xstring_t const& commandLine, bool isCoreClr)
+        bool ShouldInstrument(xstring_t const& processPath, xstring_t const& parentProcessPath, xstring_t const& appPoolId, xstring_t const& commandLine, bool isCoreClr)
         {
             if (isCoreClr)
             {
-                return ShouldInstrumentNetCore(processPath, appPoolId, commandLine);
+                return ShouldInstrumentNetCore(processPath, parentProcessPath, appPoolId, commandLine);
             }
             else
             {
-                return ShouldInstrumentNetFramework(processPath, appPoolId);
+                return ShouldInstrumentNetFramework(processPath, parentProcessPath, appPoolId);
             }
         }
 
@@ -423,9 +423,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             return false;
         }
 
-        bool IsW3wpProcess(const xstring_t& processName)
+        bool IsW3wpProcess(const xstring_t& processName, xstring_t const& parentProcessName)
         {
-            return Strings::EndsWith(processName, _X("W3WP.EXE"));
+            return Strings::EndsWith(processName, _X("W3WP.EXE")) || Strings::EndsWith(parentProcessName, _X("W3WP.EXE"));
         }
 
         bool ShouldInstrumentApplicationPool(const xstring_t& appPoolId)
@@ -487,7 +487,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         }
 
         // Test to see if we should instrument this .NET Core application at all
-        bool ShouldInstrumentNetCore(xstring_t const& processPath, xstring_t const& appPoolId, xstring_t const& commandLine)
+        bool ShouldInstrumentNetCore(xstring_t const& processPath, xstring_t const& parentProcessPath, xstring_t const& appPoolId, xstring_t const& commandLine)
         {
             //If it contains MsBuild, it is a build command and should not be profiled.
             bool isMsBuildInvocation = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("MSBuild.dll"));
@@ -533,7 +533,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return false;
             }
 
-            if (IsW3wpProcess(processPath)) {
+            if (IsW3wpProcess(processPath, parentProcessPath)) {
                 return ShouldInstrumentApplicationPool(appPoolId);
             }
 
@@ -541,12 +541,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         }
 
         // Test to see if we should instrument this .NET Framework application at all
-        bool ShouldInstrumentNetFramework(xstring_t const& processPath, xstring_t const& appPoolId)
+        bool ShouldInstrumentNetFramework(xstring_t const& processPath, xstring_t const& parentProcessPath, xstring_t const& appPoolId)
         {
-            return ShouldInstrumentProcess(processPath, appPoolId);
+            return ShouldInstrumentProcess(processPath, parentProcessPath, appPoolId);
         }
 
-        bool ShouldInstrumentProcess(const xstring_t& processName, const xstring_t& appPoolId)
+        bool ShouldInstrumentProcess(const xstring_t& processName, xstring_t const& parentProcessName, const xstring_t& appPoolId)
         {
             if (!_agentEnabled) {
                 LogInfo("New Relic has been disabled via newrelic.config file.");
@@ -574,7 +574,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
                 return true;
             }
 
-            if (IsW3wpProcess(processName)) {
+            if (IsW3wpProcess(processName, parentProcessName)) {
                 return ShouldInstrumentApplicationPool(appPoolId);
             }
 
