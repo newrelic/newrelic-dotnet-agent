@@ -179,7 +179,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             }
             else
             {
-                return ShouldInstrumentNetFramework(processPath, parentProcessPath, appPoolId);
+                return ShouldInstrumentNetFramework(processPath, appPoolId);
             }
         }
 
@@ -541,9 +541,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
         }
 
         // Test to see if we should instrument this .NET Framework application at all
-        bool ShouldInstrumentNetFramework(xstring_t const& processPath, xstring_t const& parentProcessPath, xstring_t const& appPoolId)
+        bool ShouldInstrumentNetFramework(xstring_t const& processPath, xstring_t const& appPoolId)
         {
-            return ShouldInstrumentProcess(processPath, parentProcessPath, appPoolId);
+            return ShouldInstrumentProcess(processPath, _X(""), appPoolId);
         }
 
         bool ShouldInstrumentProcess(const xstring_t& processName, xstring_t const& parentProcessName, const xstring_t& appPoolId)

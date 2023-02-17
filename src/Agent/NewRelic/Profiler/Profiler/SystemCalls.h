@@ -100,7 +100,7 @@ namespace NewRelic { namespace Profiler
 
             LogTrace("Parent process id is: ", ppid);
 
-            const auto handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,FALSE, ppid);
+            const auto handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, ppid);
             if (handle)
             {
                 DWORD buffSize = MAX_PROCESS_PATH;
