@@ -124,6 +124,11 @@ namespace NewRelic { namespace Profiler
             return _X(".");
         }
 
+        virtual xstring_t GetParentProcessPath()
+        {
+            return _X(".");
+        }
+
         virtual xstring_t GetProcessDirectoryPath()
         {
             return _X(".");
