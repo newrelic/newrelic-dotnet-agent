@@ -8,17 +8,13 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
+using NLog;
 
 namespace NewRelic.Providers.Wrapper.NLogLogging
 {
     public class NLogWrapper : IWrapper
     {
-        private static Func<object, object> _getLevel;
-        private static Func<object, string> _getRenderedMessage;
-        private static Func<object, DateTime> _getTimestamp;
-        private static Func<object, string> _messageGetter;
-        private static Func<object, Exception> _getLogException;
-        private static Func<object, IDictionary<object, object>> _getPropertiesDictionary;
+        private static Action<object, string> _setFormattedMessage;
 
         public bool IsTransactionRequired => false;
 
@@ -32,8 +28,8 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[2];
-            var logEventType = logEvent.GetType();
+            var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[2] as LogEventInfo;
+            var logEventType = typeof(LogEventInfo);
 
             if (!LogProviders.RegisteredLogProvider[(int)LogProvider.NLog])
             {
@@ -46,52 +42,37 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             return Delegates.NoOp;
         }
 
-        private void RecordLogMessage(object logEvent, Type logEventType, IAgent agent)
+        private void RecordLogMessage(LogEventInfo logEvent, Type logEventType, IAgent agent)
         {
-            var getLevelFunc = _getLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Level");
+            Func<object, object> getLevelFunc = le => ((LogEventInfo)le).Level;
 
-            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "FormattedMessage");
+            Func<object, string> getRenderedMessageFunc = le => ((LogEventInfo)le).FormattedMessage;
 
-            var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
+            Func<object, DateTime> getTimestampFunc = le => ((LogEventInfo)le).TimeStamp;
 
-            var getLogExceptionFunc = _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "Exception");
+            Func<object, Exception> getLogExceptionFunc = le => ((LogEventInfo)le).Exception;
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
             xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, GetContextData, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
-        private void DecorateLogMessage(object logEvent, Type logEventType, IAgent agent)
+        private void DecorateLogMessage(LogEventInfo logEvent, Type logEventType, IAgent agent)
         {
-            if (!agent.Configuration.LogDecoratorEnabled)
+            if (!agent.Configuration.LogDecoratorEnabled || string.IsNullOrWhiteSpace(logEvent?.FormattedMessage))
             {
                 return;
             }
 
+            var setFormattedMessage = _setFormattedMessage ??= VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(logEventType, "_formattedMessage");
             var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
-
-            var messageGetter = _messageGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "Message");
-
-            // Message should not be null, but better to be sure
-            var originalMessage = messageGetter(logEvent);
-            if (string.IsNullOrWhiteSpace(originalMessage))
-            {
-                return;
-            }
-
-            // this cannot be made a static since it is unique to each logEvent
-            var messageSetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(logEvent, "Message");
-            messageSetter(originalMessage + " " + formattedMetadata);
+            setFormattedMessage(logEvent, logEvent.FormattedMessage + " " + formattedMetadata);
         }
 
         private Dictionary<string, object> GetContextData(object logEvent)
         {
             var contextData = new Dictionary<string, object>();
-
-            var getPropertiesDictionary = _getPropertiesDictionary ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary<object, object>>(logEvent.GetType(), "Properties");
-
-            var properties = getPropertiesDictionary(logEvent);
-            foreach (var property in properties)
+            foreach (var property in ((LogEventInfo)logEvent).Properties)
             {
                 contextData[property.Key.ToString()] = property.Value;
             }
