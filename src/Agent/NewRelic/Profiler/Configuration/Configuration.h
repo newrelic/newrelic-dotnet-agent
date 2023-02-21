@@ -425,7 +425,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 
         bool IsW3wpProcess(const xstring_t& processName, xstring_t const& parentProcessName)
         {
-            return Strings::EndsWith(processName, _X("W3WP.EXE")) || Strings::EndsWith(parentProcessName, _X("W3WP.EXE"));
+            auto isIis = Strings::EndsWith(processName, _X("W3WP.EXE")) || Strings::EndsWith(parentProcessName, _X("W3WP.EXE"));
+
+            LogInfo(_X("Process ") + processName + _X(" with parent process ") + parentProcessName + (isIis ? _X(" is") : _X(" is not")) + _X(" IIS."));
+
+            return isIis;
         }
 
         bool ShouldInstrumentApplicationPool(const xstring_t& appPoolId)
