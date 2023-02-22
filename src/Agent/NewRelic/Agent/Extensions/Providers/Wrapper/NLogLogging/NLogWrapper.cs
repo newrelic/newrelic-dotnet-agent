@@ -23,6 +23,8 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
         public bool IsTransactionRequired => false;
 
         private const string WrapperName = "nlog";
+        private const string FormattedMessage45Plus = "_formattedMessage";
+        private const string FormattedMessagePre45 = "formattedMessage";
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -76,25 +78,17 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             }
 
             // NLog version strings are not setup to allow using min/max version in instrumentation - they only report major version.
-            // This will use the 4.5+ field name and if that is not found, use the pre4.5 field name.
-            // Follow up calls will not throw and just work.
-            Action<object, string> setFormattedMessage;
+            // This will default to the 4.5+ field name and if that is not found, use the pre4.5 field name.
+            var formattedMessageName = FormattedMessage45Plus;
             if (_setFormattedMessage == null)
             {
-                try
+                if (logEventType.GetField(FormattedMessage45Plus, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) == null)
                 {
-                    setFormattedMessage = _setFormattedMessage ??= VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(logEventType, "_formattedMessage");
+                    formattedMessageName = FormattedMessagePre45;
                 }
-                catch
-                {
-                    setFormattedMessage = _setFormattedMessage ??= VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(logEventType, "formattedMessage");
-                }
-            }
-            else
-            {
-                setFormattedMessage = _setFormattedMessage;
             }
 
+            var setFormattedMessage = _setFormattedMessage ??= VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(logEventType, formattedMessageName);
             var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
             setFormattedMessage(logEvent, formattedMessage + " " + formattedMetadata);
         }
