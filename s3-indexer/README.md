@@ -1,25 +1,24 @@
 # S3 Indexer
 
-Given a bucket and an optional prefix, this will write an `index.html` that
-contains a directory listing to every "directory" within that bucket.
+Given a bucket and an optional prefix, this will write an `index.html` that contains a directory listing to every "directory" within that bucket.
 
 ## Requirements
 
-Works with (at least) Go v1.20
+Local installation of Docker
 
 ## Building
 
 `docker compose up` will build a container and run `make`. When complete, there should be a new `bin/linux/indexer` and `bin/windows/indexer.exe`.
 
-**Note that this is only required if there are changes to the source code -- the pre-built binaries for the indexer are included in the repository.
+**Note** This is only required if there are changes to the source code -- the pre-built binaries for the indexer are already included in the repository.
 
 ## Configuration
 
 The following environment variables need to be set, using appropriate values:
 
-`AWS_ACCESS_KEY_ID`
-`AWS_SECRET_ACCESS_KEY`
-`AWS_REGION` (usually `us-east-1`)
+* `AWS_ACCESS_KEY_ID`
+* `AWS_SECRET_ACCESS_KEY`
+* `AWS_REGION` (usually `us-east-1`)
 
 ## Running
 
@@ -27,8 +26,9 @@ The indexer can run either on Linux (`bin/linux/indexer`) or Windows (`bin/windo
 
 Command line syntax is
 
-`indexer -bucket <bucket_name> [-prefix <folder_prefix>] [ -upload ]`
+`indexer|indexer.exe -bucket <bucket_name> [-prefix <folder_prefix>] [-upload]`
 
-While `-prefix` is technically optional, you should always specify it to avoid indexing more folders than you intend to.
+`<bucket_name>` is usually either `nr-downloads-private` or `nr-downloads-main`
+While `-prefix` is technically optional, you should always specify it to avoid accidentally indexing the entire bucket.
 
-If `-upload` is not specified, indexer will tell you what it would do but not actually upload any files to the S3 bucket.
+If `-upload` is not specified, indexer will do a "dry run" - it will list the index.html files that would be generated, but won't actually upload any files to the S3 bucket.
