@@ -9,6 +9,7 @@
 #include <Shlobj.h>
 #include <corerror.h>
 #include "Exceptions.h"
+#include <tlhelp32.h>
 
 #include "Win32Helpers.h"
 #include "../Logging/Logger.h"
@@ -84,6 +85,82 @@ namespace NewRelic { namespace Profiler
 
             return moduleName;
         }
+
+        virtual xstring_t GetParentProcessPath()
+        {
+            const int MAX_PROCESS_PATH = 1024;
+            wchar_t moduleName[MAX_PROCESS_PATH];
+
+            const auto ppid = GetParentProcessId();
+            if (!ppid)
+            {
+                LogTrace("Process does not have a parent process id.");
+                return moduleName;
+            }
+
+            LogTrace("Parent process id is: ", ppid);
+
+            const auto handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, ppid);
+            if (handle)
+            {
+                DWORD buffSize = MAX_PROCESS_PATH;
+                const auto result = ::QueryFullProcessImageName(handle, 0, moduleName, &buffSize);
+                CloseHandle(handle);
+
+                if (!result)
+                {
+                    auto error = ::GetLastError();
+                    LogError(L"Unable to get the parent process path (1).  Error number: ", std::hex, error, std::resetiosflags(std::ios_base::basefield));
+                    throw ProfilerException();
+                }
+            }
+            else
+            {
+                auto error = ::GetLastError();
+                LogError(L"Unable to get the parent process path (2).  Error number: ", std::hex, error, std::resetiosflags(std::ios_base::basefield));
+                throw ProfilerException();
+            }
+
+            LogTrace("Parent process name is ", moduleName);
+
+            return moduleName;
+        }
+
+        virtual uint32_t GetParentProcessId()
+        {
+            uint32_t ppid = 0;
+            const uint32_t pid = GetCurrentProcessId();
+            const HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+            if (hSnapshot == INVALID_HANDLE_VALUE)
+            {
+                return ppid;
+            }
+
+            PROCESSENTRY32 pe32;
+            ZeroMemory(&pe32, sizeof pe32);
+            pe32.dwSize = sizeof pe32;
+
+            if (!::Process32First(hSnapshot, &pe32))
+            {
+                CloseHandle(hSnapshot);
+                return ppid;
+            }
+
+            do
+            {
+                if (pe32.th32ProcessID == pid)
+                {
+                    ppid = pe32.th32ParentProcessID;
+                    break;
+                }
+            } while (::Process32Next(hSnapshot, &pe32));
+
+            CloseHandle(hSnapshot);
+
+            return ppid;
+        }
+
 
         virtual xstring_t GetProcessDirectoryPath()
         {
