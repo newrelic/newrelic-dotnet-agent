@@ -1,4 +1,5 @@
-!bin 
+# so we can include the binaries in the repo
+!bin
+# leftovers from the build
 pkg
-
 src/github.com
