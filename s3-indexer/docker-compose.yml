@@ -1,0 +1,9 @@
+version: '2.1'
+
+services:
+
+    build:
+        build: docker/.
+        command: bash -c "make clean && make"
+        volumes: 
+            - .:/app
