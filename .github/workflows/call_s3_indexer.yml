@@ -1,0 +1,16 @@
+name: Call S3 Indexer In Another Repo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-s3-indexer-workflow-passing-data:
+    uses: newrelic/s3-indexer/.github/workflows/s3-indexer.yml@tippmar-nr/add-reusable-workflow
+    with:
+      bucket: 'nr-downloads-main'
+      prefix: 'dot_net_agent'
+      aws-region: 'us-east-1'
+      dry-run: true
+    secrets:
+      inherit
+      
