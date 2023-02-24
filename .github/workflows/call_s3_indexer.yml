@@ -8,7 +8,7 @@ on:
 
 jobs:
   call-s3-indexer-workflow-passing-data:
-    uses: newrelic/s3-indexer/.github/workflows/s3-indexer.yml@main
+    uses: newrelic/s3-indexer/.github/workflows/s3-indexer.yml@901885805a19672be18c37be8249f77fd4a61910
     with:
       bucket: 'nr-downloads-main'
       prefix: 'dot_net_agent'
