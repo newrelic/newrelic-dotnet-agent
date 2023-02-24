@@ -1,4 +1,4 @@
-# Third Party Notices
+Third Party Notices
 
 The New Relic .NET Agent uses source code from third party libraries which 
 carry their own copyright notices and license terms. These notices are 
