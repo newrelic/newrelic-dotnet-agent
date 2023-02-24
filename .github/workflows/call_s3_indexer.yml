@@ -2,6 +2,9 @@ name: Call S3 Indexer In Another Repo
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'tippmar-nr/call-s3-indexer-workflow'
 
 jobs:
   call-s3-indexer-workflow-passing-data:
@@ -13,4 +16,3 @@ jobs:
       dry-run: true
     secrets:
       inherit
-      
