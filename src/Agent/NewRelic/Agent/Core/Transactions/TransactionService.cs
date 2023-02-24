@@ -260,9 +260,20 @@ namespace NewRelic.Agent.Core.Transactions
             // We have a limit of 100 because 100 attempts to nest a transaction indicates that something has gone wrong (e.g. a transaction is never ending and is being reused over and over)
             if (currentNestedTransactionAttempts > 100)
             {
+                bool wasAsync = IsAttachedToAsyncStorage;
+
                 Log.WarnFormat("Releasing the transaction because there were too many nested transaction attempts.");
                 RemoveOutstandingInternalTransactions(true, true);
-                return CreateInternalTransaction(initialTransactionName, onCreate);
+                var newTransaction = CreateInternalTransaction(initialTransactionName, onCreate);
+
+                if (wasAsync)
+                {
+                    newTransaction.AttachToAsync();
+                    // If we're currently in an async context, it's VERY important that we not leave this transaction
+                    // in ThreadLocal storage, or other workers may grab the wrong "current" transaction
+                    RemoveOutstandingInternalTransactions(false, true);
+                }
+                return newTransaction;
             }
 
             return transaction;

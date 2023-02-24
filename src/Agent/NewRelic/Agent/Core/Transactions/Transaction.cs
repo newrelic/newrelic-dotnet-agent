@@ -59,9 +59,15 @@ namespace NewRelic.Agent.Core.Transactions
                     return Segment.NoOpSegment;
                 }
 
-                if (Segments[currentSegmentIndex.Value] != null)
+                int idx = currentSegmentIndex.Value;
+                if (idx >= Segments.Count)
                 {
-                    return Segments[currentSegmentIndex.Value];
+                    Log.Warn($"Transaction {Guid} is out of sync with the current segment [looking for {idx} out of {Segments.Count}]");
+                    return Segment.NoOpSegment;
+                }
+                if (Segments[idx] != null)
+                {
+                    return Segments[idx];
                 }
 
                 return Segment.NoOpSegment;
