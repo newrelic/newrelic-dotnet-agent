@@ -18,6 +18,7 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
         virtual void InjectPlatformInvoke(const std::wstring& methodName, const std::wstring& className, const std::wstring& moduleName, const ByteVector& signature) = 0;
         virtual void InjectStaticSecuritySafeMethod(const std::wstring& methodName, const std::wstring& className, const ByteVector& signature) = 0;
         virtual void InjectMscorlibSecuritySafeMethodReference(const std::wstring& methodName, const std::wstring& className, const ByteVector& signature) = 0;
+        virtual void InjectNRHelperType() = 0;
 
         virtual bool GetHasRefMscorlib() = 0;
         virtual bool GetHasRefSysRuntime() = 0;

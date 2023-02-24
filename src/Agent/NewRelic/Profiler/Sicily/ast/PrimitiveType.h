@@ -31,15 +31,19 @@ namespace sicily {
                     kOBJECT = 0x1C,
                 };
                     
-                PrimitiveType(PrimitiveKind kind);
+                PrimitiveType(PrimitiveKind kind, bool byRef);
                 virtual ~PrimitiveType();
 
                 PrimitiveKind GetPrimitiveKind() const;
+                bool GetByRef() const;
 
                 xstring_t ToString() const;
 
             private:
                 PrimitiveKind primitiveKind_;
+                bool byRef_;
+
+                xstring_t GetKindString() const;
         };
 
         typedef std::shared_ptr<PrimitiveType> PrimitiveTypePtr;

@@ -317,7 +317,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // The function id is used as a tie-breaker for overloaded methods when computing the key name for the app domain cache.
         void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda, bool useCache)
         {
-            if (useCache && !_systemCalls->GetIsAppDomainCachingDisabled())
+            /*if (useCache && !_systemCalls->GetIsAppDomainCachingDisabled())
             {
                 auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
                 _instructions->AppendString(keyName);
@@ -334,6 +334,24 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 }
                 
                 _instructions->Append(CEE_CALL, _X("class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [mscorlib]System.Type[])"));
+            }*/
+            if (useCache && !_systemCalls->GetIsAppDomainCachingDisabled())
+            {
+                auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
+                _instructions->AppendString(keyName);
+                _instructions->AppendString(assemblyPath);
+                _instructions->AppendString(className);
+                _instructions->AppendString(methodName);
+                if (argumentTypesLambda == NULL)
+                {
+                    _instructions->Append(CEE_LDNULL);
+                }
+                else
+                {
+                    argumentTypesLambda();
+                }
+
+                _instructions->Append(CEE_CALL, _X("class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.CannotUnloadAppDomainException::GetMethodInfoFromAgentCache(string,string,string,string,class [mscorlib]System.Type[])"));
             }
             else
             {

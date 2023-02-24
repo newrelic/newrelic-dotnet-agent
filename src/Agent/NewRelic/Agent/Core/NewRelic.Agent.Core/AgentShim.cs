@@ -2,12 +2,43 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using NewRelic.Agent.Core.Tracer;
 
 namespace NewRelic.Agent.Core
 {
+    /// <summary>
+    /// Cache of the Agent methods that can be invoked by the byte-code injected by the profiler.
+    /// </summary>
+    public class ProfilerAgentMethodCallCache
+    {
+        private static readonly ConcurrentDictionary<string, MethodInfo> _methodInfoCache = new ConcurrentDictionary<string, MethodInfo>();
+
+        public static object GetMethodCacheFunc()
+        {
+            System.Console.WriteLine("*****In Agent GetMethodCacheFunc********");
+            return (Func<string, string, string, Type[], MethodInfo>)GetAgentMethodInfoFromCache;
+        }
+
+        public static MethodInfo GetAgentMethodInfoFromCache(string key, string className, string methodName, Type[] types)
+        {
+            System.Console.WriteLine("*****In Agent GetAgentMethodInfoFromCache********");
+            return _methodInfoCache!.GetOrAdd(key, GetMethodInfo);
+
+            MethodInfo GetMethodInfo(string _)
+            {
+                var type = Type.GetType(className);
+
+                var method = types != null ? type.GetMethod(methodName, types) : type.GetMethod(methodName);
+
+                return method;
+            }
+        }
+    }
+
     /// <summary>
     /// The AgentShim is called by our injected bytecode.
     /// It exists to provide a layer of protection against deadlocks and such that can occur while the agent is initializing itself early on.

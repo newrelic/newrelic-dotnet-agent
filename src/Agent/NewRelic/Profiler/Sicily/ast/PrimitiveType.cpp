@@ -5,8 +5,8 @@
 
 namespace sicily {
     namespace ast {
-        PrimitiveType::PrimitiveType(PrimitiveKind kind)
-            : Type(Kind::kPRIMITIVE), primitiveKind_(kind)
+        PrimitiveType::PrimitiveType(PrimitiveKind kind, bool byRef)
+            : Type(Kind::kPRIMITIVE), primitiveKind_(kind), byRef_(byRef)
         {
         }
 
@@ -20,8 +20,24 @@ namespace sicily {
             return primitiveKind_;
         }
 
+        bool
+        PrimitiveType::GetByRef() const
+        {
+            return byRef_;
+        }
+
         xstring_t
         PrimitiveType::ToString() const
+        {
+            if (byRef_) {
+                return GetKindString() + _X("&");
+            }
+
+            return GetKindString();
+        }
+
+        xstring_t
+        PrimitiveType::GetKindString() const
         {
             switch (GetPrimitiveKind()) {
                 case PrimitiveKind::kOBJECT: return _X("object");

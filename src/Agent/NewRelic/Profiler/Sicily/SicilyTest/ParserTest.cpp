@@ -185,6 +185,16 @@ namespace sicily
             {
                 TestParser(L"instance !0 class [mscorlib]System.Tuple`2<class [mscorlib]System.Action`1<object[]>, class [mscorlib]System.Action`1<object[]>>::get_Item1()");
             }
+
+            TEST_METHOD(TestField)
+            {
+                TestParser(L"int32 __NRInitializer__::_isAgentAssemblyLoaded");
+            }
+
+            TEST_METHOD(TestMethodWithRefParams)
+            {
+                TestParser(L"int32 System.Threading.Interlocked::CompareExchange(int32&, int32, int32)");
+            }
         };
     }
 }

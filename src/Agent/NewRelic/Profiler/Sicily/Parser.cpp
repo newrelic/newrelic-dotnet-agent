@@ -93,6 +93,10 @@ namespace sicily {
             scanner.Expect(TOK_GT);
         }
 
+        if (scanner.Peek(sem) == TOK_END) {
+            return std::make_shared<ast::FieldType>(ast::FieldType(targetType, name, returnType));
+        }
+
         scanner.Expect(TOK_LBRACKET);
         if (!scanner.Maybe(TOK_RBRACKET)) {
             argTypes = ParseTypeList(scanner);
@@ -110,23 +114,27 @@ namespace sicily {
     {
         SemInfo sem;
         TokenType type = scanner.Next(sem);
+        bool byRef = scanner.Maybe(TOK_AMPERSAND);
         ast::TypePtr result;
 
         switch (type) {
             case TOK_OBJECT:
-                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kOBJECT);
+                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kOBJECT, byRef);
                 break;
             case TOK_VOID:
-                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kVOID);
+                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kVOID, byRef);
                 break;
             case TOK_BOOL:
-                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kBOOL);
+                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kBOOL, byRef);
                 break;
             case TOK_UINT32:
-                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kU4);
+                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kU4, byRef);
+                break;
+            case TOK_INT32:
+                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kI4, byRef);
                 break;
             case TOK_STRING:
-                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kSTRING);
+                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kSTRING, byRef);
                 break;
             case TOK_CLASS:
                 result = ParseClassTypeSignature(scanner);

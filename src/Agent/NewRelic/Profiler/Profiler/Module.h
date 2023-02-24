@@ -97,6 +97,18 @@ namespace NewRelic { namespace Profiler
             AddPermissionSetAssertToMethod(injectedMethodToken, permissionBlob);
         }
 
+        virtual void InjectNRHelperType() override
+        {
+            auto objectTypeToken = GetTypeToken(_X("System.Object"));
+            mdTypeDef nrHelperType;
+            ThrowOnError(_metaDataEmit->DefineTypeDef, _X("__NRInitializer__"), CorTypeAttr::tdAbstract | CorTypeAttr::tdSealed, objectTypeToken, NULL, &nrHelperType);
+
+            auto dataFieldAttributes = CorFieldAttr::fdPublic | CorFieldAttr::fdStatic;
+            BYTEVECTOR(dataFieldSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD, CorElementType::ELEMENT_TYPE_OBJECT);
+            mdFieldDef dataFieldToken;
+            ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_methodCache"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
+        }
+
         virtual void InjectMscorlibSecuritySafeMethodReference(const std::wstring& methodName, const std::wstring& className, const ByteVector& signature) override
         {
             auto typeReferenceOrDefinitionToken = GetOrCreateTypeReferenceToken(_mscorlibAssemblyRefToken, className);

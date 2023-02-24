@@ -67,9 +67,9 @@ namespace sicily
                 static MethodTypePtr CreateSimpleMethodType()
                 {
                     ClassTypePtr targetType(new ClassType(L"MyClass", L"MyAssembly"));
-                    TypePtr returnType(new PrimitiveType(PrimitiveType::PrimitiveKind::kSTRING));
-                    TypePtr parameterType1(new PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT));
-                    TypePtr parameterType2(new PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL));
+                    TypePtr returnType(new PrimitiveType(PrimitiveType::PrimitiveKind::kSTRING, false));
+                    TypePtr parameterType1(new PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT, false));
+                    TypePtr parameterType2(new PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL, false));
                     TypeListPtr parameterTypes(new TypeList());
                     parameterTypes->Add(parameterType1);
                     parameterTypes->Add(parameterType2);
@@ -79,27 +79,27 @@ namespace sicily
 
                 static MethodTypePtr CreateComplexMethodType()
                 {
-                    PrimitiveTypePtr u8Type(new PrimitiveType(PrimitiveType::PrimitiveKind::kU8));
+                    PrimitiveTypePtr u8Type(new PrimitiveType(PrimitiveType::PrimitiveKind::kU8, false));
                     ArrayTypePtr u8ArrayType(new ArrayType(u8Type));
                     TypeListPtr targetTypeGenericArguments(new TypeList());
                     targetTypeGenericArguments->Add(u8ArrayType);
                     GenericTypePtr targetType(new GenericType(L"MyClass", L"MyAssembly", targetTypeGenericArguments));
                     
-                    PrimitiveTypePtr stringType(new PrimitiveType(PrimitiveType::PrimitiveKind::kSTRING));
-                    PrimitiveTypePtr objectType(new PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT));
+                    PrimitiveTypePtr stringType(new PrimitiveType(PrimitiveType::PrimitiveKind::kSTRING, false));
+                    PrimitiveTypePtr objectType(new PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT, false));
                     ArrayTypePtr objectArrayType(new ArrayType(objectType));
                     TypeListPtr returnTypeGenericArguments(new TypeList());
                     returnTypeGenericArguments->Add(objectArrayType);
                     returnTypeGenericArguments->Add(stringType);
                     GenericTypePtr returnType(new GenericType(L"MyGenericReturnClass", L"MyAssembly", returnTypeGenericArguments));
                     
-                    TypePtr parameterType1(new PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT));
-                    TypePtr parameterType2(new PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL));
+                    TypePtr parameterType1(new PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT, false));
+                    TypePtr parameterType2(new PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL, false));
                     TypeListPtr parameterTypes(new TypeList());
                     parameterTypes->Add(parameterType1);
                     parameterTypes->Add(parameterType2);
 
-                    PrimitiveTypePtr boolType(new PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL));
+                    PrimitiveTypePtr boolType(new PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL, false));
                     ArrayTypePtr boolArrayType(new ArrayType(boolType));
                     TypeListPtr nestedGenericArguments(new TypeList());
                     nestedGenericArguments->Add(boolArrayType);
