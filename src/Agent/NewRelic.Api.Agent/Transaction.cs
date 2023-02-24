@@ -93,5 +93,31 @@ namespace NewRelic.Api.Agent
                 return _noOpTransaction.CurrentSpan;
             }
         }
+
+        private static bool _isSetUserIdAvailable = true;
+        public void SetUserId(string userid)
+        {
+            if (!_isSetUserIdAvailable)
+            {
+                return;
+            }
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userid))
+                {
+                    _wrappedTransaction.SetUserId(string.Empty);
+                }
+                else
+                {
+                    _wrappedTransaction.SetUserId(userid);
+                }
+                
+            }
+            catch (RuntimeBinderException)
+            {
+                _isSetUserIdAvailable = false;
+            }
+        }
     }
 }

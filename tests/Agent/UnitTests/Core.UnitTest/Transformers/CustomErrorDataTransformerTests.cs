@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.Transformers
         public void Transform_SendsErrorTraceToAggregator()
         {
             float priority = 0.5f;
-            _customErrorDataTransformer.Transform(MakeError(), priority);
+            _customErrorDataTransformer.Transform(MakeError(), priority, string.Empty);
 
             Mock.Assert(() => _errorTraceAggregator.Collect(Arg.IsAny<ErrorTraceWireModel>()));
         }
@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.Transformers
         {
             float priority = 0.5f;
 
-            _customErrorDataTransformer.Transform(MakeError(), priority);
+            _customErrorDataTransformer.Transform(MakeError(), priority, string.Empty);
 
             Mock.Assert(() => _errorEventAggregator.Collect(Arg.IsAny<ErrorEventWireModel>()));
         }
@@ -118,7 +118,7 @@ namespace NewRelic.Agent.Core.Transformers
             Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(false);
 
             float priority = 0.5f;
-            _customErrorDataTransformer.Transform(MakeError(), priority);
+            _customErrorDataTransformer.Transform(MakeError(), priority, string.Empty);
 
             Mock.Assert(() => _errorTraceAggregator.Collect(Arg.IsAny<ErrorTraceWireModel>()), Occurs.Never());
         }

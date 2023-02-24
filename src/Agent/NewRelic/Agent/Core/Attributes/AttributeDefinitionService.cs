@@ -54,6 +54,7 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> ErrorType { get; }
         AttributeDefinition<string, string> ErrorEventSpanId { get; }
         AttributeDefinition<string, string> ErrorGroupFingerprint { get; }
+        AttributeDefinition<string, string> EndUserId { get; }
         AttributeDefinition<float, double> ExternalCallCount { get; }
         AttributeDefinition<float, double> ExternalDuration { get; }
         AttributeDefinition<string, string> Guid { get; }
@@ -588,6 +589,12 @@ namespace NewRelic.Agent.Core.Attributes
         private AttributeDefinition<string, string> _errorGroupFingerprint;
         public AttributeDefinition<string, string> ErrorGroupFingerprint => _errorGroupFingerprint ?? (_errorGroupFingerprint =
             AttributeDefinitionBuilder.CreateString("error.group.fingerprint", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _endUserId;
+        public AttributeDefinition<string, string> EndUserId => _endUserId ?? (_endUserId =
+            AttributeDefinitionBuilder.CreateString("enduser.id", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace)
                 .Build(_attribFilter));
 
