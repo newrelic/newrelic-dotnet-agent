@@ -98,7 +98,7 @@ namespace NewRelic.Agent.Core
         /// <param name="apiMethod">  An enum value identifying the supportability metric to create. </param>
         /// <returns> A value of the generic type T. </returns>
         public static T? TryInvoke<T>(Func<T> action, string methodName, ApiMethod apiMethod)
-            where T: class
+            where T : class
         {
             try
             {
@@ -623,6 +623,16 @@ namespace NewRelic.Agent.Core
         public static IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
         {
             return InternalApi.GetResponseMetadata() ?? new Dictionary<string, string>();
+        }
+
+        public static void ErrorFingerprintingCallback(Func<Exception, string> callback)
+        {
+            const string apiName = nameof(ErrorFingerprintingCallback);
+            void work()
+            {
+                InternalApi.ErrorFingerprintingCallback(callback);
+            }
+            TryInvoke(work, apiName, ApiMethod.ErrorFingerprintingCallback);
         }
     }
 }

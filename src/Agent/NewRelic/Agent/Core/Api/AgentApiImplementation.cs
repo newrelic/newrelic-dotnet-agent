@@ -748,6 +748,15 @@ namespace NewRelic.Agent.Core.Api
 
             return _agent.CurrentTransaction.GetResponseMetadata();
         }
+
+        /// <summary>
+        /// DOCS GO HERE
+        /// </summary>
+        /// <param name="callback"></param>
+        public void ErrorFingerprintingCallback(Func<Exception, string> callback)
+        {
+            ((Agent)_agent).ErrorFingerprintingCallback = callback;
+        }
     }
 }
 #nullable restore

@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
-            _errorTraceMaker = new ErrorTraceMaker(_configurationService);
+            _errorTraceMaker = new ErrorTraceMaker(_configurationService, _attribDefSvc);
             _errorService = new ErrorService(_configurationService);
         }
 

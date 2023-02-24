@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.Transformers
             
 
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
-            _errorTraceMaker = new ErrorTraceMaker(configurationService);
+            _errorTraceMaker = new ErrorTraceMaker(configurationService, _attribDefSvc);
             _errorTraceAggregator = Mock.Create<IErrorTraceAggregator>();
             _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
             _errorEventAggregator = Mock.Create<IErrorEventAggregator>();
@@ -90,7 +90,7 @@ namespace NewRelic.Agent.Core.Transformers
             var errorType = "ErrorType";
             var stackTrace = "StackTrace";
 
-            var errorData = new ErrorData(errorMsg, errorType, stackTrace, errorNoticedAt, errorCustomParameters, false);
+            var errorData = new ErrorData(errorMsg, errorType, stackTrace, errorNoticedAt, errorCustomParameters, false, string.Empty);
 
             // ACT
             var errorTrace = _errorTraceMaker.GetErrorTrace( attribValues, errorData);
@@ -125,7 +125,7 @@ namespace NewRelic.Agent.Core.Transformers
 
         private ErrorData MakeError(ReadOnlyDictionary<string, object> attributes = null)
         {
-            return new ErrorData("error message", "error.type", null, System.DateTime.UtcNow, attributes, false);
+            return new ErrorData("error message", "error.type", null, System.DateTime.UtcNow, attributes, false, string.Empty);
         }
     }
 }

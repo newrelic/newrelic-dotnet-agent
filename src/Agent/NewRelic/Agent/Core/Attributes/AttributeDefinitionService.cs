@@ -53,6 +53,7 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> ErrorMessage { get; }
         AttributeDefinition<string, string> ErrorType { get; }
         AttributeDefinition<string, string> ErrorEventSpanId { get; }
+        AttributeDefinition<string, string> ErrorGroupFingerprint { get; }
         AttributeDefinition<float, double> ExternalCallCount { get; }
         AttributeDefinition<float, double> ExternalDuration { get; }
         AttributeDefinition<string, string> Guid { get; }
@@ -582,6 +583,12 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<bool, bool> SpanIsErrorExpected => _spanIsErrorExpected ?? (_spanIsErrorExpected =
             AttributeDefinitionBuilder.CreateBool("error.expected", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _errorGroupFingerprint;
+        public AttributeDefinition<string, string> ErrorGroupFingerprint => _errorGroupFingerprint ?? (_errorGroupFingerprint =
+            AttributeDefinitionBuilder.CreateString("error.group.fingerprint", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace)
                 .Build(_attribFilter));
 
         private AttributeDefinition<DateTime, long> _timestamp;

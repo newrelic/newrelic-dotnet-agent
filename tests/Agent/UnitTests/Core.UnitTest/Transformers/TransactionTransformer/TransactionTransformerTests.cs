@@ -800,7 +800,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvents = new List<ErrorEventWireModel>();
             var errorTraces = new List<ErrorTraceWireModel>();
 
-            _errorTraceMaker = new ErrorTraceMaker(_configurationService);
+            _errorTraceMaker = new ErrorTraceMaker(_configurationService, _attribDefSvc);
             _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
 
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
@@ -865,7 +865,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvents = new List<ErrorEventWireModel>();
             var errorTraces = new List<ErrorTraceWireModel>();
 
-            _errorTraceMaker = new ErrorTraceMaker(_configurationService);
+            _errorTraceMaker = new ErrorTraceMaker(_configurationService, _attribDefSvc);
             _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
 
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
