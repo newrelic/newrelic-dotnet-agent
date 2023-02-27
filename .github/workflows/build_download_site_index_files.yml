@@ -59,9 +59,9 @@ jobs:
       - name: Update index.html files in AWS S3 bucket
         run: |
           if [ ${{ inputs.dry-run }} = true ]; then
-            echo "dry run, inputs.dry-run=[${{ inputs.dry-run }}]"
-            /bin/s3-indexer/indexer -bucket "${{secrets.BUCKET_NAME}}" -prefix "${{inputs.prefix}}"
+            echo "dry run, inputs.dry-run=[${{ inputs.dry-run }}], secrets.BUCKET_NAME=[${{ secrets.BUCKET_NAME }}]"
+            /bin/s3-indexer/indexer -bucket "${{ secrets.BUCKET_NAME }}" -prefix "${{ inputs.prefix }}"
           else
             echo "upload, inputs.dry-run=[${{ inputs.dry-run }}]"
-            /bin/s3-indexer/indexer -bucket "${{secrets.BUCKET_NAME}}" -prefix "${{inputs.prefix}}" -upload
+            /bin/s3-indexer/indexer -bucket "${{ secrets.BUCKET_NAME }}" -prefix "${{ inputs.prefix }}" -upload
           fi
