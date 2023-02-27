@@ -10,7 +10,6 @@ jobs:
   index-download-site:
     name: Rebuild indexes on the download site
 #    if: ${{ github.event.inputs.downloadsite == 'true' }} 
-    runs-on: ubuntu-latest
     uses: ./.github/workflows/build_download_site_index_files.yml
     with:
       bucket: ${{ secrets.BUCKET_NAME }}
