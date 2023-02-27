@@ -11,7 +11,7 @@ on:
         description: 'AWS Secret Access Key'
         required: true
       BUCKET_NAME:
-        description: 's3 bucket to build index.html for'
+        description: 's3 bucket name, must be prefixed with "s3://"'
         required: true
     inputs:
       aws-region:
