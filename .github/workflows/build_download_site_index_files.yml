@@ -10,38 +10,41 @@ on:
       AWS_SECRET_ACCESS_KEY:
         description: 'AWS Secret Access Key'
         required: true
-      BUCKET_NAME:
+    inputs:
+      aws-region:
+        description: 'AWS region s3 bucket is in'
+        required: true
+        type: string
+      bucket:
         description: 's3 bucket to build index.html for'
         required: true
-    inputs:
       prefix:
         description: 'object prefix to build index.html for'
         required: false
-        type: string
-      aws-region:
-        description: 'AWS region s3 bucket is in'
-        required: true
-        type: string
-      dry-run:
-        description: 'See what index.html will be generated without uploading them to the bucket'
-        required: false
-        default: false
-        type: boolean  
-  workflow_dispatch:
-    inputs:
-      prefix:
-        description: 'object prefix to build index.html for'
-        required: false
-        type: string
-      aws-region:
-        description: 'AWS region s3 bucket is in'
-        required: true
         type: string
       dry-run:
         description: 'See what index.html will be generated without uploading them to the bucket'
         required: false
         default: true
-        type: boolean
+        type: boolean  
+  workflow_dispatch:
+    inputs:
+      aws-region:
+        description: 'AWS region s3 bucket is in'
+        required: true
+        type: string
+      bucket:
+        description: 's3 bucket to build index.html for'
+        required: true
+      prefix:
+        description: 'object prefix to build index.html for'
+        required: false
+        type: string
+      dry-run:
+        description: 'See what index.html will be generated without uploading them to the bucket'
+        required: false
+        default: true
+        type: boolean  
 
 jobs:
   s3-build-index:
@@ -60,8 +63,8 @@ jobs:
         run: |
           if [ ${{ inputs.dry-run }} = true ]; then
             echo "dry run, inputs.dry-run=[${{ inputs.dry-run }}]"
-            /bin/s3-indexer/indexer -bucket "${{ secrets.BUCKET_NAME }}" -prefix "${{ inputs.prefix }}"
+            /opt/nr/bin/s3-indexer -bucket "${{ inputs.bucket }}" -prefix "${{ inputs.prefix }}"
           else
             echo "upload, inputs.dry-run=[${{ inputs.dry-run }}]"
-            /bin/s3-indexer/indexer -bucket "${{ secrets.BUCKET_NAME }}" -prefix "${{ inputs.prefix }}" -upload
+            /opt/nr/bin/s3-indexer -bucket "${{ inputs.bucket }}" -prefix "${{ inputs.prefix }}" -upload
           fi
