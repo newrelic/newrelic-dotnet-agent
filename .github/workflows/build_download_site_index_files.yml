@@ -18,6 +18,7 @@ on:
       bucket:
         description: 's3 bucket to build index.html for'
         required: true
+        type: string
       prefix:
         description: 'object prefix to build index.html for'
         required: false
@@ -36,6 +37,7 @@ on:
       bucket:
         description: 's3 bucket to build index.html for'
         required: true
+        type: string
       prefix:
         description: 'object prefix to build index.html for'
         required: false

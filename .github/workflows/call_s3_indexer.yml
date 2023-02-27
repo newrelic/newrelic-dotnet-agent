@@ -14,8 +14,9 @@ jobs:
       matrix:
         prefix: ["dot_net_agent/latest_release", "dot_net_agent/previous_releases/10.7.0"]
     with:
+      bucket: nr-downloads-main
       prefix: ${{ matrix.prefix }}
-      aws-region: "us-west-2"
+      aws-region: "us-east-1"
       dry-run: true
     secrets: inherit
     
