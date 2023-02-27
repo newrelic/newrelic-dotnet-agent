@@ -11,10 +11,10 @@ jobs:
     name: Rebuild indexes on the download site
 #    if: ${{ github.event.inputs.downloadsite == 'true' }} 
     uses: ./.github/workflows/build_download_site_index_files.yml
+    secrets: inherit
     with:
-      bucket: ${{ secrets.BUCKET_NAME }}
+      bucket: "${{ secrets.BUCKET_NAME }}"
       prefix: "dot_net_agent/latest_release"
       aws-region: "us-east-1"
       dry-run: true
-    secrets: inherit
     
