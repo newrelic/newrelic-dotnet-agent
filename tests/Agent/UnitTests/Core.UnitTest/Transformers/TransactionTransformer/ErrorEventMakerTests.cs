@@ -155,7 +155,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [Test]
         public void GetErrorEvent_InTransaction_WithException_ContainsCorrectAttributes_FullAttributes()
         {
-            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false, string.Empty);
+            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false, null);
 
             var transaction = BuildTestTransaction(statusCode: 404,
                                                             customErrorData: errorData,

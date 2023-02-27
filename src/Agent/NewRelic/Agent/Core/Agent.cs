@@ -302,11 +302,12 @@ namespace NewRelic.Agent.Core
             Log.Error($"An exception occurred in a wrapper: {exception}");
         }
 
+        //TODO: does this callback really belong on IAgent??
         public Func<Exception, string> ErrorFingerprintingCallback
         {
             get
             {
-                return _errorFingerprintingCallback ??= delegate (Exception x) { return string.Empty; };
+                return _errorFingerprintingCallback ??= x => null;
             }
             set
             {

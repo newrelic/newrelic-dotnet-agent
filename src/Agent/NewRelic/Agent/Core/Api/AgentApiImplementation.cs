@@ -354,10 +354,10 @@ namespace NewRelic.Agent.Core.Api
 
         private void ProcessNoticedError(ErrorData errorData, IInternalTransaction transaction)
         {
-            ProcessNoticedError(errorData, transaction, string.Empty);
+            ProcessNoticedError(errorData, transaction, null);
         }
 
-        private void ProcessNoticedError(ErrorData errorData, IInternalTransaction transaction, string userid)
+        private void ProcessNoticedError(ErrorData errorData, IInternalTransaction transaction, string? userid)
         {
             if (transaction != null)
             {
