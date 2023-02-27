@@ -9,7 +9,7 @@ on:
 jobs:
   index-download-site:
     name: Rebuild indexes on the download site
-    if: ${{ github.event.inputs.downloadsite == 'true' }} 
+#    if: ${{ github.event.inputs.downloadsite == 'true' }} 
     runs-on: ubuntu-latest
     steps:
       - name: Build indexes for latest_release
