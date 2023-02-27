@@ -10,11 +10,10 @@ on:
       AWS_SECRET_ACCESS_KEY:
         description: 'AWS Secret Access Key'
         required: true
-    inputs:
-      bucket:
+      BUCKET_NAME:
         description: 's3 bucket to build index.html for'
         required: true
-        type: string
+    inputs:
       prefix:
         description: 'object prefix to build index.html for'
         required: false
@@ -30,10 +29,6 @@ on:
         type: boolean  
   workflow_dispatch:
     inputs:
-      bucket:
-        description: 's3 bucket to build index.html for'
-        required: true
-        type: string
       prefix:
         description: 'object prefix to build index.html for'
         required: false
@@ -65,8 +60,8 @@ jobs:
         run: |
           if [ ${{ inputs.dry-run }} = true ]; then
             echo "dry run, inputs.dry-run=[${{ inputs.dry-run }}]"
-            /bin/s3-indexer/indexer -bucket "${{inputs.bucket}}" -prefix "${{inputs.prefix}}"
+            /bin/s3-indexer/indexer -bucket "${{secrets.BUCKET_NAME}}" -prefix "${{inputs.prefix}}"
           else
             echo "upload, inputs.dry-run=[${{ inputs.dry-run }}]"
-            /bin/s3-indexer/indexer -bucket "${{inputs.bucket}}" -prefix "${{inputs.prefix}}" -upload
+            /bin/s3-indexer/indexer -bucket "${{secrets.BUCKET_NAME}}" -prefix "${{inputs.prefix}}" -upload
           fi
