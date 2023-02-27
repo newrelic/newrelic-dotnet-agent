@@ -7,14 +7,24 @@ on:
       - 'tippmar-nr/call-s3-indexer-workflow'
 
 jobs:
-  call-s3-indexer-workflow-passing-data:
-    uses: newrelic/s3-indexer/.github/workflows/s3-indexer.yml@main
-    with:
-      bucket: 'nr-downloads-main'
-      prefix: 'dot_net_agent'
-      aws-region: 'us-east-1'
-      dry-run: true
-    secrets:
-      inherit
+  index-download-site:
+    name: Rebuild indexes on the download site
+    if: ${{ github.event.inputs.downloadsite == 'true' }} 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build indexes for latest_release
+        uses: build_download_site_index_files.yml
+        with:
+          bucket: ${{ secrets.BUCKET_NAME }}
+          prefix: "dot_net_agent/latest_release"
+          aws-region: "us-east-1"
+          dry-run: true
+      - name: Build indexes for previous_release
+        uses: build_download_site_index_files.yml
+        with:
+          bucket: ${{ secrets.BUCKET_NAME }}
+          prefix: "dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}"
+          aws-region: "us-east-1"
+          dry-run: true
     
     
