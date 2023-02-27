@@ -10,6 +10,9 @@ on:
       AWS_SECRET_ACCESS_KEY:
         description: 'AWS Secret Access Key'
         required: true
+      BUCKET_NAME:
+        description: 's3 bucket to build index.html for'
+        required: true
       MT_TEST_BUCKET_NAME:
         description: 's3 bucket to build index.html for'
         required: true
