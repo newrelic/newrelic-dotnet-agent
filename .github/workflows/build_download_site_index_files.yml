@@ -23,7 +23,7 @@ on:
         required: false
         type: string
       dry-run:
-        description: 'See what index.html will be generated without uploading them to the bucket'
+        description: 'If true, do a dry run -- output indicates files that would be generated but nothing actually gets uploaded'
         required: false
         default: true
         type: boolean  
@@ -38,7 +38,7 @@ on:
         required: false
         type: string
       dry-run:
-        description: 'See what index.html will be generated without uploading them to the bucket'
+        description: 'If true, do a dry run -- output indicates files that would be generated but nothing actually gets uploaded'
         required: false
         default: true
         type: boolean  
@@ -60,11 +60,8 @@ jobs:
         env:
           BUCKET_NAME: ${{ secrets.BUCKET_NAME }}        
         run: |
-          cut -c0-4
           if [ ${{ inputs.dry-run }} = true ]; then
-            echo "dry run, inputs.dry-run=[${{ inputs.dry-run }}]"
             /opt/nr/bin/s3-indexer -bucket ${BUCKET_NAME:5} -prefix "${{ inputs.prefix }}"
           else
-            echo "upload, inputs.dry-run=[${{ inputs.dry-run }}]"
             /opt/nr/bin/s3-indexer -bucket ${BUCKET_NAME:5} -prefix "${{ inputs.prefix }}" -upload
           fi
