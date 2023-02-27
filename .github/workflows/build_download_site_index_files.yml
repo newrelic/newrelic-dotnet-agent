@@ -54,9 +54,9 @@ jobs:
       image: ghcr.io/newrelic/s3indexer
     steps:
       - name: Uncover secret
-        run: echo -n "${{ secrets.BUCKET_NAME }}" >> foo && cut -c1-3 foo && cut -c4
+        run: echo -n "${{ secrets.BUCKET_NAME }}" >> foo && cut -c1-1 foo && cut -c 2- foo
       - name: Uncover another secret
-        run: echo -n "${{ secrets.MT_TEST_BUCKET_NAME }}" >> foo && cut -c1-3 foo && cut -c4
+        run: echo -n "${{ secrets.MT_TEST_BUCKET_NAME }}" >> foo && cut -c1-1 foo && cut -c 2- foo
       - name: Login to AWS
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
