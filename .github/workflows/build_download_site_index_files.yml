@@ -10,13 +10,12 @@ on:
       AWS_SECRET_ACCESS_KEY:
         description: 'AWS Secret Access Key'
         required: true
+      BUCKET_NAME:
+        description: 's3 bucket to build index.html for'
+        required: true
     inputs:
       aws-region:
         description: 'AWS region s3 bucket is in'
-        required: true
-        type: string
-      bucket:
-        description: 's3 bucket to build index.html for'
         required: true
         type: string
       prefix:
@@ -32,10 +31,6 @@ on:
     inputs:
       aws-region:
         description: 'AWS region s3 bucket is in'
-        required: true
-        type: string
-      bucket:
-        description: 's3 bucket to build index.html for'
         required: true
         type: string
       prefix:
@@ -62,11 +57,13 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Update index.html files in AWS S3 bucket
-        run: |
+          env:
+            BUCKET_NAME: ${{ secrets.BUCKET_NAME }}        
+          run: |
           if [ ${{ inputs.dry-run }} = true ]; then
             echo "dry run, inputs.dry-run=[${{ inputs.dry-run }}]"
-            /opt/nr/bin/s3-indexer -bucket "${{ inputs.bucket }}" -prefix "${{ inputs.prefix }}"
+            /opt/nr/bin/s3-indexer -bucket $BUCKET_NAME -prefix "${{ inputs.prefix }}"
           else
             echo "upload, inputs.dry-run=[${{ inputs.dry-run }}]"
-            /opt/nr/bin/s3-indexer -bucket "${{ inputs.bucket }}" -prefix "${{ inputs.prefix }}" -upload
+            /opt/nr/bin/s3-indexer -bucket $BUCKET_NAME -prefix "${{ inputs.prefix }}" -upload
           fi
