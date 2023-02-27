@@ -9,14 +9,13 @@ on:
 jobs:
   index-download-site:
     name: Rebuild indexes on the download site
-#    if: ${{ github.event.inputs.downloadsite == 'true' }} 
     uses: ./.github/workflows/build_download_site_index_files.yml
     strategy:
       matrix:
         prefix: ["dot_net_agent/latest_release", "dot_net_agent/previous_releases/10.7.0"]
     with:
       prefix: ${{ matrix.prefix }}
-      aws-region: "us-east-1"
+      aws-region: "us-west-2"
       dry-run: true
     secrets: inherit
     
