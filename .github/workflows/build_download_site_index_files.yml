@@ -62,6 +62,7 @@ jobs:
         run: |
           if [ ${{ inputs.dry-run }} = true ]; then
             echo "dry run, inputs.dry-run=[${{ inputs.dry-run }}]"
+            echo "bucket name: $BUCKET_NAME"
             /opt/nr/bin/s3-indexer -bucket $BUCKET_NAME -prefix "${{ inputs.prefix }}"
           else
             echo "upload, inputs.dry-run=[${{ inputs.dry-run }}]"
