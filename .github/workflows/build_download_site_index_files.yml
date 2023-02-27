@@ -10,7 +10,7 @@ on:
       AWS_SECRET_ACCESS_KEY:
         description: 'AWS Secret Access Key'
         required: true
-      BUCKET_NAME:
+      MT_TEST_BUCKET_NAME:
         description: 's3 bucket to build index.html for'
         required: true
     inputs:
@@ -58,7 +58,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Update index.html files in AWS S3 bucket
         env:
-          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}        
+          BUCKET_NAME: ${{ secrets.MT_TEST_BUCKET_NAME }}        
         run: |
           if [ ${{ inputs.dry-run }} = true ]; then
             echo "dry run, inputs.dry-run=[${{ inputs.dry-run }}]"
