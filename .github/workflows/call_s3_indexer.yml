@@ -17,5 +17,9 @@ jobs:
       prefix: ${{ matrix.prefix }}
       aws-region: "us-east-1"
       dry-run: true
-    secrets: inherit
+    secrets: 
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+
     
