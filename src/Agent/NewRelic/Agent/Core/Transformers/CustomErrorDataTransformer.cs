@@ -65,7 +65,10 @@ namespace NewRelic.Agent.Core.Transformers
             // so it can display the stack trace. 
             _attribDefs.TransactionNameForError.TrySetValue(attribValues, errorData.Path);
 
-            _attribDefs.EndUserId.TrySetValue(attribValues, userid);
+            if (!string.IsNullOrEmpty(userid))
+            {
+                _attribDefs.EndUserId.TrySetValue(attribValues, userid);
+            }
 
             //We have to do the filtering here b/c these methods further update
             var errorTrace = _errorTraceMaker.GetErrorTrace(new AttributeValueCollection(attribValues, AttributeDestinations.ErrorTrace), errorData);
