@@ -692,7 +692,7 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void NoticeError(ErrorData errorData)
         {
-            
+
             TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
             TryNoticeErrorOnCurrentSpan(errorData);
         }
@@ -1319,7 +1319,10 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void SetUserId(string userid)
         {
-            TransactionMetadata.UserAndRequestAttributes.TrySetValue(_attribDefs.EndUserId, userid);
+            if (!string.IsNullOrWhiteSpace(userid))
+            {
+                TransactionMetadata.UserAndRequestAttributes.TrySetValue(_attribDefs.EndUserId, userid);
+            }
         }
     }
 }

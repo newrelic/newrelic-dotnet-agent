@@ -595,7 +595,8 @@ namespace NewRelic.Agent.Core.Attributes
         private AttributeDefinition<string, string> _endUserId;
         public AttributeDefinition<string, string> EndUserId => _endUserId ?? (_endUserId =
             AttributeDefinitionBuilder.CreateString("enduser.id", AttributeClassification.AgentAttributes)
-                .AppliesTo(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace)
+                .AppliesTo(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace,
+                           AttributeDestinations.TransactionTrace, AttributeDestinations.TransactionEvent)
                 .Build(_attribFilter));
 
         private AttributeDefinition<DateTime, long> _timestamp;

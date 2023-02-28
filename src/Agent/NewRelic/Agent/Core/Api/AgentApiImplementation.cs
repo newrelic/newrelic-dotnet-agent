@@ -354,20 +354,14 @@ namespace NewRelic.Agent.Core.Api
 
         private void ProcessNoticedError(ErrorData errorData, IInternalTransaction transaction)
         {
-            ProcessNoticedError(errorData, transaction, null);
-        }
-
-        private void ProcessNoticedError(ErrorData errorData, IInternalTransaction transaction, string? userid)
-        {
             if (transaction != null)
             {
-                transaction.SetUserId(userid);
                 transaction.NoticeError(errorData);
             }
             else
             {
                 errorData.Path = NoticeErrorPath;
-                _customErrorDataTransformer.Transform(errorData, _tracePriorityManager.Create(), userid);
+                _customErrorDataTransformer.Transform(errorData, _tracePriorityManager.Create(), null);
             }
         }
 
