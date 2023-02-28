@@ -183,9 +183,12 @@ namespace NewRelic.Agent.Core.Api
 
             try
             {
-                _apiSupportabilityMetricCounters.Record(ApiMethod.SetUserId);
+                if (!string.IsNullOrWhiteSpace(userid))
+                {
+                    _apiSupportabilityMetricCounters.Record(ApiMethod.SetUserId);
 
-                _transaction.SetUserId(userid);
+                    _transaction.SetUserId(userid);
+                }
             }
             catch (Exception ex)
             {
