@@ -755,13 +755,19 @@ namespace NewRelic.Agent.Core.Api
             return _agent.CurrentTransaction.GetResponseMetadata();
         }
 
-        /// <summary>
-        /// DOCS GO HERE
+        /// <summary> Sets the method that will be invoked to define the error group that an exception
+        /// should belong to.
+        ///
+        /// The callback takes an Exception and returns the name of the error group to use. Return values
+        /// that are null, empty, or whitespace will not associate the Exception to an error group.
         /// </summary>
-        /// <param name="callback"></param>
-        public void ErrorFingerprintingCallback(Func<Exception, string> callback)
+        /// <param name="callback">The callback to invoke to define the error group that an Exception belongs to.</param>
+        public void SetErrorGroupCallback(Func<Exception, string> callback)
         {
-            ((Agent)_agent).ErrorFingerprintingCallback = callback;
+            using (new IgnoreWork())
+            {
+                EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(callback));
+            }
         }
     }
 }
