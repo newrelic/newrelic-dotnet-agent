@@ -632,7 +632,7 @@ namespace NewRelic.Agent.Core
             {
                 InternalApi.ErrorFingerprintingCallback(callback);
             }
-            TryInvoke(work, apiName, ApiMethod.ErrorGroupCallback);
+            TryInvoke(work, apiName, ApiMethod.SetErrorGroupCallback);
         }
     }
 }
