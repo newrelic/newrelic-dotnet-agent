@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.Transformers
             // so it can display the stack trace. 
             _attribDefs.TransactionNameForError.TrySetValue(attribValues, errorData.Path);
 
-            if (!string.IsNullOrEmpty(userid))
+            if (!string.IsNullOrWhiteSpace(userid))
             {
                 _attribDefs.EndUserId.TrySetValue(attribValues, userid);
             }

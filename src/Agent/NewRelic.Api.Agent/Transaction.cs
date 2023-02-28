@@ -104,15 +104,10 @@ namespace NewRelic.Api.Agent
 
             try
             {
-                if (string.IsNullOrWhiteSpace(userid))
-                {
-                    _wrappedTransaction.SetUserId(string.Empty);
-                }
-                else
+                if (!string.IsNullOrWhiteSpace(userid))
                 {
                     _wrappedTransaction.SetUserId(userid);
                 }
-                
             }
             catch (RuntimeBinderException)
             {
