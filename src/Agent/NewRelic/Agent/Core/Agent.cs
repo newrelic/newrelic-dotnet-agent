@@ -64,6 +64,7 @@ namespace NewRelic.Agent.Core
         private readonly ILogContextDataFilter _logContextDataFilter;
         private Extensions.Logging.ILogger _logger;
         private IStackExchangeRedisCache _stackExchangeRedisCache;
+        private Func<Exception, string> _errorFingerprintingCallback;
 
         public Agent(ITransactionService transactionService, ITransactionTransformer transactionTransformer,
             IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker,
@@ -299,6 +300,19 @@ namespace NewRelic.Agent.Core
             }
 
             Log.Error($"An exception occurred in a wrapper: {exception}");
+        }
+
+        //TODO: does this callback really belong on IAgent??
+        public Func<Exception, string> ErrorFingerprintingCallback
+        {
+            get
+            {
+                return _errorFingerprintingCallback ??= x => null;
+            }
+            set
+            {
+                _errorFingerprintingCallback = value;
+            }
         }
 
         #endregion Error handling

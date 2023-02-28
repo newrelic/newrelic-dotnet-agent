@@ -27,10 +27,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     public class ErrorTraceMaker : IErrorTraceMaker
     {
         private readonly IConfigurationService _configurationService;
+        private readonly IAttributeDefinitionService _attribDefSvc;
+        private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
 
-        public ErrorTraceMaker(IConfigurationService configurationService)
+        public ErrorTraceMaker(IConfigurationService configurationService, IAttributeDefinitionService attributeService)
         {
             _configurationService = configurationService;
+            _attribDefSvc = attributeService;
         }
 
         /// <summary>
@@ -53,7 +56,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var path = errorData.Path;
             var message = errorData.ErrorMessage;
             var exceptionClassName = errorData.ErrorTypeName;
-            var errorAttributesWireModel = GetErrorTraceAttributes(attribValues, stackTrace);
+            var errorAttributesWireModel = GetErrorTraceAttributes(errorData, attribValues, stackTrace);
             const string guid = null;
 
             return new ErrorTraceWireModel(timestamp, path, message, exceptionClassName, errorAttributesWireModel, guid);
@@ -83,7 +86,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var path = transactionMetricName.PrefixedName;
             var message = errorData.ErrorMessage;
             var exceptionClassName = errorData.ErrorTypeName;
-            var errorAttributesWireModel = GetErrorTraceAttributes(transactionAttributes, stackTrace);
+            var errorAttributesWireModel = GetErrorTraceAttributes(errorData, transactionAttributes, stackTrace);
             var guid = immutableTransaction.Guid;
 
             return new ErrorTraceWireModel(timestamp, path, message, exceptionClassName, errorAttributesWireModel, guid);
@@ -100,8 +103,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return stackTrace;
         }
 
-        private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes(IAttributeValueCollection attributes, IList<string> stackTrace)
+        private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes(ErrorData errorData, IAttributeValueCollection attributes, IList<string> stackTrace)
         {
+            _attribDefs.ErrorGroupFingerprint.TrySetValue(attributes, errorData.GroupFingerprint);
             return new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attributes, stackTrace);
         }
     }

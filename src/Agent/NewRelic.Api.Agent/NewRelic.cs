@@ -828,6 +828,23 @@ namespace NewRelic.Api.Agent
             return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
+        /// <summary>
+        /// DOCS GO HERE
+        /// </summary>
+        /// <param name="callback"></param>
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void ErrorFingerprintingCallback(Func<Exception, string> callback)
+        {
+            try
+            {
+                System.Diagnostics.Trace.WriteLine("NewRelic.ErrorFingerprintingCallback()");
+            }
+            catch
+            {
+                // Swallow any exception thrown from here
+            }
+        }
+
         #endregion
     }
 

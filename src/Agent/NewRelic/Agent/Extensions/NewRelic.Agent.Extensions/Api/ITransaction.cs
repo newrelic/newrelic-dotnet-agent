@@ -274,5 +274,7 @@ namespace NewRelic.Agent.Api
         void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType);
 
         ITransaction SetRequestHeaders<T>(T headers, IEnumerable<string> keysToCapture, Func<T, string, string> getter);
+
+        void SetUserId(string userid);
     }
 }

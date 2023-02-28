@@ -265,6 +265,12 @@ namespace NewRelic.Agent.Api
         ///
         /// <returns> A list of key-value pairs representing the request metadata. </returns>
         IEnumerable<KeyValuePair<string, string>> GetResponseMetadata();
+
+        /// <summary>
+        /// DOCS GO HERE
+        /// </summary>
+        /// <param name="callback"></param>
+        void ErrorFingerprintingCallback(Func<Exception, string> callback);
     }
 }
 

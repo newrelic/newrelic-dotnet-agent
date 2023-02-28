@@ -74,5 +74,11 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         ISpan CurrentSpan { get; }
+
+        /// <summary>
+        /// DOCS GO HERE
+        /// </summary>
+        /// <param name="userid"></param>
+        void SetUserId(string userid);
     }
 }

@@ -316,6 +316,15 @@ namespace NewRelic.Agent.Api
         {
             return _agentApiImplementation?.GetResponseMetadata() ?? Enumerable.Empty<KeyValuePair<string, string>>();
         }
+
+        /// <summary>
+        /// DOCS GO HERE
+        /// </summary>
+        /// <param name="callback"></param>
+        public static void ErrorFingerprintingCallback(Func<Exception, string> callback)
+        {
+            _agentApiImplementation?.ErrorFingerprintingCallback(callback);
+        }
     }
 }
 

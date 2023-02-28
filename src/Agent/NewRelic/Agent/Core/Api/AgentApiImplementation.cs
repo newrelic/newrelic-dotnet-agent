@@ -354,14 +354,20 @@ namespace NewRelic.Agent.Core.Api
 
         private void ProcessNoticedError(ErrorData errorData, IInternalTransaction transaction)
         {
+            ProcessNoticedError(errorData, transaction, null);
+        }
+
+        private void ProcessNoticedError(ErrorData errorData, IInternalTransaction transaction, string? userid)
+        {
             if (transaction != null)
             {
+                transaction.SetUserId(userid);
                 transaction.NoticeError(errorData);
             }
             else
             {
                 errorData.Path = NoticeErrorPath;
-                _customErrorDataTransformer.Transform(errorData, _tracePriorityManager.Create());
+                _customErrorDataTransformer.Transform(errorData, _tracePriorityManager.Create(), userid);
             }
         }
 
@@ -747,6 +753,15 @@ namespace NewRelic.Agent.Core.Api
             }
 
             return _agent.CurrentTransaction.GetResponseMetadata();
+        }
+
+        /// <summary>
+        /// DOCS GO HERE
+        /// </summary>
+        /// <param name="callback"></param>
+        public void ErrorFingerprintingCallback(Func<Exception, string> callback)
+        {
+            ((Agent)_agent).ErrorFingerprintingCallback = callback;
         }
     }
 }

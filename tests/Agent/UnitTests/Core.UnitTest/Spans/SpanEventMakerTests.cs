@@ -318,7 +318,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         public void GetSpanEvent_IncludesErrorAttributes_WhenThereIsAnError()
         {
             // ARRANGE
-            var testError = new ErrorData("error message", "ErrorType", "stack trace", DateTime.UtcNow, null, false);
+            var testError = new ErrorData("error message", "ErrorType", "stack trace", DateTime.UtcNow, null, false, string.Empty);
             var segments = new List<Segment>()
             {
                 _baseGenericSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
@@ -349,7 +349,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             // ARRANGE
             _localConfig.errorCollector.enabled = false;
             PublishConfig();
-            var testError = new ErrorData("error message", "ErrorType", "stack trace", DateTime.UtcNow, null, false);
+            var testError = new ErrorData("error message", "ErrorType", "stack trace", DateTime.UtcNow, null, false, string.Empty);
             var segments = new List<Segment>()
             {
                 _baseGenericSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
@@ -379,7 +379,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         public void GetSpanEvent_Generates_ExpecedErrorAttribute(bool hasExpectedError)
         {
             // ARRANGE
-            var testError = new ErrorData("error message", "ErrorType", "stack trace", DateTime.UtcNow, null, hasExpectedError);
+            var testError = new ErrorData("error message", "ErrorType", "stack trace", DateTime.UtcNow, null, hasExpectedError, string.Empty);
             var segments = new List<Segment>()
             {
                 _baseGenericSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
