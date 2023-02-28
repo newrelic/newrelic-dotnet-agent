@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private void SetFingerprint(ErrorData errorData, IAttributeValueCollection attribValues)
         {
-            _attribDefs.ErrorGroupFingerprint.TrySetValue(attribValues, errorData.GroupFingerprint);
+            _attribDefs.ErrorGroup.TrySetValue(attribValues, errorData.GroupFingerprint);
         }
     }
 }

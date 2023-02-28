@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Metric
         InsertDistributedTraceHeaders = 24,
         AcceptDistributedTraceHeaders = 25,
         SpanSetName = 26,
-        ErrorFingerprintingCallback = 27,
+        ErrorGroupCallback = 27,
         SetUserId = 28
     }
 
