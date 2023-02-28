@@ -29,6 +29,10 @@ on:
         description: 'If "true", will deploy Linux packages to the real apt/yum.newrelic.com. If "false", will deploy to a test repository.'
         required: true
         default: 'false'
+      indexdownloadsite:
+        description: 'If "true", will run the index-download-site job. If "false", will not.'
+        required: true
+        default: 'true'
 
 env:
   DOTNET_NOLOGO: true
@@ -120,6 +124,19 @@ jobs:
             Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
+
+  index-download-site:
+    name: Rebuild indexes on the download site
+    if: ${{ github.event.inputs.indexdownloadsite == 'true' }}
+    uses: ./.github/workflows/build_download_site_index_files.yml
+    strategy:
+      matrix:
+        prefix: ["dot_net_agent/latest_release", "dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}"]
+    with:
+      prefix: ${{ matrix.prefix }}
+      aws-region: "us-east-1"
+      dry-run: false
+    secrets: inherit
 
   deploy-nuget:
     needs: get-external-artifacts
