@@ -637,7 +637,7 @@ namespace NewRelic.Agent.Core
             const string apiName = nameof(SetErrorGroupCallback);
             void work()
             {
-                InternalApi.ErrorFingerprintingCallback(callback);
+                InternalApi.SetErrorGroupCallback(callback);
             }
             TryInvoke(work, apiName, ApiMethod.SetErrorGroupCallback);
         }
