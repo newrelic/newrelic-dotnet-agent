@@ -298,7 +298,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         }
 
         #region User Tracking Tests
-
         [Test]
         public void UserTracking_NoEndUserIdAttributeIfNotSet()
         {
@@ -310,31 +309,24 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         }
 
         [Test]
-        public void UserTracking_HasEndUserIdAttributeIfSet()
-        {
-            var expectedUserId = "CustomUserId";
-            _transaction.SetUserId(expectedUserId);
+        [TestCase("CustomUserId", true)]
+        [TestCase("", false)]
+        [TestCase(" ", false)]
+        [TestCase(null, false)]
 
-            var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
-            var userAttributes = immutableTransactionMetadata.UserAndRequestAttributes.ToDictionary();
-            var hasUserIdAttribute = userAttributes.TryGetValue(_attribDefs.EndUserId.Name, out var userIdValue);
-            Assert.True(hasUserIdAttribute);
-            Assert.AreEqual(expectedUserId, userIdValue);
-        }
-
-        [Test]
-        [TestCase("")]
-        [TestCase(" ")]
-        [TestCase(null)]
-
-        public void UserTracking_NoEndUserIdAttributeIfSetToNullOrWhitespace(string expectedUserId)
+        public void UserTracking_ShouldAddEndUserIdAttributeWhenNotNullOrWhitespace(string expectedUserId, bool endUserAttributeShouldExist)
         {
             _transaction.SetUserId(expectedUserId);
 
             var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
             var userAttributes = immutableTransactionMetadata.UserAndRequestAttributes.ToDictionary();
             var hasUserIdAttribute = userAttributes.TryGetValue(_attribDefs.EndUserId.Name, out var userIdValue);
-            Assert.False(hasUserIdAttribute);
+
+            Assert.AreEqual(endUserAttributeShouldExist, hasUserIdAttribute);
+            if (endUserAttributeShouldExist)
+            {
+                Assert.AreEqual(expectedUserId, userIdValue);
+            }
         }
 
         [Test]
@@ -351,8 +343,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             Assert.True(hasUserIdAttribute);
             Assert.AreEqual(expectedUserId2, userIdValue);
         }
-
-
         #endregion
 
     }
