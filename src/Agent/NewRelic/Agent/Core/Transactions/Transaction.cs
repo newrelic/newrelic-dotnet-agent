@@ -1317,6 +1317,10 @@ namespace NewRelic.Agent.Core.Transactions
             return url;
         }
 
+        /// <summary>
+        /// Sets a User Id to be associated with this transaction.
+        /// </summary>
+        /// <param name="userid">The User Id for this transaction.</param>
         public void SetUserId(string userid)
         {
             if (!string.IsNullOrWhiteSpace(userid))

@@ -95,6 +95,10 @@ namespace NewRelic.Api.Agent
         }
 
         private static bool _isSetUserIdAvailable = true;
+        /// <summary>
+        /// Sets a User Id to be associated with this transaction.
+        /// </summary>
+        /// <param name="userid">The User Id for this transaction.</param>
         public void SetUserId(string userid)
         {
             if (!_isSetUserIdAvailable)
