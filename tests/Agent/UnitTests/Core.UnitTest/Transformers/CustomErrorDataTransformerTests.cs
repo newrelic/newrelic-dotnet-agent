@@ -123,6 +123,24 @@ namespace NewRelic.Agent.Core.Transformers
             Mock.Assert(() => _errorTraceAggregator.Collect(Arg.IsAny<ErrorTraceWireModel>()), Occurs.Never());
         }
 
+        [Test]
+        [TestCase("CustomUserId", true)]
+        [TestCase("", false)]
+        [TestCase(" ", false)]
+        [TestCase(null, false)]
+        public void Transform_SetsEndUserIdAttributeWhenNotNullOrWhitespace(string expectedUserId, bool attributeShouldExist)
+        {
+            _customErrorDataTransformer.Transform(MakeError(), 0.5f, expectedUserId);
+
+            Mock.Assert(() => _errorTraceAggregator.Collect(
+                Arg.Matches<ErrorTraceWireModel>(errorTraceWireModel =>
+                    errorTraceWireModel.Attributes.AgentAttributes.ContainsKey(_attribDefs.EndUserId.Name) == attributeShouldExist)));
+
+            Mock.Assert(() => _errorEventAggregator.Collect(
+                Arg.Matches<ErrorEventWireModel>(errorEventWireModel =>
+                    errorEventWireModel.AttributeValues.GetAttributeValuesDic(AttributeClassification.AgentAttributes).ContainsKey(_attribDefs.EndUserId.Name) == attributeShouldExist)));
+        }
+
         private ErrorData MakeError(ReadOnlyDictionary<string, object> attributes = null)
         {
             return new ErrorData("error message", "error.type", null, System.DateTime.UtcNow, attributes, false, string.Empty);
