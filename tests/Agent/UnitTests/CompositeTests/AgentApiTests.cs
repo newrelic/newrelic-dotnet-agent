@@ -1743,6 +1743,23 @@ namespace CompositeTests
 
         #endregion
 
+        #region SetErrorGroupCallback
+
+        [Test]
+        public void Test_SetErrorGroupCallback()
+        {
+            Func<Exception, string> myCallback = ex => "my error group";
+
+            AgentApi.SetErrorGroupCallback(myCallback);
+
+            _compositeTestAgent.PushConfiguration();
+            var errorGroupCallback = _compositeTestAgent.CurrentConfiguration.ErrorGroupCallback;
+
+            Assert.AreSame(myCallback, errorGroupCallback);
+        }
+
+        #endregion
+
         #region GetRequestMetadata
 
         [Test]
