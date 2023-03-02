@@ -47,6 +47,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
             Mock.Arrange(() => _configuration.ErrorCollectorCaptureEvents).Returns(true);
+            Mock.Arrange(() => _configuration.ErrorGroupCallback).Returns((Func<Exception, string>)null);
 
             _configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);

@@ -105,7 +105,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes(ErrorData errorData, IAttributeValueCollection attributes, IList<string> stackTrace)
         {
-            _attribDefs.ErrorGroup.TrySetValue(attributes, errorData.GroupFingerprint);
+            _attribDefs.ErrorGroup.TrySetValue(attributes, errorData.ErrorGroup);
             return new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attributes, stackTrace);
         }
     }

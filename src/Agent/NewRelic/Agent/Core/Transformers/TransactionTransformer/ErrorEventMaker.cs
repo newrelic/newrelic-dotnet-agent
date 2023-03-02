@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             _attribDefs.ErrorDotMessage.TrySetValue(attribValues, errorData.ErrorMessage);
             _attribDefs.TimestampForError.TrySetValue(attribValues, errorData.NoticedAt);
 
-            SetFingerprint(errorData, attribValues);
+            SetErrorGroup(errorData, attribValues);
             return new ErrorEventWireModel(attribValues, false, priority);
         }
 
@@ -44,13 +44,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var priority = immutableTransaction.Priority;
 
             _attribDefs.GetTypeAttribute(TypeAttributeValue.TransactionError).TrySetDefault(attribValues);
-            SetFingerprint(immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData, attribValues);
+            SetErrorGroup(immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData, attribValues);
             return new ErrorEventWireModel(attribValues, isSynthetics, priority);
         }
 
-        private void SetFingerprint(ErrorData errorData, IAttributeValueCollection attribValues)
+        private void SetErrorGroup(ErrorData errorData, IAttributeValueCollection attribValues)
         {
-            _attribDefs.ErrorGroup.TrySetValue(attribValues, errorData.GroupFingerprint);
+            _attribDefs.ErrorGroup.TrySetValue(attribValues, errorData.ErrorGroup);
         }
     }
 }
