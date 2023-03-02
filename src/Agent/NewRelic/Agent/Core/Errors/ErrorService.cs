@@ -79,14 +79,12 @@ namespace NewRelic.Agent.Core.Errors
 
         public ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes, bool isExpected)
         {
-            var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
-            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
+            return FromMessageInternal(errorMessage, customAttributes, isExpected);
         }
 
         public ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes, bool isExpected)
         {
-            var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
-            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
+            return FromMessageInternal(errorMessage, customAttributes, isExpected);
         }
 
         public ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt)
@@ -116,6 +114,12 @@ namespace NewRelic.Agent.Core.Errors
         private string GetFormattedHttpStatusCode(int statusCode, int? subStatusCode)
         {
             return subStatusCode == null ? $"{statusCode}" : $"{statusCode}.{subStatusCode}";
+        }
+
+        private ErrorData FromMessageInternal<T>(string errorMessage, IDictionary<string, T> customAttributes, bool isExpected)
+        {
+            var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
+            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
         }
 
         private ErrorData FromExceptionInternal(Exception exception, ReadOnlyDictionary<string, object> customAttributes)
