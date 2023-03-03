@@ -51,6 +51,9 @@ namespace NewRelic.Agent.Core.Api
 
             var expectedCustomUserId = "CustomUserId";
             _transactionBridgeApi.SetUserId(expectedCustomUserId);
+
+            // verify we didn't set a UserId
+            Mock.Assert(() => _transaction.SetUserId(Arg.AnyString), Occurs.Never());
         }
     }
 }
