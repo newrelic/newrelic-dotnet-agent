@@ -24,6 +24,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private ErrorService _errorService;
         private AttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+        private const string _expectedErrorGroupAttributeName = "error.group.name";
 
         private const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
 
@@ -147,7 +148,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
 
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
-            var errorGroupAttribute = agentAttributes["error_group"];
+            var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
             Assert.AreEqual("test group", errorGroupAttribute);
         }
@@ -166,7 +167,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
 
-            CollectionAssert.DoesNotContain(agentAttributes.Keys, "error_group");
+            CollectionAssert.DoesNotContain(agentAttributes.Keys, _expectedErrorGroupAttributeName);
         }
 
         [Test]
@@ -178,7 +179,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorDataIn);
 
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
-            var errorGroupAttribute = agentAttributes["error_group"];
+            var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
             Assert.AreEqual("test group", errorGroupAttribute);
         }
@@ -195,7 +196,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
 
-            CollectionAssert.DoesNotContain(agentAttributes.Keys, "error_group");
+            CollectionAssert.DoesNotContain(agentAttributes.Keys, _expectedErrorGroupAttributeName);
         }
 
         private ImmutableTransaction BuildTestTransaction(string uri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null)

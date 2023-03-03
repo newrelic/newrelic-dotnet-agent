@@ -588,7 +588,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         private AttributeDefinition<string, string> _errorGroup;
         public AttributeDefinition<string, string> ErrorGroup => _errorGroup ?? (_errorGroup =
-            AttributeDefinitionBuilder.CreateString("error_group", AttributeClassification.AgentAttributes)
+            AttributeDefinitionBuilder.CreateString("error.group.name", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace)
                 .WithConvert(IgnoreEmptyAndWhitespaceErrorGroupValues)
                 .Build(_attribFilter));
