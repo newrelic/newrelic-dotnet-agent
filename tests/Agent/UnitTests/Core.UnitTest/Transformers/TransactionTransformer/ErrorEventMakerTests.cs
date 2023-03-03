@@ -37,16 +37,19 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private static ITimerFactory _timerFactory;
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
+        private Func<Exception, string> _errorGroupCallback;
 
         [SetUp]
         public void SetUp()
         {
+            _errorGroupCallback = null;
             _configuration = Mock.Create<IConfiguration>();
 
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
             Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
             Mock.Arrange(() => _configuration.ErrorCollectorCaptureEvents).Returns(true);
+            Mock.Arrange(() => _configuration.ErrorGroupCallback).Returns(() => _errorGroupCallback);
 
             _configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
@@ -247,6 +250,96 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
                 () => Assert.Contains("custom attribute name", userAttributes)
             );
+        }
+
+        [Test]
+        public void GetErrorEvent_NoTransaction_WithException_ContainsErrorGroup()
+        {
+            _errorGroupCallback = ex => "test group";
+            var errorData = _errorService.FromException(new Exception("test message"));
+
+            var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
+
+            var agentAttributes = errorEvent.AgentAttributes();
+            var errorGroupAttribute = agentAttributes["error_group"];
+
+            Assert.AreEqual("test group", errorGroupAttribute);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("     ")]
+        public void GetErrorEvent_NoTransaction_WithException_DoesNotContainErrorGroup(string callbackReturnValue)
+        {
+            _errorGroupCallback = ex => callbackReturnValue;
+            var errorData = _errorService.FromException(new Exception("test message"));
+
+            var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
+
+            var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
+
+            CollectionAssert.DoesNotContain(agentAttributeKeys, "error_group");
+        }
+
+        [Test]
+        public void GetErrorEvent_InTransaction_WithException_ContainsErrorGroup()
+        {
+            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false, "test group");
+
+            var transaction = BuildTestTransaction(statusCode: 500,
+                                                            exceptionData: errorData,
+                                                            uri: "http://www.newrelic.com/test?param=value",
+                                                            referrerUri: "http://referrer.uri",
+                                                            includeUserAttributes: true);
+
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var txStats = new TransactionMetricStatsCollection(transactionMetricName);
+
+            var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(15), txStats);
+
+
+            attributes.AddRange(GetIntrinsicAttributes());
+
+            var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
+
+            var agentAttributes = errorEvent.AgentAttributes();
+            var errorGroupAttribute = agentAttributes["error_group"];
+
+            Assert.AreEqual("test group", errorGroupAttribute);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("     ")]
+        public void GetErrorEvent_InTransaction_WithException_DoesNotContainErrorGroup(string errorGroupValue)
+        {
+            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false, errorGroupValue);
+
+            var transaction = BuildTestTransaction(statusCode: 500,
+                                                            exceptionData: errorData,
+                                                            uri: "http://www.newrelic.com/test?param=value",
+                                                            referrerUri: "http://referrer.uri",
+                                                            includeUserAttributes: true);
+
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var txStats = new TransactionMetricStatsCollection(transactionMetricName);
+
+            var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(15), txStats);
+
+
+            attributes.AddRange(GetIntrinsicAttributes());
+
+            var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
+
+            var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
+
+            CollectionAssert.DoesNotContain(agentAttributeKeys, "error_group");
         }
 
         private IAttributeValueCollection GetIntrinsicAttributes()

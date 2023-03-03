@@ -590,7 +590,18 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<string, string> ErrorGroup => _errorGroup ?? (_errorGroup =
             AttributeDefinitionBuilder.CreateString("error_group", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace)
+                .WithConvert(IgnoreEmptyAndWhitespaceErrorGroupValues)
                 .Build(_attribFilter));
+
+        private static string IgnoreEmptyAndWhitespaceErrorGroupValues(string errorGroupValue)
+        {
+            if (!string.IsNullOrWhiteSpace(errorGroupValue))
+            {
+                return errorGroupValue;
+            }
+
+            return null;
+        }
 
         private AttributeDefinition<string, string> _endUserId;
         public AttributeDefinition<string, string> EndUserId => _endUserId ?? (_endUserId =

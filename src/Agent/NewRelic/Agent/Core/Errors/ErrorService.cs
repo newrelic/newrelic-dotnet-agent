@@ -79,14 +79,12 @@ namespace NewRelic.Agent.Core.Errors
 
         public ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes, bool isExpected)
         {
-            var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
-            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
+            return FromMessageInternal(errorMessage, customAttributes, isExpected);
         }
 
         public ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes, bool isExpected)
         {
-            var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
-            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
+            return FromMessageInternal(errorMessage, customAttributes, isExpected);
         }
 
         public ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt)
@@ -118,11 +116,19 @@ namespace NewRelic.Agent.Core.Errors
             return subStatusCode == null ? $"{statusCode}" : $"{statusCode}.{subStatusCode}";
         }
 
+        private ErrorData FromMessageInternal<T>(string errorMessage, IDictionary<string, T> customAttributes, bool isExpected)
+        {
+            var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
+            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
+        }
+
         private ErrorData FromExceptionInternal(Exception exception, ReadOnlyDictionary<string, object> customAttributes)
         {
             // this does more work than just getting the exception, so we want to do this just once.
             var baseException = exception.GetBaseException();
-            var groupFingerprint = Agent.Instance?.ErrorFingerprintingCallback(exception);
+            // When generating the error group we use the outermost exception so that we can provide as much context as possible
+            // to the callback.
+            var errorGroup = _configurationService.Configuration.ErrorGroupCallback?.Invoke(exception);
             var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : baseException.Message;
             var baseExceptionTypeName = GetFriendlyExceptionTypeName(baseException);
             // We want the message from the base exception since that is the real exception.
@@ -131,7 +137,7 @@ namespace NewRelic.Agent.Core.Errors
             var noticedAt = DateTime.UtcNow;
 
             var isExpected = IsErrorFromExceptionSpecified(exception, _configurationService.Configuration.ExpectedErrorsConfiguration);
-            return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected, groupFingerprint);
+            return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected, errorGroup);
         }
 
         private static bool IsErrorFromExceptionSpecified(Exception exception, IDictionary<string, IEnumerable<string>> source)

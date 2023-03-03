@@ -136,6 +136,68 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             );
         }
 
+        [Test]
+        public void GetErrorTrace_InTransaction_HasErrorGroup()
+        {
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, "test group");
+            var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
+            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+            var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
+
+            var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
+
+            var agentAttributes = errorTrace.Attributes.AgentAttributes;
+            var errorGroupAttribute = agentAttributes["error_group"];
+
+            Assert.AreEqual("test group", errorGroupAttribute);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("    ")]
+        public void GetErrorTrace_InTransaction_DoesNotHaveErrorGroup(string errorGroupValue)
+        {
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, errorGroupValue);
+            var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
+            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+            var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
+
+            var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
+
+            var agentAttributes = errorTrace.Attributes.AgentAttributes;
+
+            CollectionAssert.DoesNotContain(agentAttributes.Keys, "error_group");
+        }
+
+        [Test]
+        public void GetErrorTrace_NoTransaction_HasErrorGroup()
+        {
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, "test group");
+            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+
+            var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorDataIn);
+
+            var agentAttributes = errorTrace.Attributes.AgentAttributes;
+            var errorGroupAttribute = agentAttributes["error_group"];
+
+            Assert.AreEqual("test group", errorGroupAttribute);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("    ")]
+        public void GetErrorTrace_NoTransaction_DoesNotHaveErrorGroup(string errorGroupValue)
+        {
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, errorGroupValue);
+            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+
+            var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorDataIn);
+
+            var agentAttributes = errorTrace.Attributes.AgentAttributes;
+
+            CollectionAssert.DoesNotContain(agentAttributes.Keys, "error_group");
+        }
+
         private ImmutableTransaction BuildTestTransaction(string uri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null)
         {
             var transactionMetadata = new TransactionMetadata(guid);
