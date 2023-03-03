@@ -67,4 +67,4 @@ the [New Relic .NET agent](https://opensource.newrelic.com/projects/newrelic/new
 
 ## License
 The .NET Agent is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
-The .NET Agent also uses source code from third-party libraries. You can find full details on which libraries are used and the terms under which they are licensed in the third-party notices document.
+The .NET Agent also uses source code from third-party libraries. You can find details on which libraries are used and the terms under which they are licensed in the third-party notices document.
