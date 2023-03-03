@@ -178,6 +178,10 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
+        /// <summary>
+        /// Sets a User Id to be associated with this transaction.
+        /// </summary>
+        /// <param name="userid">The User Id for this transaction.</param>
         public void SetUserId(string userid)
         {
 

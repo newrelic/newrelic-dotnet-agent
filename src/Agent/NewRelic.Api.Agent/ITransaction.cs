@@ -76,9 +76,9 @@ namespace NewRelic.Api.Agent
         ISpan CurrentSpan { get; }
 
         /// <summary>
-        /// DOCS GO HERE
+        /// Sets a User Id to be associated with this transaction.
         /// </summary>
-        /// <param name="userid"></param>
+        /// <param name="userid">The User Id for this transaction.</param>
         void SetUserId(string userid);
     }
 }
