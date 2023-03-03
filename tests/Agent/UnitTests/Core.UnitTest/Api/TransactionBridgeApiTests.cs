@@ -1,7 +1,10 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+
 using System;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Metric;
 using NUnit.Framework;
 using Telerik.JustMock;
