@@ -38,6 +38,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
         private Func<Exception, string> _errorGroupCallback;
+        private const string _expectedErrorGroupAttributeName = "error.group.name";
 
         [SetUp]
         public void SetUp()
@@ -261,7 +262,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
 
             var agentAttributes = errorEvent.AgentAttributes();
-            var errorGroupAttribute = agentAttributes["error_group"];
+            var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
             Assert.AreEqual("test group", errorGroupAttribute);
         }
@@ -278,7 +279,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
-            CollectionAssert.DoesNotContain(agentAttributeKeys, "error_group");
+            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
         }
 
         [Test]
@@ -306,7 +307,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
 
             var agentAttributes = errorEvent.AgentAttributes();
-            var errorGroupAttribute = agentAttributes["error_group"];
+            var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
             Assert.AreEqual("test group", errorGroupAttribute);
         }
@@ -339,7 +340,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
-            CollectionAssert.DoesNotContain(agentAttributeKeys, "error_group");
+            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
         }
 
         private IAttributeValueCollection GetIntrinsicAttributes()
