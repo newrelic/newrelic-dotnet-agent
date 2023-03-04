@@ -139,7 +139,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [Test]
         public void GetErrorTrace_InTransaction_HasErrorGroup()
         {
-            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, "test group");
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false);
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -157,7 +157,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [TestCase("    ")]
         public void GetErrorTrace_InTransaction_DoesNotHaveErrorGroup(string errorGroupValue)
         {
-            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, errorGroupValue);
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false);
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -172,7 +172,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [Test]
         public void GetErrorTrace_NoTransaction_HasErrorGroup()
         {
-            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, "test group");
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false);
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorDataIn);
@@ -188,7 +188,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [TestCase("    ")]
         public void GetErrorTrace_NoTransaction_DoesNotHaveErrorGroup(string errorGroupValue)
         {
-            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, errorGroupValue);
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false);
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorDataIn);

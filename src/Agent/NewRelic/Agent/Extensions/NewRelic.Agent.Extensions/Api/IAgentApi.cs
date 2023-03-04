@@ -273,7 +273,7 @@ namespace NewRelic.Agent.Api
         /// that are null, empty, or whitespace will not associate the Exception to an error group.
         /// </summary>
         /// <param name="callback">The callback to invoke to define the error group that an Exception belongs to.</param>
-        void SetErrorGroupCallback(Func<Exception, string> callback);
+        void SetErrorGroupCallback(Func<IDictionary<string, object>, string> callback);
     }
 }
 

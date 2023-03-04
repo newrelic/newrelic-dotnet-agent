@@ -309,7 +309,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         // Serializing this Func doesn't provide us with more information than the supportability metrics
         [JsonIgnore()]
-        public Func<Exception, string> ErrorGroupCallback => _configuration.ErrorGroupCallback;
+        public Func<IDictionary<string, object>, string> ErrorGroupCallback => _configuration.ErrorGroupCallback;
 
         [JsonProperty("agent.request_headers_map")]
         public Dictionary<string, string> RequestHeadersMap => _configuration.RequestHeadersMap;

@@ -317,79 +317,6 @@ namespace NewRelic.Agent.Core.Errors
 
         }
 
-        [TestCase("test group")]
-        [TestCase(null)]
-        [TestCase("")]
-        [TestCase("     ")]
-        public void FromException_ShouldHaveErrorGroup(string callbackReturnValue)
-        {
-            SetupConfiguration(null, null, null, false, null, null, null, true);
-            SetupErrorGroupCallback(ex => callbackReturnValue);
-
-            var testException = new Exception("Test exception message");
-            var errorData = _errorService.FromException(testException);
-
-            Assert.AreEqual(callbackReturnValue, errorData.ErrorGroup);
-        }
-
-        [Test]
-        public void FromException_ShouldNotHaveErrorGroup()
-        {
-            SetupConfiguration(null, null, null, false, null, null, null, true);
-            SetupErrorGroupCallback(null);
-
-            var testException = new Exception("Test exception message");
-            var errorData = _errorService.FromException(testException);
-
-            Assert.IsNull(errorData.ErrorGroup);
-        }
-
-        [Test]
-        public void FromException_ErrorGroupShouldUseOuterException()
-        {
-            SetupConfiguration(null, null, null, false, null, null, null, true);
-            SetupErrorGroupCallback(TestErrorGroupCallback);
-
-            var innerException = new Exception("Inner exception message");
-            var outerException = new Exception("Outer exception message", innerException);
-
-            var errorData = _errorService.FromException(outerException);
-
-            Assert.AreEqual("outer", errorData.ErrorGroup);
-
-            string TestErrorGroupCallback(Exception ex)
-            {
-                if (ex.InnerException != null)
-                {
-                    return "outer";
-                }
-
-                return "inner";
-            }
-        }
-
-        [Test]
-        public void FromMessage_ShouldNotHaveErrorGroup()
-        {
-            SetupConfiguration(null, null, null, false, null, null, null, true);
-            SetupErrorGroupCallback(ex => "test group");
-
-            var errorData = _errorService.FromMessage("test error message", new Dictionary<string, object>(), false);
-
-            Assert.IsNull(errorData.ErrorGroup);
-        }
-
-        [Test]
-        public void FromErrorHttpStatusCode_ShouldNotHaveErrorGroup()
-        {
-            SetupConfiguration(null, null, null, false, null, null, null, true);
-            SetupErrorGroupCallback(ex => "test group");
-
-            var errorData = _errorService.FromErrorHttpStatusCode(500, null, DateTime.UtcNow);
-
-            Assert.IsNull(errorData.ErrorGroup);
-        }
-
         private void SetupConfiguration(List<string> classesToBeIgnored, IEnumerable<KeyValuePair<string, IEnumerable<string>>> errorMessagesToBeIgnored,
             List<float> statusCodesToIgnore, bool stripExceptionMessages, List<string> errorClassesToBeExpected,
             IEnumerable<KeyValuePair<string, IEnumerable<string>>> errorMessagesToBeExpected, string expectedStatusCodes, bool errorCollectorEnabled)
@@ -450,7 +377,7 @@ namespace NewRelic.Agent.Core.Errors
             EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
         }
 
-        private void SetupErrorGroupCallback(Func<Exception, string> callback)
+        private void SetupErrorGroupCallback(Func<IDictionary<string, object>, string> callback)
         {
             EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(callback));
         }

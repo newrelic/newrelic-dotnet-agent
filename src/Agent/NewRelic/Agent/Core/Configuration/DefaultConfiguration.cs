@@ -1201,7 +1201,7 @@ namespace NewRelic.Agent.Core.Configuration
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
         public IEnumerable<string> ExpectedErrorStatusCodesForAgentSettings { get; private set; }
 
-        public Func<Exception, string> ErrorGroupCallback => _runTimeConfiguration.ErrorGroupCallback;
+        public Func<IDictionary<string, object>, string> ErrorGroupCallback => _runTimeConfiguration.ErrorGroupCallback;
 
         #endregion
 

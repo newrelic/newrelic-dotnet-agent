@@ -801,7 +801,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorTraces = new List<ErrorTraceWireModel>();
 
             _errorTraceMaker = new ErrorTraceMaker(_configurationService, _attribDefSvc);
-            _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
+            _errorEventMaker = new ErrorEventMaker(_attribDefSvc, _configurationService);
 
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
             Mock.Arrange(() => _errorEventAggregator.Collect(Arg.IsAny<ErrorEventWireModel>())).DoInstead<ErrorEventWireModel>(errorEvent => errorEvents.Add(errorEvent));
@@ -866,7 +866,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorTraces = new List<ErrorTraceWireModel>();
 
             _errorTraceMaker = new ErrorTraceMaker(_configurationService, _attribDefSvc);
-            _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
+            _errorEventMaker = new ErrorEventMaker(_attribDefSvc, _configurationService);
 
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
             Mock.Arrange(() => _errorEventAggregator.Collect(Arg.IsAny<ErrorEventWireModel>())).DoInstead<ErrorEventWireModel>(errorEvent => errorEvents.Add(errorEvent));

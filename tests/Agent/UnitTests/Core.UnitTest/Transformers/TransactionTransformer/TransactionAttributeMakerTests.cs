@@ -1720,7 +1720,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         private ErrorData MakeErrorData(bool isErrorExpected = false)
         {
-            return new ErrorData("message", "type", "stacktrace", DateTime.UtcNow, new ReadOnlyDictionary<string, object>(new Dictionary<string, object>() { { "userErrorAttributeKey", "userErrorAttributeValue" } }), isErrorExpected, string.Empty);
+            return new ErrorData("message", "type", "stacktrace", DateTime.UtcNow, new ReadOnlyDictionary<string, object>(new Dictionary<string, object>() { { "userErrorAttributeKey", "userErrorAttributeValue" } }), isErrorExpected);
         }
 
         private void AssertAttributeShouldBeAvailableFor(IAttributeValueCollection attribValues, string attribName, params AttributeDestinations[] destinations)

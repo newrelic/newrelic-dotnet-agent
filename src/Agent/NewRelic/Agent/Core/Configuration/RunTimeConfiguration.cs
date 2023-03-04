@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Core.Configuration
     {
         public IEnumerable<string> ApplicationNames;
 
-        public Func<Exception, string> ErrorGroupCallback;
+        public Func<IDictionary<string, object>, string> ErrorGroupCallback;
 
         public RunTimeConfiguration()
         {
@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.Configuration
             ErrorGroupCallback = null;
         }
 
-        public RunTimeConfiguration(IEnumerable<string> applicationNames, Func<Exception, string> errorGroupCallback)
+        public RunTimeConfiguration(IEnumerable<string> applicationNames, Func<IDictionary<string, object>, string> errorGroupCallback)
         {
             ApplicationNames = applicationNames.ToList();
             ErrorGroupCallback = errorGroupCallback;

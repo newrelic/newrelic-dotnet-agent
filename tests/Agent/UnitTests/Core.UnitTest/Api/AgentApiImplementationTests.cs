@@ -118,7 +118,7 @@ namespace NewRelic.Agent.Core.Api
         [Test]
         public void SetErrorGroupCallbackShouldRaiseEvent()
         {
-            Func<Exception, string> myCallback = ex => "mygroup";
+            Func<IDictionary<string, object>, string> myCallback = ex => "mygroup";
 
             _agentApi.SetErrorGroupCallback(myCallback);
 

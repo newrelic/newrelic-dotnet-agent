@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private static ITimerFactory _timerFactory;
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
-        private Func<Exception, string> _errorGroupCallback;
+        private Func<IDictionary<string, object>, string> _errorGroupCallback;
 
         [SetUp]
         public void SetUp()
@@ -62,7 +62,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => _segmentTreeMaker.BuildSegmentTrees(Arg.IsAny<IEnumerable<Segment>>()))
                 .Returns(new[] { BuildNode() });
 
-            _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
+            _errorEventMaker = new ErrorEventMaker(_attribDefSvc, _configurationService);
 
             _timerFactory = new TimerFactory();
 
@@ -158,7 +158,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [Test]
         public void GetErrorEvent_InTransaction_WithException_ContainsCorrectAttributes_FullAttributes()
         {
-            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false, null);
+            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false);
 
             var transaction = BuildTestTransaction(statusCode: 404,
                                                             customErrorData: errorData,
@@ -284,7 +284,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [Test]
         public void GetErrorEvent_InTransaction_WithException_ContainsErrorGroup()
         {
-            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false, "test group");
+            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false);
 
             var transaction = BuildTestTransaction(statusCode: 500,
                                                             exceptionData: errorData,
@@ -316,7 +316,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [TestCase("     ")]
         public void GetErrorEvent_InTransaction_WithException_DoesNotContainErrorGroup(string errorGroupValue)
         {
-            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false, errorGroupValue);
+            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false);
 
             var transaction = BuildTestTransaction(statusCode: 500,
                                                             exceptionData: errorData,
