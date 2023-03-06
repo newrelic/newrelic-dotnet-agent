@@ -40,12 +40,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
+        uses: microsoft/setup-msbuild@v1.3.1
 
       - name: Clean out _profilerBuild directory
         run: |
@@ -71,7 +71,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: profiler
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
@@ -88,7 +88,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -115,7 +115,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -131,7 +131,7 @@ jobs:
     
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       
@@ -180,7 +180,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -201,12 +201,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
+        uses: microsoft/setup-msbuild@v1.3.1
 
       - name: Setup VSTest Path
         uses: darenm/Setup-VSTest@v1
@@ -238,25 +238,25 @@ jobs:
         id: agentVersion
         run: |
           $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
-          Write-Host "::set-output name=version::$agentVersion"
+          echo "name=version::$agentVersion" >> $GITHUB_OUTPUT
         shell: powershell
 
       - name: Archive NewRelic.NuGetHelper
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: NewRelic.NuGetHelper
           path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\bin
           if-no-files-found: error
           
       - name: Archive NewRelic.Agent.Extensions
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: NewRelic.Agent.Extensions
           path: ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\Release
           if-no-files-found: error
 
       - name: Archive FullAgent Home folders
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: homefolders
           path: |
@@ -275,7 +275,8 @@ jobs:
           $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
           $bytes = [Convert]::FromBase64String('${{ secrets.SIGNING_CERT }}')
           [IO.File]::WriteAllBytes($filePath, $bytes)
-          Write-Host "::set-output name=filePath::$filePath"
+          echo "name=filePath::$filePath" >> $GITHUB_OUTPUT
+
         shell: powershell
           
       - name: Install Code Signing Certificate
@@ -305,14 +306,14 @@ jobs:
         shell: powershell
 
       - name: Archive msi _build Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: msi-build-folder-artifacts
           path: ${{ github.workspace }}\src\_build
           if-no-files-found: error
 
       - name: Archive NewRelic.OpenTracing.AmazonLambda.Tracer
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: NewRelic.OpenTracing.AmazonLambda.Tracer
           path: ${{ github.workspace }}\src\AwsLambda\AwsLambdaOpenTracer\bin\Release\netstandard2.0-ILRepacked
@@ -367,7 +368,7 @@ jobs:
 
       - name: Archive Test Results
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: test-results
           path: ${{ github.workspace }}\TestResults
@@ -383,12 +384,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.3
+        uses: microsoft/setup-msbuild@v1.3.1
         with:
           vs-prerelease: true
 
@@ -410,7 +411,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: integrationtests
           path: |
@@ -430,12 +431,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.3
+        uses: microsoft/setup-msbuild@v1.3.1
         with:
           vs-prerelease: true
 
@@ -453,7 +454,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: unboundedintegrationtests
           path: |
@@ -491,7 +492,7 @@ jobs:
       
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -566,7 +567,7 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: integration-test-artifacts
           path: |
@@ -576,7 +577,7 @@ jobs:
 
       - name: Archive Test Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: integration-test-artifacts
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
@@ -593,7 +594,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -635,14 +636,14 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: integration-test-artifacts-linux-arm64
           path: ${{ env.test_path }}/**/*
           if-no-files-found: error
 
       - name: Archive Test Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         if: ${{ always() }}
         with:
           name: integration-test-artifacts-linux-arm64
@@ -671,7 +672,7 @@ jobs:
         shell: powershell
         
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -774,7 +775,7 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: integration-test-artifacts
           path: |
@@ -784,7 +785,7 @@ jobs:
 
       - name: Archive Test Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: integration-test-artifacts
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
@@ -798,7 +799,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       
@@ -819,7 +820,7 @@ jobs:
         run: |
           filePath="/tmp/gpg.tar.bz2"
           echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
-          echo "::set-output name=filePath::$filePath"
+          echo "name=filePath::$filePath" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Copy GPG Key to keys
@@ -846,7 +847,7 @@ jobs:
         shell: bash
       
       - name: Archive RPM Package Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: rpm-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -860,7 +861,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
         
@@ -894,7 +895,7 @@ jobs:
         shell: bash
         
       - name: Archive Debian Package Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: debian-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -908,7 +909,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -960,7 +961,7 @@ jobs:
         shell: powershell
 
       - name: Archive Deploy Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: deploy-artifacts
           path: |
