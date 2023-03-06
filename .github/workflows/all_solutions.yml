@@ -275,7 +275,9 @@ jobs:
           $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
           $bytes = [Convert]::FromBase64String('${{ secrets.SIGNING_CERT }}')
           [IO.File]::WriteAllBytes($filePath, $bytes)
+          echo "filePath=$filePath"
           echo "filePath=$filePath" >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
 
         shell: powershell
           
