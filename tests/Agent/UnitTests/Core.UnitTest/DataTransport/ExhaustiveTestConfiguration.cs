@@ -204,7 +204,7 @@ namespace NewRelic.Agent.Core.DataTransport
             { "eight", new[] { "eight1", "eight2" } },
         };
 
-        public Func<IDictionary<string, object>, string> ErrorGroupCallback => ex => "my error group";
+        public Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback => ex => "my error group";
 
         public Dictionary<string, string> RequestHeadersMap => new Dictionary<string, string>
         {

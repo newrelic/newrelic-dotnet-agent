@@ -836,7 +836,7 @@ namespace NewRelic.Api.Agent
         /// </summary>
         /// <param name="callback">The callback to invoke to define the error group that an Exception belongs to.</param>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetErrorGroupCallback(Func<IDictionary<string, object>, string> callback)
+        public static void SetErrorGroupCallback(Func<IReadOnlyDictionary<string, object>, string> callback)
         {
             try
             {

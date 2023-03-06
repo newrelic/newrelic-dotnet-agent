@@ -7,6 +7,7 @@ using System.Linq;
 using System.Web;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Helpers;
+using System.Collections.ObjectModel;
 
 namespace NewRelic.Agent.Core.Errors
 {

@@ -377,7 +377,7 @@ namespace NewRelic.Agent.Core.Errors
             EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
         }
 
-        private void SetupErrorGroupCallback(Func<IDictionary<string, object>, string> callback)
+        private void SetupErrorGroupCallback(Func<IReadOnlyDictionary<string, object>, string> callback)
         {
             EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(callback));
         }

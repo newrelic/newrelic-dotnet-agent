@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private static ITimerFactory _timerFactory;
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
-        private Func<IDictionary<string, object>, string> _errorGroupCallback;
+        private Func<IReadOnlyDictionary<string, object>, string> _errorGroupCallback;
 
         [SetUp]
         public void SetUp()

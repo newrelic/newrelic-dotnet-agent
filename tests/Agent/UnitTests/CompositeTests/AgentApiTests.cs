@@ -1748,7 +1748,7 @@ namespace CompositeTests
         [Test]
         public void Test_SetErrorGroupCallback()
         {
-            Func<IDictionary<string, object>, string> myCallback = ex => "my error group";
+            Func<IReadOnlyDictionary<string, object>, string> myCallback = ex => "my error group";
 
             AgentApi.SetErrorGroupCallback(myCallback);
 

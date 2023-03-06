@@ -8,9 +8,9 @@ namespace NewRelic.Agent.Core.Events
 {
     public class ErrorGroupCallbackUpdateEvent
     {
-        public readonly Func<IDictionary<string, object>, string> ErrorGroupCallback;
+        public readonly Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback;
 
-        public ErrorGroupCallbackUpdateEvent(Func<IDictionary<string, object>, string> errorGroupCallback)
+        public ErrorGroupCallbackUpdateEvent(Func<IReadOnlyDictionary<string, object>, string> errorGroupCallback)
         {
             ErrorGroupCallback = errorGroupCallback;
         }

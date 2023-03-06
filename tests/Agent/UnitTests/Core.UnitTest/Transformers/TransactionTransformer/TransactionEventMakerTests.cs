@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;

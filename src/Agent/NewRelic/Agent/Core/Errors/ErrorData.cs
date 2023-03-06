@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.ObjectModel;
 
 namespace NewRelic.Agent.Core.Errors
 {
