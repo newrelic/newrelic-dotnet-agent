@@ -53,7 +53,7 @@ jobs:
             # Just use the supplied list of namespaces
             namespaces="[ ${{ github.event.inputs.integration-test-namespaces }} ]"
           fi
-          echo "matrix=$namespaces" >> $GITHUB_OUTPUT
+          echo "matrix=$namespaces" >> $env:GITHUB_OUTPUT
         shell: bash
 
       - id: configure_unbounded_tests_matrix
@@ -65,7 +65,7 @@ jobs:
             # Just use the supplied list of namespaces
             namespaces="[ ${{ github.event.inputs.unbounded-test-namespaces }} ]"
           fi
-          echo "matrix=$namespaces" >> $GITHUB_OUTPUT
+          echo "matrix=$namespaces" >> $env:GITHUB_OUTPUT
         shell: bash
 
 

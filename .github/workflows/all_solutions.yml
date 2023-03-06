@@ -238,7 +238,7 @@ jobs:
         id: agentVersion
         run: |
           $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
-          echo "version=$agentVersion" >> $GITHUB_OUTPUT
+          echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
         shell: powershell
 
       - name: Archive NewRelic.NuGetHelper
@@ -275,10 +275,7 @@ jobs:
           $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
           $bytes = [Convert]::FromBase64String('${{ secrets.SIGNING_CERT }}')
           [IO.File]::WriteAllBytes($filePath, $bytes)
-          echo "filePath=$filePath"
-          echo "filePath=$filePath" >> $GITHUB_OUTPUT
-          cat $GITHUB_OUTPUT
-
+          echo "filePath=$filePath" >> $env:GITHUB_OUTPUT
         shell: powershell
           
       - name: Install Code Signing Certificate
@@ -822,7 +819,7 @@ jobs:
         run: |
           filePath="/tmp/gpg.tar.bz2"
           echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
-          echo "filePath=$filePath" >> $GITHUB_OUTPUT
+          echo "filePath=$filePath" >> $env:GITHUB_OUTPUT
         shell: bash
 
       - name: Copy GPG Key to keys
