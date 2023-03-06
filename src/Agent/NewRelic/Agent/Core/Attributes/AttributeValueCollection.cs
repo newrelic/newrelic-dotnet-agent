@@ -43,6 +43,14 @@ namespace NewRelic.Agent.Core.Attributes
 
     public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCollection where TAttrib : IAttributeValue
     {
+        private static readonly string[] _reservedProperties = new[]
+{
+            "timestamp",
+            "error.message",
+            "errorMessage",
+            "error.class",
+            "errorType",
+        };
 
         private static AttributeDestinations[] _allTargetModelTypes;
 
@@ -147,6 +155,12 @@ namespace NewRelic.Agent.Core.Attributes
             {
                 foreach (var attribVal in GetAttribValuesImpl(classification))
                 {
+                    if (classification == AttributeClassification.UserAttributes && _reservedProperties.Contains(attribVal.AttributeDefinition.Name) )
+                    {
+                        // Agent values should override these.
+                        continue;
+                    }
+
                     result[attribVal.AttributeDefinition.Name] = attribVal.Value;
                 }
             }

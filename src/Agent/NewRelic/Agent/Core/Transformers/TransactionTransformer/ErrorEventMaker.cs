@@ -53,7 +53,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private void SetErrorGroup(ErrorData errorData, IAttributeValueCollection attribValues)
         {
-            var errorGroup = _configurationService.Configuration.ErrorGroupCallback(attribValues.GetAllAttributeValuesDic());
+            var errorGroup = _configurationService.Configuration.ErrorGroupCallback?.Invoke(attribValues.GetAllAttributeValuesDic());
             _attribDefs.ErrorGroup.TrySetValue(attribValues, errorGroup);
         }
     }

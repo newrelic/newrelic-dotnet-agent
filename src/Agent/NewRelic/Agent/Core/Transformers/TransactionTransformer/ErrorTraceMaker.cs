@@ -105,7 +105,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes(ErrorData errorData, IAttributeValueCollection attributes, IList<string> stackTrace)
         {
-            var errorGroup =_configurationService.Configuration.ErrorGroupCallback(attributes.GetAllAttributeValuesDic());
+            var errorGroup = _configurationService.Configuration.ErrorGroupCallback?.Invoke(attributes.GetAllAttributeValuesDic());
             _attribDefs.ErrorGroup.TrySetValue(attributes, errorGroup);
             return new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attributes, stackTrace);
         }
