@@ -819,7 +819,7 @@ jobs:
         run: |
           filePath="/tmp/gpg.tar.bz2"
           echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
-          echo "filePath=$filePath" >> $env:GITHUB_OUTPUT
+          echo "filePath=$filePath" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Copy GPG Key to keys
