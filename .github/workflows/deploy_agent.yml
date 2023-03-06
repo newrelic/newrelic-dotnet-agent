@@ -54,14 +54,14 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/build/BuildArtifacts
           if-no-files-found: error
 
       - name: Upload Deploy Tooling Locally
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: deploy-tooling
           path: ${{ github.workspace }}/deploy/
@@ -75,7 +75,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\staging_dir
@@ -149,7 +149,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir
@@ -242,13 +242,13 @@ jobs:
         shell: bash
         
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
 
       - name: Download Deploy Tooling
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: deploy-tooling
           path: ${{ github.workspace }}/deploy
@@ -258,7 +258,7 @@ jobs:
         run: |
           filePath="/tmp/gpg.tar.bz2"
           echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
-          echo "name=filePath::$filePath" >> $GITHUB_OUTPUT
+          echo "filePath=$filePath" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Move Artifacts and GPG Key to Staging Location

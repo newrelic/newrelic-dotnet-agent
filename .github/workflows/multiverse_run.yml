@@ -65,7 +65,7 @@ jobs:
         shell: bash
 
       - name: Upload MVS
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: mvs
           path: |
@@ -103,7 +103,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download MVS
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: mvs
           path: ${{ env.multiverse_path }}

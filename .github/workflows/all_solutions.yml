@@ -71,7 +71,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: profiler
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
@@ -115,7 +115,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -180,7 +180,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -221,7 +221,7 @@ jobs:
         shell: powershell
 
       - name: Download Profiler Artifacts Before Agent Build
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -238,25 +238,25 @@ jobs:
         id: agentVersion
         run: |
           $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
-          echo "name=version::$agentVersion" >> $GITHUB_OUTPUT
+          echo "version=$agentVersion" >> $GITHUB_OUTPUT
         shell: powershell
 
       - name: Archive NewRelic.NuGetHelper
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: NewRelic.NuGetHelper
           path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\bin
           if-no-files-found: error
           
       - name: Archive NewRelic.Agent.Extensions
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: NewRelic.Agent.Extensions
           path: ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\Release
           if-no-files-found: error
 
       - name: Archive FullAgent Home folders
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: homefolders
           path: |
@@ -275,7 +275,7 @@ jobs:
           $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
           $bytes = [Convert]::FromBase64String('${{ secrets.SIGNING_CERT }}')
           [IO.File]::WriteAllBytes($filePath, $bytes)
-          echo "name=filePath::$filePath" >> $GITHUB_OUTPUT
+          echo "filePath=$filePath" >> $GITHUB_OUTPUT
 
         shell: powershell
           
@@ -306,14 +306,14 @@ jobs:
         shell: powershell
 
       - name: Archive msi _build Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: msi-build-folder-artifacts
           path: ${{ github.workspace }}\src\_build
           if-no-files-found: error
 
       - name: Archive NewRelic.OpenTracing.AmazonLambda.Tracer
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: NewRelic.OpenTracing.AmazonLambda.Tracer
           path: ${{ github.workspace }}\src\AwsLambda\AwsLambdaOpenTracer\bin\Release\netstandard2.0-ILRepacked
@@ -368,7 +368,7 @@ jobs:
 
       - name: Archive Test Results
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: test-results
           path: ${{ github.workspace }}\TestResults
@@ -411,7 +411,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: integrationtests
           path: |
@@ -454,7 +454,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: unboundedintegrationtests
           path: |
@@ -518,7 +518,7 @@ jobs:
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: homefolders
           path: src/Agent
@@ -567,7 +567,7 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: integration-test-artifacts
           path: |
@@ -577,7 +577,7 @@ jobs:
 
       - name: Archive Test Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: integration-test-artifacts
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
@@ -599,7 +599,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: homefolders
           path: src/Agent
@@ -636,14 +636,14 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: integration-test-artifacts-linux-arm64
           path: ${{ env.test_path }}/**/*
           if-no-files-found: error
 
       - name: Archive Test Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: integration-test-artifacts-linux-arm64
@@ -682,7 +682,7 @@ jobs:
           dotnet-version: '7.0.100'
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: homefolders
           path: src/Agent
@@ -775,7 +775,7 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: integration-test-artifacts
           path: |
@@ -785,7 +785,7 @@ jobs:
 
       - name: Archive Test Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: integration-test-artifacts
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
@@ -804,13 +804,13 @@ jobs:
           fetch-depth: 0
       
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: homefolders
           path: src/Agent
@@ -820,7 +820,7 @@ jobs:
         run: |
           filePath="/tmp/gpg.tar.bz2"
           echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
-          echo "name=filePath::$filePath" >> $GITHUB_OUTPUT
+          echo "filePath=$filePath" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Copy GPG Key to keys
@@ -847,7 +847,7 @@ jobs:
         shell: bash
       
       - name: Archive RPM Package Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: rpm-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -866,13 +866,13 @@ jobs:
           fetch-depth: 0
         
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: msi-build-folder-artifacts
           path: src/_build
@@ -895,7 +895,7 @@ jobs:
         shell: bash
         
       - name: Archive Debian Package Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: debian-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -914,43 +914,43 @@ jobs:
           fetch-depth: 0
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: homefolders
           path: src/Agent 
       
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download Debian _build Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: debian-build-artifacts
           path: src/_build/CoreArtifacts
 
       - name: Download RPM _build Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: rpm-build-artifacts
           path: src/_build/CoreArtifacts
 
       - name: Download NewRelic.NuGetHelper
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: NewRelic.NuGetHelper
           path: build/NewRelic.NuGetHelper/bin
       
       - name: Download NewRelic.Agent.Extensions
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: NewRelic.Agent.Extensions
           path: src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions/bin/Release
 
       - name: Download NewRelic.OpenTracing.AmazonLambda.Tracer
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: NewRelic.OpenTracing.AmazonLambda.Tracer
           path: src/AwsLambda/AwsLambdaOpenTracer/bin/Release/netstandard2.0-ILRepacked
@@ -961,7 +961,7 @@ jobs:
         shell: powershell
 
       - name: Archive Deploy Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: deploy-artifacts
           path: |
