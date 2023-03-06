@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         IDictionary<string, object> GetAttributeValuesDic(AttributeClassification classification);
 
-        IReadOnlyDictionary<string, object> GetAllAttributeValuesDic();
+        IDictionary<string, object> GetAllAttributeValuesDic();
     }
 
     public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCollection where TAttrib : IAttributeValue
@@ -148,7 +148,7 @@ namespace NewRelic.Agent.Core.Attributes
             return result;
         }
 
-        public IReadOnlyDictionary<string, object> GetAllAttributeValuesDic()
+        public IDictionary<string, object> GetAllAttributeValuesDic()
         {
             var result = new Dictionary<string, object>();
             foreach (var classification in _allClassifications)
@@ -537,9 +537,9 @@ namespace NewRelic.Agent.Core.Attributes
             return _emptyAttribDic;
         }
 
-        public IReadOnlyDictionary<string, object> GetAllAttributeValuesDic()
+        public IDictionary<string, object> GetAllAttributeValuesDic()
         {
-            return (IReadOnlyDictionary<string, object>)_emptyAttribDic;
+            return _emptyAttribDic;
         }
     }
 }

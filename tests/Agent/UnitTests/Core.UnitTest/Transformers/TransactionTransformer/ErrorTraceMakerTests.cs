@@ -10,6 +10,7 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -19,22 +20,30 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
     [TestFixture]
     public class ErrorTraceMakerTests
     {
+        private IConfiguration _configuration;
         private IConfigurationService _configurationService;
         private ErrorTraceMaker _errorTraceMaker;
         private ErrorService _errorService;
         private AttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+        private IAgentTimerService _agentTimerService;
+        private Func<IReadOnlyDictionary<string, object>, string> _errorGroupCallback;
 
         private const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
 
         [SetUp]
         public void SetUp()
         {
+            _errorGroupCallback = null;
+            _configuration = Mock.Create<IConfiguration>();
+            Mock.Arrange(() => _configuration.ErrorGroupCallback).Returns(() => _errorGroupCallback);
+
             _configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
-
-            _errorTraceMaker = new ErrorTraceMaker(_configurationService, _attribDefSvc);
+            _agentTimerService = Mock.Create<IAgentTimerService>();
+            _errorTraceMaker = new ErrorTraceMaker(_configurationService, _attribDefSvc, _agentTimerService);
             _errorService = new ErrorService(_configurationService);
         }
 
@@ -139,7 +148,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [Test]
         public void GetErrorTrace_InTransaction_HasErrorGroup()
         {
-            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false);
+            _errorGroupCallback = delegate (IReadOnlyDictionary<string, object> x) {
+                return "test group";
+            };
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, null);
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -152,12 +164,27 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.AreEqual("test group", errorGroupAttribute);
         }
 
+        [Test]
+        public void GetErrorTrace_InTransaction_NullErrorGroupCallback_DoesNotHaveErrorGroup()
+        {
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, null);
+            var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
+            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+            var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
+
+            var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
+
+            var agentAttributes = errorTrace.Attributes.AgentAttributes;
+
+            CollectionAssert.DoesNotContain(agentAttributes.Keys, "error_group");
+        }
+
         [TestCase(null)]
         [TestCase("")]
         [TestCase("    ")]
         public void GetErrorTrace_InTransaction_DoesNotHaveErrorGroup(string errorGroupValue)
         {
-            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false);
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, null);
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -172,7 +199,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [Test]
         public void GetErrorTrace_NoTransaction_HasErrorGroup()
         {
-            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false);
+            _errorGroupCallback = delegate (IReadOnlyDictionary<string, object> x) {
+                return "test group";
+            };
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, null);
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorDataIn);
@@ -183,12 +213,25 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.AreEqual("test group", errorGroupAttribute);
         }
 
+        [Test]
+        public void GetErrorTrace_NoTransaction_NullErrorGroupCallback_DoesNotHaveErrorGroup()
+        {
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, null);
+            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+
+            var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorDataIn);
+
+            var agentAttributes = errorTrace.Attributes.AgentAttributes;
+
+            CollectionAssert.DoesNotContain(agentAttributes.Keys, "error_group");
+        }
+
         [TestCase(null)]
         [TestCase("")]
         [TestCase("    ")]
         public void GetErrorTrace_NoTransaction_DoesNotHaveErrorGroup(string errorGroupValue)
         {
-            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false);
+            var errorDataIn = new ErrorData("error message", "error type", "stack trace", DateTime.UtcNow, null, false, null);
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorDataIn);

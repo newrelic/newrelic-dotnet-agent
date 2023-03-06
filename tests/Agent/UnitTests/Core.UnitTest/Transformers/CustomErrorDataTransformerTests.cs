@@ -9,6 +9,7 @@ using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -34,6 +35,8 @@ namespace NewRelic.Agent.Core.Transformers
 
         private IErrorEventAggregator _errorEventAggregator;
 
+        private IAgentTimerService _agentTimerService;
+
         [SetUp]
         public void SetUp()
         {
@@ -42,12 +45,12 @@ namespace NewRelic.Agent.Core.Transformers
             Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
             Mock.Arrange(() => _configuration.CaptureCustomParameters).Returns(true);
             Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
-            
 
+            _agentTimerService = Mock.Create<IAgentTimerService>();
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
-            _errorTraceMaker = new ErrorTraceMaker(configurationService, _attribDefSvc);
+            _errorTraceMaker = new ErrorTraceMaker(configurationService, _attribDefSvc, _agentTimerService);
             _errorTraceAggregator = Mock.Create<IErrorTraceAggregator>();
-            _errorEventMaker = new ErrorEventMaker(_attribDefSvc, configurationService);
+            _errorEventMaker = new ErrorEventMaker(_attribDefSvc, configurationService, _agentTimerService);
             _errorEventAggregator = Mock.Create<IErrorEventAggregator>();
 
             _customErrorDataTransformer = new CustomErrorDataTransformer(configurationService, _attribDefSvc, _errorTraceMaker, _errorTraceAggregator, _errorEventMaker, _errorEventAggregator);
@@ -91,7 +94,7 @@ namespace NewRelic.Agent.Core.Transformers
             var errorType = "ErrorType";
             var stackTrace = "StackTrace";
 
-            var errorData = new ErrorData(errorMsg, errorType, stackTrace, errorNoticedAt, errorCustomParameters, false);
+            var errorData = new ErrorData(errorMsg, errorType, stackTrace, errorNoticedAt, errorCustomParameters, false, null);
 
             // ACT
             var errorTrace = _errorTraceMaker.GetErrorTrace( attribValues, errorData);
@@ -126,7 +129,7 @@ namespace NewRelic.Agent.Core.Transformers
 
         private ErrorData MakeError(ReadOnlyDictionary<string, object> attributes = null)
         {
-            return new ErrorData("error message", "error.type", null, System.DateTime.UtcNow, attributes, false);
+            return new ErrorData("error message", "error.type", null, System.DateTime.UtcNow, attributes, false, null);
         }
     }
 }

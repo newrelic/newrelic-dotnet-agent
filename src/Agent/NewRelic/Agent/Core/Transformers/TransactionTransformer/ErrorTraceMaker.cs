@@ -6,6 +6,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.WireModels;
 
@@ -26,14 +27,18 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
     public class ErrorTraceMaker : IErrorTraceMaker
     {
+        private const string SetErrorGroupSupportabilityName = "ErrorTraceMakerSetErrorGroup";
+
         private readonly IConfigurationService _configurationService;
         private readonly IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+        private readonly IAgentTimerService _agentTimerService;
 
-        public ErrorTraceMaker(IConfigurationService configurationService, IAttributeDefinitionService attributeService)
+        public ErrorTraceMaker(IConfigurationService configurationService, IAttributeDefinitionService attributeService, IAgentTimerService agentTimerService)
         {
             _configurationService = configurationService;
             _attribDefSvc = attributeService;
+            _agentTimerService = agentTimerService;
         }
 
         /// <summary>
@@ -56,7 +61,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var path = errorData.Path;
             var message = errorData.ErrorMessage;
             var exceptionClassName = errorData.ErrorTypeName;
-            var errorAttributesWireModel = GetErrorTraceAttributes(errorData, attribValues, stackTrace);
+            SetErrorGroup(errorData, stackTrace, attribValues);
+            var errorAttributesWireModel = GetErrorTraceAttributes(attribValues, stackTrace);
             const string guid = null;
 
             return new ErrorTraceWireModel(timestamp, path, message, exceptionClassName, errorAttributesWireModel, guid);
@@ -86,7 +92,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var path = transactionMetricName.PrefixedName;
             var message = errorData.ErrorMessage;
             var exceptionClassName = errorData.ErrorTypeName;
-            var errorAttributesWireModel = GetErrorTraceAttributes(errorData, transactionAttributes, stackTrace);
+            SetErrorGroup(errorData, stackTrace, transactionAttributes);
+            var errorAttributesWireModel = GetErrorTraceAttributes(transactionAttributes, stackTrace);
             var guid = immutableTransaction.Guid;
 
             return new ErrorTraceWireModel(timestamp, path, message, exceptionClassName, errorAttributesWireModel, guid);
@@ -103,11 +110,30 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return stackTrace;
         }
 
-        private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes(ErrorData errorData, IAttributeValueCollection attributes, IList<string> stackTrace)
+        private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes(IAttributeValueCollection attributes, IList<string> stackTrace)
         {
-            var errorGroup = _configurationService.Configuration.ErrorGroupCallback?.Invoke(attributes.GetAllAttributeValuesDic());
-            _attribDefs.ErrorGroup.TrySetValue(attributes, errorGroup);
             return new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attributes, stackTrace);
+        }
+
+        private void SetErrorGroup(ErrorData errorData,  IList<string> stackTrace,IAttributeValueCollection attribValues)
+        {
+            if (_configurationService.Configuration.ErrorGroupCallback == null)
+            {
+                return;
+            }
+
+            using (_agentTimerService.StartNew(SetErrorGroupSupportabilityName))
+            {
+                var callbackAttributes = attribValues.GetAllAttributeValuesDic();
+                if (errorData?.RawException != null)
+                {
+                    callbackAttributes.Add("exception", errorData.RawException);
+                }
+
+                callbackAttributes.Add("stack_trace", stackTrace);
+                var errorGroup = _configurationService.Configuration.ErrorGroupCallback?.Invoke((IReadOnlyDictionary<string, object>)callbackAttributes);
+                _attribDefs.ErrorGroup.TrySetValue(attribValues, errorGroup);
+            }
         }
     }
 }

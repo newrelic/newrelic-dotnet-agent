@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.Errors
 
             var isExpected = _configurationService.Configuration.ExpectedStatusCodes.Any(rule => rule.IsMatch(statusCode.ToString()));
 
-            return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null, isExpected);
+            return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null, isExpected, null);
         }
 
         private static string GetFriendlyExceptionTypeName(Exception exception)
@@ -120,7 +120,7 @@ namespace NewRelic.Agent.Core.Errors
         private ErrorData FromMessageInternal<T>(string errorMessage, IDictionary<string, T> customAttributes, bool isExpected)
         {
             var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
-            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected);
+            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected, null);
         }
 
         private ErrorData FromExceptionInternal(Exception exception, ReadOnlyDictionary<string, object> customAttributes)
@@ -135,7 +135,7 @@ namespace NewRelic.Agent.Core.Errors
             var noticedAt = DateTime.UtcNow;
 
             var isExpected = IsErrorFromExceptionSpecified(exception, _configurationService.Configuration.ExpectedErrorsConfiguration);
-            return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected);
+            return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected, baseException);
         }
 
         private static bool IsErrorFromExceptionSpecified(Exception exception, IDictionary<string, IEnumerable<string>> source)
