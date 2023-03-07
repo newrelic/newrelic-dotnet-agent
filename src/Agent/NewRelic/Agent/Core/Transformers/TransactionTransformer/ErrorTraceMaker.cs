@@ -134,7 +134,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
                 callbackAttributes[StackTraceAttributeName] = stackTrace;
                 var errorGroup = _configurationService.Configuration.ErrorGroupCallback?.Invoke((IReadOnlyDictionary<string, object>)callbackAttributes);
-                _attribDefs.ErrorGroup.TrySetValue(attribValues, errorGroup);
+
+                if (!string.IsNullOrWhiteSpace(errorGroup))
+                {
+                    _attribDefs.ErrorGroup.TrySetValue(attribValues, errorGroup);
+                }
             }
         }
     }
