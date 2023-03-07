@@ -79,17 +79,21 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 return;
             }
 
+            var callbackAttributes = attribValues.GetAllAttributeValuesDic();
+            if (errorData?.RawException != null)
+            {
+                callbackAttributes[ExceptionAttributeName] = errorData.RawException;
+            }
+
+            var stackTrace = GetFormattedStackTrace(errorData);
+            if (stackTrace != null && stackTrace.Count > 0)
+            {
+                callbackAttributes[StackTraceAttributeName] = stackTrace;
+            }
+
             using (_agentTimerService.StartNew(SetErrorGroupSupportabilityName))
             {
-                var callbackAttributes = attribValues.GetAllAttributeValuesDic();
-                if (errorData?.RawException != null)
-                {
-                    callbackAttributes[ExceptionAttributeName] = errorData.RawException;
-                }
-
-                callbackAttributes[StackTraceAttributeName] = GetFormattedStackTrace(errorData);
                 var errorGroup = _configurationService.Configuration.ErrorGroupCallback?.Invoke((IReadOnlyDictionary<string, object>)callbackAttributes);
-
                 if (!string.IsNullOrWhiteSpace(errorGroup))
                 {
                     _attribDefs.ErrorGroup.TrySetValue(attribValues, errorGroup);

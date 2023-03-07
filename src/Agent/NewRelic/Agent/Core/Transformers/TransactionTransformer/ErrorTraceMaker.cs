@@ -117,24 +117,27 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attributes, stackTrace);
         }
 
-        private void SetErrorGroup(ErrorData errorData,  IList<string> stackTrace,IAttributeValueCollection attribValues)
+        private void SetErrorGroup(ErrorData errorData, IList<string> stackTrace, IAttributeValueCollection attribValues)
         {
             if (_configurationService.Configuration.ErrorGroupCallback == null)
             {
                 return;
             }
 
+            var callbackAttributes = attribValues.GetAllAttributeValuesDic();
+            if (errorData?.RawException != null)
+            {
+                callbackAttributes[ExceptionAttributeName] = errorData.RawException;
+            }
+
+            if (stackTrace != null && stackTrace.Count > 0)
+            {
+                callbackAttributes[StackTraceAttributeName] = stackTrace;
+            }
+
             using (_agentTimerService.StartNew(SetErrorGroupSupportabilityName))
             {
-                var callbackAttributes = attribValues.GetAllAttributeValuesDic();
-                if (errorData?.RawException != null)
-                {
-                    callbackAttributes[ExceptionAttributeName] = errorData.RawException;
-                }
-
-                callbackAttributes[StackTraceAttributeName] = stackTrace;
                 var errorGroup = _configurationService.Configuration.ErrorGroupCallback?.Invoke((IReadOnlyDictionary<string, object>)callbackAttributes);
-
                 if (!string.IsNullOrWhiteSpace(errorGroup))
                 {
                     _attribDefs.ErrorGroup.TrySetValue(attribValues, errorGroup);
