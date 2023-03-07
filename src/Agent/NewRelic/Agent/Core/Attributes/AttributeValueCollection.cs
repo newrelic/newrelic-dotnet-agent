@@ -43,15 +43,6 @@ namespace NewRelic.Agent.Core.Attributes
 
     public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCollection where TAttrib : IAttributeValue
     {
-        private static readonly string[] _reservedProperties = new[]
-{
-            "timestamp",
-            "error.message",
-            "errorMessage",
-            "error.class",
-            "errorType",
-        };
-
         private static AttributeDestinations[] _allTargetModelTypes;
 
         public static AttributeDestinations[] AllTargetModelTypes => _allTargetModelTypes
@@ -63,7 +54,8 @@ namespace NewRelic.Agent.Core.Attributes
         public const int MaxCountUserAttrib = 64;
         public const int MaxCountAllAttrib = 255;
 
-        protected static readonly AttributeClassification[] _allClassifications = new[] { AttributeClassification.Intrinsics, AttributeClassification.AgentAttributes, AttributeClassification.UserAttributes };
+        // In priority order: user < intrinsics < agent
+        protected static readonly AttributeClassification[] _allClassifications = new[] { AttributeClassification.UserAttributes, AttributeClassification.Intrinsics, AttributeClassification.AgentAttributes };
 
         private int _intrinsicAttributeCount;
         private int _agentAttributeCount;
@@ -155,12 +147,7 @@ namespace NewRelic.Agent.Core.Attributes
             {
                 foreach (var attribVal in GetAttribValuesImpl(classification))
                 {
-                    if (classification == AttributeClassification.UserAttributes && _reservedProperties.Contains(attribVal.AttributeDefinition.Name) )
-                    {
-                        // Agent values should override these.
-                        continue;
-                    }
-
+                    // This will overwrite existing values in the order of: user < intrinsic < agent
                     result[attribVal.AttributeDefinition.Name] = attribVal.Value;
                 }
             }

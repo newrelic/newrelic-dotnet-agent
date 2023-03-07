@@ -28,6 +28,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     public class ErrorTraceMaker : IErrorTraceMaker
     {
         private const string SetErrorGroupSupportabilityName = "ErrorTraceMakerSetErrorGroup";
+        private const string ExceptionAttributeName = "exception";
+        private const string StackTraceAttributeName = "stack_trace";
 
         private readonly IConfigurationService _configurationService;
         private readonly IAttributeDefinitionService _attribDefSvc;
@@ -127,10 +129,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 var callbackAttributes = attribValues.GetAllAttributeValuesDic();
                 if (errorData?.RawException != null)
                 {
-                    callbackAttributes.Add("exception", errorData.RawException);
+                    callbackAttributes[ExceptionAttributeName] = errorData.RawException;
                 }
 
-                callbackAttributes.Add("stack_trace", stackTrace);
+                callbackAttributes[StackTraceAttributeName] = stackTrace;
                 var errorGroup = _configurationService.Configuration.ErrorGroupCallback?.Invoke((IReadOnlyDictionary<string, object>)callbackAttributes);
                 _attribDefs.ErrorGroup.TrySetValue(attribValues, errorGroup);
             }
