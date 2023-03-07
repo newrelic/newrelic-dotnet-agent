@@ -54,5 +54,13 @@ namespace MultiFunctionApplicationHelpers.Libraries
         {
             NewRelic.Api.Agent.NewRelic.SetApplicationName(applicationName);
         }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void TestSetTransactionUserId(string userId)
+        {
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.SetUserId(userId);
+        }
     }
 }
