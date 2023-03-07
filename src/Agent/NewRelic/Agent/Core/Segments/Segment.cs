@@ -135,7 +135,7 @@ namespace NewRelic.Agent.Core.Segments
                 var endTime = _transactionSegmentState.GetRelativeTime();
                 RelativeEndTime = endTime;
 
-                if (Agent.Instance?.StackExchangeRedisCache != null && Agent.Instance.StackExchangeRedisCache.Count > 0)
+                if (Agent.Instance.StackExchangeRedisCache != null && Agent.Instance.StackExchangeRedisCache.Count > 0)
                 {
                     Agent.Instance.StackExchangeRedisCache.Harvest(SpanId);
                 }
