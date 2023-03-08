@@ -33,13 +33,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Cache Multiverse Testing Suite
         id: cache-multiverse
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ env.multiverse_path }}
           key: multiverse-${{ hashFiles('**/tests/Agent/MultiverseTesting') }}
@@ -65,7 +65,7 @@ jobs:
         shell: bash
 
       - name: Upload MVS
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: mvs
           path: |
@@ -97,13 +97,13 @@ jobs:
           dotnet-version: '3.1.100'
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: 'gh-pages'
           fetch-depth: 0
 
       - name: Download MVS
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: mvs
           path: ${{ env.multiverse_path }}

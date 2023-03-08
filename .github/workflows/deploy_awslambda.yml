@@ -31,7 +31,7 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}
@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir
