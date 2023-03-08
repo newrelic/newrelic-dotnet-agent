@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Config;
-using NewRelic.SystemInterfaces;
 using System;
 using System.IO;
 using System.Text;
 #if NETSTANDARD2_0
 using System.Runtime.InteropServices;
 #endif
-using System.Threading;
 using Serilog;
 using Serilog.Core;
 using Log = NewRelic.Core.Logging.Log;
@@ -431,97 +429,5 @@ namespace NewRelic.Agent.Core
 
         }
 
-    }
-
-    class ThreadIdEnricher : ILogEventEnricher
-    {
-        public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
-        {
-            logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                "tid", Thread.CurrentThread.ManagedThreadId));
-        }
-    }
-    class ProcessIdEnricher : ILogEventEnricher
-    {
-        public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
-        {
-            logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                "pid", new ProcessStatic().GetCurrentProcess().Id));
-        }
-    }
-
-    internal static class LogLevelExtensions
-    {
-        /// <summary>
-        /// Map a configfile loglevel to the equivalent Serilog loglevel </summary>
-        /// <param name="configLogLevel"></param>
-        /// <returns></returns>
-        public static LogEventLevel MapToSerilogLogLevel(this string configLogLevel)
-        {
-            switch (configLogLevel.ToUpper())
-            {
-                case "FINEST":
-                    return LogEventLevel.Verbose;
-                case "DEBUG":
-                    return LogEventLevel.Debug;
-                case "INFO":
-                    return LogEventLevel.Information;
-                case "WARN": 
-                    return LogEventLevel.Warning;
-                default:
-                    // TODO: Add checking for deprecated log levels ??
-                    Serilog.Log.Logger.Warning($"Invalid log level '{configLogLevel}' specified. Using log level 'Info' by default.");
-                    return LogEventLevel.Information;
-            }
-        }
-
-        /// <summary>
-        /// Translates Serilog log level to the "legacy" Log4Net levels to ensure log file consistency
-        /// </summary>
-        /// <param name="logEventLevel"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public static string TranslateLogLevel(this LogEventLevel logEventLevel)
-        {
-            switch (logEventLevel)
-            {
-                case LogEventLevel.Verbose:
-                    return "FINEST";
-                case LogEventLevel.Debug:
-                    return "DEBUG";
-                case LogEventLevel.Information:
-                    return "INFO";
-                case LogEventLevel.Warning:
-                    return "WARN";
-                case LogEventLevel.Error:
-                    return "ERR";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(logEventLevel), logEventLevel, null);
-            }
-        }
-
-    }
-
-    class CustomTextFormatter : ITextFormatter
-    {
-        public void Format(LogEvent logEvent, TextWriter output)
-        {
-            // try to get process and thread id
-            logEvent.Properties.TryGetValue("pid", out var pid);
-            logEvent.Properties.TryGetValue("tid", out var tid);
-
-            // format matches the log4net format, but adds the Exception property (if present in the message as a separate property) to the end. 
-            output.Write($"{logEvent.Timestamp.ToUniversalTime():yyyy-MM-dd HH:mm:ss,fff} NewRelic {logEvent.Level.TranslateLogLevel(),6}: [pid: {pid?.ToString()}, tid: {tid?.ToString()}] {logEvent.MessageTemplate}{output.NewLine}{logEvent.Exception}");
-        }
-    }
-
-    class CustomAuditLogTextFormatter : ITextFormatter
-    {
-        public void Format(LogEvent logEvent, TextWriter output)
-        {
-            logEvent.Properties.TryGetValue("Message", out var message);
-
-            output.Write($"{logEvent.Timestamp.ToUniversalTime():yyyy-MM-dd HH:mm:ss,fff} NewRelic  AUDIT: {message}{output.NewLine}");
-        }
     }
 }
