@@ -7,6 +7,7 @@ using System.Linq;
 using System.Web;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Helpers;
+using System.Collections.ObjectModel;
 
 namespace NewRelic.Agent.Core.Errors
 {
@@ -126,9 +127,6 @@ namespace NewRelic.Agent.Core.Errors
         {
             // this does more work than just getting the exception, so we want to do this just once.
             var baseException = exception.GetBaseException();
-            // When generating the error group we use the outermost exception so that we can provide as much context as possible
-            // to the callback.
-            var errorGroup = _configurationService.Configuration.ErrorGroupCallback?.Invoke(exception);
             var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : baseException.Message;
             var baseExceptionTypeName = GetFriendlyExceptionTypeName(baseException);
             // We want the message from the base exception since that is the real exception.
@@ -137,7 +135,7 @@ namespace NewRelic.Agent.Core.Errors
             var noticedAt = DateTime.UtcNow;
 
             var isExpected = IsErrorFromExceptionSpecified(exception, _configurationService.Configuration.ExpectedErrorsConfiguration);
-            return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected, errorGroup);
+            return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected, baseException);
         }
 
         private static bool IsErrorFromExceptionSpecified(Exception exception, IDictionary<string, IEnumerable<string>> source)

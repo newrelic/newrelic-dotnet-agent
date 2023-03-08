@@ -14,6 +14,7 @@ using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -1201,7 +1202,7 @@ namespace NewRelic.Agent.Core.Configuration
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
         public IEnumerable<string> ExpectedErrorStatusCodesForAgentSettings { get; private set; }
 
-        public Func<Exception, string> ErrorGroupCallback => _runTimeConfiguration.ErrorGroupCallback;
+        public Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback => _runTimeConfiguration.ErrorGroupCallback;
 
         #endregion
 

@@ -269,11 +269,12 @@ namespace NewRelic.Agent.Api
         /// <summary> Sets the method that will be invoked to define the error group that an exception
         /// should belong to.
         ///
-        /// The callback takes an Exception and returns the name of the error group to use. Return values
+        /// The callback takes an IReadOnlyDictionary of attributes, the stack trace, and Exception,
+        /// and returns the name of the error group to use. Return values
         /// that are null, empty, or whitespace will not associate the Exception to an error group.
         /// </summary>
         /// <param name="callback">The callback to invoke to define the error group that an Exception belongs to.</param>
-        void SetErrorGroupCallback(Func<Exception, string> callback);
+        void SetErrorGroupCallback(Func<IReadOnlyDictionary<string, object>, string> callback);
     }
 }
 

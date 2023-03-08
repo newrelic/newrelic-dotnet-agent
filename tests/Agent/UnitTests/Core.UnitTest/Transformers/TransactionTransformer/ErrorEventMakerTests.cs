@@ -21,6 +21,7 @@ using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.TestUtilities;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -37,8 +38,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private static ITimerFactory _timerFactory;
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
-        private Func<Exception, string> _errorGroupCallback;
+        private Func<IReadOnlyDictionary<string, object>, string> _errorGroupCallback;
+        private IAgentTimerService _agentTimerService;
+        private OutOfMemoryException _exception;
         private const string _expectedErrorGroupAttributeName = "error.group.name";
+        private const string ErrorDataCustomAttributeKey = "myAttribute";
 
         [SetUp]
         public void SetUp()
@@ -62,14 +66,38 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _segmentTreeMaker = Mock.Create<ISegmentTreeMaker>();
             Mock.Arrange(() => _segmentTreeMaker.BuildSegmentTrees(Arg.IsAny<IEnumerable<Segment>>()))
                 .Returns(new[] { BuildNode() });
-
-            _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
+            _agentTimerService = Mock.Create<IAgentTimerService>();
+            _errorEventMaker = new ErrorEventMaker(_attribDefSvc, _configurationService, _agentTimerService);
 
             _timerFactory = new TimerFactory();
 
             _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
             _errorService = new ErrorService(_configurationService);
+
+            _exception = new OutOfMemoryException("Out of Memory Message");
         }
+
+        private ErrorData GetErrorDataFromException(object value)
+        {
+            Dictionary<string, object> customAttributes = null;
+            if (value != null)
+            {
+                customAttributes = new Dictionary<string, object> { { ErrorDataCustomAttributeKey, value } };
+            }
+
+            return _errorService.FromException(_exception, customAttributes);
+        }
+
+        private ErrorData GetErrorDataFromMessage(object value)
+        {
+            Dictionary<string, object> customAttributes = null;
+            if (value != null)
+            {
+                customAttributes = new Dictionary<string, object> { { ErrorDataCustomAttributeKey, value } };
+            }
+
+            return _errorService.FromMessage("Out of Memory Message", customAttributes, false);
+        } 
 
         [Test]
         public void GetErrorEvent_InTransaction_IfStatusCodeIs404_ContainsCorrectAttributes()
@@ -117,7 +145,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetErrorEvent_InTransaction_WithException_ContainsCorrectAttributes()
         {
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", isSynthetics: false, isCAT: false, referrerUri: "http://referrer.uri");
-            transaction.NoticeError(new OutOfMemoryException("Out of Memory Message"));
+            transaction.NoticeError(_exception);
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
             var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
@@ -159,8 +187,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [Test]
         public void GetErrorEvent_InTransaction_WithException_ContainsCorrectAttributes_FullAttributes()
         {
-            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false, null);
-
+            var errorData = GetErrorDataFromException(null);
             var transaction = BuildTestTransaction(statusCode: 404,
                                                             customErrorData: errorData,
                                                             uri: "http://www.newrelic.com/test?param=value",
@@ -225,9 +252,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             // Arrange
             var customAttributes = new AttributeValueCollection(AttributeDestinations.ErrorEvent);
-
+            var errorData = GetErrorDataFromException(null);
             _attribDefs.GetCustomAttributeForError("custom attribute name").TrySetValue(customAttributes, "custom attribute value");
-            var errorData = _errorService.FromException(new NullReferenceException("NRE message"));
 
             // Act
             float priority = 0.5f;
@@ -253,14 +279,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             );
         }
 
-        [Test]
-        public void GetErrorEvent_NoTransaction_WithException_ContainsErrorGroup()
+        #region ErrorGroup FromMesssage
+
+        [TestCase("value")]
+        [TestCase(null)]
+        public void GetErrorEvent_NoTransaction_FromMessage_ContainsErrorGroup(object value)
         {
             _errorGroupCallback = ex => "test group";
-            var errorData = _errorService.FromException(new Exception("test message"));
-
+            var errorData = GetErrorDataFromMessage(value);
             var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
-
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
@@ -270,23 +297,31 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [TestCase(null)]
         [TestCase("")]
         [TestCase("     ")]
-        public void GetErrorEvent_NoTransaction_WithException_DoesNotContainErrorGroup(string callbackReturnValue)
+        public void GetErrorEvent_NoTransaction_FromMessage_DoesNotContainErrorGroup(string callbackReturnValue)
         {
             _errorGroupCallback = ex => callbackReturnValue;
-            var errorData = _errorService.FromException(new Exception("test message"));
-
+            var errorData = GetErrorDataFromMessage(null);
             var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
-
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
             CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
         }
 
         [Test]
-        public void GetErrorEvent_InTransaction_WithException_ContainsErrorGroup()
+        public void GetErrorEvent_NoTransaction_FromMessage_DoesNotContainErrorGroup()
         {
-            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false, "test group");
+            var errorData = GetErrorDataFromMessage(null);
+            var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
+            var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
+            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
+        }
 
+        [TestCase("value")]
+        [TestCase(null)]
+        public void GetErrorEvent_InTransaction_FromMessage_ContainsErrorGroup(object value)
+        {
+            _errorGroupCallback = ex => "test group";
+            var errorData = GetErrorDataFromMessage(value);
             var transaction = BuildTestTransaction(statusCode: 500,
                                                             exceptionData: errorData,
                                                             uri: "http://www.newrelic.com/test?param=value",
@@ -294,18 +329,79 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                                                             includeUserAttributes: true);
 
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
-
             var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
             var txStats = new TransactionMetricStatsCollection(transactionMetricName);
-
             var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10),
                 TimeSpan.FromSeconds(15), txStats);
-
-
             attributes.AddRange(GetIntrinsicAttributes());
 
             var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
+            var agentAttributes = errorEvent.AgentAttributes();
+            var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
+            Assert.AreEqual("test group", errorGroupAttribute);
+        }
+
+        [Test]
+        public void GetErrorEvent_InTransaction_FromMessage_DoesNotContainErrorGroup()
+        {
+            var errorData = GetErrorDataFromMessage(null);
+            var transaction = BuildTestTransaction(statusCode: 500,
+                                                            exceptionData: errorData,
+                                                            uri: "http://www.newrelic.com/test?param=value",
+                                                            referrerUri: "http://referrer.uri",
+                                                            includeUserAttributes: true);
+
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var txStats = new TransactionMetricStatsCollection(transactionMetricName);
+            var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(15), txStats);
+            attributes.AddRange(GetIntrinsicAttributes());
+
+            var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
+            var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
+
+            CollectionAssert.DoesNotContain(agentAttributeKeys, "error_group");
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("     ")]
+        public void GetErrorEvent_InTransaction_FromMessage_DoesNotContainErrorGroup(string errorGroupValue)
+        {
+            _errorGroupCallback = ex => errorGroupValue;
+            var errorData = GetErrorDataFromMessage(null);
+            var transaction = BuildTestTransaction(statusCode: 500,
+                                                            exceptionData: errorData,
+                                                            uri: "http://www.newrelic.com/test?param=value",
+                                                            referrerUri: "http://referrer.uri",
+                                                            includeUserAttributes: true);
+
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var txStats = new TransactionMetricStatsCollection(transactionMetricName);
+            var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(15), txStats);
+            attributes.AddRange(GetIntrinsicAttributes());
+
+            var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
+            var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
+
+            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
+        }
+
+        #endregion
+
+        #region ErrorGroup FromException
+
+        [TestCase("value")]
+        [TestCase(null)]
+        public void GetErrorEvent_NoTransaction_FromException_ContainsErrorGroup(object value)
+        {
+            _errorGroupCallback = ex => "test group";
+            var errorData = GetErrorDataFromException(value);
+            var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
@@ -315,10 +411,31 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [TestCase(null)]
         [TestCase("")]
         [TestCase("     ")]
-        public void GetErrorEvent_InTransaction_WithException_DoesNotContainErrorGroup(string errorGroupValue)
+        public void GetErrorEvent_NoTransaction_FromException_DoesNotContainErrorGroup(string callbackReturnValue)
         {
-            var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null, false, errorGroupValue);
+            _errorGroupCallback = ex => callbackReturnValue;
+            var errorData = GetErrorDataFromException(null);
+            var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
+            var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
+            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
+        }
+
+        [Test]
+        public void GetErrorEvent_NoTransaction_FromException_DoesNotContainErrorGroup()
+        {
+            var errorData = GetErrorDataFromException(null);
+            var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
+            var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
+            CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
+        }
+
+        [TestCase("value")]
+        [TestCase(null)]
+        public void GetErrorEvent_InTransaction_FromException_ContainsErrorGroup(object value)
+        {
+            _errorGroupCallback = ex => "test group";
+            var errorData = GetErrorDataFromException(value);
             var transaction = BuildTestTransaction(statusCode: 500,
                                                             exceptionData: errorData,
                                                             uri: "http://www.newrelic.com/test?param=value",
@@ -326,22 +443,69 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                                                             includeUserAttributes: true);
 
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
-
             var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
             var txStats = new TransactionMetricStatsCollection(transactionMetricName);
-
             var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10),
                 TimeSpan.FromSeconds(15), txStats);
-
-
             attributes.AddRange(GetIntrinsicAttributes());
 
             var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
+            var agentAttributes = errorEvent.AgentAttributes();
+            var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
+            Assert.AreEqual("test group", errorGroupAttribute);
+        }
+
+        [Test]
+        public void GetErrorEvent_InTransaction_FromException_DoesNotContainErrorGroup()
+        {
+            var errorData = GetErrorDataFromException(null);
+            var transaction = BuildTestTransaction(statusCode: 500,
+                                                            exceptionData: errorData,
+                                                            uri: "http://www.newrelic.com/test?param=value",
+                                                            referrerUri: "http://referrer.uri",
+                                                            includeUserAttributes: true);
+
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var txStats = new TransactionMetricStatsCollection(transactionMetricName);
+            var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(15), txStats);
+            attributes.AddRange(GetIntrinsicAttributes());
+
+            var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
+            var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
+
+            CollectionAssert.DoesNotContain(agentAttributeKeys, "error_group");
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("     ")]
+        public void GetErrorEvent_InTransaction_FromException_DoesNotContainErrorGroup(string errorGroupValue)
+        {
+            _errorGroupCallback = ex => errorGroupValue;
+            var errorData = GetErrorDataFromException(null);
+            var transaction = BuildTestTransaction(statusCode: 500,
+                                                            exceptionData: errorData,
+                                                            uri: "http://www.newrelic.com/test?param=value",
+                                                            referrerUri: "http://referrer.uri",
+                                                            includeUserAttributes: true);
+
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var txStats = new TransactionMetricStatsCollection(transactionMetricName);
+            var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(15), txStats);
+            attributes.AddRange(GetIntrinsicAttributes());
+
+            var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
             var agentAttributeKeys = errorEvent.AgentAttributes().Keys;
 
             CollectionAssert.DoesNotContain(agentAttributeKeys, _expectedErrorGroupAttributeName);
         }
+
+        #endregion
 
         private IAttributeValueCollection GetIntrinsicAttributes()
         {

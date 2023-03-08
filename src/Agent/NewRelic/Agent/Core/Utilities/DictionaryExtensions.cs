@@ -4,6 +4,7 @@
 using NewRelic.Core;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace NewRelic.Agent.Core.Utilities
 {
