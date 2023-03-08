@@ -136,7 +136,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
                     Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
 
-                    AuditLog(Direction.Received, Source.Collector, response.Content.ToString());
+                    AuditLog(Direction.Received, Source.Collector, responseContent);
                     if (!response.IsSuccessStatusCode)
                     {
                         ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);

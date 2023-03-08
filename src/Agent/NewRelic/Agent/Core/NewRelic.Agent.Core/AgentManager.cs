@@ -384,7 +384,9 @@ namespace NewRelic.Agent.Core
             finally
             {
                 Dispose();
-                log4net.LogManager.Shutdown();
+                //log4net.LogManager.Shutdown();
+
+                Serilog.Log.CloseAndFlush();
             }
         }
 
