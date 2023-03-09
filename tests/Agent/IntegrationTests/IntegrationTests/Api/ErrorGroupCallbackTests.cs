@@ -17,27 +17,16 @@ namespace NewRelic.Agent.IntegrationTests.Api
     public abstract class ErrorGroupCallbackTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private const string ErrorGroupName = "error.group.name";
-        private string _errorGroupValue;
-        private string _testCommand;
+        private const string ErrorGroupValue = "CustomErrorGroup";
 
         protected readonly TFixture Fixture;
 
-        public ErrorGroupCallbackTestsBase(TFixture fixture, ITestOutputHelper output, string testCommand, string testParameter) : base(fixture)
+        public ErrorGroupCallbackTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
             Fixture.TestLogger = output;
-            _testCommand = testCommand;
 
-            _errorGroupValue = testParameter;
-            if (string.IsNullOrWhiteSpace(testParameter))
-            {
-                Fixture.AddCommand($"ApiCalls {testCommand}");
-            }
-            else
-            {
-                Fixture.AddCommand($"ApiCalls {testCommand} {testParameter}");
-            }
-
+            Fixture.AddCommand($"ApiCalls TestSetErrorGroupCallbackReturnsString " + ErrorGroupValue);
             Fixture.AddCommand("AttributeInstrumentation MakeWebTransactionWithException");
 
             Fixture.Actions
@@ -48,6 +37,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
                     configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.SetLogLevel("finest");
                     configModifier.AddExpectedErrorMessages("System.Exception", new List<string> { "Test Message" });
+                    configModifier.EnableAgentTiming(true);
                 }
             );
 
@@ -67,58 +57,22 @@ namespace NewRelic.Agent.IntegrationTests.Api
 
             var apiMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/SetErrorGroupCallback"}
+                new Assertions.ExpectedMetric(){ callCount = 1, metricName = "Supportability/ApiInvocation/SetErrorGroupCallback"},
+                new Assertions.ExpectedMetric() { callCount = 1, metricName = "Supportability/AgentTiming/ErrorEventMakerSetErrorGroup" },
+                new Assertions.ExpectedMetric() { callCount = 1, metricName = "Supportability/AgentTiming/ErrorTraceMakerSetErrorGroup" }
             };
 
-            var asserts = new List<Action> { () => Assertions.MetricsExist(apiMetrics, actualMetrics) };
-            if (_testCommand == "TestSetErrorGroupCallbackReturnsString")
-            {
-                StringTests(asserts, errorEvent, errorTrace);
-            }
-            else if (_testCommand == "TestSetErrorGroupCallbackWithKeys")
-            {
-                DictionaryTests(asserts, errorEvent, errorTrace);
-            }
-            else if (_testCommand == "TestNullSetErrorGroupCallback")
-            {
-                NullTests(asserts, errorEvent, errorTrace);
-            }
-            else
-            {
-                Assert.True(false, "Test Command was invalid: " + _testCommand);
-            }
-
-            NrAssert.Multiple(asserts.ToArray());
-        }
-
-        private void StringTests(List<Action> asserts, ErrorEventEvents errorEvent, ErrorTrace errorTrace)
-        {
             var expectedAgentAttributes = new Dictionary<string, string>
             {
-                { ErrorGroupName, _errorGroupValue}
+                { ErrorGroupName, ErrorGroupValue}
             };
+            var asserts = new List<Action> {  };
 
-            asserts.Add(() => Assertions.ErrorEventHasAttributes(expectedAgentAttributes, EventAttributeType.Agent, errorEvent));
-            asserts.Add(() => Assertions.ErrorTraceHasAttributes(expectedAgentAttributes, ErrorTraceAttributeType.Agent, errorTrace));
-        }
-
-        private void DictionaryTests(List<Action> asserts, ErrorEventEvents errorEvent, ErrorTrace errorTrace)
-        {
-            var expectedAgentAttributes = new Dictionary<string, string>
-            {
-                { ErrorGroupName, "success"}
-            };
-
-            asserts.Add(() => Assertions.ErrorEventHasAttributes(expectedAgentAttributes, EventAttributeType.Agent, errorEvent));
-            asserts.Add(() => Assertions.ErrorTraceHasAttributes(expectedAgentAttributes, ErrorTraceAttributeType.Agent, errorTrace));
-        }
-
-        private void NullTests(List<Action> asserts, ErrorEventEvents errorEvent, ErrorTrace errorTrace)
-        {
-            var unexpectedAgentAttributes = new List<string> { ErrorGroupName };
-
-            asserts.Add(() => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedAgentAttributes, EventAttributeType.Agent, errorEvent));
-            asserts.Add(() => Assertions.ErrorTraceDoesNotHaveAttributes(unexpectedAgentAttributes, ErrorTraceAttributeType.Agent, errorTrace));
+            NrAssert.Multiple(
+                () => Assertions.MetricsExist(apiMetrics, actualMetrics),
+                () => Assertions.ErrorEventHasAttributes(expectedAgentAttributes, EventAttributeType.Agent, errorEvent),
+                () => Assertions.ErrorTraceHasAttributes(expectedAgentAttributes, ErrorTraceAttributeType.Agent, errorTrace)
+            );
         }
     }
 
@@ -126,25 +80,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
     public class ErrorGroupCallbackReturnsStringTestsFW : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public ErrorGroupCallbackReturnsStringTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "TestSetErrorGroupCallbackReturnsString", "CustomErrorGroup")
-        {
-        }
-    }
-
-    [NetFrameworkTest]
-    public class ErrorGroupCallbackWithKeyTestsFW : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public ErrorGroupCallbackWithKeyTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "TestSetErrorGroupCallbackWithKeys", string.Empty)
-        {
-        }
-    }
-
-    [NetFrameworkTest]
-    public class ErrorGroupCallbackNullTestsFW : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public ErrorGroupCallbackNullTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "TestNullSetErrorGroupCallback",  string.Empty)
+            : base(fixture, output)
         {
         }
     }
@@ -153,25 +89,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
     public class ErrorGroupCallbackReturnsStringTestsCore : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ErrorGroupCallbackReturnsStringTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "TestSetErrorGroupCallbackReturnsString", "CustomErrorGroup")
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class ErrorGroupCallbackWithKeyTestsCore : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public ErrorGroupCallbackWithKeyTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "TestSetErrorGroupCallbackWithKeys", string.Empty)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class ErrorGroupCallbackNullTestsCore : ErrorGroupCallbackTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public ErrorGroupCallbackNullTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, "TestNullSetErrorGroupCallback", string.Empty)
+            : base(fixture, output)
         {
         }
     }

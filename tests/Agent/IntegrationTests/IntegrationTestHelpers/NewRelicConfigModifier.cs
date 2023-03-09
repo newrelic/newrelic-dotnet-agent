@@ -337,5 +337,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "sendDataOnExit", enabled.ToString().ToLower());
             return this;
         }
+
+        public NewRelicConfigModifier EnableAgentTiming(bool enable = true)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "diagnostics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "diagnostics"}, "captureAgentTiming", enable.ToString().ToLower());
+            return this;
+        }
     }
 }
