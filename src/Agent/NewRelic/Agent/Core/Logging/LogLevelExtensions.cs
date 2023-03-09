@@ -1,3 +1,6 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 using System;
 using Serilog.Events;
 
@@ -21,6 +24,9 @@ namespace NewRelic.Agent.Core
                     return LogEventLevel.Information;
                 case "WARN": 
                     return LogEventLevel.Warning;
+                case "OFF":
+                    // moderately hack-ish, but setting the level to something higher than Fatal disables logs as per https://stackoverflow.com/a/30864356/2078975
+                    return (LogEventLevel)1 + (int)LogEventLevel.Fatal; 
                 default:
                     // TODO: Add checking for deprecated log levels ??
                     Serilog.Log.Logger.Warning($"Invalid log level '{configLogLevel}' specified. Using log level 'Info' by default.");

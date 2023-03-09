@@ -112,10 +112,11 @@ namespace NewRelic.Agent.Core
         /// <remarks>This should only be called once, as soon as you have a valid config.</remarks>
         public static void ConfigureLogger(ILogConfig config)
         {
+            SetupLogLevel(config);
+
             var loggerConfig = new LoggerConfiguration()
                 .Enrich.With(new ThreadIdEnricher())
                 .Enrich.With(new ProcessIdEnricher())
-                .SetupLogLevel(config)
                 .ConfigureFileSink(config)
                 .ConfigureAuditLogSink(config)
                 .ConfigureDebugSink();
@@ -167,13 +168,10 @@ namespace NewRelic.Agent.Core
         /// <summary>
         /// Sets the log level for logger to either the level provided by the config or an public default.
         /// </summary>
-        /// <param name="loggerConfiguration"></param>
         /// <param name="config">The LogConfig to look for the level setting in.</param>
-        private static LoggerConfiguration SetupLogLevel(this LoggerConfiguration loggerConfiguration, ILogConfig config)
+        private static void SetupLogLevel(ILogConfig config)
         {
             _loggingLevelSwitch.MinimumLevel = config.LogLevel.MapToSerilogLogLevel();
-
-            return loggerConfiguration.MinimumLevel.ControlledBy(_loggingLevelSwitch);
         }
 
         // TODO: implement but don't use log4net log levels enum
@@ -258,6 +256,7 @@ namespace NewRelic.Agent.Core
                 .WriteTo.Logger(configuration =>
                 {
                     configuration
+                        .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                         .ExcludeAuditLog()
                         .WriteTo.Debug(formatter: new CustomTextFormatter());
 
@@ -281,6 +280,7 @@ namespace NewRelic.Agent.Core
                 .WriteTo.Logger(configuration =>
                 {
                     configuration
+                        .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                         .ExcludeAuditLog()
                         .WriteTo.Console(formatter: new CustomTextFormatter());
 
@@ -306,14 +306,14 @@ namespace NewRelic.Agent.Core
 
             try
             {
-                // configure a sub-logger for the audit log file - will only include messages at the 
                 loggerConfiguration
                     .WriteTo
                     .Logger(configuration =>
                     {
-                        ExcludeAuditLog(configuration);
-
-                        ConfigureRollingLogSink(configuration, logFileName, new CustomTextFormatter());
+                        configuration
+                            .MinimumLevel.ControlledBy(_loggingLevelSwitch)
+                            .ExcludeAuditLog()
+                            .ConfigureRollingLogSink(logFileName, new CustomTextFormatter());
                     });
             }
             catch (Exception)
@@ -334,12 +334,12 @@ namespace NewRelic.Agent.Core
 
             string logFileName = config.GetFullLogFileName().Replace(".log", "_audit.log");
 
-            // configure a sub-logger for the audit log file - will only include messages at the 
             return loggerConfiguration
                 .WriteTo
                 .Logger(configuration =>
                 {
                     configuration
+                        .MinimumLevel.Fatal()
                         .IncludeOnlyAuditLog()
                         .ConfigureRollingLogSink(logFileName, new CustomAuditLogTextFormatter());
                 });
