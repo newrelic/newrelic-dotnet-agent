@@ -9,7 +9,9 @@ namespace NewRelic.Agent.Core.Config
 
         string GetFullLogFileName();
 
+        // TODO: Not needed with Serilog
         bool FileLockingModelSpecified { get; }
+        // TODO: Not needed with Serilog
         configurationLogFileLockingModel FileLockingModel { get; }
 
         bool Console { get; }

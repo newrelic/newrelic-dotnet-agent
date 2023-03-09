@@ -4,6 +4,7 @@
 using NewRelic.Agent.Core.Config;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 #if NETSTANDARD2_0
 using System.Runtime.InteropServices;
@@ -30,20 +31,20 @@ namespace NewRelic.Agent.Core
         ///// </summary>
         //private static readonly string ConsoleLogAppenderName = "ConsoleLog";
 
-  //      /// <summary>
-  //      /// The name of the temporary event log appender.
-  //      /// </summary>
-  //      private static readonly string TemporaryEventLogAppenderName = "TemporaryEventLog";
+        ///// <summary>
+        ///// The name of the temporary event log appender.
+        ///// </summary>
+        //private static readonly string TemporaryEventLogAppenderName = "TemporaryEventLog";
 
-		///// <summary>
-		///// The name of the event log appender.
-		///// </summary>
-		//private static readonly string EventLogAppenderName = "EventLog";
+        ///// <summary>
+        ///// The name of the event log appender.
+        ///// </summary>
+        //private static readonly string EventLogAppenderName = "EventLog";
 
-		/// <summary>
-		/// The name of the event log to log to.
-		/// </summary>
-		private static readonly string EventLogName = "Application";
+        /// <summary>
+        /// The name of the event log to log to.
+        /// </summary>
+        private static readonly string EventLogName = "Application";
 
 		/// <summary>
 		/// The event source name.
@@ -64,7 +65,6 @@ namespace NewRelic.Agent.Core
         //private static ILayout AuditLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %level: %message\r\n");
         //private static ILayout FileLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %6level: [pid: %property{pid}, tid: %property{threadid}] %message\r\n");
 
-
         //private static ILayout eventLoggerLayout = new PatternLayout("%level: %message");
 
         //private static string STARTUP_APPENDER_NAME = "NEWRELIC_DOTNET_AGENT_STARTUP_APPENDER";
@@ -84,14 +84,13 @@ namespace NewRelic.Agent.Core
                 .Enrich.With(new ThreadIdEnricher())
                 .Enrich.With(new ProcessIdEnricher())
                 .MinimumLevel.Information()
-                .ConfigureConsoleSink()
-                .ConfigureEventLogSink();
-
-// TODO: MAT Figure out how to log to memory during startup, for now logs to console only
+                .ConfigureInMemoryLogSink()
+                .ConfigureEventLogSink()
+                // TODO: Remove console log sink when in-memory sink is implemented
+                .ConfigureConsoleSink();
 
             // set the global Serilog logger to our startup logger instance, this gets replaced when ConfigureLogger() is called
             Serilog.Log.Logger = startupLoggerConfig.CreateLogger();
-
 
             //var hierarchy = log4net.LogManager.GetRepository(Assembly.GetCallingAssembly()) as log4net.Repository.Hierarchy.Hierarchy;
             //var logger = hierarchy.Root;
@@ -126,13 +125,15 @@ namespace NewRelic.Agent.Core
                 loggerConfig = loggerConfig.ConfigureConsoleSink();
             }
 
-            // TODO: get the current global logger (which is the startup logger, should be logging to memory)
-            //var startupLogger = Serilog.Log.Logger;
+            var startupLogger = Serilog.Log.Logger;
 
             // configure the global singleton logger instance (which remains specific to the Agent by way of ILRepack)
-            Serilog.Log.Logger = loggerConfig.CreateLogger();
+            var configuredLogger = loggerConfig.CreateLogger();
 
-            // TODO: figure out how extract the memory-based logger data from startup logger and inject it into Log.Logger
+            EchoInMemoryLogsToConfiguredLogger(configuredLogger);
+
+            Serilog.Log.Logger = configuredLogger;
+
             // We have now bootstrapped the agent logger, so
             // remove the startup appender, then send its messages 
             // to the agent logger, which will get picked up by 
@@ -146,6 +147,17 @@ namespace NewRelic.Agent.Core
         /// Gets a string identifying the Audit log level
         /// </summary>
         public static string GetAuditLevel() => AuditLogLevelName;
+
+        private static void EchoInMemoryLogsToConfiguredLogger(Serilog.ILogger configuredLogger)
+        {
+            // TODO: copy logs from inMemory logger and emit them to Serilog.Log.Logger
+            // possible example:
+            //foreach (LogEvent logEvent in InMemorySink.Instance.LogEvents)
+            //{
+            //    configuredLogger.Write(logEvent.Level, logEvent.Exception, logEvent.MessageTemplate.Render(logEvent.Properties));
+            //}
+            //InMemorySink.Instance.Dispose();
+        }
 
         //private static void ShutdownStartupLogAppender(log4netLogger logger)
         //{
@@ -184,20 +196,21 @@ namespace NewRelic.Agent.Core
         //    return false;
         //}
 
-        ///// <summary>
-        ///// A memory appender for logging to memory during startup. Log messages will be re-logged after configuration is loaded.
-        ///// </summary>
-        ///// <param name="logger"></param>
-        //private static void SetupStartupLogAppender(log4netLogger logger)
-        //{
-        //    var startupAppender = new MemoryAppender();
-        //    startupAppender.Name = STARTUP_APPENDER_NAME;
-        //    startupAppender.Layout = LoggerBootstrapper.FileLogLayout;
-        //    startupAppender.ActivateOptions();
+        private static LoggerConfiguration ConfigureInMemoryLogSink(this LoggerConfiguration loggerConfiguration)
+        {
+            // TODO Configure the (yet-to-be-implemented) in-memory sink
 
-        //    logger.AddAppender(startupAppender);
-        //    logger.Repository.Configured = true;
-        //}
+            return loggerConfiguration;
+
+            //    var startupAppender = new MemoryAppender();
+            //    startupAppender.Name = STARTUP_APPENDER_NAME;
+            //    startupAppender.Layout = LoggerBootstrapper.FileLogLayout;
+            //    startupAppender.ActivateOptions();
+
+            //    logger.AddAppender(startupAppender);
+            //    logger.Repository.Configured = true;
+
+        }
 
         /// <summary>
         /// Add the Event Log sink if running on Windows
