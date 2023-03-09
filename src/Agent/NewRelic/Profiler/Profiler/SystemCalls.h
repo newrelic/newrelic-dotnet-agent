@@ -89,7 +89,7 @@ namespace NewRelic { namespace Profiler
         virtual xstring_t GetParentProcessPath()
         {
             const int MAX_PROCESS_PATH = 1024;
-            wchar_t moduleName[MAX_PROCESS_PATH];
+            wchar_t moduleName[MAX_PROCESS_PATH] = L"";
 
             const auto ppid = GetParentProcessId();
             if (!ppid)
@@ -109,16 +109,18 @@ namespace NewRelic { namespace Profiler
 
                 if (!result)
                 {
+                    // log the error but don't throw
                     auto error = ::GetLastError();
-                    LogError(L"Unable to get the parent process path (1).  Error number: ", std::hex, error, std::resetiosflags(std::ios_base::basefield));
-                    throw ProfilerException();
+                    LogTrace(L"Unable to get the parent process path (1).  Error number: ", std::hex, error, std::resetiosflags(std::ios_base::basefield));
+                    return moduleName;
                 }
             }
             else
             {
+                // log the error but don't throw
                 auto error = ::GetLastError();
-                LogError(L"Unable to get the parent process path (2).  Error number: ", std::hex, error, std::resetiosflags(std::ios_base::basefield));
-                throw ProfilerException();
+                LogTrace(L"Unable to get the parent process path (2).  Error number: ", std::hex, error, std::resetiosflags(std::ios_base::basefield));
+                return moduleName;
             }
 
             LogTrace("Parent process name is ", moduleName);
