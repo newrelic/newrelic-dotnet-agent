@@ -8,16 +8,16 @@ using System.Linq;
 using System.Reflection;
 #if NETFRAMEWORK
 using System.Management;
-using System.Web.Configuration;
-#endif
 using System.Web;
+using System.Web.Configuration;
 using Microsoft.Win32;
+#endif
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Agent.Configuration;
-using NewRelic.Core;
+
 
 namespace NewRelic.Agent.Core
 {
@@ -45,15 +45,22 @@ namespace NewRelic.Agent.Core
                 AddVariable("Product Name", () => fileVersionInfo?.ProductName);
 
                 AddVariable("OS", () => System.Environment.OSVersion?.VersionString);
+
+                // report operating system and version in addition to "OS" - these two report more useful information (including linux distro names)
+                // Eventually, we should deprecate "OS" in favor of these variables
+                AddVariable("Operating System", () => RuntimeEnvironmentInfo.OperatingSystem);
+                AddVariable("Operating System Version", () => RuntimeEnvironmentInfo.OperatingSystemVersion);
+
 #if NETSTANDARD2_0
                 // This API is only supported on .net FX 4.7 + so limiting it
                 // to .net core since that is the one affected. 
                 AddVariable(".NET Version", () => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription.ToString());
                 AddVariable("Processor Architecture", () => System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString());
 #else
-                AddVariable(".NET Version", () => DotnetVersion.GetDotnetFrameworkVersion().ToString());
+                AddVariable(".NET Version", () => NewRelic.Core.DotnetVersion.GetDotnetFrameworkVersion().ToString());
                 AddVariable("Processor Architecture", () => (IntPtr.Size == 8) ? "X64" : "X86");
 #endif
+
                 AddVariable("Total Physical System Memory", () => TotalPhysicalMemory);
 
                 var process = TryGetCurrentProcess();
@@ -96,7 +103,7 @@ namespace NewRelic.Agent.Core
                 AddVariable("Plugin List", GetLoadedAssemblyNames);
 
 #if DEBUG
-				AddVariable("Debug Build", () => true.ToString());
+                AddVariable("Debug Build", () => true.ToString());
 #endif
 
 #if NETFRAMEWORK
@@ -293,4 +300,5 @@ namespace NewRelic.Agent.Core
             }
         }
     }
+
 }
