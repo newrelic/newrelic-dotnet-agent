@@ -39,6 +39,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _errorGroupCallback = null;
             _configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => _configuration.ErrorGroupCallback).Returns(() => _errorGroupCallback);
+            Mock.Arrange(() => _configuration.StackTraceMaximumFrames).Returns(() => 1);
 
             _configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
@@ -265,7 +266,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [TestCase(null)]
         public void GetErrorTrace_InTransaction_FromException_HasErrorGroup(object value)
         {
-            _errorGroupCallback = ex => "test group";
+            IReadOnlyDictionary<string, object> passedInDict = null;
+            _errorGroupCallback = ex =>
+            {
+                passedInDict = ex;
+                return "test group";
+            };
             var errorData = GetErrorDataFromException(value);
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
@@ -274,6 +280,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
+            Assert.IsNotNull(passedInDict);
+            Assert.IsTrue(passedInDict.ContainsKey("stack_trace"));
+            Assert.IsTrue(passedInDict.ContainsKey("exception"));
             Assert.AreEqual("test group", errorGroupAttribute);
         }
 
@@ -310,13 +319,21 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [TestCase(null)]
         public void GetErrorTrace_NoTransaction_FromException_HasErrorGroup(object value)
         {
-            _errorGroupCallback = ex => "test group";
+            IReadOnlyDictionary<string, object> passedInDict = null;
+            _errorGroupCallback = ex =>
+            {
+                passedInDict = ex;
+                return "test group";
+            };
             var errorData = GetErrorDataFromException(value);
             var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
             var errorTrace = _errorTraceMaker.GetErrorTrace(attributes, errorData);
             var agentAttributes = errorTrace.Attributes.AgentAttributes;
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
+            Assert.IsNotNull(passedInDict);
+            Assert.IsTrue(passedInDict.ContainsKey("stack_trace"));
+            Assert.IsTrue(passedInDict.ContainsKey("exception"));
             Assert.AreEqual("test group", errorGroupAttribute);
         }
 

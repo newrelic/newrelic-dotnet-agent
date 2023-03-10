@@ -94,10 +94,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             using (_agentTimerService.StartNew(SetErrorGroupSupportabilityName))
             {
                 var errorGroup = _configurationService.Configuration.ErrorGroupCallback?.Invoke((IReadOnlyDictionary<string, object>)callbackAttributes);
-                if (!string.IsNullOrWhiteSpace(errorGroup))
-                {
-                    _attribDefs.ErrorGroup.TrySetValue(attribValues, errorGroup);
-                }
+                _attribDefs.ErrorGroup.TrySetValue(attribValues, errorGroup);
             }
         }
     }

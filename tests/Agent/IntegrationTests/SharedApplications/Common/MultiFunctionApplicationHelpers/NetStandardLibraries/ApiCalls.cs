@@ -4,6 +4,7 @@
 
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -61,6 +62,13 @@ namespace MultiFunctionApplicationHelpers.Libraries
         public static void TestSetTransactionUserId(string userId)
         {
             NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.SetUserId(userId);
+        }
+
+        [LibraryMethod]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void TestSetErrorGroupCallbackReturnsString(string callbackReturn)
+        {
+            NewRelic.Api.Agent.NewRelic.SetErrorGroupCallback((x) => callbackReturn);
         }
     }
 }
