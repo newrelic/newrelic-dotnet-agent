@@ -18,7 +18,6 @@ using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Agent.Configuration;
 
-
 namespace NewRelic.Agent.Core
 {
     [JsonConverter(typeof(EnvironmentConverter))]
@@ -300,5 +299,4 @@ namespace NewRelic.Agent.Core
             }
         }
     }
-
 }
