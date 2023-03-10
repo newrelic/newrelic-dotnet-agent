@@ -55,6 +55,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
             Mock.Arrange(() => _configuration.ErrorCollectorCaptureEvents).Returns(true);
             Mock.Arrange(() => _configuration.ErrorGroupCallback).Returns(() => _errorGroupCallback);
+            Mock.Arrange(() => _configuration.StackTraceMaximumFrames).Returns(() => 1);
 
             _configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
@@ -399,12 +400,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [TestCase(null)]
         public void GetErrorEvent_NoTransaction_FromException_ContainsErrorGroup(object value)
         {
-            _errorGroupCallback = ex => "test group";
+            IReadOnlyDictionary<string, object> passedInDict = null;
+            _errorGroupCallback = ex =>
+            {
+                passedInDict = ex;
+                return "test group";
+            };
             var errorData = GetErrorDataFromException(value);
             var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(AttributeDestinations.ErrorEvent), 0.5f);
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
+            Assert.IsNotNull(passedInDict);
+            Assert.IsTrue(passedInDict.ContainsKey("stack_trace"));
+            Assert.IsTrue(passedInDict.ContainsKey("exception"));
             Assert.AreEqual("test group", errorGroupAttribute);
         }
 
@@ -434,7 +443,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [TestCase(null)]
         public void GetErrorEvent_InTransaction_FromException_ContainsErrorGroup(object value)
         {
-            _errorGroupCallback = ex => "test group";
+            IReadOnlyDictionary<string, object> passedInDict = null;
+            _errorGroupCallback = ex =>
+            {
+                passedInDict = ex;
+                return "test group";
+            };
             var errorData = GetErrorDataFromException(value);
             var transaction = BuildTestTransaction(statusCode: 500,
                                                             exceptionData: errorData,
@@ -453,6 +467,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var agentAttributes = errorEvent.AgentAttributes();
             var errorGroupAttribute = agentAttributes[_expectedErrorGroupAttributeName];
 
+            Assert.IsNotNull(passedInDict);
+            Assert.IsTrue(passedInDict.ContainsKey("stack_trace"));
+            Assert.IsTrue(passedInDict.ContainsKey("exception"));
             Assert.AreEqual("test group", errorGroupAttribute);
         }
 
