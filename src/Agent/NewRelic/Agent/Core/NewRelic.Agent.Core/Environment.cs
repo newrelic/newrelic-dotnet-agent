@@ -17,6 +17,7 @@ using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Agent.Configuration;
+using System.Runtime.InteropServices;
 
 namespace NewRelic.Agent.Core
 {
@@ -45,10 +46,12 @@ namespace NewRelic.Agent.Core
 
                 AddVariable("OS", () => System.Environment.OSVersion?.VersionString);
 
-                // report operating system and version in addition to "OS" - these two report more useful information (including linux distro names)
-                // Eventually, we should deprecate "OS" in favor of these variables
-                AddVariable("Operating System", () => RuntimeEnvironmentInfo.OperatingSystem);
-                AddVariable("Operating System Version", () => RuntimeEnvironmentInfo.OperatingSystemVersion);
+                // report linux distro name and version when appropriate
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    AddVariable("Linux Distro Name", () => RuntimeEnvironmentInfo.OperatingSystem);
+                    AddVariable("Linux Distro Version", () => RuntimeEnvironmentInfo.OperatingSystemVersion);
+                }
 
 #if NETSTANDARD2_0
                 // This API is only supported on .net FX 4.7 + so limiting it
