@@ -9,7 +9,8 @@ namespace NewRelic.Agent.Core.Utils
     public class RuntimeEnvironmentInfoTests
     {
         [Test]
-        public void RuntimeEnvironmentInfo_OperatingSystem_ReportsWindows()
+        [Platform("Win")] // only run this test on a windows platform
+        public void RuntimeEnvironmentInfo_OperatingSystem_ReportsWindows_OnWindows()
         {
             Assert.AreEqual("Windows", RuntimeEnvironmentInfo.OperatingSystem);
         }
