@@ -76,8 +76,10 @@ namespace NewRelic.Agent.Core
                 // second token up to first dot
                 return RuntimeInformation.OSDescription.Split()[1].Split('.')[0];
             }
-            catch
+            catch (Exception ex)
             {
+                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(RuntimeEnvironmentInfo));
+                logger.Debug($"Unable to report Operating System: Unexpected exception in GetFreeBSDVersion: {ex}");
             }
             return string.Empty;
         }
@@ -137,9 +139,10 @@ namespace NewRelic.Agent.Core
                     result = NormalizeDistroInfo(result);
                 }
             }
-            catch 
+            catch (Exception ex)
             {
-                // quietly eat any exceptions and return a null result
+                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(RuntimeEnvironmentInfo));
+                logger.Debug($"Unable to report Operating System: Unexpected exception in LoadDistroInfo: {ex}");
             }
 
             return result;
