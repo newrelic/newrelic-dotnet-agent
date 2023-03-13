@@ -4,7 +4,6 @@
 
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
-using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -66,9 +65,22 @@ namespace MultiFunctionApplicationHelpers.Libraries
 
         [LibraryMethod]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void TestSetErrorGroupCallbackReturnsString(string callbackReturn)
+        public static void TestSetErrorGroupCallback()
         {
-            NewRelic.Api.Agent.NewRelic.SetErrorGroupCallback((x) => callbackReturn);
+            NewRelic.Api.Agent.NewRelic.SetErrorGroupCallback(ErrorGroupCallback);
+        }
+
+        private static string ErrorGroupCallback(IReadOnlyDictionary<string, object> attributes)
+        {
+            var errorGroupName = "OtherErrors";
+            if (attributes.TryGetValue("error.message", out var errorMessage))
+            {
+                if (errorMessage.ToString() == "Test Message") // See AttributeInstrumentation.MakeWebTransactionWithException
+                {
+                    errorGroupName = "TestErrors";
+                }
+            }
+            return errorGroupName;
         }
     }
 }

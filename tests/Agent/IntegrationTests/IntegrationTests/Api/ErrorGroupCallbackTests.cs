@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
     public abstract class ErrorGroupCallbackTestsBase<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private const string ErrorGroupName = "error.group.name";
-        private const string ErrorGroupValue = "CustomErrorGroup";
+        private const string ErrorGroupValue = "TestErrors";
 
         protected readonly TFixture Fixture;
 
@@ -26,7 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
             Fixture = fixture;
             Fixture.TestLogger = output;
 
-            Fixture.AddCommand($"ApiCalls TestSetErrorGroupCallbackReturnsString " + ErrorGroupValue);
+            Fixture.AddCommand($"ApiCalls TestSetErrorGroupCallback");
             Fixture.AddCommand("AttributeInstrumentation MakeWebTransactionWithException");
 
             Fixture.Actions
