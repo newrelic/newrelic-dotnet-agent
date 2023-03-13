@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace NewRelic.Agent.Core
 {
     // Borrowed from https://github.com/dotnet/sdk/blob/3595e2a/src/Cli/Microsoft.DotNet.Cli.Utils/RuntimeEnvironment.cs
-    internal static class RuntimeEnvironmentInfo
+    public static class RuntimeEnvironmentInfo
     {
         private enum Platform
         {
@@ -113,26 +113,33 @@ namespace NewRelic.Agent.Core
             //   BUG_REPORT_URL = "http://bugs.launchpad.net/ubuntu/"
             // We use ID and VERSION_ID
 
-            if (File.Exists("/etc/os-release"))
+            try
             {
-                var lines = File.ReadAllLines("/etc/os-release");
-                result = new DistroInfo();
-                foreach (var line in lines)
+                if (File.Exists("/etc/os-release"))
                 {
-                    if (line.StartsWith("ID=", StringComparison.Ordinal))
+                    var lines = File.ReadAllLines("/etc/os-release");
+                    result = new DistroInfo();
+                    foreach (var line in lines)
                     {
-                        result.Id = line.Substring(3).Trim('"', '\'');
-                    }
-                    else if (line.StartsWith("VERSION_ID=", StringComparison.Ordinal))
-                    {
-                        result.VersionId = line.Substring(11).Trim('"', '\'');
+                        if (line.StartsWith("ID=", StringComparison.Ordinal))
+                        {
+                            result.Id = line.Substring(3).Trim('"', '\'');
+                        }
+                        else if (line.StartsWith("VERSION_ID=", StringComparison.Ordinal))
+                        {
+                            result.VersionId = line.Substring(11).Trim('"', '\'');
+                        }
                     }
                 }
-            }
 
-            if (result != null)
+                if (result != null)
+                {
+                    result = NormalizeDistroInfo(result);
+                }
+            }
+            catch 
             {
-                result = NormalizeDistroInfo(result);
+                // quietly eat any exceptions and return a null result
             }
 
             return result;
