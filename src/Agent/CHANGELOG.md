@@ -5,9 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-* Fixes [#1353](https://github.com/newrelic/newrelic-dotnet-agent/issues/1353) so that out-of-process .Net Core web applications are instrumented according to the <applicationPools> setting in newrelic.config. [1392](https://github.com/newrelic/newrelic-dotnet-agent/pull/1392)
+
+### New Features
+* When running on Linux, distro name and version will be reported as environment settings [#1439](https://github.com/newrelic/newrelic-dotnet-agent/pull/1439)
 
 ### Fixes
+* Fixes [#1353](https://github.com/newrelic/newrelic-dotnet-agent/issues/1353) so that out-of-process .Net Core web applications are instrumented according to the <applicationPools> setting in newrelic.config. [1392](https://github.com/newrelic/newrelic-dotnet-agent/pull/1392)
 * Update NLog to improve local log decoration coverage. [#1393](https://github.com/newrelic/newrelic-dotnet-agent/pull/1393)
 
 ## [10.7.0]
