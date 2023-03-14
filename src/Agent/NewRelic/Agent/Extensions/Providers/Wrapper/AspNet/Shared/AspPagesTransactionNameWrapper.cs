@@ -6,11 +6,11 @@ using System.Web.UI;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.Asp35.Shared
+namespace NewRelic.Providers.Wrapper.AspNet.Shared
 {
     public class AspPagesTransactionNameWrapper : IWrapper
     {
-        public const string WrapperName = "Asp35.AspPagesTransactionNameTracer";
+        public const string WrapperName = "AspNet.AspPagesTransactionNameTracer";
 
         public bool IsTransactionRequired => true;
 
