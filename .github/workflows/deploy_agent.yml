@@ -126,6 +126,7 @@ jobs:
         shell: pwsh
 
   index-download-site:
+    needs: deploy-downloadsite
     name: Rebuild indexes on the download site
     if: ${{ github.event.inputs.indexdownloadsite == 'true' }}
     uses: ./.github/workflows/build_download_site_index_files.yml
