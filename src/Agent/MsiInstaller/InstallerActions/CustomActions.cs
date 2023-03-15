@@ -235,6 +235,7 @@ namespace InstallerActions
             DeleteFile(@"C:\ProgramData\New Relic\.NET Agent\Extensions\netframework\NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml");
 
             // Asp35 was renamed to AspNet
+            DeleteFile(@"C:\ProgramData\New Relic\.NET Agent\Extensions\netcore\NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml");
             DeleteFile(@"C:\ProgramData\New Relic\.NET Agent\Extensions\netframework\NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml");
 
 
