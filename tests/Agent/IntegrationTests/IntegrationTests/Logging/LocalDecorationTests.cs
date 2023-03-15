@@ -476,6 +476,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     }
 
     [NetCoreTest]
+    public class SerilogWebPatternLayoutDecorationEnabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public SerilogWebPatternLayoutDecorationEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.SerilogWeb)
+        {
+        }
+    }
+
+    [NetCoreTest]
     public class SerilogPatternLayoutDecorationEnabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
     {
         public SerilogPatternLayoutDecorationEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)

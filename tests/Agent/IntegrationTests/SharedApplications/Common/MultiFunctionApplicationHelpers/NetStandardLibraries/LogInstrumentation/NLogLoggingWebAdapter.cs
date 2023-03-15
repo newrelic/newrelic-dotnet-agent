@@ -13,17 +13,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NewRelic.Agent.IntegrationTestHelpers;
-using Serilog;
-using Serilog.Events;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
 {
-    class SerilogLoggingWebAdapter : ILoggingAdapter
+    class NLogLoggingWebAdapter : ILoggingAdapter
     {
         private static readonly HttpClient _client = new HttpClient();
         private string _uriBase;
 
-        public SerilogLoggingWebAdapter()
+        public NLogLoggingWebAdapter()
         {
         }
 
@@ -99,7 +97,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         }
 
         private void RunApplication(LoggerConfiguration loggerConfig)
-        { 
+        {
             var logger = loggerConfig.CreateLogger();
 
             var port = RandomPortGenerator.NextPort();
@@ -111,13 +109,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             // builder
             IHostBuilder CreateHostBuilder(string uriBase)
             {
-                return Host.CreateDefaultBuilder()
-                .UseSerilog(logger)
+                var builder = Host.CreateDefaultBuilder()
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                webBuilder.UseStartup<SerilogWebStartup>();
-                webBuilder.UseUrls(uriBase);
+                    webBuilder.UseStartup<NLogWebStartup>();
+                    webBuilder.UseUrls(uriBase);
                 });
+
+                return builder;
             }
         }
 
@@ -129,7 +128,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             .WriteTo.Console(
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {NR_LINKING} {NewLine}{Exception}"
             );
-         
+
             RunApplication(loggerConfig);
         }
 
@@ -140,9 +139,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
     }
 
-    public class SerilogWebStartup
+    public class NLogWebStartup
     {
-        public SerilogWebStartup(IConfiguration configuration)
+        public NLogWebStartup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
@@ -171,8 +170,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             {
                 endpoints.MapControllers();
             });
-
-            app.UseSerilogRequestLogging();
         }
     }
 }
