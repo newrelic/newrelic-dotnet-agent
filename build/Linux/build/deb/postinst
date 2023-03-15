@@ -44,6 +44,8 @@ fi
 # Deprecated instrumentation files to remove post install
 rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.Instrumentation.xml 2> /dev/null
 rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Logging.dll 2> /dev/null
+rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml 2> /dev/null
+rm -f $NEWRELIC_HOME/extensions/NewRelic.Providers.Wrapper.Asp35.dll 2> /dev/null
 
 echo "export CORECLR_NEWRELIC_HOME=${NEWRELIC_HOME}" > /etc/profile.d/${PACKAGE_NAME}-path.sh
 source /etc/profile.d/${PACKAGE_NAME}-path.sh
