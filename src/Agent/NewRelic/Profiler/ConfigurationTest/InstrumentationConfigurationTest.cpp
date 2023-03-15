@@ -274,10 +274,11 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
         TEST_METHOD(deprecated_instrumentation_xml_is_ignored)
         {
-            wchar_t* wrapperNames[2] =
+            wchar_t* wrapperNames[3] =
             {
                 L"NewRelic.Providers.Wrapper.Logging.Instrumentation.xml",
-                L"NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml"
+                L"NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml",
+                L"NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml"
             };
 
             int size = sizeof(wrapperNames) / sizeof(wchar_t*);

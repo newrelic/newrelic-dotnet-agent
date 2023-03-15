@@ -10,7 +10,7 @@ using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Asp35
+namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNet
 {
     [NetFrameworkTest]
     public class AllowAllHeadersDisabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>

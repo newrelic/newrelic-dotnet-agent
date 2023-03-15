@@ -234,6 +234,10 @@ namespace InstallerActions
 
             DeleteFile(@"C:\ProgramData\New Relic\.NET Agent\Extensions\netframework\NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml");
 
+            // Asp35 was renamed to AspNet
+            DeleteFile(@"C:\ProgramData\New Relic\.NET Agent\Extensions\netframework\NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml");
+
+
             // Delete old logging DLLs (from default locations) to prevent duplicate logs from being sent up.
             DeleteFile(@"C:\Program Files\New Relic\.NET Agent\netcore\Extensions\NewRelic.Providers.Wrapper.Logging.dll");
             DeleteFile(@"C:\Program Files\New Relic\.NET Agent\netframework\Extensions\NewRelic.Providers.Wrapper.Logging.dll");
@@ -242,6 +246,11 @@ namespace InstallerActions
 
             DeleteFile(@"C:\Program Files (x86)\New Relic\.NET Agent\netframework\Extensions\NewRelic.Providers.Wrapper.CastleMonoRail2.dll");
             DeleteFile(@"C:\Program Files\New Relic\.NET Agent\netframework\Extensions\NewRelic.Providers.Wrapper.CastleMonoRail2.dll");
+
+            // Asp35 was renamed to AspNet
+            DeleteFile(@"C:\Program Files (x86)\New Relic\.NET Agent\netframework\Extensions\NewRelic.Providers.Wrapper.Asp35.dll");
+            DeleteFile(@"C:\Program Files\New Relic\.NET Agent\netframework\Extensions\NewRelic.Providers.Wrapper.Asp35.dll");
+
 
             String newrelicHomePath = Environment.GetEnvironmentVariable("NEWRELIC_HOME");
             if (newrelicHomePath != null) DeleteFile(newrelicHomePath + @"\newrelic.xml");
