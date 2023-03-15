@@ -179,7 +179,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
             {
                 var options = new RestClientOptions($"http://{myHost}:{myPort}")
                 {
+#if NET481
+                    MaxTimeout = 1
+#else
                     Timeout = 1
+#endif
                 };
                 var client = new RestClient(options);
 
