@@ -73,7 +73,6 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 var uri = GetUri(method, connectionInfo);
 
-                Log.DebugFormat("Request({0}): About to Invoke \"{1}\" with : {2}", requestGuid, method, serializedData);
                 AuditLog(Direction.Sent, Source.InstrumentedApp, uri.ToString());
                 AuditLog(Direction.Sent, Source.InstrumentedApp, serializedData);
 
@@ -245,7 +244,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
 
             // P17: Not supposed to read/use the exception message in the connect response body. We are still going to log it, carefully, since it is very useful for support.
-            Log.ErrorFormat("Request({0}): Received HTTP status code {1} with message {2}", requestGuid, statusCode.ToString(), responseText);
+            Log.ErrorFormat("Request({0}): Received HTTP status code {1} with message {2}. Request content was: {3}", requestGuid, statusCode.ToString(), responseText, serializedData);
 
             throw new HttpException(statusCode, responseText);
         }
