@@ -23,14 +23,16 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     {
         private readonly TFixture _fixture;
         private readonly bool _decorationEnabled;
+        private readonly bool _isWebLogTest;
         private const string _primaryApplicationName = "Local Decoration Test App Name";
         private const string _secondaryApplicationName = "Some other testing application name";
         private const string _compositeApplicationName = _primaryApplicationName + ", " + _secondaryApplicationName;
         private const string _testMessage = "DecorateMe";
 
-        public LocalDecorationTestsBase(TFixture fixture, ITestOutputHelper output, bool decorationEnabled, LayoutType layoutType, LoggingFramework loggingFramework) : base(fixture)
+        public LocalDecorationTestsBase(TFixture fixture, ITestOutputHelper output, bool decorationEnabled, LayoutType layoutType, LoggingFramework loggingFramework, bool isWebLogTest = false) : base(fixture)
         {
             _decorationEnabled = decorationEnabled;
+            _isWebLogTest = isWebLogTest;
             _fixture = fixture;
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
@@ -67,25 +69,31 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
 
             // Sample decorated data we are looking for:
             // "NR-LINKING|MjczMDcwfEFQTXxBUFBMSUNBVElPTnwxODQyMg|blah.hsd1.ca.comcast.net|45f120972d61834b96fb890d2a8f97e7|840d9a82e8bc18a8|myApplicationName|"
-            var regex = new Regex(@"NR-LINKING\|([a-zA-Z0-9]*)\|([a-zA-Z0-9._-]*)\|([a-zA-Z0-9]*)\|([a-zA-Z0-9]*)\|(.+?)\|");
+            // For web logging tests there will be multiple unexpected log lines. To support this, we prefix all log lines in web tests with a known string.
+            var regex = new Regex((_isWebLogTest ? "^ThisIsAWebLog.*" : "") + @"NR-LINKING\|([a-zA-Z0-9]*)\|([a-zA-Z0-9._-]*)\|([a-zA-Z0-9]*)\|([a-zA-Z0-9]*)\|(.+?)\|", RegexOptions.Multiline);
+
             if (_decorationEnabled)
             {
                 // Make sure the added metadata is there
-                var match = regex.Match(testOutput);
-                Assert.True(match.Success);
-                Assert.NotEmpty(match.Groups);
-                var entityGuid = match.Groups[1].Value;
-                var hostname = match.Groups[2].Value;
-                var traceId = match.Groups[3].Value;
-                var spanId = match.Groups[4].Value;
-                var entityName = HttpUtility.UrlDecode(match.Groups[5].Value);
+                MatchCollection matches = regex.Matches(testOutput);
+                Assert.True(matches.Count > 0);
 
-                Assert.NotNull(entityGuid);
-                Assert.NotNull(hostname);
-                Assert.NotNull(traceId);
-                Assert.NotNull(spanId);
-                Assert.Equal(_primaryApplicationName, entityName);
+                foreach (Match match in matches)
+                {
+                    Assert.True(match.Success);
+                    Assert.NotEmpty(match.Groups);
+                    var entityGuid = match.Groups[1].Value;
+                    var hostname = match.Groups[2].Value;
+                    var traceId = match.Groups[3].Value;
+                    var spanId = match.Groups[4].Value;
+                    var entityName = HttpUtility.UrlDecode(match.Groups[5].Value);
 
+                    Assert.NotNull(entityGuid);
+                    Assert.NotNull(hostname);
+                    Assert.NotNull(traceId);
+                    Assert.NotNull(spanId);
+                    Assert.Equal(_primaryApplicationName, entityName);
+                }
             }
             else
             {
@@ -479,7 +487,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     public class SerilogWebPatternLayoutDecorationEnabledTestsNetCore60Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore60>
     {
         public SerilogWebPatternLayoutDecorationEnabledTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.SerilogWeb)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.SerilogWeb, true)
         {
         }
     }

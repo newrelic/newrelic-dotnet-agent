@@ -127,7 +127,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             .Enrich.FromLogContext()
             .MinimumLevel.Information()
             .WriteTo.Console(
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {NR_LINKING} {NewLine}{Exception}"
+                outputTemplate: "ThisIsAWebLog {Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {NR_LINKING} {NewLine}{Exception}"
             );
          
             RunApplication(loggerConfig);
