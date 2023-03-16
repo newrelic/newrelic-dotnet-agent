@@ -7,7 +7,15 @@ using System.Runtime.InteropServices;
 
 namespace NewRelic.Agent.Core
 {
-    // Borrowed from https://github.com/dotnet/sdk/blob/3595e2a/src/Cli/Microsoft.DotNet.Cli.Utils/RuntimeEnvironment.cs
+    // Originally sourced from .NET SDK (https://github.com/dotnet/sdk)
+    // https://github.com/dotnet/sdk/blob/3595e2a/src/Cli/Microsoft.DotNet.Cli.Utils/RuntimeEnvironment.cs
+    // Copyright (c) .NET Foundation and contributors. All rights reserved.
+    // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+    //
+    // Modifications Copyright (c) New Relic, Inc.
+    //
+    // * Modifications include renaming the class and the addition of exception handling and logging.
+
     public static class RuntimeEnvironmentInfo
     {
         private enum Platform
