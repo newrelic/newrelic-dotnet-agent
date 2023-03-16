@@ -409,29 +409,37 @@ namespace NewRelic.Agent.Core.DataTransport
             return SendDataOverWire<T>(wire, method, data);
         }
 
-        private  T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
+        private T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
         {
             var requestGuid = Guid.NewGuid();
             try
             {
                 var serializedData = _serializer.Serialize(data);
-                var responseBody = wire.SendData(method, _connectionInfo, serializedData, requestGuid);
-                return ParseResponse<T>(responseBody);
-            }
-            catch (Exceptions.HttpException ex)
-            {
-                Log.DebugFormat("Request({0}): Received a {1} {2} response invoking method \"{3}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method);
-
-                if (ex.StatusCode == HttpStatusCode.Gone)
+                try
                 {
-                    Log.InfoFormat("Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
+                    var responseBody = wire.SendData(method, _connectionInfo, serializedData, requestGuid);
+                    return ParseResponse<T>(responseBody);
                 }
+                catch (Exceptions.HttpException ex)
+                {
+                    Log.DebugFormat("Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
 
-                throw;
+                    if (ex.StatusCode == HttpStatusCode.Gone)
+                    {
+                        Log.InfoFormat("Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
+                    }
+
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    Log.DebugFormat("Request({0}): An error occurred invoking method \"{1}\" with payload \"{2}\": {3}", requestGuid, method, serializedData, ex);
+                    throw;
+                }
             }
             catch (Exception ex)
             {
-                Log.DebugFormat("Request({0}): An error occurred invoking method \"{1}\": {2}", requestGuid, method, ex);
+                Log.DebugFormat("Request({0}): Exception occurred serializing request data: {1}", requestGuid, ex);
                 throw;
             }
         }
