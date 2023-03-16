@@ -248,7 +248,7 @@ function RemoveDeprecatedInstrumentationFiles($newRelicInstallPath)
 	Remove-Item "$newRelicInstallPath\extensions\NewRelic.Providers.Wrapper.Logging.Instrumentation.xml" -ErrorAction Ignore
 	Remove-Item "$newRelicInstallPath\extensions\NewRelic.Providers.Wrapper.Logging.dll" -ErrorAction Ignore
 
-	# Asp35 was renamed AspNet
+	# Asp35 was renamed to AspNet
 	Remove-Item "$newRelicInstallPath\extensions\NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml" -ErrorAction Ignore
 	Remove-Item "$newRelicInstallPath\extensions\NewRelic.Providers.Wrapper.Asp35.dll" -ErrorAction Ignore
 }
