@@ -16,6 +16,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
         private static Action<object, string> _setFormattedMessage;
         private static Func<object, object> _getLevel;
         private static Func<object, string> _getFormattedMessage;
+        private static Func<object, string> _messageGetter;
         private static Func<object, DateTime> _getTimestamp;
         private static Func<object, Exception> _getLogException;
         private static Func<object, IDictionary<object, object>> _getPropertiesDictionary;
@@ -69,10 +70,23 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             {
                 return;
             }
+            var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
+
+            var messageGetter = _messageGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "Message");
+
+            // Message should not be null, but better to be sure
+            var originalMessage = messageGetter(logEvent);
+            var messageSetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(logEvent, "Message");
+            messageSetter(originalMessage + " " + formattedMetadata);
 
             var getFormattedMessageFunc = GetFormattedMessageFunc(logEventType);
             var formattedMessage = getFormattedMessageFunc(logEvent);
             if (string.IsNullOrWhiteSpace(formattedMessage))
+            {
+                return;
+            }
+
+            if (formattedMessage.Contains("NR-LINKING"))
             {
                 return;
             }
@@ -89,8 +103,9 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             }
 
             var setFormattedMessage = _setFormattedMessage ??= VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(logEventType, formattedMessageName);
-            var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
+            //var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
             setFormattedMessage(logEvent, formattedMessage + " " + formattedMetadata);
+
         }
 
         private Func<object, string> GetFormattedMessageFunc(Type logEventType)
