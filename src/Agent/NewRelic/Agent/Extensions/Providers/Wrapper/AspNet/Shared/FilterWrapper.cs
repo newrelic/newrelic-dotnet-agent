@@ -8,11 +8,11 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.Asp35.Shared
+namespace NewRelic.Providers.Wrapper.AspNet.Shared
 {
     public class FilterWrapper : IWrapper
     {
-        public const string WrapperName = "Asp35.FilterTracer";
+        public const string WrapperName = "AspNet.FilterTracer";
 
         private const string BrowerAgentInjectedKey = "NewRelic.BrowerAgentInjected";
 

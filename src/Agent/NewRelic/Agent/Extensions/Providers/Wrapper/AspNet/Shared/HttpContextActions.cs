@@ -6,12 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
-using NewRelic.SystemExtensions.Collections;
 
-namespace NewRelic.Providers.Wrapper.Asp35.Shared
+namespace NewRelic.Providers.Wrapper.AspNet.Shared
 {
     public static class HttpContextActions
     {

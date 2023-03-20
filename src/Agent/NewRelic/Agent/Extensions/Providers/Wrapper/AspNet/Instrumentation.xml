@@ -18,50 +18,50 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
-    <tracerFactory name="Asp35.CreateEventExecutionStepsTracer">
+    <tracerFactory name="AspNet.CreateEventExecutionStepsTracer">
       <match assemblyName="System.Web" className="System.Web.HttpApplication">
         <exactMethodMatcher methodName="CreateEventExecutionSteps" />
       </match>
     </tracerFactory>
 
-    <tracerFactory name="Asp35.ExecuteStepTracer">
+    <tracerFactory name="AspNet.ExecuteStepTracer">
       <match assemblyName="System.Web" className="System.Web.HttpApplication">
         <exactMethodMatcher methodName="ExecuteStep" />
       </match>
     </tracerFactory>
 
-    <tracerFactory name="Asp35.FinishPipelineRequestTracer">
+    <tracerFactory name="AspNet.FinishPipelineRequestTracer">
       <match assemblyName="System.Web" className="System.Web.HttpRuntime">
         <exactMethodMatcher methodName="FinishPipelineRequest"/>
       </match>
     </tracerFactory>
 
-    <tracerFactory name="Asp35.OnErrorTracer">
+    <tracerFactory name="AspNet.OnErrorTracer">
       <match assemblyName="System.Web" className="System.Web.HttpApplication">
         <exactMethodMatcher methodName="RecordError"/>
       </match>
     </tracerFactory>
 
-    <tracerFactory name="Asp35.GetRouteDataTracer">
+    <tracerFactory name="AspNet.GetRouteDataTracer">
       <match assemblyName="System.Web" className="System.Web.Routing.RouteCollection">
         <exactMethodMatcher methodName="GetRouteData"/>
       </match>
     </tracerFactory>
 
-    <tracerFactory name="Asp35.CallHandlerTracer">
+    <tracerFactory name="AspNet.CallHandlerTracer">
       <match assemblyName="System.Web" className="System.Web.HttpApplication+CallHandlerExecutionStep">
         <exactMethodMatcher methodName="System.Web.HttpApplication.IExecutionStep.Execute" />
       </match>
     </tracerFactory>
 
-    <tracerFactory name="Asp35.FilterTracer">
+    <tracerFactory name="AspNet.FilterTracer">
       <match assemblyName="System.Web" className="System.Web.HttpWriter">
         <exactMethodMatcher methodName="Filter" />
         <exactMethodMatcher methodName="FilterIntegrated" />
       </match>
     </tracerFactory>
 
-    <tracerFactory name="Asp35.AspPagesTransactionNameTracer">
+    <tracerFactory name="AspNet.AspPagesTransactionNameTracer">
       <match assemblyName="System.Web" className="System.Web.UI.Page">
         <exactMethodMatcher methodName="ProcessRequest" parameters="System.Boolean,System.Boolean" />
       </match>

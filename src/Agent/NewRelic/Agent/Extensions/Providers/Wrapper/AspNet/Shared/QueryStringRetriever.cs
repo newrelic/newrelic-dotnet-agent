@@ -9,7 +9,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions.Collections;
 
-namespace NewRelic.Providers.Wrapper.Asp35.Shared
+namespace NewRelic.Providers.Wrapper.AspNet.Shared
 {
     /// <summary>
     /// Surprisingly, the logic necessary to *safely* gather query strings in ASP is actually quite complicated.
