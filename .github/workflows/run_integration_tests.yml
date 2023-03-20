@@ -76,7 +76,7 @@ jobs:
     needs: [setup-matrices]
     if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
     name: Run IntegrationTests
-    runs-on: windows-2019 # TODO: make this a input so we can test different OSes?
+    runs-on: windows-2022 # TODO: make this a input so we can test different OSes?
     strategy:
       matrix:
         namespace: ${{fromJSON(needs.setup-matrices.outputs.integration-tests-matrix)}}
@@ -95,10 +95,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
+      - name: Add .NET 7 SDK
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.0.100'
 
       - name: Set up secrets
         env:
@@ -190,7 +190,7 @@ jobs:
     needs: [setup-matrices]
     if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'UnboundedIntegrationTests'
     name: Run Unbounded Tests
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         namespace: ${{fromJSON(needs.setup-matrices.outputs.unbounded-tests-matrix)}}
@@ -209,10 +209,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
+      - name: Add .NET 7 SDK
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.0.100'
 
       - name: Download Agent Home Folders
         uses: dawidd6/action-download-artifact@v2
