@@ -44,11 +44,13 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.integration-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
-            namespaces="[ 'AgentFeatures', 'AgentLogs', 'AgentMetrics', 'Api', 'AspNetCore', 'BasicInstrumentation', 'CatInbound', 'CatOutbound', 'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', \
-            'Errors', 'HttpClientInstrumentation.NetCore', 'HttpClientInstrumentation.NetFramework', 'Owin', 'ReJit.NetCore', 'Logging.HsmAndCsp', 'Logging.LocalDecoration', 'Logging.MaxSamplesStored', 'Logging.ZeroMaxSamplesStored', \
-            'Logging.MetricsAndForwarding.log4net', 'Logging.MetricsAndForwarding.MicrosoftLogging', 'Logging.MetricsAndForwarding.Serilog', 'Logging.MetricsAndForwarding.NLog', 'ReJit.NetFramework', 'RemoteServiceFixtures', 'RestSharp', \
-            'WCF.Client.IIS.ASPDisabled', 'WCF.Client.IIS.ASPEnabled', 'WCF.Client.Self', 'WCF.Service.IIS.ASPDisabled', 'WCF.Service.IIS.ASPEnabled', 'WCF.Service.Self', 'RequestHeadersCapture.WCF', 'RequestHeadersCapture.Owin', \
-            'RequestHeadersCapture.AspNetCore', 'RequestHeadersCapture.AspNet', 'RequestHeadersCapture.EnvironmentVariables', 'RequestHandling', 'CodeLevelMetrics', 'Logging.LogLevelDetection' ]"
+            namespaces="[ 'AgentFeatures', 'AgentLogs', 'AgentMetrics', 'Api', 'AppDomainCaching', 'AspNetCore', 'BasicInstrumentation', 'CatInbound', 'CatOutbound', 'CodeLevelMetrics', 'Configuration', \
+          'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', 'Errors', 'HttpClientInstrumentation', 'InfiniteTracing', 'Logging.ContextData', \
+          'Logging.HsmAndCsp', 'Logging.LocalDecoration', 'Logging.LogLevelDetection', 'Logging.MaxSamplesStored', 'Logging.MetricsAndForwarding.log4net', \
+          'Logging.MetricsAndForwarding.MicrosoftLogging', 'Logging.MetricsAndForwarding.NLog', 'Logging.MetricsAndForwarding.Serilog', 'Logging.ZeroMaxSamplesStored', \
+          'Owin', 'ReJit.NetCore', 'ReJit.NetFramework', 'RequestHandling', 'RequestHeadersCapture.AspNet', 'RequestHeadersCapture.AspNetCore', 'RequestHeadersCapture.EnvironmentVariables', \
+          'RequestHeadersCapture.Owin', 'RequestHeadersCapture.WCF', 'RestSharp', 'WCF.Client.IIS.ASPDisabled', 'WCF.Client.IIS.ASPEnabled', 'WCF.Client.Self', \
+          'WCF.Service.IIS.ASPDisabled', 'WCF.Service.IIS.ASPEnabled', 'WCF.Service.Self' ]"
           else
             # Just use the supplied list of namespaces
             namespaces="[ ${{ github.event.inputs.integration-test-namespaces }} ]"
