@@ -6,11 +6,11 @@ using System.Web.Routing;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.Asp35.Shared
+namespace NewRelic.Providers.Wrapper.AspNet.Shared
 {
     public class RouteNamingWrapper : IWrapper
     {
-        public readonly string WrapperName = "Asp35.GetRouteDataTracer";
+        public readonly string WrapperName = "AspNet.GetRouteDataTracer";
 
         public bool IsTransactionRequired => true;
 

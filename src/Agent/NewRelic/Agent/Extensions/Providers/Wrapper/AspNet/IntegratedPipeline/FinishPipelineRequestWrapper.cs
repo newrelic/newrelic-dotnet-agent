@@ -5,14 +5,14 @@ using System;
 using System.Web;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Providers.Wrapper.Asp35.Shared;
+using NewRelic.Providers.Wrapper.AspNet.Shared;
 using NewRelic.SystemExtensions;
 
-namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
+namespace NewRelic.Providers.Wrapper.AspNet.IntegratedPipeline
 {
     public class FinishPipelineRequestWrapper : IWrapper
     {
-        public const string WrapperName = "Asp35.FinishPipelineRequestTracer";
+        public const string WrapperName = "AspNet.FinishPipelineRequestTracer";
         public bool IsTransactionRequired => false;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)

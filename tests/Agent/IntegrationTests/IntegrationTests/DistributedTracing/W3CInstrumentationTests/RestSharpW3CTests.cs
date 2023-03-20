@@ -12,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
 {
     /// <summary>
     /// Test W3C support when chaining multiple requests by using RestSharp.
-    /// Instrumentations occur in this test are RestSharp and Asp35.
+    /// Instrumentations occur in this test are RestSharp and AspNet.
     /// </summary>
     [NetFrameworkTest]
     public class RestSharpW3CTests : W3CTestBase<RemoteServiceFixtures.FrameworkTracingChainFixture>

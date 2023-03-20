@@ -115,7 +115,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 .UseSerilog(logger)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                webBuilder.UseStartup<Startup>();
+                webBuilder.UseStartup<SerilogWebStartup>();
                 webBuilder.UseUrls(uriBase);
                 });
             }
@@ -123,7 +123,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
-            throw new NotImplementedException();
+            var loggerConfig = new LoggerConfiguration()
+            .Enrich.FromLogContext()
+            .MinimumLevel.Information()
+            .WriteTo.Console(
+                outputTemplate: "ThisIsAWebLog {Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {NR_LINKING} {NewLine}{Exception}"
+            );
+         
+            RunApplication(loggerConfig);
         }
 
         public void ConfigureJsonLayoutAppenderForDecoration()
@@ -133,9 +140,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
     }
 
-    public class Startup
+    public class SerilogWebStartup
     {
-        public Startup(IConfiguration configuration)
+        public SerilogWebStartup(IConfiguration configuration)
         {
             Configuration = configuration;
         }

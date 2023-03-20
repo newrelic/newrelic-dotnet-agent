@@ -1,21 +1,21 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Api;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Providers.Wrapper.Asp35.Shared;
-using NewRelic.Reflection;
-using NewRelic.SystemExtensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Web;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Providers.Wrapper.AspNet.Shared;
+using NewRelic.Reflection;
+using NewRelic.SystemExtensions;
 
-namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
+namespace NewRelic.Providers.Wrapper.AspNet.ClassicPipeline
 {
     public class CreateEventExecutionStepsWrapper : IWrapper
     {
-        public const string WrapperName = "Asp35.CreateEventExecutionStepsTracer";
+        public const string WrapperName = "AspNet.CreateEventExecutionStepsTracer";
 
         public bool IsTransactionRequired => false;
 

@@ -5,7 +5,7 @@ using System;
 using System.Web;
 using NewRelic.Reflection;
 
-namespace NewRelic.Providers.Wrapper.Asp35.Shared
+namespace NewRelic.Providers.Wrapper.AspNet.Shared
 {
     public static class RequestPathRetriever
     {

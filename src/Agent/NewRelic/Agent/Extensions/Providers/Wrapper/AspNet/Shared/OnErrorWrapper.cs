@@ -7,11 +7,11 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
-namespace NewRelic.Providers.Wrapper.Asp35.Shared
+namespace NewRelic.Providers.Wrapper.AspNet.Shared
 {
     public class OnErrorWrapper : IWrapper
     {
-        public const string WrapperName = "Asp35.OnErrorTracer";
+        public const string WrapperName = "AspNet.OnErrorTracer";
 
         public bool IsTransactionRequired => true;
 
