@@ -16,6 +16,9 @@ namespace NewRelic.Collections
         //count of number of item adds that have been attempted since ctor/Clear/Set
         private int _addsAttempted;
 
+        // number of items dropped since ctor/Clear/Set
+        private int _itemsDropped;
+
         private readonly SortedSet<T> _sortedSet;
 
         public int Size { get; private set; }
@@ -113,6 +116,7 @@ namespace NewRelic.Collections
         private void Reset()
         {
             _addsAttempted = 0;
+            _itemsDropped = 0;
             _sortedSet.Clear();
         }
 
@@ -122,13 +126,13 @@ namespace NewRelic.Collections
             if (Size == 0)
             {
                 Reset();
-                return;
             }
 
             while (_sortedSet.Count > Size)
             {
                 //_sortedSet.Max is the bottom item in the list (lowest priority).
                 _sortedSet.Remove(_sortedSet.Max);
+                ++_itemsDropped;
             }
         }
 
@@ -145,6 +149,11 @@ namespace NewRelic.Collections
         {
             return Volatile.Read(ref _addsAttempted);
         }
+        public int GetDroppedItemCount()
+        {
+            return Volatile.Read(ref _itemsDropped);
+        }
+
 
         public void Clear()
         {

@@ -20,6 +20,7 @@ namespace NewRelic.Agent.Core.Aggregators
         void Collect(LogEventWireModel loggingEventWireModel);
 
         void CollectWithPriority(IList<LogEventWireModel> logEventWireModels, float priority);
+        void IncrementEmptyLogMessageCount();
     }
 
     /// <summary>
@@ -32,6 +33,7 @@ namespace NewRelic.Agent.Core.Aggregators
         private readonly IAgentHealthReporter _agentHealthReporter;
 
         private ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>> _logEvents = new ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>(0);
+        private int _logsDroppedCount;
 
         public LogEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
             : base(dataTransportService, scheduler, processStatic)
@@ -64,6 +66,11 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
+        public void IncrementEmptyLogMessageCount()
+        {
+            Interlocked.Increment(ref _logsDroppedCount);
+        }
+
         protected override void Harvest()
         {
             var originalLogEvents = GetAndResetLogEvents(GetReservoirSize());
@@ -71,6 +78,9 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Retrieve the number of add attempts before resetting the collection.
             var eventHarvestData = new EventHarvestData(originalLogEvents.Size, originalLogEvents.GetAddAttemptsCount());
+
+            // increment the count of logs dropped since we last reported
+            Interlocked.Add(ref _logsDroppedCount, originalLogEvents.GetDroppedItemCount());
 
             // if we don't have any events to publish then don't
             if (aggregatedEvents.Count <= 0)
@@ -150,6 +160,20 @@ namespace NewRelic.Agent.Core.Aggregators
                 default:
                     break;
             }
+
+            // always report (and reset) the count of dropped logs, if any
+            ReportDroppedLogCount();
+        }
+
+        private void ReportDroppedLogCount()
+        {
+            var droppedLogsCount = Interlocked.Exchange(ref _logsDroppedCount, 0);
+
+            if (droppedLogsCount > 0)
+            {
+                _agentHealthReporter.ReportLoggingEventsDropped(droppedLogsCount);
+            }
+
         }
 
         private void RetainEvents(IEnumerable<LogEventWireModel> logEvents)

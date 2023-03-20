@@ -446,6 +446,10 @@ namespace NewRelic.Agent.Core
                 // exit quickly if the message and exception are missing
                 if (string.IsNullOrWhiteSpace(logMessage) && logException is null)
                 {
+                    // the aggregator keeps track of the number of messages that get dropped due to capacity overflow.
+                    // We'll consider this "empty" message as being dropped also.
+                    _logEventAggregator.IncrementEmptyLogMessageCount();
+
                     return;
                 }
 
