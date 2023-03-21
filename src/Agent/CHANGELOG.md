@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Other
 * Renamed `NewRelic.Providers.Wrapper.Asp35` to `NewRelic.Providers.Wrapper.AspNet` since this wrapper instruments multiple versions of ASP.NET. Updated installers to remove old `Asp35` artifacts. [#1448](https://github.com/newrelic/newrelic-dotnet-agent/pull/1448)
 
-## [10.8.0]
+## [10.8.0] - 2023-03-14
 
 ### New Features
 * When running on Linux, distro name and version will be reported as environment settings [#1439](https://github.com/newrelic/newrelic-dotnet-agent/pull/1439)
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixes [#1353](https://github.com/newrelic/newrelic-dotnet-agent/issues/1353) so that out-of-process .Net Core web applications are instrumented according to the <applicationPools> setting in newrelic.config. [1392](https://github.com/newrelic/newrelic-dotnet-agent/pull/1392)
 * Update NLog to improve local log decoration coverage. [#1393](https://github.com/newrelic/newrelic-dotnet-agent/pull/1393)
 
-## [10.7.0]
+## [10.7.0] - 2023-02-14
 
 ### New Features
 * Postgres client instrumentation support has been extended to include the following versions: 4.0.x, 4.1.x, 5.0.x, 6.0.x and 7.0.x [#1363](https://github.com/newrelic/newrelic-dotnet-agent/pull/1363)
@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Update gRPC log message when a response stream is automatically cancelled due to no messages in a time period [#1378](https://github.com/newrelic/newrelic-dotnet-agent/pull/1378)
 * Proxy configuration for Infinite Tracing should be specified using only the `https_proxy` environment variable. `grpc_proxy` is no longer supported for all application types.
 
-## [10.6.0]
+## [10.6.0] - 2023-01-24
 
 ### New Features
 * Custom instrumentation now supports targeting specific assembly versions. See [the documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/custom-instrumentation/add-detail-transactions-xml-net/#procedures)  for more details. [#1342](https://github.com/newrelic/newrelic-dotnet-agent/pull/1342)
@@ -53,18 +53,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 * StackExchange.Redis versions 2 and above use a new wrapper with improved performance and reduced network overhead. [#1351](https://github.com/newrelic/newrelic-dotnet-agent/pull/1351)
 
-## [10.5.1]
+## [10.5.1] - 2023-01-17
 
 ### Fixes
 * Resolves [#1346](https://github.com/newrelic/newrelic-dotnet-agent/issues/1346) where some NuGet packages were incomplete for the 10.5.0 release. Impacted packages have been delisted from NuGet. ([#1347](https://github.com/newrelic/newrelic-dotnet-agent/pull/1347))
 
-## [10.5.0]
+## [10.5.0] - 2023-01-12
 
 ### Fixes
 * Resolves [#1130](https://github.com/newrelic/newrelic-dotnet-agent/issues/1130). Attribute collections in the agent will now more reliably track the number of attributes contained, and allow updates to attributes that already exist in the collection when collection limits have been reached (255 global attributes, 65 custom attributes). ([#1335](https://github.com/newrelic/newrelic-dotnet-agent/pull/1335))
 * The agent has been updated to use System.Net.Http.HTTPClient to send data to New Relic instead of System.Net.WebRequest, in order to fix issue [#897](https://github.com/newrelic/newrelic-dotnet-agent/issues/897), as well as remove use of a deprecated library. ([#1325](https://github.com/newrelic/newrelic-dotnet-agent/pull/1325))
 
-## [10.4.0]
+## [10.4.0] - 2022-12-06
 
 ### New Features
 * Support for .NET 7 has been verified with the GA version of the .NET 7 SDK. Please note that if you use [dynamically-created assemblies](https://learn.microsoft.com/en-us/dotnet/framework/reflection-and-codedom/emitting-dynamic-methods-and-assemblies), there is a [bug in .NET 7](https://github.com/dotnet/runtime/issues/76016) that prevents them from being instrumented at this time.
