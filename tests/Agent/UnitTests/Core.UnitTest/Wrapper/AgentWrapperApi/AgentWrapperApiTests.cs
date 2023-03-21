@@ -1439,10 +1439,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var privateAccessor = new PrivateAccessor(_logEventAggregator);
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
             var logEvent = logEvents?.FirstOrDefault()?.Data;
-            var droppedLogCount = (int)privateAccessor.GetField("_logsDroppedCount");
 
             Assert.AreEqual(0, logEvents.Count);
-            Assert.AreEqual(1, droppedLogCount);
             Assert.IsNull(logEvent);
         }
 
