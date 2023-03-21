@@ -44,11 +44,13 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.integration-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
-            namespaces="[ 'AgentFeatures', 'AgentLogs', 'AgentMetrics', 'Api', 'AspNetCore', 'BasicInstrumentation', 'CatInbound', 'CatOutbound', 'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', \
-            'Errors', 'HttpClientInstrumentation.NetCore', 'HttpClientInstrumentation.NetFramework', 'Owin', 'ReJit.NetCore', 'Logging.HsmAndCsp', 'Logging.LocalDecoration', 'Logging.MaxSamplesStored', 'Logging.ZeroMaxSamplesStored', \
-            'Logging.MetricsAndForwarding.log4net', 'Logging.MetricsAndForwarding.MicrosoftLogging', 'Logging.MetricsAndForwarding.Serilog', 'Logging.MetricsAndForwarding.NLog', 'ReJit.NetFramework', 'RemoteServiceFixtures', 'RestSharp', \
-            'WCF.Client.IIS.ASPDisabled', 'WCF.Client.IIS.ASPEnabled', 'WCF.Client.Self', 'WCF.Service.IIS.ASPDisabled', 'WCF.Service.IIS.ASPEnabled', 'WCF.Service.Self', 'RequestHeadersCapture.WCF', 'RequestHeadersCapture.Owin', \
-            'RequestHeadersCapture.AspNetCore', 'RequestHeadersCapture.AspNet', 'RequestHeadersCapture.EnvironmentVariables', 'RequestHandling', 'CodeLevelMetrics', 'Logging.LogLevelDetection' ]"
+            namespaces="[ 'AgentFeatures', 'AgentLogs', 'AgentMetrics', 'Api', 'AppDomainCaching', 'AspNetCore', 'BasicInstrumentation', 'CatInbound', 'CatOutbound', 'CodeLevelMetrics', 'Configuration', \
+          'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', 'Errors', 'HttpClientInstrumentation', 'InfiniteTracing', 'Logging.ContextData', \
+          'Logging.HsmAndCsp', 'Logging.LocalDecoration', 'Logging.LogLevelDetection', 'Logging.MaxSamplesStored', 'Logging.MetricsAndForwarding.log4net', \
+          'Logging.MetricsAndForwarding.MicrosoftLogging', 'Logging.MetricsAndForwarding.NLog', 'Logging.MetricsAndForwarding.Serilog', 'Logging.ZeroMaxSamplesStored', \
+          'Owin', 'ReJit.NetCore', 'ReJit.NetFramework', 'RequestHandling', 'RequestHeadersCapture.AspNet', 'RequestHeadersCapture.AspNetCore', 'RequestHeadersCapture.EnvironmentVariables', \
+          'RequestHeadersCapture.Owin', 'RequestHeadersCapture.WCF', 'RestSharp', 'WCF.Client.IIS.ASPDisabled', 'WCF.Client.IIS.ASPEnabled', 'WCF.Client.Self', \
+          'WCF.Service.IIS.ASPDisabled', 'WCF.Service.IIS.ASPEnabled', 'WCF.Service.Self' ]"
           else
             # Just use the supplied list of namespaces
             namespaces="[ ${{ github.event.inputs.integration-test-namespaces }} ]"
@@ -74,7 +76,7 @@ jobs:
     needs: [setup-matrices]
     if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
     name: Run IntegrationTests
-    runs-on: windows-2019 # TODO: make this a input so we can test different OSes?
+    runs-on: windows-2022 # TODO: make this a input so we can test different OSes?
     strategy:
       matrix:
         namespace: ${{fromJSON(needs.setup-matrices.outputs.integration-tests-matrix)}}
@@ -93,10 +95,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x'
+      - name: Create and trust .NET development SSL certificate
+        run: |
+          dotnet dev-certs https --clean
+          dotnet dev-certs https --export-path ./devcert.pfx --password "password1"
+          $pwd = ConvertTo-SecureString -String "password1" -Force -AsPlainText
+          Import-PfxCertificate -FilePath ./devcert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $pwd
+          dotnet dev-certs https --check --trust
+        shell: powershell
 
       - name: Set up secrets
         env:
@@ -188,7 +194,7 @@ jobs:
     needs: [setup-matrices]
     if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'UnboundedIntegrationTests'
     name: Run Unbounded Tests
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         namespace: ${{fromJSON(needs.setup-matrices.outputs.unbounded-tests-matrix)}}
@@ -206,11 +212,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x'
 
       - name: Download Agent Home Folders
         uses: dawidd6/action-download-artifact@v2

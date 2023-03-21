@@ -392,11 +392,6 @@ jobs:
         with:
           vs-prerelease: true
 
-      - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '7.0.100'
-
       - name: List SDKS
         run: dotnet --list-sdks
         shell: powershell
@@ -439,11 +434,6 @@ jobs:
         with:
           vs-prerelease: true
 
-      - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '7.0.100'
-
       - name: Build UnboundedIntegrationTests.sln
         run: |
           Write-Host "List NuGet Sources"
@@ -469,17 +459,13 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
-          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
-          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Owin, ReJit.NetCore, 
-          Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.ZeroMaxSamplesStored,
-          Logging.MetricsAndForwarding.log4net, Logging.MetricsAndForwarding.MicrosoftLogging, 
-          Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog, Logging.LogLevelDetection,
-          Logging.ContextData,
-          ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
-          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
-          RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.AspNet, RequestHeadersCapture.EnvironmentVariables, 
-          RequestHandling, CodeLevelMetrics, InfiniteTracing]
+        namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AppDomainCaching, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, CodeLevelMetrics, Configuration, 
+          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, HttpClientInstrumentation, InfiniteTracing, Logging.ContextData, 
+          Logging.HsmAndCsp, Logging.LocalDecoration, Logging.LogLevelDetection, Logging.MaxSamplesStored, Logging.MetricsAndForwarding.log4net, 
+          Logging.MetricsAndForwarding.MicrosoftLogging, Logging.MetricsAndForwarding.NLog, Logging.MetricsAndForwarding.Serilog, Logging.ZeroMaxSamplesStored,
+          Owin, ReJit.NetCore, ReJit.NetFramework, RequestHandling, RequestHeadersCapture.AspNet, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.EnvironmentVariables, 
+          RequestHeadersCapture.Owin, RequestHeadersCapture.WCF, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, WCF.Client.Self, 
+          WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self] # maintain alphabetical order, please!
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -494,11 +480,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '7.0.100'
 
       - name: Create and trust .NET development SSL certificate
         run: |
@@ -674,11 +655,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '7.0.100'
 
       - name: Download Agent Home Folders
         uses: actions/download-artifact@v3
