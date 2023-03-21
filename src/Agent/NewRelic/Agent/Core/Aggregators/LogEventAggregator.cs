@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.Aggregators
             var eventHarvestData = new EventHarvestData(originalLogEvents.Size, originalLogEvents.GetAddAttemptsCount());
 
             // increment the count of logs dropped since we last reported
-            Interlocked.Add(ref _logsDroppedCount, originalLogEvents.GetDroppedItemCount());
+            Interlocked.Add(ref _logsDroppedCount, originalLogEvents.GetAndResetDroppedItemCount());
 
             // if we don't have any events to publish then don't
             if (aggregatedEvents.Count <= 0)

@@ -57,6 +57,12 @@ namespace NewRelic.Collections
                     }
                 }
             }
+            else
+            {
+                // add attempt failed, track this as a dropped item
+                ++_itemsDropped; 
+            }
+
             return itemsAdded;
         }
 
@@ -69,6 +75,9 @@ namespace NewRelic.Collections
                     return AddInternal(item);
                 }
             }
+
+            // add attempt failed, track this as a dropped item
+            ++_itemsDropped; 
             return false;
         }
 
@@ -116,8 +125,10 @@ namespace NewRelic.Collections
         private void Reset()
         {
             _addsAttempted = 0;
-            _itemsDropped = 0;
+
+            var itemCount = _sortedSet.Count;
             _sortedSet.Clear();
+            _itemsDropped += itemCount;
         }
 
         //Assume lock on the _syncroot is held.
@@ -149,9 +160,15 @@ namespace NewRelic.Collections
         {
             return Volatile.Read(ref _addsAttempted);
         }
-        public int GetDroppedItemCount()
+        
+        public int GetAndResetDroppedItemCount()
         {
-            return Volatile.Read(ref _itemsDropped);
+            lock (_syncroot)
+            {
+                var count = _itemsDropped;
+                _itemsDropped = 0;
+                return count;
+            }
         }
 
 
