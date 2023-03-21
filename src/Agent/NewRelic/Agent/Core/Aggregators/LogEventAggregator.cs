@@ -20,7 +20,6 @@ namespace NewRelic.Agent.Core.Aggregators
         void Collect(LogEventWireModel loggingEventWireModel);
 
         void CollectWithPriority(IList<LogEventWireModel> logEventWireModels, float priority);
-        void IncrementEmptyLogMessageCount();
     }
 
     /// <summary>
@@ -64,11 +63,6 @@ namespace NewRelic.Agent.Core.Aggregators
                 logEventWireModels[i].Priority = priority;
                 AddEventToCollection(logEventWireModels[i]);
             }
-        }
-
-        public void IncrementEmptyLogMessageCount()
-        {
-            Interlocked.Increment(ref _logsDroppedCount);
         }
 
         protected override void Harvest()

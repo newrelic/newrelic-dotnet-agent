@@ -60,7 +60,7 @@ namespace NewRelic.Collections
             else
             {
                 // add attempt failed, track this as a dropped item
-                ++_itemsDropped; 
+                _itemsDropped += items.Count(); 
             }
 
             return itemsAdded;
