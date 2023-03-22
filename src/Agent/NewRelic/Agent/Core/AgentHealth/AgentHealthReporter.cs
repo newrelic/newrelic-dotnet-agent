@@ -11,7 +11,6 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
 using NewRelic.Core.Logging;
-using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -592,9 +591,11 @@ namespace NewRelic.Agent.Core.AgentHealth
             _logLinesCountByLevel[level].Increment();
         }
 
-        public void ReportLoggingEventCollected() => TrySend(_metricBuilder.TryBuildSupportabilitLoggingEventsCollectedMetric());
+        public void ReportLoggingEventCollected() => TrySend(_metricBuilder.TryBuildSupportabilityLoggingEventsCollectedMetric());
 
-        public void ReportLoggingEventsSent(int count) => TrySend(_metricBuilder.TryBuildSupportabilitLoggingEventsSentMetric(count));
+        public void ReportLoggingEventsSent(int count) => TrySend(_metricBuilder.TryBuildSupportabilityLoggingEventsSentMetric(count));
+
+        public void ReportLoggingEventsDropped(int droppedCount)=> TrySend(_metricBuilder.TryBuildSupportabilityLoggingEventsDroppedMetric(droppedCount));
 
         public void ReportIfAppDomainCachingDisabled()
         {

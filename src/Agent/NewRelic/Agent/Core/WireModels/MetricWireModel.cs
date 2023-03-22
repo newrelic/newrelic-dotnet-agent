@@ -976,17 +976,24 @@ namespace NewRelic.Agent.Core.WireModels
                 return BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
             }
 
-            public MetricWireModel TryBuildSupportabilitLoggingEventsCollectedMetric()
+            public MetricWireModel TryBuildSupportabilityLoggingEventsCollectedMetric()
             {
                 const string proposedName = MetricNames.SupportabilityLoggingEventsCollected;
                 var data = MetricDataWireModel.BuildCountData();
                 return BuildMetric(_metricNameService, proposedName, null, data);
             }
 
-            public MetricWireModel TryBuildSupportabilitLoggingEventsSentMetric(int loggingEventCount)
+            public MetricWireModel TryBuildSupportabilityLoggingEventsSentMetric(int loggingEventCount)
             {
                 const string proposedName = MetricNames.SupportabilityLoggingEventsSent;
                 var data = MetricDataWireModel.BuildCountData(loggingEventCount);
+                return BuildMetric(_metricNameService, proposedName, null, data);
+            }
+
+            public MetricWireModel TryBuildSupportabilityLoggingEventsDroppedMetric(int droppedCount)
+            {
+                const string proposedName = MetricNames.SupportabilityLoggingEventsDropped;
+                var data = MetricDataWireModel.BuildCountData(droppedCount);
                 return BuildMetric(_metricNameService, proposedName, null, data);
             }
 

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### New Features
+* Adds the `Supportability/Logging/Forwarding/Dropped` metric to track the number of log messages that were dropped due to capacity constraints. [#1470](https://github.com/newrelic/newrelic-dotnet-agent/pull/1470)
 
 ### Fixes
 * Reduce redundant collector request data payload logging in the agent log at DEBUG level. [#1449](https://github.com/newrelic/newrelic-dotnet-agent/pull/1449)
