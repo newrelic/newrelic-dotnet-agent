@@ -55,7 +55,7 @@ jobs:
           echo "checksumFilePath=$checksumFilePath"
 
           echo "cat just the file:"
-          cat $filePath
+          cat /home/runner/work/newrelic-dotnet-agent/newrelic-dotnet-agent/build/BuildArtifacts/DownloadSite/SHA256/checksums.md
           
           echo "cat and pipe to echo:"
           cat $filePath | echo
