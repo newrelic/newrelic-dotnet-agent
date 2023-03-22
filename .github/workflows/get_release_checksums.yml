@@ -26,43 +26,19 @@ jobs:
           path: ${{ github.workspace }}
           repo: ${{ github.repository }}
 
-      - name: Check file existence
+      - name: Check if file exists
         id: check_files
         uses: andstor/file-existence-action@v2
         with:
           files: "${{ github.workspace }}/build/BuildArtifacts/DownloadSite/SHA256/checksums.md"
           ignore_case: false
+          fail: true
 
-      - name: File exists
-        if: steps.check_files.outputs.files_exists == 'true'
-        # Only runs if all of the files exists
-        run: echo The file exists!
-
-      - name: Read file
-        id: read_file
-        run: |
-          file_contents=$(cat ${{ github.workspace }}/build/BuildArtifacts/DownloadSite/SHA256/checksums.md)
-          echo "::set-output name=file_contents::$file_contents"
-
-      - name: Use file contents
-        run: |
-          contents="${{ steps.read_file.outputs.file_contents }}"
-          echo "File contents: $contents"
-
-      - name: Get Release Checksum
+      - name: Get Release Checksums
         run: |        
           checksumFilePath="${{ github.workspace }}/build/BuildArtifacts/DownloadSite/SHA256/checksums.md"
           echo "checksumFilePath=$checksumFilePath"
 
-          echo "cat just the file:"
-          cat /home/runner/work/newrelic-dotnet-agent/newrelic-dotnet-agent/build/BuildArtifacts/DownloadSite/SHA256/checksums.md
-          
-          echo "cat and pipe to echo:"
-          cat $filePath | echo
-
-          echo "echo just the cat:"
-          echo "$(cat $filePath)"
-
-          echo "echo the cat and send to github output:"
-          echo "$(cat $filePath)" >> $GITHUB_OUTPUT
+          echo "Checksum file contents:" >> $GITHUB_OUTPUT
+          echo "$(cat $checksumFilePath)" >> $GITHUB_OUTPUT
         shell: bash
