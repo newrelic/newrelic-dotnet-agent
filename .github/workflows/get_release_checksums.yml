@@ -38,6 +38,17 @@ jobs:
         # Only runs if all of the files exists
         run: echo The file exists!
 
+      - name: Read file
+        id: read_file
+        run: |
+          file_contents=$(cat ${{ github.workspace }}/build/BuildArtifacts/DownloadSite/SHA256/checksums.md)
+          echo "::set-output name=file_contents::$file_contents"
+
+      - name: Use file contents
+        run: |
+          contents="${{ steps.read_file.outputs.file_contents }}"
+          echo "File contents: $contents"
+
       - name: Get Release Checksum
         run: |        
           checksumFilePath="${{ github.workspace }}/build/BuildArtifacts/DownloadSite/SHA256/checksums.md"
