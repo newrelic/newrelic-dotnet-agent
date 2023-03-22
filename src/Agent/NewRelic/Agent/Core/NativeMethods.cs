@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core
 {
-    [ExcludeFromCodeCoverage]
 
     public class LinuxNativeMethods : INativeMethods
     {
@@ -79,7 +77,6 @@ namespace NewRelic.Agent.Core
         }
     }
 
-    [ExcludeFromCodeCoverage]
     public class WindowsNativeMethods : INativeMethods
     {
         private const string DllName = "NewRelic.Profiler.dll";
