@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -30,6 +31,7 @@ namespace NewRelic.Api.Agent
     /// agent is not installed or is disabled, method invocations of this api will have no effect.
     /// 
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public static class NewRelic
     {
         static NewRelic()

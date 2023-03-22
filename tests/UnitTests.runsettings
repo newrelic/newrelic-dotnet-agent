@@ -17,6 +17,7 @@
             <DataCollector friendlyName="XPlat code coverage">
                 <Configuration>
                     <Format>cobertura</Format>
+                    <Exclude>[NewRelic.OpenTracing.AmazonLambda*]*,NewRelic.Agent.Core.Extension.extension,NewRelic.Agent.Core.Config.configuration</Exclude>
                     <ExcludeByFile>**/tests/**/*</ExcludeByFile>
                 </Configuration>
             </DataCollector>
