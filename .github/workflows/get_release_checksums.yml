@@ -1,11 +1,11 @@
-# name: Get Release Checksums
+name: Get Release Checksums
 
-# on:
-#   workflow_dispatch:
-#     inputs:
-#       run_id:
-#         description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
-#         required: true
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
+        required: true
 
 # env:
 #   DOTNET_NOLOGO: true
