@@ -13,7 +13,7 @@ env:
 jobs:
 
   get-release-checksums:
-    name: Get and Publish Deploy Artifacts Locally
+    name: Get Deploy Artifacts and output release checksum information
     runs-on: ubuntu-latest
     steps:
       - name: Download Deploy Artifacts
@@ -36,4 +36,10 @@ jobs:
           
           echo "cat and pipe to echo:"
           cat $filePath | echo
+
+          echo "echo just the cat:"
+          echo "$(cat $filePath)"
+
+          echo "echo the cat and send to github output:"
+          echo "$(cat $filePath)" >> $GITHUB_OUTPUT
         shell: bash
