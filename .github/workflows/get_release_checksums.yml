@@ -26,6 +26,18 @@ jobs:
           path: ${{ github.workspace }}
           repo: ${{ github.repository }}
 
+      - name: Check file existence
+        id: check_files
+        uses: andstor/file-existence-action@v2
+        with:
+          files: "${{ github.workspace }}/build/BuildArtifacts/DownloadSite/SHA256/checksums.md"
+          ignore_case: false
+
+      - name: File exists
+        if: steps.check_files.outputs.files_exists == 'true'
+        # Only runs if all of the files exists
+        run: echo The file exists!
+
       - name: Get Release Checksum
         run: |        
           checksumFilePath="${{ github.workspace }}/build/BuildArtifacts/DownloadSite/SHA256/checksums.md"
