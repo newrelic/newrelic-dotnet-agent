@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.Transformers
                 return;
             }
 
-            var attribValues = new AttributeValueCollection(AttributeDestinations.CustomEvent);
+            var attribValues = new AttributeValueCollectionCore(AttributeDestinations.CustomEvent);
 
             _attribDefs.CustomEventType.TrySetValue(attribValues, eventType);
             _attribDefs.Timestamp.TrySetDefault(attribValues);

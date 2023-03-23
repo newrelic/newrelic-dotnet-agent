@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.CustomEvents.Tests
                     new Dictionary<string, object>()
                 };
 
-                var attribVals = new AttributeValueCollection(AttributeDestinations.CustomEvent);
+                var attribVals = new AttributeValueCollectionCore(AttributeDestinations.CustomEvent);
 
                 _attribDefs.Timestamp.TrySetValue(attribVals, timestampVal);
                 _attribDefs.CustomEventType.TrySetValue(attribVals, typeVal);

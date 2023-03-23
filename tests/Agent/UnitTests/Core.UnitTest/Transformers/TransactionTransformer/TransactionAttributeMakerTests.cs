@@ -1388,11 +1388,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             
             // ACT
-            var builderAttributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var builderAttributes = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             _transactionAttributeMaker.SetUserAndAgentAttributes(builderAttributes, transaction.TransactionMetadata);
 
 
-            var attributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attributes = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, immutableTransaction.TransactionMetadata);
 
             // ACQUIRE
@@ -1449,7 +1449,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
 
             // ACT
-            var attributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attributes = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, immutableTransaction.TransactionMetadata);
 
             // ASSERT
@@ -1475,10 +1475,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
             // ACT
-            var builderAttributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var builderAttributes = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             _transactionAttributeMaker.SetUserAndAgentAttributes(builderAttributes, transaction.TransactionMetadata);
 
-            var attributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attributes = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, immutableTransaction.TransactionMetadata);
 
             // ACQUIRE
@@ -1522,10 +1522,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
             // ACT
-            var builderAttributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var builderAttributes = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             _transactionAttributeMaker.SetUserAndAgentAttributes(builderAttributes, transaction.TransactionMetadata);
 
-            var attributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attributes = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, immutableTransaction.TransactionMetadata);
 
             AssertAttributeShouldBeAvailableFor(builderAttributes, "http.statusCode", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorEvent, AttributeDestinations.SpanEvent);
@@ -1591,7 +1591,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
             // ACT
-            var attributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attributes = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, immutableTransaction.TransactionMetadata);
 
             // ACQUIRE
@@ -1728,7 +1728,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var notAvailableFor = new List<AttributeDestinations>();
             foreach(var destination in destinations)
             {
-                var filteredAttribs = new AttributeValueCollection(attribValues, destination);
+                var filteredAttribs = new AttributeValueCollectionCore(attribValues, destination);
                 var values = filteredAttribs.ToDictionary();
 
                 if(!values.ContainsKey(attribName))

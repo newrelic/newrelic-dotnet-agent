@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.WireModels
         [Test]
         public void All_attribute_value_types_in_an_event_do_serialize_correctly()
         {
-            var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorEvent);
+            var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorEvent);
 
 
             // ARRANGE
@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.WireModels
         public void Is_synthetics_set_correctly()
         {
             // Arrange
-            var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorEvent);
+            var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorEvent);
             var isSyntheticsEvent = true;
 
             // Act
@@ -119,7 +119,7 @@ namespace NewRelic.Agent.Core.WireModels
         {
             var priority = 0.5f;
 
-            var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorEvent);
+            var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorEvent);
             _attribDefs.TimestampForError.TrySetValue(attribValues, DateTime.UtcNow);
 
             var wireModel = new ErrorEventWireModel(attribValues, false, priority);

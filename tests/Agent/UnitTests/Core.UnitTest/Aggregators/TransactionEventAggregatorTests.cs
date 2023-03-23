@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Core.Aggregators
         private static readonly TimeSpan ConfiguredHarvestCycle = TimeSpan.FromSeconds(5);
 
         private const string TimeStampKey = "timestamp";
-        private readonly static AttributeValueCollection _attribValues = new AttributeValueCollection(AttributeDestinations.TransactionEvent);
+        private readonly static AttributeValueCollectionCore _attribValues = new AttributeValueCollectionCore(AttributeDestinations.TransactionEvent);
 
         private const int MaxSamplesStored = 10000;
 

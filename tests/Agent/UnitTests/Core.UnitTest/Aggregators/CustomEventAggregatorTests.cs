@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         private IAttributeValueCollection GetCustomEventAttribs()
         {
-            var result = new AttributeValueCollection(AttributeDestinations.CustomEvent);
+            var result = new AttributeValueCollectionCore(AttributeDestinations.CustomEvent);
             _attribDefs.CustomEventType.TrySetValue(result, "event_type");
             _attribDefs.Timestamp.TrySetDefault(result);
 

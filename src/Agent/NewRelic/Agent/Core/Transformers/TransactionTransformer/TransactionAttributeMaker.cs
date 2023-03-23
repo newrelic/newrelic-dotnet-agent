@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         public IAttributeValueCollection GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, TransactionMetricStatsCollection txStats)
         {
-            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribVals = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
 
             SetUserAndAgentAttributes(attribVals, immutableTransaction.TransactionMetadata);
             SetIntrinsicAttributes(attribVals, immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);

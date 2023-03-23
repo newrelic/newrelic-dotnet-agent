@@ -39,7 +39,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                 .CreateCustomAttribute("test", AttributeDestinations.All)
                 .Build(filter);
 
-            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribVals = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
 
             attribDef.TrySetValue(attribVals, attributeValue);
 
@@ -86,7 +86,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                 .CreateCustomAttribute("test", AttributeDestinations.All)
                 .Build(filter);
 
-            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribVals = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
 
             var trySetResult = attribDef.TrySetValue(attribVals, null);
 
@@ -109,7 +109,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                 .CreateCustomAttribute("test", AttributeDestinations.All)
                 .Build(filter);
 
-            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribVals = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
 
             var trySetResult = attribDef.TrySetValue(attribVals, string.Empty);
 
@@ -131,7 +131,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
                 .CreateCustomAttribute("test", AttributeDestinations.All)
                 .Build(filter);
 
-            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribVals = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
 
             var trySetResult = attribDef.TrySetValue(attribVals, " ");
 
@@ -149,7 +149,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         public void Attributes_key_size()
         {
             var filter = new AttributeFilter(new AttributeFilter.Settings());
-            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribVals = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
 
             var testKeys = new string[]
                 {
@@ -188,7 +188,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         public void Attributes_value_size_errors()
         {
             var filter = new AttributeFilter(new AttributeFilter.Settings());
-            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribVals = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
 
             var attributes = new Dictionary<string, string>
             {
@@ -227,7 +227,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         public void Attributes_value_size_other_strings()
         {
             var filter = new AttributeFilter(new AttributeFilter.Settings());
-            var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribVals = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
 
             var attributes = new Dictionary<string, string>
             {

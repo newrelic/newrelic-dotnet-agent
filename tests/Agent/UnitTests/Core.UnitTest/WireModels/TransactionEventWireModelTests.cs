@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
             [Test]
             public void all_fields_serializes_correctly()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.TransactionEvent);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.TransactionEvent);
 
                 // ARRANGE
                 var userAttributes = new Dictionary<string, object>
@@ -113,7 +113,7 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
             public void only_required_fields_serialize_correctly()
             {
                 // Arrange
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorEvent);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorEvent);
 
                 var isSytheticsEvent = false;
 
@@ -137,7 +137,7 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
             [Test]
             public void Verify_setting_priority()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.TransactionEvent);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.TransactionEvent);
 
                 _attribDefs.Timestamp.TrySetValue(attribValues, DateTime.UtcNow);
 

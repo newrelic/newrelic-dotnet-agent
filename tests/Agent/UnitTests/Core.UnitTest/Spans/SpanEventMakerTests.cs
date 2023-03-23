@@ -333,7 +333,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttributes).ToList();
             var spanEvent = spanEvents[1];
             var rootSpanEvent = spanEvents[0];
-            var errorEventAttributes = new AttributeValueCollection(transactionAttributes, AttributeDestinations.ErrorEvent);
+            var errorEventAttributes = new AttributeValueCollectionCore(transactionAttributes, AttributeDestinations.ErrorEvent);
 
             // ASSERT
             NrAssert.Multiple(
@@ -364,7 +364,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttributes).ToList();
             var spanEvent = spanEvents[1];
             var rootSpanEvent = spanEvents[0];
-            var errorEventAttributes = new AttributeValueCollection(transactionAttributes, AttributeDestinations.ErrorEvent);
+            var errorEventAttributes = new AttributeValueCollectionCore(transactionAttributes, AttributeDestinations.ErrorEvent);
 
             // ASSERT
             NrAssert.Multiple(

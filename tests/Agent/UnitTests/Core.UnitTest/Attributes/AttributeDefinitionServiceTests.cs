@@ -269,7 +269,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         [Test]
         public void LazyValueTest_TransactionEvents()
         {
-            var attribValues = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribValues = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             LazyValueTest_SetAttribValues(attribValues);
 
             var wireModel = new TransactionEventWireModel(attribValues, false, .5f);
@@ -280,7 +280,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         [Test]
         public void LazyValueTest_ErrorEvents()
         {
-            var attribValues = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribValues = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             LazyValueTest_SetAttribValues(attribValues);
 
             var wireModel = new ErrorEventWireModel(attribValues, false, .5f);
@@ -304,7 +304,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         [Test]
         public void LazyValueTest_TransactionTrace()
         {
-            var attribValues = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribValues = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             LazyValueTest_SetAttribValues(attribValues);
 
             var wireModel = new TransactionTraceData.TransactionTraceAttributes(attribValues);
@@ -315,7 +315,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         [Test]
         public void LazyValueTest_ErrorTrace()
         {
-            var attribValues = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var attribValues = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
             LazyValueTest_SetAttribValues(attribValues);
 
 

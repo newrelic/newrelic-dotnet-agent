@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.WireModels
         protected EventWireModel(AttributeDestinations targetObject, IAttributeValueCollection attribValues, bool isSynthetics, float priority)
         {
             _targetObject = targetObject;
-            AttributeValues = new AttributeValueCollection(attribValues, _targetObject);
+            AttributeValues = new AttributeValueCollectionCore(attribValues, _targetObject);
             Priority = priority;
             IsSynthetics = isSynthetics;
 

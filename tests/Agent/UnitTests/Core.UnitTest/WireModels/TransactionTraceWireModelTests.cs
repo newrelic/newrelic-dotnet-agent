@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Core.WireModels
             var timestamp = new DateTime(2018, 1, 1, 1, 0, 0, DateTimeKind.Utc);
             var transactionTraceSegment = new TransactionTraceSegment(TimeSpan.Zero, TimeSpan.FromSeconds(1), "Segment Name", new Dictionary<string, object>(), new List<TransactionTraceSegment>(), "Segment Class Name", "Segment Method Name");
 
-            var transactionTrace = new TransactionTraceData(timestamp, transactionTraceSegment, new AttributeValueCollection(AttributeDestinations.TransactionTrace));
+            var transactionTrace = new TransactionTraceData(timestamp, transactionTraceSegment, new AttributeValueCollectionCore(AttributeDestinations.TransactionTrace));
             var transactionSample = new TransactionTraceWireModel(timestamp, TimeSpan.FromSeconds(1), "Transaction Name", "Transaction URI", transactionTrace, "Transaction GUID", null, null, false);
 
             // Act

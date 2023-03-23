@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             public ErrorTraceAttributesWireModel(IAttributeValueCollection attribValues, IList<string> stackTrace = null)
             {
-                var filteredAttribValues = new AttributeValueCollection(attribValues, AttributeDestinations.ErrorTrace);
+                var filteredAttribValues = new AttributeValueCollectionCore(attribValues, AttributeDestinations.ErrorTrace);
 
                 filteredAttribValues.MakeImmutable();
 

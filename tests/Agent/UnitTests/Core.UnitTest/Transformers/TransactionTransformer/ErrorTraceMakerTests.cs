@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetErrorTrace_ReturnsErrorTrace_IfStatusCodeIs404()
         {
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value");
-            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+            var attributes = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
@@ -62,7 +62,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             var errorDataIn = _errorService.FromMessage("My message", (Dictionary<string, object>)null, false);
             var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
-            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+            var attributes = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
@@ -82,7 +82,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorData1 = _errorService.FromMessage("My message", (Dictionary<string, object>)null, false);
             var errorData2 = _errorService.FromMessage("My message2", (Dictionary<string, object>)null, false);
             var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData1, errorData2 });
-            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+            var attributes = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             var errorDataIn = _errorService.FromMessage("My message", (Dictionary<string, object>)null, false);
             var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
-            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+            var attributes = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
@@ -122,7 +122,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var errorData = _errorService.FromMessage("This message should be stripped.", (Dictionary<string, object>)null, false);
             var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
-            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+            var attributes = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
 
             var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);

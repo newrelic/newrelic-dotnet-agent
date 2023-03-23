@@ -1040,7 +1040,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void TransformSendsCorrectParametersToTraceMaker()
         {
             // ARRANGE
-            var expectedAttributes = new AttributeValueCollection(AttributeDestinations.TransactionTrace);
+            var expectedAttributes = new AttributeValueCollectionCore(AttributeDestinations.TransactionTrace);
             var expectedSegmentTreeNodes = new List<ImmutableSegmentTreeNode> { BuildNode() };
             var expectedTransactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
@@ -1090,7 +1090,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void TransformSendsCorrectParametersToEventMaker()
         {
             // ARRANGE
-            var expectedAttributes = new AttributeValueCollection(AttributeDestinations.TransactionEvent);
+            var expectedAttributes = new AttributeValueCollectionCore(AttributeDestinations.TransactionEvent);
             Mock.Arrange(() => _transactionAttributeMaker.GetAttributes(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TransactionMetricStatsCollection>()))
                 .Returns(expectedAttributes);
 
@@ -1288,7 +1288,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void TransformSendsCorrectParametersToErrorTraceMaker()
         {
             // ARRANGE
-            var expectedAttributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+            var expectedAttributes = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
             var expectedTransactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
             Mock.Arrange(() => _transactionAttributeMaker.GetAttributes(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TransactionMetricStatsCollection>()))
@@ -1488,7 +1488,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         private static ErrorTraceWireModel GetError()
         {
-            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+            var attributes = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
             var stackTrace = new List<string>();
             var errorTraceAttributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attributes, stackTrace);
             return new ErrorTraceWireModel(DateTime.Now, "path", "message", "exceptionClassName", errorTraceAttributes, "guid");

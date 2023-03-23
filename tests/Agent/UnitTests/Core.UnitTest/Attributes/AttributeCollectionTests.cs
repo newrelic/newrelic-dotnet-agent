@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         [SetUp]
         public void SetUp()
         {
-            _attribValues = new AttributeValueCollection(AttributeDestinations.ErrorEvent);
+            _attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorEvent);
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
         }
 

@@ -39,7 +39,7 @@ namespace NewRelic.Agent.Core.Aggregators
         private readonly static Dictionary<string, object> _emptyAttributes = new Dictionary<string, object>();
         private readonly static Dictionary<string, object> _intrinsicAttributes = new Dictionary<string, object> { { TimeStampKey, DateTime.UtcNow.ToUnixTimeMilliseconds() } };
 
-        private readonly static AttributeValueCollection _attribValues = new AttributeValueCollection(AttributeDestinations.ErrorEvent);
+        private readonly static AttributeValueCollectionCore _attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorEvent);
 
         [SetUp]
         public void SetUp()

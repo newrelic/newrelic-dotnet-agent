@@ -220,7 +220,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetErrorEvent_NoTransaction_WithException_ContainsCorrectAttributes()
         {
             // Arrange
-            var customAttributes = new AttributeValueCollection(AttributeDestinations.ErrorEvent);
+            var customAttributes = new AttributeValueCollectionCore(AttributeDestinations.ErrorEvent);
 
             _attribDefs.GetCustomAttributeForError("custom attribute name").TrySetValue(customAttributes, "custom attribute value");
             var errorData = _errorService.FromException(new NullReferenceException("NRE message"));
@@ -251,7 +251,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         private IAttributeValueCollection GetIntrinsicAttributes()
         {
-            var attributes = new AttributeValueCollection(AttributeDestinations.ErrorEvent);
+            var attributes = new AttributeValueCollectionCore(AttributeDestinations.ErrorEvent);
 
             _attribDefs.DatabaseCallCount.TrySetValue(attributes, 10);
             _attribDefs.DatabaseDuration.TrySetValue(attributes, (float)TimeSpan.FromSeconds(10).TotalSeconds);

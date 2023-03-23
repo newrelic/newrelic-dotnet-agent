@@ -106,7 +106,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             public TransactionTraceAttributes(IAttributeValueCollection attribValues)
             {
-                var filteredAttribs = new AttributeValueCollection(attribValues, AttributeDestinations.TransactionTrace);
+                var filteredAttribs = new AttributeValueCollectionCore(attribValues, AttributeDestinations.TransactionTrace);
 
                 filteredAttribs.MakeImmutable();
 

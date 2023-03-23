@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.Transactions
     public interface ITransactionAttributeMetadata
     {
 
-        AttributeValueCollection UserAndRequestAttributes { get; }
+        AttributeValueCollectionCore UserAndRequestAttributes { get; }
 
         IReadOnlyTransactionErrorState ReadOnlyTransactionErrorState { get; }
 

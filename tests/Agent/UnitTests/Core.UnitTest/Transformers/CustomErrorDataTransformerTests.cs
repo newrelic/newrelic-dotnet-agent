@@ -77,7 +77,7 @@ namespace NewRelic.Agent.Core.Transformers
         public void Transform_FiltersAttributesBeforeSendingThemToErrorTraceMaker()
         {
             // ARRANGE
-            var attribValues = new AttributeValueCollection(AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.JavaScriptAgent); ;
+            var attribValues = new AttributeValueCollectionCore(AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.JavaScriptAgent); ;
 
             _attribDefs.GetCustomAttributeForCustomEvent("CustomEventAttrib").TrySetValue(attribValues, "CustomEventValue");        //CustomEvent
             _attribDefs.GetCustomAttributeForError("ErrorEventAttrib").TrySetValue(attribValues, "ErrorEventValue");                //Error Event and Trace

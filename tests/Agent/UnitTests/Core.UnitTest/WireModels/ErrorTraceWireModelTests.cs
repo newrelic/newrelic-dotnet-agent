@@ -115,7 +115,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             [Test]
             public void when_default_fixture_values_are_used_then_serializes_correctly()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
 
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
@@ -141,7 +141,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             [Test]
             public void eror_trace_attributes_when_default_fixture_values_are_used_then_serializes_correctly()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
 
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
 
@@ -160,7 +160,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             [Test]
             public void eror_trace_attributes_when_default_fixture_values_are_used_then_serializes_correctly_with_legacy_serializer()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
 
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
 
@@ -179,7 +179,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             [Test]
             public void when_construtor_used_timestamp_property_is_set()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
 
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
@@ -190,7 +190,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             [Test]
             public void when_construtor_used_path_property_is_set()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
 
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
@@ -201,7 +201,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             [Test]
             public void when_construtor_used_message_property_is_set()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
 
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
@@ -212,7 +212,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             [Test]
             public void when_construtor_used_exceptionClassName_property_is_set()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
 
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
@@ -223,7 +223,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             [Test]
             public void when_construtor_used_parameters_property_is_set()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
 
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
@@ -234,7 +234,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             [Test]
             public void when_construtor_used_guid_property_is_set()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
 
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues,_stackTrace);
                 var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
@@ -246,7 +246,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             public void when_agentAttributes_are_supplied_then_they_show_up_in_json()
             {
                 // ARRANGE
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
                 _attribDefs.OriginalUrl.TrySetValue(attribValues, "www.test.com");
 
                 // ACT
@@ -262,7 +262,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             public void when_intrinsicAttributes_are_supplied_then_they_show_up_in_json()
             {
                 // ARRANGE
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
                 _attribDefs.Guid.TrySetValue(attribValues, "GuidTestValue");
 
                 // ACT
@@ -278,7 +278,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             public void when_userAttributes_are_supplied_then_they_show_up_in_json()
             {
                 // ARRANGE
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
                 _attribDefs.GetCustomAttributeForError("Foo").TrySetValue(attribValues, "Bar");
 
                 // ACT
@@ -293,7 +293,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             [Test]
             public void when_attributes_are_empty_then_it_does_not_show_up()
             {
-                var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorTrace);
+                var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace);
 
                 // ACT
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attribValues, _stackTrace);
@@ -312,7 +312,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 // ACT
                 Assert.DoesNotThrow(
                     () =>
-                        new ErrorTraceWireModel.ErrorTraceAttributesWireModel(new AttributeValueCollection(AttributeDestinations.ErrorTrace), null));
+                        new ErrorTraceWireModel.ErrorTraceAttributesWireModel(new AttributeValueCollectionCore(AttributeDestinations.ErrorTrace), null));
             }
         }
     }

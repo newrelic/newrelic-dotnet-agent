@@ -111,7 +111,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var queueTime = transaction.TransactionMetadata.QueueTime ?? _zeroTimespan;
             var applicationTime = transaction.GetDurationUntilNow();
 
-            var attributes = new AttributeValueCollection(AttributeDestinations.JavaScriptAgent);
+            var attributes = new AttributeValueCollectionCore(AttributeDestinations.JavaScriptAgent);
             _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, transaction.TransactionMetadata);
 
             // for now, treat tripId as an agent attribute when passing to browser.  Eventually this will be an intrinsic but need changes to browser code first.
@@ -128,7 +128,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             return new BrowserMonitoringConfigurationData(licenseKey, beacon, errorBeacon, browserMonitoringKey, applicationId, obfuscatedTransactionName, queueTime, applicationTime, jsAgentPayloadFile, obfuscatedFormattedAttributes, sslForHttp);
         }
 
-        private string GetObfuscatedFormattedAttributes(AttributeValueCollection attribValues, string licenseKey)
+        private string GetObfuscatedFormattedAttributes(AttributeValueCollectionCore attribValues, string licenseKey)
         {
             if (attribValues == null)
             {

@@ -18,9 +18,9 @@ namespace NewRelic.Agent.Core.Attributes
     }
 
     [DebuggerDisplay("{_value ?? _lazyValue}")]
-    public class AttributeValue : IAttributeValue
+    public class AttributeValueCore : IAttributeValue
     {
-        public AttributeValue(AttributeDefinition attribDef)
+        public AttributeValueCore(AttributeDefinition attribDef)
         {
             AttributeDefinition = attribDef;
         }

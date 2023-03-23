@@ -22,7 +22,7 @@ namespace CompositeTests
         {
             _compositeTestAgent = new CompositeTestAgent();
            
-            _attribValues = new AttributeValueCollection(AttributeDestinations.TransactionEvent);
+            _attribValues = new AttributeValueCollectionCore(AttributeDestinations.TransactionEvent);
         }
 
         [TearDown]

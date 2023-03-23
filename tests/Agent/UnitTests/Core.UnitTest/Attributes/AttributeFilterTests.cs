@@ -381,7 +381,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
         public void when(TestCase testCase)
         {
             // Arrange
-            var unfilteredAttribs = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            var unfilteredAttribs = new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes);
 
             var attributeFilterSettings = testCase.Configuration.ToAttributeFilterSettings();
             var testCaseDestinations = testCase.AttributeDestinations.ToAttributeDestinations();
@@ -405,9 +405,9 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             attrib.TrySetValue(unfilteredAttribs, "foo");
 
-            foreach(var testDestination in AttributeValueCollection.AllTargetModelTypes)
+            foreach(var testDestination in AttributeValueCollectionCore.AllTargetModelTypes)
             {
-                var filteredAttribs = new AttributeValueCollection(unfilteredAttribs, testDestination);
+                var filteredAttribs = new AttributeValueCollectionCore(unfilteredAttribs, testDestination);
 
                 var countMatchAttribValues = filteredAttribs.GetAttributeValues(AttributeClassification.UserAttributes)
                         .Count(x => x.AttributeDefinition.Name == testCase.AttributeKey);

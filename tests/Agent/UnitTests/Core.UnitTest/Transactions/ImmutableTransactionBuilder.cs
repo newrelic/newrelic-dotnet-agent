@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.Transactions
 
         public int? HttpResponseStatusCode { get; }
 
-        public AttributeValueCollection UserAndRequestAttributes { get; }
+        public AttributeValueCollectionCore UserAndRequestAttributes { get; }
 
         public IEnumerable<string> CrossApplicationAlternatePathHashes { get; }
 
@@ -59,7 +59,7 @@ namespace NewRelic.Agent.Core.Transactions
             string originalUri,
             string referrerUri,
             TimeSpan? queueTime,
-            AttributeValueCollection userAndRequestAttributes,
+            AttributeValueCollectionCore userAndRequestAttributes,
             ITransactionErrorState transactionErrorState,
             int? httpResponseStatusCode,
             int? httpResponseSubStatusCode,
@@ -247,7 +247,7 @@ namespace NewRelic.Agent.Core.Transactions
                 originalUri: "originalUri",
                 referrerUri: "referrerUri",
                 queueTime: new TimeSpan(1),
-                userAndRequestAttributes: new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes),
+                userAndRequestAttributes: new AttributeValueCollectionCore(AttributeValueCollectionCore.AllTargetModelTypes),
                 transactionErrorState: _transactionErrorState,
                 httpResponseStatusCode: 200,
                 httpResponseSubStatusCode: 201,

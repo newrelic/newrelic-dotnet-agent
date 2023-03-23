@@ -151,7 +151,7 @@ namespace NewRelic.Agent.TestUtilities
 
         public static Dictionary<string, object> ToDictionary(this IAttributeValueCollection attribValueCollection, AttributeDestinations targetObject, params AttributeClassification[] classifications)
         {
-            var filteredAttribValues = new AttributeValueCollection(attribValueCollection, targetObject);
+            var filteredAttribValues = new AttributeValueCollectionCore(attribValueCollection, targetObject);
             return ToDictionary(filteredAttribValues, classifications);
         }
 

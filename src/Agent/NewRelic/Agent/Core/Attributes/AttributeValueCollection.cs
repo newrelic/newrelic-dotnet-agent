@@ -296,17 +296,17 @@ namespace NewRelic.Agent.Core.Attributes
         }
     }
 
-    public class AttributeValueCollection : AttributeValueCollectionBase<AttributeValue>
+    public class AttributeValueCollectionCore : AttributeValueCollectionBase<AttributeValueCore>
     {
-        public AttributeValueCollection(IAttributeValueCollection fromCollection, params AttributeDestinations[] targetModelTypes) : base(fromCollection, targetModelTypes)
+        public AttributeValueCollectionCore(IAttributeValueCollection fromCollection, params AttributeDestinations[] targetModelTypes) : base(fromCollection, targetModelTypes)
         {
         }
 
-        public AttributeValueCollection(params AttributeDestinations[] targetModelTypes) : base(targetModelTypes)
+        public AttributeValueCollectionCore(params AttributeDestinations[] targetModelTypes) : base(targetModelTypes)
         {
         }
 
-        public AttributeValueCollection(string transactionGuid, params AttributeDestinations[] targetModelTypes) : base(transactionGuid, targetModelTypes)
+        public AttributeValueCollectionCore(string transactionGuid, params AttributeDestinations[] targetModelTypes) : base(transactionGuid, targetModelTypes)
         {
         }
 
@@ -317,41 +317,41 @@ namespace NewRelic.Agent.Core.Attributes
             { AttributeClassification.UserAttributes, new object() }
         };
 
-        private Dictionary<Guid, AttributeValue> _intrinsicAttributes;
-        private Dictionary<Guid, AttributeValue> _agentAttributes;
-        private Dictionary<Guid, AttributeValue> _userAttributes;
+        private Dictionary<Guid, AttributeValueCore> _intrinsicAttributes;
+        private Dictionary<Guid, AttributeValueCore> _agentAttributes;
+        private Dictionary<Guid, AttributeValueCore> _userAttributes;
 
-        private Dictionary<Guid, AttributeValue> GetAttribValuesInternal(AttributeClassification classification, bool withCreate)
+        private Dictionary<Guid, AttributeValueCore> GetAttribValuesInternal(AttributeClassification classification, bool withCreate)
         {
             switch (classification)
             {
                 case AttributeClassification.Intrinsics:
                     return withCreate
-                        ? _intrinsicAttributes ??= new Dictionary<Guid, AttributeValue>()
+                        ? _intrinsicAttributes ??= new Dictionary<Guid, AttributeValueCore>()
                         : _intrinsicAttributes;
 
                 case AttributeClassification.AgentAttributes:
                     return withCreate
-                        ? _agentAttributes ??= new Dictionary<Guid, AttributeValue>()
+                        ? _agentAttributes ??= new Dictionary<Guid, AttributeValueCore>()
                         : _agentAttributes;
 
                 case AttributeClassification.UserAttributes:
                     return withCreate
-                        ? _userAttributes ??= new Dictionary<Guid, AttributeValue>()
+                        ? _userAttributes ??= new Dictionary<Guid, AttributeValueCore>()
                         : _userAttributes;
             }
 
             return null;
         }
 
-        protected override IEnumerable<AttributeValue> GetAttribValuesImpl(AttributeClassification classification)
+        protected override IEnumerable<AttributeValueCore> GetAttribValuesImpl(AttributeClassification classification)
         {
             var dic = GetAttribValuesInternal(classification, false);
 
-            return dic?.Values ?? Enumerable.Empty<AttributeValue>();
+            return dic?.Values ?? Enumerable.Empty<AttributeValueCore>();
         }
 
-        protected override void RemoveItemsImpl(IEnumerable<AttributeValue> itemsToRemove)
+        protected override void RemoveItemsImpl(IEnumerable<AttributeValueCore> itemsToRemove)
         {
             foreach (var lockObjKvp in _lockObjects)
             {
@@ -394,7 +394,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         protected override bool SetValueImpl(IAttributeValue attribVal)
         {
-            if (attribVal is AttributeValue attribValTyped)
+            if (attribVal is AttributeValueCore attribValTyped)
             {
                 return SetValueImplInternal(attribValTyped);
             }
@@ -419,7 +419,7 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            var attribVal = new AttributeValue(attribDef)
+            var attribVal = new AttributeValueCore(attribDef)
             {
                 Value = value
             };
@@ -434,7 +434,7 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            var attribVal = new AttributeValue(attribDef)
+            var attribVal = new AttributeValueCore(attribDef)
             {
                 LazyValue = lazyValue
             };
@@ -442,7 +442,7 @@ namespace NewRelic.Agent.Core.Attributes
             return SetValueImplInternal(attribVal);
         }
 
-        private bool SetValueImplInternal(AttributeValue attribVal)
+        private bool SetValueImplInternal(AttributeValueCore attribVal)
         {
             if (IsImmutable)
             {

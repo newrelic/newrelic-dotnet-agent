@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core.Transformers
                 return;
             }
 
-            var attribValues = new AttributeValueCollection(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace);
+            var attribValues = new AttributeValueCollectionCore(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace);
 
             if (errorData.CustomAttributes != null && _configurationService.Configuration.CaptureCustomParameters)
             {
@@ -66,8 +66,8 @@ namespace NewRelic.Agent.Core.Transformers
             _attribDefs.TransactionNameForError.TrySetValue(attribValues, errorData.Path);
 
             //We have to do the filtering here b/c these methods further update
-            var errorTrace = _errorTraceMaker.GetErrorTrace(new AttributeValueCollection(attribValues, AttributeDestinations.ErrorTrace), errorData);
-            var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollection(attribValues, AttributeDestinations.ErrorEvent), priority);
+            var errorTrace = _errorTraceMaker.GetErrorTrace(new AttributeValueCollectionCore(attribValues, AttributeDestinations.ErrorTrace), errorData);
+            var errorEvent = _errorEventMaker.GetErrorEvent(errorData, new AttributeValueCollectionCore(attribValues, AttributeDestinations.ErrorEvent), priority);
 
             _errorTraceAggregator.Collect(errorTrace);
             _errorEventAggregator.Collect(errorEvent);

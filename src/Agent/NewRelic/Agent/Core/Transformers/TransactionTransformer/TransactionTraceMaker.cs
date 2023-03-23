@@ -39,7 +39,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             if (!segmentTrees.Any())
                 throw new ArgumentException("There must be at least one segment to create a trace");
 
-            var filteredAttributes = new AttributeValueCollection(attribValues, AttributeDestinations.TransactionTrace);
+            var filteredAttributes = new AttributeValueCollectionCore(attribValues, AttributeDestinations.TransactionTrace);
 
             // See spec for details on these fields: https://source.datanerd.us/agents/agent-specs/blob/master/Transaction-Trace-LEGACY.md
             var startTime = immutableTransaction.StartTime;
