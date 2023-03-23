@@ -72,9 +72,11 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             }
             var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
 
-            var messageGetter = _messageGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "Message");
+            // This wrapper for NLog uses a belt-and-suspenders approach to decorating log output. We first try to decorate the Message property,
+            // then get the FormattedMessage property and check to see if it is decorated. If not, decorate the FormattedMessage backing field directly.
+            // Note: this still does not work for all log messages, particularly the messages output by ASP.NET Core when NLog.Web.AspNetCore is used.
 
-            // Message should not be null, but better to be sure
+            var messageGetter = _messageGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "Message");
 
             var originalMessage = messageGetter(logEvent);
 
