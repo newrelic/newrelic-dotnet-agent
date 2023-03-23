@@ -243,6 +243,7 @@
 	<PackageReference Include="NLog" Version="5.0.4" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <PackageReference Include="NLog" Version="4.3.11" Condition="'$(TargetFramework)' == 'net462'" />
+    <!--TODO fix order here-->
     <PackageReference Include="NLog" Version="4.1.2" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="NLog" Version="4.5.11" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="NLog" Version="4.5.11" Condition="'$(TargetFramework)' == 'net481'" />

@@ -795,6 +795,23 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
         }
     }
 
+    [NetFrameworkTest]
+    public class NLogJsonLayoutStructuredLoggingDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public NLogJsonLayoutStructuredLoggingDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog, useStructuredLogging: true)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class NLogJsonLayoutStructuredLoggingDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public NLogJsonLayoutStructuredLoggingDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog, useStructuredLogging: true)
+        {
+        }
+    }
     [NetCoreTest]
     public class NLogJsonLayoutDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
@@ -827,6 +844,24 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     {
         public NLogJsonLayoutDecorationEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogJsonLayoutStructuredLoggingDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public NLogJsonLayoutStructuredLoggingDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog, useStructuredLogging: true)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogJsonLayoutStructuredLoggingDecorationEnabledTestsNetCore31Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public NLogJsonLayoutStructuredLoggingDecorationEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Json, LoggingFramework.NLog, useStructuredLogging: true)
         {
         }
     }
@@ -911,20 +946,29 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
         }
     }
 
-    [NetCoreTest]
-    public class NLogPatternLayoutDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    [NetFrameworkTest]
+    public class NLogPatternLayoutStructuredLoggingDecorationEnabledTestsFWLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public NLogPatternLayoutDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog)
+        public NLogPatternLayoutStructuredLoggingDecorationEnabledTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog, useStructuredLogging: true)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class NLogPatternLayoutStructuredLoggingDecorationEnabledTestsFW471Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureFW471>
+    {
+        public NLogPatternLayoutStructuredLoggingDecorationEnabledTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog, useStructuredLogging: true)
         {
         }
     }
 
     [NetCoreTest]
-    public class NLogPatternLayoutStructuredLoggingDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class NLogPatternLayoutDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public NLogPatternLayoutStructuredLoggingDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog, useStructuredLogging: true)
+        public NLogPatternLayoutDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog)
         {
         }
     }
@@ -952,6 +996,25 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     {
         public NLogPatternLayoutDecorationEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
             : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    // structured logging...only test latest and oldest
+    [NetCoreTest]
+    public class NLogPatternLayoutStructuredLoggingDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public NLogPatternLayoutStructuredLoggingDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog, useStructuredLogging: true)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogPatternLayoutStructuredLoggingDecorationEnabledTestsNetCore31Tests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCore31>
+    {
+        public NLogPatternLayoutStructuredLoggingDecorationEnabledTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog, useStructuredLogging: true)
         {
         }
     }
