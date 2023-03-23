@@ -10,11 +10,11 @@ namespace NewRelic.Agent.Core.WireModels
     [JsonConverter(typeof(LoadedModuleWireModelCollectionJsonConverter))]
     public class LoadedModuleWireModelCollection
     {
-        public Dictionary<string, LoadedModuleWireModel> LoadedModules { get; }
+        public List<LoadedModuleWireModel> LoadedModules { get; }
 
         public LoadedModuleWireModelCollection()
         {
-            LoadedModules = new Dictionary<string, LoadedModuleWireModel>();
+            LoadedModules = new List<LoadedModuleWireModel>();
         }
     }
 }

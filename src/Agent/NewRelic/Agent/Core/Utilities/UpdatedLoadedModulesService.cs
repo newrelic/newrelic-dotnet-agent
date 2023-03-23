@@ -89,7 +89,7 @@ namespace NewRelic.Agent.Core.Utilities
                 }
 
                 // Use the .Name here and in GetLoadedModules
-                loadedModulesCollection.LoadedModules.Add(assembly.GetName().Name, loadedModule);
+                loadedModulesCollection.LoadedModules.Add(loadedModule);
             }
 
             var responseStatus = _dataTransportService.Send(loadedModulesCollection);
@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             foreach (var module in loadedModulesCollection.LoadedModules)
             {
-                _loadedModulesSeen.Add(module.Key);
+                _loadedModulesSeen.Add(module.Data["namespace"].ToString());
             }
         }
 

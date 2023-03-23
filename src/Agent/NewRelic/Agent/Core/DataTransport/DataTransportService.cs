@@ -142,7 +142,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules)
         {
-            if (loadedModules.LoadedModules.Keys.Count < 1)
+            if (loadedModules.LoadedModules.Count < 1)
             {
                 return DataTransportResponseStatus.RequestSuccessful;
             }

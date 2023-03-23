@@ -32,12 +32,12 @@ namespace NewRelic.Agent.Core.JsonConverters
                 // MODULE
                 jsonWriter.WriteStartArray();
 
-                jsonWriter.WriteValue(loadedModule.Value.AssemblyName);
-                jsonWriter.WriteValue(loadedModule.Value.Version ?? " ");
+                jsonWriter.WriteValue(loadedModule.AssemblyName);
+                jsonWriter.WriteValue(loadedModule.Version ?? " ");
 
                 // DATA DICTIONARY
                 jsonWriter.WriteStartObject();
-                foreach (var item in loadedModule.Value.Data)
+                foreach (var item in loadedModule.Data)
                 {
                     jsonWriter.WritePropertyName(item.Key);
                     jsonWriter.WriteValue(item.Value.ToString());
