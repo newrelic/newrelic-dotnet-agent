@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.9.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.8.0...v10.9.0) (2023-03-23)
+
+
+### New Features
+
+* Add commented out workflow to get release checksums ([68a7ee7](https://github.com/newrelic/newrelic-dotnet-agent/commit/68a7ee76f83fcf024dd8ec1ff7d07a38a7f113e9))
+* add Supportability/Logging/Forwarding/Dropped metric ([#1470](https://github.com/newrelic/newrelic-dotnet-agent/issues/1470)) ([89dd33a](https://github.com/newrelic/newrelic-dotnet-agent/commit/89dd33a6febc129c5051136226243845c606ca70))
+* Create workflow to get release checksums ([#1475](https://github.com/newrelic/newrelic-dotnet-agent/issues/1475)) ([1b0dd92](https://github.com/newrelic/newrelic-dotnet-agent/commit/1b0dd9251647aa8a51e2417f5413d14d52d3d60b))
+
 ## [Unreleased]
 
 ### New Features
