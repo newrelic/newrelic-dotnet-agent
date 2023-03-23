@@ -39,7 +39,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         }
         public void InfoWithParam(string message, object param)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation(message, param);
         }
 
         public void Warn(string message) => _logger.LogWarning(message);

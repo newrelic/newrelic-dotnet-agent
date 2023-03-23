@@ -131,7 +131,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         [LibraryMethod]
         public static void CreateSingleLogMessageWithParam(string message)
         {
-            var param = new StructuredLoggingType() { Id = 12345, Name = "John Smith" };
+            var param = new Person() { Id = 12345, Name = "John Smith" };
             _log.InfoWithParam(message, param);
         }
 

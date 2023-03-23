@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace NewRelic.IntegrationTests.Models
 {
-    public class StructuredLoggingType
+    public class Person
     {
         [JsonProperty("name", NullValueHandling = NullValueHandling.Include)]
         public string Name { get; set; }
