@@ -1,7 +1,6 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -28,7 +27,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
         private const string _compositeApplicationName = _primaryApplicationName + ", " + _secondaryApplicationName;
         private const string _testMessage = "DecorateMe";
 
-        public LocalDecorationTestsBase(TFixture fixture, ITestOutputHelper output, bool decorationEnabled, LayoutType layoutType, LoggingFramework loggingFramework) : base(fixture)
+        public LocalDecorationTestsBase(TFixture fixture, ITestOutputHelper output, bool decorationEnabled, LayoutType layoutType,
+            LoggingFramework loggingFramework, bool useStructuredLogging = false) : base(fixture)
         {
             _decorationEnabled = decorationEnabled;
             _fixture = fixture;
@@ -37,7 +37,14 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
 
             _fixture.AddCommand($"LoggingTester SetFramework {loggingFramework}");
             _fixture.AddCommand($"LoggingTester Configure{layoutType}LayoutAppenderForDecoration");
-            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {_testMessage} DEBUG");
+            if (useStructuredLogging)
+            {
+                _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransactionWithParam {_testMessage}{"{@param}"}");
+            }
+            else
+            {
+                _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction {_testMessage} DEBUG");
+            }
 
             _fixture.RemoteApplication.AppName = _compositeApplicationName;
 
@@ -909,6 +916,15 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
     {
         public NLogPatternLayoutDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class NLogPatternLayoutStructuredLoggingDecorationEnabledTestsNetCoreLatestTests : LocalDecorationTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public NLogPatternLayoutStructuredLoggingDecorationEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true, LayoutType.Pattern, LoggingFramework.NLog, useStructuredLogging: true)
         {
         }
     }

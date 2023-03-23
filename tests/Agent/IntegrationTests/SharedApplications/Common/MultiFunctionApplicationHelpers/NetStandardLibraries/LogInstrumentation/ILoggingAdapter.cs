@@ -11,6 +11,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public void Debug (string message);
         public void Info(string message);
         public void Info(string message, Dictionary<string, object> context);
+        public void InfoWithParam(string message, object param);
 
         public void Warn(string message);
         public void Error(Exception exception);

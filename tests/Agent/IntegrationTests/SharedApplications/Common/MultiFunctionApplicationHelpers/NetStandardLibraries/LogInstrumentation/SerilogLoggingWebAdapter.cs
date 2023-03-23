@@ -43,6 +43,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             var result = _client.GetStringAsync(_uriBase + "testContext?message=" + message + "&contextData=" + contextString).Result;
         }
 
+        public void InfoWithParam(string message, object param)
+        {
+            throw new NotImplementedException();
+        }
 
         public void Warn(string message)
         {

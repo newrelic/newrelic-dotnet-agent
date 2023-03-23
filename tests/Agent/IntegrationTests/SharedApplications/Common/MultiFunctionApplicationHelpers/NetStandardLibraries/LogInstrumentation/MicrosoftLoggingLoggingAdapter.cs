@@ -38,6 +38,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             }
         }
 
+        public void InfoWithParam(string message, object param)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Warn(string message)
         {
             logger.LogWarning(message);
