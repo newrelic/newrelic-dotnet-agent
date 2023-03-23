@@ -76,18 +76,11 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
 
             // Message should not be null, but better to be sure
 
-            // weird race condition (?) seems to be happening with structured logging (when MEL/NLog.Web.AspNetCore is involved)
-            // if you log a message that looks like 'My message: {@foo}' and bar = new Foo() { Bar = "thisIsABar" }
             var originalMessage = messageGetter(logEvent);
-            // at this point, originalMessage = 'My message: {@foo}' and logEvent.Message = 'My message: {"Bar":"thisIsABar"}'
 
             var messageSetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(logEvent, "Message");
 
-            // now, logEvent.Message = 'My message: {"Bar":"thisIsABar"}' originalMessage still equals 'My message: {@foo}' (that part makes sense)
-
-            // the next line should be overwriting logEvent.Message with the originalMessage (without foo being correctly JSON serialized)
             messageSetter(originalMessage + " " + formattedMetadata);
-            // but somehow at this point, logEvent.Message looks correct (the linking metadata is inserted, and @foo is properly serialized
 
             var getFormattedMessageFunc = GetFormattedMessageFunc(logEventType);
             var formattedMessage = getFormattedMessageFunc(logEvent);
@@ -113,7 +106,6 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             }
 
             var setFormattedMessage = _setFormattedMessage ??= VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(logEventType, formattedMessageName);
-            //var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
             setFormattedMessage(logEvent, formattedMessage + " " + formattedMetadata);
 
         }
