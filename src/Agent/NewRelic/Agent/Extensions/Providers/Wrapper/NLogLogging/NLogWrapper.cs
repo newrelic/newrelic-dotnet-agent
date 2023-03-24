@@ -91,7 +91,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
                 return;
             }
 
-            if (formattedMessage.Contains("NR-LINKING"))
+            if (LoggingHelpers.ContainsLinkingToken(formattedMessage))
             {
                 return;
             }
