@@ -38,6 +38,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             }
         }
 
+        public void InfoWithParam(string message, object param)
+        {
+            logger.LogInformation(message, param);
+        }
+
         public void Warn(string message)
         {
             logger.LogWarning(message);

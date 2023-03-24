@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixes
 * Reduce redundant collector request data payload logging in the agent log at DEBUG level. [#1449](https://github.com/newrelic/newrelic-dotnet-agent/pull/1449)
+* Fixes [#1459](https://github.com/newrelic/newrelic-dotnet-agent/issues/1459), a regression in NLog local decoration when logging messages with object parameters. [#1480](https://github.com/newrelic/newrelic-dotnet-agent/pull/1480)
 
 ### Other
 * Renamed `NewRelic.Providers.Wrapper.Asp35` to `NewRelic.Providers.Wrapper.AspNet` since this wrapper instruments multiple versions of ASP.NET. Updated installers to remove old `Asp35` artifacts. [#1448](https://github.com/newrelic/newrelic-dotnet-agent/pull/1448)
