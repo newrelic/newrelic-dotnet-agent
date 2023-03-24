@@ -18,5 +18,5 @@ jobs:
           release-type: go
           changelog-path: src/Agent/CHANGELOG.md
           token: ${{ secrets.GITHUB_TOKEN }}
-          changelog-types: '[{"type":"feat","section":"New Features","hidden":false},{"type":"fix","section":"Fixes","hidden":false},{"type":"security","section":"Security","hidden":false}]'
+          changelog-types: '[{"type":"feat","section":"New Features","hidden":false},{"type":"fix","section":"Fixes","hidden":false},{"type":"sec","section":"Security","hidden":false}]'
           default-branch: feature/release-notes-automation
