@@ -19,3 +19,4 @@ jobs:
           changelog-path: src/Agent/CHANGELOG.md
           token: ${{ secrets.GITHUB_TOKEN }}
           changelog-types: '[{"type":"feat","section":"New Features","hidden":false},{"type":"fix","section":"Fixes","hidden":false},{"type":"security","section":"Security","hidden":false}]'
+          default-branch: feature/release-notes-automation
