@@ -26,7 +26,7 @@ changelog=$(echo "$changelog" | sed 's/\//\\\//g')
 # TODO: capture these fields from the "Release Please" results
 feature_summary_list="'Feature 1', 'Feature 2', 'Feature 3'"
 bug_summary_list="'Bug 1', 'Bug 2', 'Bug 3'"
-security_summary_list="'Security 1', 'Feature 2', 'Feature 3'"
+security_summary_list="'Security 1', 'Security 2', 'Security 3'"
 
 # TODO: get checksum content from the deploy artifacts once this is in an action (reference existing action for details)
 checksum_content="This is some sample checksum output!"
