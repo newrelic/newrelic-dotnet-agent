@@ -7,6 +7,7 @@ using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core
 {
+
     public class LinuxNativeMethods : INativeMethods
     {
         private const string DllName = "NewRelicProfiler";

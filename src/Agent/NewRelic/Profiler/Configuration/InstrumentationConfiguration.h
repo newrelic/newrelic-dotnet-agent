@@ -114,6 +114,10 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             {
                 returnValue = true;
             }
+            else if (NewRelic::Profiler::Strings::ContainsCaseInsensitive(instrumentationXmlFilePath, _X("NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml")))
+            {
+                returnValue = true;
+            }
 
             return returnValue;
         }
