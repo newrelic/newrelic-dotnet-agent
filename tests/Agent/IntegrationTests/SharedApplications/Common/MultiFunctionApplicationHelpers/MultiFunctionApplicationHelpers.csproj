@@ -66,13 +66,13 @@
     <PackageReference Include="MySql.Data" Version="6.10.7" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="MySql.Data" Version="8.0.15" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="MySql.Data" Version="8.0.30" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="MySql.Data" Version="8.0.32" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MySql.Data" Version="8.0.32.1" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- MySql.Data .NET/Core references -->
     <PackageReference Include="MySql.Data" Version="6.10.7" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
-    <PackageReference Include ="MySql.Data" Version="8.0.15" Condition="'$(TargetFramework)' == 'net5.0'" />
-    <PackageReference Include ="MySql.Data" Version="8.0.30" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include ="MySql.Data" Version="8.0.32" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="MySql.Data" Version="8.0.15" Condition="'$(TargetFramework)' == 'net5.0'" />
+    <PackageReference Include="MySql.Data" Version="8.0.30" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="MySql.Data" Version="8.0.32.1" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!-- MongoDB.Driver .NET Framework references -->
     <!-- 2.3.0 is the oldest version we support, 2.17.1 is the newest version as of October 2022 -->
@@ -257,10 +257,17 @@
 
   <!-- RestSharp -->
   <ItemGroup>
+    <!-- This version is used to test against our minimum supported version called out in docs, and
+    to test a version older than 106.7.0 which uses different instrumentation code. -->
     <PackageReference Include="RestSharp" Version="105.2.3" Condition="'$(TargetFramework)' == 'net462'" />
+    <!-- This version is used to test against versions greater than 106.7.0 and less than 107.0.0 to
+    test against the restsharp instrumentation for those versions. -->
     <PackageReference Include="RestSharp" Version="106.15.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <!-- Beginning with version 107.0.0 we rely on httpclient instrumentation to capture the appropriate
+    data from RestSharp usage. -->
     <PackageReference Include="RestSharp" Version="107.3.0" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="RestSharp" Version="108.0.3" Condition="'$(TargetFramework)' == 'net481'" />
+    <!-- Latest version of RestSharp to test against. Relies on HttpClient instrumentation. -->
+    <PackageReference Include="RestSharp" Version="109.0.1" Condition="'$(TargetFramework)' == 'net481'" />
     
     <!-- Not testing these versions, but it simplfies the RestSharpExerciser class by not needing if directives -->
     <PackageReference Include="RestSharp" Version="106.6.10" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
@@ -272,6 +279,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
     <ProjectReference Include="..\..\..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
+    <ProjectReference Include="..\..\..\Models\Models.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.csproj" />
     <ProjectReference Include="..\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
   </ItemGroup>

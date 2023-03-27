@@ -1,0 +1,21 @@
+on:
+  push:
+    branches:
+      - feature/release-notes-automation
+
+permissions:
+  contents: write
+  pull-requests: write
+
+name: release-please
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        with:
+          release-type: go
+          changelog-path: src/Agent/CHANGELOG.md
+          token: ${{ secrets.GITHUB_TOKEN }}
+          changelog-types: '[{"type":"feat","section":"New Features","hidden":false},{"type":"fix","section":"Fixes","hidden":false},{"type":"security","section":"Security","hidden":false}]'

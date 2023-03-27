@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+
+    <tracerFactory>
+      <match assemblyName="System.Web" className="System.Web.UI.Page">
+        <exactMethodMatcher methodName="PerformPreInit" />
+      </match>
+      <match assemblyName="System.Web" className="System.Web.Compilation.AssemblyBuilder">
+        <exactMethodMatcher methodName="Compile" />
+      </match>
+      <match assemblyName="System.Web" className="System.Web.Compilation.BuildManager">
+        <exactMethodMatcher methodName="CompileWebFile" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="AspNet.CreateEventExecutionStepsTracer">
+      <match assemblyName="System.Web" className="System.Web.HttpApplication">
+        <exactMethodMatcher methodName="CreateEventExecutionSteps" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="AspNet.ExecuteStepTracer">
+      <match assemblyName="System.Web" className="System.Web.HttpApplication">
+        <exactMethodMatcher methodName="ExecuteStep" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="AspNet.FinishPipelineRequestTracer">
+      <match assemblyName="System.Web" className="System.Web.HttpRuntime">
+        <exactMethodMatcher methodName="FinishPipelineRequest"/>
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="AspNet.OnErrorTracer">
+      <match assemblyName="System.Web" className="System.Web.HttpApplication">
+        <exactMethodMatcher methodName="RecordError"/>
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="AspNet.GetRouteDataTracer">
+      <match assemblyName="System.Web" className="System.Web.Routing.RouteCollection">
+        <exactMethodMatcher methodName="GetRouteData"/>
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="AspNet.CallHandlerTracer">
+      <match assemblyName="System.Web" className="System.Web.HttpApplication+CallHandlerExecutionStep">
+        <exactMethodMatcher methodName="System.Web.HttpApplication.IExecutionStep.Execute" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="AspNet.FilterTracer">
+      <match assemblyName="System.Web" className="System.Web.HttpWriter">
+        <exactMethodMatcher methodName="Filter" />
+        <exactMethodMatcher methodName="FilterIntegrated" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="AspNet.AspPagesTransactionNameTracer">
+      <match assemblyName="System.Web" className="System.Web.UI.Page">
+        <exactMethodMatcher methodName="ProcessRequest" parameters="System.Boolean,System.Boolean" />
+      </match>
+      <match assemblyName="System.Web" className="System.Web.UI.Page">
+        <exactMethodMatcher methodName="AsyncPageBeginProcessRequest" />
+      </match>
+    </tracerFactory>
+
+    <!-- Ignore 404s thrown from the ScriptResourceHandler -->
+    <tracerFactory name="NewRelic.Agent.Core.Tracer.Factories.IgnoreTransactionTracerFactory">
+      <match assemblyName="System.Web.Extensions" className="System.Web.Handlers.ScriptResourceHandler">
+        <exactMethodMatcher methodName="Throw404" />
+      </match>
+    </tracerFactory>
+
+  </instrumentation>
+</extension>

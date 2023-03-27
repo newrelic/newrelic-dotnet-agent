@@ -12,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
 {
     /// <summary>
     /// Test W3C support when chaining multiple requests by using WebRequest.
-    /// Instrumentations occur in this test are Asp35 and HttpWebRequest.
+    /// Instrumentations occur in this test are AspNet and HttpWebRequest.
     /// </summary>
     [NetFrameworkTest]
     public class HttpWebRequestW3CTests : W3CTestBase<RemoteServiceFixtures.FrameworkTracingChainFixture>

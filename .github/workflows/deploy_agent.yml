@@ -29,6 +29,10 @@ on:
         description: 'If "true", will deploy Linux packages to the real apt/yum.newrelic.com. If "false", will deploy to a test repository.'
         required: true
         default: 'false'
+      indexdownloadsite:
+        description: 'If "true", will run the index-download-site job. If "false", will not.'
+        required: true
+        default: 'true'
 
 env:
   DOTNET_NOLOGO: true
@@ -50,14 +54,14 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/build/BuildArtifacts
           if-no-files-found: error
 
       - name: Upload Deploy Tooling Locally
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: deploy-tooling
           path: ${{ github.workspace }}/deploy/
@@ -71,7 +75,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\staging_dir
@@ -121,6 +125,20 @@ jobs:
           }
         shell: pwsh
 
+  index-download-site:
+    needs: deploy-downloadsite
+    name: Rebuild indexes on the download site
+    if: ${{ github.event.inputs.indexdownloadsite == 'true' }}
+    uses: ./.github/workflows/build_download_site_index_files.yml
+    strategy:
+      matrix:
+        prefix: ["dot_net_agent/latest_release", "dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}"]
+    with:
+      prefix: ${{ matrix.prefix }}
+      aws-region: "us-east-1"
+      dry-run: false
+    secrets: inherit
+
   deploy-nuget:
     needs: get-external-artifacts
     if: ${{ github.event.inputs.nuget == 'true' }}
@@ -132,7 +150,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir
@@ -225,13 +243,13 @@ jobs:
         shell: bash
         
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
 
       - name: Download Deploy Tooling
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: deploy-tooling
           path: ${{ github.workspace }}/deploy
@@ -241,7 +259,7 @@ jobs:
         run: |
           filePath="/tmp/gpg.tar.bz2"
           echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
-          echo "::set-output name=filePath::$filePath"
+          echo "filePath=$filePath" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Move Artifacts and GPG Key to Staging Location

@@ -43,7 +43,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mvc3", "src\Agent\NewRelic\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApi2", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\WebApi2\WebApi2.csproj", "{44434B8F-EE14-49B0-855D-6EA0B48048BF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asp35", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Asp35\Asp35.csproj", "{279F8AD0-C959-476F-BD58-3581D9A33238}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNet", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\AspNet\AspNet.csproj", "{279F8AD0-C959-476F-BD58-3581D9A33238}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApi1", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\WebApi1\WebApi1.csproj", "{5BBEEC11-B753-4631-BCDD-43BE73B5CCAC}"
 EndProject
@@ -205,6 +205,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NLogLogging", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\NLogLogging\NLogLogging.csproj", "{3D69B4C9-FD16-461F-95AF-6FCA6EAA914E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StackExchangeRedis2Plus", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\StackExchangeRedis2Plus\StackExchangeRedis2Plus.csproj", "{EC34F023-223D-432F-9401-9C3ED1B75DE4}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.NuGetHelper", "build\NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj", "{94BF8D27-2122-4573-AA79-90B977B40EF3}"
 EndProject
 Global
@@ -508,8 +509,8 @@ Global
 		{94BF8D27-2122-4573-AA79-90B977B40EF3} = {C0BB7A5D-6820-4058-AC47-0111ECC34015}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
 		SolutionGuid = {D8B98070-6B8E-403C-A07F-A3F2E4A3A3D0}
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = FullAgent.vsmdi

@@ -219,6 +219,43 @@ namespace NewRelic.Collections.UnitTests
             Assert.That(ConcurrentPriorityQueue, Has.Exactly(countOfThreads * 3).Items);
         }
 
+        [Test]
+        public void DroppedItemCountIncrementsOnAddWhenSizeIsZero()
+        {
+            ConcurrentPriorityQueue.Resize(0);
+            var _ = ConcurrentPriorityQueue.GetAndResetDroppedItemCount();
+
+            ConcurrentPriorityQueue.Add(new PrioritizedNode<TestModel>(new TestModel()));
+            var updatedDroppedCount = ConcurrentPriorityQueue.GetAndResetDroppedItemCount();
+            Assert.AreEqual(1, updatedDroppedCount);
+
+            var items = new[] { Create(1.0f), Create(1.0f), Create(1.0f), Create(1.0f), };
+            ConcurrentPriorityQueue.Add(items);
+            updatedDroppedCount = ConcurrentPriorityQueue.GetAndResetDroppedItemCount();
+
+            Assert.AreEqual(items.Length, updatedDroppedCount);
+        }
+
+        [Test]
+        public void DroppedItemCountIncrementsOnResizeToZeroWhenItemsAreInQueue()
+        {
+            ConcurrentPriorityQueue.Resize(100);
+            var _ = ConcurrentPriorityQueue.GetAndResetDroppedItemCount();
+
+            var items = new[] { Create(1.0f), Create(1.0f), Create(1.0f), Create(1.0f), };
+            ConcurrentPriorityQueue.Add(items);
+
+            // make sure items weren't dropped on add
+            var afterAddDroppedCount = ConcurrentPriorityQueue.GetAndResetDroppedItemCount();
+            Assert.AreEqual(0, afterAddDroppedCount);
+
+            // resize to 0 and make sure dropped count gets updated
+            ConcurrentPriorityQueue.Resize(0);
+            var updatedDroppedCount = ConcurrentPriorityQueue.GetAndResetDroppedItemCount();
+
+            Assert.AreEqual(items.Length, updatedDroppedCount);
+        }
+
         private static void ExerciseFullApi(IResizableCappedCollection<PrioritizedNode<TestModel>> concurrentPriorityQueue, PrioritizedNode<TestModel>[] eventsToAdd, int countOfThreads)
         {
             // Add the new events

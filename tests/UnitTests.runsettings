@@ -17,8 +17,9 @@
             <DataCollector friendlyName="XPlat code coverage">
                 <Configuration>
                     <Format>cobertura</Format>
-                    <ExcludeByFile>**/tests/**/*</ExcludeByFile>
-                </Configuration>
+                    <Exclude>[NewRelic.OpenTracing.AmazonLambda*]*</Exclude>
+                    <ExcludeByFile>**/tests/**/*, **/NativeMethods.cs</ExcludeByFile>
+                    <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>                </Configuration>
             </DataCollector>
         </DataCollectors>
     </DataCollectionRunSettings>

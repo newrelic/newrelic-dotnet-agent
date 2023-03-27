@@ -144,6 +144,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         void IncrementLogLinesCount(string logLevel);
         void ReportLoggingEventCollected();
         void ReportLoggingEventsSent(int count);
+        void ReportLoggingEventsDropped(int droppedCount);
         void ReportLogForwardingFramework(string logFramework);
         void ReportLogForwardingEnabledWithFramework(string logFramework);
     }
