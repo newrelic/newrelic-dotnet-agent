@@ -28,163 +28,163 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-windows-profiler:
-    needs: cancel-previous-workflow-runs
-    name: Build Windows Profiler
-    runs-on: windows-2019
+  #build-windows-profiler:
+  #  needs: cancel-previous-workflow-runs
+  #  name: Build Windows Profiler
+  #  runs-on: windows-2019
 
-    env:
-      profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
-      profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
-      output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
+  #  env:
+  #    profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
+  #    profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
+  #    output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v3
+  #      with:
+  #        fetch-depth: 0
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.3.1
+  #    - name: Add msbuild to PATH
+  #      uses: microsoft/setup-msbuild@v1.3.1
 
-      - name: Clean out _profilerBuild directory
-        run: |
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-x64-release" -Recurse -Force  -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
-        shell: powershell
+  #    - name: Clean out _profilerBuild directory
+  #      run: |
+  #        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
+  #        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+  #        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+  #        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-x64-release" -Recurse -Force  -ErrorAction SilentlyContinue
+  #        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
+  #      shell: powershell
 
-      - name: Build x64
-        run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
-        shell: powershell
+  #    - name: Build x64
+  #      run: |
+  #        Write-Host "List NuGet Sources"
+  #        dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+  #        Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+  #        MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
+  #      shell: powershell
         
-      - name: Build x86
-        run: |
-          Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
-        shell: powershell
+  #    - name: Build x86
+  #      run: |
+  #        Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+  #        MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
+  #      shell: powershell
 
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: profiler
-          path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
-          if-no-files-found: error
+  #    - name: Archive Artifacts
+  #      uses: actions/upload-artifact@v3
+  #      with:
+  #        name: profiler
+  #        path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
+  #        if-no-files-found: error
 
-  build-linux-x64-profiler:
-    needs: cancel-previous-workflow-runs
-    name: Build Linux x64 Profiler
-    runs-on: ubuntu-22.04
+  #build-linux-x64-profiler:
+  #  needs: cancel-previous-workflow-runs
+  #  name: Build Linux x64 Profiler
+  #  runs-on: ubuntu-22.04
 
-    env:
-      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
-      #<other env vars here>
+  #  env:
+  #    profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+  #    #<other env vars here>
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v3
+  #      with:
+  #        fetch-depth: 0
 
-      - name: Clean out _profilerBuild directory
-        run: |
-          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
-        shell: bash
+  #    - name: Clean out _profilerBuild directory
+  #      run: |
+  #        rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+  #        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
+  #        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
+  #        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
+  #        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
+  #      shell: bash
 
-      - name: Build Linux Profler
-        run: |
-          cd ${{ env.profiler_path }}
-          docker-compose build build
-          docker-compose run build
-        shell: bash
+  #    - name: Build Linux Profler
+  #      run: |
+  #        cd ${{ env.profiler_path }}
+  #        docker-compose build build
+  #        docker-compose run build
+  #      shell: bash
 
-      - name: Move Profiler to staging folder
-        run: |
-          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/
-          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
-        shell: bash
+  #    - name: Move Profiler to staging folder
+  #      run: |
+  #        mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/
+  #        mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
+  #      shell: bash
 
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: profiler
-          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
-          if-no-files-found: error
+  #    - name: Archive Artifacts
+  #      uses: actions/upload-artifact@v3
+  #      with:
+  #        name: profiler
+  #        path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+  #        if-no-files-found: error
 
-  build-linux-arm64-profiler:
-    needs: cancel-previous-workflow-runs
-    name: Build Linux ARM64 Profiler
-    runs-on: ubuntu-22.04
+  #build-linux-arm64-profiler:
+  #  needs: cancel-previous-workflow-runs
+  #  name: Build Linux ARM64 Profiler
+  #  runs-on: ubuntu-22.04
     
-    env:
-      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+  #  env:
+  #    profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
     
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v3
+  #      with:
+  #        fetch-depth: 0
       
-      - name: Clean out _profilerBuild directory
-        run: |
-          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
-          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
-        shell: bash
+  #    - name: Clean out _profilerBuild directory
+  #      run: |
+  #        rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+  #        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
+  #        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
+  #        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
+  #        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
+  #      shell: bash
         
-      - uses: uraimo/run-on-arch-action@v2.0.5
-        name: Run commands
-        id: runcmd
-        with:
-          arch: aarch64
-          distro: ubuntu18.04
-          githubToken: ${{ github.token }}
-          install: |
-            apt-get update -q -y
-            apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
-            echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
-            wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-            mkdir /root/git
-            cd /root/git
-            git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
-            curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
-            chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
-            ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
-            rm /usr/bin/cc || true
-            ln -s /usr/bin/clang-3.9 /usr/bin/cc
-            rm /usr/bin/c++ || true
-            ln -s /usr/bin/clang++-3.9 /usr/bin/c++
-          dockerRunArgs: |
-            --volume "${{ env.profiler_path }}:/profiler"
-          run: |
-            cd /profiler
-            chmod 777 ./linux/build_profiler.sh
-            ./linux/build_profiler.sh
+  #    - uses: uraimo/run-on-arch-action@v2.0.5
+  #      name: Run commands
+  #      id: runcmd
+  #      with:
+  #        arch: aarch64
+  #        distro: ubuntu18.04
+  #        githubToken: ${{ github.token }}
+  #        install: |
+  #          apt-get update -q -y
+  #          apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
+  #          echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
+  #          wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+  #          mkdir /root/git
+  #          cd /root/git
+  #          git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
+  #          curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
+  #          chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
+  #          ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
+  #          rm /usr/bin/cc || true
+  #          ln -s /usr/bin/clang-3.9 /usr/bin/cc
+  #          rm /usr/bin/c++ || true
+  #          ln -s /usr/bin/clang++-3.9 /usr/bin/c++
+  #        dockerRunArgs: |
+  #          --volume "${{ env.profiler_path }}:/profiler"
+  #        run: |
+  #          cd /profiler
+  #          chmod 777 ./linux/build_profiler.sh
+  #          ./linux/build_profiler.sh
             
-      - name: Move Profiler to staging folder
-        run: |
-          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/
-          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/libNewRelicProfiler.so
-        shell: bash
+  #    - name: Move Profiler to staging folder
+  #      run: |
+  #        mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/
+  #        mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/libNewRelicProfiler.so
+  #      shell: bash
 
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: profiler
-          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
-          if-no-files-found: error
+  #    - name: Archive Artifacts
+  #      uses: actions/upload-artifact@v3
+  #      with:
+  #        name: profiler
+  #        path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+  #        if-no-files-found: error
 
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-test-fullagent-msi:
@@ -220,7 +220,7 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
         shell: powershell
 
-      - name: Download Profiler Artifacts Before Agent Build
+      - name: Download Profiler Artifacts From Latest Build .NET Agent Profiler workflow execution
         uses: actions/download-artifact@v3
         with:
           name: profiler
@@ -318,60 +318,60 @@ jobs:
           path: ${{ github.workspace }}\src\AwsLambda\AwsLambdaOpenTracer\bin\Release\netstandard2.0-ILRepacked
           if-no-files-found: error
 
-      - name: Unit Tests
-        run: |
-          # Write-Host ${{ env.scripts_path }}\DotNet-Agent-CI-UnitTests.ps1
-          # ${{ env.scripts_path }}\DotNet-Agent-CI-UnitTests.ps1
-          Write-Host "Creating TestResults directory to temporarily get around nunit limitation"
-          mkdir ${{ github.workspace }}\TestResults
+      #- name: Unit Tests
+      #  run: |
+      #    # Write-Host ${{ env.scripts_path }}\DotNet-Agent-CI-UnitTests.ps1
+      #    # ${{ env.scripts_path }}\DotNet-Agent-CI-UnitTests.ps1
+      #    Write-Host "Creating TestResults directory to temporarily get around nunit limitation"
+      #    mkdir ${{ github.workspace }}\TestResults
 
-          $testDllPatterns = @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll')
+      #    $testDllPatterns = @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll')
 
-          Write-Host "Finding files for Framework NUnit tests"
-          $frameworkTestPaths = @('Tests\Agent\UnitTests', 'Tests\NewRelic.Core.Tests')
-          $frameworkTestFileNames = (Get-ChildItem -Recurse -Path $frameworkTestPaths -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release') } | Select Name -Unique)
-          $frameworkFiles = (Get-ChildItem -Recurse -Path $frameworkTestPaths -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release')  })
+      #    Write-Host "Finding files for Framework NUnit tests"
+      #    $frameworkTestPaths = @('Tests\Agent\UnitTests', 'Tests\NewRelic.Core.Tests')
+      #    $frameworkTestFileNames = (Get-ChildItem -Recurse -Path $frameworkTestPaths -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release') } | Select Name -Unique)
+      #    $frameworkFiles = (Get-ChildItem -Recurse -Path $frameworkTestPaths -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release')  })
 
-          Write-Host "Building file list for Framework NUnit tests"
-          $frameworkUnitTestPaths = @()
-          for ($i = 0; $i -lt $frameworkTestFileNames.Length; $i++)
-          { $frameworkFiles | ForEach-Object { if ($_.Name -eq $frameworkTestFileNames[$i].Name) { $frameworkUnitTestPaths += $_.FullName; Continue } } }
+      #    Write-Host "Building file list for Framework NUnit tests"
+      #    $frameworkUnitTestPaths = @()
+      #    for ($i = 0; $i -lt $frameworkTestFileNames.Length; $i++)
+      #    { $frameworkFiles | ForEach-Object { if ($_.Name -eq $frameworkTestFileNames[$i].Name) { $frameworkUnitTestPaths += $_.FullName; Continue } } }
 
-          $frameworkUnitTestPaths | ForEach-Object { $_ }
-          Write-Host "Executing: vstest.console.exe " $frameworkUnitTestPaths " --parallel --logger:'html;LogFileName=agent-results.html'"
-          vstest.console.exe $frameworkUnitTestPaths --parallel --logger:"html;LogFileName=agent-results.html"
-          # & '.\Build\Tools\NUnit-Console\nunit3-console.exe ' $frameworkUnitTestPaths '--result=TestResults\NUnit2-results.xml;format=nunit2'
+      #    $frameworkUnitTestPaths | ForEach-Object { $_ }
+      #    Write-Host "Executing: vstest.console.exe " $frameworkUnitTestPaths " --parallel --logger:'html;LogFileName=agent-results.html'"
+      #    vstest.console.exe $frameworkUnitTestPaths --parallel --logger:"html;LogFileName=agent-results.html"
+      #    # & '.\Build\Tools\NUnit-Console\nunit3-console.exe ' $frameworkUnitTestPaths '--result=TestResults\NUnit2-results.xml;format=nunit2'
 
-          if ($LastExitCode -ne 0)
-          { exit $LastExitCode }
+      #    if ($LastExitCode -ne 0)
+      #    { exit $LastExitCode }
 
-          Write-Host "Finding files for .NET Core NUnit tests"
-          $netCoreTestFileNames = (Get-ChildItem -Recurse -Path 'Tests\AwsLambda\UnitTests' -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release') } | Select Name -Unique)
-          $netCoreFiles = (Get-ChildItem -Recurse -Path 'Tests\AwsLambda\UnitTests' -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release')  })
+      #    Write-Host "Finding files for .NET Core NUnit tests"
+      #    $netCoreTestFileNames = (Get-ChildItem -Recurse -Path 'Tests\AwsLambda\UnitTests' -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release') } | Select Name -Unique)
+      #    $netCoreFiles = (Get-ChildItem -Recurse -Path 'Tests\AwsLambda\UnitTests' -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release')  })
 
-          Write-Host "Building file list for .NET Core NUnit tests"
-          $netCoreUnitTestPaths = @()
+      #    Write-Host "Building file list for .NET Core NUnit tests"
+      #    $netCoreUnitTestPaths = @()
 
-          for ($i = 0; $i -lt $netCoreTestFileNames.Length; $i++)
-          { $netCoreFiles | ForEach-Object { if ($_.Name -eq $netCoreTestFileNames[$i].Name) { $netCoreUnitTestPaths += $_.FullName; Continue } } }
+      #    for ($i = 0; $i -lt $netCoreTestFileNames.Length; $i++)
+      #    { $netCoreFiles | ForEach-Object { if ($_.Name -eq $netCoreTestFileNames[$i].Name) { $netCoreUnitTestPaths += $_.FullName; Continue } } }
 
-          Write-Host "Executing .NET Core NUnit Tests:"
-          $netCoreUnitTestPaths | ForEach-Object { $_ }
+      #    Write-Host "Executing .NET Core NUnit Tests:"
+      #    $netCoreUnitTestPaths | ForEach-Object { $_ }
 
-          Write-Host "Executing: dotnet test " $netCoreUnitTestPaths " --parallel --logger:'html;LogFileName=lambda-results.html'"
-          dotnet test $netCoreUnitTestPaths --parallel --logger:"html;LogFileName=lambda-results.html"
+      #    Write-Host "Executing: dotnet test " $netCoreUnitTestPaths " --parallel --logger:'html;LogFileName=lambda-results.html'"
+      #    dotnet test $netCoreUnitTestPaths --parallel --logger:"html;LogFileName=lambda-results.html"
 
-          if ($LastExitCode -ne 0)
-          { exit $LastExitCode }
-        shell: powershell
+      #    if ($LastExitCode -ne 0)
+      #    { exit $LastExitCode }
+      #  shell: powershell
 
-      - name: Archive Test Results
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: ${{ github.workspace }}\TestResults
-          if-no-files-found: error
+      #- name: Archive Test Results
+      #  if: ${{ always() }}
+      #  uses: actions/upload-artifact@v3
+      #  with:
+      #    name: test-results
+      #    path: ${{ github.workspace }}\TestResults
+      #    if-no-files-found: error
 
   build-integration-tests:
     needs: build-test-fullagent-msi
@@ -504,7 +504,7 @@ jobs:
           path: src/Agent
 
       - name: Download Integration Test Artifacts
-        uses: actions/download-artifact/@v2
+        uses: actions/download-artifact/@v3
         with:
           name: integrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
@@ -663,7 +663,7 @@ jobs:
           path: src/Agent
 
       - name: Download Unbounded Integration Test Artifacts
-        uses: actions/download-artifact/@v2
+        uses: actions/download-artifact/@v3
         with:
           name: unboundedintegrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
