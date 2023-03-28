@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.9.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.8.0...v10.9.0) (2023-03-28)
+
+
+### New Features
+
+* Add commented out workflow to get release checksums ([68a7ee7](https://github.com/newrelic/newrelic-dotnet-agent/commit/68a7ee76f83fcf024dd8ec1ff7d07a38a7f113e9))
+* add Supportability/Logging/Forwarding/Dropped metric ([#1470](https://github.com/newrelic/newrelic-dotnet-agent/issues/1470)) ([89dd33a](https://github.com/newrelic/newrelic-dotnet-agent/commit/89dd33a6febc129c5051136226243845c606ca70))
+* Add this test feature ([fb14796](https://github.com/newrelic/newrelic-dotnet-agent/commit/fb14796f9a3430d0dc9b12cd884077f6bbc03df2))
+* CLI test ([f3e37d0](https://github.com/newrelic/newrelic-dotnet-agent/commit/f3e37d0ced59164248a94a2234ae0d125d89f4b1))
+* CLI test 2\n\n* Some other additional info ([4083035](https://github.com/newrelic/newrelic-dotnet-agent/commit/4083035dc227e255ef52018777b8ac00f6943a47))
+* Create workflow to get release checksums ([#1475](https://github.com/newrelic/newrelic-dotnet-agent/issues/1475)) ([1b0dd92](https://github.com/newrelic/newrelic-dotnet-agent/commit/1b0dd9251647aa8a51e2417f5413d14d52d3d60b))
+* not a real feature ([15acb0b](https://github.com/newrelic/newrelic-dotnet-agent/commit/15acb0b58ceb47c891083f49c1e05b0a9c61f272))
+* Second test commit ([805086b](https://github.com/newrelic/newrelic-dotnet-agent/commit/805086bad55c4580e5699cc9ae021638d13fa3a2))
+* Test commit ([805086b](https://github.com/newrelic/newrelic-dotnet-agent/commit/805086bad55c4580e5699cc9ae021638d13fa3a2))
+* Testing Ruby-style workflow ([bf5cc87](https://github.com/newrelic/newrelic-dotnet-agent/commit/bf5cc877ed014ccb493348265c09613089824221))
+* Try another method ([410c32d](https://github.com/newrelic/newrelic-dotnet-agent/commit/410c32d2dad54bb22fc9dbb819b284caa1edf7f2))
+* Update existing test feature ([f54a0da](https://github.com/newrelic/newrelic-dotnet-agent/commit/f54a0daefe8f8ca04fea73c451831a71693ce204))
+
 ## [Unreleased]
 
 ### New Features
