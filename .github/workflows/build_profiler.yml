@@ -1,13 +1,13 @@
 name: Build .NET Agent Profiler
 
-# Does not run on PUSH since we have already ran all the test
 on:
-  pull_request:
-    branches: 
-    - main
-    - 'feature/**'
-  release:
-    types: [ published ]
+  # temporarily disable auto execution
+  #pull_request:
+  #  branches: 
+  #  - main
+  #  - 'feature/**'
+  #release:
+  #  types: [ published ]
   workflow_dispatch:
   #schedule:
   #  - cron:  '0 9 * * *'
