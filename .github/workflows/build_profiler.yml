@@ -13,7 +13,7 @@ on:
   #schedule:
   #  - cron:  '0 9 * * *'
 
-# only allow one instance of this job to be running per PR or branch
+# only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -167,7 +167,7 @@ jobs:
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
         
-      - uses: uraimo/run-on-arch-action@v2.0.5
+      - uses: uraimo/run-on-arch-action@v2.5.0
         name: Run commands
         id: runcmd
         with:

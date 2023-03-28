@@ -12,6 +12,11 @@ on:
   schedule:
     - cron:  '0 9 * * *'
 
+# only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   scripts_path: ${{ github.workspace }}\build\scripts
   tools_path: ${{ github.workspace }}\build\Tools
@@ -19,17 +24,7 @@ env:
 
 jobs:
 
-  cancel-previous-workflow-runs:
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || ( github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v') )
-    name: Cancel Previous Runs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: rokroskar/workflow-run-cleanup-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   #build-windows-profiler:
-  #  needs: cancel-previous-workflow-runs
   #  name: Build Windows Profiler
   #  runs-on: windows-2019
 
@@ -78,7 +73,6 @@ jobs:
   #        if-no-files-found: error
 
   #build-linux-x64-profiler:
-  #  needs: cancel-previous-workflow-runs
   #  name: Build Linux x64 Profiler
   #  runs-on: ubuntu-22.04
 
@@ -122,7 +116,6 @@ jobs:
   #        if-no-files-found: error
 
   #build-linux-arm64-profiler:
-  #  needs: cancel-previous-workflow-runs
   #  name: Build Linux ARM64 Profiler
   #  runs-on: ubuntu-22.04
     
@@ -144,7 +137,7 @@ jobs:
   #        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
   #      shell: bash
         
-  #    - uses: uraimo/run-on-arch-action@v2.0.5
+  #    - uses: uraimo/run-on-arch-action@v2.5.0
   #      name: Run commands
   #      id: runcmd
   #      with:
@@ -188,8 +181,7 @@ jobs:
 
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-test-fullagent-msi:
-    needs: [ build-windows-profiler, build-linux-x64-profiler, build-linux-arm64-profiler ]
-    name: Build and Test FullAgent and MSIInstaller
+    name: Build FullAgent and MSIInstaller
     runs-on: windows-2022
 
     env:
@@ -208,8 +200,8 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.3.1
 
-      - name: Setup VSTest Path
-        uses: darenm/Setup-VSTest@v1
+      #- name: Setup VSTest Path
+      #  uses: darenm/Setup-VSTest@v1
 
       - name: Clean out _profilerBuild directory
         run: |
@@ -220,7 +212,7 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
         shell: powershell
 
-      - name: Download Profiler Artifacts From Latest Build .NET Agent Profiler workflow execution
+      - name: Download Profiler Artifacts From Latest Execution of Build .NET Agent Profiler workflow
         uses: actions/download-artifact@v3
         with:
           name: profiler
@@ -585,7 +577,7 @@ jobs:
           path: src/Agent
 
       - name: Run test commands
-        uses: uraimo/run-on-arch-action@v2.0.5
+        uses: uraimo/run-on-arch-action@v2.5.0
         with:
           arch: aarch64
           distro: ubuntu18.04
