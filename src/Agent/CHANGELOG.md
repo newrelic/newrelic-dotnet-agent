@@ -6,7 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### New Errors inbox features
+* **User tracking**: You can now see the number of users impacted by an error group. Identify the end user with the setUser method.
+* **Error fingerprint**: Are your error occurrences grouped poorly? Set your own error fingerprint via a callback function.
+
 ### New Features
+* Agent API now supports associating a User Id with the current transaction. See our [ITransaction API documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/itransaction/#setuserid) for more details.  [#1420](https://github.com/newrelic/newrelic-dotnet-agent/pull/1420)
+* Agent API now supports providing a callback to determine what error group an exception should be grouped under. See our [SetErrorGroupCallback API documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/seterrorgroupcallback-net-agent-api/) for more details. [#1434](https://github.com/newrelic/newrelic-dotnet-agent/pull/1434)
 * Adds the `Supportability/Logging/Forwarding/Dropped` metric to track the number of log messages that were dropped due to capacity constraints. [#1470](https://github.com/newrelic/newrelic-dotnet-agent/pull/1470)
 
 ### Fixes
@@ -24,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 * Fixes [#1353](https://github.com/newrelic/newrelic-dotnet-agent/issues/1353) so that out-of-process .Net Core web applications are instrumented according to the <applicationPools> setting in newrelic.config. [1392](https://github.com/newrelic/newrelic-dotnet-agent/pull/1392)
 * Update NLog to improve local log decoration coverage. [#1393](https://github.com/newrelic/newrelic-dotnet-agent/pull/1393)
+* Fixes [#1353](https://github.com/newrelic/newrelic-dotnet-agent/issues/1353) so that out-of-process .Net Core web applications are instrumented according to the <applicationPools> setting in newrelic.config. [1392](https://github.com/newrelic/newrelic-dotnet-agent/pull/1392)
 
 ## [10.7.0] - 2023-02-14
 

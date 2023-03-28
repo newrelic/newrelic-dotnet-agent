@@ -307,6 +307,10 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("error_collector.ignore_messages")]
         public IDictionary<string, IEnumerable<string>> IgnoreErrorMessagesForAgentSettings => _configuration.IgnoreErrorMessagesForAgentSettings;
 
+        // Serializing this Func doesn't provide us with more information than the supportability metrics
+        [JsonIgnore()]
+        public Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback => _configuration.ErrorGroupCallback;
+
         [JsonProperty("agent.request_headers_map")]
         public Dictionary<string, string> RequestHeadersMap => _configuration.RequestHeadersMap;
                 

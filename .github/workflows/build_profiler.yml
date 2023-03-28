@@ -1,5 +1,6 @@
 name: Build .NET Agent Profiler
 
+# Controls when the workflow will run
 on:
   # temporarily disable auto execution
   #pull_request:
@@ -207,7 +208,7 @@ jobs:
             cd /profiler
             chmod 777 ./linux/build_profiler.sh
             ./linux/build_profiler.sh
-            
+
       - name: Move Profiler to staging folder
         run: |
           mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/

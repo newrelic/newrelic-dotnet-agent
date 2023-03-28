@@ -24,5 +24,9 @@ namespace NewRelic.Api.Agent
         }
 
         public ISpan CurrentSpan => _noOpSpan;
+
+        public void SetUserId(string userid)
+        {
+        }
     }
 }

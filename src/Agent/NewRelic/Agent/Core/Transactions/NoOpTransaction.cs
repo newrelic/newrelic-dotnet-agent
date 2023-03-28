@@ -285,5 +285,10 @@ namespace NewRelic.Agent.Core.Transactions
             // no log here since this could be called many thousands of times.
             return Segment.NoOpSegment;
         }
+
+        public void SetUserId(string userid)
+        {
+            return;
+        }
     }
 }

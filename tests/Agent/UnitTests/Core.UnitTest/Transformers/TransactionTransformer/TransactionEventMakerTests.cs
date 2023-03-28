@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
@@ -189,7 +190,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         private ErrorData MakeErrorData()
         {
-            return new ErrorData("message", "type", "stacktrace", DateTime.UtcNow, new ReadOnlyDictionary<string, object>(new Dictionary<string, object>() { { "fiz", "baz" } }), false);
+            return new ErrorData("message", "type", "stacktrace", DateTime.UtcNow, new ReadOnlyDictionary<string, object>(new Dictionary<string, object>() { { "fiz", "baz" } }), false, null);
         }
 
         private const DistributedTracingParentType Type = DistributedTracingParentType.App;
