@@ -559,7 +559,7 @@ namespace NewRelic.Agent.Core.Transactions
                 {
                     return headers;
                 }
-                return headers.Concat(new[] { new KeyValuePair<string, string>(Constants.DistributedTracePayloadKey, payload.HttpSafe()) });
+                return headers.Concat(new[] { new KeyValuePair<string, string>(Constants.DistributedTracePayloadKeyAllLower, payload.HttpSafe()) });
             }
 
             // CAT

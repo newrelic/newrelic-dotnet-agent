@@ -51,6 +51,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 : queueNameOrRoutingKey;
         }
 
+        // TODO consider removing this
         public static bool TryGetPayloadFromHeaders(Dictionary<string, object> messageHeaders, IAgent agent,
             out string serializedPayload)
         {

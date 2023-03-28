@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Text;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
@@ -14,8 +13,11 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
     {
         /// <summary>
         /// This is the key-part that the agent recognizes when trying to find a DistributedTracePayload, typically passed as a KeyValuePair in the header of a request.
+        /// Per the agent specs, the agent should accept the following variants of the header key name: newrelic, NEWRELIC, Newrelic
         /// </summary>
-        public const string DistributedTracePayloadKey = "newrelic";
+        public const string DistributedTracePayloadKeyAllLower = "newrelic";
+        public const string DistributedTracePayloadKeyAllUpper = "NEWRELIC";
+        public const string DistributedTracePayloadKeySingleUpper = "Newrelic";
 
         public const string TraceParentHeaderKey = "traceparent";
 

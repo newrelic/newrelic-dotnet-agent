@@ -68,11 +68,11 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 var timestamp = DateTime.UtcNow;
                 if (!_configurationService.Configuration.ExcludeNewrelicHeader)
                 {
-                    //set "Newrelic" header
+                    //set "newrelic" header
                     var distributedTracePayload = GetOutboundHeader(DistributedTraceHeaderType.NewRelic, transaction, timestamp);
                     if (!string.IsNullOrWhiteSpace(distributedTracePayload))
                     {
-                        setter(carrier, Constants.DistributedTracePayloadKey, distributedTracePayload);
+                        setter(carrier, Constants.DistributedTracePayloadKeyAllLower, distributedTracePayload);
                     }
                 }
 

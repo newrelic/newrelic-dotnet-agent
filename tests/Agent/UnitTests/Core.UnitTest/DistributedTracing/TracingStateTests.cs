@@ -30,8 +30,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
         //example ValidTracestate: "33@nr=0-0-33-5043-27ddd2d8890283b4-5569065a5b1313bd-1-1.23456-1518469636025,dd=YzRiMTIxODk1NmVmZTE4ZQ,44@nr=0-0-55-5043-1238890283aasdfs-4569065a5b131bbg-1-1.23456-1518469636020";
         private static readonly string ValidTracestate = TrustKey + "@nr=0-" + (int)Type + "-" + AccountId + "-" + AppId + "-" + Guid + "-" + TransactionId + "-1-" + Priority + "-" + Timestamp.ToUnixTimeMilliseconds() + ",dd=YzRiMTIxODk1NmVmZTE4ZQ,44@nr=0-0-55-5043-1238890283aasdfs-4569065a5b131bbg-1-1.23456-1518469636020";
 
-        private const string NewRelicPayloadHeaderName = "newrelic";
-
         // v:[2,5]
         private const string NewRelicPayloadWithUnsupportedVersion = "{ \"v\":[2,5],\"d\":{\"ty\":\"HTTP\",\"ac\":\"accountId\",\"ap\":\"appId\",\"tr\":\"traceId\",\"pr\":0.65,\"sa\":true,\"ti\":0,\"tk\":\"trustKey\",\"tx\":\"transactionId\",\"id\":\"guid\"}}";
         // ti:0
@@ -41,14 +39,16 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
         #region NewRelic Payload
 
-        [Test]
-        public void AcceptDistributedTraceHeadersHydratesValidNewRelicPayload()
+        [TestCase(Constants.DistributedTracePayloadKeyAllLower)]
+        [TestCase(Constants.DistributedTracePayloadKeyAllUpper)]
+        [TestCase(Constants.DistributedTracePayloadKeySingleUpper)]
+        public void AcceptDistributedTraceHeadersHydratesValidNewRelicPayload(string headerName)
         {
             var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
 
             var headers = new Dictionary<string, string>()
             {
-                { NewRelicPayloadHeaderName, encodedPayload }
+                { headerName, encodedPayload }
             };
 
             var tracingState = TracingState.AcceptDistributedTraceHeaders(carrier: headers, getter: GetHeader, transportType: TransportType.AMQP, agentTrustKey: TrustKey, transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)));
@@ -66,12 +66,14 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Assert.IsTrue(tracingState.TransportDuration > TimeSpan.Zero, $"TransportDuration should not be Zero");
         }
 
-        [Test]
-        public void AcceptDistributedTraceHeadersPopulatesErrorsIfNull()
+        [TestCase(Constants.DistributedTracePayloadKeyAllLower)]
+        [TestCase(Constants.DistributedTracePayloadKeyAllUpper)]
+        [TestCase(Constants.DistributedTracePayloadKeySingleUpper)]
+        public void AcceptDistributedTraceHeadersPopulatesErrorsIfNull(string headerName)
         {
             var headers = new Dictionary<string, string>()
             {
-                { NewRelicPayloadHeaderName, null }
+                { headerName, null }
             };
 
             var tracingState = TracingState.AcceptDistributedTraceHeaders(carrier: headers, getter: GetHeader, transportType: TransportType.AMQP, agentTrustKey: TrustKey, transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)));
@@ -91,14 +93,16 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Assert.IsTrue(tracingState.IngestErrors.Contains(IngestErrorType.NullPayload), "TracingState IngestErrors should contain NullPayload");
         }
 
-        [Test]
-        public void AcceptDistributedTraceHeadersPopulatesErrorsIfUnsupportedVersion()
+        [TestCase(Constants.DistributedTracePayloadKeyAllLower)]
+        [TestCase(Constants.DistributedTracePayloadKeyAllUpper)]
+        [TestCase(Constants.DistributedTracePayloadKeySingleUpper)]
+        public void AcceptDistributedTraceHeadersPopulatesErrorsIfUnsupportedVersion(string headerName)
         {
             var encodedPayload = Strings.Base64Encode(NewRelicPayloadWithUnsupportedVersion);
 
             var headers = new Dictionary<string, string>()
             {
-                { NewRelicPayloadHeaderName, encodedPayload }
+                { headerName, encodedPayload }
             };
 
             var tracingState = TracingState.AcceptDistributedTraceHeaders(carrier: headers, getter: GetHeader, transportType: TransportType.AMQP, agentTrustKey: TrustKey, transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)));
@@ -118,14 +122,16 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Assert.IsTrue(tracingState.IngestErrors.Contains(IngestErrorType.Version), "TracingState IngestErrors should contain Version error.");
         }
 
-        [Test]
-        public void AcceptDistributedTraceHeadersPopulatesErrorsIfInvalidTimestamp()
+        [TestCase(Constants.DistributedTracePayloadKeyAllLower)]
+        [TestCase(Constants.DistributedTracePayloadKeyAllUpper)]
+        [TestCase(Constants.DistributedTracePayloadKeySingleUpper)]
+        public void AcceptDistributedTraceHeadersPopulatesErrorsIfInvalidTimestamp(string headerName)
         {
             var encodedPayload = Strings.Base64Encode(NewRelicPayloadWithInvalidTimestamp);
 
             var headers = new Dictionary<string, string>()
             {
-                { NewRelicPayloadHeaderName, encodedPayload }
+                { headerName, encodedPayload }
             };
 
             var tracingState = TracingState.AcceptDistributedTraceHeaders(carrier: headers, getter: GetHeader, transportType: TransportType.AMQP, agentTrustKey: TrustKey, transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)));
@@ -145,14 +151,16 @@ namespace NewRelic.Agent.Core.DistributedTracing
             Assert.IsTrue(tracingState.IngestErrors.Contains(IngestErrorType.ParseException), "TracingState IngestErrors should contain ParseException.");
         }
 
-        [Test]
-        public void AcceptDistributedTraceHeadersPopulatesErrorsIfNotTraceable()
+        [TestCase(Constants.DistributedTracePayloadKeyAllLower)]
+        [TestCase(Constants.DistributedTracePayloadKeyAllUpper)]
+        [TestCase(Constants.DistributedTracePayloadKeySingleUpper)]
+        public void AcceptDistributedTraceHeadersPopulatesErrorsIfNotTraceable(string headerName)
         {
             var encodedPayload = Strings.Base64Encode(NewRelicPayloadUntraceable);
 
             var headers = new Dictionary<string, string>()
             {
-                { NewRelicPayloadHeaderName, encodedPayload }
+                { headerName, encodedPayload }
             };
 
             var tracingState = TracingState.AcceptDistributedTraceHeaders(carrier: headers, getter: GetHeader, transportType: TransportType.Other, agentTrustKey: TrustKey, transactionStartTime: DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(1)));
@@ -371,17 +379,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
         private static IEnumerable<string> GetHeader(Dictionary<string, string> carrier, string key)
         {
-            var headerValues = new List<string>();
-
-            foreach (var item in carrier)
-            {
-                if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-                {
-                    headerValues.Add(item.Value);
-                }
-            }
-
-            return headerValues;
+            return carrier.ContainsKey(key) ? new List<string>() { carrier[key] } : new List<string>();
         }
 
         #endregion helpers

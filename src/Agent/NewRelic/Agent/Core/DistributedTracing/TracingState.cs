@@ -242,8 +242,19 @@ namespace NewRelic.Agent.Core.DistributedTracing
             // if traceparent was present (regardless if valid), ignore newrelic header
             if (!tracingState._traceContext.TraceparentPresent)
             {
-                var newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKey);
-                if (newRelicHeaderList?.Count() > 0) // the Newrelic header key was present
+                // Search for the following header keys in this order: "newrelic", "NEWRELIC", "Newrelic"
+                // If the getter function makes a case-insensitive search it will find any of the three
+                // variants on the first call.
+                var newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllLower);
+                if (newRelicHeaderList?.Any() == false)
+                {
+                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeyAllUpper);
+                }
+                if (newRelicHeaderList?.Any() == false)
+                {
+                    newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKeySingleUpper);
+                }
+                if (newRelicHeaderList?.Any() == true) // a NR header key was present
                 {
                     tracingState._newRelicPayload = DistributedTracePayload.TryDecodeAndDeserializeDistributedTracePayload(newRelicHeaderList.FirstOrDefault(), agentTrustKey, errors);
                     tracingState.NewRelicPayloadWasAccepted = tracingState._newRelicPayload != null ? true : false;

@@ -225,6 +225,7 @@ namespace NewRelic.Agent.Core
 
         #region inbound CAT request, outbound CAT response
 
+        // TODO consider removing this, it's only referenced by test code and one method with no references in RabbitMQ instrumentation
         public bool TryGetDistributedTracePayloadFromHeaders<T>(IEnumerable<KeyValuePair<string, T>> headers, out T payload) where T : class
         {
             payload = null;
@@ -232,7 +233,7 @@ namespace NewRelic.Agent.Core
             {
                 foreach (var header in headers)
                 {
-                    if (header.Key.Equals(Constants.DistributedTracePayloadKey, StringComparison.OrdinalIgnoreCase))
+                    if (header.Key.Equals(Constants.DistributedTracePayloadKeyAllLower, StringComparison.OrdinalIgnoreCase))
                     {
                         payload = header.Value;
                         return true;
