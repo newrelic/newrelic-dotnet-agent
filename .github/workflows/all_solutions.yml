@@ -454,7 +454,7 @@ jobs:
           if-no-files-found: error
 
   run-integration-tests:
-    needs: [build-integration-tests]
+    #needs: [build-integration-tests]
     name: Run IntegrationTests
     runs-on: windows-2022
     strategy:
