@@ -99,6 +99,7 @@ namespace NewRelic.Agent.Configuration
         IDictionary<string, IEnumerable<string>> IgnoreErrorsConfiguration { get; }
         IEnumerable<string> IgnoreErrorClassesForAgentSettings { get; }
         IDictionary<string, IEnumerable<string>> IgnoreErrorMessagesForAgentSettings { get; }
+        Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback { get; }
         Dictionary<string, string> RequestHeadersMap { get; }
         string EncodingKey { get; }
         string EntityGuid { get; }

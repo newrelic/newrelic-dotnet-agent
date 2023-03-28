@@ -296,5 +296,54 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
             Assert.AreEqual(result, valueB);
         }
+
+        #region User Tracking Tests
+        [Test]
+        public void UserTracking_NoEndUserIdAttributeIfNotSet()
+        {
+            var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
+
+            var userAttributes = immutableTransactionMetadata.UserAndRequestAttributes.ToDictionary();
+            var hasUserIdAttribute = userAttributes.TryGetValue(_attribDefs.EndUserId.Name, out var userIdValue);
+            Assert.False(hasUserIdAttribute);
+        }
+
+        [Test]
+        [TestCase("CustomUserId", true)]
+        [TestCase("", false)]
+        [TestCase(" ", false)]
+        [TestCase(null, false)]
+
+        public void UserTracking_ShouldAddEndUserIdAttributeWhenNotNullOrWhitespace(string expectedUserId, bool endUserAttributeShouldExist)
+        {
+            _transaction.SetUserId(expectedUserId);
+
+            var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
+            var userAttributes = immutableTransactionMetadata.UserAndRequestAttributes.ToDictionary();
+            var hasUserIdAttribute = userAttributes.TryGetValue(_attribDefs.EndUserId.Name, out var userIdValue);
+
+            Assert.AreEqual(endUserAttributeShouldExist, hasUserIdAttribute);
+            if (endUserAttributeShouldExist)
+            {
+                Assert.AreEqual(expectedUserId, userIdValue);
+            }
+        }
+
+        [Test]
+        public void UserTracking_SetUserIdMultipleTimesLastOneWins()
+        {
+            var expectedUserId1 = "CustomUserId";
+            var expectedUserId2 = "AnotherCustomUserId";
+            _transaction.SetUserId(expectedUserId1);
+            _transaction.SetUserId(expectedUserId2);
+
+            var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
+            var userAttributes = immutableTransactionMetadata.UserAndRequestAttributes.ToDictionary();
+            var hasUserIdAttribute = userAttributes.TryGetValue(_attribDefs.EndUserId.Name, out var userIdValue);
+            Assert.True(hasUserIdAttribute);
+            Assert.AreEqual(expectedUserId2, userIdValue);
+        }
+        #endregion
+
     }
 }
