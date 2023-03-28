@@ -35,12 +35,18 @@ jobs:
       profiler_src: ${{ steps.filter.outputs.profiler_src }}
     steps:
     # For pull requests it's not necessary to checkout the code
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
     - uses: dorny/paths-filter@v2
       id: filter
       with:
         filters: |
           profiler_src:
             - 'src/Agent/NewRelic/Profiler/**'
+        base: 
 
   build-windows-profiler:
     needs: changes
