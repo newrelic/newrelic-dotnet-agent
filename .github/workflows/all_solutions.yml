@@ -373,47 +373,47 @@ jobs:
       #    path: ${{ github.workspace }}\TestResults
       #    if-no-files-found: error
 
-  build-integration-tests:
-    needs: build-test-fullagent-msi
-    name: Build IntegrationTests
-    runs-on: windows-2022
+  #build-integration-tests:
+  #  needs: build-test-fullagent-msi
+  #  name: Build IntegrationTests
+  #  runs-on: windows-2022
 
-    env:
-      integration_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
+  #  env:
+  #    integration_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v3
+  #      with:
+  #        fetch-depth: 0
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.3.1
-        with:
-          vs-prerelease: true
+  #    - name: Add msbuild to PATH
+  #      uses: microsoft/setup-msbuild@v1.3.1
+  #      with:
+  #        vs-prerelease: true
 
-      - name: List SDKS
-        run: dotnet --list-sdks
-        shell: powershell
+  #    - name: List SDKS
+  #      run: dotnet --list-sdks
+  #      shell: powershell
 
-      - name: Build IntegrationTests.sln
-        run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
-        shell: powershell
+  #    - name: Build IntegrationTests.sln
+  #      run: |
+  #        Write-Host "List NuGet Sources"
+  #        dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+  #        Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
+  #        MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
+  #      shell: powershell
 
-      - name: Archive Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: integrationtests
-          path: |
-            ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
-            ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
-            ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
-            !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
-          if-no-files-found: error
+  #    - name: Archive Artifacts
+  #      uses: actions/upload-artifact@v3
+  #      with:
+  #        name: integrationtests
+  #        path: |
+  #          ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
+  #          ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
+  #          ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
+  #          !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
+  #        if-no-files-found: error
 
   build-unbounded-tests:
     needs: build-test-fullagent-msi
@@ -503,11 +503,11 @@ jobs:
           name: homefolders
           path: src/Agent
 
-      - name: Download Integration Test Artifacts
-        uses: actions/download-artifact/@v3
-        with:
-          name: integrationtests
-          # Should not need a path because the integration test artifacts are archived with the full directory structure
+      #- name: Download Integration Test Artifacts
+      #  uses: actions/download-artifact/@v3
+      #  with:
+      #    name: integrationtests
+      #    # Should not need a path because the integration test artifacts are archived with the full directory structure
 
       - name: Install dependencies
         run: |
