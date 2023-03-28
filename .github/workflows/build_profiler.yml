@@ -13,6 +13,11 @@ on:
   #schedule:
   #  - cron:  '0 9 * * *'
 
+# only allow one instance of this job to be running per PR or branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   scripts_path: ${{ github.workspace }}\build\scripts
   tools_path: ${{ github.workspace }}\build\Tools
@@ -20,48 +25,26 @@ env:
 
 jobs:
 
-  cancel-previous-workflow-runs:
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || ( github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v') )
-    name: Cancel Previous Runs
+  changes:
     runs-on: ubuntu-latest
-    steps:
-      - uses: rokroskar/workflow-run-cleanup-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  check:
-    name: Check for modified files
-    needs: cancel-previous-workflow-runs
+    # Required permissions
+    permissions:
+      pull-requests: read
+    # Set job outputs to values from filter step
     outputs:
-      run_job: ${{ steps.check_files.outputs.run_job }}
-    runs-on: ubuntu-latest
+      profiler_src: ${{ steps.filter.outputs.profiler_src }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-
-      - name: check modified files
-        id: check_files
-        run: |
-          echo "========== check paths of modified files =========="
-          echo "run_job=false" >> $GITHUB_OUTPUT
-          git diff --name-only HEAD^ HEAD > files.> files.txt
-          while IFS= read -r file
-          do
-            echo $file
-            if [[ $file != src/Agent/NewRelic/Profiler/* ]]; then
-              echo "This modified file is not under the 'Profiler' folder."
-            else
-          echo "run_job=true" >> $GITHUB_OUTPUT
-              break
-            fi
-          done < files.txt
-        shell: bash
+    # For pull requests it's not necessary to checkout the code
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          profiler_src:
+            - 'src/Agent/NewRelic/Profiler/**'
 
   build-windows-profiler:
-    needs: [cancel-previous-workflow-runs, check]
-    if: needs.check.outputs.run_job == 'true'
+    needs: changes
+    if: ${{ needs.changes.outputs.profiler_src == 'true' }}
     name: Build Windows Profiler
     runs-on: windows-2019
 
@@ -110,8 +93,8 @@ jobs:
           if-no-files-found: error
 
   build-linux-x64-profiler:
-    needs: [cancel-previous-workflow-runs, check]
-    if: needs.check.outputs.run_job == 'true'
+    needs: changes
+    if: ${{ needs.changes.outputs.profiler_src == 'true' }}
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
 
@@ -155,8 +138,8 @@ jobs:
           if-no-files-found: error
 
   build-linux-arm64-profiler:
-    needs: [cancel-previous-workflow-runs, check]
-    if: needs.check.outputs.run_job == 'true'
+    needs: changes
+    if: ${{ needs.changes.outputs.profiler_src == 'true' }}
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
     
