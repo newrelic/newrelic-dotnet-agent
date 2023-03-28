@@ -31,6 +31,7 @@ jobs:
 
   check:
     name: Check for modified files
+    needs: cancel-previous-workflow-runs
     outputs:
       run_job: ${{ steps.check_files.outputs.run_job }}
     runs-on: ubuntu-latest
@@ -43,9 +44,6 @@ jobs:
       - name: check modified files
         id: check_files
         run: |
-          echo "=============== list modified files ==============="
-          git diff --name-only HEAD^ HEAD
-      
           echo "========== check paths of modified files =========="
           echo "run_job=false" >> $GITHUB_OUTPUT
           git diff --name-only HEAD^ HEAD > files.> files.txt
