@@ -34,19 +34,12 @@ jobs:
     outputs:
       profiler_src: ${{ steps.filter.outputs.profiler_src }}
     steps:
-      - name: Info
-        run: |
-          echo ${{ github.workflow }}
-          echo ${{ github.event_name }}
-          echo ${{ inputs.force-build }}
-        shell: bash
-
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Check for modified files
+      - name: Look for modified files
         uses: dorny/paths-filter@v2
         id: filter
         with:
@@ -56,7 +49,7 @@ jobs:
 
   build-windows-profiler:
     needs: changes
-    if: ${{ inputs.force-run}} || needs.changes.outputs.profiler_src == 'true'
+    if: ${{ inputs.force-run ||  needs.changes.outputs.profiler_src == 'true' }}
     name: Build Windows Profiler
     runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
 
@@ -66,14 +59,6 @@ jobs:
       output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
 
     steps:
-      - name: Info
-        run: |
-          echo ${{ github.workflow }}
-          echo ${{ github.event_name }}
-          echo ${{ inputs.force-build }}
-          echo ${{ needs.changes.outputs.profiler_src }}
-        shell: bash
-
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -114,7 +99,7 @@ jobs:
 
   build-linux-x64-profiler:
     needs: changes
-    if: ${{ inputs.force-run}} || ${{ needs.changes.outputs.profiler_src == 'true' }}
+    if: ${{ inputs.force-run ||  needs.changes.outputs.profiler_src == 'true' }}
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
 
@@ -159,7 +144,7 @@ jobs:
 
   build-linux-arm64-profiler:
     needs: changes
-    if: ${{ inputs.force-run}} || ${{ needs.changes.outputs.profiler_src == 'true' }}
+    if: ${{ inputs.force-run ||  needs.changes.outputs.profiler_src == 'true' }}
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
 
