@@ -216,7 +216,7 @@ jobs:
           if-no-files-found: error
 
   commit-changes:
-    needs: [changes, build-windows-profiler, build-linux-x64-profiler, build-linux-arm64-profiler]
+    needs: [ changes, build-windows-profiler, build-linux-x64-profiler, build-linux-arm64-profiler ]
     if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.profiler_src == 'true' }}
     name: Commit and Push New Profiler Build
     runs-on: ubuntu-22.04
