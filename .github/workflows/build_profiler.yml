@@ -34,11 +34,10 @@ jobs:
           filters: |
             profiler_src:
               - 'src/Agent/NewRelic/Profiler/**'
-          base:
 
   build-windows-profiler:
     needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.profiler_src == 'true'
+    if: needs.changes.outputs.profiler_src == 'true'
     name: Build Windows Profiler
     runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
 
@@ -88,7 +87,7 @@ jobs:
 
   build-linux-x64-profiler:
     needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.profiler_src == 'true'
+    if: needs.changes.outputs.profiler_src == 'true'
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
 
@@ -133,7 +132,7 @@ jobs:
 
   build-linux-arm64-profiler:
     needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.profiler_src == 'true'
+    if: needs.changes.outputs.profiler_src == 'true'
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
 
@@ -205,7 +204,7 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.profiler_src == 'true'
+    if: needs.changes.outputs.profiler_src == 'true'
     name: Commit and Push New Profiler Build
     runs-on: ubuntu-22.04
 
