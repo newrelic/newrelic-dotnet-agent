@@ -23,6 +23,11 @@ jobs:
     outputs:
       profiler_src: ${{ steps.filter.outputs.profiler_src }}
     steps:
+      - name: Info
+        run: |
+          echo ${{ github.workflow }}
+          echo ${{ github.event_name }}
+        shell: bash
       - name: Checkout
         uses: actions/checkout@v3
         with:
