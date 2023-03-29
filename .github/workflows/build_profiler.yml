@@ -3,7 +3,7 @@ name: Build .NET Agent Profiler
 on:
   # temporarily disable auto execution
   #pull_request:
-  #  branches: 
+  #  branches:
   #  - main
   #  - 'feature/**'
   #release:
@@ -23,7 +23,6 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
-
   changes:
     runs-on: ubuntu-latest
     # Required permissions
@@ -33,19 +32,19 @@ jobs:
     outputs:
       profiler_src: ${{ steps.filter.outputs.profiler_src }}
     steps:
-    # For pull requests it's not necessary to checkout the code
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      # For pull requests it's not necessary to checkout the code
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        filters: |
-          profiler_src:
-            - 'src/Agent/NewRelic/Profiler/**'
-        base: 
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            profiler_src:
+              - 'src/Agent/NewRelic/Profiler/**'
+          base:
 
   build-windows-profiler:
     needs: changes
@@ -83,7 +82,7 @@ jobs:
           Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
           MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
-        
+
       - name: Build x86
         run: |
           Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
@@ -101,7 +100,7 @@ jobs:
         uses: actions-js/push@v1.4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          message: 'chore: update Windows Profiler Build'
+          message: "chore: update Windows Profiler Build"
           branch: ${{ github.ref }}
 
   build-linux-x64-profiler:
@@ -154,16 +153,16 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.profiler_src == 'true' }}
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
-    
+
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       - name: Clean out _profilerBuild directory
         run: |
           rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
@@ -172,7 +171,7 @@ jobs:
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
-        
+
       - uses: uraimo/run-on-arch-action@v2.5.0
         name: Run commands
         id: runcmd
@@ -216,29 +215,35 @@ jobs:
           if-no-files-found: error
 
   commit-changes:
-    needs: [ changes, build-windows-profiler, build-linux-x64-profiler, build-linux-arm64-profiler ]
+    needs:
+      [
+        changes,
+        build-windows-profiler,
+        build-linux-x64-profiler,
+        build-linux-arm64-profiler,
+      ]
     if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.profiler_src == 'true' }}
     name: Commit and Push New Profiler Build
     runs-on: ubuntu-22.04
-    
+
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-    - name: Download Profiler Artifacts
-      uses: actions/download-artifact/@v3
-      with:
-        name: profiler
+      - name: Download Profiler Artifacts
+        uses: actions/download-artifact/@v3
+        with:
+          name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
 
-    - name: Commit and Push New Profiler Build
-      uses: actions-js/push@v1.4
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        message: 'chore: updated profiler build'
-        branch: ${{ github.ref }}
+      - name: Commit and Push New Profiler Build
+        uses: actions-js/push@v1.4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          message: "chore: updated profiler build"
+          branch: ${{ github.ref }}
