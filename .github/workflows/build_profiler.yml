@@ -1,6 +1,5 @@
 name: Build .NET Agent Profiler
 
-# Controls when the workflow will run
 on:
   # temporarily disable auto execution
   #pull_request:
@@ -98,6 +97,13 @@ jobs:
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
           if-no-files-found: error
 
+      - name: Commit and Push Windows Profiler
+        uses: actions-js/push@v1.4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          message: 'chore: update Windows Profiler Build'
+          branch: ${{ github.ref }}
+
   build-linux-x64-profiler:
     needs: changes
     if: ${{ needs.changes.outputs.profiler_src == 'true' }}
@@ -142,6 +148,13 @@ jobs:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
+
+      - name: Commit and Push linux-x64 Profiler
+        uses: actions-js/push@v1.4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          message: 'chore: update Linux x64 Profiler Build'
+          branch: ${{ github.ref }}
 
   build-linux-arm64-profiler:
     needs: changes
@@ -208,3 +221,10 @@ jobs:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
+
+      - name: Commit and Push Windows Profiler
+        uses: actions-js/push@v1.4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          message: 'chore: update Linux arm64 Profiler Build'
+          branch: ${{ github.ref }}
