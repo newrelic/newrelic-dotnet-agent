@@ -28,8 +28,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
         DistributedTracePayload TryDecodeInboundSerializedDistributedTracePayload(string serializedPayload);
 
-        ITracingState AcceptDistributedTracePayload(string serializedPayload, TransportType transportType, DateTime transactionStartTime);
-
         ITracingState AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType, DateTime transactionStartTime);
 
         void InsertDistributedTraceHeaders<T>(IInternalTransaction transaction, T carrier, Action<T, string, string> setter);
@@ -248,25 +246,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
         #endregion Outgoing/Create
 
         #region Incoming/Accept
-
-        public ITracingState AcceptDistributedTracePayload(string serializedPayload, TransportType transportType, DateTime transactionStartTime)
-        {
-            var tracingState = TracingState.AcceptDistributedTracePayload(serializedPayload, transportType, _configurationService.Configuration.TrustedAccountKey, transactionStartTime);
-
-            if (tracingState.IngestErrors != null)
-            {
-                ReportIncomingErrors(tracingState.IngestErrors);
-            }
-            else
-            {
-                if (_configurationService.Configuration.PayloadSuccessMetricsEnabled)
-                {
-                    _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess();
-                }
-            }
-
-            return tracingState;
-        }
 
         public ITracingState AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType, DateTime transactionStartTime)
         {

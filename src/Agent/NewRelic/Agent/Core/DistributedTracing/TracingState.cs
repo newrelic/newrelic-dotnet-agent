@@ -205,25 +205,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
         private DistributedTracePayload _newRelicPayload;
         private W3CTraceContext _traceContext;
 
-        public static ITracingState AcceptDistributedTracePayload(string encodedPayload, TransportType transportType, string agentTrustKey, DateTime transactionStartTime)
-        {
-            var tracingState = new TracingState();
-            var errors = new List<IngestErrorType>();
-            tracingState._newRelicPayload = DistributedTracePayload.TryDecodeAndDeserializeDistributedTracePayload(encodedPayload, agentTrustKey, errors);
-            tracingState.NewRelicPayloadWasAccepted = tracingState._newRelicPayload != null ? true : false;
-            tracingState._transactionStartTime = tracingState._newRelicPayload != null ? transactionStartTime : default;
-
-            if (errors.Any())
-            {
-                tracingState.IngestErrors = errors;
-            }
-
-            tracingState.HasDataForAttributes = tracingState.NewRelicPayloadWasAccepted;
-            tracingState.TransportType = transportType;
-
-            return tracingState;
-        }
-
         public static ITracingState AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType, string agentTrustKey, DateTime transactionStartTime)
         {
             var tracingState = new TracingState();

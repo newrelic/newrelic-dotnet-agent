@@ -51,20 +51,6 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
                 : queueNameOrRoutingKey;
         }
 
-        // TODO consider removing this
-        public static bool TryGetPayloadFromHeaders(Dictionary<string, object> messageHeaders, IAgent agent,
-            out string serializedPayload)
-        {
-            if (agent.TryGetDistributedTracePayloadFromHeaders(messageHeaders, out var payload))
-            {
-                serializedPayload = Encoding.UTF8.GetString((byte[])(payload));
-                return true;
-            }
-
-            serializedPayload = null;
-            return false;
-        }
-
         public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
         {
             // ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.

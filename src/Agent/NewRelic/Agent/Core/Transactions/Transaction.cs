@@ -607,28 +607,6 @@ namespace NewRelic.Agent.Core.Transactions
             TransactionMetadata.SetCrossApplicationPathHash(pathHash);
         }
 
-        public void AcceptDistributedTracePayload(string payload, TransportType transportType)
-        {
-            if (!_configuration.DistributedTracingEnabled)
-            {
-                return;
-            }
-            if (TransactionMetadata.HasOutgoingTraceHeaders)
-            {
-                Agent._agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredCreateBeforeAccept();
-                return;
-            }
-            if (TracingState != null)
-            {
-                Agent._agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMultiple();
-                return;
-            }
-
-            var isUnknownTransportType = transportType < TransportType.Unknown || transportType > TransportType.Other;
-
-            TracingState = Agent._distributedTracePayloadHandler.AcceptDistributedTracePayload(payload, isUnknownTransportType ? TransportType.Unknown : transportType, StartTime);
-        }
-
         public void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType)
         {
             if (_configuration.DistributedTracingEnabled)
