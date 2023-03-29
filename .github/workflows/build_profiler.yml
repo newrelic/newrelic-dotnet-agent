@@ -96,13 +96,6 @@ jobs:
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
           if-no-files-found: error
 
-      - name: Commit and Push Windows Profiler
-        uses: actions-js/push@v1.4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          message: "chore: update Windows Profiler Build"
-          branch: ${{ github.ref }}
-
   build-linux-x64-profiler:
     needs: changes
     if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.profiler_src == 'true' }}
@@ -233,7 +226,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Download Profiler Artifacts
         uses: actions/download-artifact/@v3
