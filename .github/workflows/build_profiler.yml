@@ -2,7 +2,17 @@ name: Build .NET Agent Profiler
 
 on:
   workflow_call:
+    inputs:
+      force-build:
+        required: false
+        default: false
+        type: boolean
   workflow_dispatch:
+    inputs:
+      force-build:
+        required: false
+        default: true
+        type: boolean
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
@@ -27,6 +37,7 @@ jobs:
         run: |
           echo ${{ github.workflow }}
           echo ${{ github.event_name }}
+          echo ${{ inputs.force-build }}
         shell: bash
       - name: Checkout
         uses: actions/checkout@v3
@@ -42,7 +53,7 @@ jobs:
 
   build-windows-profiler:
     needs: changes
-    if: needs.changes.outputs.profiler_src == 'true'
+    if: ${{ inputs.force-run}} || needs.changes.outputs.profiler_src == 'true'
     name: Build Windows Profiler
     runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
 
@@ -92,7 +103,7 @@ jobs:
 
   build-linux-x64-profiler:
     needs: changes
-    if: needs.changes.outputs.profiler_src == 'true'
+    if: ${{ inputs.force-run}} || needs.changes.outputs.profiler_src == 'true'
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
 
@@ -137,7 +148,7 @@ jobs:
 
   build-linux-arm64-profiler:
     needs: changes
-    if: needs.changes.outputs.profiler_src == 'true'
+    if: ${{ inputs.force-run}} || needs.changes.outputs.profiler_src == 'true'
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
 
@@ -209,7 +220,7 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: needs.changes.outputs.profiler_src == 'true'
+    if: ${{ inputs.force-run}} || needs.changes.outputs.profiler_src == 'true'
     name: Commit and Push New Profiler Build
     runs-on: ubuntu-22.04
 
