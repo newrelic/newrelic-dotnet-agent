@@ -64,6 +64,7 @@ namespace NewRelic { namespace Profiler
         std::function<HRESULT(Function&, LPCBYTE, ULONG)> _setILFunctionBody;
         std::function<HRESULT(Function&)> _rejitFunction;
 
+        bool _martyWasHere;
     public:
 
         static void StaticThrowOnError(HRESULT result)
@@ -290,6 +291,8 @@ namespace NewRelic { namespace Profiler
             ProcessID processId = 0;
             ULONG methodSize = 0;
             const uint8_t* method;
+
+            _martyWasHere = true;
 
             // get the interfaces we need and the metadata token
             ThrowOnError(_profilerInfo->GetTokenAndMetaDataFromFunction, functionId, IID_IMetaDataEmit2, (IUnknown**)&_metaDataEmit, nullptr);
