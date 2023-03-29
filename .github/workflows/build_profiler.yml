@@ -1,14 +1,7 @@
 name: Build .NET Agent Profiler
 
 on:
-  # temporarily disable auto execution
-  #pull_request:
-  #  branches:
-  #  - main
-  #  - 'feature/**'
-  push:
-  #release:
-  #  types: [ published ]
+  workflow_call:
   workflow_dispatch:
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
@@ -23,15 +16,13 @@ env:
 
 jobs:
   changes:
+    name: Check for Updated Profiler Files
     runs-on: ubuntu-latest
-    # Required permissions
     permissions:
       pull-requests: read
-    # Set job outputs to values from filter step
     outputs:
       profiler_src: ${{ steps.filter.outputs.profiler_src }}
     steps:
-      # For pull requests it's not necessary to checkout the code
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -49,7 +40,7 @@ jobs:
     needs: changes
     if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.profiler_src == 'true' }}
     name: Build Windows Profiler
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     env:
       profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler

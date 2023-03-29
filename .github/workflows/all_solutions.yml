@@ -24,9 +24,14 @@ env:
 
 jobs:
 
+  build-profiler:
+    uses: ./.github/workflows/build_profiler.yml
+    secrets: inherit
+
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
+    needs: build-profiler
     runs-on: windows-2022
 
     env:
@@ -44,25 +49,6 @@ jobs:
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.3.1
-
-      #- name: Clean out _profilerBuild directory
-      #  run: |
-      #    Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
-      #    Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
-      #    Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
-      #    Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-x64-release" -Recurse -Force  -ErrorAction SilentlyContinue
-      #    Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
-      #  shell: powershell
-
-      - name: Download Profiler Artifacts From Latest Execution of build_profiler.yml workflow on this branch
-        uses: dawidd6/action-download-artifact@v2.26.0
-        with:
-          workflow: build_profiler.yml
-          workflow_conclusion: success
-          branch: ${{ github.ref }}
-          name: profiler
-          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
-          if_no_artifact_found: warn # emit a warning if the workflow hasn't been run on this branch (and use the existing profiler build from the repo)
 
       - name: Build FullAgent.sln
         run: |
