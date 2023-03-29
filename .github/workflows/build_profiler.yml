@@ -6,11 +6,10 @@ on:
   #  branches:
   #  - main
   #  - 'feature/**'
+  push:
   #release:
   #  types: [ published ]
   workflow_dispatch:
-  #schedule:
-  #  - cron:  '0 9 * * *'
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
