@@ -47,7 +47,7 @@ jobs:
           fetch-depth: 0
 
       - name: Check for modified files
-      uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@v2
         id: filter
         with:
           filters: |
