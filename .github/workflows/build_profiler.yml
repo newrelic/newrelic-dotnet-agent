@@ -10,6 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       force-build:
+        description: 'Build even if no files were updated'
         required: false
         default: true
         type: boolean
@@ -39,12 +40,14 @@ jobs:
           echo ${{ github.event_name }}
           echo ${{ inputs.force-build }}
         shell: bash
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - uses: dorny/paths-filter@v2
+      - name: Check for modified files
+      uses: dorny/paths-filter@v2
         id: filter
         with:
           filters: |
@@ -63,6 +66,14 @@ jobs:
       output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
 
     steps:
+      - name: Info
+        run: |
+          echo ${{ github.workflow }}
+          echo ${{ github.event_name }}
+          echo ${{ inputs.force-build }}
+          echo ${{ needs.changes.outputs.profiler_src }}
+        shell: bash
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -103,7 +114,7 @@ jobs:
 
   build-linux-x64-profiler:
     needs: changes
-    if: ${{ inputs.force-run}} || needs.changes.outputs.profiler_src == 'true'
+    if: ${{ inputs.force-run}} || ${{ needs.changes.outputs.profiler_src == 'true' }}
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
 
@@ -148,7 +159,7 @@ jobs:
 
   build-linux-arm64-profiler:
     needs: changes
-    if: ${{ inputs.force-run}} || needs.changes.outputs.profiler_src == 'true'
+    if: ${{ inputs.force-run}} || ${{ needs.changes.outputs.profiler_src == 'true' }}
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
 
