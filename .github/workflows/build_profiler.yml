@@ -149,13 +149,6 @@ jobs:
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
 
-      - name: Commit and Push linux-x64 Profiler
-        uses: actions-js/push@v1.4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          message: 'chore: update Linux x64 Profiler Build'
-          branch: ${{ github.ref }}
-
   build-linux-arm64-profiler:
     needs: changes
     if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.profiler_src == 'true' }}
@@ -222,9 +215,30 @@ jobs:
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
 
-      - name: Commit and Push Windows Profiler
-        uses: actions-js/push@v1.4
+  commit-changes:
+    needs: [changes, build-windows-profiler, build-linux-x64-profiler, build-linux-arm64-profiler]
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.profiler_src == 'true' }}
+    name: Commit and Push New Profiler Build
+    runs-on: ubuntu-22.04
+    
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          message: 'chore: update Linux arm64 Profiler Build'
-          branch: ${{ github.ref }}
+          fetch-depth: 0
+
+    - name: Download Profiler Artifacts
+      uses: actions/download-artifact/@v3
+      with:
+        name: profiler
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+
+    - name: Commit and Push New Profiler Build
+      uses: actions-js/push@v1.4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        message: 'chore: updated profiler build'
+        branch: ${{ github.ref }}
