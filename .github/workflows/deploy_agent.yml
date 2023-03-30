@@ -334,6 +334,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+      - name: Download Deploy Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: deploy-artifacts
+          path: ${{ github.workspace }}/
+
+
       - name: Get Release Information
         id: getReleaseByTag
         uses: cardinalby/git-get-release-action@v1
@@ -342,7 +349,7 @@ jobs:
         with:
           tag: 'v${{ github.event.inputs.agent_version }}'
 
-    - name: Check getReleaseByTag step result
+      - name: Check getReleaseByTag step result
         run: |        
           echo "steps.getReleaseByTag.outputs.url=${steps.getReleaseByTag.outputs.url}"
           echo "steps.getReleaseByTag.outputs.assets_url=${steps.getReleaseByTag.outputs.assets_url}"
@@ -364,11 +371,6 @@ jobs:
           echo "steps.getReleaseByTag.outputs.body=${steps.getReleaseByTag.outputs.body}"
         shell: bash
 
-      - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: deploy-artifacts
-          path: ${{ github.workspace }}/
 
       - name: Check if file exists
         id: check_files
