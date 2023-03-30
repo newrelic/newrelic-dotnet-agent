@@ -5,9 +5,11 @@ on:
     inputs:
       agent_version:
         description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
-        required: true
+        default: '10.9.0'
+        required: true        
       run_id:
         description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
+        default: '4545305619'
         required: true
       deploy:
         description: 'If "true", deploy the artifacts. If "false", do everything except deploy.'
