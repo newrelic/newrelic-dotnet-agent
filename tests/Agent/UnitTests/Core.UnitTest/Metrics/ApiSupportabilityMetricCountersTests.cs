@@ -64,8 +64,8 @@ namespace NewRelic.Agent.Core.Metrics
             CollectionAssert.AreEquivalent(expectedMetricNames, actualMetricNames);
         }
 
-        [TestCase(ApiMethod.CreateDistributedTracePayload, 5)]
-        [TestCase(ApiMethod.AcceptDistributedTracePayload, 42)]
+        [TestCase(ApiMethod.InsertDistributedTraceHeaders, 5)]
+        [TestCase(ApiMethod.AcceptDistributedTraceHeaders, 42)]
         public void CorrectMetricCounts_WhenMethodIsRecordedMultipleTimes(ApiMethod apiMethod, int recordCount)
         {
             for (var x = 0; x < recordCount; x++)

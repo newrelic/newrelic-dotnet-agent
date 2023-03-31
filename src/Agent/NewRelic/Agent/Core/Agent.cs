@@ -225,24 +225,6 @@ namespace NewRelic.Agent.Core
 
         #region inbound CAT request, outbound CAT response
 
-        public bool TryGetDistributedTracePayloadFromHeaders<T>(IEnumerable<KeyValuePair<string, T>> headers, out T payload) where T : class
-        {
-            payload = null;
-            if (headers != null)
-            {
-                foreach (var header in headers)
-                {
-                    if (header.Key.Equals(Constants.DistributedTracePayloadKey, StringComparison.OrdinalIgnoreCase))
-                    {
-                        payload = header.Value;
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
         internal void TryProcessCatRequestData<T>(IInternalTransaction transaction, T carrier, Func<T, string, IEnumerable<string>> getter)
         {
             try
