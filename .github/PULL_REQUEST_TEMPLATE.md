@@ -7,7 +7,6 @@ The what, the why and the how of your PR.
 # Author Checklist
 - [ ] Unit tests, Integration tests, and Unbounded tests completed
 - [ ] Performance testing completed with satisfactory results (if required)
-- [ ] [Agent Changelog](/src/Agent/CHANGELOG.md) or [Lambda Agent changelog](/src/AwsLambda/CHANGELOG.md) updated 
 
 # Reviewer Checklist
 - [ ] Perform code review
