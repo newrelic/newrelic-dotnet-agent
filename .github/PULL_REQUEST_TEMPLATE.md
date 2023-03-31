@@ -11,4 +11,3 @@ The what, the why and the how of your PR.
 # Reviewer Checklist
 - [ ] Perform code review
 - [ ] Pull request was adequately tested (new/existing tests, performance tests)
-- [ ] Review Changelog
