@@ -1,13 +1,13 @@
 on:
   push:
     branches:
-      - feature/release-notes-automation
+      - main
 
 permissions:
   contents: write
   pull-requests: write
 
-name: release-please
+name: Release Please
 
 jobs:
   release-please:
@@ -18,4 +18,4 @@ jobs:
           release-type: go
           changelog-path: src/Agent/CHANGELOG.md
           token: ${{ secrets.GITHUB_TOKEN }}
-          changelog-types: '[{"type":"feat","section":"New Features","hidden":false},{"type":"fix","section":"Fixes","hidden":false},{"type":"security","section":"Security","hidden":false}]'
+          changelog-types: '[("type":"notice","section":"Notice","hidden":false),{"type":"feat","section":"New Features","hidden":false},{"type":"fix","section":"Fixes","hidden":false},{"type":"security","section":"Security","hidden":false}]'
