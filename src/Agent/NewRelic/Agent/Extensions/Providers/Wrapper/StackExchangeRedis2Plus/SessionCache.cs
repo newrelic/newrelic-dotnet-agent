@@ -19,7 +19,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
     {
         private readonly EventWaitHandle _stopHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-        private readonly ConcurrentDictionary<string, ProfilingSession> _sessionCache = new ConcurrentDictionary<string, ProfilingSession>();
+        private readonly ConcurrentDictionary<ISegment, ProfilingSession> _sessionCache = new ConcurrentDictionary<ISegment, ProfilingSession>();
 
         private readonly IAgent _agent;
 
@@ -37,25 +37,23 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
         /// Finishes a profiling session for the segment indicated by the span id and creates a child DataStoreSegment for each command in the session.
         /// </summary>
         /// <param name="spanId">Span ID of the segment being finalized.</param>
-        public void Harvest(string spanId)
+        public void Harvest(ISegment hostSegment)
         {
             // If we can't remove the session, it doesn't exist, so do nothing and return.
-            if (!_sessionCache.TryRemove(spanId, out var sessionData))
+            if (!_sessionCache.TryRemove(hostSegment, out var sessionData))
             {
                 return;
             }
 
             // Get the transaction from the session
             var transaction = sessionData.UserToken as ITransaction;
-
-            // We want to make sure to finish the session even if the transaction is done so that it is not orphaned.
-            var commands = sessionData.FinishProfiling();
-            if (transaction.IsFinished)
+            if (transaction == null || transaction.IsFinished)
             {
                 return;
             }
 
             var xTransaction = (ITransactionExperimental)transaction;
+            var commands = sessionData.FinishProfiling();
             foreach (var command in commands)
             {
                 // We need to build the relative start and stop time based on the transaction start time.
@@ -119,43 +117,30 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                     return null;
                 }
 
-                // Use the spanid of the segment as the key for the cache.
-                var spanId = segment.SpanId;
-                if (string.IsNullOrWhiteSpace(spanId))
-                {
-                    return null;
-                }
-
                 // During async operations, the transaction can get lost and report as NoOp so we store a reference to it in the session.
-                if (!_sessionCache.TryGetValue(spanId, out var sessionData))
+                var sessionCandidate = new ProfilingSession(transaction);
+
+                // During highly threaded operations, more than one thread for a segment could get a false TryGetValue, but that doesn't happen with TryAdd
+                if (_sessionCache.TryAdd(segment, sessionCandidate))
                 {
-                    sessionData = new ProfilingSession(transaction);
-                    _sessionCache.TryAdd(spanId, sessionData);
+                    return sessionCandidate;
                 }
 
-                return sessionData;
-            };
-        }
+                if (_sessionCache.TryGetValue(segment, out sessionCandidate))
+                {
+                    return sessionCandidate;
+                }
 
-        public int Count
-        {
-            get
-            {
-                return _sessionCache.Count;
-            }
+                return null;
+            };
         }
 
         // Clean up the handles, sessions, and wipe the dictionary.
         public void Dispose()
         {
             _stopHandle.Set();
-            _stopHandle.Dispose();
-            foreach (var cachedSession in _sessionCache.Values)
-            {
-                _ = cachedSession.FinishProfiling();
-            }
-
             _sessionCache.Clear();
+            _stopHandle.Dispose();
         }
     }
 }
