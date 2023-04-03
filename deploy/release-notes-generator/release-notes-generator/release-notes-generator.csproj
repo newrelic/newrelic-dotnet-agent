@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>release_notes_generator</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="testfiles\checksums.md" />
+    <None Remove="testfiles\release_notes.md" />
+    <None Remove="testfiles\release_notes_template.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="testfiles\checksums.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="testfiles\release_notes.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="testfiles\release_notes_template.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

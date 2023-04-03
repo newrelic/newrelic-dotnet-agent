@@ -351,8 +351,10 @@ jobs:
 
       - name: Check getReleaseByTag step result
         run: |        
-          echo 'steps.getReleaseByTag.outputs.url=${{steps.getReleaseByTag.outputs.url}}'
           echo 'steps.getReleaseByTag.outputs.body=${{steps.getReleaseByTag.outputs.body}}'
+          echo 'steps.getReleaseByTag.outputs.body=${{steps.getReleaseByTag.outputs.body}}' >> $GITHUB_STEP_SUMMARY
+
+          # TODO: write to disk, input to .NET app
         shell: bash
 
 

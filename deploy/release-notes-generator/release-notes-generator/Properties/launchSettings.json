@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "release-notes-generator": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\releaseNotesTesting\\release_notes_template.md C:\\releaseNotesTesting\\checksums.md C:\\releaseNotesTesting\\release_notes.md C:\\releaseNotesTesting\\"
+    }
+  }
+}
