@@ -11,7 +11,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
 {
     public class ConnectWrapperV2 : IWrapper
     {
-        public bool IsTransactionRequired => true;
+        public bool IsTransactionRequired => false;
 
         private const string WrapperName = "stackexchangeredis-connect";
 
