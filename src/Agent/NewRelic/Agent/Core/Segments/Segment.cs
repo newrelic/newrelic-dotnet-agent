@@ -33,8 +33,6 @@ namespace NewRelic.Agent.Core.Segments
 
     public class Segment : IInternalSpan, ISegmentDataState
     {
-        
-
         private static ConfigurationSubscriber _configurationSubscriber = new ConfigurationSubscriber();
 
         public IAttributeDefinitions AttribDefs => _transactionSegmentState.AttribDefs;
