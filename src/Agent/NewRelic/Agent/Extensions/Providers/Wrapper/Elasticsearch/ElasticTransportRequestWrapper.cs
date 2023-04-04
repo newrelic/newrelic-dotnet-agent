@@ -14,7 +14,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
     {
         public bool IsTransactionRequired => true;
 
-        private const string AssemblyName = "ElasticTransport";
+        private const string AssemblyName = "Elastic.Transport";
 
         private const string WrapperName = "ElasticTransportRequestWrapper";
 
@@ -77,11 +77,11 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                         var typeOfResponse = response.GetType();
                         var responseFullType = typeOfResponse.FullName;
 
-                        var ApiCallDetailsGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("Nest", typeOfResponse.FullName, "ApiCall");
+                        var ApiCallDetailsGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("Elastic.Clients.Elasticsearch", typeOfResponse.FullName, "ApiCallDetails");
                         var apiCallDetails = ApiCallDetailsGetter.Invoke(response);
 
                         // this could be cached because the assembly and type doesn't seem to change
-                        var UriGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>("Elasticsearch.Net", "Elasticsearch.Net.ApiCallDetails", "Uri");
+                        var UriGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>(AssemblyName, "Elastic.Transport.ApiCallDetails", "Uri");
                         var uri = UriGetter.Invoke(apiCallDetails);
 
                         // TODO: need to figure out how to plumb things so that we can set the uri on the segment after it has already been created.
