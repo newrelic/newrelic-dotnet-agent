@@ -74,15 +74,15 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                         // I assume that if somebody was using the low-level client library directly, it would be a different assembly name.
                         // This prevents us from caching the ApiCallDetailsGetter, meaning an expensive reflection operation for each API call.
                         // Is there a better way, maybe using the dynamic keyword?
-                        //var typeOfResponse = response.GetType();
-                        //var responseFullType = typeOfResponse.FullName;
+                        var typeOfResponse = response.GetType();
+                        var responseFullType = typeOfResponse.FullName;
 
-                        //var ApiCallDetailsGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("Nest", typeOfResponse.FullName, "ApiCall");
-                        //var apiCallDetails = ApiCallDetailsGetter.Invoke(response);
+                        var ApiCallDetailsGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("Nest", typeOfResponse.FullName, "ApiCall");
+                        var apiCallDetails = ApiCallDetailsGetter.Invoke(response);
 
-                        //// this could be cached because the assembly and type doesn't seem to change
-                        //var UriGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>("Elasticsearch.Net", "Elasticsearch.Net.ApiCallDetails", "Uri");
-                        //var uri = UriGetter.Invoke(apiCallDetails);
+                        // this could be cached because the assembly and type doesn't seem to change
+                        var UriGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>("Elasticsearch.Net", "Elasticsearch.Net.ApiCallDetails", "Uri");
+                        var uri = UriGetter.Invoke(apiCallDetails);
 
                         // TODO: need to figure out how to plumb things so that we can set the uri on the segment after it has already been created.
                         // See comments above about extending the experimental API
