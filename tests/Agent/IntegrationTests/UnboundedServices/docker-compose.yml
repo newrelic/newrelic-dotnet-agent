@@ -141,7 +141,6 @@ services:
             - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
             - xpack.security.enabled=true
             - xpack.security.http.ssl.enabled=false
-        mem_limit: 2g
         ulimits:
             memlock:
                 soft: -1
@@ -171,5 +170,4 @@ services:
             - ELASTICSEARCH_HOSTS=http://elastic:9200
             - ELASTICSEARCH_USERNAME=kibana_system
             - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD:-KibanaPassword}
-        mem_limit: 2g
         container_name: Kibana
