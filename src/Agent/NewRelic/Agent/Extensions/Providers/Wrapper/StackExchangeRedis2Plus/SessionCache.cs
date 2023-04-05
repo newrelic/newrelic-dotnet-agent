@@ -34,9 +34,9 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
         }
 
         /// <summary>
-        /// Finishes a profiling session for the segment indicated by the span id and creates a child DataStoreSegment for each command in the session.
+        /// Finishes a profiling session for the segment and creates a child DataStoreSegment for each command in the session.
         /// </summary>
-        /// <param name="spanId">Span ID of the segment being finalized.</param>
+        /// <param name="hostSegment">Segment being finalized.</param>
         public void Harvest(ISegment hostSegment)
         {
             // If we can't remove the session, it doesn't exist, so do nothing and return.
@@ -46,8 +46,8 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
             }
 
             // Get the transaction from the session
-            var transaction = sessionData.UserToken as ITransaction;
-            if (transaction == null || transaction.IsFinished)
+            var weakTransaction = sessionData.UserToken as WeakReference<ITransaction>;
+            if (!weakTransaction.TryGetTarget(out var transaction) || transaction.IsFinished)
             {
                 return;
             }
@@ -105,7 +105,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
 
                 // Don't want to save data to a session outside of a transaction or to a NoOp - no way to clean it up easily or reliably.
                 var transaction = _agent.CurrentTransaction;
-                if (!transaction.IsValid)
+                if (transaction.IsFinished || !transaction.IsValid)
                 {
                     return null;
                 }
@@ -117,22 +117,13 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                     return null;
                 }
 
-                // During async operations, the transaction can get lost and report as NoOp so we store a reference to it in the session.
-                var sessionCandidate = new ProfilingSession(transaction);
-
-                // During highly threaded operations, more than one thread for a segment could get a false TryGetValue, but that doesn't happen with TryAdd
-                if (_sessionCache.TryAdd(segment, sessionCandidate))
-                {
-                    return sessionCandidate;
-                }
-
-                if (_sessionCache.TryGetValue(segment, out sessionCandidate))
-                {
-                    return sessionCandidate;
-                }
-
-                return null;
+                return _sessionCache.GetOrAdd(segment, GetProfilingSession);
             };
+        }
+
+        private ProfilingSession GetProfilingSession(ISegment segment)
+        {
+            return new ProfilingSession(new WeakReference<ITransaction>(_agent.CurrentTransaction, false));
         }
 
         // Clean up the handles, sessions, and wipe the dictionary.
