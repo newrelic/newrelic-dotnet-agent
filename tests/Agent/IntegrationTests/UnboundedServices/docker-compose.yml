@@ -133,24 +133,43 @@ services:
         container_name: MySqlServer
 
     elastic:
-        image: elastic/elasticsearch:8.6.2
+        image: elasticsearch:8.6.2
         ports:
-            - "9200:9200"
-            - "9300:9300"
+            - 9200:9200
         environment:
             - discovery.type=single-node
-            - xpack.security.enabled=false
-            - xpack.security.enrollment.enabled=false
+            - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
+            - xpack.security.enabled=true
             - xpack.security.http.ssl.enabled=false
-            - xpack.security.transport.ssl.enabled=false
+        mem_limit: 2g
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
         container_name: ElasticServer
 
-    kibana:
-        image: kibana:8.6.2
-        environment:
-            - ELASTICSEARCH_HOSTS=http://elastic:9200
-        ports:
-            - "5601:5601"
+    # have to manually set the password for kibana_user - use curl to hit the correct endpoint
+    kibana_pw_setup:
+        image: curlimages/curl
         depends_on:
             - elastic
+        deploy:
+            restart_policy:
+                condition: on-failure
+        entrypoint: [ "sh", "-c", "sleep 10 && curl --user \"elastic:${ELASTIC_PASSWORD:-ElasticPassword}\" -X POST \"elastic:9200/_security/user/kibana_system/_password?pretty\" -H 'Content-Type: application/json' -d'{  \"password\" : \"${KIBANA_PASSWORD:-KibanaPassword}\"}'" ]
+        container_name: KibanaPWSetup
+
+    kibana:
+        depends_on:
+            kibana_pw_setup:
+                 condition: service_completed_successfully
+        image: kibana:8.6.2
+        ports:
+            - 5601:5601
+        environment:
+            - SERVERNAME=kibana
+            - ELASTICSEARCH_HOSTS=http://elastic:9200
+            - ELASTICSEARCH_USERNAME=kibana_system
+            - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD:-KibanaPassword}
+        mem_limit: 2g
         container_name: Kibana
