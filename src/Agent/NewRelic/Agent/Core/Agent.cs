@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core
         private readonly ILogEventAggregator _logEventAggregator;
         private readonly ILogContextDataFilter _logContextDataFilter;
         private Extensions.Logging.ILogger _logger;
-        private IStackExchangeRedisCache _stackExchangeRedisCache;
+        private volatile IStackExchangeRedisCache _stackExchangeRedisCache;
 
         public Agent(ITransactionService transactionService, ITransactionTransformer transactionTransformer,
             IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker,

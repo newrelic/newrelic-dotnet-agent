@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Agent.Extensions.Helpers
 {
@@ -11,8 +12,6 @@ namespace NewRelic.Agent.Extensions.Helpers
     /// </summary>
     public interface IStackExchangeRedisCache : IDisposable
     {
-        void Harvest(string spanId);
-
-        int Count { get; }
+        void Harvest(ISegment segment);
     }
 }
