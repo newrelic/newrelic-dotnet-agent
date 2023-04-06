@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using Nest;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
@@ -39,6 +38,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                         _client = new ElasticsearchElasticClient();
                         break;
                 }
+                _client.Connect();
             }
             else
             {

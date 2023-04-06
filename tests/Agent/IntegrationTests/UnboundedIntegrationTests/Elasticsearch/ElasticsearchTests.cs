@@ -33,15 +33,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.ElasticsearchTests
 
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
 
-            _fixture.AddCommand($"StackexchangeExerciser SetClient {clientType}");
+            _fixture.AddCommand($"ElasticsearchExerciser SetClient {clientType}");
 
-            _fixture.AddCommand($"StackexchangeExerciser Index");
+            _fixture.AddCommand($"ElasticsearchExerciser Index");
 
-            _fixture.AddCommand($"StackexchangeExerciser Index async");
+            _fixture.AddCommand($"ElasticsearchExerciser Index async");
 
-            _fixture.AddCommand($"StackexchangeExerciser Search");
+            _fixture.AddCommand($"ElasticsearchExerciser Search");
 
-            _fixture.AddCommand($"StackexchangeExerciser Search async");
+            _fixture.AddCommand($"ElasticsearchExerciser Search async");
 
             _fixture.Actions
             (
