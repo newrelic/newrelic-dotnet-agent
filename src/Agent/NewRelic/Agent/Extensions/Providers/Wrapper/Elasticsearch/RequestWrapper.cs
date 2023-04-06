@@ -34,10 +34,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var databaseName = string.Empty; // Per Elastic.co this SQL DB concept most closely maps to "cluster instance name".  TBD how to get this
             var model = path.Trim('/').Split('/')[0]; // "model"=table name for SQL.  For elastic it's index name.  It appears to always be the first component of the path
 
-            var typeOfRequestParams = requestParams.GetType();
-
-            var requestParamsTypeName = typeOfRequestParams.Name;  // IndexRequestParameters, SearchRequestParameters, etc
-            var operation = requestParamsTypeName.Remove(requestParamsTypeName.Length - "RequestParameters".Length);
+            var operation = GetOperationFromRequestParams(requestParams);
 
             Uri endpoint = null; // Unavailable at this point, but maybe available in the response - need to do some work in the AfterWrappedMethodDelegate
 
@@ -80,9 +77,16 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                             apiCallDetailsPropertyName = "ApiCallDetails";
                             apiCallDetailsType = "Elastic.Transport.ApiCallDetails";
                         }
-                        else if (responseTypeAssemblyFullName.StartsWith("Nest")) //???
+                        else if (responseTypeAssemblyFullName.StartsWith("Nest"))
                         {
                             responseAssemblyName = "Nest";
+                            apiCallDetailsAssemblyName = "Elasticsearch.Net";
+                            apiCallDetailsPropertyName = "ApiCall";
+                            apiCallDetailsType = "Elasticsearch.Net.ApiCallDetails";
+                        }
+                        else if (responseTypeAssemblyFullName.StartsWith("Elasticsearch.Net"))
+                        {
+                            responseAssemblyName = "Elasticsearch.Net";
                             apiCallDetailsAssemblyName = "Elasticsearch.Net";
                             apiCallDetailsPropertyName = "ApiCall";
                             apiCallDetailsType = "Elasticsearch.Net.ApiCallDetails";
@@ -105,6 +109,19 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                         // Don't know how valid this is
                         segment.End(exception);
                     });
+        }
+
+        private string GetOperationFromRequestParams(object requestParams)
+        {
+            if (requestParams == null)
+            {
+                // Params will be null when the low-level Elasticsearch.Net client is used, fall back to a generic operation name
+                return "Query";
+            }
+            var typeOfRequestParams = requestParams.GetType();
+
+            var requestParamsTypeName = typeOfRequestParams.Name;  // IndexRequestParameters, SearchRequestParameters, etc
+            return requestParamsTypeName.Remove(requestParamsTypeName.Length - "RequestParameters".Length);
         }
     }
 }
