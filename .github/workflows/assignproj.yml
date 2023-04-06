@@ -7,14 +7,22 @@ on:
 env:
   MY_GITHUB_TOKEN: ${{ secrets.DOTNET_GITHUB_TOKEN }}
 
+permissions:
+  contents: read
+
 jobs:
   assign_one_project:
     runs-on: ubuntu-latest
     name: Assign to One Project
     steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
     - name: Assign NEW issues and NEW pull requests to Dotnet Engineering Board
 
-      uses: srggrs/assign-one-project-github-action@1.2.0
+      uses: srggrs/assign-one-project-github-action@ee9e04cf29076579440cf7a149b0d5647467dc5b # 1.2.0
       if: github.event.action == 'opened'
       with:
         project: 'https://github.com/orgs/newrelic/projects/20'
