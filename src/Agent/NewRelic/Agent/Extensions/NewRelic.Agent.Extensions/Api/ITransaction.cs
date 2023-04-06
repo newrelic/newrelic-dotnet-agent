@@ -113,12 +113,6 @@ namespace NewRelic.Agent.Api
         IEnumerable<KeyValuePair<string, string>> GetResponseMetadata();
 
         /// <summary>
-        /// Processes incoming distributed trace request.
-        /// </summary>
-        /// <param name="payload">Serialized incoming distributed trace payload.  May or may not be Base64 Encoded.</param>
-        void AcceptDistributedTracePayload(string payload, TransportType transportType);
-
-        /// <summary>
         /// Returns the distributed trace payload model that is attached to the outbound request.
         /// </summary>
         /// <returns>The distributed trace payload model representing the outgoing request.</returns>

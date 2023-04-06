@@ -92,8 +92,6 @@ namespace NewRelic.Agent.Api
         /// <param name="requestPath">The path of the request</param>
         Stream TryGetStreamInjector(Stream stream, Encoding encoding, string contentType, string requestPath);
 
-        bool TryGetDistributedTracePayloadFromHeaders<T>(IEnumerable<KeyValuePair<string, T>> headers, out T payload) where T : class;
-
         /// <summary>
         /// Returns the Trace Metadata of the currently executing transaction.
         /// </summary>
