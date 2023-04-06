@@ -1,0 +1,766 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /.github/workflows/scripts/nugetSlackNotifications
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /build/ArtifactBuilder
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /build/Linux/build/deb
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /build/Linux/build/rpm
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /build/Linux/test/applications/custom_attributes
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /build/Linux/test/applications/custom_xml
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /build/Linux/test/applications/http_client_test
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /build/Linux/test/distros/centos
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /build/Linux/test/distros/debian
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /build/NewRelic.NuGetHelper
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /deploy/linux
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/MsiInstaller/InstallerActions
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic.Api.Agent
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Core
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Storage/AsyncLocal
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Storage/CallContext
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Storage/HttpContext
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Storage/OperationContext
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AspNet
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/AspNetCore
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/CosmosDb
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/Couchbase
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/HttpClient
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/HttpWebRequest
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/Log4NetLogging
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/MicrosoftExtensionsLogging
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/MongoDb
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/MongoDb26
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/Msmq
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/Mvc3
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/NLogLogging
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/NServiceBus
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/OpenRasta
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/Owin
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/RabbitMq
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/RestSharp
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/ScriptHandlerFactory
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/SerilogLogging
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/ServiceStackRedis
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/Sql
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/StackExchangeRedis
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/StackExchangeRedis2Plus
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/Wcf3
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/WebApi1
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/WebApi2
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/WebOptimization
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Extensions/Providers/Wrapper/WebServices
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Agent/Parsing
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Home
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Profiler/MockCore
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Profiler/ProfiledMethods
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/Agent/NewRelic/Profiler/VersionFileGenerator
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /src/Agent/NewRelic/Profiler/linux
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/AwsLambda/AwsLambdaOpenTracer
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/AwsLambda/AwsLambdaWrapper
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /src/NewRelic.Core
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/Benchmarking/Benchmarking
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/Benchmarking/BenchmarkingTests
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/Benchmarking/ConcurrentBenchmarking
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/ApplicationHelperLibraries/ApplicationLifecycle
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/ApplicationHelperLibraries/NetCore3Collectible
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AgentApiExecutor
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/ApiAppNameChange
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCore3BasicWebApiApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCore3Features
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCore5BasicWebApiApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCore6BasicWebApiApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCore7BasicWebApiApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCoreDistTracingApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCoreMvcAsyncApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCoreMvcBasicRequestsApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCoreMvcCoreFrameworkApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCoreMvcFrameworkApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCoreMvcFrameworkAsyncApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCoreMvcRejitApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/AspNetCoreWebApiCustomAttributesApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/BasicAspWebService
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/BasicMvcApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/BasicWebApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/BasicWebFormsApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/BasicWebService
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/ConsoleAsyncApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/ConsoleInstrumentationLoader
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/ConsoleInstrumentationLoaderCore
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/ConsoleOtherTransactionWrapperApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/CustomAttributesWebApi
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/DistributedTracingApiApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/MockNewRelic
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/MvcAsyncApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/NetCoreAsyncApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/OpenRastaWebApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/Owin2WebApi
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/Owin3WebApi
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/Owin4WebApi
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/OwinRemotingClient
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/OwinRemotingServer
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/RejitMvcApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/SerilogSumologicApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/ServiceStackApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/ThreadProfileStressTest
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Applications/WebApiAsyncApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/HostedWebCore
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/IntegrationTestHelpers.Test
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/IntegrationTestHelpers
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/IntegrationTests
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Models
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/Shared
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/SharedApplications/Common/MultiFunctionApplicationHelpers
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/SharedApplications/Common/NetStandardTestLibrary
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/SharedApplications/ConsoleMultiFunctionApplicationCore
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/SharedApplications/ConsoleMultiFunctionApplicationFW
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/SharedApplications/WcfAppIisHosted
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/UnboundedApplications/BasicMvcApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/UnboundedApplications/BasicMvcCoreApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/UnboundedApplications/MongoDBApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/IntegrationTests/UnboundedIntegrationTests
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/IntegrationTests/UnboundedServices/cosmosdb
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/IntegrationTests/UnboundedServices/couchbase
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/IntegrationTests/UnboundedServices/db2
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/IntegrationTests/UnboundedServices/mongodb32
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/IntegrationTests/UnboundedServices/mongodb60
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/IntegrationTests/UnboundedServices/mssql
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/IntegrationTests/UnboundedServices/mysql
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/IntegrationTests/UnboundedServices/oracle
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/IntegrationTests/UnboundedServices/postgres
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/IntegrationTests/UnboundedServices/rabbitmq
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/IntegrationTests/UnboundedServices/redis
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/MultiverseTesting/ConsoleScanner
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/MultiverseTesting/MultiverseScanner
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/MultiverseTesting/ReportBuilder
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/NewRelic.Testing.Assertions
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/PlatformTests/Applications/AWSLambdaTestApplication/AWSLambdaTestApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/PlatformTests/Applications/AWSLambdaTestApplication/AwsLambdaAwsSdkTestFunction
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/PlatformTests/Applications/AWSLambdaTestApplication/AwsLambdaChainCallingApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/PlatformTests/Applications/AWSLambdaTestApplication/AwsLambdaErrorTestFunction
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/PlatformTests/Applications/AgentLogHelper
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/PlatformTests/Applications/NetFrameworkBasicApplication/NetFrameworkBasicApplication
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/PlatformTests/Applications/ServiceFabricApplication/OwinService
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/PlatformTests/PlatformTests
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /tests/Agent/SmokeTest
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/SmokeTest/app
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/UnitTests/AsyncLocalTests
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/UnitTests/CompositeTests
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/UnitTests/Core.UnitTest
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/UnitTests/NewRelic.Agent.Extensions.Tests
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/UnitTests/NewRelic.Agent.TestUtilities
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/UnitTests/NewRelic.Testing.Assertions.UnitTests
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/Agent/UnitTests/ParsingTests
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/AwsLambda/UnitTests/AwsLambdaOpenTracerTests
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/AwsLambda/UnitTests/AwsLambdaWrapperTests
+    schedule:
+      interval: daily
+
+  - package-ecosystem: nuget
+    directory: /tests/NewRelic.Core.Tests
+    schedule:
+      interval: daily
