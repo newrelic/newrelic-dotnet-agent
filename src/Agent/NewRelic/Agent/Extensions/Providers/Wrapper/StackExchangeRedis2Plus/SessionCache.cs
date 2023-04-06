@@ -47,7 +47,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
 
             // Get the transaction from the session
             var weakTransaction = sessionData.UserToken as WeakReference<ITransaction>;
-            if (!weakTransaction?.TryGetTarget(out var transaction) || transaction.IsFinished)
+            if (!(weakTransaction?.TryGetTarget(out var transaction) ?? false) || transaction.IsFinished)
             {
                 return;
             }
