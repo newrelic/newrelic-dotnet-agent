@@ -14,8 +14,6 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
     {
         public bool IsTransactionRequired => true;
 
-        private const string AssemblyName = "Elasticsearch.Net";
-
         private const string WrapperName = "RequestWrapper";
 
 
@@ -34,20 +32,12 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
 
             //  For reference here's Elastic's take on mapping SQL terms/concepts to Elastic's: https://www.elastic.co/guide/en/elasticsearch/reference/current/_mapping_concepts_across_sql_and_elasticsearch.html
             var databaseName = string.Empty; // Per Elastic.co this SQL DB concept most closely maps to "cluster instance name".  TBD how to get this
-            var model = path.Split('/')[0]; // "model"=table name for SQL.  For elastic it's index name.  It appears to always be the first component of the path
+            var model = path.Trim('/').Split('/')[0]; // "model"=table name for SQL.  For elastic it's index name.  It appears to always be the first component of the path
 
             var typeOfRequestParams = requestParams.GetType();
 
-            var operation = string.Empty; // Depends on the type of either postData or requestParams
-            if (typeOfRequestParams.FullName == "Elasticsearch.Net.IndexRequestParameters")
-            {
-                operation = "Index";
-            }
-            else if (typeOfRequestParams.FullName == "Elasticsearch.Net.SearchRequestParameters")
-            {
-                operation = "Search";
-            }
-            // etc, etc
+            var requestParamsTypeName = typeOfRequestParams.Name;  // IndexRequestParameters, SearchRequestParameters, etc
+            var operation = requestParamsTypeName.Remove(requestParamsTypeName.Length - "RequestParameters".Length);
 
             Uri endpoint = null; // Unavailable at this point, but maybe available in the response - need to do some work in the AfterWrappedMethodDelegate
 
@@ -77,11 +67,32 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                         var typeOfResponse = response.GetType();
                         var responseFullType = typeOfResponse.FullName;
 
-                        var ApiCallDetailsGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("Nest", typeOfResponse.FullName, "ApiCall");
+                        var responseAssemblyName = string.Empty;
+                        var apiCallDetailsAssemblyName = string.Empty;
+                        var apiCallDetailsPropertyName = string.Empty;
+                        var apiCallDetailsType = string.Empty;
+
+                        var responseTypeAssemblyFullName = typeOfResponse.Assembly.FullName;
+                        if (responseTypeAssemblyFullName.StartsWith("Elastic.Clients"))
+                        {
+                            responseAssemblyName = "Elastic.Clients.Elasticsearch";
+                            apiCallDetailsAssemblyName = "Elastic.Transport";
+                            apiCallDetailsPropertyName = "ApiCallDetails";
+                            apiCallDetailsType = "Elastic.Transport.ApiCallDetails";
+                        }
+                        else if (responseTypeAssemblyFullName.StartsWith("Nest")) //???
+                        {
+                            responseAssemblyName = "Nest";
+                            apiCallDetailsAssemblyName = "Elasticsearch.Net";
+                            apiCallDetailsPropertyName = "ApiCall";
+                            apiCallDetailsType = "Elasticsearch.Net.ApiCallDetails";
+                        }
+
+                        var ApiCallDetailsGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);
                         var apiCallDetails = ApiCallDetailsGetter.Invoke(response);
 
                         // this could be cached because the assembly and type doesn't seem to change
-                        var UriGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>("Elasticsearch.Net", "Elasticsearch.Net.ApiCallDetails", "Uri");
+                        var UriGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>(apiCallDetailsAssemblyName, apiCallDetailsType, "Uri");
                         var uri = UriGetter.Invoke(apiCallDetails);
 
                         // TODO: need to figure out how to plumb things so that we can set the uri on the segment after it has already been created.

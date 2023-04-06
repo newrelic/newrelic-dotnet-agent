@@ -14,7 +14,7 @@ SPDX-License-Identifier: Apache-2.0
     </tracerFactory>
 
     <!--8.x Elastic.Clients.Elasticsearch -->
-    <tracerFactory name="ElasticTransportRequestWrapper">
+    <tracerFactory name="RequestWrapper">
       <match assemblyName="Elastic.Transport" className="Elastic.Transport.DefaultHttpTransport`1">
         <exactMethodMatcher methodName="Request" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters" />
       </match>
