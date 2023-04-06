@@ -16,6 +16,8 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
 
         private const string WrapperName = "RequestWrapper";
 
+        private Func<object, object> _apiCallDetailsGetter;
+        private Func<object, Uri> _uriGetter;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -56,47 +58,10 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             return Delegates.GetDelegateFor<object>(
                     onSuccess: response =>
                     {
-                        // The type of response varies depending on the operation.  IndexResponse for index operations, SearchResponse for search, etc.
-                        // Also note that the assembly is "Nest" because the test app I used to prototype this uses the NEST high-level client but
-                        // I assume that if somebody was using the low-level client library directly, it would be a different assembly name.
-                        // This prevents us from caching the ApiCallDetailsGetter, meaning an expensive reflection operation for each API call.
-                        // Is there a better way, maybe using the dynamic keyword?
-                        var typeOfResponse = response.GetType();
-                        var responseFullType = typeOfResponse.FullName;
-
-                        var responseAssemblyName = string.Empty;
-                        var apiCallDetailsAssemblyName = string.Empty;
-                        var apiCallDetailsPropertyName = string.Empty;
-                        var apiCallDetailsType = string.Empty;
-
-                        var responseTypeAssemblyFullName = typeOfResponse.Assembly.FullName;
-                        if (responseTypeAssemblyFullName.StartsWith("Elastic.Clients"))
-                        {
-                            responseAssemblyName = "Elastic.Clients.Elasticsearch";
-                            apiCallDetailsAssemblyName = "Elastic.Transport";
-                            apiCallDetailsPropertyName = "ApiCallDetails";
-                            apiCallDetailsType = "Elastic.Transport.ApiCallDetails";
-                        }
-                        else if (responseTypeAssemblyFullName.StartsWith("Nest"))
-                        {
-                            responseAssemblyName = "Nest";
-                            apiCallDetailsAssemblyName = "Elasticsearch.Net";
-                            apiCallDetailsPropertyName = "ApiCall";
-                            apiCallDetailsType = "Elasticsearch.Net.ApiCallDetails";
-                        }
-                        else if (responseTypeAssemblyFullName.StartsWith("Elasticsearch.Net"))
-                        {
-                            responseAssemblyName = "Elasticsearch.Net";
-                            apiCallDetailsAssemblyName = "Elasticsearch.Net";
-                            apiCallDetailsPropertyName = "ApiCall";
-                            apiCallDetailsType = "Elasticsearch.Net.ApiCallDetails";
-                        }
-
-                        var ApiCallDetailsGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);
+                        var ApiCallDetailsGetter = _apiCallDetailsGetter ??= GetApiCallDetailsGetterFromResponse(response);
                         var apiCallDetails = ApiCallDetailsGetter.Invoke(response);
 
-                        // this could be cached because the assembly and type doesn't seem to change
-                        var UriGetter = VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>(apiCallDetailsAssemblyName, apiCallDetailsType, "Uri");
+                        var UriGetter = _uriGetter ??= GetUriGetterFromResponse(response);
                         var uri = UriGetter.Invoke(apiCallDetails);
 
                         // TODO: need to figure out how to plumb things so that we can set the uri on the segment after it has already been created.
@@ -123,5 +88,24 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var requestParamsTypeName = typeOfRequestParams.Name;  // IndexRequestParameters, SearchRequestParameters, etc
             return requestParamsTypeName.Remove(requestParamsTypeName.Length - "RequestParameters".Length);
         }
+
+        private Func<object, object> GetApiCallDetailsGetterFromResponse(object response)
+        {
+            var typeOfResponse = response.GetType();
+            var responseAssemblyName = typeOfResponse.Assembly.FullName;
+            var apiCallDetailsPropertyName = responseAssemblyName.StartsWith("Elastic.Clients.Elasticsearch") ? "ApiCallDetails" : "ApiCall";
+
+            return VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);
+        }
+
+        private Func<object, Uri> GetUriGetterFromResponse(object response)
+        {
+            var responseAssemblyName = response.GetType().Assembly.FullName;
+            var apiCallDetailsAssemblyName = responseAssemblyName.StartsWith("Elastic.Clients.Elasticsearch") ? "Elastic.Transport" : "Elasticsearch.Net";
+            var apiCallDetailsType = $"{apiCallDetailsAssemblyName}.ApiCallDetails";
+
+            return VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>(apiCallDetailsAssemblyName, apiCallDetailsType, "Uri");
+        }
+
     }
 }
