@@ -44,11 +44,6 @@ jobs:
       output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
 
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-        with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
       - name: Checkout
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
@@ -220,11 +215,6 @@ jobs:
       agentVersion: ${{ steps.agentVersion.outputs.version }}
 
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-        with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
       - name: Checkout
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
@@ -407,11 +397,6 @@ jobs:
       integration_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
 
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-        with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
       - name: Checkout
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
@@ -454,11 +439,6 @@ jobs:
       unbounded_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\UnboundedIntegrationTests.sln
 
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-        with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
       - name: Checkout
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
@@ -511,11 +491,6 @@ jobs:
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
       
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-        with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
       - name: Checkout
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
@@ -692,11 +667,6 @@ jobs:
       enhanced_logging: false
 
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-        with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
       - name: My IP
         run: (Invoke-WebRequest -uri "http://ifconfig.me/ip").Content
         shell: powershell
@@ -943,11 +913,6 @@ jobs:
     runs-on: windows-2022
 
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-        with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
       - name: Checkout
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
