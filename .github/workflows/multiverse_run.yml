@@ -62,7 +62,7 @@ jobs:
         shell: bash
 
       - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@608ee757cfcce72c2e91e99aca128e0cae67de87 # v1.9.1
+        uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a # v3.0.3
         with:
           dotnet-version: '3.1.100'
 
@@ -107,7 +107,7 @@ jobs:
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
       - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@608ee757cfcce72c2e91e99aca128e0cae67de87 # v1.9.1
+        uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a # v3.0.3
         with:
           dotnet-version: '3.1.100'
 
