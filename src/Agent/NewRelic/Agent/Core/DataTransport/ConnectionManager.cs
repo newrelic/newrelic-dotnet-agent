@@ -107,10 +107,10 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 HandleHttpErrorResponse(ex);
             }
-            // Occurs when the agent is unable to connect to APM
-            catch (HttpRequestException httpRequestException)
+            // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
+            // issue such as network connectivity, DNS failure, server certificate validation or timeout.
+            catch (HttpRequestException)
             {
-                Log.Warn(httpRequestException);
                 ScheduleRestart();
             }
             // Occurs when the agent connects to APM but the connection gets aborted by the collector
