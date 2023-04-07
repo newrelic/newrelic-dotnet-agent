@@ -131,7 +131,7 @@ jobs:
         shell: bash
 
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@0f24da7de3e7e135102609a4c9633b025be8411b # 4.1.5
+        uses: JamesIves/github-pages-deploy-action@ba1486788b0490a235422264426c45848eac35c6 # 4.4.1
         with:
           branch: gh-pages
           folder: .
