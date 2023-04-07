@@ -17,6 +17,9 @@ on:
 env:
   DOTNET_NOLOGO: true
 
+permissions:
+  contents: read
+
 jobs:
   nuget-slack-notifications:
     name: Check for core technology package updates
@@ -27,8 +30,13 @@ jobs:
       scan-tool-path: ${{ github.workspace }}/.github/workflows/scripts/nugetSlackNotifications
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
         with:
           fetch-depth: 0
 

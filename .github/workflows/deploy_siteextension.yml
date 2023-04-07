@@ -14,14 +14,25 @@ on:
 env:
   DOTNET_NOLOGO: true
 
+permissions:
+  contents: read
+
 jobs:
 
   get-external-artifacts:
+    permissions:
+      actions: read  # for dawidd6/action-download-artifact to query and download artifacts
+      pull-requests: read  # for dawidd6/action-download-artifact to query commit hash
     name: Get and Publish Deploy Artifacts Locally
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
       - name: Download Deploy Artifacts
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@7132ab516fba5f602fafae6fdd4822afa10db76f # v2.26.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: siteextension_release.yml
@@ -31,7 +42,7 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}
@@ -47,7 +58,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir
