@@ -12,26 +12,20 @@ on:
   schedule:
     - cron:  '0 9 * * *'
 
+# only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  
 env:
   scripts_path: ${{ github.workspace }}\build\scripts
   tools_path: ${{ github.workspace }}\build\Tools
   DOTNET_NOLOGO: true
 
 jobs:
-
-  cancel-previous-workflow-runs:
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || ( github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v') )
-    name: Cancel Previous Runs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-        with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-      - uses: rokroskar/workflow-run-cleanup-action@c631227427d0452af4994af0940d7655ebc50c7c # master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows-profiler:
     needs: cancel-previous-workflow-runs
@@ -135,7 +129,10 @@ jobs:
     needs: cancel-previous-workflow-runs
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
-    
+    permissions:
+      contents: read  # for actions/checkout to fetch code
+      packages: write  # for uraimo/run-on-arch-action to cache docker images    
+
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
     
@@ -583,6 +580,9 @@ jobs:
     name: Run IntegrationTests linux-arm64
     runs-on: ubuntu-22.04
     if: false
+    permissions:
+      contents: read  # for actions/checkout to fetch code
+      packages: write  # for uraimo/run-on-arch-action to cache docker images
 
     env:
       test_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/TestResults
