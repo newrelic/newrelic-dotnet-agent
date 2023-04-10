@@ -22,7 +22,7 @@ jobs:
 
     - name: Assign NEW issues and NEW pull requests to Dotnet Engineering Board
 
-      uses: srggrs/assign-one-project-github-action@ee9e04cf29076579440cf7a149b0d5647467dc5b # 1.2.0
+      uses: srggrs/assign-one-project-github-action@65a8ddab497df42ef268001e67bbf976f8fd39e1 # 1.3.1
       if: github.event.action == 'opened'
       with:
         project: 'https://github.com/orgs/newrelic/projects/20'
