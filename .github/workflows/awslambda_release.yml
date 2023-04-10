@@ -21,7 +21,6 @@ env:
 jobs:
 
   build-test-lambda:
-    needs: [ cancel-previous-workflow-runs ]
     name: Build and Test FullAgent and MSIInstaller
     runs-on: windows-2019
 
