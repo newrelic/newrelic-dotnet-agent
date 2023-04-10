@@ -7,9 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.UnboundedIntegrationTests.ElasticsearchTests;
 using NewRelic.Testing.Assertions;
-using StackExchange.Redis;
 using Xunit;
 using Xunit.Abstractions;
 
