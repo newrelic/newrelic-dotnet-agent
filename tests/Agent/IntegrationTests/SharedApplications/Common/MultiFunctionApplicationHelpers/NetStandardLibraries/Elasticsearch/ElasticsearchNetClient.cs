@@ -4,7 +4,7 @@
 using System;
 using System.Threading.Tasks;
 using Elasticsearch.Net;
-using NewRelic.IntegrationTests.Models;
+using NewRelic.Agent.IntegrationTests.Shared;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 {
@@ -15,6 +15,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         public override void Connect()
         {
             var settings = new ConnectionConfiguration(Address)
+                .BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
+                    ElasticSearchConfiguration.ElasticPassword)
                 .RequestTimeout(TimeSpan.FromMinutes(2));
 
             _client = new ElasticLowLevelClient(settings);
@@ -22,23 +24,27 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
         public override void Index()
         {
-            var record = new FakeRecord("foo", "bar", "home", 12345);
-            var indexResponse = _client.Index<BytesResponse>("people", "1", PostData.Serializable(record));
+            var record = FlightRecord.GetSample();
+            var indexResponse = _client.Index<BytesResponse>(IndexName, record.Id.ToString(), PostData.Serializable(record));
             byte[] responseBytes = indexResponse.Body;
 
+            // TODO: Validate that it worked
         }
 
         public override async Task<bool> IndexAsync()
         {
-            var record = new FakeRecord("foo", "bar", "home", 12345);
+            var record = FlightRecord.GetSample();
 
-            var response = await _client.IndexAsync<StringResponse>("people", "1", PostData.Serializable(record));
+            var response = await _client.IndexAsync<StringResponse>(IndexName, record.Id.ToString(), PostData.Serializable(record));
+
+            // TODO: Validate that it worked
+
             return response.Success;
         }
 
         public override void Search()
         {
-            var searchResponse = _client.Search<StringResponse>("people", PostData.Serializable(new
+            var searchResponse = _client.Search<StringResponse>(IndexName, PostData.Serializable(new
             {
                 from = 0,
                 size = 10,
@@ -46,9 +52,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 {
                     match = new
                     {
-                        LastName = new
+                        Departure = new
                         {
-                            query = "Bar"
+                            query = FlightRecord.GetSample().Departure
                         }
                     }
                 }
@@ -56,11 +62,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var successful = searchResponse.Success;
             var responseJson = searchResponse.Body;
+
+            // TODO: Validate that it worked
         }
 
         public override async Task<long> SearchAsync()
         {
-            var response = await _client.SearchAsync<StringResponse>("people", PostData.Serializable(new
+            var response = await _client.SearchAsync<StringResponse>(IndexName, PostData.Serializable(new
             {
                 from = 0,
                 size = 10,
@@ -68,14 +76,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 {
                     match = new
                     {
-                        LastName = new
+                        Departure = new
                         {
-                            query = "Bar"
+                            query = FlightRecord.GetSample().Departure
                         }
                     }
                 }
             }));
-            // Gotta parse the JSON :(
+            // TODO: Gotta parse the JSON :(
             var json = response.Body;
             return 0;
         }

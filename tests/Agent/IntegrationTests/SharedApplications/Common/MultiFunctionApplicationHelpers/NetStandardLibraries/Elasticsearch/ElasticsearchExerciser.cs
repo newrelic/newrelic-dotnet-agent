@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Runtime.CompilerServices;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
@@ -21,6 +22,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         private const string ASYNC_MODE = "async";
 
         [LibraryMethod]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        /// <summary>
+        /// Sets the library to use for further actions
+        /// </summary>
+        /// <param name="client">ElasticsearchNet, NEST, or ElasticClients</param>
         public void SetClient(string clientType)
         {
             if (Enum.TryParse(clientType, out ClientType client))
@@ -48,6 +54,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
         [LibraryMethod]
         [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        /// <summary>
+        /// Performs an Elasticsearch Search operation
+        /// </summary>
+        /// <param name="syncMode">sync or async</param>
         public void Search(string syncMode)
         {
             if (syncMode == ASYNC_MODE)
@@ -62,6 +73,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
         [LibraryMethod]
         [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        /// <summary>
+        /// Performs an Elasticsearch Index operation
+        /// </summary>
+        /// <param name="syncMode">sync or async</param>
         public void Index(string syncMode)
         {
             if (syncMode == ASYNC_MODE)
