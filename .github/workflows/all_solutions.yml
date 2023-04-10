@@ -972,6 +972,8 @@ jobs:
           if-no-files-found: error
   
   run-multiverse_testing_suite:
+    permissions: 
+      contents: write
     name: Build and Publish Multiverse Testing Suite
     needs: build-test-fullagent-msi
     if: ${{ github.event.release }}
