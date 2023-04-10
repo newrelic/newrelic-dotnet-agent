@@ -136,13 +136,13 @@
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net7.0'" />
 
-    <!-- Elasticsearch.Net framework references -->
+    <!-- Elastic.Clients.Elasticsearch framework references -->
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net481'" />
 
-    <!-- Elasticsearch.Net .NET/Core references -->
+    <!-- Elastic.Clients.Elasticsearch .NET/Core references -->
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net5.0'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net6.0'" />

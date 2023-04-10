@@ -84,7 +84,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchNestAsyncTestsFW462 : ElasticsearchAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public ElasticsearchNestAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            // FW462 is testing MongoDB.Driver version 2.3, which needs to connect to the 3.2 server
             : base(fixture, output, ClientType.NEST.ToString())
         {
         }
@@ -160,7 +159,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchNetAsyncTestsFW462 : ElasticsearchAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public ElasticsearchNetAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            // FW462 is testing MongoDB.Driver version 2.3, which needs to connect to the 3.2 server
             : base(fixture, output, ClientType.ElasticsearchNet.ToString())
         {
         }
@@ -235,7 +233,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchElasticClientAsyncTestsFW462 : ElasticsearchAsyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public ElasticsearchElasticClientAsyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            // FW462 is testing MongoDB.Driver version 2.3, which needs to connect to the 3.2 server
             : base(fixture, output, ClientType.ElasticClients.ToString())
         {
         }
