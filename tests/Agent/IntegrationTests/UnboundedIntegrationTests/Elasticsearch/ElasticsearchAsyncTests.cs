@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiFunctionApplicationHelpers;
@@ -14,14 +15,43 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 {
-    public abstract class ElasticsearchAsyncTestsBase<TFixture> : ElasticsearchTestsBase<TFixture>
+    public abstract class ElasticsearchAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
-        const string SYNC_MODE = "async";
-
-        protected ElasticsearchAsyncTestsBase(TFixture fixture, ITestOutputHelper output, string clientType) : base(fixture, output, clientType, SYNC_MODE)
+        protected enum ClientType
         {
+            ElasticsearchNet,
+            NEST,
+            ElasticClients
+        }
 
+        protected readonly ConsoleDynamicMethodFixture _fixture;
+
+        protected ElasticsearchAsyncTestsBase(TFixture fixture, ITestOutputHelper output, string clientType) : base(fixture)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+
+            // TODO: Set high to allow for debugging
+            _fixture.SetTimeout(TimeSpan.FromMinutes(20));
+
+            _fixture.AddCommand($"ElasticsearchExerciser SetClient {clientType}");
+
+            _fixture.AddCommand($"ElasticsearchExerciser IndexAsync");
+
+            _fixture.AddCommand($"ElasticsearchExerciser SearchAsync");
+
+            _fixture.Actions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ForceTransactionTraces();
+                }
+            );
+
+            _fixture.Initialize();
         }
 
         [Fact]

@@ -19,7 +19,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
         private ClientType _clientType;
         private ElasticsearchTestClient _client;
-        private const string ASYNC_MODE = "async";
 
         [LibraryMethod]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -55,40 +54,21 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        /// <summary>
-        /// Performs an Elasticsearch Search operation
-        /// </summary>
-        /// <param name="syncMode">sync or async</param>
-        public void Search(string syncMode)
-        {
-            if (syncMode == ASYNC_MODE)
-            {
-                _client.SearchAsync();
-            }
-            else
-            {
-                _client.Search();
-            }
-        }
+        public void Search() => _client.Search();
+
+        [LibraryMethod]
+        [Transaction]
+        public void SearchAsync() => _client.SearchAsync();
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        /// <summary>
-        /// Performs an Elasticsearch Index operation
-        /// </summary>
-        /// <param name="syncMode">sync or async</param>
-        public void Index(string syncMode)
-        {
-            if (syncMode == ASYNC_MODE)
-            {
-                _client.IndexAsync();
-            }
-            else
-            {
-                _client.Index();
-            }
-        }
+        public void Index() => _client.Index();
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void IndexAsync() => _client.IndexAsync();
 
     }
 }
