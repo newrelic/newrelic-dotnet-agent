@@ -45,7 +45,8 @@ on:
 
 permissions:
   contents: read
-
+  packages: read
+  
 jobs:
   s3-build-index:
     name: Build index.html files
