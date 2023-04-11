@@ -46,7 +46,7 @@ on:
 permissions:
   contents: read
   packages: read
-  
+
 jobs:
   s3-build-index:
     name: Build index.html files
@@ -54,10 +54,10 @@ jobs:
     container:
       image: ghcr.io/newrelic/s3indexer
     steps:
-      # - name: Harden Runner
-      #   uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-      #   with:
-      #     egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+      - name: Harden Runner
+        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
       - name: Login to AWS
         uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef # v2.0.0
