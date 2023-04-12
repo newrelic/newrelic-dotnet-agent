@@ -48,26 +48,14 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var postData = instrumentedMethodCall.MethodCall.MethodArguments[2];
             var requestParams = instrumentedMethodCall.MethodCall.MethodArguments[indexOfRequestParams];
 
-            //  For reference here's Elastic's take on mapping SQL terms/concepts to Elastic's: https://www.elastic.co/guide/en/elasticsearch/reference/current/_mapping_concepts_across_sql_and_elasticsearch.html
-            var databaseName = string.Empty; // Per Elastic.co this SQL DB concept most closely maps to "cluster instance name".  TBD how to get this
-            var model = path.Trim('/').Split('/')[0]; // "model"=table name for SQL.  For elastic it's index name.  It appears to always be the first component of the path
+            var model = path.Trim('/').Split('/')[0]; // For SQL datastores, "model" is the table name. For Elastic it's the index name, which is always the first component of the request path.
 
             var operation = GetOperationFromRequestParams(requestParams);
-
-            // Playing with extending the experimental API to allow us to add data to a datastore segment after it has been started.
-            // See ITransactionExperimental.CreateExternalSegmentData and how that is used in the SendAsync wrapper for HttpClient instrumentation.
-            // Ran out of time during the spike to carry this through to completion.
 
             var transactionExperimental = transaction.GetExperimentalApi();
             var datastoreSegmentData = transactionExperimental.CreateDatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.Elasticsearch, model, operation), new ConnectionInfo(string.Empty, string.Empty, databaseName), string.Empty, null);
             var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
             segment.GetExperimentalApi().SetSegmentData(datastoreSegmentData).MakeLeaf();
-
-            //var segment = transaction.StartDatastoreSegment(
-            //    instrumentedMethodCall.MethodCall,
-            //    new ParsedSqlStatement(DatastoreVendor.Elasticsearch, model, operation),
-            //    connectionInfo: endpoint != null ? new ConnectionInfo(endpoint.Host, endpoint.Port.ToString(), databaseName) : new ConnectionInfo(string.Empty, string.Empty, databaseName),
-            //    isLeaf: true);
 
             if (instrumentedMethodCall.IsAsync)
             {
