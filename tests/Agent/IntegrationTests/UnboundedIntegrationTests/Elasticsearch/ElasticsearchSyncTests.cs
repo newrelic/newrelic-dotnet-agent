@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -24,6 +25,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
 
         protected readonly ConsoleDynamicMethodFixture _fixture;
+
+        protected readonly string _host = ElasticSearchConfiguration.ElasticServer.Remove(0, "http://".Length);
 
 
         protected ElasticsearchSyncTestsBase(TFixture fixture, ITestOutputHelper output, string clientType) : base(fixture)
@@ -71,12 +74,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
             var operationDatastoreSpans = spanEvents.Where(@event => @event.IntrinsicAttributes["traceId"].ToString().Equals(traceId) && @event.IntrinsicAttributes["name"].ToString().Contains("Datastore/statement/Elasticsearch"));
 
+            var operationDatastoreAgentAttributes = operationDatastoreSpans.FirstOrDefault().AgentAttributes;
+
+            var uri = operationDatastoreAgentAttributes.Where(x => x.Key == "peer.address").FirstOrDefault().Value;
 
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assert.Equal(1, operationDatastoreSpans.Count())
-            );
+                () => Assert.Equal(1, operationDatastoreSpans.Count()),
+                () => Assert.Equal(_host, uri)
+            ); ;
         }
 
     }
