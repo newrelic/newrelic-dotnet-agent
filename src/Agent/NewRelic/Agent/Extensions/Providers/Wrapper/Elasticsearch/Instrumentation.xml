@@ -15,7 +15,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <tracerFactory name="RequestWrapper">
       <match assemblyName="Elasticsearch.Net" className="Elasticsearch.Net.Transport`1">
-        <exactMethodMatcher methodName="RequestAsync" parameters="Elasticsearch.Net.HttpMethod,System.String,Elasticsearch.Net.PostData,Elasticsearch.Net.IRequestParameters,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="RequestAsync" parameters="Elasticsearch.Net.HttpMethod,System.String,System.Threading.CancellationToken,Elasticsearch.Net.PostData,Elasticsearch.Net.IRequestParameters" />
       </match>
     </tracerFactory>
 

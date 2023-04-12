@@ -8,7 +8,6 @@ using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using System.Collections.Concurrent;
-using System.Net.Http;
 
 namespace NewRelic.Providers.Wrapper.Elasticsearch
 {
@@ -31,16 +30,22 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            // borrowed this from HttpClient instrumentation, not sure if necessary?
+            var indexOfRequestParams = 3; // unless it's Elasticsearch.Net/NEST and async
+
             if (instrumentedMethodCall.IsAsync) 
             {
                 transaction.AttachToAsync();
+
+                var parameterTypeNamesList = instrumentedMethodCall.InstrumentedMethodInfo.Method.ParameterTypeNames.Split(',');
+                if (parameterTypeNamesList[4] == "Elasticsearch.Net.IRequestParameters")
+                {
+                    indexOfRequestParams = 4;
+                }
             }
 
-            //Elasticsearch.Net.HttpMethod,System.String,Elasticsearch.Net.PostData,Elasticsearch.Net.IRequestParameters
             var path = (string)instrumentedMethodCall.MethodCall.MethodArguments[1];
             var postData = instrumentedMethodCall.MethodCall.MethodArguments[2];
-            var requestParams = instrumentedMethodCall.MethodCall.MethodArguments[3];
+            var requestParams = instrumentedMethodCall.MethodCall.MethodArguments[indexOfRequestParams];
 
             //  For reference here's Elastic's take on mapping SQL terms/concepts to Elastic's: https://www.elastic.co/guide/en/elasticsearch/reference/current/_mapping_concepts_across_sql_and_elasticsearch.html
             var databaseName = string.Empty; // Per Elastic.co this SQL DB concept most closely maps to "cluster instance name".  TBD how to get this
