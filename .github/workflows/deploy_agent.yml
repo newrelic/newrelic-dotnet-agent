@@ -34,6 +34,9 @@ on:
         required: true
         default: 'true'
 
+permissions:
+  contents: read
+  
 env:
   DOTNET_NOLOGO: true
 
@@ -137,7 +140,7 @@ jobs:
     uses: ./.github/workflows/build_download_site_index_files.yml
     strategy:
       matrix:
-        prefix: ["dot_net_agent/latest_release", "dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}"]
+        prefix: ["dot_net_agent/latest_release", "dot_net_agent/previous_releases"]
     with:
       prefix: ${{ matrix.prefix }}
       aws-region: "us-east-1"

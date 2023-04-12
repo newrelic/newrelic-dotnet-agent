@@ -5,6 +5,14 @@ on:
     types: [ published ]
   workflow_dispatch:
 
+# only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  
 env:
   scripts_path: ${{ github.workspace }}\build\scripts
   tools_path: ${{ github.workspace }}\build\Tools
@@ -12,22 +20,7 @@ env:
 
 jobs:
 
-  cancel-previous-workflow-runs:
-    if:  github.event_name == 'workflow_dispatch' || ( github.event_name == 'release' && startsWith(github.ref, 'refs/tags/AwsLambdaOpenTracer_v') )
-    name: Cancel Previous Runs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-        with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-      - uses: rokroskar/workflow-run-cleanup-action@c631227427d0452af4994af0940d7655ebc50c7c # master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-test-lambda:
-    needs: [ cancel-previous-workflow-runs ]
     name: Build and Test FullAgent and MSIInstaller
     runs-on: windows-2019
 

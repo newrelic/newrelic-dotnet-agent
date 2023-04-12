@@ -27,6 +27,9 @@ on:
         description: 'Run tests in parallel within each namespace'
         required: false
 
+permissions:
+  contents: read
+  
 env:
   DOTNET_NOLOGO: true
 
