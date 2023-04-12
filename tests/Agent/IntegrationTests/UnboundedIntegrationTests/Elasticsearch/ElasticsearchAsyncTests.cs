@@ -55,11 +55,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         [Fact]
         public void IndexAndSearch()
         {
-            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/Index";
+            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/IndexAsync";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = $"statement/Elasticsearch/flights/Index", metricScope = expectedTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Elasticsearch/flights/Index", metricScope = expectedTransactionName, callCount = 1 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
