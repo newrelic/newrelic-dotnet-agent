@@ -4,6 +4,8 @@
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace NewRelic.Agent.Api.Experimental
 {
@@ -40,6 +42,17 @@ namespace NewRelic.Agent.Api.Experimental
         /// <param name="method">The method of the request, such as an HTTP verb (e.g. GET or POST).</param>
         /// <returns>An object that can be used to manage all of the data we support for external requests.</returns>
         IExternalSegmentData CreateExternalSegmentData(Uri destinationUri, string method);
+
+        /// <summary>
+        /// Creates an object that holds the data that represents a datastore request. This data can be added to a
+        /// segment so that a segment can represent a datastore request.
+        /// </summary>
+        /// <param name="sqlStatement">An object containing information about the request being made.</param>
+        /// <param name="connectionInfo">An object containing information about the service the request is being made to.</param>
+        /// <param name="commandText">An string with the raw datastore statement text. Can be an empty string.</param>
+        /// <param name="queryParameters">A dictionary of query parameter names and values. Can be null.</param>
+        /// <returns>An object that can be used to manage all of the data we support for datastore requests.</returns>
+        IDatastoreSegmentData CreateDatastoreSegmentData(ParsedSqlStatement sqlStatement, ConnectionInfo connectionInfo, string commandText, IDictionary<string, IConvertible> queryParameters);
 
         DateTime StartTime { get; }
 

@@ -4,6 +4,7 @@
 using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
@@ -53,22 +54,20 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
 
             var operation = GetOperationFromRequestParams(requestParams);
 
-            Uri endpoint = null; // Unavailable at this point, but maybe available in the response - need to do some work in the AfterWrappedMethodDelegate
-
             // Playing with extending the experimental API to allow us to add data to a datastore segment after it has been started.
             // See ITransactionExperimental.CreateExternalSegmentData and how that is used in the SendAsync wrapper for HttpClient instrumentation.
             // Ran out of time during the spike to carry this through to completion.
 
-            //var transactionExperimental = transaction.GetExperimentalApi();
-            //var externalSegmentData = transactionExperimental.CreateDatastoreSegmentData(DatastoreVendor.Elasticsearch, model, operation, new ConnectionInfo(string.Empty, string.Empty, databaseName));
-            //var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
-            //segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
+            var transactionExperimental = transaction.GetExperimentalApi();
+            var datastoreSegmentData = transactionExperimental.CreateDatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.Elasticsearch, model, operation), new ConnectionInfo(string.Empty, string.Empty, databaseName), string.Empty, null);
+            var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
+            segment.GetExperimentalApi().SetSegmentData(datastoreSegmentData).MakeLeaf();
 
-            var segment = transaction.StartDatastoreSegment(
-                instrumentedMethodCall.MethodCall,
-                new ParsedSqlStatement(DatastoreVendor.Elasticsearch, model, operation),
-                connectionInfo: endpoint != null ? new ConnectionInfo(endpoint.Host, endpoint.Port.ToString(), databaseName) : new ConnectionInfo(string.Empty, string.Empty, databaseName),
-                isLeaf: true);
+            //var segment = transaction.StartDatastoreSegment(
+            //    instrumentedMethodCall.MethodCall,
+            //    new ParsedSqlStatement(DatastoreVendor.Elasticsearch, model, operation),
+            //    connectionInfo: endpoint != null ? new ConnectionInfo(endpoint.Host, endpoint.Port.ToString(), databaseName) : new ConnectionInfo(string.Empty, string.Empty, databaseName),
+            //    isLeaf: true);
 
             if (instrumentedMethodCall.IsAsync)
             {
@@ -91,8 +90,10 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                         onSuccess: response =>
                         {
                             var uri = GetUriFromResponse(response);
-                            // TODO: need to figure out how to plumb things so that we can set the uri on the segment after it has already been created.
-                            // See comments above about extending the experimental API
+
+                            var data = segment.GetExperimentalApi().SegmentData as IDatastoreSegmentData;
+                            data.SetConnectionInfo(new ConnectionInfo(uri.Host, uri.Port.ToString(), string.Empty));
+                            segment.GetExperimentalApi().SetSegmentData(data);
 
                             segment.End();
                         },
@@ -115,8 +116,9 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
 
                 var uri = GetUriFromResponse(response);
 
-                // TODO: need to figure out how to plumb things so that we can set the uri on the segment after it has already been created.
-                // See comments above about extending the experimental API
+                var data = segment.GetExperimentalApi().SegmentData as IDatastoreSegmentData;
+                data.SetConnectionInfo(new ConnectionInfo(uri.Host, uri.Port.ToString(), string.Empty));
+                segment.GetExperimentalApi().SetSegmentData(data);
 
                 segment.End();
             }
