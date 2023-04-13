@@ -26,7 +26,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
         protected readonly ConsoleDynamicMethodFixture _fixture;
 
-        protected readonly string _host = ElasticSearchConfiguration.ElasticServer.Remove(0, "http://".Length);
+        protected readonly string _host = GetHostFromElasticServer(ElasticSearchConfiguration.ElasticServer);
 
 
         protected ElasticsearchSyncTestsBase(TFixture fixture, ITestOutputHelper output, string clientType) : base(fixture)
@@ -84,6 +84,22 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
                 () => Assert.Equal(1, operationDatastoreSpans.Count()),
                 () => Assert.Equal(_host, uri)
             ); ;
+        }
+
+        private static string GetHostFromElasticServer(string elasticServer)
+        {
+            if (elasticServer.StartsWith("https://"))
+            {
+                return elasticServer.Remove(0, "https://".Length);
+            }
+            else if (elasticServer.StartsWith("http://"))
+            {
+                return elasticServer.Remove(0, "http://".Length);
+            }
+            else
+            {
+                return string.Empty;
+            }
         }
 
     }
