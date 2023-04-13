@@ -53,7 +53,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var operation = GetOperationFromRequestParams(requestParams);
 
             var transactionExperimental = transaction.GetExperimentalApi();
-            var datastoreSegmentData = transactionExperimental.CreateDatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.Elasticsearch, model, operation), new ConnectionInfo(string.Empty, string.Empty, databaseName), string.Empty, null);
+            var datastoreSegmentData = transactionExperimental.CreateDatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.Elasticsearch, model, operation), new ConnectionInfo(string.Empty, string.Empty, string.Empty), string.Empty, null);
             var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
             segment.GetExperimentalApi().SetSegmentData(datastoreSegmentData).MakeLeaf();
 
@@ -78,10 +78,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                         onSuccess: response =>
                         {
                             var uri = GetUriFromResponse(response);
-
-                            var data = segment.GetExperimentalApi().SegmentData as IDatastoreSegmentData;
-                            data.SetConnectionInfo(new ConnectionInfo(uri.Host, uri.Port.ToString(), string.Empty));
-                            segment.GetExperimentalApi().SetSegmentData(data);
+                            SetUriOnDatastoreSegment(segment, uri);
 
                             segment.End();
                         },
@@ -103,10 +100,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                 }
 
                 var uri = GetUriFromResponse(response);
-
-                var data = segment.GetExperimentalApi().SegmentData as IDatastoreSegmentData;
-                data.SetConnectionInfo(new ConnectionInfo(uri.Host, uri.Port.ToString(), string.Empty));
-                segment.GetExperimentalApi().SetSegmentData(data);
+                SetUriOnDatastoreSegment(segment, uri);
 
                 segment.End();
             }
@@ -125,6 +119,14 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var uri = UriGetter.Invoke(apiCallDetails);
 
             return uri;
+        }
+
+        private static void SetUriOnDatastoreSegment(ISegment segment, Uri uri)
+        {
+            var segmentExperimentalApi = segment.GetExperimentalApi();
+            var data = segmentExperimentalApi.SegmentData as IDatastoreSegmentData;
+            data.SetConnectionInfo(new ConnectionInfo(uri.Host, uri.Port.ToString(), string.Empty));
+            segmentExperimentalApi.SetSegmentData(data);
         }
 
         private string GetOperationFromRequestParams(object requestParams)
