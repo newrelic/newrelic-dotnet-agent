@@ -5,7 +5,7 @@ on:
     types: [opened]
 
 permissions:
-  issues: write
+  contents: read
 
 jobs:
   set-community-label:
@@ -30,3 +30,6 @@ jobs:
         uses: andymckay/labeler@3a4296e9dcdf9576b0456050db78cfd34853f260 # master
         with:
           add-labels: "community"
+          permissions:
+            issues: write
+            
