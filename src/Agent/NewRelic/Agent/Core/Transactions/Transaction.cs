@@ -306,7 +306,7 @@ namespace NewRelic.Agent.Core.Transactions
             return segment;
         }
 
-        public AbstractSegmentData CreateDatastoreSegmentData(ParsedSqlStatement parsedSqlStatement, ConnectionInfo connectionInfo, string commandText, IDictionary<string, IConvertible> queryParameters = null)
+        public IDatastoreSegmentData CreateDatastoreSegmentData(ParsedSqlStatement parsedSqlStatement, ConnectionInfo connectionInfo, string commandText, IDictionary<string, IConvertible> queryParameters = null)
         {
             if (!Agent.Configuration.DatastoreTracerQueryParametersEnabled)
             {
