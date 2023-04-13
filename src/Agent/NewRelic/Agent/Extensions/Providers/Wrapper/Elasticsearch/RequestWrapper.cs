@@ -49,9 +49,11 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
 
             //  For reference here's Elastic's take on mapping SQL terms/concepts to Elastic's: https://www.elastic.co/guide/en/elasticsearch/reference/current/_mapping_concepts_across_sql_and_elasticsearch.html
             var databaseName = string.Empty; // Per Elastic.co this SQL DB concept most closely maps to "cluster instance name".  TBD how to get this
-            var model = path.Trim('/').Split('/')[0]; // "model"=table name for SQL.  For elastic it's index name.  It appears to always be the first component of the path
+            var splitPath = path.Trim('/').Split('/');
 
-            var operation = GetOperationFromRequestParams(requestParams);
+            var model = splitPath[0]; // "model"=table name for SQL.  For elastic it's index name.  It appears to always be the first component of the path
+
+            var operation = (requestParams == null) ? GetOperationFromPath(splitPath) : GetOperationFromRequestParams(requestParams);
 
             Uri endpoint = null; // Unavailable at this point, but maybe available in the response - need to do some work in the AfterWrappedMethodDelegate
 
@@ -135,6 +137,20 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var uri = UriGetter.Invoke(apiCallDetails);
 
             return uri;
+        }
+
+        private string GetOperationFromPath(string[] splitPath)
+        {
+            switch (splitPath[1])
+            {
+                case "_doc":
+                case "_create":
+                    return "Index";
+                case "_search":
+                    return "Search";
+            }
+
+            return "Query";
         }
 
         private string GetOperationFromRequestParams(object requestParams)
