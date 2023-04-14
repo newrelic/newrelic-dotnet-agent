@@ -48,8 +48,6 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var postData = instrumentedMethodCall.MethodCall.MethodArguments[2];
             var requestParams = instrumentedMethodCall.MethodCall.MethodArguments[indexOfRequestParams];
 
-            //  For reference here's Elastic's take on mapping SQL terms/concepts to Elastic's: https://www.elastic.co/guide/en/elasticsearch/reference/current/_mapping_concepts_across_sql_and_elasticsearch.html
-            var databaseName = string.Empty; // Per Elastic.co this SQL DB concept most closely maps to "cluster instance name".  TBD how to get this
             var splitPath = path.Trim('/').Split('/');
             var model = splitPath[0]; // For SQL datastores, "model" is the table name. For Elastic it's the index name, which is always the first component of the request path.
 

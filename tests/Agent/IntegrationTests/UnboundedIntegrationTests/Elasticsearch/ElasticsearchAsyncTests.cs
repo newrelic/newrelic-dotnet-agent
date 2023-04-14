@@ -60,6 +60,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         [Fact]
         public void IndexAndSearch()
         {
+            ValidateIndex();
+            ValidateSearch();
+        }
+        private void ValidateIndex()
+        {
             var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/IndexAsync";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
@@ -82,10 +87,36 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assert.Equal(1, operationDatastoreSpans.Count()),
+                () => Assert.Single(operationDatastoreSpans),
                 () => Assert.Equal(_host, uri)
+            ); ;
+        }
+
+        private void ValidateSearch()
+        {
+            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/SearchAsync";
+
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Elasticsearch/flights/Search", metricScope = expectedTransactionName, callCount = 1 },
+            };
+
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+            var spanEvents = _fixture.AgentLog.GetSpanEvents();
+
+            var traceId = spanEvents.Where(@event => @event.IntrinsicAttributes["name"].ToString().Equals(expectedTransactionName)).FirstOrDefault().IntrinsicAttributes["traceId"];
+
+            var operationDatastoreSpans = spanEvents.Where(@event => @event.IntrinsicAttributes["traceId"].ToString().Equals(traceId) && @event.IntrinsicAttributes["name"].ToString().Contains("Datastore/statement/Elasticsearch"));
+
+
+            NrAssert.Multiple
+            (
+                () => Assertions.MetricsExist(expectedMetrics, metrics),
+                () => Assert.Single(operationDatastoreSpans)
             );
         }
+
         private static string GetHostFromElasticServer(string elasticServer)
         {
             if (elasticServer.StartsWith("https://"))

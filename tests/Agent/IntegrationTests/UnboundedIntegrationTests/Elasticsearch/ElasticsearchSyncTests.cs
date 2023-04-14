@@ -56,6 +56,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.Initialize();
         }
 
+        [Fact]
+        public void IndexAndSearch()
+        {
+            ValidateIndex();
+            ValidateSearch();
+        }
         private void ValidateIndex()
         {
             var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/Index";
@@ -85,23 +91,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             ); ;
         }
 
-        private static string GetHostFromElasticServer(string elasticServer)
-        {
-            if (elasticServer.StartsWith("https://"))
-            {
-                return elasticServer.Remove(0, "https://".Length);
-            }
-            else if (elasticServer.StartsWith("http://"))
-            {
-                return elasticServer.Remove(0, "http://".Length);
-            }
-            else
-            {
-                return string.Empty;
-            }
-        }
-
-
         private void ValidateSearch()
         {
             var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/Search";
@@ -123,15 +112,24 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assert.Single( operationDatastoreSpans)
+                () => Assert.Single(operationDatastoreSpans)
             );
         }
 
-        [Fact]
-        public void IndexAndSearch()
+        private static string GetHostFromElasticServer(string elasticServer)
         {
-            ValidateIndex();
-            ValidateSearch();
+            if (elasticServer.StartsWith("https://"))
+            {
+                return elasticServer.Remove(0, "https://".Length);
+            }
+            else if (elasticServer.StartsWith("http://"))
+            {
+                return elasticServer.Remove(0, "http://".Length);
+            }
+            else
+            {
+                return string.Empty;
+            }
         }
 
     }
