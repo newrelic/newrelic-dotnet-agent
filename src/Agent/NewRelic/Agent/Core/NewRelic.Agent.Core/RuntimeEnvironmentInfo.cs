@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace NewRelic.Agent.Core
 {
+#if NETSTANDARD2_0
     // Originally sourced from .NET SDK (https://github.com/dotnet/sdk)
     // https://github.com/dotnet/sdk/blob/3595e2a/src/Cli/Microsoft.DotNet.Cli.Utils/RuntimeEnvironment.cs
     // Copyright (c) .NET Foundation and contributors. All rights reserved.
@@ -205,4 +206,5 @@ namespace NewRelic.Agent.Core
             return Platform.Unknown;
         }
     }
+#endif
 }

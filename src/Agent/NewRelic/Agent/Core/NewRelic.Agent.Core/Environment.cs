@@ -46,6 +46,7 @@ namespace NewRelic.Agent.Core
 
                 AddVariable("OS", () => System.Environment.OSVersion?.VersionString);
 
+#if NETSTANDARD2_0
                 // report linux distro name and version when appropriate
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
@@ -53,7 +54,6 @@ namespace NewRelic.Agent.Core
                     AddVariable("Linux Distro Version", () => RuntimeEnvironmentInfo.OperatingSystemVersion);
                 }
 
-#if NETSTANDARD2_0
                 // This API is only supported on .net FX 4.7 + so limiting it
                 // to .net core since that is the one affected. 
                 AddVariable(".NET Version", () => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription.ToString());
