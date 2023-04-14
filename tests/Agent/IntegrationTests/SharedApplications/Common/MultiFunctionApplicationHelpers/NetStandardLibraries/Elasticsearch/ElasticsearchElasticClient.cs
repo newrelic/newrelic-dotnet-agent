@@ -1,6 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
@@ -12,6 +13,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
     {
         private ElasticsearchClient _client;
 
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Connect()
         {
             var settings = new ElasticsearchClientSettings(Address)
@@ -26,6 +28,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             _client.Ping();
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Index()
         {
             var record = FlightRecord.GetSample();
@@ -34,6 +37,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             // TODO: Validate that it worked
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override async Task<bool> IndexAsync()
         {
             var record = FlightRecord.GetSample();
@@ -45,6 +49,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             return response.IsSuccess();
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Search()
         {
             var response = _client.Search<FlightRecord>(s => s
@@ -59,6 +64,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             // TODO: Validate that it worked
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override async Task<long> SearchAsync()
         {
             var response = await _client.SearchAsync<FlightRecord>(s => s

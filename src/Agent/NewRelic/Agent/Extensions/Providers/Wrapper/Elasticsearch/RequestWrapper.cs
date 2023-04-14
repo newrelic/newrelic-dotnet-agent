@@ -48,9 +48,12 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var postData = instrumentedMethodCall.MethodCall.MethodArguments[2];
             var requestParams = instrumentedMethodCall.MethodCall.MethodArguments[indexOfRequestParams];
 
-            var model = path.Trim('/').Split('/')[0]; // For SQL datastores, "model" is the table name. For Elastic it's the index name, which is always the first component of the request path.
+            //  For reference here's Elastic's take on mapping SQL terms/concepts to Elastic's: https://www.elastic.co/guide/en/elasticsearch/reference/current/_mapping_concepts_across_sql_and_elasticsearch.html
+            var databaseName = string.Empty; // Per Elastic.co this SQL DB concept most closely maps to "cluster instance name".  TBD how to get this
+            var splitPath = path.Trim('/').Split('/');
+            var model = splitPath[0]; // For SQL datastores, "model" is the table name. For Elastic it's the index name, which is always the first component of the request path.
 
-            var operation = GetOperationFromRequestParams(requestParams);
+            var operation = (requestParams == null) ? GetOperationFromPath(splitPath) : GetOperationFromRequestParams(requestParams);
 
             var transactionExperimental = transaction.GetExperimentalApi();
             var datastoreSegmentData = transactionExperimental.CreateDatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.Elasticsearch, model, operation), new ConnectionInfo(string.Empty, string.Empty, string.Empty), string.Empty, null);
@@ -120,6 +123,20 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
 
             return uri;
         }
+
+        private string GetOperationFromPath(string[] splitPath)
+        {
+            switch (splitPath[1])
+            {
+                case "_doc":
+                case "_create":
+                    return "Index";
+                case "_search":
+                    return "Search";
+            }
+
+            return "Query";
+		}
 
         private static void SetUriOnDatastoreSegment(ISegment segment, Uri uri)
         {
