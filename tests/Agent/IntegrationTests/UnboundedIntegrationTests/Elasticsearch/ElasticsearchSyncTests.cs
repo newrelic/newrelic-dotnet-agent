@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -24,6 +25,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
 
         protected readonly ConsoleDynamicMethodFixture _fixture;
+
+        protected readonly string _host = GetHostFromElasticServer(ElasticSearchConfiguration.ElasticServer);
 
 
         protected ElasticsearchSyncTestsBase(TFixture fixture, ITestOutputHelper output, string clientType) : base(fixture)
@@ -70,12 +73,32 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
             var operationDatastoreSpans = spanEvents.Where(@event => @event.IntrinsicAttributes["traceId"].ToString().Equals(traceId) && @event.IntrinsicAttributes["name"].ToString().Contains("Datastore/statement/Elasticsearch"));
 
+            var operationDatastoreAgentAttributes = operationDatastoreSpans.FirstOrDefault().AgentAttributes;
+
+            var uri = operationDatastoreAgentAttributes.Where(x => x.Key == "peer.address").FirstOrDefault().Value;
 
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assert.Single(operationDatastoreSpans)
-            );
+                () => Assert.Single(operationDatastoreSpans),
+                () => Assert.Equal(_host, uri)
+            ); ;
+        }
+
+        private static string GetHostFromElasticServer(string elasticServer)
+        {
+            if (elasticServer.StartsWith("https://"))
+            {
+                return elasticServer.Remove(0, "https://".Length);
+            }
+            else if (elasticServer.StartsWith("http://"))
+            {
+                return elasticServer.Remove(0, "http://".Length);
+            }
+            else
+            {
+                return string.Empty;
+            }
         }
 
 
