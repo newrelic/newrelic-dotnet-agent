@@ -91,7 +91,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             }));
             // TODO: Gotta parse the JSON :(
             var json = response.Body;
-            IndexRequestParameters
             return 0;
         }
 
