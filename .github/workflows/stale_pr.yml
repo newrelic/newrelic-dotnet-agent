@@ -9,7 +9,6 @@ permissions:
 jobs:
   stale:
     permissions:
-      issues: write  # for actions/stale to close stale issues
       pull-requests: write  # for actions/stale to close stale PRs
     runs-on: ubuntu-latest
     steps:
@@ -26,5 +25,7 @@ jobs:
         stale-pr-message: 'This PR has been marked stale after 30 days with no activity. It will be closed in 5 days if there is no activity.'
         days-before-stale: 30
         days-before-close: 5
+        days-before-issue-stale: -1 # disable issue checking
+        days-before-issue-close: -1 # disable issue checking
         stale-pr-label: 'stale'
         exempt-pr-labels: 'on hold,in review'

@@ -167,5 +167,46 @@ namespace NewRelic.Core
             return new string(chars);
         }
 
+        public static string ObfuscateLicenseKeyInAuditLog(string text, string licenseKeyParameterName)
+        {
+            var licenseKeyParameterIndex = text.IndexOf(licenseKeyParameterName + "=");
+            if (licenseKeyParameterIndex == -1)
+            {
+                return text;
+            }
+            try
+            {
+                var licenseKeyStartPos = licenseKeyParameterIndex + licenseKeyParameterName.Length + 1; // +1 to account for the =
+                var licenseKeyEndPos = text.IndexOf('&', licenseKeyStartPos);
+                var licenseKeyLength = licenseKeyEndPos - licenseKeyStartPos;
+                var licenseKey = text.Substring(licenseKeyStartPos, licenseKeyLength);
+                var obfuscatedLicenseKey = ObfuscateLicenseKey(licenseKey);
+                var sb = new StringBuilder(text);
+                sb.Remove(licenseKeyStartPos, licenseKeyLength);
+                sb.Insert(licenseKeyStartPos, obfuscatedLicenseKey);
+                return sb.ToString();
+            }
+            catch
+            {
+                return text;
+            }
+        }
+
+        public static string ObfuscateLicenseKey(string licenseKey)
+        {
+            // We can log up to 8 characters of a 40-character license key, the rest must be obfuscated
+            // For our agent, the license key should always be 40 characters. For safety, if it isn't, just obfuscate the whole thing
+            if (licenseKey.Length == 40)
+            {
+                return licenseKey.Substring(0, 8) + new string('*', 32);
+            }
+            else
+            {
+                return new string('*', licenseKey.Length);
+            }
+        }
+
+
+
     }
 }

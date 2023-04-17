@@ -4,6 +4,7 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Exceptions;
+using NewRelic.Core;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
@@ -44,6 +45,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public const int ProtocolVersion = 17;
         private const int CompressMinimumByteLength = 20;
         private const string EmptyResponseBody = "{}";
+        private const string LicenseKeyParameterName = "license_key";
 
         private bool _diagnoseConnectionError = true;
         private readonly IConfiguration _configuration;
@@ -156,7 +158,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private static void AuditLog(Direction direction, Source source, string uri)
         {
-            var message = string.Format(AuditLogFormat, direction, source, uri);
+            var message = string.Format(AuditLogFormat, direction, source, Strings.ObfuscateLicenseKeyInAuditLog(uri, LicenseKeyParameterName));
             Logging.AuditLog.Log(message);
         }
 
@@ -164,7 +166,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var uri = new StringBuilder("/agent_listener/invoke_raw_method?method=")
                 .Append(method)
-                .Append("&license_key=")
+                .Append($"&{LicenseKeyParameterName}=")
                 .Append(_configuration.AgentLicenseKey)
                 .Append("&marshal_format=json")
                 .Append("&protocol_version=")
@@ -290,5 +292,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 Log.Error(message);
             }
         }
+
     }
 }
