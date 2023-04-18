@@ -43,6 +43,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
             _fixture.AddCommand($"ElasticsearchExerciser Search");
 
+            _fixture.AddCommand($"ElasticsearchExerciser IndexMany");
+
+            _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
+
+
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -57,18 +62,37 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         }
 
         [Fact]
-        public void IndexAndSearch()
+        public void Index()
         {
-            ValidateIndex();
-            ValidateSearch();
+            ValidateOperation("Index");
         }
-        private void ValidateIndex()
+
+        [Fact]
+        public void Search()
         {
-            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/Index";
+            ValidateOperation("Search");
+        }
+
+        [Fact]
+        public void IndexMany()
+        {
+            ValidateOperation("IndexMany");
+        }
+
+        [Fact]
+        public void MultiSearch()
+        {
+            ValidateOperation("MultiSearch");
+        }
+
+
+        private void ValidateOperation(string operationName)
+        {
+            var expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/{operationName}";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Elasticsearch/flights/Index", metricScope = expectedTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Elasticsearch/flights/{operationName}", metricScope = expectedTransactionName, callCount = 1 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
@@ -88,33 +112,62 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assert.Single(operationDatastoreSpans),
                 () => Assert.Equal(_host, uri)
-            ); ;
-        }
-
-        private void ValidateSearch()
-        {
-            var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/Search";
-
-            var expectedMetrics = new List<Assertions.ExpectedMetric>
-            {
-                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Elasticsearch/flights/Search", metricScope = expectedTransactionName, callCount = 1 },
-            };
-
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
-
-            var spanEvents = _fixture.AgentLog.GetSpanEvents();
-
-            var traceId = spanEvents.Where(@event => @event.IntrinsicAttributes["name"].ToString().Equals(expectedTransactionName)).FirstOrDefault().IntrinsicAttributes["traceId"];
-
-            var operationDatastoreSpans = spanEvents.Where(@event => @event.IntrinsicAttributes["traceId"].ToString().Equals(traceId) && @event.IntrinsicAttributes["name"].ToString().Contains("Datastore/statement/Elasticsearch"));
-
-
-            NrAssert.Multiple
-            (
-                () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assert.Single(operationDatastoreSpans)
             );
         }
+
+        //private void ValidateIndexMany()
+        //{
+        //    var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/IndexMany";
+
+        //    var expectedMetrics = new List<Assertions.ExpectedMetric>
+        //    {
+        //        new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Elasticsearch/flights/IndexMany", metricScope = expectedTransactionName, callCount = 1 },
+        //    };
+
+        //    var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+        //    var spanEvents = _fixture.AgentLog.GetSpanEvents();
+
+        //    var traceId = spanEvents.Where(@event => @event.IntrinsicAttributes["name"].ToString().Equals(expectedTransactionName)).FirstOrDefault().IntrinsicAttributes["traceId"];
+
+        //    var operationDatastoreSpans = spanEvents.Where(@event => @event.IntrinsicAttributes["traceId"].ToString().Equals(traceId) && @event.IntrinsicAttributes["name"].ToString().Contains("Datastore/statement/Elasticsearch"));
+
+        //    var operationDatastoreAgentAttributes = operationDatastoreSpans.FirstOrDefault().AgentAttributes;
+
+        //    var uri = operationDatastoreAgentAttributes.Where(x => x.Key == "peer.address").FirstOrDefault().Value;
+
+        //    NrAssert.Multiple
+        //    (
+        //        () => Assertions.MetricsExist(expectedMetrics, metrics),
+        //        () => Assert.Single(operationDatastoreSpans),
+        //        () => Assert.Equal(_host, uri)
+        //    );
+        //}
+
+        //private void ValidateSearch()
+        //{
+        //    var expectedTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/Search";
+
+        //    var expectedMetrics = new List<Assertions.ExpectedMetric>
+        //    {
+        //        new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Elasticsearch/flights/Search", metricScope = expectedTransactionName, callCount = 1 },
+        //    };
+
+        //    var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+        //    var spanEvents = _fixture.AgentLog.GetSpanEvents();
+
+        //    var traceId = spanEvents.Where(@event => @event.IntrinsicAttributes["name"].ToString().Equals(expectedTransactionName)).FirstOrDefault().IntrinsicAttributes["traceId"];
+
+        //    var operationDatastoreSpans = spanEvents.Where(@event => @event.IntrinsicAttributes["traceId"].ToString().Equals(traceId) && @event.IntrinsicAttributes["name"].ToString().Contains("Datastore/statement/Elasticsearch"));
+
+
+        //    NrAssert.Multiple
+        //    (
+        //        () => Assertions.MetricsExist(expectedMetrics, metrics),
+        //        () => Assert.Single(operationDatastoreSpans)
+        //    );
+        //}
 
         private static string GetHostFromElasticServer(string elasticServer)
         {
@@ -317,7 +370,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchElasticClientSyncTestsFW462 : ElasticsearchSyncTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public ElasticsearchElasticClientSyncTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            // FW462 is testing MongoDB.Driver version 2.3, which needs to connect to the 3.2 server
             : base(fixture, output, ClientType.ElasticClients.ToString())
         {
         }
