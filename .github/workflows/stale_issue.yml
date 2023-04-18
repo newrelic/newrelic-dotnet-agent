@@ -10,18 +10,20 @@ jobs:
   stale:
     permissions:
       issues: write  # for actions/stale to close stale issues
-      pull-requests: write  # for actions/stale to close stale PRs
     runs-on: ubuntu-latest
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
       with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+        disable-sudo: true
+        egress-policy: audit
 
     - uses: actions/stale@1160a2240286f5da8ec72b1c0816ce2481aabf84 # v8.0.0
       with:
         stale-issue-message: 'This Issue has been marked stale after 90 days with no activity. It will be closed in 30 days if there is no activity.'
         days-before-stale: 90
         days-before-close: 30
+        days-before-pr-stale: -1 # disable pr checking
+        days-before-pr-close: -1 # disable pr checking
         stale-issue-label: 'stale'
         exempt-issue-labels: 'good first issue,help wanted,in progress,on hold,in review,roadmap'

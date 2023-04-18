@@ -11,11 +11,14 @@ jobs:
   set-community-label:
     name: Set Community Label
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
         with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+          disable-sudo: true
+          egress-policy: audit
 
       - name: Check if organization member
         id: is_organization_member
@@ -30,6 +33,4 @@ jobs:
         uses: andymckay/labeler@3a4296e9dcdf9576b0456050db78cfd34853f260 # master
         with:
           add-labels: "community"
-          permissions:
-            issues: write
             
