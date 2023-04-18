@@ -17,7 +17,6 @@ using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Agent.Configuration;
-using System.Runtime.InteropServices;
 
 namespace NewRelic.Agent.Core
 {
@@ -48,7 +47,9 @@ namespace NewRelic.Agent.Core
 
 #if NETSTANDARD2_0
                 // report linux distro name and version when appropriate
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                // This API is only supported on .net FX 4.7 + so limiting it
+                // to .net core since that is the one affected. 
+                if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
                 {
                     AddVariable("Linux Distro Name", () => RuntimeEnvironmentInfo.OperatingSystem);
                     AddVariable("Linux Distro Version", () => RuntimeEnvironmentInfo.OperatingSystemVersion);
