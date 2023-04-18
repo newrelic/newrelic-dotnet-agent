@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Nest;
 using NewRelic.Agent.IntegrationTests.Shared;
+using NewRelic.IntegrationTests.Models;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 {
@@ -49,6 +50,26 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void IndexMany()
+        {
+            var records = FlightRecord.GetSamples(3);
+            var response = _client.IndexMany(records);
+
+            // TODO: Validate that it worked
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override async Task<bool> IndexManyAsync()
+        {
+            var record = FlightRecord.GetSample();
+            var response = await _client.IndexDocumentAsync(record);
+
+            // TODO: Validate that it worked
+
+            return response.IsValid;
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Search()
         {
             var searchResponse = _client.Search<FlightRecord>(s => s
@@ -82,6 +103,54 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             // TODO: Validate that it worked
 
             return response.Total;
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void MultiSearch()
+        {
+            var msd = new MultiSearchDescriptor();
+
+            var records = FlightRecord.GetSamples(2);
+            foreach (var record in records)
+            {
+                msd.Search<FlightRecord>(s => s
+                    .From(0)
+                    .Size(10)
+                    .Query(q => q
+                        .Match(m => m
+                        .Field(f => f.Departure)
+                        .Query(record.Departure)
+                        )
+                       ));
+            }
+
+            var response = _client.MultiSearch(msd);
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override async Task<long> MultiSearchAsync()
+        {
+            var msd = new MultiSearchDescriptor();
+
+            var records = FlightRecord.GetSamples(2);
+            foreach (var record in records)
+            {
+                msd.Search<FlightRecord>(s => s
+                    .From(0)
+                    .Size(10)
+                    .Query(q => q
+                        .Match(m => m
+                        .Field(f => f.Departure)
+                        .Query(record.Departure)
+                        )
+                       ));
+            }
+
+            var response = await _client.MultiSearchAsync(msd);
+
+            // TODO: Validate that it worked
+
+            return response.TotalResponses;
         }
     }
 }
