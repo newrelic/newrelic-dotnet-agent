@@ -128,23 +128,23 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             return uri;
         }
 
-        private void ParsePath(string[] splitPath, out string api, out string subApi)
+        private void ParsePath(string[] splitPath, out string api, out string subType)
         {
             // Some examples of different structures:
             // GET /my-index/_count?q=user:foo => API = "_count"
             // GET /my-index/_search => API = "_search"
             // PUT /my-index-000001 => API = ""
-            // GET /_search/scroll => API = "_search", subApi = "scroll"
+            // GET /_search/scroll => API = "_search", subType = "scroll"
 
             api = "";
-            subApi = "";
+            subType = "";
             bool foundApi = false;
             foreach (var path in splitPath)
             {
                 // Sub-api is directly after the API
                 if (foundApi)
                 {
-                    subApi = path.Split('?')[0];
+                    subType = path.Split('?')[0];
                     break;
                 }
                 else if (path[0] == '_')
@@ -185,7 +185,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             { "_search|scroll", "Scroll" },
         });
 
-        // Some request types depend on the type, subtype, and HTTP request type
+        // Some request types depend on the type, subtype, and HTTP request
         private static ReadOnlyDictionary<string, string> _fullRequestTypeMap = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>
         {
             { "DELETE|_search|scroll", "ClearScroll" },
@@ -193,12 +193,14 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
 
         private string GetOperationFromPath(string request, string[] splitPath)
         {
-            ParsePath(splitPath, out string api, out string subApi);
+            ParsePath(splitPath, out string api, out string subType);
 
+            // Since different operations are determined by different combinations of the path, combine the different
+            // elements into a single string with a separator, so we can do a faster dictionary lookup
             string operation;
-            string apiWithSub = api + "|" + subApi;
+            string apiWithSub = api + "|" + subType;
             string apiWithRequest = request + "|" + api;
-            string fullApi = apiWithRequest + "|" + subApi;
+            string fullApi = apiWithRequest + "|" + subType;
 
             // Check from most-specific to least-specific special cases. Most will fall through to the default handler.
             if (_fullRequestTypeMap.TryGetValue(fullApi, out operation))
