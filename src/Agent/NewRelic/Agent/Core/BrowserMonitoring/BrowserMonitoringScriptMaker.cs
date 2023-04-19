@@ -44,10 +44,17 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         public string GetScript(IInternalTransaction transaction, string nonce)
         {
             if (string.IsNullOrEmpty(_configurationService.Configuration.BrowserMonitoringJavaScriptAgent))
+            {
+                Log.Debug("Skipping RUM injection because \"js_agent_loader\" config is missing or empty");
                 return null;
+            }
 
-            if (_configurationService.Configuration.BrowserMonitoringJavaScriptAgentLoaderType.Equals("none", StringComparison.InvariantCultureIgnoreCase))
+            if (_configurationService.Configuration.BrowserMonitoringJavaScriptAgentLoaderType.Equals("none",
+                    StringComparison.InvariantCultureIgnoreCase))
+            {
+                Log.Debug("Skipping RUM injection because \"browser_monitoring.loader\" config is \"none\"");
                 return null;
+            }
 
             if (transaction.Ignored)
             {
