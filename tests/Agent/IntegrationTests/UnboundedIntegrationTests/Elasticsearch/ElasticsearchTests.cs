@@ -179,7 +179,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
         private static string GetExpectedIndexName(string operationName, ClientType clientType)
         {
-            if (operationName.StartsWith("IndexMany") || operationName.StartsWith("MultiSearch"))
+            if (operationName.StartsWith("MultiSearch"))
+            {
+                return "Unknown";
+            }
+            else if (clientType != ClientType.ElasticClients && operationName.StartsWith("IndexMany"))
             {
                 return "Unknown";
             }
