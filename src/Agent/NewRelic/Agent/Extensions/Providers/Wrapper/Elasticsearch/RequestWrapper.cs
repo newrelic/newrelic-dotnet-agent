@@ -49,9 +49,14 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var requestParams = instrumentedMethodCall.MethodCall.MethodArguments[indexOfRequestParams];
 
             var splitPath = path.Trim('/').Split('/');
-            var model = splitPath[0]; // For SQL datastores, "model" is the table name. For Elastic it's the index name, which is always the first component of the request path.
 
             var operation = (requestParams == null) ? GetOperationFromPath(splitPath) : GetOperationFromRequestParams(requestParams);
+
+            var model = splitPath[0]; // For SQL datastores, "model" is the table name. For Elastic it's the index name.  This is often the first component of the request path, but not always.
+            if (model[0] == '_') // Per Elastic docs, index names aren't allowed to start with an underscore, and the first component of the path can be an operation name in some cases, e.g. "_bulk" or "_msearch"
+            {
+                model = "Unknown";
+            }
 
             var transactionExperimental = transaction.GetExperimentalApi();
             var datastoreSegmentData = transactionExperimental.CreateDatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.Elasticsearch, model, operation), new ConnectionInfo(string.Empty, string.Empty, string.Empty), string.Empty, null);
