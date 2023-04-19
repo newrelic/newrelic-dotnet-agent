@@ -134,7 +134,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             var expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/{operationName}";
 
             var expectedIndexName = GetExpectedIndexName(operationName, _clientType);
-            var expectedOperationName = GetExpectedOperationName(operationName, _clientType);
+            var expectedOperationName = GetExpectedOperationName(operationName);
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -179,7 +179,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
         private static string GetExpectedIndexName(string operationName, ClientType clientType)
         {
-            if (operationName.StartsWith("MultiSearch"))
+            if (clientType != ClientType.ElasticsearchNet && operationName.StartsWith("MultiSearch"))
             {
                 return "Unknown";
             }
@@ -192,7 +192,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
                 return IndexName;
             }
         }
-        private static string GetExpectedOperationName(string operationName, ClientType clientType)
+        private static string GetExpectedOperationName(string operationName)
         {
             if (operationName.StartsWith("IndexMany"))
             {
