@@ -217,28 +217,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     }
 
     [NetFrameworkTest]
-    public class ElasticsearchNestTestsFW48 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW48>
-    {
-        public ElasticsearchNestTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.NEST)
-        {
-        }
-    }
-
-    [NetFrameworkTest]
-    public class ElasticsearchNestTestsFW471 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public ElasticsearchNestTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.NEST)
-        {
-        }
-    }
-
-    [NetFrameworkTest]
     public class ElasticsearchNestTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public ElasticsearchNestTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            // FW462 is testing MongoDB.Driver version 2.3, which needs to connect to the 3.2 server
             : base(fixture, output, ClientType.NEST)
         {
         }
@@ -248,24 +229,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchNestTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ElasticsearchNestTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.NEST)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class ElasticsearchNestTestsCore60 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public ElasticsearchNestTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.NEST)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class ElasticsearchNestTestsCore50 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public ElasticsearchNestTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output, ClientType.NEST)
         {
         }
@@ -293,24 +256,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     }
 
     [NetFrameworkTest]
-    public class ElasticsearchNetTestsFW48 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW48>
-    {
-        public ElasticsearchNetTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticsearchNet)
-        {
-        }
-    }
-
-    [NetFrameworkTest]
-    public class ElasticsearchNetTestsFW471 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public ElasticsearchNetTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticsearchNet)
-        {
-        }
-    }
-
-    [NetFrameworkTest]
     public class ElasticsearchNetTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public ElasticsearchNetTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -324,24 +269,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchNetTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ElasticsearchNetTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticsearchNet)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class ElasticsearchNetTestsCore60 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public ElasticsearchNetTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticsearchNet)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class ElasticsearchNetTestsCore50 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public ElasticsearchNetTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output, ClientType.ElasticsearchNet)
         {
         }
@@ -368,24 +295,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     }
 
     [NetFrameworkTest]
-    public class ElasticsearchElasticClientTestsFW48 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW48>
-    {
-        public ElasticsearchElasticClientTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticClients)
-        {
-        }
-    }
-
-    [NetFrameworkTest]
-    public class ElasticsearchElasticClientTestsFW471 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW471>
-    {
-        public ElasticsearchElasticClientTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticClients)
-        {
-        }
-    }
-
-    [NetFrameworkTest]
     public class ElasticsearchElasticClientTestsFW462 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
         public ElasticsearchElasticClientTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
@@ -398,24 +307,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     public class ElasticsearchElasticClientTestsCoreLatest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public ElasticsearchElasticClientTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticClients)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class ElasticsearchElasticClientTestsCore60 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public ElasticsearchElasticClientTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, ClientType.ElasticClients)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class ElasticsearchElasticClientTestsCore50 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public ElasticsearchElasticClientTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
             : base(fixture, output, ClientType.ElasticClients)
         {
         }
