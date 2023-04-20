@@ -9,10 +9,10 @@ using NewRelic.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using NewRelic.Core.CodeAttributes;
 
 #pragma warning disable 649 // Unassigned fields. This should be removed when we support thread profiling in the NETSTANDARD2_0 build.
 
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         /// as the aggregation thread and the unmanaged connection so that thread profiling can later be turned on using the 
         /// <see cref="ThreadProfilingService.StartThreadProfilingSession"/> function.
         /// </remarks>
-        [ExcludeFromCodeCoverage]
+        [NrExcludeFromCodeCoverage]
         public void Start()
         {
         }
@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         /// Stops the <see cref="ThreadProfilingService"/> service. This will halt a 
         /// thread profiling session that might be running.
         /// </summary>
-        [ExcludeFromCodeCoverage]
+        [NrExcludeFromCodeCoverage]
         public void Stop()
         {
             // Shutdown a running thread profiling session.
@@ -219,7 +219,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         /// <summary>
         /// This is called by the sampler prior to terminating the native thread profiler which will reset all of the resources including the name cache.
         /// </summary>
-        [ExcludeFromCodeCoverage]
+        [NrExcludeFromCodeCoverage]
         public void SamplingComplete()
         {
             if (_reportData)

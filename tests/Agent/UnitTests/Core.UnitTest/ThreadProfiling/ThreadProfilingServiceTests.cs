@@ -125,7 +125,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         public void PerformAggregation_HandlesException()
         {
             Mock.Arrange(() => _dataTransportService.SendThreadProfilingData(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()))
-                .Throws<Exception>("Test Exception");
+                .Throws(new Exception("Test Exception", new Exception("Test Inner Exception")));
 
             try
             {
