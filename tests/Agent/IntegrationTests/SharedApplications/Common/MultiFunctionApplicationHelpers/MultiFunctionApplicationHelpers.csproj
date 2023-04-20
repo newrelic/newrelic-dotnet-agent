@@ -112,26 +112,26 @@
     <PackageReference Include="StackExchange.Redis" Version="2.5.61" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.90" Condition="'$(TargetFramework)' == 'net7.0'" />
 
-    <!-- Elasticsearch NEST framework references - only actually testing oldest and newest -->
-    <PackageReference Include="NEST" Version="7.0.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <!-- Elasticsearch NEST framework references - only able to test newest 7.x with 8.x server -->
+    <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'net481'" />
 
-    <!-- Elasticsearch NEST .NET/Core references - only actually testing oldest and newest -->
-    <PackageReference Include="NEST" Version="7.0.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+    <!-- Elasticsearch NEST .NET/Core references - only able to test newest 7.x with 8.x server -->
+    <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'net5.0'" />
     <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="NEST" Version="7.17.5" Condition="'$(TargetFramework)' == 'net7.0'" />
 
-    <!-- Elasticsearch.Net framework references - only actually testing oldest and newest -->
-    <PackageReference Include="Elasticsearch.Net" Version="7.0.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <!-- Elasticsearch.Net framework references - only able to test newest 7.x with 8.x server -->
+    <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net481'" />
 
-    <!-- Elasticsearch.Net .NET/Core references - only actually testing oldest and newest -->
-    <PackageReference Include="Elasticsearch.Net" Version="7.0.0" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+    <!-- Elasticsearch.Net .NET/Core references - only able to test newest 7.x with 8.x server -->
+    <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net5.0'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" Condition="'$(TargetFramework)' == 'net7.0'" />

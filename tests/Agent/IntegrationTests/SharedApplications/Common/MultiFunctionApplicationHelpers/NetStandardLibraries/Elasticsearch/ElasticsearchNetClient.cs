@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elasticsearch.Net;
 using NewRelic.Agent.IntegrationTests.Shared;
+using Xunit;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 {
@@ -29,10 +30,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         public override void Index()
         {
             var record = FlightRecord.GetSample();
-            var indexResponse = _client.Index<BytesResponse>(IndexName, record.Id.ToString(), PostData.Serializable(record));
-            byte[] responseBytes = indexResponse.Body;
+            var response = _client.Index<BytesResponse>(IndexName, record.Id.ToString(), PostData.Serializable(record));
 
-            // TODO: Validate that it worked
+            Assert.True(response.Success, $"Elasticsearch server error: {response}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -42,7 +42,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = await _client.IndexAsync<StringResponse>(IndexName, record.Id.ToString(), PostData.Serializable(record));
 
-            // TODO: Validate that it worked
+            Assert.True(response.Success, $"Elasticsearch server error: {response}");
 
             return response.Success;
         }
@@ -59,10 +59,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 bulkIndex.Add(record);
             }
 
-            var bulkResponse = _client.Bulk<BytesResponse>(PostData.MultiJson(bulkIndex));
-            byte[] responseBytes = bulkResponse.Body;
+            var response = _client.Bulk<BytesResponse>(PostData.MultiJson(bulkIndex));
 
-            // TODO: Validate that it worked
+            Assert.True(response.Success, $"Elasticsearch server error: {response}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -77,18 +76,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 bulkIndex.Add(record);
             }
 
-            var bulkResponse = await _client.BulkAsync<BytesResponse>(PostData.MultiJson(bulkIndex));
-            byte[] responseBytes = bulkResponse.Body;
+            var response = await _client.BulkAsync<BytesResponse>(PostData.MultiJson(bulkIndex));
 
-            // TODO: Validate that it worked
+            Assert.True(response.Success, $"Elasticsearch server error: {response}");
 
-            return bulkResponse.Success;
+            return response.Success;
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Search()
         {
-            var searchResponse = _client.Search<StringResponse>(IndexName, PostData.Serializable(new
+            var response = _client.Search<StringResponse>(IndexName, PostData.Serializable(new
             {
                 from = 0,
                 size = 10,
@@ -104,10 +102,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 }
             }));
 
-            var successful = searchResponse.Success;
-            var responseJson = searchResponse.Body;
-
-            // TODO: Validate that it worked
+            Assert.True(response.Success, $"Elasticsearch server error: {response}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -128,8 +123,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                     }
                 }
             }));
-            // TODO: Gotta parse the JSON :(
-            var json = response.Body;
+
+            Assert.True(response.Success, $"Elasticsearch server error: {response}");
+
             return 0;
         }
 
@@ -157,12 +153,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                     }
                 });
             }
-            var searchResponse = _client.MultiSearch<StringResponse>(IndexName, PostData.MultiJson(multiSearchData));
+            var response = _client.MultiSearch<StringResponse>(IndexName, PostData.MultiJson(multiSearchData));
 
-            var successful = searchResponse.Success;
-            var responseJson = searchResponse.Body;
-
-            // TODO: Validate that it worked
+            Assert.True(response.Success, $"Elasticsearch server error: {response}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -191,8 +184,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             }
 
             var response = await _client.MultiSearchAsync<StringResponse>(IndexName, PostData.MultiJson(multiSearchData));
-            // TODO: Gotta parse the JSON :(
-            var json = response.Body;
+
+            Assert.True(response.Success, $"Elasticsearch server error: {response}");
+
             return 0;
         }
 

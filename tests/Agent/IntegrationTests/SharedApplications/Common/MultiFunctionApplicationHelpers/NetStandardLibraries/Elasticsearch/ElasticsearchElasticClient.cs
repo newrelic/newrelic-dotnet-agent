@@ -1,13 +1,12 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.Core.MSearch;
 using Elastic.Transport;
 using NewRelic.Agent.IntegrationTests.Shared;
+using Xunit;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 {
@@ -25,7 +24,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             _client = new ElasticsearchClient(settings);
 
-            // TODO: This isn't necessary but will log the response, which can help troubleshoot if
+            // This isn't necessary but will log the response, which can help troubleshoot if
             // you're having connection errors
             _client.Ping();
         }
@@ -36,7 +35,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var record = FlightRecord.GetSample();
             var response = _client.Index(record, IndexName);
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -46,7 +45,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = await _client.IndexAsync(record, IndexName);
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
 
             return response.IsSuccess();
         }
@@ -63,7 +62,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 )
             );
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -78,7 +77,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 )
             );
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
 
             return response.Total;
         }
@@ -90,8 +89,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = _client.IndexMany(records, IndexName);
 
-            // TODO: Validate that it worked
-
+            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -101,7 +99,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = await _client.IndexManyAsync(records, IndexName);
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
 
             return response.IsSuccess();
         }
@@ -110,13 +108,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         public override void MultiSearch()
         {
             // Currently unable to figure out how to make a real multisearch work in 8.x
+            // This empty call is enough to make the instrumentation (wrapper) execute and generate the data
+            // we are looking for, but we can't assert for success.
             var response = _client.MultiSearch<FlightRecord>();
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override async Task<long> MultiSearchAsync()
         {
-
+            // Currently unable to figure out how to make a real multisearch work in 8.x
+            // This empty call is enough to make the instrumentation (wrapper) execute and generate the data
+            // we are looking for, but we can't assert for success.
             var response = await _client.MultiSearchAsync<FlightRecord>();
 
             return response.TotalResponses;
