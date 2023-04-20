@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -114,8 +113,9 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         }
 
         [Test]
-        public void PerformAggregation_ResolvesFunctionNamesAndSendsData_CallsSendThreadProfilingData()
+        public void FullCycleTest_IsSuccessful()
         {
+
             // Arrange
             var typeOfFidTypeMethodName = typeof(FidTypeMethodName);
             var sizeOfFidTypeMethodName = Marshal.SizeOf(typeOfFidTypeMethodName);
@@ -142,18 +142,22 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 new ThreadSnapshot { ThreadId = (UIntPtr)1, ErrorCode = 0, FunctionIDs = new[] { (UIntPtr)1, (UIntPtr)2 } },
                 new ThreadSnapshot { ThreadId = (UIntPtr)2, ErrorCode = 0, FunctionIDs = new[] { (UIntPtr)3 } }
             };
-            _threadProfilingService.SampleAcquired(threadSnapshots);
 
             // Act
-            _threadProfilingService.PerformAggregation();
+            _threadProfilingService.Start();
+            _threadProfilingService.StartThreadProfilingSession(1, 60000, 120000);
+            _threadProfilingService.SampleAcquired(threadSnapshots);
+            _threadProfilingService.SamplingComplete();
+            _threadProfilingService.Stop();
 
             // Assert
             Mock.Assert(() => _dataTransportService.SendThreadProfilingData(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()), Occurs.Once());
             Assert.AreEqual(1, actualModels.Count);
             Assert.AreEqual(2, actualModels[0].TotalThreadCount);
             Assert.AreEqual(1, actualModels[0].NumberOfSamples);
-            Assert.AreEqual(2, (actualModels[0].Samples["OTHER"] as ProfileNodes).Count);
+            Assert.AreEqual(0, (actualModels[0].Samples["OTHER"] as ProfileNodes).Count);
 
+            // Teardown
             Marshal.Release(fidGizmoIntPtr);
         }
 
