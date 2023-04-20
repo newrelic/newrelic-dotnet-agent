@@ -1,9 +1,11 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.Core.MSearch;
 using Elastic.Transport;
 using NewRelic.Agent.IntegrationTests.Shared;
 
@@ -81,5 +83,43 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             return response.Total;
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void IndexMany()
+        {
+            var records = FlightRecord.GetSamples(3);
+
+            var response = _client.IndexMany(records, IndexName);
+
+            // TODO: Validate that it worked
+
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override async Task<bool> IndexManyAsync()
+        {
+            var records = FlightRecord.GetSamples(3);
+
+            var response = await _client.IndexManyAsync(records, IndexName);
+
+            // TODO: Validate that it worked
+
+            return response.IsSuccess();
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void MultiSearch()
+        {
+            // Currently unable to figure out how to make a real multisearch work in 8.x
+            var response = _client.MultiSearch<FlightRecord>();
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override async Task<long> MultiSearchAsync()
+        {
+
+            var response = await _client.MultiSearchAsync<FlightRecord>();
+
+            return response.TotalResponses;
+        }
     }
 }

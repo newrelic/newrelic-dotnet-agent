@@ -17,13 +17,22 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         public ElasticsearchTestClient() { }
 
         public abstract void Connect();
+
         public abstract void Index();
 
         public abstract Task<bool> IndexAsync();
 
+        public abstract void IndexMany();
+
+        public abstract Task<bool> IndexManyAsync();
+
         public abstract void Search();
 
         public abstract Task<long> SearchAsync();
+
+        public abstract void MultiSearch();
+
+        public abstract Task<long> MultiSearchAsync();
     }
 
     public class FlightRecord

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elasticsearch.Net;
@@ -47,6 +48,44 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void IndexMany()
+        {
+            var records = FlightRecord.GetSamples(3);
+            var bulkIndex = new List<object>();
+
+            foreach (var record in records)
+            {
+                bulkIndex.Add(new { index = new { _index = IndexName, _type = "FlightRecord",  _id = record.Id.ToString() } });
+                bulkIndex.Add(record);
+            }
+
+            var bulkResponse = _client.Bulk<BytesResponse>(PostData.MultiJson(bulkIndex));
+            byte[] responseBytes = bulkResponse.Body;
+
+            // TODO: Validate that it worked
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override async Task<bool> IndexManyAsync()
+        {
+            var records = FlightRecord.GetSamples(3);
+            var bulkIndex = new List<object>();
+
+            foreach (var record in records)
+            {
+                bulkIndex.Add(new { index = new { _index = IndexName, _type = "FlightRecord", _id = record.Id.ToString() } });
+                bulkIndex.Add(record);
+            }
+
+            var bulkResponse = await _client.BulkAsync<BytesResponse>(PostData.MultiJson(bulkIndex));
+            byte[] responseBytes = bulkResponse.Body;
+
+            // TODO: Validate that it worked
+
+            return bulkResponse.Success;
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Search()
         {
             var searchResponse = _client.Search<StringResponse>(IndexName, PostData.Serializable(new
@@ -89,6 +128,69 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                     }
                 }
             }));
+            // TODO: Gotta parse the JSON :(
+            var json = response.Body;
+            return 0;
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void MultiSearch()
+        {
+            var records = FlightRecord.GetSamples(2);
+            var multiSearchData = new List<object>();
+            foreach (var record in records)
+            {
+                multiSearchData.Add(new { index = IndexName });
+                multiSearchData.Add(new
+                {
+                    from = 0,
+                    size = 10,
+                    query = new
+                    {
+                        match = new
+                        {
+                            Departure = new
+                            {
+                                query = record.Departure
+                            }
+                        }
+                    }
+                });
+            }
+            var searchResponse = _client.MultiSearch<StringResponse>(IndexName, PostData.MultiJson(multiSearchData));
+
+            var successful = searchResponse.Success;
+            var responseJson = searchResponse.Body;
+
+            // TODO: Validate that it worked
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override async Task<long> MultiSearchAsync()
+        {
+            var records = FlightRecord.GetSamples(2);
+            var multiSearchData = new List<object>();
+            foreach (var record in records)
+            {
+                multiSearchData.Add(new { index = IndexName });
+                multiSearchData.Add(new
+                {
+                    from = 0,
+                    size = 10,
+                    query = new
+                    {
+                        match = new
+                        {
+                            Departure = new
+                            {
+                                query = record.Departure
+                            }
+                        }
+                    }
+                });
+            }
+
+            var response = await _client.MultiSearchAsync<StringResponse>(IndexName, PostData.MultiJson(multiSearchData));
             // TODO: Gotta parse the JSON :(
             var json = response.Body;
             return 0;
