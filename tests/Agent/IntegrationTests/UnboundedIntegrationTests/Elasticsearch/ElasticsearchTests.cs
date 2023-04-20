@@ -44,16 +44,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
             _fixture.AddCommand($"ElasticsearchExerciser SetClient {clientType}");
 
-            // Sync operations
-
-            _fixture.AddCommand($"ElasticsearchExerciser Index");
-
-            _fixture.AddCommand($"ElasticsearchExerciser Search");
-
-            _fixture.AddCommand($"ElasticsearchExerciser IndexMany");
-
-            _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
-
             // Async operations
 
             _fixture.AddCommand($"ElasticsearchExerciser IndexAsync");
@@ -64,8 +54,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
             _fixture.AddCommand($"ElasticsearchExerciser MultiSearchAsync");
 
-            // Don't like having to do this but it makes the async tests pass reliably
-            _fixture.AddCommand("RootCommands DelaySeconds 5");
+            // Sync operations
+
+            _fixture.AddCommand($"ElasticsearchExerciser Index");
+
+            _fixture.AddCommand($"ElasticsearchExerciser Search");
+
+            _fixture.AddCommand($"ElasticsearchExerciser IndexMany");
+
+            _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
 
             _fixture.Actions
             (
