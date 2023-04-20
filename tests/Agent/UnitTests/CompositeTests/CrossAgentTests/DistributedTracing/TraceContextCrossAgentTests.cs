@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using Castle.Core.Internal;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -16,6 +15,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using MoreLinq;
 using Telerik.JustMock;
 
 namespace CompositeTests.CrossAgentTests.DistributedTracing

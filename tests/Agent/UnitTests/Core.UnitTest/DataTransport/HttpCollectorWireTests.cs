@@ -69,7 +69,6 @@ namespace NewRelic.Agent.Core.DataTransport
             _configurationMock.Setup(x => x.PutForDataSend).Returns(usePutForSend);
 
             var connectionInfo = new ConnectionInfo(_configurationMock.Object);
-
             var serializedData = "{ \"key\": \"value\" }";
             var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -136,11 +135,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(_configurationMock.Object);
             var largeSerializedData = new string('x', 1024 * 1024 + 1); // Create a string larger than the maximum allowed payload size
-
-            CreateMockHttpClient(new HttpResponseMessage(HttpStatusCode.OK)
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("{}")
-            });
+            };
+
+            CreateMockHttpClient(httpResponse);
 
             var collectorWire = CreateHttpCollectorWire();
 
