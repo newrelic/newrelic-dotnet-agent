@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Web.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -81,10 +80,10 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         public void SampleAcquired_AllErrorCode0_UpdatesTreeWithThreadSnapshots()
         {
             // Arrange
-            var threadSnapshots = new ThreadSnapshot[]
+            var threadSnapshots = new[]
             {
-                new ThreadSnapshot { ThreadId = (UIntPtr)1, ErrorCode = 0, FunctionIDs = new UIntPtr[] { (UIntPtr)1, (UIntPtr)2 } },
-                new ThreadSnapshot { ThreadId = (UIntPtr)2, ErrorCode = 0, FunctionIDs = new UIntPtr[] { (UIntPtr)3 } }
+                new ThreadSnapshot { ThreadId = (UIntPtr)1, ErrorCode = 0, FunctionIDs = new[] { (UIntPtr)1, (UIntPtr)2 } },
+                new ThreadSnapshot { ThreadId = (UIntPtr)2, ErrorCode = 0, FunctionIDs = new[] { (UIntPtr)3 } }
             };
 
             var expectedBucketNodeCount = threadSnapshots.Sum(ts => ts.FunctionIDs.Length);
@@ -100,10 +99,11 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         public void SampleAcquired_NonZeroErrorCode_DoesNotUpdateTreeWithThreadSnapshots()
         {
             // Arrange
-            var threadSnapshots = new ThreadSnapshot[]
+            var threadSnapshots = new[]
             {
-                new ThreadSnapshot { ThreadId = (UIntPtr)1, ErrorCode = 1, FunctionIDs = new UIntPtr[] { (UIntPtr)1, (UIntPtr)2 } },
-                new ThreadSnapshot { ThreadId = (UIntPtr)2, ErrorCode = 2, FunctionIDs = new UIntPtr[] { (UIntPtr)3 } }
+                new ThreadSnapshot { ThreadId = (UIntPtr)1, ErrorCode = 1, FunctionIDs = new[] { (UIntPtr)1, (UIntPtr)2 } },
+                new ThreadSnapshot { ThreadId = (UIntPtr)2, ErrorCode = 2, FunctionIDs = new[] { (UIntPtr)3 } },
+                new ThreadSnapshot { ThreadId = (UIntPtr)2, ErrorCode = 2, FunctionIDs = new[] { (UIntPtr)3 } } // duplicate to exercise a code path in AddFailedThreadProfile()
             };
 
             // Act
@@ -116,9 +116,45 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         [Test]
         public void PerformAggregation_ResolvesFunctionNamesAndSendsData_CallsSendThreadProfilingData()
         {
+            // Arrange
+            var typeOfFidTypeMethodName = typeof(FidTypeMethodName);
+            var sizeOfFidTypeMethodName = Marshal.SizeOf(typeOfFidTypeMethodName);
+            var fidGizmo = new FidTypeMethodName() { FunctionID = UIntPtr.Zero, MethodName = "SomeMethod", TypeName = "SomeType" };
+            IntPtr fidGizmoIntPtr = Marshal.AllocHGlobal(Marshal.SizeOf(fidGizmo) * 3);
+            Marshal.StructureToPtr(fidGizmo, fidGizmoIntPtr, false);
+            Marshal.StructureToPtr(fidGizmo, fidGizmoIntPtr + sizeOfFidTypeMethodName, false);
+            Marshal.StructureToPtr(fidGizmo, fidGizmoIntPtr + sizeOfFidTypeMethodName * 2, false);
+
+            Mock.Arrange(() =>
+                    _nativeMethods.RequestFunctionNames(Arg.IsAny<UIntPtr[]>(), Arg.AnyInt, out fidGizmoIntPtr))
+                .Returns(0);
+
+            var actualModels = new List<ThreadProfilingModel>();
+            Mock.Arrange(() =>
+                    _dataTransportService.SendThreadProfilingData(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()))
+                .DoInstead((IEnumerable<ThreadProfilingModel> models) =>
+                {
+                    actualModels.AddRange(models);
+                });
+
+            var threadSnapshots = new[]
+            {
+                new ThreadSnapshot { ThreadId = (UIntPtr)1, ErrorCode = 0, FunctionIDs = new[] { (UIntPtr)1, (UIntPtr)2 } },
+                new ThreadSnapshot { ThreadId = (UIntPtr)2, ErrorCode = 0, FunctionIDs = new[] { (UIntPtr)3 } }
+            };
+            _threadProfilingService.SampleAcquired(threadSnapshots);
+
+            // Act
             _threadProfilingService.PerformAggregation();
 
+            // Assert
             Mock.Assert(() => _dataTransportService.SendThreadProfilingData(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()), Occurs.Once());
+            Assert.AreEqual(1, actualModels.Count);
+            Assert.AreEqual(2, actualModels[0].TotalThreadCount);
+            Assert.AreEqual(1, actualModels[0].NumberOfSamples);
+            Assert.AreEqual(2, (actualModels[0].Samples["OTHER"] as ProfileNodes).Count);
+
+            Marshal.Release(fidGizmoIntPtr);
         }
 
         [Test]
