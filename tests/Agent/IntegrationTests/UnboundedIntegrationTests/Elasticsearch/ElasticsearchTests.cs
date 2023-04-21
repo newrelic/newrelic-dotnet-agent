@@ -69,6 +69,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
             _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
 
+            _fixture.AddCommand($"ElasticsearchExerciser GenerateError");
+
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -128,6 +130,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         public void MultiSearchAsync()
         {
             ValidateOperation("SearchAsync");
+        }
+
+        [Fact]
+        public void Error()
+        {
+            ValidateError("GenerateError");
+        }
+
+        private void ValidateError(string operationName)
+        {
+            var errorTrace =
+                _fixture.AgentLog.TryGetErrorTrace(
+                    $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch.ElasticsearchExerciser/{operationName}");
+            Assert.NotNull(errorTrace);
         }
 
 

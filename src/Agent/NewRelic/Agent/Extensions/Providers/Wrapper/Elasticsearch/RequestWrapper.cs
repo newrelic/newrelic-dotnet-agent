@@ -23,6 +23,8 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
         private const string WrapperName = "RequestWrapper";
 
         private static Func<object, object> _apiCallDetailsGetter;
+        private static Func<object, bool> _successGetter;
+        private static Func<object, object> _exceptionGetter;
         private static Func<object, Uri> _uriGetter;
         private static ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new ConcurrentDictionary<Type, Func<object, object>>();
 
@@ -36,7 +38,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
         {
             var indexOfRequestParams = 3; // unless it's Elasticsearch.Net/NEST and async
 
-            if (instrumentedMethodCall.IsAsync) 
+            if (instrumentedMethodCall.IsAsync)
             {
                 transaction.AttachToAsync();
 
@@ -79,7 +81,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                     }
                     var responseGetter = _getRequestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
                     var response = responseGetter(responseTask);
-                    TryProcessResponse(agent, response, transaction, segment);
+                    TryProcessResponse(agent, response, segment);
                 }
             }
             else
@@ -87,8 +89,10 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                 return Delegates.GetDelegateFor<object>(
                         onSuccess: response =>
                         {
-                            var uri = GetUriFromResponse(response);
+                            var apiCallDetails = GetApiCallDetailsFromResponse(response);
+                            var uri = GetUriFromApiCallDetails(apiCallDetails);
                             SetUriOnDatastoreSegment(segment, uri);
+                            ReportError(apiCallDetails);
 
                             segment.End();
                         },
@@ -100,7 +104,31 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             }
         }
 
-        private static void TryProcessResponse(IAgent agent, object response, ITransaction transaction, ISegment segment)
+        private static void ReportError(object apiCallDetails)
+        {
+            var exceptionGetter = _exceptionGetter ??= GetExceptionGetterFromApiCallDetails(apiCallDetails);
+            var ex = exceptionGetter(apiCallDetails);
+
+            if ((ex != null) && (ex is Exception exception))
+            {
+                InternalApi.NoticeError(exception);
+                return;
+            }
+
+            // If an error can be caught by the library before the request is made, it doesn't throw an exception, or
+            // set any kind of error object. The best we can do is check if it was successful, and use the ToString()
+            // override to get a summary of what happened
+            var successGetter = _successGetter ??= GetSuccessGetterFromApiCallDetails(apiCallDetails);
+            var success = successGetter(apiCallDetails);
+
+            if (!success)
+            {
+                InternalApi.NoticeError(apiCallDetails.ToString(), (Dictionary<string, object>)null);
+            }
+
+        }
+
+        private static void TryProcessResponse(IAgent agent, object response, ISegment segment)
         {
             try
             {
@@ -108,9 +136,10 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                 {
                     return;
                 }
-
-                var uri = GetUriFromResponse(response);
+                var apiCallDetails = GetApiCallDetailsFromResponse(response);
+                var uri = GetUriFromApiCallDetails(apiCallDetails);
                 SetUriOnDatastoreSegment(segment, uri);
+                ReportError(apiCallDetails);
 
                 segment.End();
             }
@@ -120,12 +149,16 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             }
         }
 
-        private static Uri GetUriFromResponse(object response)
+        private static object GetApiCallDetailsFromResponse(object response)
         {
             var ApiCallDetailsGetter = _apiCallDetailsGetter ??= GetApiCallDetailsGetterFromResponse(response);
             var apiCallDetails = ApiCallDetailsGetter.Invoke(response);
+            return apiCallDetails;
+        }
 
-            var UriGetter = _uriGetter ??= GetUriGetterFromResponse(response);
+        private static Uri GetUriFromApiCallDetails(object apiCallDetails)
+        {
+            var UriGetter = _uriGetter ??= GetUriGetterFromApiCallDetails(apiCallDetails);
             var uri = UriGetter.Invoke(apiCallDetails);
 
             return uri;
@@ -257,14 +290,31 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             return VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);
         }
 
-        private static Func<object, Uri> GetUriGetterFromResponse(object response)
+        private static Func<object, Uri> GetUriGetterFromApiCallDetails(object apiCallDetails)
         {
-            var responseAssemblyName = response.GetType().Assembly.FullName;
-            var apiCallDetailsAssemblyName = responseAssemblyName.StartsWith("Elastic.Clients.Elasticsearch") ? "Elastic.Transport" : "Elasticsearch.Net";
-            var apiCallDetailsType = $"{apiCallDetailsAssemblyName}.ApiCallDetails";
+            var typeOfApiCall = apiCallDetails.GetType();
+            var responseAssemblyName = apiCallDetails.GetType().Assembly.FullName;
 
-            return VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>(apiCallDetailsAssemblyName, apiCallDetailsType, "Uri");
+            return VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>(responseAssemblyName, typeOfApiCall.FullName, "Uri");
         }
+
+        private static Func<object, Exception> GetExceptionGetterFromApiCallDetails(object apiCallDetails)
+        {
+            var typeOfApiCall = apiCallDetails.GetType();
+            var responseAssemblyName = apiCallDetails.GetType().Assembly.FullName;
+
+            return VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(responseAssemblyName, typeOfApiCall.FullName, "OriginalException");
+        }
+
+        private static Func<object, bool> GetSuccessGetterFromApiCallDetails(object apiCallDetails)
+        {
+            var typeOfApiCall = apiCallDetails.GetType();
+            var responseAssemblyName = apiCallDetails.GetType().Assembly.FullName;
+
+            // "Success" might be better, but it isn't available on all libraries
+            return VisibilityBypasser.Instance.GeneratePropertyAccessor<bool>(responseAssemblyName, typeOfApiCall.FullName, "SuccessOrKnownError");
+        }
+
 
         private static bool ValidTaskResponse(Task response)
         {

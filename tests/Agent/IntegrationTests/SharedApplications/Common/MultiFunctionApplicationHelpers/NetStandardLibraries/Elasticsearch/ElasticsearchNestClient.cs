@@ -3,6 +3,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using LibGit2Sharp;
 using Nest;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
@@ -29,12 +30,21 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public override void Index()
+        private void IndexInternal(string indexName, bool validate = true)
         {
             var record = FlightRecord.GetSample();
-            var response = _client.IndexDocument(record);
+            var response = _client.Index(record, i => i.Index(indexName));
 
-            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
+            if (validate)
+            {
+                Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void Index()
+        {
+            IndexInternal(IndexName);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -152,6 +162,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
 
             return response.TotalResponses;
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void GenerateError()
+        {
+            IndexInternal(BadIndexName, false);
         }
     }
 }

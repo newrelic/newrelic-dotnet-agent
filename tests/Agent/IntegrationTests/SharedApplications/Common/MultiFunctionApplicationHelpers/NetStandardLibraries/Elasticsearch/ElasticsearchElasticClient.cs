@@ -30,12 +30,21 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public override void Index()
+        private void IndexInternal(string indexName, bool validate = true)
         {
             var record = FlightRecord.GetSample();
-            var response = _client.Index(record, IndexName);
+            var response = _client.Index(record, indexName);
 
-            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
+            if (validate)
+            {
+                Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void Index()
+        {
+            IndexInternal(IndexName);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -122,6 +131,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var response = await _client.MultiSearchAsync<FlightRecord>();
 
             return response.TotalResponses;
+        }
+
+        public override void GenerateError()
+        {
+            IndexInternal(BadIndexName, false);
         }
     }
 }

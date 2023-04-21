@@ -91,5 +91,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task IndexManyAsync() => await _client.IndexManyAsync();
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void GenerateError() => _client.GenerateError();
     }
 }
