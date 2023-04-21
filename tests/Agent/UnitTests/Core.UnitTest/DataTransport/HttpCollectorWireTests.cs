@@ -7,6 +7,10 @@ using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Net.Http.Headers;
+using System.Text;
 using NUnit.Framework;
 using System.Threading.Tasks;
 using System.Threading;
@@ -76,6 +80,152 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
+        public void SendData_ShouldReturnEmptyResponseBody_WhenResponseContentIsNull()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
+            Mock.Arrange(() => _configuration.CollectorTimeout).Returns(5000);
+            Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
+
+            var connectionInfo = new ConnectionInfo(_configuration);
+            var serializedData = "{ \"key\": \"value\" }";
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = null
+            };
+
+            CreateMockHttpClient(httpResponse, false);
+
+            var collectorWire = CreateHttpCollectorWire();
+
+            // Act
+            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+
+            // Assert
+            Assert.AreEqual("{}", response);
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
+        }
+
+        [Test]
+        public void SendData_ShouldReturnEmptyResponse_WhenResponseContentIsEmpty()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
+            Mock.Arrange(() => _configuration.CollectorTimeout).Returns(5000);
+            Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
+
+            var connectionInfo = new ConnectionInfo(_configuration);
+            var serializedData = "{ \"key\": \"value\" }";
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("")
+            };
+
+            CreateMockHttpClient(httpResponse, false);
+
+            var collectorWire = CreateHttpCollectorWire();
+
+            // Act
+            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+
+            // Assert
+            Assert.AreEqual("{}", response);
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
+        }
+
+        [Test]
+        public void SendData_DecompressesGZipResponse()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
+            Mock.Arrange(() => _configuration.CollectorTimeout).Returns(5000);
+            Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
+
+            var connectionInfo = new ConnectionInfo(_configuration);
+            var serializedData = "{ \"key\": \"value\" }";
+
+            byte[] zippedBytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var gzipStream = new GZipStream(memoryStream, CompressionLevel.Fastest))
+                {
+                    var bytes = Encoding.UTF8.GetBytes(serializedData);
+                    gzipStream.Write(bytes, 0, bytes.Length);
+                }
+
+                memoryStream.Flush();
+                zippedBytes = memoryStream.ToArray();
+            }
+
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+
+                Content = new ByteArrayContent(zippedBytes)
+            };
+            httpResponse.Content.Headers.ContentEncoding.Add("gzip");
+
+            CreateMockHttpClient(httpResponse, false);
+
+            var collectorWire = CreateHttpCollectorWire();
+
+            // Act
+            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+
+            // Assert
+            Assert.AreEqual(serializedData, response);
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
+        }
+
+        [Test]
+        public void SendData_ReturnsEmptyResponse_WhenGZipResponseIsInvalid()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
+            Mock.Arrange(() => _configuration.CollectorTimeout).Returns(5000);
+            Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
+
+            var connectionInfo = new ConnectionInfo(_configuration);
+            var serializedData = "{ \"key\": \"value\" }";
+
+            byte[] zippedBytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var gzipStream = new GZipStream(memoryStream, CompressionLevel.Fastest))
+                {
+                    var bytes = Encoding.UTF8.GetBytes(serializedData);
+                    gzipStream.Write(bytes, 0, bytes.Length);
+                }
+
+                memoryStream.Flush();
+                zippedBytes = memoryStream.ToArray();
+            }
+            // make the array invalid by twiddling a byte...
+            zippedBytes[0] = Byte.MaxValue;
+
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+
+                Content = new ByteArrayContent(zippedBytes)
+            };
+            httpResponse.Content.Headers.ContentEncoding.Add("gzip");
+
+            CreateMockHttpClient(httpResponse, false);
+
+            var collectorWire = CreateHttpCollectorWire();
+
+            // Act
+            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+
+            // Assert
+            Assert.AreEqual("{}", response);
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
+        }
+
+        [Test]
         public void SendData_ShouldThrowHttpRequestException_WhenRequestFails()
         {
             // Arrange
@@ -110,8 +260,8 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
 
             var connectionInfo = new ConnectionInfo(_configuration);
-            var serializedData = "{ \"key\": \"value\" }";
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+            var serializedData = "invalidjson";
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.UnsupportedMediaType)
             {
                 Content = new StringContent("{}")
             };
@@ -126,6 +276,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
             Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
         }
+
         [Test]
         public void SendData_ShouldDropPayload_WhenPayloadSizeExceedsMaxSize()
         {
@@ -157,7 +308,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
     }
 
-    public class MockHttpMessageHandler: HttpMessageHandler
+    public class MockHttpMessageHandler : HttpMessageHandler
     {
         private readonly HttpResponseMessage _mockResponse;
         private readonly bool _throwHttpRequestException;
@@ -173,7 +324,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             if (_throwHttpRequestException)
                 throw new HttpRequestException();
-            
+
             return Task.FromResult(_mockResponse);
         }
 
