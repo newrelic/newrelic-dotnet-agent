@@ -697,6 +697,16 @@ namespace NewRelic.Agent.Core.Transactions
             TryNoticeErrorOnCurrentSpan(errorData);
         }
 
+        public void NoticeError(string message)
+        {
+            if (Log.IsDebugEnabled) Log.Debug($"Noticed application error: {message}");
+
+            var errorData = _errorService.FromMessage(message, (Dictionary<string, object>)null, false);
+
+            TransactionMetadata.TransactionErrorState.AddExceptionData(errorData);
+            TryNoticeErrorOnCurrentSpan(errorData);
+        }
+
         private void TryNoticeErrorOnCurrentSpan(ErrorData errorData)
         {
             var currentSpan = CurrentSegment as IInternalSpan;

@@ -131,6 +131,12 @@ namespace NewRelic.Agent.Api
         void NoticeError(Exception exception);
 
         /// <summary>
+        /// Tell the agent about an error that just occurred in the instrumented application.  If there is a transaction running the transaction will be flagged as an error transaction.
+        /// </summary>
+        /// <param name="message">The text associated with this error, when an exception is not available. Must not be blank.</param>
+        void NoticeError(string message);
+
+        /// <summary>
         /// Sets the HTTP Response status code on the transaction.
         /// </summary>
         /// <param name="statusCode">The status code to set the transaction to.</param>

@@ -81,7 +81,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                     }
                     var responseGetter = _getRequestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
                     var response = responseGetter(responseTask);
-                    TryProcessResponse(agent, response, segment);
+                    TryProcessResponse(agent, transaction, response, segment);
                 }
             }
             else
@@ -92,7 +92,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                             var apiCallDetails = GetApiCallDetailsFromResponse(response);
                             var uri = GetUriFromApiCallDetails(apiCallDetails);
                             SetUriOnDatastoreSegment(segment, uri);
-                            ReportError(apiCallDetails);
+                            ReportError(transaction, apiCallDetails);
 
                             segment.End();
                         },
@@ -104,7 +104,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             }
         }
 
-        private static void ReportError(object apiCallDetails)
+        private static void ReportError(ITransaction transaction, object apiCallDetails)
         {
             var exceptionGetter = _exceptionGetter ??= GetExceptionGetterFromApiCallDetails(apiCallDetails);
             var ex = exceptionGetter(apiCallDetails);
@@ -123,12 +123,12 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
 
             if (!success)
             {
-                InternalApi.NoticeError(apiCallDetails.ToString(), (Dictionary<string, object>)null);
+                transaction.NoticeError(apiCallDetails.ToString());
             }
 
         }
 
-        private static void TryProcessResponse(IAgent agent, object response, ISegment segment)
+        private static void TryProcessResponse(IAgent agent, ITransaction transaction, object response, ISegment segment)
         {
             try
             {
@@ -139,7 +139,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                 var apiCallDetails = GetApiCallDetailsFromResponse(response);
                 var uri = GetUriFromApiCallDetails(apiCallDetails);
                 SetUriOnDatastoreSegment(segment, uri);
-                ReportError(apiCallDetails);
+                ReportError(transaction, apiCallDetails);
 
                 segment.End();
             }
