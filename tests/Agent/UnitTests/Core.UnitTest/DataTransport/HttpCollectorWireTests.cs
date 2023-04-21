@@ -36,9 +36,9 @@ namespace NewRelic.Agent.Core.DataTransport
             return new HttpCollectorWire(_configuration, requestHeadersMap, _agentHealthReporter, _httpClientFactory);
         }
 
-        private void CreateMockHttpClient(HttpResponseMessage response)
+        private void CreateMockHttpClient(HttpResponseMessage response, bool throwHttpRequestException)
         {
-            _mockHttpMessageHandler = new MockHttpMessageHandler(response);
+            _mockHttpMessageHandler = new MockHttpMessageHandler(response, throwHttpRequestException);
             var httpClient = new HttpClient(_mockHttpMessageHandler);
 
             Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>())).Returns(httpClient);
@@ -62,7 +62,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 Content = new StringContent("{}")
             };
 
-            CreateMockHttpClient(httpResponse);
+            CreateMockHttpClient(httpResponse, false);
 
             var collectorWire = CreateHttpCollectorWire();
 
@@ -90,7 +90,33 @@ namespace NewRelic.Agent.Core.DataTransport
                 Content = new StringContent("{}")
             };
 
-            CreateMockHttpClient(httpResponse);
+            CreateMockHttpClient(httpResponse, true);
+
+            var collectorWire = CreateHttpCollectorWire();
+
+            // Act and Assert
+            Assert.Throws<HttpRequestException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
+
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
+        }
+
+        [Test]
+        public void SendData_ShouldThrowHttpException_WhenResponse_IsNotSuccessful()
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
+            Mock.Arrange(() => _configuration.CollectorTimeout).Returns(5000);
+            Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
+
+            var connectionInfo = new ConnectionInfo(_configuration);
+            var serializedData = "{ \"key\": \"value\" }";
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+            {
+                Content = new StringContent("{}")
+            };
+
+            CreateMockHttpClient(httpResponse, false);
 
             var collectorWire = CreateHttpCollectorWire();
 
@@ -100,7 +126,6 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
             Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
         }
-
         [Test]
         public void SendData_ShouldDropPayload_WhenPayloadSizeExceedsMaxSize()
         {
@@ -117,7 +142,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 Content = new StringContent("{}")
             };
 
-            CreateMockHttpClient(httpResponse);
+            CreateMockHttpClient(httpResponse, false);
 
             var collectorWire = CreateHttpCollectorWire();
 
@@ -135,14 +160,20 @@ namespace NewRelic.Agent.Core.DataTransport
     public class MockHttpMessageHandler: HttpMessageHandler
     {
         private readonly HttpResponseMessage _mockResponse;
+        private readonly bool _throwHttpRequestException;
 
-        public MockHttpMessageHandler(HttpResponseMessage mockResponse)
+        public MockHttpMessageHandler(HttpResponseMessage mockResponse, bool throwHttpRequestException)
         {
             _mockResponse = mockResponse;
+            _throwHttpRequestException = throwHttpRequestException;
         }
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             SendAsyncInvoked = true;
+
+            if (_throwHttpRequestException)
+                throw new HttpRequestException();
+            
             return Task.FromResult(_mockResponse);
         }
 
