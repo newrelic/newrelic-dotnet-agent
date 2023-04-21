@@ -1,12 +1,11 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Nest;
 using NewRelic.Agent.IntegrationTests.Shared;
-using NewRelic.IntegrationTests.Models;
+using Xunit;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 {
@@ -24,7 +23,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             _client = new ElasticClient(settings);
 
-            // TODO: This isn't necessary but will log the response, which can help troubleshoot if
+            // This isn't necessary but will log the response, which can help troubleshoot if
             // you're having connection errors
             _client.Ping();
         }
@@ -35,7 +34,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var record = FlightRecord.GetSample();
             var response = _client.IndexDocument(record);
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -44,7 +43,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var record = FlightRecord.GetSample();
             var response = await _client.IndexDocumentAsync(record);
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
 
             return response.IsValid;
         }
@@ -55,7 +54,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var records = FlightRecord.GetSamples(3);
             var response = _client.IndexMany(records);
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -64,7 +63,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var record = FlightRecord.GetSample();
             var response = await _client.IndexDocumentAsync(record);
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
 
             return response.IsValid;
         }
@@ -72,7 +71,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Search()
         {
-            var searchResponse = _client.Search<FlightRecord>(s => s
+            var response = _client.Search<FlightRecord>(s => s
                 .From(0)
                 .Size(10)
                 .Query(q => q
@@ -83,7 +82,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                    )
                 );
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -100,7 +99,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                    )
                 );
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
 
             return response.Total;
         }
@@ -125,6 +124,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             }
 
             var response = _client.MultiSearch(msd);
+
+            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -148,7 +149,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = await _client.MultiSearchAsync(msd);
 
-            // TODO: Validate that it worked
+            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
 
             return response.TotalResponses;
         }

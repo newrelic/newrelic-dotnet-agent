@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 
@@ -58,7 +59,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
         [LibraryMethod]
         [Transaction]
-        public void SearchAsync() => _client.SearchAsync();
+        public async Task SearchAsync() => await _client.SearchAsync();
 
         [LibraryMethod]
         [Transaction]
@@ -68,7 +69,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void MultiSearchAsync() => _client.MultiSearchAsync();
+        public async Task MultiSearchAsync() => await _client.MultiSearchAsync();
 
         [LibraryMethod]
         [Transaction]
@@ -78,7 +79,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void IndexAsync() => _client.IndexAsync();
+        public async Task IndexAsync() => await _client.IndexAsync();
 
         [LibraryMethod]
         [Transaction]
@@ -88,7 +89,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void IndexManyAsync() => _client.IndexManyAsync();
+        public async Task IndexManyAsync() => await _client.IndexManyAsync();
 
     }
 }

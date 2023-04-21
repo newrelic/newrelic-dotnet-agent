@@ -39,20 +39,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.TestLogger = output;
             _clientType = clientType;
 
-            // TODO: Set high to allow for debugging
-            _fixture.SetTimeout(TimeSpan.FromMinutes(20));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+
+            if (_clientType != ClientType.ElasticClients)
+            {
+                // This lets 7.x clients work with an 8.x server
+                _fixture.SetAdditionalEnvironmentVariable("ELASTIC_CLIENT_APIVERSIONING", "true");
+            }
 
             _fixture.AddCommand($"ElasticsearchExerciser SetClient {clientType}");
-
-            // Sync operations
-
-            _fixture.AddCommand($"ElasticsearchExerciser Index");
-
-            _fixture.AddCommand($"ElasticsearchExerciser Search");
-
-            _fixture.AddCommand($"ElasticsearchExerciser IndexMany");
-
-            _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
 
             // Async operations
 
@@ -64,8 +59,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
             _fixture.AddCommand($"ElasticsearchExerciser MultiSearchAsync");
 
-            // Don't like having to do this but it makes the async tests pass reliably
-            _fixture.AddCommand("RootCommands DelaySeconds 5");
+            // Sync operations
+
+            _fixture.AddCommand($"ElasticsearchExerciser Index");
+
+            _fixture.AddCommand($"ElasticsearchExerciser Search");
+
+            _fixture.AddCommand($"ElasticsearchExerciser IndexMany");
+
+            _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
 
             _fixture.Actions
             (
