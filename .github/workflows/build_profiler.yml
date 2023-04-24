@@ -31,7 +31,8 @@ env:
 jobs:
   check-for-changes:
     name: Check for Updated Profiler Files
-    if: ${{ !inputs.force-build }}
+    # would like to skip this job if "force" is set, but subsequent jobs that depend on this one get skipped if this job is skipped
+    #if: ${{ !inputs.force-build }}   
     runs-on: ubuntu-22.04
     permissions:
       pull-requests: read
@@ -60,11 +61,7 @@ jobs:
 
   build-windows-profiler:
     needs: check-for-changes
-    if: |
-      always() && 
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') &&
-      (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
+    if: ${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true'
     name: Build Windows Profiler
     runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
 
@@ -114,11 +111,7 @@ jobs:
 
   build-linux-x64-profiler:
     needs: check-for-changes
-    if: |
-      always() && 
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') &&
-      (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
+    if: ${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true'
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -171,11 +164,7 @@ jobs:
 
   build-linux-arm64-profiler:
     needs: check-for-changes
-    if: |
-      always() && 
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') &&
-      (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
+    if: ${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true'
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -255,11 +244,7 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: |
-      always() && 
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') &&
-      (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
+    if: ${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true'
     name: Create PR for New Profiler Build
     runs-on: ubuntu-22.04
     permissions:
