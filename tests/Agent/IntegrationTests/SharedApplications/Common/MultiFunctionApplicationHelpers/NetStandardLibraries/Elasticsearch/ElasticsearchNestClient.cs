@@ -3,7 +3,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using LibGit2Sharp;
+using Elastic.Clients.Elasticsearch;
 using Nest;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
@@ -30,21 +30,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        private void IndexInternal(string indexName, bool validate = true)
-        {
-            var record = FlightRecord.GetSample();
-            var response = _client.Index(record, i => i.Index(indexName));
-
-            if (validate)
-            {
-                Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Index()
         {
-            IndexInternal(IndexName);
+            var record = FlightRecord.GetSample();
+            var response = _client.IndexDocument(record);
+
+            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -167,7 +158,16 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void GenerateError()
         {
-            IndexInternal(BadIndexName, false);
+            // This isn't the password, so connection should fail, but we won't get an error until the Ping
+            var settings = new ConnectionSettings(Address).
+                BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
+                "1234").
+                DefaultIndex(IndexName);
+
+            var client = new ElasticClient(settings);
+
+            var response = client.Ping();
+            Assert.False(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
         }
     }
 }

@@ -27,21 +27,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        private void IndexInternal(string indexName, bool validate = true)
-        {
-            var record = FlightRecord.GetSample();
-            var response = _client.Index<BytesResponse>(indexName, record.Id.ToString(), PostData.Serializable(record));
-
-            if (validate)
-            {
-                Assert.True(response.Success, $"Elasticsearch server error: {response}");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Index()
         {
-            IndexInternal(IndexName);
+            var record = FlightRecord.GetSample();
+            var response = _client.Index<BytesResponse>(IndexName, record.Id.ToString(), PostData.Serializable(record));
+
+            Assert.True(response.Success, $"Elasticsearch server error: {response}");
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -202,8 +193,16 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void GenerateError()
         {
-            IndexInternal(BadIndexName);
-        }
+            // This isn't the password, so connection should fail, but we won't get an error until the Ping
+            var settings = new ConnectionConfiguration(Address)
+                .BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
+                    "1234")
+                .RequestTimeout(TimeSpan.FromMinutes(2));
 
+            var client = new ElasticLowLevelClient(settings);
+            var response = client.Ping<StringResponse>();
+
+            Assert.False(response.Success, $"Elasticsearch server error: {response}");
+        }
     }
 }

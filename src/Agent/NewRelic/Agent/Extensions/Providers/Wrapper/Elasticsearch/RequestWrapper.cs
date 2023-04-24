@@ -26,6 +26,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
         private static Func<object, bool> _successGetter;
         private static Func<object, object> _exceptionGetter;
         private static Func<object, Uri> _uriGetter;
+        
         private static ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new ConcurrentDictionary<Type, Func<object, object>>();
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -59,7 +60,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var operation = (requestParams == null) ? GetOperationFromPath(request, splitPath) : GetOperationFromRequestParams(requestParams);
 
             var model = splitPath[0]; // For SQL datastores, "model" is the table name. For Elastic it's the index name.  This is often the first component of the request path, but not always.
-            if (model[0] == '_') // Per Elastic docs, index names aren't allowed to start with an underscore, and the first component of the path can be an operation name in some cases, e.g. "_bulk" or "_msearch"
+            if ((model.Length == 0) || (model[0] == '_')) // Per Elastic docs, index names aren't allowed to start with an underscore, and the first component of the path can be an operation name in some cases, e.g. "_bulk" or "_msearch"
             {
                 model = "Unknown";
             }
@@ -123,7 +124,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
 
             if (!success)
             {
-                transaction.NoticeError(apiCallDetails.ToString());
+                transaction.NoticeError(new ElasticsearchRequestException(apiCallDetails.ToString()));
             }
 
         }
@@ -177,6 +178,10 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             bool foundApi = false;
             foreach (var path in splitPath)
             {
+                if (string.IsNullOrEmpty(path))
+                {
+                    continue;
+                }
                 // Sub-api is directly after the API
                 if (foundApi)
                 {
@@ -314,7 +319,6 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             // "Success" might be better, but it isn't available on all libraries
             return VisibilityBypasser.Instance.GeneratePropertyAccessor<bool>(responseAssemblyName, typeOfApiCall.FullName, "SuccessOrKnownError");
         }
-
 
         private static bool ValidTaskResponse(Task response)
         {
