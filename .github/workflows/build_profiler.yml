@@ -31,8 +31,7 @@ env:
 jobs:
   check-for-changes:
     name: Check for Updated Profiler Files
-    # would like to skip this job if "force" is set, but subsequent jobs that depend on this one get skipped if this job is skipped
-    #if: ${{ !inputs.force-build }}   
+    if: ${{ !inputs.force-build }}   
     runs-on: ubuntu-22.04
     permissions:
       pull-requests: read
@@ -50,7 +49,7 @@ jobs:
           fetch-depth: 1
 
       - name: Look for modified files
-        uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.1.1
+        uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter
         with:
           base: 'HEAD'
@@ -61,7 +60,10 @@ jobs:
 
   build-windows-profiler:
     needs: check-for-changes
-    if: ${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true'
+    if: |
+      always() &&
+      (needs.check-for-changes.result == 'success' || needs.check-for-changes.result == 'skipped') &&
+      (${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true')
     name: Build Windows Profiler
     runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
 
@@ -111,7 +113,10 @@ jobs:
 
   build-linux-x64-profiler:
     needs: check-for-changes
-    if: ${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true'
+    if: |
+      always() &&
+      (needs.check-for-changes.result == 'success' || needs.check-for-changes.result == 'skipped') &&
+      (${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true')
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -164,7 +169,10 @@ jobs:
 
   build-linux-arm64-profiler:
     needs: check-for-changes
-    if: ${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true'
+    if: |
+      always() &&
+      (needs.check-for-changes.result == 'success' || needs.check-for-changes.result == 'skipped') &&
+      (${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true')
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -244,7 +252,10 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: ${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true'
+    if: |
+      always() &&
+      (needs.check-for-changes.result == 'success' || needs.check-for-changes.result == 'skipped') &&
+      (${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true')
     name: Create PR for New Profiler Build
     runs-on: ubuntu-22.04
     permissions:
