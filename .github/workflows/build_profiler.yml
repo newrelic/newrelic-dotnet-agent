@@ -243,14 +243,12 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-
     if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
-
     name: Create PR for New Profiler Build
     runs-on: ubuntu-22.04
-
     permissions:
       contents: write
+      pull-requests: write
 
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
