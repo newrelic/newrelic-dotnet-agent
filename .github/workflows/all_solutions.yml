@@ -26,14 +26,6 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
-  build-profiler:
-    uses: ./.github/workflows/build_profiler.yml
-    secrets: inherit
-    permissions:
-      pull-requests: read
-      contents: write
-      packages: write
-
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
