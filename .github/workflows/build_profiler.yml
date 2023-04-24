@@ -60,7 +60,9 @@ jobs:
 
   build-windows-profiler:
     needs: check-for-changes
-    if: ${{ inputs.force-build ||  needs.check-for-changes.outputs.profiler_src == 'true' }}
+    if: |
+      always() && 
+      (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
     name: Build Windows Profiler
     runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
 
@@ -110,7 +112,9 @@ jobs:
 
   build-linux-x64-profiler:
     needs: check-for-changes
-    if: ${{ inputs.force-build ||  needs.check-for-changes.outputs.profiler_src == 'true' }}
+    if: |
+      always() && 
+      (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -163,7 +167,9 @@ jobs:
 
   build-linux-arm64-profiler:
     needs: check-for-changes
-    if: ${{ inputs.force-build ||  needs.check-for-changes.outputs.profiler_src == 'true' }}
+    if: |
+      always() && 
+      (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -243,7 +249,9 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
+    if: |
+      always() && 
+      (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
     name: Create PR for New Profiler Build
     runs-on: ubuntu-22.04
     permissions:
