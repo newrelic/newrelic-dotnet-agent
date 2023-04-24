@@ -62,6 +62,8 @@ jobs:
     needs: check-for-changes
     if: |
       always() && 
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
       (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
     name: Build Windows Profiler
     runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
@@ -114,6 +116,8 @@ jobs:
     needs: check-for-changes
     if: |
       always() && 
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
       (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
@@ -169,6 +173,8 @@ jobs:
     needs: check-for-changes
     if: |
       always() && 
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
       (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
@@ -251,6 +257,8 @@ jobs:
       ]
     if: |
       always() && 
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
       (${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true')
     name: Create PR for New Profiler Build
     runs-on: ubuntu-22.04
