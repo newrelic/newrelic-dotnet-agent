@@ -150,6 +150,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public int InfiniteTracingExitTimeoutMs => 1234;
 
+        public bool InfiniteTracingCompression => true;
+
         public string PrimaryApplicationId => "PrimaryApplicationId";
 
         public string TrustedAccountKey => "TrustedAccountKey";
@@ -201,6 +203,8 @@ namespace NewRelic.Agent.Core.DataTransport
             { "seven", new[] { "seven1", "seven2" } },
             { "eight", new[] { "eight1", "eight2" } },
         };
+
+        public Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback => dict => "my error group";
 
         public Dictionary<string, string> RequestHeadersMap => new Dictionary<string, string>
         {

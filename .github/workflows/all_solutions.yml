@@ -12,6 +12,14 @@ on:
   schedule:
     - cron:  '0 9 * * *'
 
+# only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  
 env:
   scripts_path: ${{ github.workspace }}\build\scripts
   tools_path: ${{ github.workspace }}\build\Tools
@@ -19,17 +27,7 @@ env:
 
 jobs:
 
-  cancel-previous-workflow-runs:
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || ( github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v') )
-    name: Cancel Previous Runs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: rokroskar/workflow-run-cleanup-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-windows-profiler:
-    needs: cancel-previous-workflow-runs
     name: Build Windows Profiler
     runs-on: windows-2019
 
@@ -40,12 +38,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
+        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
 
       - name: Clean out _profilerBuild directory
         run: |
@@ -71,14 +69,13 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: profiler
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
           if-no-files-found: error
 
   build-linux-x64-profiler:
-    needs: cancel-previous-workflow-runs
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
 
@@ -87,8 +84,14 @@ jobs:
       #<other env vars here>
 
     steps:
+      # intentionally disabled for this job, when enabled it causes a failure in the Build Linux Profiler step
+      # - name: Harden Runner
+      #   uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+      #   with:
+      #     egress-policy: audit 
+
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
@@ -115,23 +118,30 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
 
   build-linux-arm64-profiler:
-    needs: cancel-previous-workflow-runs
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
-    
+    permissions:
+      contents: read  # for actions/checkout to fetch code
+      packages: write  # for uraimo/run-on-arch-action to cache docker images    
+
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
     
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+        with:
+          egress-policy: audit
+
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
       
@@ -144,7 +154,7 @@ jobs:
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
         
-      - uses: uraimo/run-on-arch-action@v2.0.5
+      - uses: uraimo/run-on-arch-action@a8003307a739516fdd80ee6d3da8924db811b8da # v2.5.0
         name: Run commands
         id: runcmd
         with:
@@ -180,7 +190,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -201,15 +211,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
+        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
 
       - name: Setup VSTest Path
-        uses: darenm/Setup-VSTest@v1
+        uses: darenm/Setup-VSTest@fbb574e849d6225ce9702f86e64eb6cdc4b4e561 # v1.1.1
 
       - name: Clean out _profilerBuild directory
         run: |
@@ -221,7 +231,7 @@ jobs:
         shell: powershell
 
       - name: Download Profiler Artifacts Before Agent Build
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -238,25 +248,25 @@ jobs:
         id: agentVersion
         run: |
           $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
-          Write-Host "::set-output name=version::$agentVersion"
+          echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
         shell: powershell
 
       - name: Archive NewRelic.NuGetHelper
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: NewRelic.NuGetHelper
           path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\bin
           if-no-files-found: error
           
       - name: Archive NewRelic.Agent.Extensions
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: NewRelic.Agent.Extensions
           path: ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\Release
           if-no-files-found: error
 
       - name: Archive FullAgent Home folders
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: homefolders
           path: |
@@ -275,7 +285,7 @@ jobs:
           $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
           $bytes = [Convert]::FromBase64String('${{ secrets.SIGNING_CERT }}')
           [IO.File]::WriteAllBytes($filePath, $bytes)
-          Write-Host "::set-output name=filePath::$filePath"
+          echo "filePath=$filePath" >> $env:GITHUB_OUTPUT
         shell: powershell
           
       - name: Install Code Signing Certificate
@@ -305,14 +315,14 @@ jobs:
         shell: powershell
 
       - name: Archive msi _build Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: msi-build-folder-artifacts
           path: ${{ github.workspace }}\src\_build
           if-no-files-found: error
 
       - name: Archive NewRelic.OpenTracing.AmazonLambda.Tracer
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: NewRelic.OpenTracing.AmazonLambda.Tracer
           path: ${{ github.workspace }}\src\AwsLambda\AwsLambdaOpenTracer\bin\Release\netstandard2.0-ILRepacked
@@ -367,7 +377,7 @@ jobs:
 
       - name: Archive Test Results
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: test-results
           path: ${{ github.workspace }}\TestResults
@@ -383,19 +393,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.3
+        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
         with:
           vs-prerelease: true
-
-      - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '7.0.100'
 
       - name: List SDKS
         run: dotnet --list-sdks
@@ -410,7 +415,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: integrationtests
           path: |
@@ -430,19 +435,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.3
+        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
         with:
           vs-prerelease: true
-
-      - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '7.0.100'
 
       - name: Build UnboundedIntegrationTests.sln
         run: |
@@ -453,7 +453,7 @@ jobs:
         shell: powershell
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: unboundedintegrationtests
           path: |
@@ -469,17 +469,13 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
-          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
-          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Owin, ReJit.NetCore, 
-          Logging.HsmAndCsp, Logging.LocalDecoration, Logging.MaxSamplesStored, Logging.ZeroMaxSamplesStored,
-          Logging.MetricsAndForwarding.log4net, Logging.MetricsAndForwarding.MicrosoftLogging, 
-          Logging.MetricsAndForwarding.Serilog, Logging.MetricsAndForwarding.NLog, Logging.LogLevelDetection,
-          Logging.ContextData,
-          ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
-          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self, RequestHeadersCapture.WCF, 
-          RequestHeadersCapture.Owin, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.Asp35, RequestHeadersCapture.EnvironmentVariables, 
-          RequestHandling, CodeLevelMetrics, InfiniteTracing]
+        namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AppDomainCaching, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, CodeLevelMetrics, Configuration, 
+          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, HttpClientInstrumentation, InfiniteTracing, Logging.ContextData, 
+          Logging.HsmAndCsp, Logging.LocalDecoration, Logging.LogLevelDetection, Logging.MaxSamplesStored, Logging.MetricsAndForwarding.log4net, 
+          Logging.MetricsAndForwarding.MicrosoftLogging, Logging.MetricsAndForwarding.NLog, Logging.MetricsAndForwarding.Serilog, Logging.ZeroMaxSamplesStored,
+          Owin, ReJit.NetCore, ReJit.NetFramework, RequestHandling, RequestHeadersCapture.AspNet, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.EnvironmentVariables, 
+          RequestHeadersCapture.Owin, RequestHeadersCapture.WCF, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, WCF.Client.Self, 
+          WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self] # maintain alphabetical order, please!
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -491,14 +487,9 @@ jobs:
       
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
-
-      - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '7.0.100'
 
       - name: Create and trust .NET development SSL certificate
         run: |
@@ -517,13 +508,13 @@ jobs:
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download Integration Test Artifacts
-        uses: actions/download-artifact/@v2
+        uses: actions/download-artifact/@cbed621e49e4c01b044d60f6c80ea4ed6328b281 # v2.1.1
         with:
           name: integrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
@@ -566,7 +557,7 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: integration-test-artifacts
           path: |
@@ -576,7 +567,7 @@ jobs:
 
       - name: Archive Test Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: integration-test-artifacts
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
@@ -587,24 +578,32 @@ jobs:
     name: Run IntegrationTests linux-arm64
     runs-on: ubuntu-22.04
     if: false
+    permissions:
+      contents: read  # for actions/checkout to fetch code
+      packages: write  # for uraimo/run-on-arch-action to cache docker images
 
     env:
       test_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/TestResults
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+        with:
+          egress-policy: audit
+            
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: homefolders
           path: src/Agent
 
       - name: Run test commands
-        uses: uraimo/run-on-arch-action@v2.0.5
+        uses: uraimo/run-on-arch-action@a8003307a739516fdd80ee6d3da8924db811b8da # v2.5.0
         with:
           arch: aarch64
           distro: ubuntu18.04
@@ -635,14 +634,14 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: integration-test-artifacts-linux-arm64
           path: ${{ env.test_path }}/**/*
           if-no-files-found: error
 
       - name: Archive Test Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         if: ${{ always() }}
         with:
           name: integration-test-artifacts-linux-arm64
@@ -671,23 +670,18 @@ jobs:
         shell: powershell
         
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
-      - name: Add .NET 7 SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '7.0.100'
-
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download Unbounded Integration Test Artifacts
-        uses: actions/download-artifact/@v2
+        uses: actions/download-artifact/@cbed621e49e4c01b044d60f6c80ea4ed6328b281 # v2.1.1
         with:
           name: unboundedintegrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
@@ -746,7 +740,7 @@ jobs:
 
       - name: Start Local CosmosDB Emulator for CosmosDB Tests
         if: matrix.namespace == 'CosmosDB'
-        uses: southpolesteve/cosmos-emulator-github-action@v1
+        uses: southpolesteve/cosmos-emulator-github-action@2b1168b52481f972890f5da2ff8f9d2cc3707804 # v1
 
       - name: Run Unbounded Integration Tests
         run: |
@@ -774,7 +768,7 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: integration-test-artifacts
           path: |
@@ -784,7 +778,7 @@ jobs:
 
       - name: Archive Test Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: integration-test-artifacts
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
@@ -797,19 +791,25 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
       
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: homefolders
           path: src/Agent
@@ -819,7 +819,7 @@ jobs:
         run: |
           filePath="/tmp/gpg.tar.bz2"
           echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
-          echo "::set-output name=filePath::$filePath"
+          echo "filePath=$filePath" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Copy GPG Key to keys
@@ -846,7 +846,7 @@ jobs:
         shell: bash
       
       - name: Archive RPM Package Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: rpm-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -859,19 +859,25 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
         
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: msi-build-folder-artifacts
           path: src/_build
@@ -894,7 +900,7 @@ jobs:
         shell: bash
         
       - name: Archive Debian Package Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: debian-build-artifacts
           path: ${{ github.workspace }}/src/_build/CoreArtifacts
@@ -908,48 +914,48 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
       - name: Download Agent Home Folders
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: homefolders
           path: src/Agent 
       
       - name: Download msi _build Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: msi-build-folder-artifacts
           path: src/_build
 
       - name: Download Debian _build Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: debian-build-artifacts
           path: src/_build/CoreArtifacts
 
       - name: Download RPM _build Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: rpm-build-artifacts
           path: src/_build/CoreArtifacts
 
       - name: Download NewRelic.NuGetHelper
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: NewRelic.NuGetHelper
           path: build/NewRelic.NuGetHelper/bin
       
       - name: Download NewRelic.Agent.Extensions
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: NewRelic.Agent.Extensions
           path: src/Agent/NewRelic/Agent/Extensions/NewRelic.Agent.Extensions/bin/Release
 
       - name: Download NewRelic.OpenTracing.AmazonLambda.Tracer
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: NewRelic.OpenTracing.AmazonLambda.Tracer
           path: src/AwsLambda/AwsLambdaOpenTracer/bin/Release/netstandard2.0-ILRepacked
@@ -960,7 +966,7 @@ jobs:
         shell: powershell
 
       - name: Archive Deploy Artifacts
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: deploy-artifacts
           path: |
@@ -969,6 +975,8 @@ jobs:
           if-no-files-found: error
   
   run-multiverse_testing_suite:
+    permissions: 
+      contents: write
     name: Build and Publish Multiverse Testing Suite
     needs: build-test-fullagent-msi
     if: ${{ github.event.release }}

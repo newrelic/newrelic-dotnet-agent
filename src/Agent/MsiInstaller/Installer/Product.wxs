@@ -350,14 +350,6 @@ SPDX-License-Identifier: Apache-2.0
         <File Id="CoreNewRelic.Agent.Extensions.dll" Name="NewRelic.Agent.Extensions.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\NewRelic.Agent.Extensions.dll"/>
       </Component>
 
-      <!--Google gRPC CSharp Extensions-->
-      <Component Id="CoregRPCCSharpExtensionsLibx64" Guid="{3AC8931D-8D17-4834-A21F-783B61B1910C}">
-        <File Id="Coregrpc_csharp_ext.x64.dll" Name="grpc_csharp_ext.x64.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\grpc_csharp_ext.x64.dll"/>
-      </Component>
-      <Component Id="CoregRPCCSharpExtensionsLibx86" Guid="{7078C7BE-0216-4ECE-AC3F-6647D7C04DD3}">
-        <File Id="Coregrpc_csharp_ext.x86.dll" Name="grpc_csharp_ext.x86.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\grpc_csharp_ext.x86.dll"/>
-      </Component>
-
       <!-- Configuration -->
       <Component Id="CoreConfigurationShortcuts" Guid="{3F39FDDD-A607-4DA3-9B4D-3169D65BE49C}">
         <Shortcut Id="CoreExtensionsShortcut" Name="Extensions" Target="[CoreExtensionsFolder]" WorkingDirectory="CoreExtensionsFolder" Advertise="no"/>
@@ -381,8 +373,8 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
 
       <!-- Wrappers -->
-      <Component Id="Asp35WrapperComponent" Guid="{E80B97F6-1FC0-4432-B9BF-8833F0C6D62D}">
-        <File Id="Asp35WrapperFile" Name="NewRelic.Providers.Wrapper.Asp35.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Asp35.dll"/>
+      <Component Id="AspNetWrapperComponent" Guid="{E80B97F6-1FC0-4432-B9BF-8833F0C6D62D}">
+        <File Id="AspNetWrapperFile" Name="NewRelic.Providers.Wrapper.AspNet.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AspNet.dll"/>
       </Component>
       <Component Id="Mvc3WrapperComponent" Guid="{71F61B42-0543-442F-A925-79D95A16591C}">
         <File Id="Mvc3WrapperFile" Name="NewRelic.Providers.Wrapper.Mvc3.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Mvc3.dll"/>
@@ -528,8 +520,8 @@ SPDX-License-Identifier: Apache-2.0
 
     <!-- Wrapper Instrumentation Files-->
     <ComponentGroup Id="NewRelic.Agent.Extensions.Instrumentation" Directory="FrameworkExtensionsFolder">
-      <Component Id="Asp35InstrumentationComponent" Guid="{7DF74F2A-701D-4E6B-BF6B-E63D6AEBF35B}">
-        <File Id="Asp35InstrumentationFile" Name="NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml"/>
+      <Component Id="AspNetInstrumentationComponent" Guid="{7DF74F2A-701D-4E6B-BF6B-E63D6AEBF35B}">
+        <File Id="AspNetInstrumentationFile" Name="NewRelic.Providers.Wrapper.AspNet.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AspNet.Instrumentation.xml"/>
       </Component>
       <Component Id="AspNetCoreInstrumentationComponent" Guid="{EB9739C4-BC22-4A31-86F1-D52035FF0281}">
         <File Id="AspNetCoreInstrumentationFile" Name="NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml"/>

@@ -317,6 +317,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Assert
             Mock.Assert(() => _agentHealthReporter.ReportLoggingEventCollected(), Occurs.Never());
             Mock.Assert(() => _agentHealthReporter.ReportLoggingEventsSent(Arg.IsAny<int>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportLoggingEventsDropped(Arg.IsAny<int>()), Occurs.Never());
         }
 
         [Test]
@@ -441,6 +442,29 @@ namespace NewRelic.Agent.Core.Aggregators
         public void Harvest_cycle_should_match_configured_cycle()
         {
             Assert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
+        }
+
+        [Test]
+        public void Logs_Dropped_Metric_is_reported_when_capacity_is_exceeded()
+        {
+            // Arrange
+            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LogEventWireModelCollection>()))
+                .Returns<LogEventWireModelCollection>(events => DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
+
+            var logEvents = new List<LogEventWireModel>();
+            for (var i = 0; i < 105; i++)
+            {
+                logEvents.Add(new LogEventWireModel(1, "message1", "info", "spanid", "traceid", _contextData));
+            }
+
+            _logEventAggregator.CollectWithPriority(logEvents, 1.0F);
+
+            // Act
+            _harvestAction();
+
+            // Assert
+            // The number of logs over capacity (100) should be reported as dropped
+            Mock.Assert(() => _agentHealthReporter.ReportLoggingEventsDropped(5));
         }
 
         #region Helpers

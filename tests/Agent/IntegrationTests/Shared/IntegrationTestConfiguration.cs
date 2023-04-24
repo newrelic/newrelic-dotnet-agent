@@ -53,6 +53,18 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 return DefaultSetting.TraceObserverUrl;
             }
         }
+        public string TraceObserverPort
+        {
+            get
+            {
+                if (TestSettingOverrides.TryGetValue(_configurationCategory, out var item) && !string.IsNullOrEmpty(item.TraceObserverPort))
+                {
+                    return item.TraceObserverPort;
+                };
+
+                return DefaultSetting.TraceObserverPort;
+            }
+        }
 
         private IntegrationTestConfiguration(string configurationCategory)
         {
@@ -92,6 +104,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         public string AwsAccountNumber { get; set; }
         public string TraceObserverUrl { get; set; }
         public IDictionary<string, string> CustomSettings { get; set; }
+        public string TraceObserverPort { get; set; } = "443";
     }
 
 }

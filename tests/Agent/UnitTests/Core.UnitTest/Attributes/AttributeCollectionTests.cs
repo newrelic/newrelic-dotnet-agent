@@ -230,5 +230,28 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             CollectionAssert.IsEmpty(allAttribs);
         }
+
+
+        private const string UserValue = "uservalue";
+        private const string Intrinsicvalue = "intrinsicvalue";
+        private const string Agentvalue = "agentvalue";
+        [TestCase("userOnly", UserValue)]
+        [TestCase("transactionName", Intrinsicvalue)]
+        [TestCase("original_url", Agentvalue)]
+        public void GetAllAttributeValuesDic_AgentOverIntrinsicOverUser(string userKey, string expectedResult)
+        {
+            // user
+            _attribDefs.GetCustomAttributeForTransaction(userKey).TrySetValue(_attribValues, UserValue);
+
+            // intrinsic key=transactionName
+            _attribDefs.TransactionNameForError.TrySetValue(_attribValues, Intrinsicvalue);
+
+            // agent key=original_url
+            _attribDefs.OriginalUrl.TrySetValue(_attribValues, Agentvalue);
+
+            var allValues = _attribValues.GetAllAttributeValuesDic();
+
+            Assert.AreEqual(expectedResult, allValues[userKey].ToString());
+        }
     }
 }

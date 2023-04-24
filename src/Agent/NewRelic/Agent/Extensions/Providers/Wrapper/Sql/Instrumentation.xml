@@ -15,7 +15,6 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
-    
     <tracerFactory name="OleDbCommandTracer">
       <!-- built in ODBC driver -->
       <match assemblyName="System.Data" className="System.Data.OleDb.OleDbCommand">
@@ -120,6 +119,9 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteNonQuery" />
         <exactMethodMatcher methodName="ExecuteScalar" />
       </match>
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand" minVersion="4.1">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+      </match>
     </tracerFactory>
 
     <tracerFactory name="SqlCommandTracerAsync">
@@ -171,13 +173,15 @@ SPDX-License-Identifier: Apache-2.0
 
       <!-- Postgres SQL Driver-->
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand">
-        <exactMethodMatcher methodName="ExecuteScalarAsync"/>
-        <exactMethodMatcher methodName="ExecuteNonQueryAsync"/>
         <exactMethodMatcher methodName="ExecuteDbDataReaderAsync"/>
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync"/>
+        <exactMethodMatcher methodName="ExecuteScalarAsync"/>
       </match>
-      
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand" minVersion="4.1">
+        <exactMethodMatcher methodName="ExecuteReaderAsync"/>
+      </match>
     </tracerFactory>
-    
+
     <!-- DataReader methods. DISABLED by default due to possible performance impact. Set enabled to "true" (or omit completely) to enable this instrumentation. -->
     <tracerFactory name="DataReaderTracer" enabled="false">
       <!-- built in MS SQL driver (framework) -->
@@ -241,9 +245,18 @@ SPDX-License-Identifier: Apache-2.0
       </match>
 
       <!-- Postgres data provider -->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="4" maxVersion="4.1">
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
+      </match>
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="4.1" maxVersion="5">
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
+        <exactMethodMatcher methodName="TryFastRead" />
+      </match>
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="5">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
+        <exactMethodMatcher methodName="TryFastRead" />
       </match>
     </tracerFactory>
 
@@ -278,13 +291,22 @@ SPDX-License-Identifier: Apache-2.0
       </match>
 
       <!-- Postgres data provider -->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader">
-        <exactMethodMatcher methodName="NextResultAsync" />
-        <exactMethodMatcher methodName="ReadAsync" />
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="4" maxVersion="4.1">
+        <exactMethodMatcher methodName="NextResult" parameters="System.Boolean,System.Boolean"/>
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean"/>
+      </match>
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="4.1" maxVersion="5">
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean"/>
+        <exactMethodMatcher methodName="TryFastRead" />
+      </match>
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader" minVersion="5">
+        <exactMethodMatcher methodName="NextResult" parameters="System.Boolean,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="TryFastRead" />
       </match>
     </tracerFactory>
-    
-    
+
+
     <!-- DbConnection.Open() -->
     <tracerFactory name="OpenConnectionTracer">
       <!-- built in MS SQL driver (framework) -->

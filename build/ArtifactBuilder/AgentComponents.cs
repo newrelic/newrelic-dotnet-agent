@@ -55,7 +55,6 @@ namespace ArtifactBuilder
         public string NewRelicThirdPartyNoticesFile;
         public string AgentInfoJson;
         public string[] GRPCExtensionsLibWindows;
-        public string[] GRPCExtensionsLibLinux;
 
         public List<string> AllComponents
         {
@@ -72,11 +71,6 @@ namespace ArtifactBuilder
                 if (!string.IsNullOrEmpty(LinuxProfiler))
                 {
                     list.Add(LinuxProfiler);
-                }
-
-                if (GRPCExtensionsLibLinux != null)
-                {
-                    list.AddRange(GRPCExtensionsLibLinux);
                 }
 
                 return list;

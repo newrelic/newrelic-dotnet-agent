@@ -14,6 +14,7 @@ using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -1093,6 +1094,19 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private bool? _infiniteTracingCompression;
+        public bool InfiniteTracingCompression
+        {
+            get
+            {
+                if (!_infiniteTracingCompression.HasValue)
+                {
+                    _infiniteTracingCompression = EnvironmentOverrides(_localConfiguration.infiniteTracing.compression, "NEW_RELIC_INFINITE_TRACING_COMPRESSION");
+                }
+                return _infiniteTracingCompression.Value;
+            }
+        }
+
 
 
 
@@ -1187,6 +1201,8 @@ namespace NewRelic.Agent.Core.Configuration
         public IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; private set; }
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
         public IEnumerable<string> ExpectedErrorStatusCodesForAgentSettings { get; private set; }
+
+        public Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback => _runTimeConfiguration.ErrorGroupCallback;
 
         #endregion
 

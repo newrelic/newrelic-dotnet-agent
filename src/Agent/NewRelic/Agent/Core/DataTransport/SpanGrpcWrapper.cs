@@ -5,18 +5,23 @@ using NewRelic.Agent.Core.Segments;
 using Grpc.Core;
 using System.Threading;
 using System;
+#if LEGACY_GRPC
+using GrpcChannel = Grpc.Core.Channel;
+#else
+using Grpc.Net.Client;
+#endif
 
 namespace NewRelic.Agent.Core.DataTransport
 {
     public class SpanGrpcWrapper : GrpcWrapper<Span, RecordStatus>, IGrpcWrapper<Span, RecordStatus>
     {
-        protected override AsyncDuplexStreamingCall<Span, RecordStatus> CreateStreamsImpl(Channel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
+        protected override AsyncDuplexStreamingCall<Span, RecordStatus> CreateStreamsImpl(GrpcChannel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
         {
             if (channel == null)
             {
                 throw new GrpcWrapperChannelNotAvailableException();
             }
-
+#if LEGACY_GRPC
             if (!channel.ConnectAsync(DateTime.Now.AddMilliseconds(connectTimeoutMs)).Wait(connectTimeoutMs, cancellationToken))
             {
                 // Ensure channel connection attempt shutdown on timeout
@@ -24,6 +29,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 throw new GrpcWrapperChannelNotAvailableException();
             }
+#endif
 
             var client = new IngestService.IngestServiceClient(channel);
             var streams = client.RecordSpan(headers: headers, cancellationToken: cancellationToken);
@@ -34,13 +40,14 @@ namespace NewRelic.Agent.Core.DataTransport
 
     public class SpanBatchGrpcWrapper : GrpcWrapper<SpanBatch, RecordStatus>, IGrpcWrapper<SpanBatch, RecordStatus>
     {
-        protected override AsyncDuplexStreamingCall<SpanBatch, RecordStatus> CreateStreamsImpl(Channel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
+        protected override AsyncDuplexStreamingCall<SpanBatch, RecordStatus> CreateStreamsImpl(GrpcChannel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
         {
             if (channel == null)
             {
                 throw new GrpcWrapperChannelNotAvailableException();
             }
 
+#if LEGACY_GRPC
             if (!channel.ConnectAsync(DateTime.Now.AddMilliseconds(connectTimeoutMs)).Wait(connectTimeoutMs, cancellationToken))
             {
                 // Ensure channel connection attempt shutdown on timeout
@@ -48,6 +55,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 throw new GrpcWrapperChannelNotAvailableException();
             }
+#endif
 
             var client = new IngestService.IngestServiceClient(channel);
             var streams = client.RecordSpanBatch(headers: headers, cancellationToken: cancellationToken);

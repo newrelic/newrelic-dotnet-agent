@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
+using NewRelic.IntegrationTests.Models;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
 {
@@ -34,6 +35,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 case "MICROSOFTLOGGING":
 #if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
                     _log = new MicrosoftLoggingLoggingAdapter();
+#endif
+                    break;
+                case "DUMMYMEL":
+#if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
+                    _log = new DummyMELAdapter();
 #endif
                     break;
                 case "NLOG":
@@ -123,6 +129,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         }
 
         [LibraryMethod]
+        public static void CreateSingleLogMessageWithParam(string message)
+        {
+            var param = new Person() { Id = 12345, Name = "John Smith" };
+            _log.InfoWithParam(message, param);
+        }
+
+        [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void CreateSingleLogMessageInTransaction(string message, string level)
@@ -185,6 +198,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         {
             CreateSingleLogMessage(message, level);
             CreateSingleLogMessageWithTraceAttribute(message, level);
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void CreateSingleLogMessageInTransactionWithParam(string message)
+        {
+            CreateSingleLogMessageWithParam(message);
         }
 
     }

@@ -98,7 +98,7 @@ namespace NewRelic.Agent.Core
         /// <param name="apiMethod">  An enum value identifying the supportability metric to create. </param>
         /// <returns> A value of the generic type T. </returns>
         public static T? TryInvoke<T>(Func<T> action, string methodName, ApiMethod apiMethod)
-            where T: class
+            where T : class
         {
             try
             {
@@ -623,6 +623,24 @@ namespace NewRelic.Agent.Core
         public static IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
         {
             return InternalApi.GetResponseMetadata() ?? new Dictionary<string, string>();
+        }
+
+        /// <summary> Sets the method that will be invoked to define the error group that an exception
+        /// should belong to.
+        ///
+        /// The callback takes an an IReadOnlyDictionary of attributes, the stack trace, and Exception,
+        /// and returns the name of the error group to use. Return values
+        /// that are null, empty, or whitespace will not associate the Exception to an error group.
+        /// </summary>
+        /// <param name="callback">The callback to invoke to define the error group that an Exception belongs to.</param>
+        public static void SetErrorGroupCallback(Func<IReadOnlyDictionary<string, object>, string> callback)
+        {
+            const string apiName = nameof(SetErrorGroupCallback);
+            void work()
+            {
+                InternalApi.SetErrorGroupCallback(callback);
+            }
+            TryInvoke(work, apiName, ApiMethod.SetErrorGroupCallback);
         }
     }
 }

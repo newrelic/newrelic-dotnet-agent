@@ -16,6 +16,9 @@ namespace NewRelic.Collections
         //count of number of item adds that have been attempted since ctor/Clear/Set
         private int _addsAttempted;
 
+        // number of items dropped since ctor/Clear/Set
+        private int _itemsDropped;
+
         private readonly SortedSet<T> _sortedSet;
 
         public int Size { get; private set; }
@@ -54,6 +57,12 @@ namespace NewRelic.Collections
                     }
                 }
             }
+            else
+            {
+                // add attempt failed, track this as a dropped item
+                _itemsDropped += items.Count(); 
+            }
+
             return itemsAdded;
         }
 
@@ -66,6 +75,9 @@ namespace NewRelic.Collections
                     return AddInternal(item);
                 }
             }
+
+            // add attempt failed, track this as a dropped item
+            ++_itemsDropped; 
             return false;
         }
 
@@ -113,7 +125,10 @@ namespace NewRelic.Collections
         private void Reset()
         {
             _addsAttempted = 0;
+
+            var itemCount = _sortedSet.Count;
             _sortedSet.Clear();
+            _itemsDropped += itemCount;
         }
 
         //Assume lock on the _syncroot is held.
@@ -122,13 +137,13 @@ namespace NewRelic.Collections
             if (Size == 0)
             {
                 Reset();
-                return;
             }
 
             while (_sortedSet.Count > Size)
             {
                 //_sortedSet.Max is the bottom item in the list (lowest priority).
                 _sortedSet.Remove(_sortedSet.Max);
+                ++_itemsDropped;
             }
         }
 
@@ -145,6 +160,17 @@ namespace NewRelic.Collections
         {
             return Volatile.Read(ref _addsAttempted);
         }
+        
+        public int GetAndResetDroppedItemCount()
+        {
+            lock (_syncroot)
+            {
+                var count = _itemsDropped;
+                _itemsDropped = 0;
+                return count;
+            }
+        }
+
 
         public void Clear()
         {

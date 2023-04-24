@@ -1,9 +1,13 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -15,6 +19,7 @@ namespace NewRelic.Agent.Core.Api
         private IConfiguration _configuration;
         private IAgent _wrapperApi;
         private IAgentApi _agentApi;
+        private List<ErrorGroupCallbackUpdateEvent> _errorGroupCallbackUpdateEvents;
 
         [SetUp]
         public void Setup()
@@ -25,7 +30,16 @@ namespace NewRelic.Agent.Core.Api
 
             _wrapperApi = Mock.Create<IAgent>();
 
+            _errorGroupCallbackUpdateEvents = new List<ErrorGroupCallbackUpdateEvent>();
+            EventBus<ErrorGroupCallbackUpdateEvent>.Subscribe(OnRaisedErrorGroupCallbackUpdateEvent);
+
             _agentApi = new AgentApiImplementation(null, null, null, null, null, null, null, configurationService, _wrapperApi, null, null, null);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            EventBus<ErrorGroupCallbackUpdateEvent>.Unsubscribe(OnRaisedErrorGroupCallbackUpdateEvent);
         }
 
 
@@ -99,6 +113,24 @@ namespace NewRelic.Agent.Core.Api
 
             //Assert
             Assert.IsNotNull(result);
+        }
+
+        [Test]
+        public void SetErrorGroupCallbackShouldRaiseEvent()
+        {
+            Func<IReadOnlyDictionary<string, object>, string> myCallback = ex => "mygroup";
+
+            _agentApi.SetErrorGroupCallback(myCallback);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual(1, _errorGroupCallbackUpdateEvents.Count, "Expected only one update event to be triggered."),
+                () => Assert.AreSame(myCallback, _errorGroupCallbackUpdateEvents[0].ErrorGroupCallback, "Expected the callback in the event to match the callback passed to the API.")
+                );
+        }
+
+        private void OnRaisedErrorGroupCallbackUpdateEvent(ErrorGroupCallbackUpdateEvent updateEvent)
+        {
+            _errorGroupCallbackUpdateEvents.Add(updateEvent);
         }
     }
 }

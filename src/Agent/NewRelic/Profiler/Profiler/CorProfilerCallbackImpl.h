@@ -235,11 +235,12 @@ namespace NewRelic { namespace Profiler {
 
                 LogTrace("Checking to see if we should instrument this process.");
                 auto forceProfiling = _systemCalls->GetForceProfiling();
-                auto processPath = GetAndTransformProcessPath();
+                auto processPath = Strings::ToUpper(_systemCalls->GetProcessPath());
                 auto commandLine = _systemCalls->GetProgramCommandLine();
+                auto parentProcessPath = Strings::ToUpper(_systemCalls->GetParentProcessPath());
                 auto appPoolId = GetAppPoolId(_systemCalls);
                 LogInfo(L"Command line: ", commandLine);
-                if (!forceProfiling && !configuration->ShouldInstrument(processPath, appPoolId, commandLine, _isCoreClr)) {
+                if (!forceProfiling && !configuration->ShouldInstrument(processPath, parentProcessPath, appPoolId, commandLine, _isCoreClr)) {
                     LogInfo("This process should not be instrumented, unloading profiler.");
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
@@ -1263,13 +1264,6 @@ namespace NewRelic { namespace Profiler {
             if (runtimeInfo != nullptr) {
                 LogTrace(L"CLR version: ", runtimeInfo->majorVersion, L".", runtimeInfo->minorVersion);
             }
-        }
-
-        xstring_t GetAndTransformProcessPath()
-        {
-            auto processPath = _systemCalls->GetProcessPath();
-            std::transform(processPath.begin(), processPath.end(), processPath.begin(), ::towupper);
-            return processPath;
         }
 
         void DelayProfilerAttach()

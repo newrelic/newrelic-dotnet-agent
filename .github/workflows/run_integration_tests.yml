@@ -27,6 +27,9 @@ on:
         description: 'Run tests in parallel within each namespace'
         required: false
 
+permissions:
+  contents: read
+  
 env:
   DOTNET_NOLOGO: true
 
@@ -40,20 +43,27 @@ jobs:
       integration-tests-matrix: ${{ steps.configure_integration_tests_matrix.outputs.matrix }}
       unbounded-tests-matrix: ${{ steps.configure_unbounded_tests_matrix.outputs.matrix }}
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+        with:
+          egress-policy: audit 
+
       - id: configure_integration_tests_matrix
         run: |
           if [ "${{ github.event.inputs.integration-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
-            namespaces="[ 'AgentFeatures', 'AgentLogs', 'AgentMetrics', 'Api', 'AspNetCore', 'BasicInstrumentation', 'CatInbound', 'CatOutbound', 'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', \
-            'Errors', 'HttpClientInstrumentation.NetCore', 'HttpClientInstrumentation.NetFramework', 'Owin', 'ReJit.NetCore', 'Logging.HsmAndCsp', 'Logging.LocalDecoration', 'Logging.MaxSamplesStored', 'Logging.ZeroMaxSamplesStored', \
-            'Logging.MetricsAndForwarding.log4net', 'Logging.MetricsAndForwarding.MicrosoftLogging', 'Logging.MetricsAndForwarding.Serilog', 'Logging.MetricsAndForwarding.NLog', 'ReJit.NetFramework', 'RemoteServiceFixtures', 'RestSharp', \
-            'WCF.Client.IIS.ASPDisabled', 'WCF.Client.IIS.ASPEnabled', 'WCF.Client.Self', 'WCF.Service.IIS.ASPDisabled', 'WCF.Service.IIS.ASPEnabled', 'WCF.Service.Self', 'RequestHeadersCapture.WCF', 'RequestHeadersCapture.Owin', \
-            'RequestHeadersCapture.AspNetCore', 'RequestHeadersCapture.Asp35', 'RequestHeadersCapture.EnvironmentVariables', 'RequestHandling', 'CodeLevelMetrics', 'Logging.LogLevelDetection' ]"
+            namespaces="[ 'AgentFeatures', 'AgentLogs', 'AgentMetrics', 'Api', 'AppDomainCaching', 'AspNetCore', 'BasicInstrumentation', 'CatInbound', 'CatOutbound', 'CodeLevelMetrics', 'Configuration', \
+          'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', 'Errors', 'HttpClientInstrumentation', 'InfiniteTracing', 'Logging.ContextData', \
+          'Logging.HsmAndCsp', 'Logging.LocalDecoration', 'Logging.LogLevelDetection', 'Logging.MaxSamplesStored', 'Logging.MetricsAndForwarding.log4net', \
+          'Logging.MetricsAndForwarding.MicrosoftLogging', 'Logging.MetricsAndForwarding.NLog', 'Logging.MetricsAndForwarding.Serilog', 'Logging.ZeroMaxSamplesStored', \
+          'Owin', 'ReJit.NetCore', 'ReJit.NetFramework', 'RequestHandling', 'RequestHeadersCapture.AspNet', 'RequestHeadersCapture.AspNetCore', 'RequestHeadersCapture.EnvironmentVariables', \
+          'RequestHeadersCapture.Owin', 'RequestHeadersCapture.WCF', 'RestSharp', 'WCF.Client.IIS.ASPDisabled', 'WCF.Client.IIS.ASPEnabled', 'WCF.Client.Self', \
+          'WCF.Service.IIS.ASPDisabled', 'WCF.Service.IIS.ASPEnabled', 'WCF.Service.Self' ]"
           else
             # Just use the supplied list of namespaces
             namespaces="[ ${{ github.event.inputs.integration-test-namespaces }} ]"
           fi
-          echo "::set-output name=matrix::$namespaces"
+          echo "matrix=$namespaces" >> $GITHUB_OUTPUT
         shell: bash
 
       - id: configure_unbounded_tests_matrix
@@ -65,7 +75,7 @@ jobs:
             # Just use the supplied list of namespaces
             namespaces="[ ${{ github.event.inputs.unbounded-test-namespaces }} ]"
           fi
-          echo "::set-output name=matrix::$namespaces"
+          echo "matrix=$namespaces" >> $GITHUB_OUTPUT
         shell: bash
 
 
@@ -74,7 +84,7 @@ jobs:
     needs: [setup-matrices]
     if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'IntegrationTests'
     name: Run IntegrationTests
-    runs-on: windows-2019 # TODO: make this a input so we can test different OSes?
+    runs-on: windows-2022 # TODO: make this a input so we can test different OSes?
     strategy:
       matrix:
         namespace: ${{fromJSON(needs.setup-matrices.outputs.integration-tests-matrix)}}
@@ -89,14 +99,18 @@ jobs:
       
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x'
+      - name: Create and trust .NET development SSL certificate
+        run: |
+          dotnet dev-certs https --clean
+          dotnet dev-certs https --export-path ./devcert.pfx --password "password1"
+          $pwd = ConvertTo-SecureString -String "password1" -Force -AsPlainText
+          Import-PfxCertificate -FilePath ./devcert.pfx -CertStoreLocation Cert:\LocalMachine\Root -Password $pwd
+          dotnet dev-certs https --check --trust
+        shell: powershell
 
       - name: Set up secrets
         env:
@@ -106,7 +120,7 @@ jobs:
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
       - name: Download Agent Home Folders
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: all_solutions.yml
@@ -116,7 +130,7 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Download Integration Tests
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: all_solutions.yml
@@ -167,7 +181,7 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: integration-test-artifacts
           path: |
@@ -178,7 +192,7 @@ jobs:
 
       - name: Archive Test Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: integration-test-artifacts
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx
@@ -188,7 +202,7 @@ jobs:
     needs: [setup-matrices]
     if: github.event.inputs.solutions == 'Both' || github.event.inputs.solutions == 'UnboundedIntegrationTests'
     name: Run Unbounded Tests
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         namespace: ${{fromJSON(needs.setup-matrices.outputs.unbounded-tests-matrix)}}
@@ -203,17 +217,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x'
-
       - name: Download Agent Home Folders
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: all_solutions.yml
@@ -223,7 +232,7 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Download Integration Tests
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: all_solutions.yml
@@ -291,7 +300,7 @@ jobs:
 
       - name: Start Local CosmosDB Emulator for CosmosDB Tests
         if: matrix.namespace == 'CosmosDB'
-        uses: southpolesteve/cosmos-emulator-github-action@v1
+        uses: southpolesteve/cosmos-emulator-github-action@2b1168b52481f972890f5da2ff8f9d2cc3707804 # v1
 
       - name: Run Unbounded Integration Tests
         run: |
@@ -323,7 +332,7 @@ jobs:
 
       - name: Archive IntegrationTestWorkingDirectory on Failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: integration-test-artifacts
           path: |
@@ -334,7 +343,7 @@ jobs:
 
       - name: Archive Test Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: integration-test-artifacts
           path: C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.trx

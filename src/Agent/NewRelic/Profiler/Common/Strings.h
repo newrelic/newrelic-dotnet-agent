@@ -62,5 +62,12 @@ namespace NewRelic { namespace Profiler
 
             return true;
         }
+
+        static xstring_t ToUpper(xstring_t source)
+        {
+            std::transform(source.begin(), source.end(), source.begin(), ::towupper);
+            return source;
+        }
+
     };
 }}

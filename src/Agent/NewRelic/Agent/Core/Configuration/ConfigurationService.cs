@@ -43,6 +43,7 @@ namespace NewRelic.Agent.Core.Configuration
             _subscriptions.Add<ConfigurationDeserializedEvent>(OnConfigurationDeserialized);
             _subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
             _subscriptions.Add<AppNameUpdateEvent>(OnAppNameUpdate);
+            _subscriptions.Add<ErrorGroupCallbackUpdateEvent>(OnErrorGroupCallbackUpdate);
             _subscriptions.Add<GetCurrentConfigurationRequest, IConfiguration>(OnGetCurrentConfiguration);
             _subscriptions.Add<SecurityPoliciesConfigurationUpdatedEvent>(OnSecurityPoliciesUpdated);
         }
@@ -91,7 +92,16 @@ namespace NewRelic.Agent.Core.Configuration
             if (_runTimeConfiguration.ApplicationNames.SequenceEqual(appNameUpdateEvent.AppNames))
                 return;
 
-            _runTimeConfiguration = new RunTimeConfiguration(appNameUpdateEvent.AppNames);
+            _runTimeConfiguration = new RunTimeConfiguration(appNameUpdateEvent.AppNames, _runTimeConfiguration.ErrorGroupCallback);
+            UpdateAndPublishConfiguration(ConfigurationUpdateSource.RunTime);
+        }
+
+        private void OnErrorGroupCallbackUpdate(ErrorGroupCallbackUpdateEvent errorGroupCallbackUpdateEvent)
+        {
+            if (_runTimeConfiguration.ErrorGroupCallback == errorGroupCallbackUpdateEvent.ErrorGroupCallback)
+                return;
+
+            _runTimeConfiguration = new RunTimeConfiguration(_runTimeConfiguration.ApplicationNames, errorGroupCallbackUpdateEvent.ErrorGroupCallback);
             UpdateAndPublishConfiguration(ConfigurationUpdateSource.RunTime);
         }
 

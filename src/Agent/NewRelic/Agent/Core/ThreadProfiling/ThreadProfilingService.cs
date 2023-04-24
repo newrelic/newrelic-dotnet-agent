@@ -296,6 +296,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             PruningList.Add(node);
         }
 
+        // for unit testing only
         public int GetTotalBucketNodeCount()
         {
             return _threadProfilingBucket.GetNodeCount();

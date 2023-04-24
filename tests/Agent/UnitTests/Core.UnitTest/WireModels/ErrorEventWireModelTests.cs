@@ -6,11 +6,11 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using NewRelic.Agent.TestUtilities;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.Configuration.UnitTest;
 
 namespace NewRelic.Agent.Core.WireModels
 {

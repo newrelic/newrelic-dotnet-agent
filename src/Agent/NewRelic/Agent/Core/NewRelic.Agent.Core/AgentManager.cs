@@ -184,12 +184,6 @@ namespace NewRelic.Agent.Core
 
             StartServices();
             LogInitialized();
-            LogTlsConfiguration();
-        }
-
-        private void LogTlsConfiguration()
-        {
-            Log.Info($"TLS Configuration (System.Net.ServicePointManager.SecurityProtocol): {System.Net.ServicePointManager.SecurityProtocol}");
         }
 
         private void LogInitialized()
@@ -251,6 +245,7 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_QUEUE_SIZE",
                     "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_PARTITION_COUNT",
                     "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_BATCH_SIZE",
+                    "NEW_RELIC_INFINITE_TRACING_COMPRESSION",
                     "NEW_RELIC_UTILIZATION_DETECT_AWS",
                     "NEW_RELIC_UTILIZATION_DETECT_AZURE",
                     "NEW_RELIC_UTILIZATION_DETECT_GCP",

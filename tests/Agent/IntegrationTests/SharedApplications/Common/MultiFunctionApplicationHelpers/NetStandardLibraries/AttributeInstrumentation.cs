@@ -3,6 +3,7 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
@@ -132,6 +133,20 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Internal
             Task.Delay(TimeSpan.FromMilliseconds(10)).Wait();
 
             DoSomeWork(spanName);
+        }
+
+        /// <summary>
+        /// Synchronous method creating a Web transaction With Exception (NoticeError)
+        /// </summary>
+        [LibraryMethod]
+        [Transaction(Web = true)]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void MakeWebTransactionWithException()
+        {
+            Task.Delay(TimeSpan.FromMilliseconds(100)).Wait();
+            var exception = new Exception("Test Message");
+            NewRelic.Api.Agent.NewRelic.NoticeError(exception);
+            Task.Delay(TimeSpan.FromMilliseconds(1000)).Wait();
         }
     }
 }

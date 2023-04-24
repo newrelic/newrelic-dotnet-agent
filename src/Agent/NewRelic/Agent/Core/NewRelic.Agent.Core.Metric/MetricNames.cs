@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using Grpc.Core;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -9,7 +8,6 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Parsing;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -964,6 +962,11 @@ namespace NewRelic.Agent.Core.Metric
             return SupportabilityInfiniteTracingSpan + "gRPC" + PathSeparator + error;
         }
 
+        public static string SupportabilityInfiniteTracingCompression(bool compressionEnabled)
+        {
+            return SupportabilityInfiniteTracing + "Compression" + PathSeparator + (compressionEnabled? "enabled" : "disabled");
+        }
+
         #endregion
 
         #region Performance Metrics
@@ -1040,6 +1043,7 @@ namespace NewRelic.Agent.Core.Metric
         private const string SupportabilityLoggingEventsPs = SupportabilityPs + "Logging" + PathSeparator;
         public const string SupportabilityLoggingEventsSent = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Sent";
         public const string SupportabilityLoggingEventsCollected = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Seen";
+        public const string SupportabilityLoggingEventsDropped = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Dropped";
 
         public static string GetLoggingMetricsLinesBySeverityName(string logLevel)
         {
@@ -1085,6 +1089,7 @@ namespace NewRelic.Agent.Core.Metric
         }
 
         private const string SupportabilityLogForwardingEnabledWithFrameworkNamePs = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + DotNet + PathSeparator;
+
         public static string GetSupportabilityLogForwardingEnabledWithFrameworkName(string loggingFramework)
         {
             return SupportabilityLogForwardingEnabledWithFrameworkNamePs + loggingFramework + PathSeparator + Enabled;

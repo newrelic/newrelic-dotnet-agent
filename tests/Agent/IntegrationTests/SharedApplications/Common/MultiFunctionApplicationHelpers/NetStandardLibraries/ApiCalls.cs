@@ -48,5 +48,39 @@ namespace MultiFunctionApplicationHelpers.Libraries
                 ConsoleMFLogger.Info($"key: {item.Key}, value:{item.Value}");
             }
         }
+
+        [LibraryMethod]
+        public static void TestSetApplicationName(string applicationName)
+        {
+            NewRelic.Api.Agent.NewRelic.SetApplicationName(applicationName);
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void TestSetTransactionUserId(string userId)
+        {
+            NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.SetUserId(userId);
+        }
+
+        [LibraryMethod]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void TestSetErrorGroupCallback()
+        {
+            NewRelic.Api.Agent.NewRelic.SetErrorGroupCallback(ErrorGroupCallback);
+        }
+
+        private static string ErrorGroupCallback(IReadOnlyDictionary<string, object> attributes)
+        {
+            var errorGroupName = "OtherErrors";
+            if (attributes.TryGetValue("error.message", out var errorMessage))
+            {
+                if (errorMessage.ToString() == "Test Message") // See AttributeInstrumentation.MakeWebTransactionWithException
+                {
+                    errorGroupName = "TestErrors";
+                }
+            }
+            return errorGroupName;
+        }
     }
 }

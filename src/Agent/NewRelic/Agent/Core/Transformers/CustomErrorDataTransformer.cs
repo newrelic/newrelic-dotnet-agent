@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Transformers
 {
     public interface ICustomErrorDataTransformer
     {
-        void Transform(ErrorData errorData, float priority);
+        void Transform(ErrorData errorData, float priority, string userid);
     }
 
     public class CustomErrorDataTransformer : ICustomErrorDataTransformer
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.Transformers
             _errorEventAggregator = errorEventAggregator;
         }
 
-        public void Transform(ErrorData errorData, float priority)
+        public void Transform(ErrorData errorData, float priority, string userid)
         {
             if (!_configurationService.Configuration.ErrorCollectorEnabled)
             {
@@ -64,6 +64,11 @@ namespace NewRelic.Agent.Core.Transformers
             // 'transactionName' attribute to find the corresponding Error Trace (matching it to 'Path') 
             // so it can display the stack trace. 
             _attribDefs.TransactionNameForError.TrySetValue(attribValues, errorData.Path);
+
+            if (!string.IsNullOrWhiteSpace(userid))
+            {
+                _attribDefs.EndUserId.TrySetValue(attribValues, userid);
+            }
 
             //We have to do the filtering here b/c these methods further update
             var errorTrace = _errorTraceMaker.GetErrorTrace(new AttributeValueCollection(attribValues, AttributeDestinations.ErrorTrace), errorData);

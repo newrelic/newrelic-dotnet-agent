@@ -19,7 +19,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
     {
         private readonly EventWaitHandle _stopHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-        private readonly ConcurrentDictionary<string, ProfilingSession> _sessionCache = new ConcurrentDictionary<string, ProfilingSession>();
+        private readonly ConcurrentDictionary<ISegment, ProfilingSession> _sessionCache = new ConcurrentDictionary<ISegment, ProfilingSession>();
 
         private readonly IAgent _agent;
 
@@ -34,28 +34,26 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
         }
 
         /// <summary>
-        /// Finishes a profiling session for the segment indicated by the span id and creates a child DataStoreSegment for each command in the session.
+        /// Finishes a profiling session for the segment and creates a child DataStoreSegment for each command in the session.
         /// </summary>
-        /// <param name="spanId">Span ID of the segment being finalized.</param>
-        public void Harvest(string spanId)
+        /// <param name="hostSegment">Segment being finalized.</param>
+        public void Harvest(ISegment hostSegment)
         {
             // If we can't remove the session, it doesn't exist, so do nothing and return.
-            if (!_sessionCache.TryRemove(spanId, out var sessionData))
+            if (!_sessionCache.TryRemove(hostSegment, out var sessionData))
             {
                 return;
             }
 
             // Get the transaction from the session
-            var transaction = sessionData.UserToken as ITransaction;
-
-            // We want to make sure to finish the session even if the transaction is done so that it is not orphaned.
-            var commands = sessionData.FinishProfiling();
-            if (transaction.IsFinished)
+            var weakTransaction = sessionData.UserToken as WeakReference<ITransaction>;
+            if (!(weakTransaction?.TryGetTarget(out var transaction) ?? false) || transaction.IsFinished)
             {
                 return;
             }
 
             var xTransaction = (ITransactionExperimental)transaction;
+            var commands = sessionData.FinishProfiling();
             foreach (var command in commands)
             {
                 // We need to build the relative start and stop time based on the transaction start time.
@@ -107,7 +105,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
 
                 // Don't want to save data to a session outside of a transaction or to a NoOp - no way to clean it up easily or reliably.
                 var transaction = _agent.CurrentTransaction;
-                if (!transaction.IsValid)
+                if (transaction.IsFinished || !transaction.IsValid)
                 {
                     return null;
                 }
@@ -119,43 +117,21 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                     return null;
                 }
 
-                // Use the spanid of the segment as the key for the cache.
-                var spanId = segment.SpanId;
-                if (string.IsNullOrWhiteSpace(spanId))
-                {
-                    return null;
-                }
-
-                // During async operations, the transaction can get lost and report as NoOp so we store a reference to it in the session.
-                if (!_sessionCache.TryGetValue(spanId, out var sessionData))
-                {
-                    sessionData = new ProfilingSession(transaction);
-                    _sessionCache.TryAdd(spanId, sessionData);
-                }
-
-                return sessionData;
+                return _sessionCache.GetOrAdd(segment, GetProfilingSession);
             };
         }
 
-        public int Count
+        private ProfilingSession GetProfilingSession(ISegment segment)
         {
-            get
-            {
-                return _sessionCache.Count;
-            }
+            return new ProfilingSession(new WeakReference<ITransaction>(_agent.CurrentTransaction, false));
         }
 
         // Clean up the handles, sessions, and wipe the dictionary.
         public void Dispose()
         {
             _stopHandle.Set();
-            _stopHandle.Dispose();
-            foreach (var cachedSession in _sessionCache.Values)
-            {
-                _ = cachedSession.FinishProfiling();
-            }
-
             _sessionCache.Clear();
+            _stopHandle.Dispose();
         }
     }
 }

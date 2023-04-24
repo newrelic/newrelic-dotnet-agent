@@ -1,13 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30011.22
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33403.182
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Installer", "Installer\Installer.wixproj", "{B5C13B8F-279B-455B-ACE5-864CA37CEB08}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InstallerActions", "InstallerActions\InstallerActions.csproj", "{E8C424D3-4493-4FE6-89B1-650A589C4209}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsiInstallerTests", "..\..\..\tests\Agent\MsiInstallerTests\MsiInstallerTests.csproj", "{ACDD62F6-4E3D-4EC0-89A7-3A9DAE09C651}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,14 +31,6 @@ Global
 		{E8C424D3-4493-4FE6-89B1-650A589C4209}.Release|x64.Build.0 = Release|x64
 		{E8C424D3-4493-4FE6-89B1-650A589C4209}.Release|x86.ActiveCfg = Release|x86
 		{E8C424D3-4493-4FE6-89B1-650A589C4209}.Release|x86.Build.0 = Release|x86
-		{ACDD62F6-4E3D-4EC0-89A7-3A9DAE09C651}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{ACDD62F6-4E3D-4EC0-89A7-3A9DAE09C651}.Debug|x64.Build.0 = Debug|Any CPU
-		{ACDD62F6-4E3D-4EC0-89A7-3A9DAE09C651}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{ACDD62F6-4E3D-4EC0-89A7-3A9DAE09C651}.Debug|x86.Build.0 = Debug|Any CPU
-		{ACDD62F6-4E3D-4EC0-89A7-3A9DAE09C651}.Release|x64.ActiveCfg = Release|Any CPU
-		{ACDD62F6-4E3D-4EC0-89A7-3A9DAE09C651}.Release|x64.Build.0 = Release|Any CPU
-		{ACDD62F6-4E3D-4EC0-89A7-3A9DAE09C651}.Release|x86.ActiveCfg = Release|Any CPU
-		{ACDD62F6-4E3D-4EC0-89A7-3A9DAE09C651}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

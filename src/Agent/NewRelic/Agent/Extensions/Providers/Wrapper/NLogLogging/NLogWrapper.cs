@@ -13,16 +13,19 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
 {
     public class NLogWrapper : IWrapper
     {
+        private static Action<object, string> _setFormattedMessage;
         private static Func<object, object> _getLevel;
-        private static Func<object, string> _getRenderedMessage;
-        private static Func<object, DateTime> _getTimestamp;
+        private static Func<object, string> _getFormattedMessage;
         private static Func<object, string> _messageGetter;
+        private static Func<object, DateTime> _getTimestamp;
         private static Func<object, Exception> _getLogException;
         private static Func<object, IDictionary<object, object>> _getPropertiesDictionary;
 
         public bool IsTransactionRequired => false;
 
         private const string WrapperName = "nlog";
+        private const string FormattedMessage45Plus = "_formattedMessage";
+        private const string FormattedMessagePre45 = "formattedMessage";
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -50,7 +53,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
         {
             var getLevelFunc = _getLevel ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Level");
 
-            var getRenderedMessageFunc = _getRenderedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "FormattedMessage");
+            var getRenderedMessageFunc = GetFormattedMessageFunc(logEventType); ;
 
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
 
@@ -67,29 +70,57 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             {
                 return;
             }
-
             var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
+
+            // This wrapper for NLog uses a belt-and-suspenders approach to decorating log output. We first try to decorate the Message property,
+            // then get the FormattedMessage property and check to see if it is decorated. If not, decorate the FormattedMessage backing field directly.
+            // Note: this still does not work for all log messages, particularly the messages output by ASP.NET Core when NLog.Web.AspNetCore is used.
 
             var messageGetter = _messageGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "Message");
 
-            // Message should not be null, but better to be sure
             var originalMessage = messageGetter(logEvent);
-            if (string.IsNullOrWhiteSpace(originalMessage))
+
+            var messageSetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(logEvent, "Message");
+
+            messageSetter(originalMessage + " " + formattedMetadata);
+
+            var getFormattedMessageFunc = GetFormattedMessageFunc(logEventType);
+            var formattedMessage = getFormattedMessageFunc(logEvent);
+            if (string.IsNullOrWhiteSpace(formattedMessage))
             {
                 return;
             }
 
-            // this cannot be made a static since it is unique to each logEvent
-            var messageSetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(logEvent, "Message");
-            messageSetter(originalMessage + " " + formattedMetadata);
+            if (LoggingHelpers.ContainsLinkingToken(formattedMessage))
+            {
+                return;
+            }
+
+            // NLog version strings are not setup to allow using min/max version in instrumentation - they only report major version.
+            // This will default to the 4.5+ field name and if that is not found, use the pre4.5 field name.
+            var formattedMessageName = FormattedMessage45Plus;
+            if (_setFormattedMessage == null)
+            {
+                if (logEventType.GetField(FormattedMessage45Plus, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) == null)
+                {
+                    formattedMessageName = FormattedMessagePre45;
+                }
+            }
+
+            var setFormattedMessage = _setFormattedMessage ??= VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(logEventType, formattedMessageName);
+            setFormattedMessage(logEvent, formattedMessage + " " + formattedMetadata);
+
+        }
+
+        private Func<object, string> GetFormattedMessageFunc(Type logEventType)
+        {
+            return _getFormattedMessage ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "FormattedMessage");
         }
 
         private Dictionary<string, object> GetContextData(object logEvent)
         {
             var contextData = new Dictionary<string, object>();
-
             var getPropertiesDictionary = _getPropertiesDictionary ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary<object, object>>(logEvent.GetType(), "Properties");
-
             var properties = getPropertiesDictionary(logEvent);
             foreach (var property in properties)
             {

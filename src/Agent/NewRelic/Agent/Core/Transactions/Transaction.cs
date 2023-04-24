@@ -59,9 +59,15 @@ namespace NewRelic.Agent.Core.Transactions
                     return Segment.NoOpSegment;
                 }
 
-                if (Segments[currentSegmentIndex.Value] != null)
+                int idx = currentSegmentIndex.Value;
+                if (idx >= Segments.Count)
                 {
-                    return Segments[currentSegmentIndex.Value];
+                    Log.Warn($"Transaction {Guid} is out of sync with the current segment [looking for {idx} out of {Segments.Count}]");
+                    return Segment.NoOpSegment;
+                }
+                if (Segments[idx] != null)
+                {
+                    return Segments[idx];
                 }
 
                 return Segment.NoOpSegment;
@@ -553,7 +559,7 @@ namespace NewRelic.Agent.Core.Transactions
                 {
                     return headers;
                 }
-                return headers.Concat(new[] { new KeyValuePair<string, string>(Constants.DistributedTracePayloadKey, payload.HttpSafe()) });
+                return headers.Concat(new[] { new KeyValuePair<string, string>(Constants.DistributedTracePayloadKeyAllLower, payload.HttpSafe()) });
             }
 
             // CAT
@@ -599,28 +605,6 @@ namespace NewRelic.Agent.Core.Transactions
         {
             var pathHash = Agent._pathHashMaker.CalculatePathHash(transactionMetricName.PrefixedName, TransactionMetadata.CrossApplicationReferrerPathHash);
             TransactionMetadata.SetCrossApplicationPathHash(pathHash);
-        }
-
-        public void AcceptDistributedTracePayload(string payload, TransportType transportType)
-        {
-            if (!_configuration.DistributedTracingEnabled)
-            {
-                return;
-            }
-            if (TransactionMetadata.HasOutgoingTraceHeaders)
-            {
-                Agent._agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredCreateBeforeAccept();
-                return;
-            }
-            if (TracingState != null)
-            {
-                Agent._agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMultiple();
-                return;
-            }
-
-            var isUnknownTransportType = transportType < TransportType.Unknown || transportType > TransportType.Other;
-
-            TracingState = Agent._distributedTracePayloadHandler.AcceptDistributedTracePayload(payload, isUnknownTransportType ? TransportType.Unknown : transportType, StartTime);
         }
 
         public void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType)
@@ -686,6 +670,7 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void NoticeError(ErrorData errorData)
         {
+
             TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
             TryNoticeErrorOnCurrentSpan(errorData);
         }
@@ -1308,6 +1293,18 @@ namespace NewRelic.Agent.Core.Transactions
             }
 
             return url;
+        }
+
+        /// <summary>
+        /// Sets a User Id to be associated with this transaction.
+        /// </summary>
+        /// <param name="userid">The User Id for this transaction.</param>
+        public void SetUserId(string userid)
+        {
+            if (!string.IsNullOrWhiteSpace(userid))
+            {
+                TransactionMetadata.UserAndRequestAttributes.TrySetValue(_attribDefs.EndUserId, userid);
+            }
         }
     }
 }

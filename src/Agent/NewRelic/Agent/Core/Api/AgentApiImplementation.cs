@@ -361,7 +361,7 @@ namespace NewRelic.Agent.Core.Api
             else
             {
                 errorData.Path = NoticeErrorPath;
-                _customErrorDataTransformer.Transform(errorData, _tracePriorityManager.Create());
+                _customErrorDataTransformer.Transform(errorData, _tracePriorityManager.Create(), null);
             }
         }
 
@@ -747,6 +747,22 @@ namespace NewRelic.Agent.Core.Api
             }
 
             return _agent.CurrentTransaction.GetResponseMetadata();
+        }
+
+        /// <summary> Sets the method that will be invoked to define the error group that an exception
+        /// should belong to.
+        ///
+        /// The callback takes an an IReadOnlyDictionary of attributes, the stack trace, and Exception,
+        /// and returns the name of the error group to use. Return values
+        /// that are null, empty, or whitespace will not associate the Exception to an error group.
+        /// </summary>
+        /// <param name="callback">The callback to invoke to define the error group that an Exception belongs to.</param>
+        public void SetErrorGroupCallback(Func<IReadOnlyDictionary<string, object>, string> callback)
+        {
+            using (new IgnoreWork())
+            {
+                EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(callback));
+            }
         }
     }
 }

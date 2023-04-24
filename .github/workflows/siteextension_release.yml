@@ -10,16 +10,15 @@ env:
   tools_path: ${{ github.workspace }}\build\Tools
   DOTNET_NOLOGO: true
 
-jobs:
+permissions:
+  contents: read
 
-  cancel-previous-workflow-runs:
-    if:  github.event_name == 'workflow_dispatch' || ( github.event_name == 'release' && startsWith(github.ref, 'refs/tags/AzureSiteExtension_v') )
-    name: Cancel Previous Runs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: rokroskar/workflow-run-cleanup-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+# only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
 
   run-artifactbuilder:
     if: ${{ github.event.release }}
@@ -32,12 +31,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
           
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
+        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
 
       - name: Build NewRelic.NuGetHelper
         run: |
@@ -56,7 +55,7 @@ jobs:
         shell: powershell
 
       - name: Archive Deploy Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: deploy-artifacts
           path: |

@@ -1,4 +1,4 @@
-FROM debian:buster-20210816-slim
+FROM debian:buster-20230202-slim
 
 RUN apt-get update && apt-get install -y \
     apt-utils \

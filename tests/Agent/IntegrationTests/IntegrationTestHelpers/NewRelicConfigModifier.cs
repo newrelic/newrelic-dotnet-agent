@@ -110,10 +110,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
-        public NewRelicConfigModifier EnableInfinteTracing(string traceObserverUrl)
+        public NewRelicConfigModifier EnableInfiniteTracing(string traceObserverUrl, string traceObserverPort)
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
                new[] { "configuration", "infiniteTracing", "trace_observer" }, "host", traceObserverUrl);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
+                    new[] { "configuration", "infiniteTracing", "trace_observer" }, "port", traceObserverPort);
             return this;
         }
 
@@ -327,6 +329,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding" }, "contextData", string.Empty);
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding", "contextData" }, "enabled", enabled.ToString().ToLower());
 
+            return this;
+        }
+
+        public NewRelicConfigModifier SetSendDataOnExit(bool enabled = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "sendDataOnExit", enabled.ToString().ToLower());
+            return this;
+        }
+
+        public NewRelicConfigModifier EnableAgentTiming(bool enable = true)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "diagnostics", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "diagnostics"}, "captureAgentTiming", enable.ToString().ToLower());
             return this;
         }
     }
