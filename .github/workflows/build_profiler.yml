@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       force-build:
-        description: 'Build even if no files were updated'
+        description: "Build even if no files were updated"
         required: false
         default: true
         type: boolean
@@ -86,7 +86,7 @@ jobs:
           Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
           MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
-        
+
       - name: Build x86
         run: |
           Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
@@ -106,7 +106,7 @@ jobs:
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
     permissions:
-      contents: read  # for actions/checkout to fetch code
+      contents: read # for actions/checkout to fetch code
 
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
@@ -117,7 +117,7 @@ jobs:
       # - name: Harden Runner
       #   uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
       #   with:
-      #     egress-policy: audit 
+      #     egress-policy: audit
 
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
@@ -159,8 +159,8 @@ jobs:
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
     permissions:
-      contents: read  # for actions/checkout to fetch code
-      packages: write  # for uraimo/run-on-arch-action to cache docker images    
+      contents: read # for actions/checkout to fetch code
+      packages: write # for uraimo/run-on-arch-action to cache docker images
 
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
@@ -175,7 +175,7 @@ jobs:
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
-      
+
       - name: Clean out _profilerBuild directory
         run: |
           rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
@@ -184,7 +184,7 @@ jobs:
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
-        
+
       - uses: uraimo/run-on-arch-action@a8003307a739516fdd80ee6d3da8924db811b8da # v2.5.0
         name: Run commands
         id: runcmd
@@ -213,7 +213,7 @@ jobs:
             cd /profiler
             chmod 777 ./linux/build_profiler.sh
             ./linux/build_profiler.sh
-            
+
       - name: Move Profiler to staging folder
         run: |
           mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/
@@ -242,7 +242,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     permissions:
-        contents: write
+      contents: write
 
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
@@ -251,7 +251,7 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
         with:
-          egress-policy: audit 
+          egress-policy: audit
 
       - name: Checkout
         uses: actions/checkout@v3

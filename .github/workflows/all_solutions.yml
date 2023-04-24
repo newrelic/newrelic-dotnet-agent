@@ -3,14 +3,14 @@ name: .NET Agent All Solutions Build
 # Does not run on PUSH since we have already ran all the test
 on:
   pull_request:
-    branches: 
-    - main
-    - 'feature/**'
+    branches:
+      - main
+      - "feature/**"
   release:
-    types: [ published ]
+    types: [published]
   workflow_dispatch:
   schedule:
-    - cron:  '0 9 * * *'
+    - cron: "0 9 * * *"
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
@@ -19,14 +19,13 @@ concurrency:
 
 permissions:
   contents: read
-  
+
 env:
   scripts_path: ${{ github.workspace }}\build\scripts
   tools_path: ${{ github.workspace }}\build\Tools
   DOTNET_NOLOGO: true
 
 jobs:
-
   build-profiler:
     uses: ./.github/workflows/build_profiler.yml
     secrets: inherit
@@ -74,7 +73,7 @@ jobs:
           name: NewRelic.NuGetHelper
           path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\bin
           if-no-files-found: error
-          
+
       - name: Archive NewRelic.Agent.Extensions
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
@@ -104,15 +103,15 @@ jobs:
           [IO.File]::WriteAllBytes($filePath, $bytes)
           echo "filePath=$filePath" >> $env:GITHUB_OUTPUT
         shell: powershell
-          
+
       - name: Install Code Signing Certificate
         if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
         run: |
           Write-Host "certutil.exe -f -user -p <passphrase> -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot"
           certutil.exe -f -user -p ${{ secrets.CERT_PASSPHRASE }} -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot
         shell: powershell
-      
-      - name: Create Self-signed code signing cert  
+
+      - name: Create Self-signed code signing cert
         if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
         run: |
           Write-Host "New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)"
@@ -231,13 +230,53 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AppDomainCaching, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, CodeLevelMetrics, Configuration, 
-          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, HttpClientInstrumentation, InfiniteTracing, Logging.ContextData, 
-          Logging.HsmAndCsp, Logging.LocalDecoration, Logging.LogLevelDetection, Logging.MaxSamplesStored, Logging.MetricsAndForwarding.log4net, 
-          Logging.MetricsAndForwarding.MicrosoftLogging, Logging.MetricsAndForwarding.NLog, Logging.MetricsAndForwarding.Serilog, Logging.ZeroMaxSamplesStored,
-          Owin, ReJit.NetCore, ReJit.NetFramework, RequestHandling, RequestHeadersCapture.AspNet, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.EnvironmentVariables, 
-          RequestHeadersCapture.Owin, RequestHeadersCapture.WCF, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, WCF.Client.Self, 
-          WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self] # maintain alphabetical order, please!
+        namespace: [
+            AgentFeatures,
+            AgentLogs,
+            AgentMetrics,
+            Api,
+            AppDomainCaching,
+            AspNetCore,
+            BasicInstrumentation,
+            CatInbound,
+            CatOutbound,
+            CodeLevelMetrics,
+            Configuration,
+            CSP,
+            CustomAttributes,
+            CustomInstrumentation,
+            DataTransmission,
+            DistributedTracing,
+            Errors,
+            HttpClientInstrumentation,
+            InfiniteTracing,
+            Logging.ContextData,
+            Logging.HsmAndCsp,
+            Logging.LocalDecoration,
+            Logging.LogLevelDetection,
+            Logging.MaxSamplesStored,
+            Logging.MetricsAndForwarding.log4net,
+            Logging.MetricsAndForwarding.MicrosoftLogging,
+            Logging.MetricsAndForwarding.NLog,
+            Logging.MetricsAndForwarding.Serilog,
+            Logging.ZeroMaxSamplesStored,
+            Owin,
+            ReJit.NetCore,
+            ReJit.NetFramework,
+            RequestHandling,
+            RequestHeadersCapture.AspNet,
+            RequestHeadersCapture.AspNetCore,
+            RequestHeadersCapture.EnvironmentVariables,
+            RequestHeadersCapture.Owin,
+            RequestHeadersCapture.WCF,
+            RestSharp,
+            WCF.Client.IIS.ASPDisabled,
+            WCF.Client.IIS.ASPEnabled,
+            WCF.Client.Self,
+            WCF.Service.IIS.ASPDisabled,
+            WCF.Service.IIS.ASPEnabled,
+            WCF.Service.Self,
+          ] # maintain alphabetical order, please!
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -245,8 +284,8 @@ jobs:
       integration_tests_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net462
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: false
-      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
-      
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+
     steps:
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
@@ -307,7 +346,7 @@ jobs:
           $json | ConvertTo-Json | Out-File "${{ env.integration_tests_path }}/xunit.runner.json"
 
           dotnet test ${{ env.integration_tests_path }}/NewRelic.Agent.IntegrationTests.dll --filter FullyQualifiedName~NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} --no-build --nologo --logger "trx;LogFileName=C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.trx"
-          
+
           if ($Env:enhanced_logging -eq $True) {
             Write-Host "Get HostableWebCore errors (if any)"
             Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
@@ -341,8 +380,8 @@ jobs:
     runs-on: ubuntu-22.04
     if: false
     permissions:
-      contents: read  # for actions/checkout to fetch code
-      packages: write  # for uraimo/run-on-arch-action to cache docker images
+      contents: read # for actions/checkout to fetch code
+      packages: write # for uraimo/run-on-arch-action to cache docker images
 
     env:
       test_path: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/TestResults
@@ -352,7 +391,7 @@ jobs:
         uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
         with:
           egress-policy: audit
-            
+
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
@@ -416,7 +455,21 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        namespace: [ CosmosDB, Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, NServiceBus5, Oracle, Postgres, RabbitMq, Redis ]
+        namespace:
+          [
+            CosmosDB,
+            Couchbase,
+            MongoDB,
+            Msmq,
+            MsSql,
+            MySql,
+            NServiceBus,
+            NServiceBus5,
+            Oracle,
+            Postgres,
+            RabbitMq,
+            Redis,
+          ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -430,7 +483,7 @@ jobs:
       - name: My IP
         run: (Invoke-WebRequest -uri "http://ifconfig.me/ip").Content
         shell: powershell
-        
+
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
@@ -447,7 +500,7 @@ jobs:
         with:
           name: unboundedintegrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
-      
+
       - name: Setup TLS
         run: |
           $registryRootPath = "HKCU:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols"
@@ -474,7 +527,7 @@ jobs:
             else {
               New-ItemProperty -Path $registryPath -Name $name -Value $value -PropertyType DWORD -Force | Out-Null
             }
-          }  
+          }
         shell: powershell
 
       - name: Install dependencies
@@ -563,7 +616,7 @@ jobs:
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
-      
+
       - name: Download msi _build Artifacts
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
@@ -593,7 +646,7 @@ jobs:
       - name: Build RPM
         run: |
           agentVersion=${{ needs.build-fullagent-msi.outputs.agentVersion }}
-          
+
           if [[ "$agentVersion" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
             major=$(echo $agentVersion | cut -d'.' -f1)
             minor=$(echo $agentVersion | cut -d'.' -f2)
@@ -601,12 +654,12 @@ jobs:
             agentVersion="${major}.${minor}.${patch}"
             echo "agentVersion is simplified to $agentVersion"
           fi
-          
+
           cd ${{ github.workspace }}/build/Linux
           docker-compose build build_rpm
           docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
         shell: bash
-      
+
       - name: Archive RPM Package Artifacts
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
@@ -631,7 +684,7 @@ jobs:
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
-        
+
       - name: Download Agent Home Folders
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
@@ -647,7 +700,7 @@ jobs:
       - name: Build Debian Package
         run: |
           agentVersion=${{ needs.build-fullagent-msi.outputs.agentVersion }}
-          
+
           if [[ "$agentVersion" =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]]; then
             major=$(echo $agentVersion | cut -d'.' -f1)
             minor=$(echo $agentVersion | cut -d'.' -f2)
@@ -655,12 +708,12 @@ jobs:
             agentVersion="${major}.${minor}.${patch}"
             echo "agentVersion is simplified to $agentVersion"
           fi
-          
+
           cd ${{ github.workspace }}/build/Linux
           docker-compose build build_deb
           docker-compose run -e AGENT_VERSION=$agentVersion build_deb
         shell: bash
-        
+
       - name: Archive Debian Package Artifacts
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
@@ -669,7 +722,7 @@ jobs:
           if-no-files-found: error
 
   run-artifactbuilder:
-    needs: [ create-package-rpm, create-package-deb ]
+    needs: [create-package-rpm, create-package-deb]
     if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
     name: Run ArtifactBuilder
     runs-on: windows-2022
@@ -684,8 +737,8 @@ jobs:
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: homefolders
-          path: src/Agent 
-      
+          path: src/Agent
+
       - name: Download msi _build Artifacts
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
@@ -709,7 +762,7 @@ jobs:
         with:
           name: NewRelic.NuGetHelper
           path: build/NewRelic.NuGetHelper/bin
-      
+
       - name: Download NewRelic.Agent.Extensions
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
@@ -735,9 +788,9 @@ jobs:
             ${{ github.workspace }}\build\BuildArtifacts
             ${{ github.workspace }}\deploy
           if-no-files-found: error
-  
+
   run-multiverse_testing_suite:
-    permissions: 
+    permissions:
       contents: write
     name: Build and Publish Multiverse Testing Suite
     needs: build-fullagent-msi
