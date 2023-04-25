@@ -38,7 +38,7 @@ namespace ArtifactBuilder.Artifacts
                 return;
             }
 
-            //ValidateWxsDefinitionFileForInstaller();
+            ValidateWxsDefinitionFileForInstaller();
 
             var fileSearchPattern = $@"NewRelicAgent_{Platform}_*.msi";
             var msiPath = Directory.GetFiles(MsiDirectory, fileSearchPattern).FirstOrDefault();
@@ -162,7 +162,7 @@ namespace ArtifactBuilder.Artifacts
                     throw new PackagingException($"Product.wxs file {file.Id} did not have KeyPath set to yes, but was {file.KeyPath}.");
                 }
 
-                var expectedSourcePath = isCore ? $@"$(var.SolutionDir)newrelichome_$(var.Platform)_coreclr\extensions\{file.Name}" : $@"$(var.SolutionDir)newrelichome_$(var.Platform)\extensions\{file.Name}";
+                var expectedSourcePath = isCore ? $@"$(var.HomeFolderPath)_coreclr\extensions\{file.Name}" : $@"$(var.HomeFolderPath)\extensions\{file.Name}";
                 if (file.Source != expectedSourcePath)
                 {
                     throw new PackagingException($"Product.wxs file {file.Id} did not have the expected source path of {expectedSourcePath}, but was {file.Source}");
