@@ -190,5 +190,19 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             return 0;
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void GenerateError()
+        {
+            // This isn't the password, so connection should fail, but we won't get an error until the Ping
+            var settings = new ConnectionConfiguration(Address)
+                .BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
+                    "1234")
+                .RequestTimeout(TimeSpan.FromMinutes(2));
+
+            var client = new ElasticLowLevelClient(settings);
+            var response = client.Ping<StringResponse>();
+
+            Assert.False(response.Success, $"Elasticsearch server error: {response}");
+        }
     }
 }

@@ -12,6 +12,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
     internal abstract class ElasticsearchTestClient
     {
         protected const string IndexName = "flights";   // Must be lowercase!
+        protected const string BadIndexName = "_ILLEGAL";
+
         protected Uri Address = new Uri(ElasticSearchConfiguration.ElasticServer);
 
         public ElasticsearchTestClient() { }
@@ -33,6 +35,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         public abstract void MultiSearch();
 
         public abstract Task<long> MultiSearchAsync();
+
+        public abstract void GenerateError();
     }
 
     public class FlightRecord

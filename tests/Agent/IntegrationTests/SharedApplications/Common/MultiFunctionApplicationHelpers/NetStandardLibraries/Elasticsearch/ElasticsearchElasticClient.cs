@@ -123,5 +123,21 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             return response.TotalResponses;
         }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void GenerateError()
+        {
+            // This isn't the password, so connection should fail, but we won't get an error until the Ping
+            var settings = new ElasticsearchClientSettings(Address)
+                    .Authentication(new BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
+                    "12345")).
+                    DefaultIndex(IndexName);
+
+            var client = new ElasticsearchClient(settings);
+
+            var response = client.Ping();
+
+            Assert.False(response.IsSuccess());
+        }
     }
 }

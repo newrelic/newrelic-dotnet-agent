@@ -126,6 +126,11 @@ namespace NewRelic.Agent.Core.Transactions
             Log.Debug($"Ignoring application error because it occurred outside of a transaction: {exception}");
         }
 
+        public void NoticeError(string message)
+        {
+            Log.Debug($"Ignoring application error because it occurred outside of a transaction: {message}");
+        }
+
         public void SetHttpResponseStatusCode(int statusCode, int? subStatusCode = null)
         {
 

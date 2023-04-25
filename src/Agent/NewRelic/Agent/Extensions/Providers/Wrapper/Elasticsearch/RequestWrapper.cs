@@ -23,7 +23,10 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
         private const string WrapperName = "RequestWrapper";
 
         private static Func<object, object> _apiCallDetailsGetter;
+        private static Func<object, bool> _successGetter;
+        private static Func<object, object> _exceptionGetter;
         private static Func<object, Uri> _uriGetter;
+        
         private static ConcurrentDictionary<Type, Func<object, object>> _getRequestResponseFromGeneric = new ConcurrentDictionary<Type, Func<object, object>>();
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -36,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
         {
             var indexOfRequestParams = 3; // unless it's Elasticsearch.Net/NEST and async
 
-            if (instrumentedMethodCall.IsAsync) 
+            if (instrumentedMethodCall.IsAsync)
             {
                 transaction.AttachToAsync();
 
@@ -57,7 +60,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             var operation = (requestParams == null) ? GetOperationFromPath(request, splitPath) : GetOperationFromRequestParams(requestParams);
 
             var model = splitPath[0]; // For SQL datastores, "model" is the table name. For Elastic it's the index name.  This is often the first component of the request path, but not always.
-            if (model[0] == '_') // Per Elastic docs, index names aren't allowed to start with an underscore, and the first component of the path can be an operation name in some cases, e.g. "_bulk" or "_msearch"
+            if ((model.Length == 0) || (model[0] == '_')) // Per Elastic docs, index names aren't allowed to start with an underscore, and the first component of the path can be an operation name in some cases, e.g. "_bulk" or "_msearch"
             {
                 model = "Unknown";
             }
@@ -79,7 +82,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                     }
                     var responseGetter = _getRequestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
                     var response = responseGetter(responseTask);
-                    TryProcessResponse(agent, response, transaction, segment);
+                    TryProcessResponse(agent, transaction, response, segment);
                 }
             }
             else
@@ -87,8 +90,10 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                 return Delegates.GetDelegateFor<object>(
                         onSuccess: response =>
                         {
-                            var uri = GetUriFromResponse(response);
+                            var apiCallDetails = GetApiCallDetailsFromResponse(response);
+                            var uri = GetUriFromApiCallDetails(apiCallDetails);
                             SetUriOnDatastoreSegment(segment, uri);
+                            ReportError(transaction, apiCallDetails);
 
                             segment.End();
                         },
@@ -100,7 +105,31 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             }
         }
 
-        private static void TryProcessResponse(IAgent agent, object response, ITransaction transaction, ISegment segment)
+        private static void ReportError(ITransaction transaction, object apiCallDetails)
+        {
+            var exceptionGetter = _exceptionGetter ??= GetExceptionGetterFromApiCallDetails(apiCallDetails);
+            var ex = exceptionGetter(apiCallDetails);
+
+            if ((ex != null) && (ex is Exception exception))
+            {
+                InternalApi.NoticeError(exception);
+                return;
+            }
+
+            // If an error can be caught by the library before the request is made, it doesn't throw an exception, or
+            // set any kind of error object. The best we can do is check if it was successful, and use the ToString()
+            // override to get a summary of what happened
+            var successGetter = _successGetter ??= GetSuccessGetterFromApiCallDetails(apiCallDetails);
+            var success = successGetter(apiCallDetails);
+
+            if (!success)
+            {
+                transaction.NoticeError(new ElasticsearchRequestException(apiCallDetails.ToString()));
+            }
+
+        }
+
+        private static void TryProcessResponse(IAgent agent, ITransaction transaction, object response, ISegment segment)
         {
             try
             {
@@ -108,9 +137,10 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
                 {
                     return;
                 }
-
-                var uri = GetUriFromResponse(response);
+                var apiCallDetails = GetApiCallDetailsFromResponse(response);
+                var uri = GetUriFromApiCallDetails(apiCallDetails);
                 SetUriOnDatastoreSegment(segment, uri);
+                ReportError(transaction, apiCallDetails);
 
                 segment.End();
             }
@@ -120,12 +150,16 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             }
         }
 
-        private static Uri GetUriFromResponse(object response)
+        private static object GetApiCallDetailsFromResponse(object response)
         {
             var ApiCallDetailsGetter = _apiCallDetailsGetter ??= GetApiCallDetailsGetterFromResponse(response);
             var apiCallDetails = ApiCallDetailsGetter.Invoke(response);
+            return apiCallDetails;
+        }
 
-            var UriGetter = _uriGetter ??= GetUriGetterFromResponse(response);
+        private static Uri GetUriFromApiCallDetails(object apiCallDetails)
+        {
+            var UriGetter = _uriGetter ??= GetUriGetterFromApiCallDetails(apiCallDetails);
             var uri = UriGetter.Invoke(apiCallDetails);
 
             return uri;
@@ -144,6 +178,10 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             bool foundApi = false;
             foreach (var path in splitPath)
             {
+                if (string.IsNullOrEmpty(path))
+                {
+                    continue;
+                }
                 // Sub-api is directly after the API
                 if (foundApi)
                 {
@@ -257,13 +295,29 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
             return VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(responseAssemblyName, typeOfResponse.FullName, apiCallDetailsPropertyName);
         }
 
-        private static Func<object, Uri> GetUriGetterFromResponse(object response)
+        private static Func<object, Uri> GetUriGetterFromApiCallDetails(object apiCallDetails)
         {
-            var responseAssemblyName = response.GetType().Assembly.FullName;
-            var apiCallDetailsAssemblyName = responseAssemblyName.StartsWith("Elastic.Clients.Elasticsearch") ? "Elastic.Transport" : "Elasticsearch.Net";
-            var apiCallDetailsType = $"{apiCallDetailsAssemblyName}.ApiCallDetails";
+            var typeOfApiCall = apiCallDetails.GetType();
+            var responseAssemblyName = apiCallDetails.GetType().Assembly.FullName;
 
-            return VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>(apiCallDetailsAssemblyName, apiCallDetailsType, "Uri");
+            return VisibilityBypasser.Instance.GeneratePropertyAccessor<Uri>(responseAssemblyName, typeOfApiCall.FullName, "Uri");
+        }
+
+        private static Func<object, Exception> GetExceptionGetterFromApiCallDetails(object apiCallDetails)
+        {
+            var typeOfApiCall = apiCallDetails.GetType();
+            var responseAssemblyName = apiCallDetails.GetType().Assembly.FullName;
+
+            return VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(responseAssemblyName, typeOfApiCall.FullName, "OriginalException");
+        }
+
+        private static Func<object, bool> GetSuccessGetterFromApiCallDetails(object apiCallDetails)
+        {
+            var typeOfApiCall = apiCallDetails.GetType();
+            var responseAssemblyName = apiCallDetails.GetType().Assembly.FullName;
+
+            // "Success" might be better, but it isn't available on all libraries
+            return VisibilityBypasser.Instance.GeneratePropertyAccessor<bool>(responseAssemblyName, typeOfApiCall.FullName, "SuccessOrKnownError");
         }
 
         private static bool ValidTaskResponse(Task response)

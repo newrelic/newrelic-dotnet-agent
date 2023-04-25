@@ -3,6 +3,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Elastic.Clients.Elasticsearch;
 using Nest;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
@@ -152,6 +153,21 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
 
             return response.TotalResponses;
+        }
+
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public override void GenerateError()
+        {
+            // This isn't the password, so connection should fail, but we won't get an error until the Ping
+            var settings = new ConnectionSettings(Address).
+                BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
+                "1234").
+                DefaultIndex(IndexName);
+
+            var client = new ElasticClient(settings);
+
+            var response = client.Ping();
+            Assert.False(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
         }
     }
 }
