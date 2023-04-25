@@ -112,7 +112,7 @@ namespace NewRelic.Providers.Wrapper.Elasticsearch
 
             if ((ex != null) && (ex is Exception exception))
             {
-                InternalApi.NoticeError(exception);
+                transaction.NoticeError(exception);
                 return;
             }
 
