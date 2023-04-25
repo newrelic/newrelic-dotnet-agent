@@ -4,11 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### New Features
+## [10.9.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.9.0...v10.9.1) (2023-04-10)
 
 ### Fixes
+
+* Allow StackExchange.Redis v2+ profiling to start outside of a transaction. ([#1501](https://github.com/newrelic/newrelic-dotnet-agent/issues/1501)) ([#1504](https://github.com/newrelic/newrelic-dotnet-agent/issues/1504)) ([925d016](https://github.com/newrelic/newrelic-dotnet-agent/commit/925d016c145b50b75a3b3401de303f5fa9a64609))
+* allow the agent to accept multiple versions of legacy NR distributed tracing headers ([#1489](https://github.com/newrelic/newrelic-dotnet-agent/issues/1489)) ([23ee241](https://github.com/newrelic/newrelic-dotnet-agent/commit/23ee24141ad44afa39e3f35f93aa2ae7570acb72))
+* Fix a memory leak when using StackExchange.Redis v2+. ([#1473](https://github.com/newrelic/newrelic-dotnet-agent/issues/1473)) ([#1504](https://github.com/newrelic/newrelic-dotnet-agent/issues/1504)) ([925d016](https://github.com/newrelic/newrelic-dotnet-agent/commit/925d016c145b50b75a3b3401de303f5fa9a64609))
+* Retry connection on HttpRequestException error ([#1514](https://github.com/newrelic/newrelic-dotnet-agent/issues/1514)) ([#1484](https://github.com/newrelic/newrelic-dotnet-agent/issues/1484)) ([99b520e](https://github.com/newrelic/newrelic-dotnet-agent/commit/99b520e271df4357f8ea62cad2403884edb4d856))
 
 ## [10.9.0] - 2023-03-28
 

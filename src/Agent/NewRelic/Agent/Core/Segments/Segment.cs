@@ -115,10 +115,16 @@ namespace NewRelic.Agent.Core.Segments
         public bool IsExternal => Data.SpanCategory == SpanCategory.Http;
 
         private string _spanId;
+        /// <summary>
+        /// Gets the SpanId for the segment.  If SpanId has not been set it will create one.
+        /// This call could potentially generate more than one Id if GET is called from multiple threads at the same time.
+        /// Current usage of this property does not do this.
+        /// </summary>
         public string SpanId
         {
             get
             {
+                // If _spanId is null and this is called rapidly from different threads, the returned value could be different for each.
                 return _spanId ?? (_spanId = GuidGenerator.GenerateNewRelicGuid());
             }
             set
@@ -135,9 +141,9 @@ namespace NewRelic.Agent.Core.Segments
                 var endTime = _transactionSegmentState.GetRelativeTime();
                 RelativeEndTime = endTime;
 
-                if (Agent.Instance.StackExchangeRedisCache != null && Agent.Instance.StackExchangeRedisCache.Count > 0)
+                if (Agent.Instance.StackExchangeRedisCache != null)
                 {
-                    Agent.Instance.StackExchangeRedisCache.Harvest(SpanId);
+                    Agent.Instance.StackExchangeRedisCache.Harvest(this);
                 }
 
                 Finish();

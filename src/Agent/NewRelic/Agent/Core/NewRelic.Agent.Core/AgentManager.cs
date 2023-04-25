@@ -177,12 +177,6 @@ namespace NewRelic.Agent.Core
 
             StartServices();
             LogInitialized();
-            LogTlsConfiguration();
-        }
-
-        private void LogTlsConfiguration()
-        {
-            Log.Info($"TLS Configuration (System.Net.ServicePointManager.SecurityProtocol): {System.Net.ServicePointManager.SecurityProtocol}");
         }
 
         private void LogInitialized()

@@ -109,11 +109,6 @@ namespace NewRelic.Agent.Core.Transactions
             return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
-        public void AcceptDistributedTracePayload(string payload, TransportType transportType)
-        {
-            Log.Debug("Tried to accept distributed trace payload, but there was no transaction");
-        }
-
         public IDistributedTracePayload CreateDistributedTracePayload()
         {
             Log.Debug("Tried to create distributed trace payload, but there was no transaction");

@@ -439,6 +439,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CouchbaseWrapperComponent" Guid="{21A0A03D-4799-4D8B-B6DB-553DD66C7020}">
         <File Id="CouchbaseWrapperFile" Name="NewRelic.Providers.Wrapper.Couchbase.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Couchbase.dll"/>
       </Component>
+      <Component Id="CosmosDbWrapperComponent" Guid="{C72D656C-B55D-4690-9BD7-9343096D4553}">
+        <File Id="CosmosDbWrapperFile" Name="NewRelic.Providers.Wrapper.CosmosDb.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.CosmosDb.dll"/>
+      </Component>
 
       <Component Id="OwinWrapperComponent" Guid="{FC044DC6-52D8-42C6-A9FE-CB9425EF5811}">
         <File Id="OwinWrapperFile" Name="NewRelic.Providers.Wrapper.Owin.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Owin.dll"/>
@@ -498,6 +501,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreRabbitMqWrapperComponent" Guid="{758394DD-AB71-4E58-8E18-BF1135F8B2C2}">
         <File Id="CoreRabbitMqWrapperFile" Name="NewRelic.Providers.Wrapper.RabbitMq.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.RabbitMq.dll"/>
+      </Component>
+      <Component Id="CoreCosmosDbWrapperComponent" Guid="{3855755F-2A69-43EC-AE31-8D778E4B41E2}">
+        <File Id="CoreCosmosDbWrapperFile" Name="NewRelic.Providers.Wrapper.CosmosDb.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.CosmosDb.dll"/>
       </Component>
       <Component Id="CoreLog4NetLoggingWrapperComponent" Guid="{882392E9-9403-41EC-9321-9C6E53781744}">
         <File Id="CoreLog4NetLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.Log4NetLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Log4NetLogging.dll"/>
@@ -598,6 +604,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CouchbaseInstrumentationComponent" Guid="{03FA7D3A-3368-45B1-92B8-19DA97A659B8}">
         <File Id="CouchbaseInstrumentationFile" Name="NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml"/>
       </Component>
+      <Component Id="CosmosDbInstrumentationComponent" Guid="{56DEAF3E-5F51-4C47-82E5-1C2D0FF4E7DD}">
+        <File Id="CosmosDbInstrumentationFile" Name="NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml"/>
+      </Component>
       <Component Id="MiscInstrumentationComponent" Guid="{EE12546C-A328-49A7-84BE-B9A556ADA0A8}">
         <File Id="MiscInstrumentationFile" Name="NewRelic.Providers.Wrapper.Misc.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml"/>
       </Component>
@@ -642,6 +651,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreRabbitMqInstrumentationComponent" Guid="{1CDC18CC-992A-4386-BC4D-DE87A85D9568}">
         <File Id="CoreRabbitMqInstrumentationFile" Name="NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreCosmosDbInstrumentationComponent" Guid="{1B6D4139-9217-4A03-94D0-D6E3AFFE0A8E}">
+        <File Id="CoreCosmosDbInstrumentationFile" Name="NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml"/>
       </Component>
       <Component Id="CoreLog4NetLoggingInstrumentationComponent" Guid="{A40554DF-870C-477C-8910-1113A221820C}">
         <File Id="CoreLog4NetLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.Log4NetLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Log4NetLogging.Instrumentation.xml"/>
