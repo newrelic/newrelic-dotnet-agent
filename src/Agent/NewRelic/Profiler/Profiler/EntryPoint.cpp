@@ -12,6 +12,11 @@ BOOL STDMETHODCALLTYPE DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID
     (void)hModule;
     (void)ul_reason_for_call;
     (void)lpReserved;
+
+    // TEST TEST TEST
+    // DUMMY CHANGE FOR WORKFLOW TESTING ONLY
+    ++ul_reason_for_call;
+
     return TRUE;
 }
 
