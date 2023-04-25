@@ -37,6 +37,10 @@ jobs:
   build-profiler:
     name: Build Profiler
     if: ${{ github.event.release.action == 'released' }} || ${{ github.event.release.action == 'published' }} || ${{ inputs.force-profiler-build }}
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
     uses: ./.github/workflows/build_profiler.yml
     with:
       force-build: true
