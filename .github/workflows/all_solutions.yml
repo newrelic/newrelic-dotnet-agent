@@ -49,6 +49,7 @@ jobs:
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
     runs-on: windows-2022
+    needs: build-profiler
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
