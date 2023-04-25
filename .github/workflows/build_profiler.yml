@@ -1,16 +1,26 @@
 name: Build .NET Agent Profiler
 
 on:
+  # run this workflow on a push to any branch other than main or a feature branch
+  push:
+    branches-ignore:
+      - main
+      - "feature/**"
+
+  # this workflow can be called from another workflow
   workflow_call:
     inputs:
       force-build:
-        required: false
+        description: 'Force a build, even if no files are changed'
+        required: true
         default: false
         type: boolean
+  
+  # this workflow can be invoked manually
   workflow_dispatch:
     inputs:
       force-build:
-        description: "Build even if no files were updated"
+        description: 'Force a build, even if no files are changed'
         required: false
         default: true
         type: boolean
@@ -40,6 +50,7 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
         with:
+          disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
@@ -51,7 +62,6 @@ jobs:
         uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter
         with:
-          base: 'HEAD'
           filters: |
             profiler_src:
               - 'src/Agent/NewRelic/Profiler/**'
@@ -59,7 +69,7 @@ jobs:
 
   build-windows-profiler:
     needs: check-for-changes
-    if: ${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true'
+    if: ${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true'
     name: Build Windows Profiler
     runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
 
@@ -109,7 +119,7 @@ jobs:
 
   build-linux-x64-profiler:
     needs: check-for-changes
-    if: ${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true'
+    if: ${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true'
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -162,7 +172,7 @@ jobs:
 
   build-linux-arm64-profiler:
     needs: check-for-changes
-    if: ${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true'
+    if: ${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true'
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -234,7 +244,7 @@ jobs:
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
 
-  create-pull-request:
+  commit-or-pr:
     needs:
       [
         check-for-changes,
@@ -242,8 +252,8 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: ${{ inputs.force-build }} ||  needs.check-for-changes.outputs.profiler_src == 'true'
-    name: Create PR for New Profiler Build
+    if: ${{ inputs.force-build }} || needs.check-for-changes.outputs.profiler_src == 'true'
+    name: Commit or Create PR for New Profiler Build
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -256,6 +266,7 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
         with:
+          disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
@@ -269,14 +280,23 @@ jobs:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
 
-      - name: Create Pull Request
+      # commit directly to non-protected branch
+      - name: Commit and Push New Profiler Build on Non-Protected Branch
+        if: ${{ !github.ref_protected }}
+        uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772 #v1.4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          message: "chore: Update Profiler build."
+          branch: ${{ github.ref }}
+
+      # create a PR if the branch is protected (i.e., main, feature/**)      
+      - name: Create Pull Request on Protected Branch
+        if: ${{ github.ref_protected }}
         uses: peter-evans/create-pull-request@5b4a9f6a9e2af26e5f02351490b90d01eb8ec1e5 # v5.0.0
         with:
             commit-message: "chore: Update Profiler build."
             title: "chore: Update Profiler build."
             branch: profiler-build-updates/${{ github.ref_name }}
-            assignees: ${{ github.actor}}
-            reviewers: ${{ github.actor }}
             labels: |
               profiler build
               automated pr

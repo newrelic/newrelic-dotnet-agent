@@ -9,6 +9,13 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      force-profiler-build:
+        description: 'Build Profiler'
+        required: true
+        default: false
+        type: boolean
+
   schedule:
     - cron: "0 9 * * *"
 
@@ -26,10 +33,17 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
+
+  build-profiler:
+    name: Build Profiler
+    if: ${{ github.event.release.action == 'released' }} || ${{ github.event.release.action == 'published' }} || ${{ inputs.force-profiler-build }}
+    uses: ./.github/workflows/build_profiler.yml
+    with:
+      force-build: true
+
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
-    needs: build-profiler
     runs-on: windows-2022
 
     env:
