@@ -32,7 +32,7 @@ on:
       deploy:
         description: 'Deploy Profiler NuGet package after build'
         required: true
-        default: false
+        default: true
         type: boolean
 
 permissions:
@@ -264,8 +264,7 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: ${{ inputs.deploy }}
-    # if: ${{ inputs.deploy && (inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true') }}
+    if: ${{ inputs.deploy && (inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true') }}
     name: Package and Deploy Profiler NuGet
     runs-on: windows-2022
 
@@ -277,7 +276,7 @@ jobs:
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
-          
+
       - name: Download Profiler Artifacts to working Directory
         uses: actions/download-artifact/@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
@@ -294,6 +293,8 @@ jobs:
           $agentRev = Invoke-Expression $getRevCmd
           # if count is > 0, add the rev to the version
           if ($agentRev -gt 0) { $agentVersion = $agentVersion + "." + $agentRev}
+          # remove the leading "v" from the version number
+          $agentVersion = $agentVersion.substring(1)
           echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
         shell: powershell
 
