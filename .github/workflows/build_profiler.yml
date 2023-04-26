@@ -273,10 +273,10 @@ jobs:
 
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-        with:
-          fetch-depth: 1
+      # - name: Checkout
+      #   uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      #   with:
+      #     fetch-depth: 1
 
       - name: Download Profiler Artifacts to working Directory
         uses: actions/download-artifact/@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -284,10 +284,16 @@ jobs:
           name: profiler
           path: ${{ github.workspace }}/_workingDir
       
-      - name: Determine Package Version
+      - name: Determine Package Version from Git history
         id: agentVersion
         run: |
-          $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
+          # get latest agent version tag
+          $agentVersion = git describe --match v* --abbrev=0 HEAD --tags
+          # get commit count since that tag
+          $getRevCmd = "git rev-list $agentVersion..HEAD --count HEAD"
+          $agentRev = Invoke-Expression $getRevCmd
+          # if count is > 0, add the rev to the version
+          if ($agentRev -gt 0) { $agentVersion = $agentVersion + "." + $agentRev}
           echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
         shell: powershell
 
