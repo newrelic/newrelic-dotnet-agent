@@ -303,6 +303,7 @@ jobs:
 
       - name: Pack Profiler NuGet Package
         run: |
+          New-Item "${{ github.workspace }}/_workingDir/NugetProfiler" -Type "directory"
           nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version ${{ steps.agentVersion.outputs.version }}
         shell: powershell
 
