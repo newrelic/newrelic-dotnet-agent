@@ -16,7 +16,7 @@
         <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/</releaseNotes>
     </metadata>
     <files>
-        <file src=".\readme.md" target="docs" />
+        <file src="readme.md" target="docs" />
         <file src="images\icon.png" target="images" />
         <file src="x86-Release\**" target="profiler\x86"/>
         <file src="x64-Release\**" target="profiler\x64"/>
