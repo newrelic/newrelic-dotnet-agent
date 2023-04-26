@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+    <metadata minClientVersion="3.3.0">
+        <id>NewRelic.Agent.Internal.Profiler</id>
+        <version>0.0.0</version>
+        <title>New Relic .NET Agent Profiler</title>
+        <authors>New Relic</authors>
+        <license type="expression">Apache-2.0</license>
+        <projectUrl>https://github.com/newrelic/newrelic-dotnet-agent</projectUrl>
+        <icon>images\icon.png</icon>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>
+            This package is for New Relic internal use only and should not be installed in other projects.
+        </description>
+        <readme>docs\readme.md</readme>
+        <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/</releaseNotes>
+    </metadata>
+    <files>
+        <file src=".\readme.md" target="docs" />
+        <file src="images\icon.png" target="images" />
+        <file src="x86-Release\**" target="profiler\x86"/>
+        <file src="x64-Release\**" target="profiler\x64"/>
+        <file src="linux-x64-release\**" target="profiler\linux_x64"/>
+        <file src="linux-arm64-release\**" target="profiler\linux_arm64"/>
+    </files>
+</package>

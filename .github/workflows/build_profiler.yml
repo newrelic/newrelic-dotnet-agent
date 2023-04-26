@@ -15,6 +15,11 @@ on:
         required: true
         default: false
         type: boolean
+      deploy:
+        description: 'Deploy Profiler NuGet package after build'
+        required: true
+        default: false
+        type: boolean
   
   # this workflow can be invoked manually
   workflow_dispatch:
@@ -23,6 +28,11 @@ on:
         description: 'Force a build, even if no files are changed'
         required: false
         default: true
+        type: boolean
+      deploy:
+        description: 'Deploy Profiler NuGet package after build'
+        required: true
+        default: false
         type: boolean
 
 permissions:
@@ -245,7 +255,7 @@ jobs:
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
 
-  commit-or-pr:
+  package-and-deploy:
     needs:
       [
         check-for-changes,
@@ -254,52 +264,81 @@ jobs:
         build-linux-arm64-profiler,
       ]
     if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
-    name: Commit or Create PR for New Profiler Build
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-      pull-requests: write
+    name: Package and Deploy Profiler NuGet
+    runs-on: windows-2022
 
     env:
-      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+      #nuget_source: https://www.nuget.org
+      myget_source: https://www.myget.org/F/newrelic/api/v2/package
+
 
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-        with:
-          disable-sudo: true
-          egress-policy: audit
-
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - name: Download Profiler Artifacts
+      - name: Download Profiler Artifacts to working Directory
         uses: actions/download-artifact/@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: profiler
-          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          path: ${{ github.workspace }}/_workingDir
+      
+      - name: Determine Package Version
+        id: agentVersion
+        run: |
+          $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
+          echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
+        shell: powershell
 
-      # commit directly to non-protected branch
-      - name: Commit and Push New Profiler Build on Non-Protected Branch
-        if: ${{ !github.ref_protected }}
-        uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772 #v1.4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          message: "chore: Update Profiler build."
-          branch: ${{ github.ref }}
+      - name: Set up Icon and Readme.md
+        run: |
+          Copy-Item "${{ github.workspace }}/build/icon.png {{ github.workspace }}/_workingDir/images"
+          echo "This package is for New Relic internal use only and should not be installed in other projects." >> {{ github.workspace }}/_workingDir/readme.md
 
-      # create a PR if the branch is protected (i.e., main, feature/**)      
-      - name: Create Pull Request on Protected Branch
-        if: ${{ github.ref_protected }}
-        uses: peter-evans/create-pull-request@5b4a9f6a9e2af26e5f02351490b90d01eb8ec1e5 # v5.0.0
-        with:
-            commit-message: "chore: Update Profiler build."
-            title: "chore: Update Profiler build."
-            branch: profiler-build-updates/${{ github.ref_name }}
-            labels: |
-              profiler build
-              automated pr
-            delete-branch: true
+      - name: Pack Profiler NuGet Package
+        run: |
+          nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version ${{ steps.agentVersion.outputs.version }}
+        shell: powershell
+
+      - name: Setup MyGet API Key
+        run: |
+          nuget.exe setApiKey ${{ secrets.MYGET_APIKEY }} -Source ${{ env.myget_source }}
+        shell: pwsh
+
+      - name: Deploy Profiler Package to MyGet
+        run: |
+          $packageName = Get-ChildItem ${{ github.workspace }}/_workingDir/NugetProfiler/NewRelic.Agent.Internal.Profiler.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}//_workingDir/NugetProfiler/$packageName
+          $version = $packageName.TrimStart('NewRelic.Agent.Internal.Profiler').TrimStart('.').TrimEnd('.nupkg')
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.myget_source }}
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+          }
+        shell: powershell
+
+      # # commit directly to non-protected branch
+      # - name: Commit and Push New Profiler Build on Non-Protected Branch
+      #   if: ${{ !github.ref_protected }}
+      #   uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772 #v1.4
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     message: "chore: Update Profiler build."
+      #     branch: ${{ github.ref }}
+
+      # # create a PR if the branch is protected (i.e., main, feature/**)      
+      # - name: Create Pull Request on Protected Branch
+      #   if: ${{ github.ref_protected }}
+      #   uses: peter-evans/create-pull-request@5b4a9f6a9e2af26e5f02351490b90d01eb8ec1e5 # v5.0.0
+      #   with:
+      #       commit-message: "chore: Update Profiler build."
+      #       title: "chore: Update Profiler build."
+      #       branch: profiler-build-updates/${{ github.ref_name }}
+      #       labels: |
+      #         profiler build
+      #         automated pr
+      #       delete-branch: true
 
