@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -9,14 +10,17 @@ namespace ArtifactBuilder.Artifacts
 {
     class MsiInstaller : Artifact
     {
-        private string[] _frameworkIISRegistryValues = new string[] {
+        private readonly string[] _frameworkIISRegistryValues = new string[] {
                     "COR_ENABLE_PROFILING=1",
                     "COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}" };
 
-        private string[] _coreIISRegistryValues = new string[] {
+        private readonly string[] _coreIISRegistryValues = new string[] {
                     "CORECLR_ENABLE_PROFILING=1",
                     "CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}",
                     "CORECLR_NEWRELIC_HOME=[NETAGENTCOMMONFOLDER]" };
+
+        private readonly AgentComponents _frameworkAgentComponents;
+        private readonly AgentComponents _coreAgentComponents;
 
         public string Configuration { get; }
         public string Platform { get; }
@@ -28,6 +32,9 @@ namespace ArtifactBuilder.Artifacts
             Configuration = configuration;
             MsiDirectory = $@"{RepoRootDirectory}\src\_build\{Platform}-{Configuration}\Installer";
             OutputDirectory = $@"{RepoRootDirectory}\build\BuildArtifacts\{Name}-{Platform}";
+
+            _frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
+            _coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
         }
 
         protected override void InternalBuild()
@@ -40,27 +47,18 @@ namespace ArtifactBuilder.Artifacts
 
             ValidateWxsDefinitionFileForInstaller();
 
-            var fileSearchPattern = $@"NewRelicAgent_{Platform}_*.msi";
-            var msiPath = Directory.GetFiles(MsiDirectory, fileSearchPattern).FirstOrDefault();
-
-            if (string.IsNullOrEmpty(msiPath))
+            if (TryGetMsiPath(out var msiPath))
             {
-                Console.WriteLine("Warning: The {0} installer could not be found.", fileSearchPattern);
-                return;
+                FileHelpers.CopyFile(msiPath, OutputDirectory);
+                File.WriteAllText($@"{OutputDirectory}\checksum.sha256", FileHelpers.GetSha256Checksum(msiPath));
             }
-
-            FileHelpers.CopyFile(msiPath, OutputDirectory);
-            File.WriteAllText($@"{OutputDirectory}\checksum.sha256", FileHelpers.GetSha256Checksum(msiPath));
         }
 
         private void ValidateWxsDefinitionFileForInstaller()
         {
             //Verify that the expected agent components are in the homebuilder for the installer
-            var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
-            frameworkAgentComponents.ValidateComponents();
-
-            var coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
-            coreAgentComponents.ValidateComponents();
+            _frameworkAgentComponents.ValidateComponents();
+            _coreAgentComponents.ValidateComponents();
 
             var productWxs = GetParsedProductWxsData();
 
@@ -131,16 +129,16 @@ namespace ArtifactBuilder.Artifacts
             ValidateWixUninstallComponents(uninstallComponent);
             ValidateWixIisRegistryDefinitions(frameworkIISRegistryComponentsGroup, coreIISRegistryComponentsGroup);
 
-            ValidateAgentComponentsAndWixReferenceTheSameFiles(frameworkAgentComponents.ExtensionDirectoryComponents, extensionGroup, frameworkExtensionsComponentsGroup);
-            ValidateAgentComponentsAndWixReferenceTheSameFiles(frameworkAgentComponents.WrapperXmlFiles, instrumentationGroup);
+            ValidateAgentComponentsAndWixReferenceTheSameFiles(_frameworkAgentComponents.ExtensionDirectoryComponents, extensionGroup, frameworkExtensionsComponentsGroup);
+            ValidateAgentComponentsAndWixReferenceTheSameFiles(_frameworkAgentComponents.WrapperXmlFiles, instrumentationGroup);
 
 
 
 
-            ValidateAgentComponentsAndWixReferenceTheSameFiles(frameworkAgentComponents.ConfigurationComponents, frameworkConfigurationComponentsGroup);
+            ValidateAgentComponentsAndWixReferenceTheSameFiles(_frameworkAgentComponents.ConfigurationComponents, frameworkConfigurationComponentsGroup);
 
-            ValidateAgentComponentsAndWixReferenceTheSameFiles(CreateReadOnlyCollection(coreAgentComponents.AgentApiDll), globalApiComponentGroup);
-            ValidateAgentComponentsAndWixReferenceTheSameFiles(CreateReadOnlyCollection(frameworkAgentComponents.AgentApiDll), globalApiComponentGroup);
+            ValidateAgentComponentsAndWixReferenceTheSameFiles(CreateReadOnlyCollection(_coreAgentComponents.AgentApiDll), globalApiComponentGroup);
+            ValidateAgentComponentsAndWixReferenceTheSameFiles(CreateReadOnlyCollection(_frameworkAgentComponents.AgentApiDll), globalApiComponentGroup);
         }
 
         private Wix GetParsedProductWxsData()
@@ -152,7 +150,7 @@ namespace ArtifactBuilder.Artifacts
             }
         }
 
-        private void ValidateWixFileExtensionDefinitions(WixFragmentComponentGroup group, bool isCore = false)
+        private static void ValidateWixFileExtensionDefinitions(WixFragmentComponentGroup group, bool isCore = false)
         {
             foreach (var component in group.Component)
             {
@@ -170,7 +168,7 @@ namespace ArtifactBuilder.Artifacts
             }
         }
 
-        private void ValidateWixRegistryDefinitions(WixFragmentComponentGroup group)
+        private static void ValidateWixRegistryDefinitions(WixFragmentComponentGroup group)
         {
             foreach (var component in group.Component)
             {
@@ -193,7 +191,7 @@ namespace ArtifactBuilder.Artifacts
             }
         }
 
-        private void ValidateWixUninstallComponents(WixFragmentComponentGroupComponent uninstallComponent)
+        private static void ValidateWixUninstallComponents(WixFragmentComponentGroupComponent uninstallComponent)
         {
             if (uninstallComponent.RegistryValue.KeyPath != "yes")
             {
@@ -257,7 +255,7 @@ namespace ArtifactBuilder.Artifacts
                 }
             }
         }
-        private void ValidateAgentComponentsAndWixReferenceTheSameFiles(IReadOnlyCollection<string> agentComponent, params WixFragmentComponentGroup[] wixGroups)
+        private static void ValidateAgentComponentsAndWixReferenceTheSameFiles(IReadOnlyCollection<string> agentComponent, params WixFragmentComponentGroup[] wixGroups)
         {
             var wixFiles = new List<string>();
             foreach (var wixGroup in wixGroups)
@@ -289,14 +287,163 @@ namespace ArtifactBuilder.Artifacts
             return new HashSet<string>(items);
         }
 
+        private bool TryGetMsiPath(out string msiPath)
+        {
+            var fileSearchPattern = $@"NewRelicAgent_{Platform}_*.msi";
+            msiPath = Directory.GetFiles(MsiDirectory, fileSearchPattern).FirstOrDefault();
+
+            if (string.IsNullOrEmpty(msiPath))
+            {
+                Console.WriteLine("Warning: The {0} installer could not be found.", fileSearchPattern);
+                return false;
+            }
+
+            return true;
+        }
+
         protected override void ValidateContent()
         {
-            throw new NotImplementedException();
+            var unpackedLocation = Unpack();
+
+            if (string.IsNullOrEmpty(unpackedLocation))
+            {
+                return;
+            }
+
+            var installedFilesRoot = unpackedLocation + $@"\New Relic\.NET Agent\";
+
+            var expectedComponents = GetExpectedComponents(installedFilesRoot);
+
+            var unpackedComponents = GetUnpackedComponents(installedFilesRoot);
+
+            var missingExpectedComponents = new SortedSet<string>(expectedComponents, StringComparer.OrdinalIgnoreCase);
+            missingExpectedComponents.ExceptWith(unpackedComponents);
+            foreach (var missingComponent in missingExpectedComponents)
+            {
+                throw new PackagingException($"The unpacked msi was missing the expected component {missingComponent}");
+            }
+
+            var unexpectedUnpackedComponents = new SortedSet<string>(unpackedComponents, StringComparer.OrdinalIgnoreCase);
+            unexpectedUnpackedComponents.ExceptWith(expectedComponents);
+            foreach (var unexpectedComponent in unexpectedUnpackedComponents)
+            {
+                throw new PackagingException($"The unpacked msi contained an unexpected component {unexpectedComponent}");
+            }
+
+            FileHelpers.DeleteDirectories(unpackedLocation);
         }
 
         protected override string Unpack()
         {
-            throw new NotImplementedException();
+            if (!TryGetMsiPath(out var msiPath))
+            {
+                return string.Empty;
+            }
+
+            var unpackedDirectory = OutputDirectory + "\\unpacked";
+
+            if (Directory.Exists(unpackedDirectory))
+            {
+                FileHelpers.DeleteDirectories(unpackedDirectory);
+            }
+
+            var parameters = $@"/a ""{msiPath}"" /qn TARGETDIR=""{unpackedDirectory}""";
+            var process = Process.Start("msiexec.exe", parameters);
+            process.WaitForExit(30000);
+            if (!process.HasExited)
+            {
+                process.Kill();
+                throw new Exception($"msiexec failed to complete in timely fashion.");
+            }
+            if (process.ExitCode != 0)
+            {
+                throw new Exception($"msiexec failed with exit code {process.ExitCode}.");
+            }
+
+            return unpackedDirectory;
+        }
+
+        private SortedSet<string> GetExpectedComponents(string installedFilesRoot)
+        {
+            var expectedComponents = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // The msi contains a different config file name than is used by the agent in the root directory
+            // During a real installation the default config should be renamed.
+            AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "default_newrelic.config");
+            // The msi contains the agent api dll in the root probably for backwards compatibility
+            AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.AgentApiDll);
+            AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.RootInstallDirectoryComponents);
+            AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.ConfigurationComponents);
+
+            if (Platform == "x64")
+            {
+                // Only the x64 msi contains the profiler dll in the root probably for backwards compatibility
+                AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.WindowsProfiler);
+            }
+
+            var installedExtensionsRoot = installedFilesRoot + "Extensions\\";
+            AddSingleFileToCollectionWithNewPath(expectedComponents, installedExtensionsRoot, _frameworkAgentComponents.ExtensionXsd);
+
+            var installedCoreExtensionXmlFolder = installedExtensionsRoot + "netcore\\";
+            AddFilesToCollectionWithNewPath(expectedComponents, installedCoreExtensionXmlFolder, _coreAgentComponents.WrapperXmlFiles);
+
+            var installedFrameworkExtensionsXmlFolder = installedExtensionsRoot + "netframework\\";
+            AddFilesToCollectionWithNewPath(expectedComponents, installedFrameworkExtensionsXmlFolder, _frameworkAgentComponents.WrapperXmlFiles);
+
+            var netcoreFolder = installedFilesRoot + "netcore\\";
+            AddFilesToCollectionWithNewPath(expectedComponents, netcoreFolder, _coreAgentComponents.AgentHomeDirComponents.Where(f => !f.EndsWith(".config") && !f.EndsWith(".xsd")));
+
+            var netframeworkFolder = installedFilesRoot + "netframework\\";
+            AddFilesToCollectionWithNewPath(expectedComponents, netframeworkFolder, _frameworkAgentComponents.AgentHomeDirComponents.Where(f => !f.EndsWith(".config") && !f.EndsWith(".xsd")));
+
+            AddSingleFileToCollectionWithNewPath(expectedComponents, netframeworkFolder, _frameworkAgentComponents.AgentApiDll);
+
+            var netcoreExtensionsFolder = netcoreFolder + "Extensions\\";
+            AddFilesToCollectionWithNewPath(expectedComponents, netcoreExtensionsFolder, _coreAgentComponents.ExtensionDirectoryComponents.Where(f => !f.EndsWith(".xsd")));
+
+            var netframeworkExtensionsFolder = netframeworkFolder + "Extensions\\";
+            AddFilesToCollectionWithNewPath(expectedComponents, netframeworkExtensionsFolder, _frameworkAgentComponents.ExtensionDirectoryComponents.Where(f => !f.EndsWith(".xsd")));
+
+            // This script is only included with the msi installer
+            expectedComponents.Add(netframeworkFolder + "Tools\\flush_dotnet_temp.cmd");
+
+            return expectedComponents;
+        }
+
+        private static SortedSet<string> GetUnpackedComponents(string installedFilesRoot)
+        {
+            var unpackedComponents = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            var enumerationOptions = new EnumerationOptions
+            {
+                RecurseSubdirectories = true,
+            };
+
+            foreach (var file in Directory.EnumerateFiles(installedFilesRoot, "*", enumerationOptions))
+            {
+                unpackedComponents.Add(file);
+            }
+
+            return unpackedComponents;
+        }
+
+        private static void AddFilesToCollectionWithNewPath(SortedSet<string> fileCollection, string newPath, IEnumerable<string> filesWithPath)
+        {
+            foreach (var fileWithPath in filesWithPath)
+            {
+                AddSingleFileToCollectionWithNewPath(fileCollection, newPath, fileWithPath);
+            }
+        }
+
+        private static void AddSingleFileToCollectionWithNewPath(SortedSet<string> fileCollection, string newPath,string fileWithPath)
+        {
+            fileCollection.Add(newPath + GetFileNameWithoutPath(fileWithPath));
+        }
+
+        private static string GetFileNameWithoutPath(string fullFileName)
+        {
+            var fileInfo = new FileInfo(fullFileName);
+            return fileInfo.Name;
         }
     }
 }
