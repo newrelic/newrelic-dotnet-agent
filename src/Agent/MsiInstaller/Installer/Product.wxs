@@ -514,6 +514,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreNLogLoggingWrapperComponent" Guid="{897C07B8-AF97-4BA3-B6F3-26395A02147E}">
         <File Id="CoreNLogLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.NLogLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.NLogLogging.dll"/>
       </Component>
+      <Component Id="CoreNServiceBusWrapperComponent" Guid="{E315AE98-119D-4E46-BACB-C28CF6016C19}">
+        <File Id="CoreNServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.NServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.NServiceBus.dll"/>
+      </Component>
 
       <!-- Reference libraries -->
       <Component Id="CoreNewRelicCoreReferenceComponent" Guid="{DD2BE979-7D4B-47EA-9FBE-F6B381D70E0B}">
@@ -657,6 +660,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreNLogLoggingInstrumentationComponent" Guid="{D9A87E74-C43B-4ACD-BF6C-DC082FEDD777}">
         <File Id="CoreNLogLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreNServiceBusInstrumentationComponent" Guid="{1FE0856C-08E4-4397-9C6A-939EA8E953AE}">
+        <File Id="CoreNServiceBusInstrumentationFile" Name="NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 
