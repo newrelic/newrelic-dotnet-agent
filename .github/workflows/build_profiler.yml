@@ -51,6 +51,7 @@ env:
 jobs:
   check-for-changes:
     name: Check for Updated Profiler Files
+    if: ${{ !inputs.force-build }}
     runs-on: ubuntu-22.04
     permissions:
       pull-requests: read
@@ -275,8 +276,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
-          fetch-depth: 1
-
+          fetch-depth: 0
+          
       - name: Download Profiler Artifacts to working Directory
         uses: actions/download-artifact/@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
