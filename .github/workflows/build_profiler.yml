@@ -263,20 +263,19 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
+    if: ${{ inputs.deploy }}
+    # if: ${{ inputs.deploy && (inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true') }}
     name: Package and Deploy Profiler NuGet
     runs-on: windows-2022
 
     env:
-      #nuget_source: https://www.nuget.org
       myget_source: https://www.myget.org/F/newrelic/api/v2/package
 
-
     steps:
-      # - name: Checkout
-      #   uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-      #   with:
-      #     fetch-depth: 1
+      - name: Checkout
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          fetch-depth: 1
 
       - name: Download Profiler Artifacts to working Directory
         uses: actions/download-artifact/@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
