@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.10.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.9.1...v10.10.0) (2023-04-26)
+
+
+### New Features
+
+* Add additional logging when RUM injection is being skipped. ([#1561](https://github.com/newrelic/newrelic-dotnet-agent/issues/1561)) ([e1b8eca](https://github.com/newrelic/newrelic-dotnet-agent/commit/e1b8eca24fc63671a8ea1bafaebabbb9f3b29cb2))
+* Add instrumentation for .NET Elasticsearch clients. ([#1575](https://github.com/newrelic/newrelic-dotnet-agent/issues/1575)) ([8e49d7b](https://github.com/newrelic/newrelic-dotnet-agent/commit/8e49d7bfc22df88abc96a6ebc2518a7be8a1d29b))
+* Move TLS config logging closer to connect. ([#1562](https://github.com/newrelic/newrelic-dotnet-agent/issues/1562)) ([0ff3ddd](https://github.com/newrelic/newrelic-dotnet-agent/commit/0ff3ddde1c8c0aed3b0a3c1aaf4c59e7ddc3837c))
+
+
+### Fixes
+
+* Add missing instrumentation to MSI installer ([#1569](https://github.com/newrelic/newrelic-dotnet-agent/issues/1569)) ([b65b117](https://github.com/newrelic/newrelic-dotnet-agent/commit/b65b1170d7649ab6e82a9796f235925ca147393c))
+* Add NServiceBus instrumentation to the MSI installer for .NET Core/5+. ([#1576](https://github.com/newrelic/newrelic-dotnet-agent/issues/1576)) ([3cae03e](https://github.com/newrelic/newrelic-dotnet-agent/commit/3cae03eacbfb4b2c250abb3a35047190571d35a6))
+* IsOsPlatform() can fail on older .NET Framework Versions ([#1552](https://github.com/newrelic/newrelic-dotnet-agent/issues/1552)) ([699c205](https://github.com/newrelic/newrelic-dotnet-agent/commit/699c2056883e4548c025e3ee893e215400899e0e))
+
 ## [10.9.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.9.0...v10.9.1) (2023-04-10)
 
 ### Fixes
