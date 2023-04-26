@@ -15,7 +15,7 @@ on:
         required: true
         type: boolean
       deploy:
-        description: 'Deploy Profiler NuGet package after build'
+        description: 'Deploy Profiler NuGet package.'
         required: true
         type: boolean
   
@@ -261,7 +261,8 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: ${{ inputs.deploy && (inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true') }}
+    if: ${{ inputs.deploy }}
+    #if: ${{ inputs.deploy && (inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true') }}
     name: Package and Deploy Profiler NuGet
     runs-on: windows-2022
 
