@@ -298,7 +298,7 @@ jobs:
 
       - name: Set up Icon and Readme.md
         run: |
-          Copy-Item "${{ github.workspace }}/build/icon.png {{ github.workspace }}/_workingDir/images"
+          Copy-Item -Path "${{ github.workspace }}/build/icon.png" -Destination "{{ github.workspace }}/_workingDir/images"
           echo "This package is for New Relic internal use only and should not be installed in other projects." >> {{ github.workspace }}/_workingDir/readme.md
 
       - name: Pack Profiler NuGet Package
