@@ -148,5 +148,29 @@ namespace NewRelic.SystemExtensions
 
             return source + trailing;
         }
+
+        public static string CapitalizeWord(this string word)
+        {
+            if (string.IsNullOrEmpty(word))
+            {
+                return word;
+            }
+            string result = char.ToUpper(word[0]).ToString();
+            if (word.Length > 1)
+            {
+                result += word.Substring(1);
+            }
+            return result;
+        }
+
+        public static string CapitalizeEachWord(this string source, char separator = ' ', bool removeSeparator = true)
+        {
+            var words = source.Split(separator);
+            for (int idx = 0; idx < words.Length; idx++)
+            {
+                words[idx] = CapitalizeWord(words[idx]);
+            }
+            return removeSeparator ? string.Join("", words) : string.Join(separator.ToString(), words);
+        }
     }
 }

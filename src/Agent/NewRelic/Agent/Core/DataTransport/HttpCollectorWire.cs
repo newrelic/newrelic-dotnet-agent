@@ -131,13 +131,13 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     var responseContent = GetResponseContent(response, requestGuid);
 
-                    _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response.Content.ToString()).Length);
+                    _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(responseContent).Length);
 
                     // Possibly combine these logs? makes parsing harder in tests...
                     Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
                     Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
 
-                    AuditLog(Direction.Received, Source.Collector, response.Content.ToString());
+                    AuditLog(Direction.Received, Source.Collector, responseContent);
                     if (!response.IsSuccessStatusCode)
                     {
                         ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);
@@ -199,16 +199,10 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             try
             {
-                var responseStream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+                var responseStream = response.Content?.ReadAsStreamAsync().GetAwaiter().GetResult();
 
                 if (responseStream == null)
-                {
-                    throw new NullReferenceException("responseStream");
-                }
-                if (response.Headers == null)
-                {
-                    throw new NullReferenceException("response.Headers");
-                }
+                    return EmptyResponseBody;
 
                 var contentTypeEncoding = response.Content.Headers.ContentEncoding;
                 if (contentTypeEncoding.Contains("gzip"))

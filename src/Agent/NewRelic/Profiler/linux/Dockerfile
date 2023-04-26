@@ -1,3 +1,17 @@
+# Using a multistage build to work around some expired certificates
+# that prevent cloning the CLR repo from the older ubuntu image.
+FROM ubuntu:22.04 AS ClrRepoCloner
+
+RUN apt-get update && apt-get install -y \
+  git
+
+# The CoreCLR build notes say their repos should be pulled into a `git` directory.
+# That probably isn't necessary, but whatever.
+RUN mkdir /root/git
+WORKDIR /root/git
+
+RUN git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
+
 # This builds an Ubuntu image, clones the coreclr github repo and builds it.
 # It then sets up the environment for compiling the New Relic .NET profiler.
 FROM ubuntu:14.04
@@ -19,9 +33,7 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 # The CoreCLR build notes say their repos should be pulled into a `git` directory.
 # That probably isn't necessary, but whatever.
 RUN mkdir /root/git
-WORKDIR /root/git
-
-RUN git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
+COPY --from=ClrRepoCloner /root/git /root/git
 
 # Install the build tools that the profiler requires
 RUN apt-get update && apt-get install -y \

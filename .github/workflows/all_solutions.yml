@@ -474,6 +474,7 @@ jobs:
           [
             CosmosDB,
             Couchbase,
+            Elasticsearch, 
             MongoDB,
             Msmq,
             MsSql,

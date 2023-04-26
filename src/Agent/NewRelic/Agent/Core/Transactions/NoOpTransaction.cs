@@ -4,6 +4,7 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -26,6 +27,7 @@ namespace NewRelic.Agent.Core.Transactions
         private object _wrapperToken;
 
         private static readonly IExternalSegmentData _noOpExternalSegmentData = new ExternalSegmentData(new Uri("https://www.newrelic.com/"), string.Empty);
+        private static readonly IDatastoreSegmentData _noOpDatastoreSegmentData = new DatastoreSegmentData(new DatabaseService(), new ParsedSqlStatement(DatastoreVendor.Other, string.Empty, string.Empty));
 
         public void End(bool captureResponseTime = true)
         {
@@ -117,6 +119,11 @@ namespace NewRelic.Agent.Core.Transactions
         public void NoticeError(Exception exception)
         {
             Log.Debug($"Ignoring application error because it occurred outside of a transaction: {exception}");
+        }
+
+        public void NoticeError(string message)
+        {
+            Log.Debug($"Ignoring application error because it occurred outside of a transaction: {message}");
         }
 
         public void SetHttpResponseStatusCode(int statusCode, int? subStatusCode = null)
@@ -255,6 +262,11 @@ namespace NewRelic.Agent.Core.Transactions
             return _noOpExternalSegmentData;
         }
 
+        public IDatastoreSegmentData CreateDatastoreSegmentData(ParsedSqlStatement sqlStatement, ConnectionInfo connectionInfo, string commandText, IDictionary<string, IConvertible> queryParameters)
+        {
+            return _noOpDatastoreSegmentData;
+        }
+
         public ITransaction AddCustomAttribute(string key, object value)
         {
             return this;
@@ -285,5 +297,6 @@ namespace NewRelic.Agent.Core.Transactions
         {
             return;
         }
+
     }
 }
