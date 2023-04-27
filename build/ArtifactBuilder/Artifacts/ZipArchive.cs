@@ -74,21 +74,8 @@ namespace ArtifactBuilder.Artifacts
 
             var unpackedComponents = ValidationHelpers.GetUnpackedComponents(installedFilesRoot);
 
-            var missingExpectedComponents = new SortedSet<string>(expectedComponents, StringComparer.OrdinalIgnoreCase);
-            missingExpectedComponents.ExceptWith(unpackedComponents);
-            foreach (var missingComponent in missingExpectedComponents)
-            {
-                throw new PackagingException($"The unpacked ZIP archive was missing the expected component {missingComponent}");
-            }
+            ValidationHelpers.ValidateComponents(expectedComponents, unpackedComponents, "ZIP archive");
 
-            var unexpectedUnpackedComponents = new SortedSet<string>(unpackedComponents, StringComparer.OrdinalIgnoreCase);
-            unexpectedUnpackedComponents.ExceptWith(expectedComponents);
-            foreach (var unexpectedComponent in unexpectedUnpackedComponents)
-            {
-                throw new PackagingException($"The unpacked ZIP archive contained an unexpected component {unexpectedComponent}");
-            }
-
-            // cleanup
             FileHelpers.DeleteDirectories(unpackedLocation);
         }
 
@@ -102,7 +89,7 @@ namespace ArtifactBuilder.Artifacts
 
             var netframeworkFolder = Path.Join(installedFilesRoot, FrameworkSubDirectoryName);
             ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netframeworkFolder, _frameworkAgentComponents.AgentHomeDirComponents);
-            expectedComponents.Add(Path.Join(netframeworkFolder, AgentInfo.AgentInfoFilename));
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netframeworkFolder, _frameworkAgentComponents.ConfigurationComponents);
 
             var netframeworkExtensionsFolder = Path.Join(netframeworkFolder, "extensions");
             ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netframeworkExtensionsFolder, _frameworkAgentComponents.ExtensionDirectoryComponents);
@@ -114,7 +101,7 @@ namespace ArtifactBuilder.Artifacts
 
             var netcoreFolder = Path.Join(installedFilesRoot, CoreSubDirectoryName);
             ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netcoreFolder, _coreAgentComponents.AgentHomeDirComponents);
-            expectedComponents.Add(Path.Join(netcoreFolder, AgentInfo.AgentInfoFilename));
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netcoreFolder, _coreAgentComponents.ConfigurationComponents);
 
             var netcoreExtensionsFolder = Path.Join(netcoreFolder, "extensions");
             ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netcoreExtensionsFolder, _coreAgentComponents.ExtensionDirectoryComponents);

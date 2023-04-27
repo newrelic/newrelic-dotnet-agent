@@ -6,6 +6,24 @@ namespace ArtifactBuilder
 {
     public static class ValidationHelpers
     {
+
+        public static void ValidateComponents(SortedSet<string> expectedComponents, SortedSet<string> unpackedComponents, string artifactName)
+        {
+            var missingExpectedComponents = new SortedSet<string>(expectedComponents, StringComparer.OrdinalIgnoreCase);
+            missingExpectedComponents.ExceptWith(unpackedComponents);
+            foreach (var missingComponent in missingExpectedComponents)
+            {
+                throw new PackagingException($"The unpacked {artifactName} was missing the expected component {missingComponent}");
+            }
+
+            var unexpectedUnpackedComponents = new SortedSet<string>(unpackedComponents, StringComparer.OrdinalIgnoreCase);
+            unexpectedUnpackedComponents.ExceptWith(expectedComponents);
+            foreach (var unexpectedComponent in unexpectedUnpackedComponents)
+            {
+                throw new PackagingException($"The unpacked {artifactName} contained an unexpected component {unexpectedComponent}");
+            }
+        }
+
         public static SortedSet<string> GetUnpackedComponents(string installedFilesRoot)
         {
             var unpackedComponents = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);

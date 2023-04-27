@@ -317,19 +317,7 @@ namespace ArtifactBuilder.Artifacts
 
             var unpackedComponents = ValidationHelpers.GetUnpackedComponents(installedFilesRoot);
 
-            var missingExpectedComponents = new SortedSet<string>(expectedComponents, StringComparer.OrdinalIgnoreCase);
-            missingExpectedComponents.ExceptWith(unpackedComponents);
-            foreach (var missingComponent in missingExpectedComponents)
-            {
-                throw new PackagingException($"The unpacked msi was missing the expected component {missingComponent}");
-            }
-
-            var unexpectedUnpackedComponents = new SortedSet<string>(unpackedComponents, StringComparer.OrdinalIgnoreCase);
-            unexpectedUnpackedComponents.ExceptWith(expectedComponents);
-            foreach (var unexpectedComponent in unexpectedUnpackedComponents)
-            {
-                throw new PackagingException($"The unpacked msi contained an unexpected component {unexpectedComponent}");
-            }
+            ValidationHelpers.ValidateComponents(expectedComponents, unpackedComponents, "msi");
 
             FileHelpers.DeleteDirectories(unpackedLocation);
         }
