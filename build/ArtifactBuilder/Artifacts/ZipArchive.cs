@@ -21,6 +21,7 @@ namespace ArtifactBuilder.Artifacts
             Configuration = configuration;
             StagingDirectory = $@"{RepoRootDirectory}\build\_staging\{Name}-{Platform}";
             OutputDirectory = $@"{RepoRootDirectory}\build\BuildArtifacts\{Name}-{Platform}";
+            ValidateContentAction = ValidateContent;
 
             _frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
             _coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
@@ -53,7 +54,7 @@ namespace ArtifactBuilder.Artifacts
             Console.WriteLine($"Successfully created artifact for {nameof(ZipArchive)}.");
         }
 
-        protected override string Unpack()
+        private string Unpack()
         {
             var unpackDir = $@"{OutputDirectory}\unpacked";
             FileHelpers.DeleteDirectories(unpackDir);
@@ -61,7 +62,7 @@ namespace ArtifactBuilder.Artifacts
             return unpackDir;
         }
 
-        protected override void ValidateContent()
+        private void ValidateContent()
         {
             var unpackDir = Unpack();
 

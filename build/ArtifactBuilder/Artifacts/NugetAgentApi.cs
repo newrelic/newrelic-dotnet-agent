@@ -26,15 +26,5 @@ namespace ArtifactBuilder.Artifacts
             package.SetVersion(frameworkAgentComponents.Version);
             package.Pack();
         }
-
-        protected override string Unpack()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        protected override void ValidateContent()
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }

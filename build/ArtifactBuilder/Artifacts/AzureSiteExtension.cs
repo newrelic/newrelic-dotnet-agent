@@ -18,16 +18,6 @@ namespace ArtifactBuilder.Artifacts
             package.Pack();
         }
 
-        protected override string Unpack()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        protected override void ValidateContent()
-        {
-            throw new System.NotImplementedException();
-        }
-
         private string ReadVersionFromFile()
         {
             var versionFile = $@"{RepoRootDirectory}\build\BuildArtifacts\_buildProperties\version_azuresiteextension.txt";

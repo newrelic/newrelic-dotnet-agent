@@ -63,15 +63,5 @@ namespace ArtifactBuilder.Artifacts
             nodeLog.SetAttribute("directory", @"c:\Home\LogFiles\NewRelic");
             xml.Save(path);
         }
-
-        protected override void ValidateContent()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override string Unpack()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

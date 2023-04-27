@@ -32,6 +32,7 @@ namespace ArtifactBuilder.Artifacts
             Configuration = configuration;
             MsiDirectory = $@"{RepoRootDirectory}\src\_build\{Platform}-{Configuration}\Installer";
             OutputDirectory = $@"{RepoRootDirectory}\build\BuildArtifacts\{Name}-{Platform}";
+            ValidateContentAction = ValidateContent;
 
             _frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
             _coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
@@ -301,7 +302,7 @@ namespace ArtifactBuilder.Artifacts
             return true;
         }
 
-        protected override void ValidateContent()
+        private void ValidateContent()
         {
             var unpackedLocation = Unpack();
 
@@ -333,7 +334,7 @@ namespace ArtifactBuilder.Artifacts
             FileHelpers.DeleteDirectories(unpackedLocation);
         }
 
-        protected override string Unpack()
+        private string Unpack()
         {
             if (!TryGetMsiPath(out var msiPath))
             {
