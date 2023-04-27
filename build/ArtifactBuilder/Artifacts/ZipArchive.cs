@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace ArtifactBuilder.Artifacts
 {
@@ -56,73 +55,109 @@ namespace ArtifactBuilder.Artifacts
 
         private string Unpack()
         {
-            var unpackDir = $@"{OutputDirectory}\unpacked";
-            FileHelpers.DeleteDirectories(unpackDir);
-            System.IO.Compression.ZipFile.ExtractToDirectory(_zipFilePath, unpackDir);
-            return unpackDir;
+            var unpackedDir = Path.Join(OutputDirectory, "unpacked");
+            if (Directory.Exists(unpackedDir))
+            {
+                FileHelpers.DeleteDirectories(unpackedDir);
+            }
+            System.IO.Compression.ZipFile.ExtractToDirectory(_zipFilePath, unpackedDir);
+            return unpackedDir;
         }
 
         private void ValidateContent()
         {
-            var unpackDir = Unpack();
+            var unpackedLocation = Unpack();
+
+            var installedFilesRoot = unpackedLocation;
+
+            var expectedComponents = GetExpectedComponents(installedFilesRoot);
+
+            var unpackedComponents = GetUnpackedComponents(installedFilesRoot);
+
+            var missingExpectedComponents = new SortedSet<string>(expectedComponents, StringComparer.OrdinalIgnoreCase);
+            missingExpectedComponents.ExceptWith(unpackedComponents);
+            foreach (var missingComponent in missingExpectedComponents)
+            {
+                throw new PackagingException($"The unpacked ZIP archive was missing the expected component {missingComponent}");
+            }
+
+            var unexpectedUnpackedComponents = new SortedSet<string>(unpackedComponents, StringComparer.OrdinalIgnoreCase);
+            unexpectedUnpackedComponents.ExceptWith(expectedComponents);
+            foreach (var unexpectedComponent in unexpectedUnpackedComponents)
+            {
+                throw new PackagingException($"The unpacked ZIP archive contained an unexpected component {unexpectedComponent}");
+            }
+
+            // cleanup
+            FileHelpers.DeleteDirectories(unpackedLocation);
+        }
+
+        private SortedSet<string> GetExpectedComponents(string installedFilesRoot)
+        {
+            var expectedComponents = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
 
             // framework agent
 
-            var frameworkSourceHomeBuilderPath = $@"{_frameworkAgentComponents.HomeRootPath}\newrelichome_{_frameworkAgentComponents.Platform}";
+            AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.RootInstallDirectoryComponents);
 
-            var rootInstallDirComponents = RemoveSourceHomeBuilderPath(_frameworkAgentComponents.RootInstallDirectoryComponents, frameworkSourceHomeBuilderPath);
-            var frameworkAgentHomeDirComponents = RemoveSourceHomeBuilderPath(_frameworkAgentComponents.AgentHomeDirComponents, frameworkSourceHomeBuilderPath);
-            var frameworkExtensionDirComponents = RemoveSourceHomeBuilderPath(_frameworkAgentComponents.ExtensionDirectoryComponents, frameworkSourceHomeBuilderPath);
-            var frameworkWrapperXmlFiles = RemoveSourceHomeBuilderPath(_frameworkAgentComponents.WrapperXmlFiles, frameworkSourceHomeBuilderPath);
+            var netframeworkFolder = Path.Join(installedFilesRoot, FrameworkSubDirectoryName);
+            AddFilesToCollectionWithNewPath(expectedComponents, netframeworkFolder, _frameworkAgentComponents.AgentHomeDirComponents);
+            expectedComponents.Add(Path.Join(netframeworkFolder, AgentInfo.AgentInfoFilename));
 
-            VerifyComponentsExist(rootInstallDirComponents, unpackDir, null);
-            VerifyComponentsExist(frameworkAgentHomeDirComponents, unpackDir, FrameworkSubDirectoryName);
-            VerifyComponentsExist(frameworkExtensionDirComponents, unpackDir, FrameworkSubDirectoryName);
-            VerifyComponentsExist(frameworkWrapperXmlFiles, unpackDir, FrameworkSubDirectoryName);
+            var netframeworkExtensionsFolder = Path.Join(netframeworkFolder, "extensions");
+            AddFilesToCollectionWithNewPath(expectedComponents, netframeworkExtensionsFolder, _frameworkAgentComponents.ExtensionDirectoryComponents);
+            AddFilesToCollectionWithNewPath(expectedComponents, netframeworkExtensionsFolder, _frameworkAgentComponents.WrapperXmlFiles);
 
             // core agent
 
-            var coreSourceHomeBuilderPath = $@"{_coreAgentComponents.HomeRootPath}\newrelichome_{_coreAgentComponents.Platform}_coreclr";
+            AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.RootInstallDirectoryComponents);
 
-            var rootCoreInstallDirComponents = RemoveSourceHomeBuilderPath(_coreAgentComponents.RootInstallDirectoryComponents, coreSourceHomeBuilderPath);
-            var coreAgentHomeDirComponents = RemoveSourceHomeBuilderPath(_coreAgentComponents.AgentHomeDirComponents, coreSourceHomeBuilderPath);
-            var coreExtensionDirComponents = RemoveSourceHomeBuilderPath(_coreAgentComponents.ExtensionDirectoryComponents, coreSourceHomeBuilderPath);
-            var coreWrapperXmlFiles = RemoveSourceHomeBuilderPath(_coreAgentComponents.WrapperXmlFiles, coreSourceHomeBuilderPath);
+            var netcoreFolder = Path.Join(installedFilesRoot, CoreSubDirectoryName);
+            AddFilesToCollectionWithNewPath(expectedComponents, netcoreFolder, _coreAgentComponents.AgentHomeDirComponents);
+            expectedComponents.Add(Path.Join(netcoreFolder, AgentInfo.AgentInfoFilename));
 
-            VerifyComponentsExist(rootCoreInstallDirComponents, unpackDir, null);
-            VerifyComponentsExist(coreAgentHomeDirComponents, unpackDir, CoreSubDirectoryName);
-            VerifyComponentsExist(coreExtensionDirComponents, unpackDir, CoreSubDirectoryName);
-            VerifyComponentsExist(coreWrapperXmlFiles, unpackDir, CoreSubDirectoryName);
+            var netcoreExtensionsFolder = Path.Join(netcoreFolder, "extensions");
+            AddFilesToCollectionWithNewPath(expectedComponents, netcoreExtensionsFolder, _coreAgentComponents.ExtensionDirectoryComponents);
+            AddFilesToCollectionWithNewPath(expectedComponents, netcoreExtensionsFolder, _coreAgentComponents.WrapperXmlFiles);
 
-            // Open questions
-            // 1. Why does the Agent API DLL get placed in the home dir for the core agent, but not the framework agent?
-            // 2. Why do the RootInstallDirectoryComponents differ between framework and core?
-            // 3. How to account for "agentInfo.json" in the home dir (both framework and core)?
-
-            // cleanup
-            FileHelpers.DeleteDirectories(unpackDir);
+            return expectedComponents;
         }
 
-        private List<string> RemoveSourceHomeBuilderPath(IReadOnlyCollection<string> components, string sourceHomeBuilderPath)
+        private static SortedSet<string> GetUnpackedComponents(string installedFilesRoot)
         {
-            var returnList = new List<string>();
-            foreach (var component in components)
+            var unpackedComponents = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            var enumerationOptions = new EnumerationOptions
             {
-                returnList.Add(component.Remove(0, sourceHomeBuilderPath.Length));
+                RecurseSubdirectories = true,
+            };
+
+            foreach (var file in Directory.EnumerateFiles(installedFilesRoot, "*", enumerationOptions))
+            {
+                unpackedComponents.Add(file);
             }
-            return returnList;
+
+            return unpackedComponents;
         }
 
-        private void VerifyComponentsExist(List<string> components, string root, string subdir)
+        private static void AddFilesToCollectionWithNewPath(SortedSet<string> fileCollection, string newPath, IEnumerable<string> filesWithPath)
         {
-            foreach(var component in components)
+            foreach (var fileWithPath in filesWithPath)
             {
-                var expectedComponent = Path.Join(root, subdir, component);
-                if (!File.Exists(expectedComponent))
-                {
-                    throw new PackagingException($"Expected component {expectedComponent} is missing.");
-                }
+                AddSingleFileToCollectionWithNewPath(fileCollection, newPath, fileWithPath);
             }
         }
+
+        private static void AddSingleFileToCollectionWithNewPath(SortedSet<string> fileCollection, string newPath, string fileWithPath)
+        {
+            fileCollection.Add(Path.Join(newPath, GetFileNameWithoutPath(fileWithPath)));
+        }
+
+        private static string GetFileNameWithoutPath(string fullFileName)
+        {
+            var fileInfo = new FileInfo(fullFileName);
+            return fileInfo.Name;
+        }
+
     }
 }
