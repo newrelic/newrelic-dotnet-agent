@@ -315,7 +315,7 @@ namespace ArtifactBuilder.Artifacts
 
             var expectedComponents = GetExpectedComponents(installedFilesRoot);
 
-            var unpackedComponents = GetUnpackedComponents(installedFilesRoot);
+            var unpackedComponents = ValidationHelpers.GetUnpackedComponents(installedFilesRoot);
 
             var missingExpectedComponents = new SortedSet<string>(expectedComponents, StringComparer.OrdinalIgnoreCase);
             missingExpectedComponents.ExceptWith(unpackedComponents);
@@ -341,7 +341,7 @@ namespace ArtifactBuilder.Artifacts
                 return string.Empty;
             }
 
-            var unpackedDirectory = OutputDirectory + "\\unpacked";
+            var unpackedDirectory = Path.Join(OutputDirectory, "unpacked");
 
             if (Directory.Exists(unpackedDirectory))
             {
@@ -370,81 +370,46 @@ namespace ArtifactBuilder.Artifacts
 
             // The msi contains a different config file name than is used by the agent in the root directory
             // During a real installation the default config should be renamed.
-            AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "default_newrelic.config");
+            ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "default_newrelic.config");
             // The msi contains the agent api dll in the root probably for backwards compatibility
-            AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.AgentApiDll);
-            AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.RootInstallDirectoryComponents);
-            AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.ConfigurationComponents);
+            ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.AgentApiDll);
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.RootInstallDirectoryComponents);
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.ConfigurationComponents);
 
             if (Platform == "x64")
             {
                 // Only the x64 msi contains the profiler dll in the root probably for backwards compatibility
-                AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.WindowsProfiler);
+                ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.WindowsProfiler);
             }
 
-            var installedExtensionsRoot = installedFilesRoot + "Extensions\\";
-            AddSingleFileToCollectionWithNewPath(expectedComponents, installedExtensionsRoot, _frameworkAgentComponents.ExtensionXsd);
+            var installedExtensionsRoot = Path.Join(installedFilesRoot, "Extensions");
+            ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedExtensionsRoot, _frameworkAgentComponents.ExtensionXsd);
 
-            var installedCoreExtensionXmlFolder = installedExtensionsRoot + "netcore\\";
-            AddFilesToCollectionWithNewPath(expectedComponents, installedCoreExtensionXmlFolder, _coreAgentComponents.WrapperXmlFiles);
+            var installedCoreExtensionXmlFolder = Path.Join(installedExtensionsRoot, "netcore");
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedCoreExtensionXmlFolder, _coreAgentComponents.WrapperXmlFiles);
 
-            var installedFrameworkExtensionsXmlFolder = installedExtensionsRoot + "netframework\\";
-            AddFilesToCollectionWithNewPath(expectedComponents, installedFrameworkExtensionsXmlFolder, _frameworkAgentComponents.WrapperXmlFiles);
+            var installedFrameworkExtensionsXmlFolder = Path.Join(installedExtensionsRoot, "netframework");
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFrameworkExtensionsXmlFolder, _frameworkAgentComponents.WrapperXmlFiles);
 
-            var netcoreFolder = installedFilesRoot + "netcore\\";
-            AddFilesToCollectionWithNewPath(expectedComponents, netcoreFolder, _coreAgentComponents.AgentHomeDirComponents.Where(f => !f.EndsWith(".config") && !f.EndsWith(".xsd")));
+            var netcoreFolder = Path.Join(installedFilesRoot, "netcore");
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netcoreFolder, _coreAgentComponents.AgentHomeDirComponents.Where(f => !f.EndsWith(".config") && !f.EndsWith(".xsd")));
 
-            var netframeworkFolder = installedFilesRoot + "netframework\\";
-            AddFilesToCollectionWithNewPath(expectedComponents, netframeworkFolder, _frameworkAgentComponents.AgentHomeDirComponents.Where(f => !f.EndsWith(".config") && !f.EndsWith(".xsd")));
+            var netframeworkFolder = Path.Join(installedFilesRoot, "netframework");
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netframeworkFolder, _frameworkAgentComponents.AgentHomeDirComponents.Where(f => !f.EndsWith(".config") && !f.EndsWith(".xsd")));
 
-            AddSingleFileToCollectionWithNewPath(expectedComponents, netframeworkFolder, _frameworkAgentComponents.AgentApiDll);
+            ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, netframeworkFolder, _frameworkAgentComponents.AgentApiDll);
 
-            var netcoreExtensionsFolder = netcoreFolder + "Extensions\\";
-            AddFilesToCollectionWithNewPath(expectedComponents, netcoreExtensionsFolder, _coreAgentComponents.ExtensionDirectoryComponents.Where(f => !f.EndsWith(".xsd")));
+            var netcoreExtensionsFolder = Path.Join(netcoreFolder, "Extensions");
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netcoreExtensionsFolder, _coreAgentComponents.ExtensionDirectoryComponents.Where(f => !f.EndsWith(".xsd")));
 
-            var netframeworkExtensionsFolder = netframeworkFolder + "Extensions\\";
-            AddFilesToCollectionWithNewPath(expectedComponents, netframeworkExtensionsFolder, _frameworkAgentComponents.ExtensionDirectoryComponents.Where(f => !f.EndsWith(".xsd")));
+            var netframeworkExtensionsFolder = Path.Join(netframeworkFolder, "Extensions");
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netframeworkExtensionsFolder, _frameworkAgentComponents.ExtensionDirectoryComponents.Where(f => !f.EndsWith(".xsd")));
 
             // This script is only included with the msi installer
-            expectedComponents.Add(netframeworkFolder + "Tools\\flush_dotnet_temp.cmd");
+            expectedComponents.Add(Path.Combine(netframeworkFolder, "Tools", "flush_dotnet_temp.cmd"));
 
             return expectedComponents;
         }
 
-        private static SortedSet<string> GetUnpackedComponents(string installedFilesRoot)
-        {
-            var unpackedComponents = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            var enumerationOptions = new EnumerationOptions
-            {
-                RecurseSubdirectories = true,
-            };
-
-            foreach (var file in Directory.EnumerateFiles(installedFilesRoot, "*", enumerationOptions))
-            {
-                unpackedComponents.Add(file);
-            }
-
-            return unpackedComponents;
-        }
-
-        private static void AddFilesToCollectionWithNewPath(SortedSet<string> fileCollection, string newPath, IEnumerable<string> filesWithPath)
-        {
-            foreach (var fileWithPath in filesWithPath)
-            {
-                AddSingleFileToCollectionWithNewPath(fileCollection, newPath, fileWithPath);
-            }
-        }
-
-        private static void AddSingleFileToCollectionWithNewPath(SortedSet<string> fileCollection, string newPath,string fileWithPath)
-        {
-            fileCollection.Add(newPath + GetFileNameWithoutPath(fileWithPath));
-        }
-
-        private static string GetFileNameWithoutPath(string fullFileName)
-        {
-            var fileInfo = new FileInfo(fullFileName);
-            return fileInfo.Name;
-        }
     }
 }

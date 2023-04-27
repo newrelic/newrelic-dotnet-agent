@@ -72,7 +72,7 @@ namespace ArtifactBuilder.Artifacts
 
             var expectedComponents = GetExpectedComponents(installedFilesRoot);
 
-            var unpackedComponents = GetUnpackedComponents(installedFilesRoot);
+            var unpackedComponents = ValidationHelpers.GetUnpackedComponents(installedFilesRoot);
 
             var missingExpectedComponents = new SortedSet<string>(expectedComponents, StringComparer.OrdinalIgnoreCase);
             missingExpectedComponents.ExceptWith(unpackedComponents);
@@ -98,65 +98,29 @@ namespace ArtifactBuilder.Artifacts
 
             // framework agent
 
-            AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.RootInstallDirectoryComponents);
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _frameworkAgentComponents.RootInstallDirectoryComponents);
 
             var netframeworkFolder = Path.Join(installedFilesRoot, FrameworkSubDirectoryName);
-            AddFilesToCollectionWithNewPath(expectedComponents, netframeworkFolder, _frameworkAgentComponents.AgentHomeDirComponents);
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netframeworkFolder, _frameworkAgentComponents.AgentHomeDirComponents);
             expectedComponents.Add(Path.Join(netframeworkFolder, AgentInfo.AgentInfoFilename));
 
             var netframeworkExtensionsFolder = Path.Join(netframeworkFolder, "extensions");
-            AddFilesToCollectionWithNewPath(expectedComponents, netframeworkExtensionsFolder, _frameworkAgentComponents.ExtensionDirectoryComponents);
-            AddFilesToCollectionWithNewPath(expectedComponents, netframeworkExtensionsFolder, _frameworkAgentComponents.WrapperXmlFiles);
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netframeworkExtensionsFolder, _frameworkAgentComponents.ExtensionDirectoryComponents);
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netframeworkExtensionsFolder, _frameworkAgentComponents.WrapperXmlFiles);
 
             // core agent
 
-            AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.RootInstallDirectoryComponents);
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.RootInstallDirectoryComponents);
 
             var netcoreFolder = Path.Join(installedFilesRoot, CoreSubDirectoryName);
-            AddFilesToCollectionWithNewPath(expectedComponents, netcoreFolder, _coreAgentComponents.AgentHomeDirComponents);
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netcoreFolder, _coreAgentComponents.AgentHomeDirComponents);
             expectedComponents.Add(Path.Join(netcoreFolder, AgentInfo.AgentInfoFilename));
 
             var netcoreExtensionsFolder = Path.Join(netcoreFolder, "extensions");
-            AddFilesToCollectionWithNewPath(expectedComponents, netcoreExtensionsFolder, _coreAgentComponents.ExtensionDirectoryComponents);
-            AddFilesToCollectionWithNewPath(expectedComponents, netcoreExtensionsFolder, _coreAgentComponents.WrapperXmlFiles);
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netcoreExtensionsFolder, _coreAgentComponents.ExtensionDirectoryComponents);
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, netcoreExtensionsFolder, _coreAgentComponents.WrapperXmlFiles);
 
             return expectedComponents;
-        }
-
-        private static SortedSet<string> GetUnpackedComponents(string installedFilesRoot)
-        {
-            var unpackedComponents = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            var enumerationOptions = new EnumerationOptions
-            {
-                RecurseSubdirectories = true,
-            };
-
-            foreach (var file in Directory.EnumerateFiles(installedFilesRoot, "*", enumerationOptions))
-            {
-                unpackedComponents.Add(file);
-            }
-
-            return unpackedComponents;
-        }
-
-        private static void AddFilesToCollectionWithNewPath(SortedSet<string> fileCollection, string newPath, IEnumerable<string> filesWithPath)
-        {
-            foreach (var fileWithPath in filesWithPath)
-            {
-                AddSingleFileToCollectionWithNewPath(fileCollection, newPath, fileWithPath);
-            }
-        }
-
-        private static void AddSingleFileToCollectionWithNewPath(SortedSet<string> fileCollection, string newPath, string fileWithPath)
-        {
-            fileCollection.Add(Path.Join(newPath, GetFileNameWithoutPath(fileWithPath)));
-        }
-
-        private static string GetFileNameWithoutPath(string fullFileName)
-        {
-            var fileInfo = new FileInfo(fullFileName);
-            return fileInfo.Name;
         }
 
     }
