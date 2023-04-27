@@ -23,6 +23,7 @@ namespace ArtifactBuilder.Artifacts
         protected string StagingDirectory;
         protected string PackageDirectory;
         protected string OutputDirectory;
+        protected Action ValidateContentAction;
 
         public void Build(bool clearOutput = true)
         {
@@ -31,13 +32,9 @@ namespace ArtifactBuilder.Artifacts
                 FileHelpers.DeleteDirectories(OutputDirectory);
 
             InternalBuild();
-            ValidateContent();
+            ValidateContentAction?.Invoke();
         }
 
         protected abstract void InternalBuild();
-
-        protected abstract string Unpack();
-
-        protected abstract void ValidateContent();
     }
 }

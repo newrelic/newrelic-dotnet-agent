@@ -101,15 +101,5 @@ namespace ArtifactBuilder.Artifacts
 
             File.WriteAllLines(Path.Combine(shaDirectory, outputFilename), outputLines.ToArray());
         }
-
-        protected override void ValidateContent()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        protected override string Unpack()
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }

@@ -33,15 +33,5 @@ namespace ArtifactBuilder.Artifacts
             File.Copy(fileInfo.FullName, $@"{OutputDirectory}\{fileInfo.Name}", true);
             Console.WriteLine($"Successfully created package {nameof(NugetAgentExtensions)}");
         }
-
-        protected override string Unpack()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void ValidateContent()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

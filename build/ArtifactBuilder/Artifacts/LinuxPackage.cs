@@ -39,15 +39,5 @@ namespace ArtifactBuilder.Artifacts
             //<checksum_mode> is either a ' ' for text mode or '*' for binary mode.
             File.WriteAllText($@"{OutputDirectory}\{fileInfo.Name}.sha256", $"{FileHelpers.GetSha256Checksum(packagePath)} *{fileInfo.Name}");
         }
-
-        protected override string Unpack()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void ValidateContent()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -30,16 +30,6 @@ namespace ArtifactBuilder.Artifacts
             package.Pack();
         }
 
-        protected override string Unpack()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void ValidateContent()
-        {
-            throw new NotImplementedException();
-        }
-
         private void DoInstallerReplacements(string agentInstaller)
         {
             var paths = new[] {
