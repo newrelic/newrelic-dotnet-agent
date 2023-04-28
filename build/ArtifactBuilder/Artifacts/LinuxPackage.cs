@@ -143,9 +143,10 @@ namespace ArtifactBuilder.Artifacts
             var expectedComponents = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
 
             ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.RootInstallDirectoryComponents);
-            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.AgentHomeDirComponents.Where(f => !f.Contains("NewRelic.Profiler.dll")));
-            ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "libNewRelicProfiler.so");
+            ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.AgentHomeDirComponents.Where(f => f != _coreAgentComponents.WindowsProfiler));
+            ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.LinuxProfiler);
             ValidationHelpers.AddFilesToCollectionWithNewPath(expectedComponents, installedFilesRoot, _coreAgentComponents.ConfigurationComponents);
+            // These next two files are added to the Linux packages by the containerized build process, not the ArtifactBuilder, so they are hardcoded here
             ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "run.sh");
             ValidationHelpers.AddSingleFileToCollectionWithNewPath(expectedComponents, installedFilesRoot, "setenv.sh");
 
