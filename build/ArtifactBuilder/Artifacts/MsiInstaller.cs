@@ -290,7 +290,7 @@ namespace ArtifactBuilder.Artifacts
 
         private bool TryGetMsiPath(out string msiPath)
         {
-            var fileSearchPattern = $@"NewRelicAgent_{Platform}_*.msi";
+            var fileSearchPattern = $@"NewRelicAgent_{Platform}_{_frameworkAgentComponents.Version}.msi";
             msiPath = Directory.GetFiles(MsiDirectory, fileSearchPattern).FirstOrDefault();
 
             if (string.IsNullOrEmpty(msiPath))
@@ -311,7 +311,7 @@ namespace ArtifactBuilder.Artifacts
                 return;
             }
 
-            var installedFilesRoot = unpackedLocation + $@"\New Relic\.NET Agent\";
+            var installedFilesRoot = Path.Join(unpackedLocation, "New Relic", ".NET Agent");
 
             var expectedComponents = GetExpectedComponents(installedFilesRoot);
 
