@@ -120,8 +120,8 @@ namespace ArtifactBuilder.Artifacts
 
         private string Unpack()
         {
-            var unpackDir = $@"{OutputDirectory}\unpacked";
-            var nugetFile = $@"{OutputDirectory}\NewRelic.Agent.{_frameworkAgentComponents.Version}.nupkg";
+            var unpackDir = Path.Join(OutputDirectory, "unpacked");
+            var nugetFile = Path.Join(OutputDirectory, $"NewRelic.Agent.{_frameworkAgentComponents.Version}.nupkg");
             NuGetHelpers.Unpack(nugetFile, unpackDir);
             return unpackDir;
         }
