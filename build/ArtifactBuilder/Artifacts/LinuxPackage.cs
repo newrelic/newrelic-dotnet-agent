@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Formats;
 using System.Formats.Tar;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using Microsoft.Win32;
 
 namespace ArtifactBuilder.Artifacts
 {
     public class LinuxPackage : Artifact
     {
         private const string GzipFileExtension = ".gz";
+        private const string Default7zPath = @"C:\Program Files\7-Zip\7z.exe";
 
         private readonly string _packagePlatform;
         private readonly string _fileExtension;
@@ -66,43 +69,16 @@ namespace ArtifactBuilder.Artifacts
                 FileHelpers.DeleteDirectories(unpackedDir);
             }
 
-            var packageFileName = new FileInfo(_packagePath).Name;
-
             switch (_fileExtension)
             {
                 case "deb":
-                    //using (ArchiveFile archiveFile = new ArchiveFile(_packagePath))
-                    //{
-                    //    archiveFile.Extract(unpackedDir);
-                    //}
-
-                    //using (ArchiveFile archiveFileXz = new ArchiveFile(Path.Join(unpackedDir, "data.tar.xz")))
-                    //{
-                    //    MemoryStream memoryStream = new MemoryStream();
-                    //    archiveFileXz.Entries[0].Extract(memoryStream);
-
-                    //    using (ArchiveFile archiveFileTar = new ArchiveFile(memoryStream, SevenZipFormat.Tar))
-                    //    {
-                    //        archiveFileTar.Extract(unpackedDir);
-                    //    }
-                    //}
+                    UnpackWith7z(_packagePath, unpackedDir, false); // creates "data.tar" in unpackedDir
+                    UnpackWith7z(Path.Join(unpackedDir, "data.tar"), unpackedDir, true);
                     return Path.Combine(unpackedDir, "usr", "local", "newrelic-dotnet-agent");
                 case "rpm":
-                    //using (ArchiveFile archiveFile = new ArchiveFile(_packagePath))
-                    //{
-                    //    archiveFile.Extract(unpackedDir);
-                    //}
-                    //var cpioFile = packageFileName.Replace(".rpm", "") + ".cpio.xz";
-                    //using (ArchiveFile archiveFileXz = new ArchiveFile(Path.Join(unpackedDir, cpioFile)))
-                    //{
-                    //    MemoryStream memoryStream = new MemoryStream();
-                    //    archiveFileXz.Entries[0].Extract(memoryStream);
-
-                    //    using (ArchiveFile archiveFileCpio = new ArchiveFile(memoryStream, SevenZipFormat.Cpio))
-                    //    {
-                    //        archiveFileCpio.Extract(unpackedDir);
-                    //    }
-                    //}
+                    UnpackWith7z(_packagePath, unpackedDir, false); // creates cpio file in unpackedDir with same base name as the .rpm
+                    var cpioFile = Path.Join(unpackedDir, new FileInfo(_packagePath).Name.Replace(".rpm", "") + ".cpio");
+                    UnpackWith7z(cpioFile, unpackedDir, true);
                     return Path.Combine(unpackedDir, "usr", "local", "newrelic-dotnet-agent");
                 case "tar.gz":
                     Directory.CreateDirectory(unpackedDir);
@@ -129,11 +105,55 @@ namespace ArtifactBuilder.Artifacts
             return outputFile;
         }
 
+        private void UnpackWith7z(string archiveFile, string outputPath, bool extractWithFullPaths)
+        {
+            var pathTo7z = Get7zPath();
+            if (string.IsNullOrEmpty(pathTo7z))
+            {
+                throw new PackagingException("Unable to find path to 7z tool, can't validate contents of Linux archives.");
+            }
+
+            var operation = extractWithFullPaths ? "x" : "e";
+            var parameters = $"{operation} {archiveFile} -o{outputPath}";
+            var pInfo = new ProcessStartInfo(pathTo7z, parameters);
+            pInfo.CreateNoWindow = true;
+            pInfo.RedirectStandardOutput = true;
+            pInfo.RedirectStandardError = true;
+            pInfo.UseShellExecute = false;
+
+            var process = Process.Start(pInfo);
+            process.WaitForExit(30000);
+            if (!process.HasExited)
+            {
+                process.Kill();
+                throw new Exception($"7z unpacakge failed to complete in a timely fashion.");
+            }
+            if (process.ExitCode != 0)
+            {
+                throw new Exception($"7z unpacakge failed with exit code {process.ExitCode}.");
+            }
+        }
+
+        private string Get7zPath()
+        {
+            if (File.Exists(Default7zPath))
+            {
+                return Default7zPath;
+            }
+            if (OperatingSystem.IsWindows())
+            {
+                var maybePath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\7-Zip", "Path", string.Empty) as string;
+                if (File.Exists(maybePath))
+                {
+                    return maybePath;
+                }
+            }
+            return string.Empty;
+        }
+
         private void ValidateContent()
         {
-            var unpackedLocation = Unpack();
-
-            var installedFilesRoot = unpackedLocation;
+            var installedFilesRoot = Unpack();
 
             var expectedComponents = GetExpectedComponents(installedFilesRoot);
 
@@ -141,7 +161,7 @@ namespace ArtifactBuilder.Artifacts
 
             ValidationHelpers.ValidateComponents(expectedComponents, unpackedComponents, _packageName);
 
-            FileHelpers.DeleteDirectories(unpackedLocation);
+            FileHelpers.DeleteDirectories(installedFilesRoot);
         }
 
         private SortedSet<string> GetExpectedComponents(string installedFilesRoot)
