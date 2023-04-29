@@ -126,11 +126,11 @@ namespace ArtifactBuilder.Artifacts
             if (!process.HasExited)
             {
                 process.Kill();
-                throw new Exception($"7z unpacakge failed to complete in a timely fashion.");
+                throw new Exception($"7z unpackage failed to complete in a timely fashion.");
             }
             if (process.ExitCode != 0)
             {
-                throw new Exception($"7z unpacakge failed with exit code {process.ExitCode}.");
+                throw new Exception($"7z unpackage failed with exit code {process.ExitCode}.");
             }
         }
 

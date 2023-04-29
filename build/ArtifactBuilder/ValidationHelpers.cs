@@ -22,6 +22,8 @@ namespace ArtifactBuilder
             {
                 throw new PackagingException($"The unpacked {artifactName} contained an unexpected component {unexpectedComponent}");
             }
+
+            Console.WriteLine($"Successfully validated the contents of the {artifactName}.");
         }
 
         public static SortedSet<string> GetUnpackedComponents(string installedFilesRoot)
