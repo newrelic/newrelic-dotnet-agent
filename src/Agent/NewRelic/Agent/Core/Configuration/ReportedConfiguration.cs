@@ -620,6 +620,12 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("application_logging.forwarding.context_data.exclude")]
         public IEnumerable<string> ContextDataExclude => _configuration.ContextDataExclude;
 
+        [JsonProperty("metrics.harvest_cycle")]
+        public TimeSpan? MetricsHarvestCycle => _configuration.MetricsHarvestCycle;
+
+        [JsonProperty("transaction_traces.harvest_cycle")]
+        public TimeSpan? TransactionTracesHarvestCycle => TimeSpan.FromMinutes(1);
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return _configuration.GetAppSettings();

@@ -2029,6 +2029,45 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+
+        public TimeSpan? MetricsHarvestCycle
+        {
+            get
+            {
+                if (_newRelicAppSettings.TryGetValue("OverrideMetricsHarvestCycle", out var harvestCycle))
+                {
+                    var convertedHarvestCycle = Convert.ToInt32(harvestCycle);
+                    if (convertedHarvestCycle <= 0)
+                    {
+                        return null;
+                    }
+
+                    return TimeSpan.FromSeconds(convertedHarvestCycle);
+                }
+
+                return null;
+            }
+        }
+
+        public TimeSpan? TransactionTracesHarvestCycle
+        {
+            get
+            {
+                if (_newRelicAppSettings.TryGetValue("OverrideTransactionTracesHarvestCycle", out var harvestCycle))
+                {
+                    var convertedHarvestCycle = Convert.ToInt32(harvestCycle);
+                    if (convertedHarvestCycle <= 0)
+                    {
+                        return null;
+                    }
+
+                    return TimeSpan.FromSeconds(convertedHarvestCycle);
+                }
+
+                return null;
+            }
+        }
+
         #endregion
 
         #region Helpers
