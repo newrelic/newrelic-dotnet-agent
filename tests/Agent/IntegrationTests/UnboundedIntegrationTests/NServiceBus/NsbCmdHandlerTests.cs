@@ -26,7 +26,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 
             _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithCommandHandler");
             _fixture.AddCommand("NServiceBusDriver SendCommand");
-            _fixture.AddCommand("RootCommands DelaySeconds 5");
             _fixture.AddCommand("NServiceBusDriver StopNServiceBus");
 
             _fixture.Actions

@@ -2,20 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using MultiFunctionApplicationHelpers;
-using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using NServiceBus;
-using NsbTests;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 #if !NET462
@@ -112,35 +104,33 @@ namespace NsbTests
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void PublishEventInTransaction()
+        public async void PublishEventInTransaction()
         {
-            PublishEvent();
+            await PublishEvent();
         }
 
         [LibraryMethod]
-        public void PublishEvent()
+        public async Task PublishEvent()
         {
             var @event = new Event();
             ConsoleMFLogger.Info($"Sending NServiceBus Event with Id: {@event.Id}");
-            _endpoint.Publish(@event).Wait();
-            Task.Delay(TimeSpan.FromSeconds(2)).Wait();
+            await _endpoint.Publish(@event);
         }
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void SendCommandInTransaction()
+        public async void SendCommandInTransaction()
         {
-            SendCommand();
+            await SendCommand();
         }
 
         [LibraryMethod]
-        public void SendCommand()
+        public async Task SendCommand()
         {
             var command = new Command();
             ConsoleMFLogger.Info($"Sending NServiceBus Command with Id: {command.Id}");
-            _endpoint.SendLocal(command).Wait();
-            Task.Delay(TimeSpan.FromSeconds(2)).Wait();
+            await _endpoint.SendLocal(command);
         }
     }
 }
