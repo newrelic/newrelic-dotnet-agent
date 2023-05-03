@@ -295,12 +295,17 @@ jobs:
           echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
         shell: powershell
 
+      - name: Stage files in working directory
+        run: |
+          New-Item "${{ github.workspace }}/_workingDir/images" -Type "directory"
+          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/images/*.*" -Destination "${{ github.workspace }}/_workingDir/images"
+          New-Item "${{ github.workspace }}/_workingDir/build" -Type "directory"
+          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/build/*.*" -Destination "${{ github.workspace }}/_workingDir/build"
+          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/readme.md" -Destination "${{ github.workspace }}/_workingDir"
+
       - name: Pack Profiler NuGet Package
         run: |
           New-Item "${{ github.workspace }}/_workingDir/NugetProfiler" -Type "directory"
-          dir "${{ github.workspace }}/build/Packaging/NugetProfiler"
-          dir "${{ github.workspace }}/_workingDir"
-          dir "${{ github.workspace }}/_workingDir/NugetProfiler"
           nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version ${{ steps.agentVersion.outputs.version }} -Verbosity detailed
         shell: powershell
 
