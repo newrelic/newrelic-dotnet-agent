@@ -29,6 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "autoStart", "false");
                     configModifier.SetLogLevel("finest");
+                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
                 },
                 exerciseApplication: () =>
                 {
