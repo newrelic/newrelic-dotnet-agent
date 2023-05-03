@@ -1,4 +1,4 @@
-name: Build .NET Agent Profiler
+name: Build and Package Profiler
 
 on:
   # run this workflow on a push to any branch other than main or a feature branch
@@ -14,21 +14,12 @@ on:
         description: 'Force a build, even if no files are changed'
         required: true
         type: boolean
-      deploy:
-        description: 'Deploy Profiler NuGet package.'
-        required: true
-        type: boolean
   
   # this workflow can be invoked manually
   workflow_dispatch:
     inputs:
       force-build:
         description: 'Force a build, even if no files are changed'
-        required: true
-        default: true
-        type: boolean
-      deploy:
-        description: 'Deploy Profiler NuGet package after build'
         required: true
         default: true
         type: boolean
@@ -260,8 +251,7 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: ${{ inputs.deploy }}
-    #if: ${{ inputs.deploy && (inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true') }}
+    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
     name: Package and Deploy Profiler NuGet
     runs-on: windows-2022
 
@@ -327,26 +317,4 @@ jobs:
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
-
-      # # commit directly to non-protected branch
-      # - name: Commit and Push New Profiler Build on Non-Protected Branch
-      #   if: ${{ !github.ref_protected }}
-      #   uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772 #v1.4
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     message: "chore: Update Profiler build."
-      #     branch: ${{ github.ref }}
-
-      # # create a PR if the branch is protected (i.e., main, feature/**)      
-      # - name: Create Pull Request on Protected Branch
-      #   if: ${{ github.ref_protected }}
-      #   uses: peter-evans/create-pull-request@5b4a9f6a9e2af26e5f02351490b90d01eb8ec1e5 # v5.0.0
-      #   with:
-      #       commit-message: "chore: Update Profiler build."
-      #       title: "chore: Update Profiler build."
-      #       branch: profiler-build-updates/${{ github.ref_name }}
-      #       labels: |
-      #         profiler build
-      #         automated pr
-      #       delete-branch: true
 
