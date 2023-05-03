@@ -62,20 +62,12 @@ namespace HostedWebCore
             var eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset, "app_server_wait_for_all_request_done_" + _port.ToString());
             CreatePidFile();
             eventWaitHandle.WaitOne(TimeSpan.FromMinutes(ServerTimeoutShutdownMinutes));
-            FinishWebServer();
         }
 
         private void StartWebServer()
         {
             var hresult = NativeMethods.WebCoreActivate(ApplicationHostConfigFilePath, null, @".NET Agent Integration Test Web Host");
             Marshal.ThrowExceptionForHR(hresult);
-        }
-
-        private static void FinishWebServer()
-        {
-            var hresult = NativeMethods.WebCoreShutdown(true);
-            if (hresult != 0)
-                throw new Exception("Error occurred when calling WebCoreShutdown.  HResult: " + hresult);
         }
 
         private static void CreatePidFile()
