@@ -42,6 +42,7 @@ jobs:
       pull-requests: write
       packages: write
     uses: ./.github/workflows/build_profiler.yml
+    secrets: inherit
     with:
       force-build: true
 
