@@ -344,5 +344,29 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "diagnostics"}, "captureAgentTiming", enable.ToString().ToLower());
             return this;
         }
+
+        public NewRelicConfigModifier ConfigureFasterMetricsHarvestCycle(int seconds)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "key", "OverrideMetricsHarvestCycle");
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "value", seconds.ToString());
+            return this;
+        }
+
+        public NewRelicConfigModifier ConfigureFasterTransactionTracesHarvestCycle(int seconds)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "key", "OverrideTransactionTracesHarvestCycle");
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "value", seconds.ToString());
+            return this;
+        }
+
+        public NewRelicConfigModifier ConfigureFasterSpanEventsHarvestCycle(int seconds)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "key", "OverrideSpanEventsHarvestCycle");
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "value", seconds.ToString());
+            return this;
+        }
     }
 }
