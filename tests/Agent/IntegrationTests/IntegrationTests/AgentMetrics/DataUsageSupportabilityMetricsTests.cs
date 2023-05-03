@@ -58,12 +58,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction ThisIsAInfoLogMessage INFO");
 
-            // This is necessary to allow the logging data endpoint to be called before the application is shut down
-            _fixture.AddCommand($"RootCommands DelaySeconds 5");
-
-
-
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
@@ -71,6 +66,10 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 
                     configModifier.EnableLogForwarding()
                     .SetLogLevel("debug");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.LogDataLogLineRegex, TimeSpan.FromSeconds(10));
                 }
             );
 
