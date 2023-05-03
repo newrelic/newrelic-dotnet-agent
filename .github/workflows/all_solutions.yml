@@ -34,23 +34,23 @@ env:
 
 jobs:
 
-  build-profiler:
-    name: Build Profiler
-    if: ${{ github.event.release.action == 'released' }} || ${{ github.event.release.action == 'published' }} || ${{ inputs.force-profiler-build }}
-    permissions:
-      contents: write
-      pull-requests: write
-      packages: write
-    uses: ./.github/workflows/build_profiler.yml
-    secrets: inherit
-    with:
-      force-build: true
+  # build-profiler:
+  #   name: Build Profiler
+  #   if: ${{ github.event.release.action == 'released' }} || ${{ github.event.release.action == 'published' }} || ${{ inputs.force-profiler-build }}
+  #   permissions:
+  #     contents: write
+  #     pull-requests: write
+  #     packages: write
+  #   uses: ./.github/workflows/build_profiler.yml
+  #   secrets: inherit
+  #   with:
+  #     force-build: ${{ inputs.force-profiler-build }}
 
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
     runs-on: windows-2022
-    needs: build-profiler
+    # needs: build-profiler
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
