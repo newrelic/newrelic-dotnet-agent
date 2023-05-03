@@ -295,12 +295,6 @@ jobs:
           echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
         shell: powershell
 
-      - name: Set up Icon and Readme.md
-        run: |
-          New-Item "${{ github.workspace }}/_workingDir/images" -Type "directory"
-          Copy-Item -Path "${{ github.workspace }}/build/icon.png" -Destination "${{ github.workspace }}/_workingDir/images"
-          echo "This package is for New Relic internal use only and should not be installed in other projects." >> ${{ github.workspace }}/_workingDir/readme.md
-
       - name: Pack Profiler NuGet Package
         run: |
           New-Item "${{ github.workspace }}/_workingDir/NugetProfiler" -Type "directory"
