@@ -59,7 +59,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
             Fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction ThisIsADebugLogMessage DEBUG");
 
             // This is necessary to cause one harvest cycle to happen and cause the logging data endpoint to be called
-            Fixture.AddCommand($"RootCommands DelaySeconds 60");
+            Fixture.AddCommand($"RootCommands DelaySeconds 10");
 
 
 
@@ -68,7 +68,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
                     configModifier.EnableLogForwarding()
                     .SetLogLevel("debug");
                 }

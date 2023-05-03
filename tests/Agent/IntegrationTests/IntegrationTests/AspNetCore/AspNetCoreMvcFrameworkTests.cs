@@ -33,6 +33,8 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
                 },
                 exerciseApplication: () =>
                 {
@@ -40,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
                     _fixture.Get();
                     //We need to wait for a harvest cycle otherwise we do not always have enough time for the transaction
                     //to complete and have all of its data included in the forced harvest during shutdown.
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

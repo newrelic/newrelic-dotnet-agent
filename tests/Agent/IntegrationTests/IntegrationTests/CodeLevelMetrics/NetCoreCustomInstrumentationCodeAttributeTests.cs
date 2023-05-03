@@ -30,6 +30,9 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
             (
                 setupConfiguration: () =>
                 {
+                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(5);
+
                     var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "NetCoreAsyncApplication", AsyncUseCasesNamespace, "IoBoundNoSpecialAsync", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.OtherTransactionWrapperAsync", "IoBoundNoSpecialAsync", 7);
@@ -39,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

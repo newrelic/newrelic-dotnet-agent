@@ -32,14 +32,16 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
                 },
                 exerciseApplication: () =>
                 {
                     _fixture.Get();
                     _fixture.ThrowException();
 
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(2));
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

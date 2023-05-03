@@ -29,6 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
                     CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "errorCollector", "ignoreClasses" }, "errorClass", "System.ArithmeticException");
@@ -36,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
                 exerciseApplication: () =>
                 {
                     _fixture.Get404();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

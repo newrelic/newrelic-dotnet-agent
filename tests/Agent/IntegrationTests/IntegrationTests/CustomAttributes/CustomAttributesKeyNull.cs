@@ -27,13 +27,13 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
-
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
                 },
                 exerciseApplication: () =>
                 {
                     _fixture.GetKeyNull();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
                 });
             _fixture.Initialize();
         }

@@ -28,6 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level",
                         "debug");
@@ -37,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
                 exerciseApplication: () =>
                 {
                     _fixture.Get();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
                 }
 
                 );

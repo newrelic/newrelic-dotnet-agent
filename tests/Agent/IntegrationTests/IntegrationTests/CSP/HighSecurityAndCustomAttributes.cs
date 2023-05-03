@@ -31,12 +31,14 @@ namespace NewRelic.Agent.IntegrationTests.CSP
                     configModifier.ForceTransactionTraces();
                     configModifier.SetHighSecurityMode(true);
                     configModifier.SetLogLevel("debug");
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
                 },
                 exerciseApplication: () =>
                 {
                     _fixture.Get();
                     _fixture.GetCustomErrorAttributes();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.ErrorEventDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.ErrorEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
                 }
 
                 );

@@ -29,7 +29,9 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
             (
                 setupConfiguration: () =>
                 {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
 
                     var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
@@ -57,7 +59,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                     _fixture.GetManualTaskFactoryStartNewBlocked();
                     _fixture.GetManualNewThreadStartBlocked();
 
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

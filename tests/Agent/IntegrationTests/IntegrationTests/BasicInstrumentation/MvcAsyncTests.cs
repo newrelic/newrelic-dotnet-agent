@@ -31,7 +31,10 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
             (
                 setupConfiguration: () =>
                 {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var newRelicConfig = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(newRelicConfig);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
 
                     var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
@@ -55,7 +58,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                     _fixture.GetIoBoundConfigureAwaitFalseAsync();
                     _fixture.GetCpuBoundTasksAsync();
 
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

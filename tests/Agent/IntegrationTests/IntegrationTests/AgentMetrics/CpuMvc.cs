@@ -27,16 +27,17 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
                 },
                 exerciseApplication: () =>
                 {
                     _fixture.Get();
                     var startTime = DateTime.Now;
-                    while (DateTime.Now <= startTime.AddSeconds(60))
+                    while (DateTime.Now <= startTime.AddSeconds(20))
                     {
                         if (_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "CPU/User Time"))
                             break;
-                        Thread.Sleep(TimeSpan.FromSeconds(5));
+                        Thread.Sleep(TimeSpan.FromMilliseconds(500));
                     }
                 }
             );

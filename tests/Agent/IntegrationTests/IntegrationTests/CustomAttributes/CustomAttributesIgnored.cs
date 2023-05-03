@@ -23,29 +23,31 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _fixture.Actions(setupConfiguration: () =>
-            {
-                var configPath = _fixture.DestinationNewRelicConfigFilePath;
-                var configModifier = new NewRelicConfigModifier(configPath);
-                configModifier.ForceTransactionTraces();
-                configModifier.SetLogLevel("debug");
-                configModifier.AddAttributesExclude("*");
-                configModifier.AddAttributesInclude("name");
-                configModifier.AddAttributesInclude("foo");
-                configModifier.AddAttributesInclude("hey");
-            },
-
-            exerciseApplication: () =>
+            _fixture.Actions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = _fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ForceTransactionTraces();
+                    configModifier.SetLogLevel("debug");
+                    configModifier.AddAttributesExclude("*");
+                    configModifier.AddAttributesInclude("name");
+                    configModifier.AddAttributesInclude("foo");
+                    configModifier.AddAttributesInclude("hey");
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
+                },
+                exerciseApplication: () =>
                 {
                     // Generates a transaction trace.
                     _fixture.Get();
 
                     // Generates an error trace.
                     _fixture.Get404();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
                 }
 
-                );
+            );
             _fixture.Initialize();
         }
 
