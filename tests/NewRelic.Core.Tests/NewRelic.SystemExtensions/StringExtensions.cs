@@ -135,5 +135,37 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             Assert.AreEqual(expectedResult, actualResult);
         }
+
+        [TestCase("foo", "Foo")]
+        [TestCase("Bar", "Bar")]
+        [TestCase("Foo", "Foo")]
+        [TestCase("BAR", "BAR")]
+        [TestCase("the quick brown fox", "The quick brown fox")]
+        [TestCase("2251", "2251")]
+        [TestCase(" ", " ")]
+        public void CapitalizeWord(string word, string expectedResult)
+        {
+            var actualResult = word.CapitalizeWord();
+
+            Assert.AreEqual(expectedResult, actualResult);
+        }
+
+        [TestCase("the quick brown fox", ' ', false, "The Quick Brown Fox")]
+        [TestCase("the quick brown fox", ' ', true, "TheQuickBrownFox")]
+        [TestCase("the_quick_brown_fox", '_', false, "The_Quick_Brown_Fox")]
+        [TestCase("the_quick_brown_fox", '_', true, "TheQuickBrownFox")]
+        [TestCase("_foo", '_', true, "Foo")]
+        [TestCase("_foo", '_', false, "_Foo")]
+        [TestCase("bar_", '_', true, "Bar")]
+        [TestCase("bar_", '_', false, "Bar_")]
+        [TestCase("_foo_bar_", '_', true, "FooBar")]
+        [TestCase("_foo_bar_", '_', false, "_Foo_Bar_")]
+
+        public void CapitalizeEachWord(string sentence, char separator, bool removeSeparator, string expectedResult)
+        {
+            var actualResult = sentence.CapitalizeEachWord(separator, removeSeparator);
+
+            Assert.AreEqual(expectedResult, actualResult);
+        }
     }
 }

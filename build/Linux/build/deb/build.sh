@@ -66,8 +66,10 @@ cp /tmp/${ARCH}/${PACKAGE_NAME}.deb /release/${PACKAGE_NAME}_${ARCH}.deb
 # agentinfo.json for tar.gz
 cp /common/agentinfo.json .
 
-# create tar ball
-tar cvfz /release/${PACKAGE_FILE_BASENAME}.tar.gz -C ${INSTALL_LOCATION} ..
+# create tar.gz archive
+cd ..
+
+tar -zcvf /release/${PACKAGE_FILE_BASENAME}.tar.gz ${PACKAGE_NAME}
 
 if [ $? -gt 0 ] ; then
     echo "::error Docker run exited with code: $?"

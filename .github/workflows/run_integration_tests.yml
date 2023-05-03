@@ -44,7 +44,7 @@ jobs:
       unbounded-tests-matrix: ${{ steps.configure_unbounded_tests_matrix.outputs.matrix }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+        uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
         with:
           egress-policy: audit 
 
@@ -70,7 +70,7 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.unbounded-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
-            namespaces="[ 'CosmosDB', 'Couchbase', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Oracle', 'Postgres', 'RabbitMq', 'Redis' ]"
+            namespaces="[ 'CosmosDB', 'Couchbase', 'Elasticsearch', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Oracle', 'Postgres', 'RabbitMq', 'Redis' ]"
           else
             # Just use the supplied list of namespaces
             namespaces="[ ${{ github.event.inputs.unbounded-test-namespaces }} ]"

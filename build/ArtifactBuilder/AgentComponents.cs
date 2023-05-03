@@ -56,7 +56,7 @@ namespace ArtifactBuilder
         public string AgentInfoJson;
         public string[] GRPCExtensionsLibWindows;
 
-        private List<string> AllComponents
+        public List<string> AllComponents
         {
             get
             {
