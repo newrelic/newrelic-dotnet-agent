@@ -23,9 +23,6 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
 
             _fixture.AddCommand($"ApiCalls TestSetApplicationName NewIntegrationTestName");
 
-            // Needed to ensure that the scheduled reconnect, with a 15 second delay, can happen
-            _fixture.AddCommand($"RootCommands DelaySeconds 30");
-
             _fixture.AddActions
             (
                 setupConfiguration: () =>
@@ -39,8 +36,10 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SetApplicationnameAPICalledDuringCollectMethodLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SetApplicationnameAPICalledDuringConnectMethodLogLineRegex, TimeSpan.FromMinutes(1));
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.AttemptReconnectLogLineRegex, TimeSpan.FromMinutes(1));
+                    // There should be two connected log lines, one for the initial connect and the other after the reconnect
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1), 2);
                 }
             );
 
