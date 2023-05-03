@@ -326,8 +326,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             RemoteApplication.Shutdown();
             RemoteApplication.Dispose();
-
-            RemoteApplication.ReleasePort();
         }
 
         public virtual void WriteProcessOutputToLog()
