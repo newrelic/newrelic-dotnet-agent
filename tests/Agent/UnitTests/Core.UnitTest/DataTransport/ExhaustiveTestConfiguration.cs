@@ -427,6 +427,10 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public IEnumerable<string> ContextDataExclude => new[] { "attr1", "attr2" };
 
+        public TimeSpan? MetricsHarvestCycle => null;
+
+        public TimeSpan? TransactionTracesHarvestCycle => null;
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return new Dictionary<string, string>

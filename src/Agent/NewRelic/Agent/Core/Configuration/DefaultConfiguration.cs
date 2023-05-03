@@ -840,7 +840,22 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public TimeSpan SpanEventsHarvestCycle => ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestCycle, TimeSpan.FromMinutes(1));
+        public TimeSpan SpanEventsHarvestCycle
+        {
+            get
+            {
+                if (_newRelicAppSettings.TryGetValue("OverrideSpanEventsHarvestCycle", out var harvestCycle))
+                {
+                    var convertedHarvestCycle = Convert.ToInt32(harvestCycle);
+                    if (convertedHarvestCycle > 0)
+                    {
+                        return TimeSpan.FromSeconds(convertedHarvestCycle);
+                    }
+                }
+
+                return ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestCycle, TimeSpan.FromMinutes(1));
+            }
+        }
 
         public bool SpanEventsAttributesEnabled => CaptureAttributes && _localConfiguration.spanEvents.attributes.enabled;
 

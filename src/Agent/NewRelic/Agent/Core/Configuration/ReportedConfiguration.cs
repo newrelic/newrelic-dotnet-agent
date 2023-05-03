@@ -624,7 +624,7 @@ namespace NewRelic.Agent.Core.Configuration
         public TimeSpan? MetricsHarvestCycle => _configuration.MetricsHarvestCycle;
 
         [JsonProperty("transaction_traces.harvest_cycle")]
-        public TimeSpan? TransactionTracesHarvestCycle => TimeSpan.FromMinutes(1);
+        public TimeSpan? TransactionTracesHarvestCycle => _configuration.TransactionTracesHarvestCycle;
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
