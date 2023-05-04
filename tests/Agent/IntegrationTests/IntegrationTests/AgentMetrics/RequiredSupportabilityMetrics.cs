@@ -28,7 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 },
                 exerciseApplication: () =>
                 {

@@ -31,8 +31,8 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                     var newRelicConfig = _fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(newRelicConfig);
                     configModifier.ForceTransactionTraces();
-                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
 
                     //The purpose of this custom instrumentation file is to ignore noisy transactions.
                     var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");

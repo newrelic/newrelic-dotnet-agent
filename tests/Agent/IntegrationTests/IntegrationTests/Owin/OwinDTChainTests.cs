@@ -29,8 +29,8 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                     configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.SetOrDeleteSpanEventsEnabled(true);
                     configModifier.SetLogLevel("all");
-                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(5);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
 
                     var environmentVariables = new Dictionary<string, string>();
 

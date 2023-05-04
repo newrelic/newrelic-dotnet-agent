@@ -35,8 +35,8 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
                     configModifier.AddAttributesInclude("name");
                     configModifier.AddAttributesInclude("foo");
                     configModifier.AddAttributesInclude("hey");
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
-                    configModifier.ConfigureFasterErrorTracesHarvestCycle(5);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
                 },
                 exerciseApplication: () =>
                 {

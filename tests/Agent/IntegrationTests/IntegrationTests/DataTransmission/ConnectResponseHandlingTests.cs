@@ -33,9 +33,9 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
                     configModifier.EnableSpanEvents(true);
                     configModifier.ForceTransactionTraces();
                     configModifier.SetLogLevel("finest");
-                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(5);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
                 },
                 exerciseApplication: () =>
                 {

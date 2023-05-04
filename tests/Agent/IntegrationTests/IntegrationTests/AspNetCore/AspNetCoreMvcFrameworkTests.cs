@@ -33,8 +33,8 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
-                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
                 },
                 exerciseApplication: () =>
                 {

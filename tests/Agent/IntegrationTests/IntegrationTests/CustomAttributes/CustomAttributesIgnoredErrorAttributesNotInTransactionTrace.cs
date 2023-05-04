@@ -29,8 +29,8 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
-                    configModifier.ConfigureFasterErrorTracesHarvestCycle(5);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
                     CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "errorCollector", "ignoreClasses" }, "errorClass", "System.ArithmeticException");
                 },

@@ -197,8 +197,8 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
                     var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
                     Fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
-                    Fixture.RemoteApplication.NewRelicConfig.ConfigureFasterMetricsHarvestCycle(5);
-                    Fixture.RemoteApplication.NewRelicConfig.ConfigureFasterSpanEventsHarvestCycle(5);
+                    Fixture.RemoteApplication.NewRelicConfig.ConfigureFasterMetricsHarvestCycle(10);
+                    Fixture.RemoteApplication.NewRelicConfig.ConfigureFasterSpanEventsHarvestCycle(10);
 
                     SetupConfiguration(instrumentationFilePath);
 

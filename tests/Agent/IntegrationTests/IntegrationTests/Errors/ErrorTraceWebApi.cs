@@ -29,8 +29,8 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                     var newRelicConfig = fixture.DestinationNewRelicConfigFilePath;
 
                     var configModifier = new NewRelicConfigModifier(newRelicConfig);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
-                    configModifier.ConfigureFasterErrorTracesHarvestCycle(5);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
                     CommonUtils.DeleteXmlNodeFromNewRelicConfig(newRelicConfig, new[] { "configuration", "errorCollector" }, "ignoreClasses");
                     CommonUtils.DeleteXmlNodeFromNewRelicConfig(newRelicConfig, new[] { "configuration", "errorCollector" }, "ignoreStatusCodes");
 

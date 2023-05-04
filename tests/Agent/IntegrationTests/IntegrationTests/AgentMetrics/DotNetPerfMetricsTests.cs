@@ -126,7 +126,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
                 {
                     Fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
                     Fixture.RemoteApplication.AddAppSetting("NewRelic.EventListenerSamplersEnabled", "true");
-                    Fixture.RemoteApplication.NewRelicConfig.ConfigureFasterMetricsHarvestCycle(2);
+                    Fixture.RemoteApplication.NewRelicConfig.ConfigureFasterMetricsHarvestCycle(10);
                 }
             );
 

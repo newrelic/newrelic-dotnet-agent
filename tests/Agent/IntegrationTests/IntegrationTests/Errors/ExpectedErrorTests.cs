@@ -29,9 +29,9 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(5);
-                    configModifier.ConfigureFasterErrorTracesHarvestCycle(5);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
                     configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.AddExpectedStatusCodes("410-450")
                     .AddExpectedErrorMessages("System.Exception", new List<string> { "test exception"})

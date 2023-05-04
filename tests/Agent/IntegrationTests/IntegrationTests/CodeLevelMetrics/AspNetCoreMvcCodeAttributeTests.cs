@@ -28,7 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(5);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
                 },
                 exerciseApplication: () =>
                 {

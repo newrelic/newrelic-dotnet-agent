@@ -28,7 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                     configModifier.SetLogLevel("finest");
-                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 },
                 exerciseApplication: () =>
                 {

@@ -205,8 +205,8 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
 
                     var instrumentationFilePath = Path.Combine(_fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 

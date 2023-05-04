@@ -31,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                    configModifier.ConfigureFasterSpanEventsHarvestCycle(5);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
 
                     var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
