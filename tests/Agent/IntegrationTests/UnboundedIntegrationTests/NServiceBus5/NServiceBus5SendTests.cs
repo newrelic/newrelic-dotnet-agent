@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiFunctionApplicationHelpers;
@@ -25,16 +26,21 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
             _fixture.AddCommand("NServiceBusSetup Setup");
             _fixture.AddCommand("NServiceBusService Start");
             _fixture.AddCommand("NServiceBusService Send");
-            _fixture.AddCommand("RootCommands DelaySeconds 5");
-            _fixture.AddCommand("NServiceBusService Stop");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.SetLogLevel("finest");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(30));
+                    _fixture.SendCommand("NServiceBusService Stop");
                 }
+
             );
 
             _fixture.Initialize();
