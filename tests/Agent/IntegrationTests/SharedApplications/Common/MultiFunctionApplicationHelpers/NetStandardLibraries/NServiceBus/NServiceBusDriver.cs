@@ -104,7 +104,7 @@ namespace NsbTests
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async void PublishEventInTransaction()
+        public async Task PublishEventInTransaction()
         {
             await PublishEvent();
         }
@@ -120,7 +120,7 @@ namespace NsbTests
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async void SendCommandInTransaction()
+        public async Task SendCommandInTransaction()
         {
             await SendCommand();
         }
