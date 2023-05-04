@@ -302,7 +302,7 @@ jobs:
       - name: Setup MyGet API Key
         run: |
           nuget.exe setApiKey ${{ secrets.MYGET_APIKEY }} -Source ${{ env.myget_source }}
-        shell: pwsh
+        shell: powershell
 
       - name: Deploy Profiler Package to MyGet
         run: |
@@ -314,7 +314,7 @@ jobs:
           }
           else {
             Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.myget_source }}"
           }
         shell: powershell
 
