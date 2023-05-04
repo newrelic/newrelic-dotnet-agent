@@ -28,7 +28,9 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNet
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(5);
                     configModifier.SetAllowAllHeaders(true)
                         .ForceTransactionTraces()
                         .EnableSpanEvents(true);
@@ -44,7 +46,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNet
                     };
 
                     _fixture.PostWithTestHeaders(customRequestHeaders);
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

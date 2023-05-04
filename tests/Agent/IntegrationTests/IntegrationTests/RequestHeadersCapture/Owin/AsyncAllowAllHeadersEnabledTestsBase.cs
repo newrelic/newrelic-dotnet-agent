@@ -34,13 +34,15 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
                     configModifier.EnableDistributedTrace();
                     configModifier.ForceTransactionTraces();
                     configModifier.AddAttributesInclude("request.parameters.*");
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(5);
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
                 },
                 exerciseApplication: () =>
                 {
                     _fixture.PostAsync();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();
