@@ -198,5 +198,6 @@ namespace NewRelic.Agent.Configuration
         bool CodeLevelMetricsEnabled {  get; }
         TimeSpan? MetricsHarvestCycle { get; }
         TimeSpan? TransactionTracesHarvestCycle { get; }
+        TimeSpan? ErrorTracesHarvestCycle { get; }
     }
 }
