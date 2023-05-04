@@ -29,6 +29,45 @@ namespace NewRelic.Agent.Core.Config
         private const string NewRelicConfigFileName = "newrelic.config";
         private static readonly ProcessStatic _processStatic = new ProcessStatic();
 
+        #region Unit test helpers
+
+        // These fields and methods exists and is public so that the test projects can replace the functionality
+        // without requiring a redesign of this static class.
+
+#if NETFRAMEWORK
+
+        private static string InternalGetAppDomainAppId()
+        {
+            return HttpRuntime.AppDomainAppId;
+        }
+        public static Func<string> GetAppDomainAppId = InternalGetAppDomainAppId;
+
+        private static string InternalGetAppDomainAppVirtualPath()
+        {
+            return HttpRuntime.AppDomainAppVirtualPath;
+        }
+        public static Func<string> GetAppDomainAppVirtualPath = InternalGetAppDomainAppVirtualPath;
+
+        private static string InternalGetAppDomainAppPath()
+        {
+            return HttpRuntime.AppDomainAppPath;
+        }
+        public static Func<string> GetAppDomainAppPath = InternalGetAppDomainAppPath;
+
+        public static Func<string, System.Configuration.Configuration> OpenWebConfiguration = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration;
+#endif
+
+        public static Func<string, bool> FileExists = File.Exists;
+        public static Func<string, string> PathGetDirectoryName = Path.GetDirectoryName;
+
+        private static string InternalGetNewRelicHome()
+        {
+            return AgentInstallConfiguration.NewRelicHome;
+        }
+        public static Func<string> GetNewRelicHome = InternalGetNewRelicHome;
+
+        #endregion Unit test helpers
+
         /// <summary>
         /// Reads an application setting from the web configuration associated with the current virtual path,
         /// or from the web site if none is found.
@@ -38,15 +77,14 @@ namespace NewRelic.Agent.Core.Config
         /// <returns></returns>
         public static ValueWithProvenance<string> GetWebConfigAppSetting(string key)
         {
-#if NETSTANDARD2_0
-			return null;
-#else
+            ValueWithProvenance<string> value = null;
+#if NETFRAMEWORK
             try
             {
-                if (HttpRuntime.AppDomainAppId != null)
+                if (GetAppDomainAppId() != null)
                 {
-                    string appVirtualPath = HttpRuntime.AppDomainAppVirtualPath;
-                    var webConfiguration = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration(appVirtualPath);
+                    string appVirtualPath = GetAppDomainAppVirtualPath();
+                    var webConfiguration = OpenWebConfiguration(appVirtualPath);
                     var setting = webConfiguration.AppSettings.Settings[key];
                     if (setting != null)
                     {
@@ -58,9 +96,10 @@ namespace NewRelic.Agent.Core.Config
             {
                 // Can't log anything here because the logging hasn't been initialized.  Just swallow the exception.
             }
-            return new ValueWithProvenance<string>(System.Web.Configuration.WebConfigurationManager.AppSettings[key],
+            value = new ValueWithProvenance<string>(System.Web.Configuration.WebConfigurationManager.AppSettings[key],
                 "WebConfigurationManager default app settings");
 #endif
+            return value;
         }
 
         public static ValueWithProvenance<string> GetConfigSetting(string key)
@@ -119,7 +158,7 @@ namespace NewRelic.Agent.Core.Config
             try
             {
                 var fileName = GetConfigSetting("NewRelic.ConfigFile").Value;
-                if (!File.Exists(fileName))
+                if (!FileExists(fileName))
                 {
                     return null;
                 }
@@ -170,14 +209,14 @@ namespace NewRelic.Agent.Core.Config
 #else
             try
             {
-                if (HttpRuntime.AppDomainAppVirtualPath == null) return null;
+                if (GetAppDomainAppVirtualPath() == null) return null;
 
-                var appRoot = HttpRuntime.AppDomainAppPath;
+                var appRoot = GetAppDomainAppPath();
                 if (appRoot == null)
                     return null;
 
                 var fileName = Path.Combine(appRoot, NewRelicConfigFileName);
-                if (!File.Exists(fileName))
+                if (!FileExists(fileName))
                     return null;
 
                 Log.InfoFormat("Configuration file found in app/web root directory: {0}", fileName);
@@ -195,12 +234,12 @@ namespace NewRelic.Agent.Core.Config
             try
             {
                 var mainModuleFilePath = _processStatic.GetCurrentProcess().MainModuleFileName;
-                var executionPath = Path.GetDirectoryName(mainModuleFilePath);
+                var executionPath = PathGetDirectoryName(mainModuleFilePath);
                 if (executionPath == null)
                     return null;
 
                 var fileName = Path.Combine(executionPath, NewRelicConfigFileName);
-                if (!File.Exists(fileName))
+                if (!FileExists(fileName))
                     return null;
 
                 Log.InfoFormat("Configuration file found in execution path: {0}", fileName);
@@ -216,12 +255,12 @@ namespace NewRelic.Agent.Core.Config
         {
             try
             {
-                var newRelicHome = AgentInstallConfiguration.NewRelicHome;
+                var newRelicHome = GetNewRelicHome();
                 if (newRelicHome == null)
                     return null;
 
                 var fileName = Path.Combine(newRelicHome, NewRelicConfigFileName);
-                if (!File.Exists(fileName))
+                if (!FileExists(fileName))
                     return null;
 
                 Log.InfoFormat("Configuration file found in New Relic home directory: {0}", fileName);
@@ -237,7 +276,7 @@ namespace NewRelic.Agent.Core.Config
         {
             try
             {
-                if (!File.Exists(NewRelicConfigFileName))
+                if (!FileExists(NewRelicConfigFileName))
                     return null;
 
                 Log.InfoFormat("Configuration file found in current working directory: {0}", NewRelicConfigFileName);
@@ -252,7 +291,7 @@ namespace NewRelic.Agent.Core.Config
         public static string GetConfigurationFilePath(string homeDirectory)
         {
             var fileName = Path.Combine(homeDirectory, NewRelicConfigFileName);
-            if (!File.Exists(fileName))
+            if (!FileExists(fileName))
             {
                 throw new Exception(string.Format("Could not find the config file in the new relic home directory. Check New Relic home directory for {0}.", NewRelicConfigFileName));
             }
@@ -269,7 +308,7 @@ namespace NewRelic.Agent.Core.Config
             try
             {
                 fileName = GetAgentConfigFileName();
-                if (!File.Exists(fileName))
+                if (!FileExists(fileName))
                 {
                     throw new ConfigurationLoaderException(string.Format("The New Relic Agent configuration file does not exist: {0}", fileName));
                 }
@@ -311,7 +350,7 @@ namespace NewRelic.Agent.Core.Config
             }
         }
 
-        static void ValidationEventHandler(object sender, ValidationEventArgs e)
+        private static void ValidationEventHandler(object sender, ValidationEventArgs e)
         {
             switch (e.Severity)
             {
