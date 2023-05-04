@@ -32,6 +32,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
                     configModifier.SetHighSecurityMode(true);
                     configModifier.SetLogLevel("debug");
                     configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(5);
                 },
                 exerciseApplication: () =>
                 {

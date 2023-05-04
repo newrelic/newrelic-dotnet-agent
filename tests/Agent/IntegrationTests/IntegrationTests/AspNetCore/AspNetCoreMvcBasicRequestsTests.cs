@@ -34,6 +34,7 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
                     configModifier.ForceTransactionTraces();
                     configModifier.ConfigureFasterMetricsHarvestCycle(5);
                     configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(5);
                 },
                 exerciseApplication: () =>
                 {

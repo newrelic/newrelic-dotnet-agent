@@ -31,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
                     configModifier.ForceTransactionTraces();
                     configModifier.AddAttributesInclude("request.parameters.*");
 
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                         _fixture.GetBogusPath(bogusPath);
                     }
 
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.MetricDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

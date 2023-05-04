@@ -431,6 +431,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public TimeSpan? TransactionTracesHarvestCycle => null;
 
+        public TimeSpan? ErrorTracesHarvestCycle => null;
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return new Dictionary<string, string>

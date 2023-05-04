@@ -31,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
                     configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
-
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(5);
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level",
                         "debug");
                 },

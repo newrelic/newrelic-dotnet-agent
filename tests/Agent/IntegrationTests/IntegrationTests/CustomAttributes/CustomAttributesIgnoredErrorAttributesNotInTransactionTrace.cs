@@ -30,7 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
                     configModifier.ConfigureFasterTransactionTracesHarvestCycle(5);
-
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(5);
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
                     CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "errorCollector", "ignoreClasses" }, "errorClass", "System.ArithmeticException");
                 },

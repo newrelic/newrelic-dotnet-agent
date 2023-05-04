@@ -29,6 +29,8 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                     configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.SetOrDeleteSpanEventsEnabled(true);
                     configModifier.SetLogLevel("all");
+                    configModifier.ConfigureFasterMetricsHarvestCycle(5);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(5);
 
                     var environmentVariables = new Dictionary<string, string>();
 
@@ -39,8 +41,8 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 {
                     _fixture.ExecuteTraceRequestChainHttpClient();
 
-                    _fixture.ReceiverApplication.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(2));
-                    _fixture.ReceiverApplication.AgentLog.WaitForLogLine(AgentLogFile.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.ReceiverApplication.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.ReceiverApplication.AgentLog.WaitForLogLine(AgentLogFile.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
 
