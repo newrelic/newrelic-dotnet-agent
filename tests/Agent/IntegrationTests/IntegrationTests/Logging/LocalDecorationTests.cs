@@ -57,7 +57,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
 
                     configModifier
                     .EnableLogDecoration(true)
-                    .EnableDistributedTrace()
                     .SetLogLevel("finest");
                 },
                 exerciseApplication: () =>

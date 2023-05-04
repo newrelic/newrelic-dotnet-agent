@@ -37,7 +37,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
                     // applicationLogging metrics and forwarding enabled by default
                     configModifier
                     .SetLogForwardingMaxSamplesStored(1) // must be 1 since 0 causes it to return the default
-                    .EnableDistributedTrace()
                     .SetLogLevel("debug");
                 }
             );
