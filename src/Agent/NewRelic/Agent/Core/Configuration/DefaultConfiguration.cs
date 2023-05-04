@@ -840,16 +840,24 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private TimeSpan? _spanEventsHarvestCycleOverride = null;
         public TimeSpan SpanEventsHarvestCycle
         {
             get
             {
+                if (_spanEventsHarvestCycleOverride.HasValue)
+                {
+                    return _spanEventsHarvestCycleOverride.Value;
+                }
+
                 if (_newRelicAppSettings.TryGetValue("OverrideSpanEventsHarvestCycle", out var harvestCycle))
                 {
                     var convertedHarvestCycle = Convert.ToInt32(harvestCycle);
                     if (convertedHarvestCycle > 0)
                     {
-                        return TimeSpan.FromSeconds(convertedHarvestCycle);
+                        Log.Info("Span events harvest cycle overridden to " + convertedHarvestCycle + " seconds.");
+                        _spanEventsHarvestCycleOverride = TimeSpan.FromSeconds(convertedHarvestCycle);
+                        return _spanEventsHarvestCycleOverride.Value;
                     }
                 }
 
@@ -2044,42 +2052,55 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-
+        private TimeSpan? _metricsHarvestCycleOverride = null;
         public TimeSpan? MetricsHarvestCycle
         {
             get
             {
+                if (_metricsHarvestCycleOverride.HasValue)
+                {
+                    return _metricsHarvestCycleOverride;
+                }
+
                 if (_newRelicAppSettings.TryGetValue("OverrideMetricsHarvestCycle", out var harvestCycle))
                 {
                     var convertedHarvestCycle = Convert.ToInt32(harvestCycle);
                     if (convertedHarvestCycle <= 0)
                     {
-                        return null;
+                        return _metricsHarvestCycleOverride;
                     }
 
-                    return TimeSpan.FromSeconds(convertedHarvestCycle);
+                    Log.Info("Metrics harvest cycle overridden to " + convertedHarvestCycle + " seconds.");
+                    return _metricsHarvestCycleOverride = TimeSpan.FromSeconds(convertedHarvestCycle);
                 }
 
-                return null;
+                return _metricsHarvestCycleOverride;
             }
         }
 
+        private TimeSpan? _transactionTraceHarvestCycleOverride = null;
         public TimeSpan? TransactionTracesHarvestCycle
         {
             get
             {
+                if (_transactionTraceHarvestCycleOverride.HasValue)
+                {
+                    return _transactionTraceHarvestCycleOverride;
+                }
+
                 if (_newRelicAppSettings.TryGetValue("OverrideTransactionTracesHarvestCycle", out var harvestCycle))
                 {
                     var convertedHarvestCycle = Convert.ToInt32(harvestCycle);
                     if (convertedHarvestCycle <= 0)
                     {
-                        return null;
+                        return _transactionTraceHarvestCycleOverride;
                     }
 
-                    return TimeSpan.FromSeconds(convertedHarvestCycle);
+                    Log.Info("Transaction traces harvest cycle overridden to " + convertedHarvestCycle + " seconds.");
+                    return _transactionTraceHarvestCycleOverride = TimeSpan.FromSeconds(convertedHarvestCycle);
                 }
 
-                return null;
+                return _transactionTraceHarvestCycleOverride;
             }
         }
 

@@ -347,25 +347,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public NewRelicConfigModifier ConfigureFasterMetricsHarvestCycle(int seconds)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "key", "OverrideMetricsHarvestCycle");
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "value", seconds.ToString());
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideMetricsHarvestCycle", seconds.ToString(), "urn:newrelic-config");
             return this;
         }
 
         public NewRelicConfigModifier ConfigureFasterTransactionTracesHarvestCycle(int seconds)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "key", "OverrideTransactionTracesHarvestCycle");
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "value", seconds.ToString());
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideTransactionTracesHarvestCycle", seconds.ToString(), "urn:newrelic-config");
             return this;
         }
 
         public NewRelicConfigModifier ConfigureFasterSpanEventsHarvestCycle(int seconds)
         {
-            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "key", "OverrideSpanEventsHarvestCycle");
-            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add" }, "value", seconds.ToString());
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideSpanEventsHarvestCycle", seconds.ToString(), "urn:newrelic-config");
             return this;
         }
     }
