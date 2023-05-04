@@ -331,7 +331,7 @@ jobs:
           path: src/Agent
 
       - name: Download Integration Test Artifacts
-        uses: actions/download-artifact/@cbed621e49e4c01b044d60f6c80ea4ed6328b281 # v2.1.1
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: integrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure
