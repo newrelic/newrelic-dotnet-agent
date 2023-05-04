@@ -9,6 +9,13 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    # inputs:
+    #   force-profiler-build:
+    #     description: 'Build and Package Profiler, even if no files have changed'
+    #     required: true
+    #     default: false
+    #     type: boolean
+
   schedule:
     - cron: "0 9 * * *"
 
@@ -26,19 +33,24 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
-  build-profiler:
-    uses: ./.github/workflows/build_profiler.yml
-    secrets: inherit
-    permissions:
-      pull-requests: read
-      contents: write
-      packages: write
+
+  # build-profiler:
+  #   name: Build Profiler
+  #   if: ${{ github.event.release.action == 'released' }} || ${{ github.event.release.action == 'published' }} || ${{ inputs.force-profiler-build }}
+  #   permissions:
+  #     contents: write
+  #     pull-requests: write
+  #     packages: write
+  #   uses: ./.github/workflows/build_profiler.yml
+  #   secrets: inherit
+  #   with:
+  #     force-build: ${{ inputs.force-profiler-build }}
 
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
-    needs: build-profiler
     runs-on: windows-2022
+    # needs: build-profiler
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
@@ -319,7 +331,7 @@ jobs:
           path: src/Agent
 
       - name: Download Integration Test Artifacts
-        uses: actions/download-artifact/@cbed621e49e4c01b044d60f6c80ea4ed6328b281 # v2.1.1
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: integrationtests
           # Should not need a path because the integration test artifacts are archived with the full directory structure

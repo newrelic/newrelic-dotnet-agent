@@ -1,21 +1,29 @@
-name: Build .NET Agent Profiler
+name: Build and Package Profiler
 
 on:
+  # run this workflow on a push to any branch other than main or a feature branch
+  push:
+    branches-ignore:
+      - main
+      - "feature/**"
+
+  # this workflow can be called from another workflow
   workflow_call:
     inputs:
       force-build:
-        required: false
-        default: false
+        description: 'Force a build, even if no files are changed'
+        required: true
         type: boolean
+  
+  # this workflow can be invoked manually
   workflow_dispatch:
     inputs:
       force-build:
-        description: "Build even if no files were updated"
-        required: false
+        description: 'Force a build, even if no files are changed'
+        required: true
         default: true
         type: boolean
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 permissions:
   contents: read
 
@@ -30,7 +38,7 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
-  changes:
+  check-for-changes:
     name: Check for Updated Profiler Files
     runs-on: ubuntu-22.04
     permissions:
@@ -38,21 +46,30 @@ jobs:
     outputs:
       profiler_src: ${{ steps.filter.outputs.profiler_src }}
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
       - name: Look for modified files
-        uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.1.1
+        uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter
         with:
+          base: ${{ github.ref }}
           filters: |
             profiler_src:
               - 'src/Agent/NewRelic/Profiler/**'
+          list-files: 'csv'
+
   build-windows-profiler:
-    needs: changes
-    if: ${{ inputs.force-build ||  needs.changes.outputs.profiler_src == 'true' }}
+    needs: check-for-changes
+    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
     name: Build Windows Profiler
     runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
 
@@ -101,16 +118,15 @@ jobs:
           if-no-files-found: error
 
   build-linux-x64-profiler:
-    needs: changes
-    if: ${{ inputs.force-build ||  needs.changes.outputs.profiler_src == 'true' }}
+    needs: check-for-changes
+    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
     name: Build Linux x64 Profiler
     runs-on: ubuntu-22.04
     permissions:
-      contents: read # for actions/checkout to fetch code
+      contents: read
 
     env:
       profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
-      #<other env vars here>
 
     steps:
       # intentionally disabled for this job, when enabled it causes a failure in the Build Linux Profiler step
@@ -154,8 +170,8 @@ jobs:
           if-no-files-found: error
 
   build-linux-arm64-profiler:
-    needs: changes
-    if: ${{ inputs.force-build ||  needs.changes.outputs.profiler_src == 'true' }}
+    needs: check-for-changes
+    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
     name: Build Linux ARM64 Profiler
     runs-on: ubuntu-22.04
     permissions:
@@ -227,46 +243,78 @@ jobs:
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
           if-no-files-found: error
 
-  commit-changes:
+  package-and-deploy:
     needs:
       [
-        changes,
+        check-for-changes,
         build-windows-profiler,
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-
-    if: ${{ inputs.force-build}} || needs.changes.outputs.profiler_src == 'true'
-
-    name: Commit and Push New Profiler Build
-    runs-on: ubuntu-22.04
-
-    permissions:
-      contents: write
+    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
+    name: Package and Deploy Profiler NuGet
+    runs-on: windows-2022
 
     env:
-      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+      myget_source: https://www.myget.org/F/newrelic/api/v2/package
 
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
-        with:
-          egress-policy: audit
-
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
-      - name: Download Profiler Artifacts
+      - name: Download Profiler Artifacts to working Directory
         uses: actions/download-artifact/@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: profiler
-          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          path: ${{ github.workspace }}/_workingDir
+      
+      - name: Determine Package Version from Git history
+        id: agentVersion
+        run: |
+          # get latest agent version tag
+          $agentVersion = git describe --match v* --abbrev=0 HEAD --tags
+          # get commit count since that tag
+          $getRevCmd = "git rev-list $agentVersion..HEAD --count HEAD"
+          $agentRev = Invoke-Expression $getRevCmd
+          # if count is > 0, add the rev to the version
+          if ($agentRev -gt 0) { $agentVersion = $agentVersion + "." + $agentRev}
+          # remove the leading "v" from the version number
+          $agentVersion = $agentVersion.substring(1)
+          echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
+        shell: powershell
 
-      - name: Commit and Push New Profiler Build
-        uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772 #v1.4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          message: "chore: updated profiler build"
-          branch: ${{ github.ref }}
+      - name: Stage files in working directory
+        run: |
+          New-Item "${{ github.workspace }}/_workingDir/images" -Type "directory"
+          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/images/*.*" -Destination "${{ github.workspace }}/_workingDir/images"
+          New-Item "${{ github.workspace }}/_workingDir/build" -Type "directory"
+          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/build/*.*" -Destination "${{ github.workspace }}/_workingDir/build"
+          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/readme.md" -Destination "${{ github.workspace }}/_workingDir"
+
+      - name: Pack Profiler NuGet Package
+        run: |
+          New-Item "${{ github.workspace }}/_workingDir/NugetProfiler" -Type "directory"
+          nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version ${{ steps.agentVersion.outputs.version }} -Verbosity detailed
+        shell: powershell
+
+      - name: Setup MyGet API Key
+        run: |
+          nuget.exe setApiKey ${{ secrets.MYGET_APIKEY }} -Source ${{ env.myget_source }}
+        shell: powershell
+
+      - name: Deploy Profiler Package to MyGet
+        run: |
+          $packageName = Get-ChildItem ${{ github.workspace }}/_workingDir/NugetProfiler/NewRelic.Agent.Internal.Profiler.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}//_workingDir/NugetProfiler/$packageName
+          $version = $packageName.TrimStart('NewRelic.Agent.Internal.Profiler').TrimStart('.').TrimEnd('.nupkg')
+          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+            nuget.exe push $packagePath -Source ${{ env.myget_source }}
+          }
+          else {
+            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "nuget.exe push $packagePath -Source ${{ env.myget_source }}"
+          }
+        shell: powershell
+
