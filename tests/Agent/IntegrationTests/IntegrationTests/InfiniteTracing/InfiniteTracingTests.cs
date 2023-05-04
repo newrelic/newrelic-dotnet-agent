@@ -43,6 +43,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                     // Now send the command to make the 8T Span
                     _fixture.SendCommand("InfiniteTracingTester Make8TSpan");
                     // Now wait to see that the 8T spans were sent successfully
+                    _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullySentLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
                     _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
                 }
 
