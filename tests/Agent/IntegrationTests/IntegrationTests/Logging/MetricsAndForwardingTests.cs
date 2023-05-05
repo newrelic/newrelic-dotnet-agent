@@ -65,13 +65,13 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
         private const string ErrorClassValue = "System.Exception";
 
-        public MetricsAndForwardingTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework, bool canHaveLogsOutsideTransaction = true) : base(fixture)
+        public MetricsAndForwardingTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework) : base(fixture)
         {
             _fixture = fixture;
             _loggingFramework = loggingFramework;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
-            _canHaveLogsOutsideTransaction = canHaveLogsOutsideTransaction;
+            _canHaveLogsOutsideTransaction = _loggingFramework != LoggingFramework.SerilogWeb;
 
             _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework}");
             _fixture.AddCommand($"LoggingTester Configure");
@@ -655,7 +655,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
     {
         public SerilogWebMetricsAndForwardingTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
             ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.SerilogWeb, canHaveLogsOutsideTransaction: false)
+            : base(fixture, output, LoggingFramework.SerilogWeb)
         {
         }
     }
