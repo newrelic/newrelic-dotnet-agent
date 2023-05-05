@@ -26,16 +26,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 
             _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithoutHandlers");
             _fixture.AddCommand("NServiceBusDriver PublishEventInTransaction");
-            _fixture.AddCommand("RootCommands DelaySeconds 5");
-            _fixture.AddCommand("NServiceBusDriver StopNServiceBus");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.SetLogLevel("finest");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(30));
+                    _fixture.SendCommand("NServiceBusDriver StopNServiceBus");
                 }
             );
 

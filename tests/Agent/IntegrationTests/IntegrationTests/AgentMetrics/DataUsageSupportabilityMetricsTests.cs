@@ -44,26 +44,21 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
     
     public abstract class DataUsageSupportabilityMetricsTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
-        protected readonly TFixture Fixture;
+        protected readonly TFixture _fixture;
 
         public DataUsageSupportabilityMetricsTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
-            Fixture = fixture;
-            Fixture.TestLogger = output;
-            Fixture.SetTimeout(TimeSpan.FromMinutes(2));
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
 
             // Logging commands
-            Fixture.AddCommand($"LoggingTester SetFramework log4net");
-            Fixture.AddCommand($"LoggingTester Configure");
+            _fixture.AddCommand($"LoggingTester SetFramework log4net");
+            _fixture.AddCommand($"LoggingTester ConfigureWithInfoLevelEnabled");
 
-            Fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction ThisIsADebugLogMessage DEBUG");
+            _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction ThisIsAInfoLogMessage INFO");
 
-            // This is necessary to cause one harvest cycle to happen and cause the logging data endpoint to be called
-            Fixture.AddCommand($"RootCommands DelaySeconds 10");
-
-
-
-            Fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
@@ -71,10 +66,14 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
                     configModifier.ConfigureFasterMetricsHarvestCycle(10);
                     configModifier.EnableLogForwarding()
                     .SetLogLevel("debug");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.LogDataLogLineRegex, TimeSpan.FromSeconds(30));
                 }
             );
 
-            Fixture.Initialize();
+            _fixture.Initialize();
         }
 
         [Theory]
@@ -83,7 +82,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         [InlineData("Supportability/DotNET/Collector/log_event_data/Output/Bytes")]
         public void ExpectedDataUsageMetric(string expectedMetricName)
         {
-            var metrics = Fixture.AgentLog.GetMetrics().ToList();
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
             var dataUsageMetric = metrics.FirstOrDefault(x => x.MetricSpec.Name == expectedMetricName);
             Assert.NotNull(dataUsageMetric);

@@ -29,16 +29,21 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
             _fixture.AddCommand("NServiceBusService Start");
             _fixture.AddCommand("NServiceBusService SendValid");
             _fixture.AddCommand("NServiceBusService SendInvalid");
-            _fixture.AddCommand("RootCommands DelaySeconds 5");
-            _fixture.AddCommand("NServiceBusService Stop");
-            _fixture.AddCommand("NServiceBusReceiverHost Stop");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.SetLogLevel("finest");
+                },
+                exerciseApplication: () =>
+                {
+                    // There will be two transactions created by the reciever, one for the valid message and one for the invalid message
+                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(30), 2);
+                    _fixture.SendCommand("NServiceBusService Stop");
+                    _fixture.SendCommand("NServiceBusReceiverHost Stop");
                 }
             );
 

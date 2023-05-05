@@ -184,6 +184,16 @@ namespace MultiFunctionApplicationHelpers
             return this;
         }
 
+        public void SendCommand(string cmd)
+        {
+            if (!RemoteApplication.IsRunning)
+            {
+                throw new Exception($"Remote Process has exited, Cannot execute command: {cmd}");
+            }
+
+            RemoteApplication.WriteToStandardInput(cmd);
+        }
+
         public ConsoleDynamicMethodFixture(string applicationDirectoryName, string executableName, string targetFramework, bool isCoreApp, TimeSpan timeout)
             : base(new RemoteConsoleApplication(applicationDirectoryName, executableName, targetFramework, ApplicationType.Shared, isCoreApp, isCoreApp)
                   .SetTimeout(timeout)
@@ -193,12 +203,7 @@ namespace MultiFunctionApplicationHelpers
             {
                 foreach (var cmd in _commands)
                 {
-                    if (!RemoteApplication.IsRunning)
-                    {
-                        throw new Exception($"Remote Process has exited, Cannot execute command: {cmd}");
-                    }
-
-                    RemoteApplication.WriteToStandardInput(cmd);
+                    SendCommand(cmd);
                 }
             });
         }
