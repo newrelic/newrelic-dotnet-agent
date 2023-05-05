@@ -51,7 +51,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
 
             _fixture.RemoteApplication.AppName = _compositeApplicationName;
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
@@ -76,8 +76,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
         {
             var testOutput = _fixture.RemoteApplication.CapturedOutput.StandardOutput;
             // Make sure the original message is there
-            var commandResults = Regex.Split(testOutput, System.Environment.NewLine).Where(l => !l.Contains("EXECUTING"));
-            Assert.Contains(_testMessage, string.Join(System.Environment.NewLine, commandResults));
+            var commandResults = Regex.Split(testOutput, Environment.NewLine).Where(l => !l.Contains("EXECUTING"));
+            Assert.Contains(_testMessage, string.Join(Environment.NewLine, commandResults));
 
             // Sample decorated data we are looking for:
             // "NR-LINKING|MjczMDcwfEFQTXxBUFBMSUNBVElPTnwxODQyMg|blah.hsd1.ca.comcast.net|45f120972d61834b96fb890d2a8f97e7|840d9a82e8bc18a8|myApplicationName|"
