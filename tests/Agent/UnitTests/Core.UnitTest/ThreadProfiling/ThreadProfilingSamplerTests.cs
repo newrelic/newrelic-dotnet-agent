@@ -16,15 +16,13 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         private INativeMethods _nativeMethods;
         private ThreadProfilingSampler _threadProfiler;
         private ISampleSink _sampleSink;
-        private ManualResetEventSlim _shutdownEvent;
 
         [SetUp]
         public void Setup()
         {
             _nativeMethods = Mock.Create<INativeMethods>();
             _sampleSink = Mock.Create<ISampleSink>();
-            _shutdownEvent = Mock.Create<ManualResetEventSlim>();
-            _threadProfiler = new ThreadProfilingSampler(_nativeMethods, _shutdownEvent);
+            _threadProfiler = new ThreadProfilingSampler(_nativeMethods);
         }
 
         [Test]
