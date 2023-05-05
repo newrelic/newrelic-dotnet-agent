@@ -433,6 +433,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public TimeSpan? ErrorTracesHarvestCycle => null;
 
+        public TimeSpan? GetsAgentCommandsCycle => null;
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return new Dictionary<string, string>

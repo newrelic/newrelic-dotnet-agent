@@ -629,6 +629,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("error_traces.harvest_cycle")]
         public TimeSpan? ErrorTracesHarvestCycle => _configuration.ErrorTracesHarvestCycle;
 
+        [JsonProperty("get_agent_commands.cycle")]
+        public TimeSpan? GetsAgentCommandsCycle => _configuration.GetsAgentCommandsCycle;
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return _configuration.GetAppSettings();

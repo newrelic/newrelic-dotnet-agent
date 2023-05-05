@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Core.Logging;
 using System.Collections.Generic;
@@ -41,7 +42,7 @@ namespace NewRelic.Agent.Core.Commands
                 return netCore30RequiredForLinuxThreadProfiling;
             }
 
-            var startArgs = new ThreadProfilerCommandArgs(arguments);
+            var startArgs = new ThreadProfilerCommandArgs(arguments, ThreadProfilingService.IgnoreMinMinimumSamplingDuration);
             if (startArgs.ProfileId == 0)
                 return "A valid profile_id must be supplied to start a thread profiling session.";
 

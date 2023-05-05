@@ -2130,6 +2130,32 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private TimeSpan? _getAgentCommandsCycleOverride = null;
+        public TimeSpan? GetsAgentCommandsCycle
+        {
+            get
+            {
+                if (_getAgentCommandsCycleOverride.HasValue)
+                {
+                    return _getAgentCommandsCycleOverride;
+                }
+
+                if (_newRelicAppSettings.TryGetValue("OverrideGetAgentCommandsCycle", out var harvestCycle))
+                {
+                    var convertedHarvestCycle = Convert.ToInt32(harvestCycle);
+                    if (convertedHarvestCycle <= 0)
+                    {
+                        return _getAgentCommandsCycleOverride;
+                    }
+
+                    Log.Info("Get agent commands cycle overridden to " + convertedHarvestCycle + " seconds.");
+                    return _getAgentCommandsCycleOverride = TimeSpan.FromSeconds(convertedHarvestCycle);
+                }
+
+                return _getAgentCommandsCycleOverride;
+            }
+        }
+
         #endregion
 
         #region Helpers
