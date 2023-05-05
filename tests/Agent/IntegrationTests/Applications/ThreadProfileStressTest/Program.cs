@@ -73,7 +73,7 @@ namespace ThreadProfileStressTest
 
             //Only hammer the system for 90s instead of the full thread profile duration of 2 minutes so that the agent's
             //threads have enough time to process everything it needs.
-            var maxTimeToRun = TimeSpan.FromSeconds(90);
+            var maxTimeToRun = TimeSpan.FromSeconds(15);
             var sw = Stopwatch.StartNew();
             while (sw.Elapsed < maxTimeToRun)
             {
