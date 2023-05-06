@@ -18,7 +18,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
         public MaxSamplesStoredTestsBase(TFixture fixture, ITestOutputHelper output, LoggingFramework loggingFramework) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"LoggingTester SetFramework {loggingFramework}");
@@ -37,8 +37,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
 
                     // applicationLogging metrics and forwarding enabled by default
                     configModifier
+                    // 12 is the per-minute sample limit.
+                    // It gets divided by 12 to come up with the per-five-second-faster-event-harvest limit of 1
+                    // (This assumes that the FEH interval is set to the default five seconds)
                     .SetLogForwardingMaxSamplesStored(12)
-                    .EnableDistributedTrace()
                     .SetLogLevel("debug");
                 },
                 exerciseApplication: () =>
@@ -61,7 +63,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MaxSamplesStored
             Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.EntityGuid));
             Assert.False(string.IsNullOrWhiteSpace(logData.Common.Attributes.Hostname));
 
-            // Since we set the maximum number of log lines stored to 1 in setupConfiguration, there should only be one log line
+            // Since we set the maximum number of log lines per five-second harvest interval
+            // stored to 1 in setupConfiguration, there should only be one log line
             Assert.Single(logData.Logs);
             var logLine = logData.Logs[0];
             Assert.False(string.IsNullOrWhiteSpace(logLine.Message));

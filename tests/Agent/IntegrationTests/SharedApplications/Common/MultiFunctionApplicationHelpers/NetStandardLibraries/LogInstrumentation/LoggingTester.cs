@@ -157,32 +157,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             await Task.Run(() => CreateSingleLogMessage(message, level));
         }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        [LibraryMethod]
-        public static async Task CreateSingleLogMessageAsyncNoAwait(string message, string level)
-        {
-            _ = Task.Run(() => CreateSingleLogMessage(message, level));
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-
-        public static async Task CreateSingleLogMessageInTransactionAsyncNoAwait(string message, string level)
-        {
-            _ = Task.Run(() => CreateSingleLogMessage(message, level));
-        }
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static async Task CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay(string message, string level)
-        {
-            _ = Task.Run(() => CreateSingleLogMessage(message, level));
-            await Task.Delay(1000);
-        }
-
         [LibraryMethod]
         [Trace]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
