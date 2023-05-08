@@ -37,7 +37,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
 
                     // applicationLogging metrics and forwarding enabled by default
                     configModifier
-                    .EnableDistributedTrace()
                     .SetLogLevel("debug");
 
                     if (typeof(TFixture).ToString().Contains("HSM"))

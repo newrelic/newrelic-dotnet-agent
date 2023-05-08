@@ -38,7 +38,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
 
                     // applicationLogging metrics and forwarding enabled by default
                     configModifier
-                    .EnableDistributedTrace()
                     .SetLogLevel("debug");
                 },
                 exerciseApplication: () =>

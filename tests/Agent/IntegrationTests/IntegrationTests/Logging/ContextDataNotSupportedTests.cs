@@ -60,7 +60,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
                 },
                 exerciseApplication: () =>
                 {
-                    Thread.Sleep(TimeSpan.FromSeconds(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.LogDataLogLineRegex, TimeSpan.FromSeconds(30));
                 }
             );
 
