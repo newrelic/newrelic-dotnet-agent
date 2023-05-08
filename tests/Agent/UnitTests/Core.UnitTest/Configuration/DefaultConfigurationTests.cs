@@ -3238,6 +3238,238 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.CodeLevelMetricsEnabled;
         }
 
+        #region Harvest Cycle Overrides
+
+        [Test]
+        public void HarvestCycleOverride_DefaultOrNotSet()
+        {
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.False(defaultConfig.MetricsHarvestCycle.HasValue);
+            Assert.False(defaultConfig.TransactionTracesHarvestCycle.HasValue);
+            Assert.False(defaultConfig.ErrorTracesHarvestCycle.HasValue);
+            Assert.False(defaultConfig.GetAgentCommandsCycle.HasValue);
+
+            // This config item already existed and as a plain TimeSpan so it needs to be checks directly and not as a nullable.
+            Assert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
+        }
+
+        [TestCase("")]
+        [TestCase(null)]
+        [TestCase("0")]
+        [TestCase("-1")]
+        [TestCase("A")]
+        public void HarvestCycleOverride_Metrics_NotValidValueSet(string value)
+        {
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideMetricsHarvestCycle",
+                value = value
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.IsFalse(defaultConfig.MetricsHarvestCycle.HasValue);
+        }
+
+        [TestCase("")]
+        [TestCase(null)]
+        [TestCase("0")]
+        [TestCase("-1")]
+        [TestCase("A")]
+        public void HarvestCycleOverride_TransactionTraces_NotValidValueSet(string value)
+        {
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideTransactionTracesHarvestCycle",
+                value = value
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.IsFalse(defaultConfig.TransactionTracesHarvestCycle.HasValue);
+        }
+
+        [TestCase("")]
+        [TestCase(null)]
+        [TestCase("0")]
+        [TestCase("-1")]
+        [TestCase("A")]
+        public void HarvestCycleOverride_ErrorTraces_NotValidValueSet(string value)
+        {
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideErrorTracesHarvestCycle",
+                value = value
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.IsFalse(defaultConfig.ErrorTracesHarvestCycle.HasValue);
+        }
+
+        [TestCase("")]
+        [TestCase(null)]
+        [TestCase("0")]
+        [TestCase("-1")]
+        [TestCase("A")]
+        public void HarvestCycleOverride_SpanEvents_NotValidValueSet(string value)
+        {
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideSpanEventsHarvestCycle",
+                value = value
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            // When override is missing or not valid SpanEventsHarvestCycle returns default of 60 seconds. 
+            Assert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
+        }
+
+        [TestCase("")]
+        [TestCase(null)]
+        [TestCase("0")]
+        [TestCase("-1")]
+        [TestCase("A")]
+        public void HarvestCycleOverride_GetAgentCommands_NotValidValueSet(string value)
+        {
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideGetAgentCommandsCycle",
+                value = value
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.IsFalse(defaultConfig.GetAgentCommandsCycle.HasValue);
+        }
+
+        [Test]
+        public void HarvestCycleOverride_Metrics_ValidValueSet()
+        {
+            var expectedSeconds = "10";
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideMetricsHarvestCycle",
+                value = expectedSeconds
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.IsTrue(defaultConfig.MetricsHarvestCycle.HasValue);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.MetricsHarvestCycle.Value.TotalSeconds);
+
+            // Test that the backing field is used after the initial call and not changed.
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideMetricsHarvestCycle",
+                value = "100"
+            });
+
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.MetricsHarvestCycle.Value.TotalSeconds);
+        }
+
+        [Test]
+        public void HarvestCycleOverride_TransactionTraces_ValidValueSet()
+        {
+            var expectedSeconds = "10";
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideTransactionTracesHarvestCycle",
+                value = expectedSeconds
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.IsTrue(defaultConfig.TransactionTracesHarvestCycle.HasValue);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.TransactionTracesHarvestCycle.Value.TotalSeconds);
+
+            // Test that the backing field is used after the initial call and not changed.
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideTransactionTracesHarvestCycle",
+                value = "100"
+            });
+
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.TransactionTracesHarvestCycle.Value.TotalSeconds);
+        }
+
+        [Test]
+        public void HarvestCycleOverride_ErrorTraces_ValidValueSet()
+        {
+            var expectedSeconds = "10";
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideErrorTracesHarvestCycle",
+                value = expectedSeconds
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.IsTrue(defaultConfig.ErrorTracesHarvestCycle.HasValue);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.ErrorTracesHarvestCycle.Value.TotalSeconds);
+
+            // Test that the backing field is used after the initial call and not changed.
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideErrorTracesHarvestCycle",
+                value = "100"
+            });
+
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.ErrorTracesHarvestCycle.Value.TotalSeconds);
+        }
+
+        [Test]
+        public void HarvestCycleOverride_SpanEvents_ValidValueSet()
+        {
+            var expectedSeconds = "10";
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideSpanEventsHarvestCycle",
+                value = expectedSeconds
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
+
+            // Test that the backing field is used after the initial call and not changed.
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideSpanEventsHarvestCycle",
+                value = "100"
+            });
+
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
+        }
+
+        [Test]
+        public void HarvestCycleOverride_GetAgentCommands_ValidValueSet()
+        {
+            var expectedSeconds = "10";
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideGetAgentCommandsCycle",
+                value = expectedSeconds
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.IsTrue(defaultConfig.GetAgentCommandsCycle.HasValue);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.GetAgentCommandsCycle.Value.Seconds);
+
+            // Test that the backing field is used after the initial call and not changed.
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideGetAgentCommandsCycle",
+                value = "100"
+            });
+
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.GetAgentCommandsCycle.Value.Seconds);
+        }
+
+        #endregion
 
         private void CreateDefaultConfiguration()
         {

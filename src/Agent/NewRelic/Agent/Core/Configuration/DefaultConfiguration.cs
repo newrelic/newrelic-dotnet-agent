@@ -2131,7 +2131,7 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         private TimeSpan? _getAgentCommandsCycleOverride = null;
-        public TimeSpan? GetsAgentCommandsCycle
+        public TimeSpan? GetAgentCommandsCycle
         {
             get
             {

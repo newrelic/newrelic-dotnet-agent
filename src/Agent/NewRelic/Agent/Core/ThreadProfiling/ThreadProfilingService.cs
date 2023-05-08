@@ -538,7 +538,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         {
             get
             {
-                return _configuration.GetsAgentCommandsCycle.HasValue;
+                return _configuration.GetAgentCommandsCycle.HasValue;
             }
         }
     }
