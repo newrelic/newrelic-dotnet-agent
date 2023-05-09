@@ -122,27 +122,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     }
 
     [NetCoreTest]
-    public class Log4NetContextDataNetCore60Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class Log4NetContextDataNetCoreOldestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public Log4NetContextDataNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class Log4NetContextDataNetCore50Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public Log4NetContextDataNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class Log4NetContextDataNetCore31Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public Log4NetContextDataNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public Log4NetContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
@@ -189,27 +171,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     }
 
     [NetCoreTest]
-    public class NLogContextDataNetCore60Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class NLogContextDataNetCoreOldestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public NLogContextDataNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NLogContextDataNetCore50Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public NLogContextDataNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NLogContextDataNetCore31Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public NLogContextDataNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public NLogContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
         }
@@ -256,37 +220,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     }
 
     [NetCoreTest]
-    public class SerilogContextDataNetCore60Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class SerilogContextDataNetCoreOldestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public SerilogContextDataNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public SerilogContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Serilog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class SerilogContextDataNetCore50Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public SerilogContextDataNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class SerilogContextDataNetCore31Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public SerilogContextDataNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class SerilogWebContextDataNetCore60Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public SerilogWebContextDataNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.SerilogWeb)
         {
         }
     }
@@ -314,27 +251,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     }
 
     [NetCoreTest]
-    public class MELContextDataNetCore60Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class MELContextDataNetCoreOldestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MELContextDataNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MELContextDataNetCore50Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MELContextDataNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MELContextDataNetCore31Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MELContextDataNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MELContextDataNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }

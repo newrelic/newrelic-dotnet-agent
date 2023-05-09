@@ -212,7 +212,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
 #endregion
 
 
-        private async Task<string> DoWork(string value, bool ignoreTransaction, bool throwException)
+        private Task<string> DoWork(string value, bool ignoreTransaction, bool throwException)
         {
             if (_printOutput) Console.WriteLine("DoWork");
 
@@ -238,7 +238,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
                     Console.WriteLine($"Length of downloaded string = {s.Length}");
                 }
 
-                return $"You entered: {value}";
+                return Task.FromResult($"You entered: {value}");
             }
         }
     }

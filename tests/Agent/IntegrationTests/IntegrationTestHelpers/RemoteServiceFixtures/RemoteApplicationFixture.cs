@@ -398,20 +398,22 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected T DownloadJsonAndAssertEqual<T>(string address, T expectedResult)
         {
-            var webClient = new WebClient();
-            webClient.Headers.Add("accept", "application/json");
-
-            var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<T>(resultJson);
-
-            Assert.NotEqual(default(T), result);
-
-            if (expectedResult != null)
+            using (var httpClient = new HttpClient())
             {
-                Assert.Equal(expectedResult, result);
-            }
+                httpClient.DefaultRequestHeaders.Add(nameof(HttpRequestHeader.Accept), "application/json");
 
-            return result;
+                var resultJson = httpClient.GetStringAsync(address).Result;
+                var result = JsonConvert.DeserializeObject<T>(resultJson);
+
+                Assert.NotEqual(default(T), result);
+
+                if (expectedResult != null)
+                {
+                    Assert.Equal(expectedResult, result);
+                }
+
+                return result;
+            }
         }
     }
 }

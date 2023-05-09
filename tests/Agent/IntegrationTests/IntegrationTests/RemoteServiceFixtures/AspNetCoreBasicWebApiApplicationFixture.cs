@@ -3,14 +3,15 @@
 
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using System.Net;
 using System.Net.Http;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
-    public abstract class AspNetCoreBasicWebApiApplicationFixture : RemoteApplicationFixture
+    public class AspNetCoreBasicWebApiApplicationFixture : RemoteApplicationFixture
     {
-        protected AspNetCoreBasicWebApiApplicationFixture(string ApplicationDirectoryName, string ExecutableName, string TargetFramework) : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded, true, true, true))
+        public AspNetCoreBasicWebApiApplicationFixture() : base(new RemoteService("AspNetCoreBasicWebApiApplication", "AspNetCoreBasicWebApiApplication.exe", "net7.0", ApplicationType.Bounded, true, true, true))
         {
         }
 
@@ -23,25 +24,16 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 Assert.Contains("Worked", response);
             }
         }
-    }
-    public class AspNetCoreBasicWebApiApplicationFixture_net50 : AspNetCoreBasicWebApiApplicationFixture
-    {
-        public AspNetCoreBasicWebApiApplicationFixture_net50() : base("AspNetCore5BasicWebApiApplication", "AspNetCore5BasicWebApiApplication.exe", "net5.0")
-        {
-        }
-    }
 
-    public class AspNetCoreBasicWebApiApplicationFixture_net60 : AspNetCoreBasicWebApiApplicationFixture
-    {
-        public AspNetCoreBasicWebApiApplicationFixture_net60() : base("AspNetCore6BasicWebApiApplication", "AspNetCore6BasicWebApiApplication.exe", "net6.0")
+        public string GetTraceId()
         {
-        }
-    }
-
-    public class AspNetCoreBasicWebApiApplicationFixture_net70 : AspNetCoreBasicWebApiApplicationFixture
-    {
-        public AspNetCoreBasicWebApiApplicationFixture_net70() : base("AspNetCore7BasicWebApiApplication", "AspNetCore7BasicWebApiApplication.exe", "net7.0")
-        {
+            var address = $"http://localhost:{Port}/api/default/GetTraceId";
+            using (var client = new HttpClient())
+            {
+                var result = client.GetStringAsync(address).Result;
+                Assert.NotNull(result);
+                return result;
+            }
         }
     }
 }

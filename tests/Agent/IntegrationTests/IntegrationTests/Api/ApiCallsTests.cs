@@ -12,23 +12,22 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Api
 {
     [NetFrameworkTest]
-    public class ApiCallsTestsFW : ApiCallsTests<ConsoleDynamicMethodFixtureFWLatest>
+    public class ApiCallsTestsFWLatest : ApiCallsTests<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public ApiCallsTestsFW(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public ApiCallsTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class ApiCallsTestsCore : ApiCallsTests<ConsoleDynamicMethodFixtureCore31>
+    public class ApiCallsTestsCoreLatest : ApiCallsTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public ApiCallsTestsCore(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public ApiCallsTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
-
     public abstract class ApiCallsTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly string[] ApiCalls = new string[]

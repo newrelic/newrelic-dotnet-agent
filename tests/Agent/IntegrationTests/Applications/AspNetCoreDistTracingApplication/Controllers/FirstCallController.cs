@@ -30,9 +30,11 @@ namespace AspNetCoreDistTracingApplication.Controllers
 
         public string WebRequestCallNext(string nextUrl)
         {
-            var httpWebRequest = WebRequest.Create(nextUrl);
-            httpWebRequest.GetResponse();
-            return "Worked";
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.GetAsync(nextUrl).Wait();
+                return "Worked";
+            }
         }
     }
 }

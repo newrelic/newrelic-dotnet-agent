@@ -27,7 +27,7 @@ namespace BasicMvcCoreApplication
         {
             var commandLine = string.Join(" ", args);
 
-            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
+            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().Location).LocalPath) + ".exe";
 
             Console.WriteLine($"[{_applicationName}] Joined args: {commandLine}");
 
@@ -60,7 +60,7 @@ namespace BasicMvcCoreApplication
         {
             var pid = Process.GetCurrentProcess().Id;
             var applicationDirectory =
-                Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath),
+                Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().Location).LocalPath),
                     _applicationName);
             var pidFilePath = applicationDirectory + ".pid";
 

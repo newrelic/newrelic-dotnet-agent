@@ -125,36 +125,12 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
     }
 
     [NetCoreTest]
-    public class HttpClientInstrumentationTests_Net31 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        protected override string ExpectedClassName { get { return LEGACY_CLASS_NAME; } }
-        protected override string UnexpectedClassName { get { return CLASS_NAME; } }
-
-        public HttpClientInstrumentationTests_Net31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class HttpClientInstrumentationTests_Net50 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class HttpClientInstrumentationTests_NetCoreOldest : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         protected override string ExpectedClassName { get { return CLASS_NAME; } }
         protected override string UnexpectedClassName { get { return LEGACY_CLASS_NAME; } }
 
-        public HttpClientInstrumentationTests_Net50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class HttpClientInstrumentationTests_Net60 : HttpClientInstrumentationTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        protected override string ExpectedClassName { get { return CLASS_NAME; } }
-        protected override string UnexpectedClassName { get { return LEGACY_CLASS_NAME; } }
-
-        public HttpClientInstrumentationTests_Net60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public HttpClientInstrumentationTests_NetCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

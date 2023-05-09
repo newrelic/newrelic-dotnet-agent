@@ -3,7 +3,7 @@
 
 
 using System;
-using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,12 +15,11 @@ namespace AspNetCoreDistTracingApplication.Controllers
         {
             try
             {
-                string result = null;
-
-                var client = new WebClient();
-                result = await client.DownloadStringTaskAsync(new Uri(nextUrl));
-
-                return result;
+                using (var httpClient = new HttpClient())
+                {
+                    var result = await httpClient.GetStringAsync(new Uri(nextUrl));
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -30,9 +29,11 @@ namespace AspNetCoreDistTracingApplication.Controllers
 
         public string WebRequestCallNext(string nextUrl)
         {
-            var httpWebRequest = WebRequest.Create(nextUrl);
-            httpWebRequest.GetResponse();
-            return "Worked";
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.GetAsync(nextUrl).Wait();
+                return "Worked";
+            }
         }
     }
 }
