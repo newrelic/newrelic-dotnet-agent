@@ -124,7 +124,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                     segment.RemoveSegmentFromCallStack();
                     transaction.Hold();
                     var task = (Task)methodReturnMessage.ReturnValue;
-                    task.ContinueWith(ContinueWork);
+                    task.ContinueWith(ContinueWork, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.HideScheduler);
 
                     void ContinueWork(Task t)
                     {

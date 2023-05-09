@@ -133,6 +133,11 @@ namespace NewRelic.Agent.Core.Transactions
                 {
                     LogFinest("Response time captured.");
                 }
+
+                // Once the response time is captured, the only work remaining for the transaction can be
+                // async work that is holding onto the transaction. We need to remove the transaction
+                // from the transaction context so that it will not be reused.
+                Agent._transactionService.RemoveOutstandingInternalTransactions(true, true);
             }
 
             var remainingUnitsOfWork = NoticeUnitOfWorkEnds();
