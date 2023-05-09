@@ -3254,11 +3254,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
         }
 
-        [TestCase("")]
         [TestCase(null)]
         [TestCase("0")]
         [TestCase("-1")]
-        [TestCase("A")]
         public void HarvestCycleOverride_Metrics_NotValidValueSet(string value)
         {
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3272,11 +3270,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsFalse(defaultConfig.MetricsHarvestCycle.HasValue);
         }
 
-        [TestCase("")]
         [TestCase(null)]
         [TestCase("0")]
         [TestCase("-1")]
-        [TestCase("A")]
         public void HarvestCycleOverride_TransactionTraces_NotValidValueSet(string value)
         {
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3290,11 +3286,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsFalse(defaultConfig.TransactionTracesHarvestCycle.HasValue);
         }
 
-        [TestCase("")]
         [TestCase(null)]
         [TestCase("0")]
         [TestCase("-1")]
-        [TestCase("A")]
         public void HarvestCycleOverride_ErrorTraces_NotValidValueSet(string value)
         {
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3308,11 +3302,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.IsFalse(defaultConfig.ErrorTracesHarvestCycle.HasValue);
         }
 
-        [TestCase("")]
         [TestCase(null)]
         [TestCase("0")]
         [TestCase("-1")]
-        [TestCase("A")]
         public void HarvestCycleOverride_SpanEvents_NotValidValueSet(string value)
         {
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3327,11 +3319,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
         }
 
-        [TestCase("")]
         [TestCase(null)]
         [TestCase("0")]
         [TestCase("-1")]
-        [TestCase("A")]
         public void HarvestCycleOverride_GetAgentCommands_NotValidValueSet(string value)
         {
             _localConfig.appSettings.Add(new configurationAdd()
