@@ -136,12 +136,22 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
+        // Overriding this allows unit tests to continue without a real connection
+        protected virtual bool TestConnect(GrpcChannel channel, int connectTimeoutMs, CancellationToken cancellationToken)
+        {
+#if LEGACY_GRPC
+            return channel.ConnectAsync().Wait(connectTimeoutMs, cancellationToken);
+#else
+            return true;
+#endif
+        }
+
         private bool TestChannel(GrpcChannel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
         {
             try
             {
 #if LEGACY_GRPC
-                if (channel.ConnectAsync().Wait(connectTimeoutMs, cancellationToken) && !_notConnectedStates.Contains(channel.State))
+                if (TestConnect(channel, connectTimeoutMs, cancellationToken) && !_notConnectedStates.Contains(channel.State))
                 {
                     using (CreateStreamsImpl(channel, headers, connectTimeoutMs, cancellationToken))
                     {
