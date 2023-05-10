@@ -36,11 +36,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/MsSql/EnterpriseLibraryMsSql?tableName={TableName}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         private void CreateTable()

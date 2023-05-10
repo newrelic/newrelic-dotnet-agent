@@ -15,19 +15,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = $"http://{DestinationServerName}:{Port}/Default";
-            DownloadStringAndAssertContains(address, "<html>");
+            GetStringAndAssertContains(address, "<html>");
         }
 
         public void GenerateCallsToCustomInstrumentationEditorMethods()
         {
             var address = $"http://{DestinationServerName}:{Port}/CustomInstrumentation/Get";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
 
         public void StartAgent()
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/StartAgent";
-            DownloadStringAndAssertContains(address, "<html>");
+            GetStringAndAssertContains(address, "<html>");
         }
     }
 }

@@ -12,10 +12,6 @@ public class OdbcBasicMvcFixture : MsSqlBasicMvcFixture
     {
         var address = $"http://{DestinationServerName}:{Port}/MsSql/MsSqlParameterizedStoredProcedureUsingOdbcDriver?procedureName={ProcedureName}&paramsWithAtSign={paramsWithAtSign}";
 
-        using (var webClient = new WebClient())
-        {
-            var responseBody = webClient.DownloadString(address);
-            Assert.NotNull(responseBody);
-        }
+        GetStringAndAssertIsNotNull(address);
     }
 }

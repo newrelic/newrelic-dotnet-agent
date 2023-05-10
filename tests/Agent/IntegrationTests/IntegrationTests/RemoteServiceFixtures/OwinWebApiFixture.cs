@@ -35,48 +35,33 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = string.Format("http://{0}:{1}/api/Values", DestinationServerName, Port);
-            using (var client = new HttpClient())
-            {
-                var resultJson = client.GetStringAsync(address).Result;
-                var result = JsonConvert.DeserializeObject<List<string>>(resultJson);
 
-                Assert.NotNull(result);
-                Assert.Equal(2, result.Count);
-                Assert.Equal("value 1", result[0]);
-                Assert.Equal("value 2", result[1]);
-            }
+            var result = GetJson<List<string>>(address);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
+            Assert.Equal("value 1", result[0]);
+            Assert.Equal("value 2", result[1]);
         }
 
         public void Get404()
         {
             var address = string.Format(@"http://{0}:{1}/api/404/", DestinationServerName, Port);
 
-            using (var client = new HttpClient())
-            {
-                using (var response = client.GetAsync(address).Result)
-                {
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-                    }
-                    else
-                        Assert.True(false, "Expected a 404 status code.");
-                }
-            }
+            GetAndAssertStatusCode(address, HttpStatusCode.NotFound);
         }
 
         public void GetId()
         {
             const string id = "5";
             var address = string.Format("http://{0}:{1}/api/Values/{2}", DestinationServerName, Port, id);
-            DownloadJsonAndAssertEqual(address, id);
+            GetJsonAndAssertEqual(address, id);
         }
 
         public void GetData()
         {
             const string expected = "mything";
             var address = string.Format("http://{0}:{1}/api/Values?data={2}", DestinationServerName, Port, expected);
-            DownloadJsonAndAssertEqual(address, expected);
+            GetJsonAndAssertEqual(address, expected);
         }
 
         public void Post()
@@ -95,27 +80,24 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             const string body = "stuff";
 
-            using (var client = new HttpClient())
+            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+                request.Headers.Referrer = new Uri("http://example.com/");
+                request.Headers.Add("User-Agent", "FakeUserAgent");
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                request.Headers.Host = "fakehost:1234";
+                request.Headers.Add("foo", "bar");
+
+                var serializedBody = JsonConvert.SerializeObject(body);
+
+                request.Content = new StringContent(serializedBody, Encoding.Default, "application/json");
+
+                using (var response = _httpClient.SendAsync(request).Result)
                 {
-                    request.Headers.Referrer = new Uri("http://example.com/");
-                    request.Headers.Add("User-Agent", "FakeUserAgent");
-                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    request.Headers.Host = "fakehost:1234";
-                    request.Headers.Add("foo", "bar");
-
-                    var serializedBody = JsonConvert.SerializeObject(body);
-
-                    request.Content = new StringContent(serializedBody, Encoding.Default, "application/json");
-
-                    using (var response = client.SendAsync(request).Result)
-                    {
-                        var resultJson = response.Content.ReadAsStringAsync().Result;
-                        var result = JsonConvert.DeserializeObject<string>(resultJson);
-                        Assert.NotNull(result);
-                        Assert.Equal(body, result);
-                    }
+                    var resultJson = response.Content.ReadAsStringAsync().Result;
+                    var result = JsonConvert.DeserializeObject<string>(resultJson);
+                    Assert.NotNull(result);
+                    Assert.Equal(body, result);
                 }
             }
         }
@@ -123,107 +105,87 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void ThrowException()
         {
             var address = string.Format(@"http://{0}:{1}/api/ThrowException/", DestinationServerName, Port);
-            using (var client = GetHttpClient())
-            {
-                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
-            }
+            GetAndAssertThrows<AggregateException>(address, GetHeaders());
         }
 
         public void InvokeBadMiddleware()
         {
             var address = string.Format(@"http://{0}:{1}/AsyncAwait/UseBadMiddleware", DestinationServerName, Port);
-            using (var client = GetHttpClient())
-            {
-                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
-            }
+            GetAndAssertThrows<AggregateException>(address, GetHeaders());
         }
 
         public void Async()
         {
             var address = string.Format("http://{0}:{1}/api/Async", DestinationServerName, Port);
 
-            using (var client = GetHttpClient())
-            {
-                var resultJson = client.GetStringAsync(address).Result;
-
-                var result = JsonConvert.DeserializeObject<List<string>>(resultJson);
-
-                Assert.NotNull(result);
-                Assert.Equal(2, result.Count);
-            }
+            var result = GetJson<List<string>>(address, GetHeaders());
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
         }
+
         public void GetIoBoundNoSpecialAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/IoBoundNoSpecialAsync";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetIoBoundConfigureAwaitFalseAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/IoBoundConfigureAwaitFalseAsync";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
         public void GetCpuBoundTasksAsync()
         {
             var address = $"http://localhost:{Port}/AsyncAwait/CpuBoundTasksAsync";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
         public void GetCustomMiddlewareIoBoundNoSpecialAsync()
         {
             var address = $"http://localhost:{Port}/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void ErrorResponse()
         {
             var address = $"http://localhost:{Port}/AsyncAwait/ErrorResponse";
 
-            using (var client = GetHttpClient())
-            {
-                using (var response = client.GetAsync(address).Result)
-                {
-                    Assert.False(response.IsSuccessStatusCode);
-                }
-            }
+            GetAndAssertSuccessStatus(address, false, GetHeaders());
         }
 
         public void GetManualTaskRunBlocked()
         {
             var address = $"http://localhost:{Port}/ManualAsync/TaskRunBlocked";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualTaskFactoryStartNewBlocked()
         {
             var address = $"http://localhost:{Port}/ManualAsync/TaskFactoryStartNewBlocked";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualNewThreadStartBlocked()
         {
             var address = $"http://localhost:{Port}/ManualAsync/NewThreadStartBlocked";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetBogusPath(string bogusPath)
         {
             var address = string.Format(@"http://{0}:{1}/{2}", DestinationServerName, Port, bogusPath);
-            using (var client = GetHttpClient())
-            {
-                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
-            }
+            GetAndAssertThrows<AggregateException>(address, GetHeaders());
         }
 
-        public HttpClient GetHttpClient()
+        public IEnumerable<KeyValuePair<string, string>> GetHeaders()
         {
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("accept", "application/json");
-            client.DefaultRequestHeaders.Add("referer", "http://example.com");
-            client.DefaultRequestHeaders.Add("user-agent", "FakeUserAgent");
-            client.DefaultRequestHeaders.Add("host", "fakehost");
-            client.DefaultRequestHeaders.Add("foo", "bar");
-
-            return client;
+            return new List<KeyValuePair<string, string>>()
+            {
+                new KeyValuePair<string, string>("accept", "application/json"),
+                new KeyValuePair<string, string>("referer", "http://example.com"),
+                new KeyValuePair<string, string>("user-agent", "FakeUserAgent"),
+                new KeyValuePair<string, string>("host", "fakehost"),
+                new KeyValuePair<string, string>("foo", "bar")
+            };
         }
     }
 

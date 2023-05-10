@@ -113,15 +113,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Default/Chained{queryString}";
 
-            using (var httpClient = new HttpClient())
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, address))
             {
-                var httpRequestMessage = new HttpRequestMessage { RequestUri = new Uri(address), Method = HttpMethod.Get };
                 foreach (var header in headers)
                 {
                     httpRequestMessage.Headers.Add(header.Key, header.Value);
                 }
 
-                return Task.Run(async () => await httpClient.SendAsync(httpRequestMessage)).Result.Headers;
+                return Task.Run(async () => await _httpClient.SendAsync(httpRequestMessage)).Result.Headers;
             }
         }
 
@@ -136,7 +135,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[{nameof(OwinTracingChainFixture)}]: Starting A -> B request chain with URL: {senderUrl}");
 
-            DownloadStringAndAssertContains(senderUrl, "Worked", headers);
+            GetStringAndAssertContains(senderUrl, "Worked", headers);
         }
 
         public void ExecuteTraceRequestChainRestSharp(IEnumerable<KeyValuePair<string, string>> headers)
@@ -144,7 +143,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var secondCallUrl = $"http://localhost:{ReceiverApplication.Port}/api/RestAPI";
             var firstCallUrl = $"http://localhost:{SenderApplication.Port}/DistributedTracing/MakeExternalCallUsingRestClient?externalCallUrl={secondCallUrl}";
 
-            DownloadStringAndAssertEqual(firstCallUrl, "Worked", headers);
+            GetStringAndAssertEqual(firstCallUrl, "Worked", headers);
         }
     }
 }

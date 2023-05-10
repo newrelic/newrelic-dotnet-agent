@@ -16,7 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = $"http://localhost:{Port}/api/default/AwesomeName";
-            DownloadStringAndAssertContains(address, "Chuck Norris");
+            GetStringAndAssertContains(address, "Chuck Norris");
         }
     }
 }

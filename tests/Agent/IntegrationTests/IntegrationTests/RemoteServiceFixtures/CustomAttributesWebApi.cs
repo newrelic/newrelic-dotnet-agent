@@ -33,7 +33,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void SpinupRequest()
         {
             var address = string.Format("http://{0}:{1}/api/IgnoreTransaction", DestinationServerName, Port);
-            DownloadJsonAndAssertEqual(address, "success");
+            GetJsonAndAssertEqual(address, "success");
         }
 
         public void WaitForStartup()
@@ -45,11 +45,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             {
                 try
                 {
-                    var httpClient = new HttpClient();
-                    var address = string.Format("http://{0}:{1}/api/IgnoreTransaction", DestinationServerName, Port);
-                    httpClient.Timeout = TimeSpan.FromSeconds(1);
-                    Task.Run(() => httpClient.GetStringAsync(address)).Wait();
-                    return;
+                    using (var httpClient = new HttpClient())
+                    {
+                        var address = string.Format("http://{0}:{1}/api/IgnoreTransaction", DestinationServerName, Port);
+                        httpClient.Timeout = TimeSpan.FromSeconds(1);
+                        Task.Run(() => httpClient.GetStringAsync(address)).Wait();
+                        return;
+                    }
                 }
                 catch (Exception)
                 {
@@ -64,31 +66,31 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = string.Format("http://{0}:{1}/api/CustomAttributes", DestinationServerName, Port);
-            DownloadJsonAndAssertEqual(address, "success");
+            GetJsonAndAssertEqual(address, "success");
         }
 
         public void GetCustomErrorAttributes()
         {
             var address = string.Format("http://{0}:{1}/api/CustomErrorAttributes", DestinationServerName, Port);
-            DownloadJsonAndAssertEqual(address, "success");
+            GetJsonAndAssertEqual(address, "success");
         }
 
         public void Get404()
         {
             var address = string.Format("http://{0}:{1}/api/CustomErrorAttributes", DestinationServerName, Port);
-            DownloadJsonAndAssertEqual(address, "success");
+            GetJsonAndAssertEqual(address, "success");
         }
 
         public void GetKeyNull()
         {
             var address = string.Format("http://{0}:{1}/api/CustomAttributesKeyNull", DestinationServerName, Port);
-            DownloadJsonAndAssertEqual(address, "success");
+            GetJsonAndAssertEqual(address, "success");
         }
 
         public void GetValueNull()
         {
             var address = string.Format("http://{0}:{1}/api/CustomAttributesValueNull", DestinationServerName, Port);
-            DownloadJsonAndAssertEqual(address, "success");
+            GetJsonAndAssertEqual(address, "success");
         }
     }
 

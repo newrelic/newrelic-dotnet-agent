@@ -26,7 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             // 1. Metric is named as "DefAult.aspx".ToLower() (or "default.aspx") to keep casing clean (AspPagesTransactionNameWrapper.cs)
             // 2. Prevent a server redirect - Server strips the .aspx suffix and redirects to just "Default" before matching on "Default.aspx"
             var address = string.Format("http://{0}:{1}/DefAult", DestinationServerName, Port);
-            DownloadStringAndAssertContains(address, "<html");
+            GetStringAndAssertContains(address, "<html");
         }
     }
 }

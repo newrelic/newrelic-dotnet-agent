@@ -16,7 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void GetHello()
         {
             var address = $"http://{DestinationServerName}:{Port}/hello/Worked";
-            DownloadJsonAndAssertEqual(address, new HelloResponse("Worked"));
+            GetJsonAndAssertEqual(address, new HelloResponse("Worked"));
         }
 
         public class HelloResponse

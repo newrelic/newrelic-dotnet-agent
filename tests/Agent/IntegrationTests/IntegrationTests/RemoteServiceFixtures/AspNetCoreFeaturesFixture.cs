@@ -20,43 +20,37 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = $"http://localhost:{Port}/";
-            DownloadStringAndAssertContains(address, "<html>");
+            GetStringAndAssertContains(address, "<html>");
         }
 
         public void ThrowException()
         {
             var address = $"http://localhost:{Port}/Home/ThrowException";
-            using (var httpClient = new HttpClient())
-            {
-                Assert.Throws<AggregateException>(() => httpClient.GetStringAsync(address).Wait());
-            }
+            GetAndAssertThrows<AggregateException>(address);
         }
 
         public void AccessCollectible()
         {
             var address = $"http://localhost:{Port}/Collectible/AccessCollectible";
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.GetStringAsync(address).Wait();
-            }
+            _httpClient.GetStringAsync(address).Wait();
         }
 
         public void AsyncStream()
         {
             var address = $"http://localhost:{Port}/api/AsyncStream";
-            DownloadStringAndAssertContains(address, "45");
+            GetStringAndAssertContains(address, "45");
         }
 
         public void InterfaceDefaultsGetWithAttributes()
         {
             var address = $"http://localhost:{Port}/InterfaceDefaults/GetWithAttributes";
-            DownloadStringAndAssertContains(address, "Done");
+            GetStringAndAssertContains(address, "Done");
         }
 
         public void InterfaceDefaultsGetWithoutAttributes()
         {
             var address = $"http://localhost:{Port}/InterfaceDefaults/GetWithoutAttributes";
-            DownloadStringAndAssertContains(address, "Done");
+            GetStringAndAssertContains(address, "Done");
         }
     }
 }

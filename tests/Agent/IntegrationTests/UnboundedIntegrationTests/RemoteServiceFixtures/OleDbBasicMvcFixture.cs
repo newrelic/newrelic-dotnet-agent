@@ -14,10 +14,6 @@ public class OleDbBasicMvcFixture : MsSqlBasicMvcFixture
     {
         var address = $"http://{DestinationServerName}:{Port}/MsSql/MsSqlParameterizedStoredProcedureUsingOleDbDriver?procedureName={ProcedureName}&paramsWithAtSign={paramsWithAtSign}";
 
-        using (var webClient = new WebClient())
-        {
-            var responseBody = webClient.DownloadString(address);
-            Assert.NotNull(responseBody);
-        }
+        GetStringAndAssertIsNotNull(address);
     }
 }

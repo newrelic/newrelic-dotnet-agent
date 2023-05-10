@@ -253,9 +253,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     }
 
     [NetCoreTest]
-    public class ElasticsearchNestTestsCore31 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class ElasticsearchNestTestsCoreOldest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public ElasticsearchNestTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public ElasticsearchNestTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, ClientType.NEST)
         {
         }
@@ -293,9 +293,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     }
 
     [NetCoreTest]
-    public class ElasticsearchNetTestsCore31 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class ElasticsearchNetTestsCoreOldest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public ElasticsearchNetTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public ElasticsearchNetTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, ClientType.ElasticsearchNet)
         {
         }
@@ -331,9 +331,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
     }
 
     [NetCoreTest]
-    public class ElasticsearchElasticClientTestsCore31 : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class ElasticsearchElasticClientTestsCoreOldest : ElasticsearchTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public ElasticsearchElasticClientTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public ElasticsearchElasticClientTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, ClientType.ElasticClients)
         {
         }

@@ -53,11 +53,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             if (thirdAppAction.IsEqualTo("CallError"))
             {
-                DownloadStringAndAssertContains(firstCallUrl, "Exception occurred in ");
+                GetStringAndAssertContains(firstCallUrl, "Exception occurred in ");
             }
             else
             {
-                DownloadStringAndAssertEqual(firstCallUrl, "Worked", headers);
+                GetStringAndAssertEqual(firstCallUrl, "Worked", headers);
             }
         }
 

@@ -27,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public string GetObjectTcp()
         {
             var address = string.Format(@"http://{0}:{1}/Remote/GetObjectTcp", DestinationServerName, Port);
-            var result = DownloadStringAndAssertEqual(address, null);
+            var result = GetStringAndAssertEqual(address, null);
 
             return result;
         }
@@ -35,7 +35,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public string GetObjectHttp()
         {
             var address = string.Format(@"http://{0}:{1}/Remote/GetObjectHttp", DestinationServerName, Port);
-            var result = DownloadStringAndAssertEqual(address, null);
+            var result = GetStringAndAssertEqual(address, null);
 
             return result;
         }

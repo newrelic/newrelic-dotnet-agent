@@ -23,25 +23,22 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = $"http://localhost:{Port}/";
-            DownloadStringAndAssertContains(address, "<html>");
+            GetStringAndAssertContains(address, "<html>");
         }
 
         public void GetCORSPreflight()
         {
             var address = $"http://localhost:{Port}/Home/About";
 
-            using (var client = new HttpClient())
+            using (var request = new HttpRequestMessage(HttpMethod.Options, address))
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Options, address))
-                {
-                    request.Headers.Add("Origin", "http://example.com");
-                    request.Headers.Add("Access-Control-Request-Method", "GET");
-                    request.Headers.Add("Access-Control-Request-Headers", "X-Requested-With");
+                request.Headers.Add("Origin", "http://example.com");
+                request.Headers.Add("Access-Control-Request-Method", "GET");
+                request.Headers.Add("Access-Control-Request-Headers", "X-Requested-With");
 
-                    using (var response = client.SendAsync(request).Result)
-                    {
-                        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-                    }
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
                 }
             }
         }
@@ -49,22 +46,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void ThrowException()
         {
             var address = $"http://localhost:{Port}/Home/ThrowException";
-            using (var client = new HttpClient())
-            {
-                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
-            }
+            GetAndAssertThrows<AggregateException>(address);
         }
 
         public void GetWithData(string requestParameter)
         {
             var address = $"http://localhost:{Port}/Home/Query?data={requestParameter}";
-            DownloadStringAndAssertContains(address, "<html>");
+            GetStringAndAssertContains(address, "<html>");
         }
 
         public void GetCallAsyncExternal()
         {
             var address = $"http://localhost:{Port}/DetachWrapper/CallAsyncExternal";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
     }
 }

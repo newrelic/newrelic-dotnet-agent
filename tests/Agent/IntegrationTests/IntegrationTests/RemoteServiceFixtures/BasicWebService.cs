@@ -23,17 +23,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/HelloWorld";
 
-            using (var client = new HttpClient())
+            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Post, address))
-                {
-                    request.Content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>());
+                request.Content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>());
 
-                    using (var response = client.SendAsync(request).Result)
-                    {
-                        var responseString = response.Content.ReadAsStringAsync().Result;
-                        Assert.Contains("Hello World", responseString);
-                    }
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    var responseString = response.Content.ReadAsStringAsync().Result;
+                    Assert.Contains("Hello World", responseString);
                 }
             }
         }
@@ -52,17 +49,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/HelloWorld";
 
-            using (var client = new HttpClient())
+            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Post, address))
-                {
-                    request.Content = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
+                request.Content = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
 
-                    using (var response = client.SendAsync(request).Result)
-                    {
-                        var responseData = response.Content.ReadAsStringAsync().Result;
-                        Assert.Contains("Hello World", responseData);
-                    }
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    var responseData = response.Content.ReadAsStringAsync().Result;
+                    Assert.Contains("Hello World", responseData);
                 }
             }
         }
@@ -71,16 +65,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/ThrowException";
 
-            using (var client = new HttpClient())
+            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Post, address))
-                {
-                    request.Content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>());
+                request.Content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>());
 
-                    using (var response = client.SendAsync(request).Result)
-                    {
-                        Assert.False(response.IsSuccessStatusCode);
-                    }
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    Assert.False(response.IsSuccessStatusCode);
                 }
             }
         }
@@ -99,16 +90,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/ThrowException";
 
-            using (var client = new HttpClient())
+            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Post, address))
-                {
-                    request.Content = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
+                request.Content = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
 
-                    using (var response = client.SendAsync(request).Result)
-                    {
-                        Assert.False(response.IsSuccessStatusCode);
-                    }
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    Assert.False(response.IsSuccessStatusCode);
                 }
             }
         }

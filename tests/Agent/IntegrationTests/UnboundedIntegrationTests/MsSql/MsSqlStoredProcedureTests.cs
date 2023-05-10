@@ -167,9 +167,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MsSqlStoredProcedureTests_SystemDataSqlClient_Core60 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class MsSqlStoredProcedureTests_SystemDataSqlClient_CoreOldest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MsSqlStoredProcedureTests_SystemDataSqlClient_Core60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public MsSqlStoredProcedureTests_SystemDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -180,61 +180,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_Core60 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_CoreOldest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_Core60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser",
-                  paramsWithAtSign: false)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MsSqlStoredProcedureTests_SystemDataSqlClient_Core50 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MsSqlStoredProcedureTests_SystemDataSqlClient_Core50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser",
-                  paramsWithAtSign: true)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_Core50 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_Core50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser",
-                  paramsWithAtSign: false)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MsSqlStoredProcedureTests_SystemDataSqlClient_Core31 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MsSqlStoredProcedureTests_SystemDataSqlClient_Core31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser",
-                  paramsWithAtSign: true)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_Core31 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_Core31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MsSqlStoredProcedureTests_SystemDataSqlClient_NoAtSigns_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -328,9 +276,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_Core31 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreOldest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_Core31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -341,9 +289,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_NoAtSigns_Core31 : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class MsSqlStoredProcedureTests_MicrosoftDataSqlClient_NoAtSigns_CoreOldest : MsSqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_NoAtSigns_Core31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MsSqlStoredProcedureTests_MicrosoftDataSqlClient_NoAtSigns_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,

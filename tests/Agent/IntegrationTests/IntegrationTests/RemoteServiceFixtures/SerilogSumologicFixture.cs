@@ -17,13 +17,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void SyncControllerMethod()
         {
             var address = $"http://localhost:{Port}/Home/SyncControllerMethod";
-            DownloadStringAndAssertContains(address, "<html>");
+            GetStringAndAssertContains(address, "<html>");
         }
 
         public void AsyncControllerMethod()
         {
             var address = $"http://localhost:{Port}/Home/AsyncControllerMethod";
-            DownloadStringAndAssertContains(address, "<html>");
+            GetStringAndAssertContains(address, "<html>");
         }
     }
 }
