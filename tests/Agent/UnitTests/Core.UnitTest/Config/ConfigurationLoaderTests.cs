@@ -103,8 +103,12 @@ namespace NewRelic.Agent.Core.Config
         [Test]
         public void GetAgentConfigFileName_ThrowsExceptionWhenNoneFound()
         {
-            var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
-            StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+            using (var staticMocks = new ConfigurationLoaderStaticMocks())
+            {
+                ReplaceNewRelicHomeWithNullIfNecessary(staticMocks);
+                var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
+                StringAssert.Contains("Could not find newrelic.config", actualException.Message);
+            }
         }
 
         [Test]
@@ -170,6 +174,7 @@ namespace NewRelic.Agent.Core.Config
         {
             using (var staticMocks = new ConfigurationLoaderStaticMocks())
             {
+                ReplaceNewRelicHomeWithNullIfNecessary(staticMocks);
                 staticMocks.UseAppDomainAppVirtualPathFunc(() => "testVirtualPath");
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
@@ -226,6 +231,7 @@ namespace NewRelic.Agent.Core.Config
         {
             using (var staticMocks = new ConfigurationLoaderStaticMocks())
             {
+                ReplaceNewRelicHomeWithNullIfNecessary(staticMocks);
                 staticMocks.UsePathGetDirectoryNameFunc(_ => null);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
@@ -553,6 +559,14 @@ namespace NewRelic.Agent.Core.Config
 	</threadProfiling>
 </configuration>
 ";
+        }
+
+        private static void ReplaceNewRelicHomeWithNullIfNecessary(ConfigurationLoaderStaticMocks mocks)
+        {
+            if (!string.IsNullOrEmpty(AgentInstallConfiguration.NewRelicHome))
+            {
+                mocks.UseGetNewRelicHome(() => null);
+            }
         }
 
         private class ConfigurationLoaderStaticMocks : IDisposable

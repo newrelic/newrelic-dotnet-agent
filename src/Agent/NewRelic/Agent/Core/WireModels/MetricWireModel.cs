@@ -683,13 +683,6 @@ namespace NewRelic.Agent.Core.WireModels
 
             #endregion SqlTraces
 
-            public MetricWireModel TryBuildTransactionBuilderGarbageCollectedRollupMetric()
-            {
-                const string proposedName = MetricNames.SupportabilityTransactionBuilderGarbageCollectedAll;
-                var data = MetricDataWireModel.BuildCountData();
-                return BuildMetric(_metricNameService, proposedName, null, data);
-            }
-
             public MetricWireModel TryBuildAgentHealthEventMetric(AgentHealthEvent agentHealthEvent,
                 string additionalData = null)
             {
@@ -944,20 +937,6 @@ namespace NewRelic.Agent.Core.WireModels
             public MetricWireModel TryBuildSpanEventsSentMetric(int eventCount)
             {
                 return TryBuildSupportabilityCountMetric(MetricNames.SupportabilitySpanEventsSent, eventCount);
-            }
-
-            public MetricWireModel TryBuildCacheCountMetric(string name, int count)
-            {
-                var proposedName = MetricNames.SupportabilityCachePrefix + name;
-                var data = MetricDataWireModel.BuildCountData(count);
-                return BuildMetric(_metricNameService, proposedName, null, data);
-            }
-
-            public MetricWireModel TryBuildCacheSizeMetric(string name, int size)
-            {
-                var proposedName = MetricNames.SupportabilityCachePrefix + name;
-                var data = MetricDataWireModel.BuildAverageData(size);
-                return BuildMetric(_metricNameService, proposedName, null, data);
             }
 
             #endregion Span builders
