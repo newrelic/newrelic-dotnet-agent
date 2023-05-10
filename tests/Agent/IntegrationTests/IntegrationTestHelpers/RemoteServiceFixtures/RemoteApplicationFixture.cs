@@ -399,25 +399,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected T GetJsonAndAssertEqual<T>(string address, T expectedResult)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Get, address))
+            var resultJson = _httpClient.GetStringAsync(address).Result;
+            var result = JsonConvert.DeserializeObject<T>(resultJson);
+
+            Assert.NotEqual(default(T), result);
+
+            if (expectedResult != null)
             {
-                request.Headers.Add(nameof(HttpRequestHeader.Accept), "application/json");
-
-                using (var response = _httpClient.SendAsync(request).Result)
-                {
-                    var resultJson = response.Content.ReadAsStringAsync().Result;
-                    var result = JsonConvert.DeserializeObject<T>(resultJson);
-
-                    Assert.NotEqual(default(T), result);
-
-                    if (expectedResult != null)
-                    {
-                        Assert.Equal(expectedResult, result);
-                    }
-
-                    return result;
-                }
+                Assert.Equal(expectedResult, result);
             }
+
+            return result;
         }
 
         protected string GetStringAndAssertIsNotNull(string address)
@@ -425,22 +417,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             var result = _httpClient.GetStringAsync(address).Result;
             Assert.NotNull(result);
             return result;
-        }
-
-        protected void GetAndAssertThrows<T>(string address, IEnumerable<KeyValuePair<string, string>> headers = null) where T : Exception
-        {
-            using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, address))
-            {
-                if (headers != null)
-                {
-                    foreach (var header in headers)
-                    {
-                        requestMessage.Headers.Add(header.Key, header.Value);
-                    }
-                }
-
-                Assert.Throws<T>(() => _httpClient.SendAsync(requestMessage).Wait());
-            }
         }
 
         protected void GetStringAndIgnoreResult(string address, List<KeyValuePair<string, string>> headers = null)
@@ -463,6 +439,36 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected T GetJson<T>(string address, IEnumerable<KeyValuePair<string, string>> headers = null)
         {
+            if (headers == null)
+            {
+                var result = _httpClient.GetStringAsync(address).Result;
+                var jsonResult = JsonConvert.DeserializeObject<T>(result);
+                return jsonResult;
+            }
+            else
+            {
+                using (var request = new HttpRequestMessage(HttpMethod.Get, address))
+                {
+                    if (headers != null)
+                    {
+                        foreach (var header in headers)
+                        {
+                            request.Headers.Add(header.Key, header.Value);
+                        }
+                    }
+
+                    using (var response = _httpClient.SendAsync(request).Result)
+                    {
+                        var result = response.Content.ReadAsStringAsync().Result;
+                        var jsonResult = JsonConvert.DeserializeObject<T>(result);
+                        return jsonResult;
+                    }
+                }
+            }
+        }
+
+        protected void GetAndAssertStatusCode(string address, HttpStatusCode expectedStatusCode, IEnumerable<KeyValuePair<string, string>> headers = null)
+        {
             using (var request = new HttpRequestMessage(HttpMethod.Get, address))
             {
                 if (headers != null)
@@ -473,22 +479,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     }
                 }
 
-                request.Headers.Add(nameof(HttpRequestHeader.Accept), "application/json");
-
                 using (var response = _httpClient.SendAsync(request).Result)
                 {
-                    var result = response.Content.ReadAsStringAsync().Result;
-                    var jsonResult = JsonConvert.DeserializeObject<T>(result);
-                    return jsonResult;
+                    Assert.Equal(expectedStatusCode, response.StatusCode);
                 }
-            }
-        }
-
-        protected void GetAndAssertStatusCode(string address, HttpStatusCode expectedStatusCode)
-        {
-            using (var response = _httpClient.GetAsync(address).Result)
-            {
-                Assert.Equal(expectedStatusCode, response.StatusCode);
             }
         }
 

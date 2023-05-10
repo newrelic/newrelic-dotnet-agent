@@ -105,13 +105,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void ThrowException()
         {
             var address = string.Format(@"http://{0}:{1}/api/ThrowException/", DestinationServerName, Port);
-            GetAndAssertThrows<AggregateException>(address, GetHeaders());
+            GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError, GetHeaders());
         }
 
         public void InvokeBadMiddleware()
         {
             var address = string.Format(@"http://{0}:{1}/AsyncAwait/UseBadMiddleware", DestinationServerName, Port);
-            GetAndAssertThrows<AggregateException>(address, GetHeaders());
+            GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError, GetHeaders());
         }
 
         public void Async()
@@ -173,7 +173,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void GetBogusPath(string bogusPath)
         {
             var address = string.Format(@"http://{0}:{1}/{2}", DestinationServerName, Port, bogusPath);
-            GetAndAssertThrows<AggregateException>(address, GetHeaders());
+            GetAndAssertStatusCode(address, HttpStatusCode.NotFound, GetHeaders());
         }
 
         public IEnumerable<KeyValuePair<string, string>> GetHeaders()

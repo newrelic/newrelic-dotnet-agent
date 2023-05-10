@@ -57,7 +57,7 @@ namespace BasicMvcApplication.Controllers
 
             // Intentionally run this method on a background thread so it won't be caught up as part of the current transaction.
             // Don't wait for it to finish or else it won't be able to generate a transaction trace (because it will be eclipsed by the request)
-            Task.Run(async () => await CustomMethodBackgroundThreadWithError()).Wait();
+            Task.Run(CustomMethodBackgroundThreadWithError);
 
             return "Worked";
         }

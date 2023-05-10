@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Net;
 using System.Net.Http;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -46,7 +45,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void ThrowException()
         {
             var address = $"http://localhost:{Port}/Home/ThrowException";
-            GetAndAssertThrows<AggregateException>(address);
+            GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
         }
 
         public void GetWithData(string requestParameter)

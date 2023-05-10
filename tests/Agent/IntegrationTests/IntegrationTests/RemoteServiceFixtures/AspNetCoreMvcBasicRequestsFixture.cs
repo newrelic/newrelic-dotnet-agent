@@ -80,13 +80,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void ThrowException()
         {
             var address = $"http://localhost:{Port}/Home/ThrowException";
-            GetAndAssertThrows<AggregateException>(address);
+            GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
         }
 
         public void ThrowExceptionWithMessage(string exceptionMessage)
         {
             var address = $"http://localhost:{Port}/ExpectedErrorTest/ThrowExceptionWithMessage?exceptionMessage={exceptionMessage}";
-            GetAndAssertThrows<AggregateException>(address);
+            GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
         }
 
         public void ReturnADesiredStatusCode(int statusCode)
@@ -98,7 +98,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void ThrowCustomException()
         {
             var address = $"http://localhost:{Port}/ExpectedErrorTest/ThrowCustomException";
-            GetAndAssertThrows<AggregateException>(address);
+            GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
         }
 
         public void GetWithData(string requestParameter)

@@ -324,7 +324,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void ThrowException()
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/ThrowException";
-            GetAndAssertThrows<AggregateException>(address);
+            GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
         }
 
         public void SimulateLostTransaction()
