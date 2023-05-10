@@ -31,28 +31,29 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                     //Increasing the log level to attempt to diagnose the test runs where the profiling session does not terminate.
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
                     configModifier.SetLogLevel("finest");
+                    configModifier.ConfigureFasterGetAgentCommandsCycle(10);
                 },
                 exerciseApplication: () =>
                 {
                     var stopWatch = new Stopwatch();
                     stopWatch.Start();
 
-                    _fixture.TestLogger?.WriteLine("[ThreadProfileNetCoreTests] Making first request to application.");
+                    _fixture.TestLogger?.WriteLine("[ThreadProfileNetCoreTests] Making first request to application at {0} ms.", stopWatch.ElapsedMilliseconds);
                     _fixture.Get();
 
                     _fixture.TestLogger?.WriteLine("[ThreadProfileNetCoreTests] Requesting a thread profile run at {0} ms.", stopWatch.ElapsedMilliseconds);
                     _fixture.TriggerThreadProfile();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.ThreadProfileStartingLogLineRegex, TimeSpan.FromMinutes(3));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.ThreadProfileStartingLogLineRegex, TimeSpan.FromMinutes(1));
                     _fixture.TestLogger?.WriteLine("[ThreadProfileNetCoreTests] Thread profile run detected at {0} ms.", stopWatch.ElapsedMilliseconds);
 
-                    var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(1));
+                    var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
                     RequestUntilCancelled(cancellationTokenSource);
                     _fixture.TestLogger?.WriteLine("[ThreadProfileNetCoreTests] Stopped exercising the app at {0} ms.", stopWatch.ElapsedMilliseconds);
 
                     //We need to wait long enough for the thread profile run to finish
                     try
                     {
-                        var threadProfileMatch = _fixture.AgentLog.WaitForLogLine(AgentLogFile.ThreadProfileDataLogLineRegex, TimeSpan.FromMinutes(3));
+                        var threadProfileMatch = _fixture.AgentLog.WaitForLogLine(AgentLogFile.ThreadProfileDataLogLineRegex, TimeSpan.FromMinutes(2));
                         _threadProfileString = threadProfileMatch.Value;
                         _fixture.TestLogger?.WriteLine("[ThreadProfileNetCoreTests] Retrieved thread profile at {0} ms.", stopWatch.ElapsedMilliseconds);
                     }
@@ -103,7 +104,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                     _fixture.Get();
                     //We don't want to hammer the system too much, otherwise the system can get too overwhelmed to take stack trace
                     //snapshots and complete the thread profiling session.
-                    Thread.Sleep(1);
+                    Thread.Sleep(25);
                 }
                 catch (Exception e)
                 {

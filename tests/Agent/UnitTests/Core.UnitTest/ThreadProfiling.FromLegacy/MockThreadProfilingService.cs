@@ -57,5 +57,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         }
 
         public ArrayList PruningList { get; set; }
-    }
+
+        public bool IgnoreMinMinimumSamplingDuration { get; private set; }
+}
 }

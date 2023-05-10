@@ -28,7 +28,9 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
                     configModifier.SetAllowAllHeaders(true)
                     .EnableDistributedTrace().ForceTransactionTraces();
                 },
@@ -36,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.AspNetCore
                 {
                     var customRequestHeaders = new Dictionary<string, string> { { "foo", "bar" } };
                     _fixture.MakePostRequestWithCustomRequestHeader(customRequestHeaders);
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

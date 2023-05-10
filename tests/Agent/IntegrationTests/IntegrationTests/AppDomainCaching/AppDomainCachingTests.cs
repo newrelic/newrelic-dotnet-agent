@@ -35,7 +35,7 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
                     configModifier
                     .EnableDistributedTrace()
                     .SetLogLevel("debug");

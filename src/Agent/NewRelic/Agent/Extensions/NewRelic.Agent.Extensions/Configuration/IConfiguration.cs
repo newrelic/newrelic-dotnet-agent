@@ -196,5 +196,10 @@ namespace NewRelic.Agent.Configuration
         bool AppDomainCachingDisabled { get; }
         bool ForceNewTransactionOnNewThread { get; }
         bool CodeLevelMetricsEnabled {  get; }
+        TimeSpan MetricsHarvestCycle { get; }
+        TimeSpan TransactionTracesHarvestCycle { get; }
+        TimeSpan ErrorTracesHarvestCycle { get; }
+        TimeSpan GetAgentCommandsCycle { get; }
+        TimeSpan DefaultHarvestCycle { get; }
     }
 }

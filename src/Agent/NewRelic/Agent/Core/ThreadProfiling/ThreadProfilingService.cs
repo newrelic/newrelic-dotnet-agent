@@ -533,5 +533,13 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
             return new FidTypeMethodName[0];
         }
+
+        public bool IgnoreMinMinimumSamplingDuration
+        {
+            get
+            {
+                return _configuration.GetAgentCommandsCycle != _configuration.DefaultHarvestCycle;
+            }
+        }
     }
 }
