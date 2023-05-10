@@ -435,6 +435,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public TimeSpan GetAgentCommandsCycle => TimeSpan.FromMinutes(1);
 
+        public TimeSpan DefaultHarvestCycle => TimeSpan.FromMinutes(1);
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return new Dictionary<string, string>

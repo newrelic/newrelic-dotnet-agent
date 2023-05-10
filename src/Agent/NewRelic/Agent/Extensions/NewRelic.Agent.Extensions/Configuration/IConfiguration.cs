@@ -200,5 +200,6 @@ namespace NewRelic.Agent.Configuration
         TimeSpan TransactionTracesHarvestCycle { get; }
         TimeSpan ErrorTracesHarvestCycle { get; }
         TimeSpan GetAgentCommandsCycle { get; }
+        TimeSpan DefaultHarvestCycle { get; }
     }
 }

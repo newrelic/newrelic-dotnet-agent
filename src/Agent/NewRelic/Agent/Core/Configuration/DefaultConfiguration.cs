@@ -62,6 +62,8 @@ namespace NewRelic.Agent.Core.Configuration
         public bool UseResourceBasedNamingForWCFEnabled { get; }
         public bool EventListenerSamplersEnabled { get; set; }
 
+        public TimeSpan DefaultHarvestCycle => TimeSpan.FromMinutes(1);
+
         /// <summary>
         /// Default configuration constructor.  It will contain reasonable default values for everything and never anything more.
         /// </summary>
@@ -860,7 +862,7 @@ namespace NewRelic.Agent.Core.Configuration
                     }
                 }
 
-                return ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestCycle, TimeSpan.FromMinutes(1));
+                return ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestCycle, DefaultHarvestCycle);
             }
         }
 
@@ -2071,7 +2073,7 @@ namespace NewRelic.Agent.Core.Configuration
                     }
                 }
 
-                return TimeSpan.FromMinutes(1);
+                return DefaultHarvestCycle;
             }
         }
 
@@ -2095,7 +2097,7 @@ namespace NewRelic.Agent.Core.Configuration
                     }
                 }
 
-                return TimeSpan.FromMinutes(1);
+                return DefaultHarvestCycle;
             }
         }
 
@@ -2119,7 +2121,7 @@ namespace NewRelic.Agent.Core.Configuration
                     }
                 }
 
-                return TimeSpan.FromMinutes(1);
+                return DefaultHarvestCycle;
             }
         }
 
@@ -2143,7 +2145,7 @@ namespace NewRelic.Agent.Core.Configuration
                     }
                 }
 
-                return TimeSpan.FromMinutes(1);
+                return DefaultHarvestCycle;
             }
         }
 

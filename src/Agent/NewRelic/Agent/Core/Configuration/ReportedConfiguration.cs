@@ -632,6 +632,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("get_agent_commands.cycle")]
         public TimeSpan GetAgentCommandsCycle => _configuration.GetAgentCommandsCycle;
 
+        [JsonProperty("default.harvest_cycle")]
+        public TimeSpan DefaultHarvestCycle => _configuration.DefaultHarvestCycle;
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return _configuration.GetAppSettings();

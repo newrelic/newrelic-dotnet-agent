@@ -538,7 +538,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         {
             get
             {
-                return _configuration.GetAgentCommandsCycle != TimeSpan.FromMinutes(1);
+                return _configuration.GetAgentCommandsCycle != _configuration.DefaultHarvestCycle;
             }
         }
     }
