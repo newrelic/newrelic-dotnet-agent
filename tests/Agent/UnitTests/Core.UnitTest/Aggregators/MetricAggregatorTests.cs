@@ -357,37 +357,5 @@ namespace NewRelic.Agent.Core.Aggregators
             Assert.IsTrue(unsentMetrics.Any(_ => _.MetricName.Name == "DotNet/metric2" && _.Data.Value0 == 1));
             Assert.IsTrue(unsentMetrics.Any(_ => _.MetricName.Name == "Supportability/MetricHarvest/transmit" && _.Data.Value0 == 2));
         }
-
-        [Test]
-        public void HarvestCycle_MatchesDefaultCycle_NoOverride()
-        {
-            Assert.AreEqual(TimeSpan.FromMinutes(1), _harvestCycle);
-        }
-
-        [Test]
-        public void HarvestCycle_MatchesOverridden_Value()
-        {
-            _metricAggregator.Dispose();
-            _configurationAutoResponder.Dispose();
-
-            var expectedTimeSpan = TimeSpan.FromSeconds(10);
-
-            var configuration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
-            Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
-            Mock.Arrange(() => configuration.MetricsHarvestCycle).Returns(expectedTimeSpan);
-            _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
-            var scheduler = Mock.Create<IScheduler>();
-
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
-
-            Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-                .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
-            var metricAggregator = new MetricAggregator(_dataTransportService, _metricBuilder, _metricNameService, _outOfBandMetricSources, _processStatic, scheduler);
-
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
-
-            Assert.AreEqual(expectedTimeSpan, _harvestCycle);
-        }
     }
 }

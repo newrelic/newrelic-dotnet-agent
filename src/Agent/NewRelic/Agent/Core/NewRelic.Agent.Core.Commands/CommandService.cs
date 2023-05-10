@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.Commands
             _configurationService = configurationService;
             _scheduler = scheduler;
 
-            _scheduler.ExecuteEvery(GetAndExecuteAgentCommands, _configurationService.Configuration.GetAgentCommandsCycle ?? TimeSpan.FromMinutes(1));
+            _scheduler.ExecuteEvery(GetAndExecuteAgentCommands, _configurationService.Configuration.GetAgentCommandsCycle);
         }
 
         public override void Dispose()

@@ -45,18 +45,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _metricStatsCollectionQueue = CreateMetricStatsCollectionQueue();
         }
 
-        protected override TimeSpan HarvestCycle
-        {
-            get
-            {
-                if (_configuration.MetricsHarvestCycle.HasValue)
-                {
-                    return _configuration.MetricsHarvestCycle.Value;
-                }
-
-                return DefaultHarvestCycle;
-            }
-        }
+        protected override TimeSpan HarvestCycle => _configuration.MetricsHarvestCycle;
 
         public MetricStatsCollectionQueue StatsCollectionQueue => _metricStatsCollectionQueue;
 

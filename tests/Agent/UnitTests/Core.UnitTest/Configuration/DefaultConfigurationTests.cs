@@ -3238,25 +3238,25 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.CodeLevelMetricsEnabled;
         }
 
-        #region Harvest Cycle Overrides
+        #region Harvest Cycle Tests
 
         [Test]
         public void HarvestCycleOverride_DefaultOrNotSet()
         {
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.False(defaultConfig.MetricsHarvestCycle.HasValue);
-            Assert.False(defaultConfig.TransactionTracesHarvestCycle.HasValue);
-            Assert.False(defaultConfig.ErrorTracesHarvestCycle.HasValue);
-            Assert.False(defaultConfig.GetAgentCommandsCycle.HasValue);
-
-            // This config item already existed and as a plain TimeSpan so it needs to be checks directly and not as a nullable.
+            Assert.AreEqual(60, defaultConfig.MetricsHarvestCycle.TotalSeconds);
+            Assert.AreEqual(60, defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
+            Assert.AreEqual(60, defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
+            Assert.AreEqual(60, defaultConfig.GetAgentCommandsCycle.TotalSeconds);
             Assert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
         }
 
         [TestCase(null)]
         [TestCase("0")]
         [TestCase("-1")]
+        [TestCase("")]
+        [TestCase("a")]
         public void HarvestCycleOverride_Metrics_NotValidValueSet(string value)
         {
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3267,12 +3267,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsFalse(defaultConfig.MetricsHarvestCycle.HasValue);
+            Assert.AreEqual(60, defaultConfig.MetricsHarvestCycle.TotalSeconds);
         }
 
         [TestCase(null)]
         [TestCase("0")]
         [TestCase("-1")]
+        [TestCase("")]
+        [TestCase("a")]
         public void HarvestCycleOverride_TransactionTraces_NotValidValueSet(string value)
         {
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3283,12 +3285,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsFalse(defaultConfig.TransactionTracesHarvestCycle.HasValue);
+            Assert.AreEqual(60, defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
         }
 
         [TestCase(null)]
         [TestCase("0")]
         [TestCase("-1")]
+        [TestCase("")]
+        [TestCase("a")]
         public void HarvestCycleOverride_ErrorTraces_NotValidValueSet(string value)
         {
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3299,12 +3303,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsFalse(defaultConfig.ErrorTracesHarvestCycle.HasValue);
+            Assert.AreEqual(60, defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
         }
 
         [TestCase(null)]
         [TestCase("0")]
         [TestCase("-1")]
+        [TestCase("")]
+        [TestCase("a")]
         public void HarvestCycleOverride_SpanEvents_NotValidValueSet(string value)
         {
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3315,13 +3321,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            // When override is missing or not valid SpanEventsHarvestCycle returns default of 60 seconds. 
             Assert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
         }
 
         [TestCase(null)]
         [TestCase("0")]
         [TestCase("-1")]
+        [TestCase("")]
+        [TestCase("a")]
         public void HarvestCycleOverride_GetAgentCommands_NotValidValueSet(string value)
         {
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3332,7 +3339,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsFalse(defaultConfig.GetAgentCommandsCycle.HasValue);
+            Assert.AreEqual(60, defaultConfig.GetAgentCommandsCycle.TotalSeconds);
         }
 
         [Test]
@@ -3347,8 +3354,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsTrue(defaultConfig.MetricsHarvestCycle.HasValue);
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.MetricsHarvestCycle.Value.TotalSeconds);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.MetricsHarvestCycle.TotalSeconds);
 
             // Test that the backing field is used after the initial call and not changed.
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3357,7 +3363,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "100"
             });
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.MetricsHarvestCycle.Value.TotalSeconds);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.MetricsHarvestCycle.TotalSeconds);
         }
 
         [Test]
@@ -3372,8 +3378,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsTrue(defaultConfig.TransactionTracesHarvestCycle.HasValue);
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.TransactionTracesHarvestCycle.Value.TotalSeconds);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
 
             // Test that the backing field is used after the initial call and not changed.
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3382,7 +3387,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "100"
             });
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.TransactionTracesHarvestCycle.Value.TotalSeconds);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.TransactionTracesHarvestCycle.TotalSeconds);
         }
 
         [Test]
@@ -3397,8 +3402,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsTrue(defaultConfig.ErrorTracesHarvestCycle.HasValue);
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.ErrorTracesHarvestCycle.Value.TotalSeconds);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
 
             // Test that the backing field is used after the initial call and not changed.
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3407,7 +3411,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "100"
             });
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.ErrorTracesHarvestCycle.Value.TotalSeconds);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
         }
 
         [Test]
@@ -3446,8 +3450,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.IsTrue(defaultConfig.GetAgentCommandsCycle.HasValue);
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.GetAgentCommandsCycle.Value.Seconds);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.GetAgentCommandsCycle.Seconds);
 
             // Test that the backing field is used after the initial call and not changed.
             _localConfig.appSettings.Add(new configurationAdd()
@@ -3456,7 +3459,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 value = "100"
             });
 
-            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.GetAgentCommandsCycle.Value.Seconds);
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.GetAgentCommandsCycle.Seconds);
         }
 
         #endregion

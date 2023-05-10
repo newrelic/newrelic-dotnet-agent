@@ -73,38 +73,6 @@ namespace NewRelic.Agent.Core.Aggregators
             Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
         }
 
-        [Test]
-        public void HarvestCycle_MatchesDefaultCycle_NoOverride()
-        {
-            Assert.AreEqual(TimeSpan.FromMinutes(1), _harvestCycle);
-        }
-
-        [Test]
-        public void HarvestCycle_MatchesOverridden_Value()
-        {
-            _errorTraceAggregator.Dispose();
-            _configurationAutoResponder.Dispose();
-
-            var expectedTimeSpan = TimeSpan.FromSeconds(10);
-
-            var configuration = Mock.Create<IConfiguration>();
-            Mock.Arrange(() => configuration.ErrorCollectorEnabled).Returns(true);
-            Mock.Arrange(() => configuration.ErrorsMaximumPerPeriod).Returns(20);
-            Mock.Arrange(() => configuration.CaptureErrorCollectorAttributes).Returns(true);
-            Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
-            Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
-            Mock.Arrange(() => configuration.ErrorTracesHarvestCycle).Returns(expectedTimeSpan);
-            _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
-
-            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
-
-            var errorTraceAggregator = new ErrorTraceAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
-
-            EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
-
-            Assert.AreEqual(expectedTimeSpan, _harvestCycle);
-        }
-
         #region Conifiguration
 
         [Test]

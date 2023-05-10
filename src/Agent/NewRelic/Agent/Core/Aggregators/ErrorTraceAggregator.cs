@@ -42,18 +42,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _readerWriterLock.Dispose();
         }
 
-        protected override TimeSpan HarvestCycle
-        {
-            get
-            {
-                if (_configuration.ErrorTracesHarvestCycle.HasValue)
-                {
-                    return _configuration.ErrorTracesHarvestCycle.Value;
-                }
-
-                return DefaultHarvestCycle;
-            }
-        }
+        protected override TimeSpan HarvestCycle => _configuration.ErrorTracesHarvestCycle;
 
         protected override bool IsEnabled => _configuration.ErrorCollectorEnabled;
 
