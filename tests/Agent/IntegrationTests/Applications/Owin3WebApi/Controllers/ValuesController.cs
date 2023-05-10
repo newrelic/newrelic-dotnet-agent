@@ -50,7 +50,8 @@ namespace Owin3WebApi.Controllers
             }
 
             // Attempt to enforce this is always the transaction trace.
-            Thread.Sleep(5000);
+            await Task.Delay(5000);
+
             return data;
         }
 

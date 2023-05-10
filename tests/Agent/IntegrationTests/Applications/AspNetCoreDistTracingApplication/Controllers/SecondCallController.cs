@@ -17,7 +17,7 @@ namespace AspNetCoreDistTracingApplication.Controllers
             {
                 using (var httpClient = new HttpClient())
                 {
-                    var result = await httpClient.GetStringAsync(new Uri(nextUrl));
+                    var result = await httpClient.GetStringAsync(nextUrl);
                     return result;
                 }
             }

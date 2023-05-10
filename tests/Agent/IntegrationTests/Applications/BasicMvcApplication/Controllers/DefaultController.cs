@@ -63,7 +63,7 @@ namespace BasicMvcApplication.Controllers
 
             using (var client = new HttpClient())
             {
-                await client.GetAsync("https://www.newrelic.com");
+                using var _ = await client.GetAsync("https://www.newrelic.com");
             }
 
             // Simulate lost transaction by clearing HttpContext
