@@ -342,25 +342,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected string DownloadStringAndAssertEqual(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers = null)
         {
-            var webClient = new WebClient();
-
-            if (headers != null)
+            using (var client = new HttpClient())
             {
-                foreach (var header in headers)
+                if (headers != null)
                 {
-                    webClient.Headers.Add(header.Key, header.Value);
+                    foreach (var header in headers)
+                    {
+                        client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                    }
                 }
+
+                var result = client.GetStringAsync(address).Result;
+
+                Assert.NotNull(result);
+                if (expectedResult != null)
+                {
+                    Assert.Equal(expectedResult, result);
+                }
+
+                return result;
             }
-
-            var result = webClient.DownloadString(address);
-
-            Assert.NotNull(result);
-            if (expectedResult != null)
-            {
-                Assert.Equal(expectedResult, result);
-            }
-
-            return result;
         }
 
         protected string DownloadStringAndAssertContains(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers)

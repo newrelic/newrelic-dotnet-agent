@@ -4,7 +4,7 @@
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using System;
-using System.Net;
+using System.Net.Http;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         }
 
         protected AspNetCoreReJitMvcApplicationFixture(bool useTieredCompilation)
-            : base(new RemoteService("AspNetCoreMvcRejitApplication", "AspNetCoreMvcRejitApplication.exe", "net6.0", ApplicationType.Bounded, true, true, true))
+            : base(new RemoteService("AspNetCoreMvcRejitApplication", "AspNetCoreMvcRejitApplication.exe", "net7.0", ApplicationType.Bounded, true, true, true))
         {
             RemoteApplication.UseTieredCompilation = useTieredCompilation;
         }
@@ -56,10 +56,16 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void InitializeApp()
         {
             var address = $"http://{DestinationServerName}:{Port}/";
-            var result = new ExtendedTimeoutWebClient().DownloadString(address);
 
-            Assert.NotNull(result);
-            Assert.Contains("It am working", result);
+            using (var client = new HttpClient())
+            {
+                client.Timeout = TimeSpan.FromMinutes(5);
+
+                var result = client.GetStringAsync(address).Result;
+
+                Assert.NotNull(result);
+                Assert.Contains("It am working", result);
+            }
         }
 
         /// <summary>
@@ -114,29 +120,18 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             ExtendedTimeoutDownloadStringAndAssertEqual(address, "It am working");
         }
 
-        /// <summary>
-        /// When run together, the rejit tests sometimes timeout waiting for the site to spin up initially.
-        /// This class extends the timeout significantly to allow things to spin up in their own time.
-        /// </summary>
-        private class ExtendedTimeoutWebClient : WebClient
-        {
-            protected override WebRequest GetWebRequest(Uri uri)
-            {
-                var webRequest = base.GetWebRequest(uri);
-                webRequest.Timeout = 300 * 1000; // 5 minutes
-                return webRequest;
-            }
-        }
-
         private string ExtendedTimeoutDownloadStringAndAssertEqual(string address, string expectedContent)
         {
-            var result = new ExtendedTimeoutWebClient().DownloadString(address);
+            using (var client = new HttpClient())
+            {
+                client.Timeout = TimeSpan.FromMinutes(5);
 
-            Assert.NotNull(result);
-            Assert.Equal(expectedContent, result);
+                var result = client.GetStringAsync(address).Result;
+                Assert.NotNull(result);
+                Assert.Equal(expectedContent, result);
 
-            return result;
-
+                return result;
+            }
         }
     }
 }

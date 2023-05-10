@@ -5,7 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -39,7 +39,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             try
             {
-                new WebClient().DownloadString(address);
+                using (var client = new HttpClient())
+                {
+                    client.GetStringAsync(address).Wait();
+                }
             }
             catch (Exception)
             {
@@ -56,8 +59,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var exceptionOccurred = false;
             try
             {
-                var result = new WebClient().DownloadString(address);
-                Assert.NotNull(result);
+                using (var client = new HttpClient())
+                {
+                    var result = client.GetStringAsync(address).Result;
+                    Assert.NotNull(result);
+                }
             }
             catch
             {

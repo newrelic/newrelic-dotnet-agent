@@ -230,9 +230,10 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
             }
 
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            using (var wc = new WebClient())
+
+            using (var client = new HttpClient())
             {
-                var s = wc.DownloadString(new Uri("https://www.google.com/"));
+                var s = client.GetStringAsync(new Uri("https://www.google.com/")).Result;
                 if (_printOutput)
                 {
                     Console.WriteLine($"Length of downloaded string = {s.Length}");

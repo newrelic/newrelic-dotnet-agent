@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
@@ -14,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"AspNetCoreMvcBasicRequestsApplication";
         private const string ExecutableName = @"AspNetCoreMvcBasicRequestsApplication.exe";
-        public AspNetCoreMvcBasicRequestsFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net6.0", ApplicationType.Bounded, true, true, true))
+        public AspNetCoreMvcBasicRequestsFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true))
         {
         }
 
@@ -26,75 +29,97 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void GetCORSPreflight()
         {
             var address = $"http://localhost:{Port}/Home/About";
-            var request = (HttpWebRequest)WebRequest.Create(address);
-            request.Method = "OPTIONS";
-            request.Headers.Add("Origin", "http://example.com");
-            request.Headers.Add("Access-Control-Request-Method", "GET");
-            request.Headers.Add("Access-Control-Request-Headers", "X-Requested-With");
 
-            var response = (HttpWebResponse)request.GetResponse();
-            Assert.True(response.StatusCode == HttpStatusCode.NoContent);
+            using (var client = new HttpClient())
+            {
+                using (var request = new HttpRequestMessage(HttpMethod.Options, address))
+                {
+
+                    request.Headers.Add("Origin", "http://example.com");
+                    request.Headers.Add("Access-Control-Request-Method", "GET");
+                    request.Headers.Add("Access-Control-Request-Headers", "X-Requested-With");
+
+                    using (var response = client.SendAsync(request).Result)
+                    {
+                        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+                    }
+                }
+            }
+
         }
 
         public void MakePostRequestWithCustomRequestHeader(Dictionary<string, string> customHeadersToAdd)
         {
             var address = $"http://localhost:{Port}/";
-            var request = (HttpWebRequest)WebRequest.Create(address);
-            request.Method = "POST";
-            request.Referer = "http://example.com/";
-            request.Host = "fakehost:1234";
-            request.UserAgent = "FakeUserAgent";
-            request.Accept = "text/html";
 
-            request.Headers.Add("Proxy-Authorization", "Basic abc");
-            request.Headers.Add("Authorization", "Basic xyz");
-            request.Headers.Add("Cookie", "name1=value1; name2=value2; name3=value3");
-            request.Headers.Add("X-Forwarded-For", "xyz");
-
-            //add custom header
-            foreach (var pairs in customHeadersToAdd)
+            using (var client = new HttpClient())
             {
-                request.Headers.Add(pairs.Key, pairs.Value);
+                using (var request = new HttpRequestMessage(HttpMethod.Options, address))
+                {
+                    request.Method = HttpMethod.Post;
+                    request.Headers.Referrer = new Uri("http://example.com/");
+                    request.Headers.Host = "fakehost:1234";
+                    request.Headers.Add("User-Agent", "FakeUserAgent");
+                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
+
+                    request.Headers.Add("Proxy-Authorization", "Basic abc");
+                    request.Headers.Add("Authorization", "Basic xyz");
+                    request.Headers.Add("Cookie", "name1=value1; name2=value2; name3=value3");
+                    request.Headers.Add("X-Forwarded-For", "xyz");
+
+                    //add custom header
+                    foreach (var pairs in customHeadersToAdd)
+                    {
+                        request.Headers.Add(pairs.Key, pairs.Value);
+                    }
+
+                    var bodyData = Encoding.Default.GetBytes("Hello");
+                    var byteContent = new ByteArrayContent(bodyData);
+                    request.Content = byteContent;
+
+                    using (var response = client.SendAsync(request).Result)
+                    {
+                        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                    }
+                }
             }
-
-            //send some data in the request body
-            var bodyData = Encoding.Default.GetBytes("Hello");
-            request.ContentLength = bodyData.Length;
-            var newStream = request.GetRequestStream();
-            newStream.Write(bodyData, 0, bodyData.Length);
-            newStream.Close();
-
-            var response = (HttpWebResponse)request.GetResponse();
-            Assert.True(response.StatusCode == HttpStatusCode.OK);
         }
 
         public void ThrowException()
         {
             var address = $"http://localhost:{Port}/Home/ThrowException";
-            var webClient = new WebClient();
-            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+            using (var client = new HttpClient())
+            {
+                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
+            }
         }
 
         public void ThrowExceptionWithMessage(string exceptionMessage)
         {
             var address = $"http://localhost:{Port}/ExpectedErrorTest/ThrowExceptionWithMessage?exceptionMessage={exceptionMessage}";
-            var webClient = new WebClient();
-            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+            using (var client = new HttpClient())
+            {
+                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
+            }
         }
 
         public void ReturnADesiredStatusCode(int statusCode)
         {
             var address = $"http://localhost:{Port}/ExpectedErrorTest/ReturnADesiredStatusCode?statusCode={statusCode}";
-            var webClient = new WebClient();
-            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+            using (var client = new HttpClient())
+            {
+                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
+            }
         }
         
 
         public void ThrowCustomException()
         {
             var address = $"http://localhost:{Port}/ExpectedErrorTest/ThrowCustomException";
-            var webClient = new WebClient();
-            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+            using (var client = new HttpClient())
+            {
+                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
+            }
         }
 
         public void GetWithData(string requestParameter)

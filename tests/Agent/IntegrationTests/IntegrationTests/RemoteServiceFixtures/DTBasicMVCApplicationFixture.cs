@@ -3,7 +3,7 @@
 
 
 using System.Collections.Generic;
-using System.Net;
+using System.Net.Http;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
@@ -22,9 +22,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://localhost:{Port}/DistributedTracing/Initiate";
 
-            using (WebClient client = new WebClient())
+            using (var client = new HttpClient())
             {
-                client.DownloadString(address);
+                client.GetStringAsync(address).Wait();
             }
         }
 
@@ -38,10 +38,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             var header = new KeyValuePair<string, string>(DTHeaderHame, payload);
 
-            using (WebClient client = new WebClient())
+            using (var client = new HttpClient())
             {
-                client.Headers.Add(header.Key, header.Value);
-                client.DownloadString(address);
+                client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                client.GetStringAsync(address).Wait();
             }
         }
 
@@ -57,10 +57,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             string payload = "eyJ2IjpbOTk5OSwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiOTEyMyIsImFwIjoiNTE0MjQiLCJpZCI6IjI3ODU2ZjcwZDNkMzE0YjciLCJ0ciI6IjE0ODI5NTk1MjU1NzciLCJwciI6MC4xMjM0LCJzYSI6ZmFsc2UsInRpIjoxNTI5NDI0MTMwNjAzLCJwYSI6IjVmYTNjMDE0OThlMjQ0YTYifX0=";
             var header = new KeyValuePair<string, string>(DTHeaderHame, payload);
 
-            using (var client = new WebClient())
+            using (var client = new HttpClient())
             {
-                client.Headers.Add(header.Key, header.Value);
-                client.DownloadString(address);
+                client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                client.GetStringAsync(address).Wait();
             }
         }
 
@@ -70,10 +70,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             string payload = null;
             var header = new KeyValuePair<string, string>(DTHeaderHame, payload);
 
-            using (var client = new WebClient())
+            using (var client = new HttpClient())
             {
-                client.Headers.Add(header.Key, header.Value);
-                client.DownloadString(address);
+                client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                client.GetStringAsync(address).Wait();
             }
         }
 
@@ -83,10 +83,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             string payload = "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImZvbyI6ImJhciIsYWMiOiI5MTIzIiwiYXAiOiI1MTQyNCIsImlkIjoiMjc4NTZmNzBkM2QzMTRiNyIsInRyIjoiMTQ4Mjk1OTUyNTU3NyIsInByIjowLjEyMzQsInNhIjpmYWxzZSwidGkiOjE1Mjk0MjQxMzA2MDMsInBhIjoiNWZhM2MwMTQ5OGUyNDRhNiJ9fQ==";
             var header = new KeyValuePair<string, string>(DTHeaderHame, payload);
 
-            using (var client = new WebClient())
+            using (var client = new HttpClient())
             {
-                client.Headers.Add(header.Key, header.Value);
-                client.DownloadString(address);
+                client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                client.GetStringAsync(address).Wait();
             }
         }
 
@@ -96,10 +96,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             string payload = "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiMSIsImFwIjoiNTE0MjQiLCJwYSI6IjVmYTNjMDE0OThlMjQ0YTYiLCJpZCI6IjI3ODU2ZjcwZDNkMzE0YjciLCJ0ciI6IjMyMjFiZjA5YWEwYmNmMGQiLCJwciI6MC4xMjM0LCJzYSI6ZmFsc2UsInRpIjoxNDgyOTU5NTI1NTc3fX0=";
             var header = new KeyValuePair<string, string>(DTHeaderHame, payload);
 
-            using (var client = new WebClient())
+            using (var client = new HttpClient())
             {
-                client.Headers.Add(header.Key, header.Value);
-                client.DownloadString(address);
+                client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                client.GetStringAsync(address).Wait();
             }
         }
 
@@ -111,10 +111,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             string payload = "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiODY3NTMwOSIsImFwIjoiNTE0MjQiLCJwYSI6IjVmYTNjMDE0OThlMjQ0YTYiLCJpZCI6IjI3ODU2ZjcwZDNkMzE0YjciLCJ0ciI6IjMyMjFiZjA5YWEwYmNmMGQiLCJwciI6MC4xMjM0LCJzYSI6ZmFsc2UsInRpIjoxNDgyOTU5NTI1NTc3fX0=";
             var header = new KeyValuePair<string, string>(DTHeaderHame, payload);
 
-            using (var client = new WebClient())
+            using (var client = new HttpClient())
             {
-                client.Headers.Add(header.Key, header.Value);
-                client.DownloadString(address);
+                client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                client.GetStringAsync(address).Wait();
             }
         }
 
@@ -124,10 +124,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             string payload = "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiMSIsImFwIjoiNTE0MjQiLCJwYSI6IjVmYTNjMDE0OThlMjQ0YTYiLCJpZCI6IjI3ODU2ZjcwZDNkMzE0YjciLCJ0ciI6IjMyMjFiZjA5YWEwYmNmMGQiLCJwciI6MC4xMjM0LCJzYSI6ZmFsc2UsInRpIjoxNDgyOTU5NTI1NTc3fX0=";
             var header = new KeyValuePair<string, string>(DTHeaderHame, payload);
 
-            using (var client = new WebClient())
+            using (var client = new HttpClient())
             {
-                client.Headers.Add(header.Key, header.Value);
-                client.DownloadString(address);
+                client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                client.GetStringAsync(address).Wait();
             }
         }
 

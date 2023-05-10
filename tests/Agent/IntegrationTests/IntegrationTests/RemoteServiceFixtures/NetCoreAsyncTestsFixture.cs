@@ -10,7 +10,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"NetCoreAsyncApplication";
         private const string ExecutableName = @"NetCoreAsyncApplication.exe";
-        public NetCoreAsyncTestsFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net6.0", ApplicationType.Bounded, true, true, true))
+        public NetCoreAsyncTestsFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true))
         {
         }
     }

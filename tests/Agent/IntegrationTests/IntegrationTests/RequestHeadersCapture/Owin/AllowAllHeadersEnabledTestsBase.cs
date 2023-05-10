@@ -56,7 +56,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
                 { "request.uri", "/api/Values/" },
 
                 // Captured headers
-                { "request.headers.connection", "Keep-Alive" },
                 { "request.headers.accept", "application/json" },
                 { "request.headers.host", "fakehost:1234" },
                 { "request.headers.referer", "http://example.com/" },

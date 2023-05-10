@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -90,15 +89,16 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get404(string Path = "DoesNotExist")
         {
             var address = $"http://{DestinationServerName}:{Port}/{Path}";
-            var webClient = new WebClient();
-
-            try
+            using (var client = new HttpClient())
             {
-                webClient.DownloadString(address);
-            }
-            catch (WebException)
-            {
-                // swallow
+                try
+                {
+                    client.GetStringAsync(address).Wait();
+                }
+                catch (AggregateException)
+                {
+                    // swallow
+                }
             }
         }
 
@@ -106,18 +106,21 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             var guid = Guid.NewGuid().ToString();
             var address = $"http://{DestinationServerName}:{Port}/Default/Ignored?data={guid}";
-            var webClient = new WebClient();
-            var result = webClient.DownloadString(address);
-            Assert.Equal(guid, result);
+            using (var client = new HttpClient())
+            {
+                var result = client.GetStringAsync(address).Result;
+                Assert.Equal(guid, result);
+            }
         }
 
         public void GetRouteWithAttribute()
         {
             var address = $"http://{DestinationServerName}:{Port}/foo/bar";
-            var webClient = new WebClient();
-            webClient.DownloadString(address);
+            using (var client = new HttpClient())
+            {
+                client.GetStringAsync(address).Wait();
+            }
         }
-
         public void WaitForStartup()
         {
             AgentLog.WaitForConnect(Timing.TimeToConnect);
@@ -277,23 +280,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return GetWithHeaders(headers, "Chained", queryString);
         }
 
-        /// <summary>
-        /// Makes a request, optionally including CAT headers, to the "Chained" endpoint (which will itself make a request).
-        /// </summary>
-
-        public HttpResponseHeaders GetWithCatHeaderChainedHttpClient(CrossApplicationRequestData requestData)
-        {
-            var headers = new List<KeyValuePair<string, string>>
-            {
-                new KeyValuePair<string, string>("X-NewRelic-ID", GetXNewRelicId()),
-                new KeyValuePair<string, string>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData))
-            };
-
-            const string action = "Index";
-            var queryString = $"?chainedServerName={DestinationServerName}&chainedPortNumber={Port}&chainedAction={action}";
-            return GetWithHeaders(headers, "ChainedHttpClient", queryString);
-        }
-
 
         public HttpResponseHeaders GetWithUntrustedCatHeader()
         {
@@ -341,8 +327,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void GetStaticResource()
         {
             var address = $"http://{DestinationServerName}:{Port}/bundles/modernizr?v=wBEWDufH_8Md-Pbioxomt90vm6tJN2Pyy9u9zHtWsPo1";
-            var webClient = new WebClient();
-            webClient.DownloadString(address);
+            using (var client = new HttpClient())
+            {
+                client.GetStringAsync(address).Wait();
+            }
         }
 
 
@@ -362,8 +350,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void ThrowException()
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/ThrowException";
-            var webClient = new WebClient();
-            Assert.Throws<System.Net.WebException>(() => webClient.DownloadString(address));
+            using (var client = new HttpClient())
+            {
+                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
+            }
         }
 
         public void SimulateLostTransaction()
@@ -433,7 +423,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 var address = $"http://{DestinationServerName}:{Port}/CustomInstrumentationAsync/GetBackgroundThreadWithError";
                 DownloadStringAndAssertEqual(address, "Worked");
             }
-            catch (WebException)
+            catch (AggregateException)
             {
                 // This is expected behavior.  We need to catch and swallow this exception here to
                 // keep it from bubbling up to the test framework and failing the test.

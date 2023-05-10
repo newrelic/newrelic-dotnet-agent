@@ -3,7 +3,6 @@
 
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using System.Net;
 using System.Net.Http;
 using Xunit;
 

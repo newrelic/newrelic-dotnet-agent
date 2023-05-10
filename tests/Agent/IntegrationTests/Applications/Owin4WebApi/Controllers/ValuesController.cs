@@ -6,7 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace Owin4WebApi.Controllers
@@ -40,9 +42,12 @@ namespace Owin4WebApi.Controllers
 
         [HttpGet]
         [Route("api/Values")]
-        public string Get([FromUri] string data)
+        public async Task<string> Get([FromUri] string data)
         {
-            new WebClient().DownloadString("http://www.google.com");
+            using (var client = new HttpClient())
+            {
+                await client.GetStringAsync("http://www.google.com");
+            }
 
             // Attempt to enforce this is always the transaction trace.
             Thread.Sleep(5000);

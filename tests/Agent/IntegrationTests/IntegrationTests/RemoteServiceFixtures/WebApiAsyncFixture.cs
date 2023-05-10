@@ -5,6 +5,7 @@
 using System.Net;
 using System.Net.Http;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
@@ -106,11 +107,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Get404(string Path = "DoesNotExist")
         {
-            try
+
+            using (var client = new HttpClient())
             {
-                new WebClient().DownloadString($"http://localhost:{Port}/{Path}");
+                using (var response = client.GetAsync($"http://localhost:{Port}/{Path}").Result)
+                {
+                    Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+                }
             }
-            catch (WebException) { }
         }
     }
 }

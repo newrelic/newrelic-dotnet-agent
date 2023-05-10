@@ -121,7 +121,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                     httpRequestMessage.Headers.Add(header.Key, header.Value);
                 }
 
-                return Task.Run(() => httpClient.SendAsync(httpRequestMessage)).Result.Headers;
+                return Task.Run(async () => await httpClient.SendAsync(httpRequestMessage)).Result.Headers;
             }
         }
 

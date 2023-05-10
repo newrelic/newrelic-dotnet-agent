@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Newtonsoft.Json;
@@ -34,32 +35,33 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = string.Format("http://{0}:{1}/api/Values", DestinationServerName, Port);
-            var webClient = GetWebClient();
+            using (var client = new HttpClient())
+            {
+                var resultJson = client.GetStringAsync(address).Result;
+                var result = JsonConvert.DeserializeObject<List<string>>(resultJson);
 
-            var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<List<string>>(resultJson);
-
-            Assert.NotNull(result);
-            Assert.Equal(2, result.Count);
-            Assert.Equal("value 1", result[0]);
-            Assert.Equal("value 2", result[1]);
+                Assert.NotNull(result);
+                Assert.Equal(2, result.Count);
+                Assert.Equal("value 1", result[0]);
+                Assert.Equal("value 2", result[1]);
+            }
         }
 
         public void Get404()
         {
             var address = string.Format(@"http://{0}:{1}/api/404/", DestinationServerName, Port);
-            var webClient = GetWebClient();
 
-            try
+            using (var client = new HttpClient())
             {
-                webClient.DownloadString(address);
-                Assert.True(false, "Expected a 404 WebException.");
-            }
-            catch (WebException exception)
-            {
-                var httpWebResponse = exception.Response as HttpWebResponse;
-                Assert.NotNull(httpWebResponse);
-                Assert.Equal(HttpStatusCode.NotFound, httpWebResponse.StatusCode);
+                using (var response = client.GetAsync(address).Result)
+                {
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+                    }
+                    else
+                        Assert.True(false, "Expected a 404 status code.");
+                }
             }
         }
 
@@ -92,60 +94,63 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         private void PostImpl(string address)
         {
             const string body = "stuff";
-            var httpWebRequest = WebRequest.CreateHttp(address);
-            httpWebRequest.Method = "POST";
-            httpWebRequest.ContentType = "application/json";
-            httpWebRequest.Accept = "application/json";
-            httpWebRequest.Referer = "http://example.com/";
-            httpWebRequest.UserAgent = "FakeUserAgent";
-            httpWebRequest.Host = "fakehost:1234";
-            httpWebRequest.Headers.Add("foo", "bar");
 
-            var serializedBody = JsonConvert.SerializeObject(body);
-            var encoding = new ASCIIEncoding();
-            var bodyBytes = encoding.GetBytes(serializedBody);
-            httpWebRequest.ContentLength = bodyBytes.Length;
+            using (var client = new HttpClient())
+            {
+                using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+                {
+                    request.Headers.Referrer = new Uri("http://example.com/");
+                    request.Headers.Add("User-Agent", "FakeUserAgent");
+                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    request.Headers.Host = "fakehost:1234";
+                    request.Headers.Add("foo", "bar");
 
-            Contract.Assert(serializedBody != null);
+                    var serializedBody = JsonConvert.SerializeObject(body);
 
-            httpWebRequest.GetRequestStream().Write(bodyBytes, 0, bodyBytes.Length);
-            var response = (HttpWebResponse)httpWebRequest.GetResponse();
-            var receiveStream = response.GetResponseStream();
-            var encode = Encoding.GetEncoding("utf-8");
-            var readStream = new StreamReader(receiveStream, encode);
-            var resultJson = readStream.ReadToEnd();
-            var result = JsonConvert.DeserializeObject<string>(resultJson);
-            response.Close();
-            readStream.Close();
+                    request.Content = new StringContent(serializedBody, Encoding.Default, "application/json");
 
-            Assert.NotNull(result);
-            Assert.Equal(body, result);
+                    using (var response = client.SendAsync(request).Result)
+                    {
+                        var resultJson = response.Content.ReadAsStringAsync().Result;
+                        var result = JsonConvert.DeserializeObject<string>(resultJson);
+                        Assert.NotNull(result);
+                        Assert.Equal(body, result);
+                    }
+                }
+            }
         }
 
         public void ThrowException()
         {
             var address = string.Format(@"http://{0}:{1}/api/ThrowException/", DestinationServerName, Port);
-            var webClient = GetWebClient();
-            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+            using (var client = GetHttpClient())
+            {
+                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
+            }
         }
 
         public void InvokeBadMiddleware()
         {
             var address = string.Format(@"http://{0}:{1}/AsyncAwait/UseBadMiddleware", DestinationServerName, Port);
-            var webClient = GetWebClient();
-            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+            using (var client = GetHttpClient())
+            {
+                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
+            }
         }
 
         public void Async()
         {
             var address = string.Format("http://{0}:{1}/api/Async", DestinationServerName, Port);
-            var webClient = GetWebClient();
 
-            var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<List<string>>(resultJson);
+            using (var client = GetHttpClient())
+            {
+                var resultJson = client.GetStringAsync(address).Result;
 
-            Assert.NotNull(result);
-            Assert.Equal(2, result.Count);
+                var result = JsonConvert.DeserializeObject<List<string>>(resultJson);
+
+                Assert.NotNull(result);
+                Assert.Equal(2, result.Count);
+            }
         }
         public void GetIoBoundNoSpecialAsync()
         {
@@ -173,15 +178,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://localhost:{Port}/AsyncAwait/ErrorResponse";
 
-            var webClient = GetWebClient();
-            try
+            using (var client = GetHttpClient())
             {
-                var response = webClient.DownloadString(address);
-            }
-            catch (WebException)
-            {
-                // This is expected behavior.  We need to catch this exception here to make sure it doesn't
-                // bubble up to the test framework and fail the test.
+                using (var response = client.GetAsync(address).Result)
+                {
+                    Assert.False(response.IsSuccessStatusCode);
+                }
             }
         }
 
@@ -206,19 +208,22 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void GetBogusPath(string bogusPath)
         {
             var address = string.Format(@"http://{0}:{1}/{2}", DestinationServerName, Port, bogusPath);
-            var webClient = GetWebClient();
-            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+            using (var client = GetHttpClient())
+            {
+                Assert.Throws<AggregateException>(() => client.GetStringAsync(address).Wait());
+            }
         }
 
-        public WebClient GetWebClient()
+        public HttpClient GetHttpClient()
         {
-            var webClient = new WebClient();
-            webClient.Headers.Add("accept", "application/json");
-            webClient.Headers.Add("referer", "http://example.com");
-            webClient.Headers.Add("user-agent", "FakeUserAgent");
-            webClient.Headers.Add("host", "fakehost");
-            webClient.Headers.Add("foo", "bar");
-            return webClient;
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("accept", "application/json");
+            client.DefaultRequestHeaders.Add("referer", "http://example.com");
+            client.DefaultRequestHeaders.Add("user-agent", "FakeUserAgent");
+            client.DefaultRequestHeaders.Add("host", "fakehost");
+            client.DefaultRequestHeaders.Add("foo", "bar");
+
+            return client;
         }
     }
 

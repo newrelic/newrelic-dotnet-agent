@@ -7,7 +7,6 @@ using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
-using System.Net;
 using System.IO;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
@@ -37,7 +36,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                     {
                         _fixture.Get();
                     }
-                    catch (WebException ex)
+                    catch (AggregateException ex)
                     {
                         throw new Exception("Application with mscorlib custom instrumentation crashed.", ex);
 

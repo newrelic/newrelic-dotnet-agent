@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
+using System.Net.Http;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.IntegrationTests.Models;
@@ -69,9 +70,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Warming up collector via: {address}");
 
-            var webClient = new WebClient();
-            var result = webClient.DownloadString(address);
-            return result;
+            using (var client = new HttpClient())
+            {
+                var result = client.GetStringAsync(address).Result;
+                return result;
+            }
         }
 
         public IEnumerable<CollectedRequest> GetCollectedRequests()
@@ -80,10 +83,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Get collected requests via: {address}");
 
-            var webClient = new WebClient();
-            var result = webClient.DownloadString(address);
-            var collectedRequests = JsonConvert.DeserializeObject<List<CollectedRequest>>(result);
-            return collectedRequests;
+            using (var client = new HttpClient())
+            {
+                var result = client.GetStringAsync(address).Result;
+                var collectedRequests = JsonConvert.DeserializeObject<List<CollectedRequest>>(result);
+                return collectedRequests;
+            }
         }
 
         public void TriggerThreadProfile()
@@ -92,8 +97,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Trigger thread profile via: {address}");
 
-            var webClient = new WebClient();
-            var result = webClient.DownloadString(address);
+            using (var client = new HttpClient())
+            {
+                client.GetStringAsync(address).Wait();
+            }
         }
 
         public void TriggerCustomInstrumentationEditorAgentCommand()
@@ -102,8 +109,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Trigger custom instrumentation editor via: {address}");
 
-            var webClient = new WebClient();
-            var result = webClient.DownloadString(address);
+            using (var client = new HttpClient())
+            {
+                client.GetStringAsync(address).Wait();
+            }
         }
 
         public void SetCustomInstrumentationEditorOnConnect()
@@ -112,8 +121,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Set custom instrumentation editor on connect via: {address}");
 
-            var webClient = new WebClient();
-            var result = webClient.DownloadString(address);
+            using (var client = new HttpClient())
+            {
+                client.GetStringAsync(address).Wait();
+            }
         }
 
         public HeaderValidationData GetRequestHeaderMapValidationData()
@@ -122,9 +133,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[MockNewRelicFixture] Get request_header_map HeaderValidation via: {address}");
 
-            var webClient = new WebClient();
-            var result = webClient.DownloadString(address);
-            return JsonConvert.DeserializeObject<HeaderValidationData>(result);
+            using (var client = new HttpClient())
+            {
+                var result = client.GetStringAsync(address).Result;
+                return JsonConvert.DeserializeObject<HeaderValidationData>(result);
+            }
         }
 
         private void LogSslNegotiationMessage()
