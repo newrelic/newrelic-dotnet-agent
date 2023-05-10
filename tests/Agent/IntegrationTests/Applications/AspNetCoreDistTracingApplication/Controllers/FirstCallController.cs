@@ -26,14 +26,5 @@ namespace AspNetCoreDistTracingApplication.Controllers
                 return result;
             }
         }
-
-        public string WebRequestCallNext(string nextUrl)
-        {
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.GetAsync(nextUrl).Wait();
-                return "Worked";
-            }
-        }
     }
 }

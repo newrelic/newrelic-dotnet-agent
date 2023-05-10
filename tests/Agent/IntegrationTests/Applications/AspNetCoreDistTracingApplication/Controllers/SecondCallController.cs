@@ -26,14 +26,5 @@ namespace AspNetCoreDistTracingApplication.Controllers
                 return $"Exception occurred in {nameof(SecondCallController)} calling [{nextUrl}]: {ex}";
             }
         }
-
-        public string WebRequestCallNext(string nextUrl)
-        {
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.GetAsync(nextUrl).Wait();
-                return "Worked";
-            }
-        }
     }
 }
