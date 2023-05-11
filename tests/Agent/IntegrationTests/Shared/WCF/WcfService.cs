@@ -212,7 +212,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
 #endregion
 
 
-        private Task<string> DoWork(string value, bool ignoreTransaction, bool throwException)
+        private async Task<string> DoWork(string value, bool ignoreTransaction, bool throwException)
         {
             if (_printOutput) Console.WriteLine("DoWork");
 
@@ -233,13 +233,13 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
 
             using (var client = new HttpClient())
             {
-                var s = client.GetStringAsync(new Uri("https://www.google.com/")).Result;
+                var s = await client.GetStringAsync(new Uri("https://www.google.com/"));
                 if (_printOutput)
                 {
                     Console.WriteLine($"Length of downloaded string = {s.Length}");
                 }
 
-                return Task.FromResult($"You entered: {value}");
+                return $"You entered: {value}";
             }
         }
     }

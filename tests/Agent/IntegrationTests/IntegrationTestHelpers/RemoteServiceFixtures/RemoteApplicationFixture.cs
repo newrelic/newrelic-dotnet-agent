@@ -342,29 +342,39 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected string GetStringAndAssertEqual(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers = null)
         {
-            using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, address))
+            string result;
+
+            if (headers == null)
             {
-                if (headers != null)
+                result = _httpClient.GetStringAsync(address).Result; // throws an AggregateException if there's a problem making the call
+            }
+            else
+            {
+                using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, address))
                 {
-                    foreach (var header in headers)
+                    if (headers != null)
                     {
-                        requestMessage.Headers.Add(header.Key, header.Value);
-                    }
-                }
-
-                using (var response = _httpClient.SendAsync(requestMessage).Result)
-                {
-                    var result = response.Content.ReadAsStringAsync().Result;
-
-                    Assert.NotNull(result);
-                    if (expectedResult != null)
-                    {
-                        Assert.Equal(expectedResult, result);
+                        foreach (var header in headers)
+                        {
+                            requestMessage.Headers.Add(header.Key, header.Value);
+                        }
                     }
 
-                    return result;
+                    using (var response = _httpClient.SendAsync(requestMessage).Result)
+                    {
+                        result = response.Content.ReadAsStringAsync().Result;
+                    }
                 }
             }
+
+            Assert.NotNull(result);
+            if (expectedResult != null)
+            {
+                Assert.Equal(expectedResult, result);
+            }
+
+            return result;
+
         }
 
         protected string GetStringAndAssertContains(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers = null)
