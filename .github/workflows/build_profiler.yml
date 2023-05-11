@@ -328,17 +328,22 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Install xmlstarlet
+        run: |
+          sudo apt-get install -y xmlstarlet
+
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
-      - name: Install xmlstarlet
-        run: |
-          sudo apt-get install -y xmlstarlet
-
       - name: Update Profiler Package Reference to Latest Version
         run: |
+          cat ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj \
+          cat ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj | \
+          xmlstarlet edit --pf --omit-decl \
+          --update "//PackageReference[@Include='NewRelic.Agent.Internal.Profiler']/@Version" \
+          --value "${{ needs.package-and-deploy.outputs.package_version }}" \
           cat ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj | \
           xmlstarlet edit --pf --omit-decl \
           --update "//PackageReference[@Include='NewRelic.Agent.Internal.Profiler']/@Version" \
