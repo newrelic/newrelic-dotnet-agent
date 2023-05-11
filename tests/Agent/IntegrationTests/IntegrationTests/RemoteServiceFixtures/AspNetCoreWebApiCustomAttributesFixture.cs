@@ -18,7 +18,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = string.Format("http://localhost:{0}/api/CustomAttributes", Port);
-            GetJsonAndAssertEqual(address, "success");
+            GetStringAndAssertEqual(address, "success");
         }
     }
     public class HSMAspNetCoreWebApiCustomAttributesFixture : AspNetCoreWebApiCustomAttributesFixture

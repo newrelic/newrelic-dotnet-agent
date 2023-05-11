@@ -397,10 +397,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
 
-        protected T GetJsonAndAssertEqual<T>(string address, T expectedResult)
+        protected T GetJsonAndAssertEqual<T>(string address, T expectedResult, List<KeyValuePair<string, string>> headers = null)
         {
-            var resultJson = _httpClient.GetStringAsync(address).Result;
-            var result = JsonConvert.DeserializeObject<T>(resultJson);
+            var result = GetJson<T>(address, headers);
 
             Assert.NotEqual(default(T), result);
 
