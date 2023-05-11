@@ -312,16 +312,11 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}/_workingDir/NugetProfiler/NewRelic.Agent.Internal.Profiler.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}//_workingDir/NugetProfiler/$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Internal.Profiler').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
-            nuget.exe push $packagePath -Source ${{ env.myget_source }}
-          }
-          else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
-            Write-Host "nuget.exe push $packagePath -Source ${{ env.myget_source }}"
-          }
+          nuget.exe push $packagePath -Source ${{ env.myget_source }}
         shell: powershell
 
   update-nuget-reference:
+    name: Update Profiler Nuget  Reference
     runs-on: ubuntu-22.04
     needs: package-and-deploy
     permissions:
