@@ -8,6 +8,7 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -40,6 +41,8 @@ namespace NewRelic.Agent.Core.Aggregators
             base.Dispose();
             _readerWriterLock.Dispose();
         }
+
+        protected override TimeSpan HarvestCycle => _configuration.ErrorTracesHarvestCycle;
 
         protected override bool IsEnabled => _configuration.ErrorCollectorEnabled;
 

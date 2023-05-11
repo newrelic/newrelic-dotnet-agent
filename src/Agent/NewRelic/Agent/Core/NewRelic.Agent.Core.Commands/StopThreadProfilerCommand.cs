@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.Commands
             if (arguments == null)
                 return "No arguments sent with stop_profiler command.";
 
-            var stopArgs = new ThreadProfilerCommandArgs(arguments);
+            var stopArgs = new ThreadProfilerCommandArgs(arguments, ThreadProfilingService.IgnoreMinMinimumSamplingDuration);
             if (stopArgs.ProfileId == 0)
                 return "A valid profile_id must be supplied to stop a thread profiling session.";
 

@@ -62,6 +62,8 @@ namespace NewRelic.Agent.Core.Configuration
         public bool UseResourceBasedNamingForWCFEnabled { get; }
         public bool EventListenerSamplersEnabled { get; set; }
 
+        public TimeSpan DefaultHarvestCycle => TimeSpan.FromMinutes(1);
+
         /// <summary>
         /// Default configuration constructor.  It will contain reasonable default values for everything and never anything more.
         /// </summary>
@@ -840,7 +842,29 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public TimeSpan SpanEventsHarvestCycle => ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestCycle, TimeSpan.FromMinutes(1));
+        private TimeSpan? _spanEventsHarvestCycleOverride = null;
+        public TimeSpan SpanEventsHarvestCycle
+        {
+            get
+            {
+                if (_spanEventsHarvestCycleOverride.HasValue)
+                {
+                    return _spanEventsHarvestCycleOverride.Value;
+                }
+
+                if (_newRelicAppSettings.TryGetValue("OverrideSpanEventsHarvestCycle", out var harvestCycle))
+                {
+                    if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                    {
+                        Log.Info("Span events harvest cycle overridden to " + parsedHarvestCycle + " seconds.");
+                        _spanEventsHarvestCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                        return _spanEventsHarvestCycleOverride.Value;
+                    }
+                }
+
+                return ServerOverrides(_serverConfiguration.SpanEventHarvestConfig?.HarvestCycle, DefaultHarvestCycle);
+            }
+        }
 
         public bool SpanEventsAttributesEnabled => CaptureAttributes && _localConfiguration.spanEvents.attributes.enabled;
 
@@ -2026,6 +2050,102 @@ namespace NewRelic.Agent.Core.Configuration
                 return _forceSynchronousTimingCalculationHttpClient.HasValue
                     ? _forceSynchronousTimingCalculationHttpClient.Value
                     : (_forceSynchronousTimingCalculationHttpClient = TryGetAppSettingAsBoolWithDefault("ForceSynchronousTimingCalculation.HttpClient", false)).Value;
+            }
+        }
+
+        private TimeSpan? _metricsHarvestCycleOverride = null;
+        public TimeSpan MetricsHarvestCycle
+        {
+            get
+            {
+                if (_metricsHarvestCycleOverride.HasValue)
+                {
+                    return _metricsHarvestCycleOverride.Value;
+                }
+
+                if (_newRelicAppSettings.TryGetValue("OverrideMetricsHarvestCycle", out var harvestCycle))
+                {
+                    if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                    {
+                        Log.Info("Metrics harvest cycle overridden to " + parsedHarvestCycle + " seconds.");
+                        _metricsHarvestCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                        return _metricsHarvestCycleOverride.Value;
+                    }
+                }
+
+                return DefaultHarvestCycle;
+            }
+        }
+
+        private TimeSpan? _transactionTraceHarvestCycleOverride = null;
+        public TimeSpan TransactionTracesHarvestCycle
+        {
+            get
+            {
+                if (_transactionTraceHarvestCycleOverride.HasValue)
+                {
+                    return _transactionTraceHarvestCycleOverride.Value;
+                }
+
+                if (_newRelicAppSettings.TryGetValue("OverrideTransactionTracesHarvestCycle", out var harvestCycle))
+                {
+                    if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                    {
+                        Log.Info("Transaction traces harvest cycle overridden to " + parsedHarvestCycle + " seconds.");
+                        _transactionTraceHarvestCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                        return _transactionTraceHarvestCycleOverride.Value;
+                    }
+                }
+
+                return DefaultHarvestCycle;
+            }
+        }
+
+        private TimeSpan? _errorTracesHarvestCycleOverride = null;
+        public TimeSpan ErrorTracesHarvestCycle
+        {
+            get
+            {
+                if (_errorTracesHarvestCycleOverride.HasValue)
+                {
+                    return _errorTracesHarvestCycleOverride.Value;
+                }
+
+                if (_newRelicAppSettings.TryGetValue("OverrideErrorTracesHarvestCycle", out var harvestCycle))
+                {
+                    if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                    {
+                        Log.Info("Error traces harvest cycle overridden to " + parsedHarvestCycle + " seconds.");
+                        _errorTracesHarvestCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                        return _errorTracesHarvestCycleOverride.Value;
+                    }
+                }
+
+                return DefaultHarvestCycle;
+            }
+        }
+
+        private TimeSpan? _getAgentCommandsCycleOverride = null;
+        public TimeSpan GetAgentCommandsCycle
+        {
+            get
+            {
+                if (_getAgentCommandsCycleOverride.HasValue)
+                {
+                    return _getAgentCommandsCycleOverride.Value;
+                }
+
+                if (_newRelicAppSettings.TryGetValue("OverrideGetAgentCommandsCycle", out var harvestCycle))
+                {
+                    if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                    {
+                        Log.Info("Get agent commands cycle overridden to " + parsedHarvestCycle + " seconds.");
+                        _getAgentCommandsCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                        return _getAgentCommandsCycleOverride.Value;
+                    }
+                }
+
+                return DefaultHarvestCycle;
             }
         }
 

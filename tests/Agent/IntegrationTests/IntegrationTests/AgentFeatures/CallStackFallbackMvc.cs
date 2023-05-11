@@ -30,7 +30,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
                     configModifier.SetLogLevel("Finest");
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
                     _fixture.DisableAsyncLocalCallStack();
                 },
                 exerciseApplication: () =>

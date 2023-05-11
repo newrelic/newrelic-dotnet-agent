@@ -28,6 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 },
                 exerciseApplication: () =>
                 {
@@ -38,9 +39,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 
                     // The Supportability/AnalyticsEvents/TotalEventsSent metric won't be seen until a second harvest occurs, so we must wait up to 60 seconds for it
                     var startTime = DateTime.Now;
-                    while (DateTime.Now <= startTime.AddSeconds(60) && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/AnalyticsEvents/TotalEventsSent"))
+                    while (DateTime.Now <= startTime.AddSeconds(20) && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/AnalyticsEvents/TotalEventsSent"))
                     {
-                        Thread.Sleep(TimeSpan.FromSeconds(5));
+                        Thread.Sleep(TimeSpan.FromMilliseconds(500));
                     }
                 }
             );

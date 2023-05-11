@@ -344,5 +344,35 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "diagnostics"}, "captureAgentTiming", enable.ToString().ToLower());
             return this;
         }
+
+        public NewRelicConfigModifier ConfigureFasterMetricsHarvestCycle(int seconds)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideMetricsHarvestCycle", seconds.ToString(), "urn:newrelic-config");
+            return this;
+        }
+
+        public NewRelicConfigModifier ConfigureFasterTransactionTracesHarvestCycle(int seconds)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideTransactionTracesHarvestCycle", seconds.ToString(), "urn:newrelic-config");
+            return this;
+        }
+
+        public NewRelicConfigModifier ConfigureFasterSpanEventsHarvestCycle(int seconds)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideSpanEventsHarvestCycle", seconds.ToString(), "urn:newrelic-config");
+            return this;
+        }
+
+        public NewRelicConfigModifier ConfigureFasterErrorTracesHarvestCycle(int seconds)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideErrorTracesHarvestCycle", seconds.ToString(), "urn:newrelic-config");
+            return this;
+        }
+
+        public NewRelicConfigModifier ConfigureFasterGetAgentCommandsCycle(int seconds)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideGetAgentCommandsCycle", seconds.ToString(), "urn:newrelic-config");
+            return this;
+        }
     }
 }
