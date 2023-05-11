@@ -316,7 +316,7 @@ jobs:
         shell: powershell
 
   update-nuget-reference:
-    name: Update Profiler Nuget  Reference
+    name: Update Profiler Nuget Reference
     runs-on: ubuntu-22.04
     needs: package-and-deploy
     permissions:
@@ -326,7 +326,6 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
         with:
-          disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
@@ -334,15 +333,22 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install xmlstarlet
+        run: |
+          sudo apt-get install -y xmlstarlet
+
       - name: Update Profiler Package Reference to Latest Version
         run: |
-          dotnet add src/Agent/NewRelic/Home/Home.csproj package NewRelic.Agent.Internal.Profiler --version ${{ needs.package-and-deploy.outputs.package_version }}
+          cat ./src/Agent/NewRelic/Home/Home.csproj | \
+          xmlstarlet edit --pf --omit-decl \
+          --update "//PackageReference[@Include='NewRelic.Agent.Internal.Profiler']/@Version" \
+          --value "${{ needs.package-and-deploy.outputs.package_version }}" > ./src/Agent/NewRelic/Home/Home.csproj
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@5b4a9f6a9e2af26e5f02351490b90d01eb8ec1e5 # v5.0.0
         with:
-            commit-message: "chore: Update Profiler NuGet Package Reference."
-            title: "chore: Update Profiler NuGet Package Reference."
+            commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}."
+            title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}"
             branch: profiler-nuget-updates/${{ github.ref_name }}
             labels: |
               profiler nuget
