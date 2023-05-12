@@ -241,10 +241,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         }
 
         /// <summary>
-        /// Makes a request, optionally including CAT headers, to the "Chained" endpoint (which will itself make a request).
+        /// Makes a request, optionally including CAT headers, to the "ChainedWebRequest" endpoint (which will itself make a request).
         /// </summary>
 
-        public HttpResponseHeaders GetWithCatHeaderChained(CrossApplicationRequestData requestData)
+        public HttpResponseHeaders GetWithCatHeaderChainedWebRequest(CrossApplicationRequestData requestData)
         {
             var headers = new List<KeyValuePair<string, string>>
             {
@@ -254,9 +254,25 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             const string action = "Index";
             var queryString = $"?chainedServerName={DestinationServerName}&chainedPortNumber={Port}&chainedAction={action}";
-            return GetWithHeaders(headers, "Chained", queryString);
+            return GetWithHeaders(headers, "ChainedWebRequest", queryString);
         }
 
+        /// <summary>
+        /// Makes a request, optionally including CAT headers, to the "ChainedHttpClient" endpoint (which will itself make a request).
+        /// </summary>
+
+        public HttpResponseHeaders GetWithCatHeaderChainedHttpClient(CrossApplicationRequestData requestData)
+        {
+            var headers = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("X-NewRelic-ID", GetXNewRelicId()),
+                new KeyValuePair<string, string>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData))
+            };
+
+            const string action = "Index";
+            var queryString = $"?chainedServerName={DestinationServerName}&chainedPortNumber={Port}&chainedAction={action}";
+            return GetWithHeaders(headers, "ChainedHttpClient", queryString);
+        }
 
         public HttpResponseHeaders GetWithUntrustedCatHeader()
         {

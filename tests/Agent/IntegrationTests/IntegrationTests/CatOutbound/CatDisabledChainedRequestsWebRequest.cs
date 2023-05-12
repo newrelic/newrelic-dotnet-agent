@@ -16,13 +16,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CatOutbound
 {
     [NetFrameworkTest]
-    public class CatDisabledChainedRequests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class CatDisabledChainedRequestsWebRequest : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
         private HttpResponseHeaders _responseHeaders;
 
-        public CatDisabledChainedRequests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
+        public CatDisabledChainedRequestsWebRequest(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
                 exerciseApplication: () =>
                 {
                     _fixture.GetIgnored();
-                    _responseHeaders = _fixture.GetWithCatHeaderChained(requestData: new CrossApplicationRequestData("guid", false, "tripId", "pathHash"));
+                    _responseHeaders = _fixture.GetWithCatHeaderChainedWebRequest(requestData: new CrossApplicationRequestData("guid", false, "tripId", "pathHash"));
                 }
             );
             _fixture.Initialize();
@@ -52,7 +52,7 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
             var calleeTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/Index");
             Assert.NotNull(calleeTransactionEvent);
 
-            var callerTransactionTrace = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/Chained");
+            var callerTransactionTrace = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/ChainedWebRequest");
             Assert.NotNull(callerTransactionTrace);
 
             var crossProcessId = _fixture.AgentLog.GetCrossProcessId();
@@ -64,13 +64,13 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
                 new Assertions.ExpectedMetric { metricName = @"External/allWeb", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/DefaultController/Chained", callCount = 1 }
+                new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/DefaultController/ChainedWebRequest", callCount = 1 }
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $@"ExternalApp/{_fixture.RemoteApplication.DestinationServerName}/{crossProcessId}/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{_fixture.RemoteApplication.DestinationServerName}/{crossProcessId}/WebTransaction/MVC/DefaultController/Index" },
-                new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{_fixture.RemoteApplication.DestinationServerName}/{crossProcessId}/WebTransaction/MVC/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/Chained" },
+                new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{_fixture.RemoteApplication.DestinationServerName}/{crossProcessId}/WebTransaction/MVC/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/ChainedWebRequest" },
                 new Assertions.ExpectedMetric { metricName = @"ClientApplication/[^/]+/all", IsRegexName = true }
             };
             var expectedCallerTraceSegmentRegexes = new List<string>

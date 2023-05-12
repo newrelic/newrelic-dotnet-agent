@@ -15,7 +15,7 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CatOutbound
 {
     [NetFrameworkTest]
-    public class CatEnabledChainedRequests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class CatEnabledChainedRequestsWebRequest : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
 
         private RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
@@ -23,7 +23,7 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
 
         private HttpResponseHeaders _responseHeaders;
 
-        public CatEnabledChainedRequests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
+        public CatEnabledChainedRequestsWebRequest(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -40,7 +40,7 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
                 exerciseApplication: () =>
                 {
                     _fixture.GetIgnored();
-                    _responseHeaders = _fixture.GetWithCatHeaderChained(requestData: new CrossApplicationRequestData("guid", false, "tripId", "pathHash"));
+                    _responseHeaders = _fixture.GetWithCatHeaderChainedWebRequest(requestData: new CrossApplicationRequestData("guid", false, "tripId", "pathHash"));
                 }
             );
             _fixture.Initialize();
@@ -59,7 +59,7 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
             var calleeTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/Index");
             Assert.NotNull(calleeTransactionEvent);
 
-            var callerTransactionTrace = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/Chained");
+            var callerTransactionTrace = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/ChainedWebRequest");
             Assert.NotNull(callerTransactionTrace);
 
             var crossProcessId = _fixture.AgentLog.GetCrossProcessId();
@@ -72,14 +72,14 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
                 new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"ExternalApp/{_fixture.RemoteApplication.DestinationServerName}/{crossProcessId}/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{_fixture.RemoteApplication.DestinationServerName}/{crossProcessId}/WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{_fixture.RemoteApplication.DestinationServerName}/{crossProcessId}/WebTransaction/MVC/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/Chained", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{_fixture.RemoteApplication.DestinationServerName}/{crossProcessId}/WebTransaction/MVC/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/ChainedWebRequest", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"ClientApplication/[^/]+/all", IsRegexName = true }
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
 				// This scoped metric should be superceded by the ExternalTransaction metric above
-				new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/DefaultController/Chained" }
+				new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/DefaultController/ChainedWebRequest" }
             };
             // Note: we are checking the attributes attached to the *Callee's* transaction, not the caller's transaction. The attributes attached to the caller's transaction are already fully vetted in the CatInbound tests.
             var expectedTransactionEventIntrinsicAttributes1 = new List<string>
@@ -101,7 +101,7 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
 
             NrAssert.Multiple(
                 () => Assert.Equal(crossProcessId, catResponseData.CrossProcessId),
-                () => Assert.Equal("WebTransaction/MVC/DefaultController/Chained", catResponseData.TransactionName),
+                () => Assert.Equal("WebTransaction/MVC/DefaultController/ChainedWebRequest", catResponseData.TransactionName),
                 () => Assert.True(catResponseData.QueueTimeInSeconds >= 0),
                 () => Assert.True(catResponseData.ResponseTimeInSeconds >= 0),
                 () => Assert.Equal(-1, catResponseData.ContentLength),

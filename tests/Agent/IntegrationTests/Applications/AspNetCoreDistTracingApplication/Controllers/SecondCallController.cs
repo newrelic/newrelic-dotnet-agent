@@ -3,6 +3,7 @@
 
 
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +26,15 @@ namespace AspNetCoreDistTracingApplication.Controllers
             {
                 return $"Exception occurred in {nameof(SecondCallController)} calling [{nextUrl}]: {ex}";
             }
+        }
+
+        public string WebRequestCallNext(string nextUrl)
+        {
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
+            var httpWebRequest = WebRequest.Create(nextUrl);
+            httpWebRequest.GetResponse();
+#pragma warning restore SYSLIB0014
+            return "Worked";
         }
     }
 }

@@ -106,6 +106,27 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return receiverApplication;
         }
 
+        public HttpResponseHeaders ExecuteTraceRequestChainHttpWebRequest(IEnumerable<KeyValuePair<string, string>> headers)
+        {
+            const string action = "Index";
+            var queryString = $"?chainedServerName={ReceiverApplication.DestinationServerName}&chainedPortNumber={ReceiverApplication.Port}&chainedAction={action}";
+
+            var address = $"http://{DestinationServerName}:{Port}/Default/ChainedWebRequest{queryString}";
+
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, address))
+            {
+                foreach (var header in headers)
+                {
+                    httpRequestMessage.Headers.Add(header.Key, header.Value);
+                }
+
+                using (var httpResponseMessage = _httpClient.SendAsync(httpRequestMessage).Result)
+                {
+                    return httpResponseMessage.Headers;
+                }
+            }
+        }
+
         public void ExecuteTraceRequestChainHttpClient(IEnumerable<KeyValuePair<string, string>> headers = null)
         {
             // the test calls the senderUrl, passing in the receiverUrl as a parameter

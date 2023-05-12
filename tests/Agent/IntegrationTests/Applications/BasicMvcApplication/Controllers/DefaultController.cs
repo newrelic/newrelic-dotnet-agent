@@ -148,7 +148,19 @@ namespace BasicMvcApplication.Controllers
             return View("Index");
         }
 
-        public async Task<string> Chained(string chainedServerName, string chainedPortNumber, string chainedAction)
+
+        public string ChainedWebRequest(string chainedServerName, string chainedPortNumber, string chainedAction)
+        {
+            var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
+            var httpWebRequest = WebRequest.Create(address);
+            httpWebRequest.GetResponse();
+#pragma warning restore SYSLIB0014
+
+            return "Worked";
+        }
+
+        public async Task<string> ChainedHttpClient(string chainedServerName, string chainedPortNumber, string chainedAction)
         {
             var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
             using (var client = new HttpClient())
