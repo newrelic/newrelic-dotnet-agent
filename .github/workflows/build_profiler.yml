@@ -342,9 +342,9 @@ jobs:
           cat ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj | \
           xmlstarlet edit --pf --omit-decl \
           --update "//PackageReference[@Include='NewRelic.Agent.Internal.Profiler']/@Version" \
-          --value "${{ needs.package-and-deploy.outputs.package_version }}" > ./_temp &&
-          cat ./_temp > ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj &&
-          rm -f ./_temp
+          --value "${{ needs.package-and-deploy.outputs.package_version }}" > ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp &&
+          cat ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp > ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj &&
+          rm -f ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@5b4a9f6a9e2af26e5f02351490b90d01eb8ec1e5 # v5.0.0
