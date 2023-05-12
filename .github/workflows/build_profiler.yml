@@ -326,12 +326,11 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
         with:
-          disable-sudo: true
           egress-policy: audit
 
       - name: Install xmlstarlet
         run: |
-          apt-get install -y xmlstarlet
+          sudo apt-get install -y xmlstarlet
 
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
