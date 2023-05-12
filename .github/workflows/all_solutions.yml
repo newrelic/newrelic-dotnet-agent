@@ -9,12 +9,6 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-    # inputs:
-    #   force-profiler-build:
-    #     description: 'Build and Package Profiler, even if no files have changed'
-    #     required: true
-    #     default: false
-    #     type: boolean
 
   schedule:
     - cron: "0 9 * * *"
@@ -33,24 +27,10 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
-
-  # build-profiler:
-  #   name: Build Profiler
-  #   if: ${{ github.event.release.action == 'released' }} || ${{ github.event.release.action == 'published' }} || ${{ inputs.force-profiler-build }}
-  #   permissions:
-  #     contents: write
-  #     pull-requests: write
-  #     packages: write
-  #   uses: ./.github/workflows/build_profiler.yml
-  #   secrets: inherit
-  #   with:
-  #     force-build: ${{ inputs.force-profiler-build }}
-
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
     runs-on: windows-2022
-    # needs: build-profiler
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
@@ -246,12 +226,49 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        namespace: [ AgentFeatures, AgentLogs, AgentMetrics, Api, AppDomainCaching, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, CodeLevelMetrics, Configuration, 
-          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, HttpClientInstrumentation, InfiniteTracing, Logging.ContextData, 
-          Logging.HsmAndCsp, Logging.LocalDecoration, Logging.LogLevelDetection, Logging.MaxSamplesStored, Logging.MetricsAndForwarding, Logging.ZeroMaxSamplesStored,
-          Owin, ReJit.NetCore, ReJit.NetFramework, RequestHandling, RequestHeadersCapture.AspNet, RequestHeadersCapture.AspNetCore, RequestHeadersCapture.EnvironmentVariables, 
-          RequestHeadersCapture.Owin, RequestHeadersCapture.WCF, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, WCF.Client.Self, 
-          WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self] # maintain alphabetical order, please!
+        namespace: [ 
+          AgentFeatures, 
+          AgentLogs, 
+          AgentMetrics, 
+          Api, 
+          AppDomainCaching, 
+          AspNetCore, 
+          BasicInstrumentation, 
+          CatInbound, 
+          CatOutbound, 
+          CodeLevelMetrics, 
+          Configuration, 
+          CSP, 
+          CustomAttributes, 
+          CustomInstrumentation, 
+          DataTransmission, 
+          DistributedTracing, 
+          Errors, 
+          HttpClientInstrumentation, 
+          InfiniteTracing, 
+          Logging.ContextData, 
+          Logging.HsmAndCsp, 
+          Logging.LocalDecoration, 
+          Logging.LogLevelDetection, 
+          Logging.MaxSamplesStored, 
+          Logging.MetricsAndForwarding, 
+          Logging.ZeroMaxSamplesStored,
+          Owin, 
+          ReJit.NetCore, 
+          ReJit.NetFramework, 
+          RequestHandling, 
+          RequestHeadersCapture.AspNet, 
+          RequestHeadersCapture.AspNetCore, 
+          RequestHeadersCapture.EnvironmentVariables, 
+          RequestHeadersCapture.Owin, 
+          RequestHeadersCapture.WCF, 
+          RestSharp, 
+          WCF.Client.IIS.ASPDisabled, 
+          WCF.Client.IIS.ASPEnabled, 
+          WCF.Client.Self, 
+          WCF.Service.IIS.ASPDisabled, 
+          WCF.Service.IIS.ASPEnabled, 
+          WCF.Service.Self] # maintain alphabetical order, please!
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
