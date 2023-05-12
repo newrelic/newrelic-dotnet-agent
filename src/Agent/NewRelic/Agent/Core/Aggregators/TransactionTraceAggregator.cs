@@ -33,6 +33,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override bool IsEnabled => _configuration.TransactionTracerEnabled;
 
+        protected override TimeSpan HarvestCycle => _configuration.TransactionTracesHarvestCycle;
+
         public override void Collect(TransactionTraceWireModelComponents transactionTraceWireModel)
         {
             foreach (var transactionCollector in _transactionCollectors)

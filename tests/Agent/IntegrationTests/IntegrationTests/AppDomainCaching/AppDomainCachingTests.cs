@@ -3,8 +3,6 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -26,22 +24,25 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
-            _fixture.AddCommand($"RootCommands DelaySeconds 10");
 
             if(_appDomainCachingDisabled)
             {
                 _fixture.SetAdditionalEnvironmentVariable("NEW_RELIC_DISABLE_APPDOMAIN_CACHING", _appDomainCachingDisabled ? "true" : "false");
             }
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
                     configModifier
                     .EnableDistributedTrace()
                     .SetLogLevel("debug");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForConnect(TimeSpan.FromSeconds(30));
                 }
             );
 

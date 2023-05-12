@@ -29,7 +29,9 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
                     configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.AddExpectedStatusCodes("410-450")
                     .AddExpectedErrorMessages("System.Exception", new List<string> { "test exception"})
@@ -40,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                     _fixture.ReturnADesiredStatusCode(415);
                     _fixture.ThrowExceptionWithMessage("test exception message");
                     _fixture.ThrowCustomException();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

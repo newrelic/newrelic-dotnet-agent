@@ -571,6 +571,7 @@ namespace NewRelic.Agent.Core.Aggregators
             Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
             Mock.Arrange(() => configuration.SqlTracesPerPeriod).Returns(sqlTracesPerPeriod ?? 10);
             Mock.Arrange(() => configuration.SlowSqlEnabled).Returns(true);
+            Mock.Arrange(() => configuration.DefaultHarvestCycle).Returns(TimeSpan.FromMinutes(1));
             if (versionNumber.HasValue)
                 Mock.Arrange(() => configuration.ConfigurationVersion).Returns(versionNumber.Value);
             return configuration;

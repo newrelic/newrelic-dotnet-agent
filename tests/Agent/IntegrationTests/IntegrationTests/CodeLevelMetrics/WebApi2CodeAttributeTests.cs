@@ -27,13 +27,18 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
             _fixture.TestLogger = output;
             _fixture.Actions
             (
+                setupConfiguration: () =>
+                {
+                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
+                },
                 exerciseApplication: () =>
                 {
                     _fixture.GetIoBoundNoSpecialAsync();
                     _fixture.GetIoBoundConfigureAwaitFalseAsync();
                     _fixture.GetCpuBoundTasksAsync();
 
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

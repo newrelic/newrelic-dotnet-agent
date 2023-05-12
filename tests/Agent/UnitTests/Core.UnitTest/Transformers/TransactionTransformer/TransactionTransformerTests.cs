@@ -384,7 +384,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(actualMetrics.Keys, Is.EquivalentTo(expectedMetrics));
             foreach (var actual in actualMetrics)
             {
-#warning Spec-Check! in the case of a transaction with an error, should the Apdex, ApdexAll, and Apdex/TransactionName metrics have a value of zero
                 if (!isError || !(actual.Key == "ApdexAll" || actual.Key == "Apdex" || actual.Key == "Apdex/TransactionName"))
                 {
                     Assert.That(actual.Value.Value0, Is.EqualTo(1), actual.Key);

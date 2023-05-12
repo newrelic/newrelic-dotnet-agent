@@ -18,9 +18,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
         private Action<byte[], int, int> _streamWriter;
 
-        public BrowserMonitoringStreamInjector(Func<string> getJavascriptAgentScript, Stream output, Encoding contentEncoding)
+        public BrowserMonitoringStreamInjector(Func<string> getJavascriptAgentScript, Stream output, Encoding contentEncoding, BrowserMonitoringWriter browserMonitoringWriter = null)
         {
-            _jsWriter = new BrowserMonitoringWriter(getJavascriptAgentScript);
+            _jsWriter = browserMonitoringWriter ?? new BrowserMonitoringWriter(getJavascriptAgentScript);
             OutputStream = output;
             _contentEncoding = contentEncoding;
         }
@@ -69,24 +69,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             // BEWARE: There is no try/catch between this method and the users application!  Anything that can throw *must* be wrapped in a try/catch block!  We cannot wrap this in a try/catch block because we should not catch exceptions thrown by the underlying stream.
 
             // the first time Write is called, get the function that we will use to write
-            if (_streamWriter == null)
-                _streamWriter = GetStreamWriter();
+            _streamWriter ??= GetInjectingStreamWriter(_contentEncoding);
 
             _streamWriter(buffer, offset, count);
-        }
-
-        private Action<byte[], int, int> GetStreamWriter()
-        {
-            try
-            {
-                return GetInjectingStreamWriter(_contentEncoding);
-            }
-            catch (Exception exception)
-            {
-                // logged at debug level since the exception is likely caused by the user setting the content-type to something invalid or the wrapper provided functions failing
-                try { Log.Debug(exception); } catch { }
-                return PassThroughStreamWriter;
-            }
         }
 
         private void PassThroughStreamWriter(byte[] buffer, int offset, int count)

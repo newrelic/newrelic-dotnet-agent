@@ -3,13 +3,12 @@
 
 
 using MultiFunctionApplicationHelpers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
@@ -53,7 +52,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
     {
         private const string LibraryClassName = "MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.AttributeInstrumentation";
 
-        protected readonly TFixture Fixture;
+        protected readonly TFixture _fixture;
 
         private readonly bool ForceNewTransaction;
 
@@ -61,35 +60,40 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         {
             ForceNewTransaction = forceNewTransaction;
 
-            Fixture = fixture;
-            Fixture.TestLogger = output;
+            _fixture = fixture;
+            _fixture.TestLogger = output;
 
-            Fixture.EnvironmentVariables.Add("NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD", ForceNewTransaction ? "true" : "false");
+            _fixture.EnvironmentVariables.Add("NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD", ForceNewTransaction ? "true" : "false");
 
-            Fixture.AddCommand($"AttributeInstrumentation MakeOtherTransactionWithThreadedCallToInstrumentedMethod");
-            Fixture.AddCommand("RootCommands DelaySeconds 5");
+            _fixture.AddCommand($"AttributeInstrumentation MakeOtherTransactionWithThreadedCallToInstrumentedMethod");
 
-            Fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ForceTransactionTraces();
+                    configModifier.ForceTransactionTraces()
+                    .SetLogLevel("finest");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(10));
                 }
             );
 
-            Fixture.Initialize();
+            _fixture.Initialize();
         }
 
         [Fact]
         public void Test()
         {
-            var expectedMetrics = new List<Assertions.ExpectedMetric>();
-
-            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"OtherTransaction/all", callCount = ForceNewTransaction ? 2 : 1 });
-            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionWithThreadedCallToInstrumentedMethod", callCount = 1 });
-            expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionWithThreadedCallToInstrumentedMethod", callCount = 1 });
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = $"OtherTransaction/all", callCount = ForceNewTransaction ? 2 : 1 },
+                new Assertions.ExpectedMetric { metricName = $"OtherTransaction/Custom/{LibraryClassName}/MakeOtherTransactionWithThreadedCallToInstrumentedMethod", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"DotNet/{LibraryClassName}/MakeOtherTransactionWithThreadedCallToInstrumentedMethod", callCount = 1 }
+            };
 
             if (ForceNewTransaction)
             {
@@ -97,7 +101,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
             }
             expectedMetrics.Add(new Assertions.ExpectedMetric { metricName = $"DotNet/{LibraryClassName}/SpanOrTransactionBasedOnConfig", callCount = 1 });
 
-            var metrics = Fixture.AgentLog.GetMetrics().ToList();
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
             Assertions.MetricsExist(expectedMetrics, metrics);
         }
