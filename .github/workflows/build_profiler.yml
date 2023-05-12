@@ -349,11 +349,14 @@ jobs:
           --value "${{ needs.package-and-deploy.outputs.package_version }}"
 
       - name: Update Profiler Package Reference to Latest Version
-        run: >-
-          cat ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj | 
-          xmlstarlet edit --pf --omit-decl 
-          --update "//PackageReference[@Include='NewRelic.Agent.Internal.Profiler']/@Version" 
-          --value "${{ needs.package-and-deploy.outputs.package_version }}" > ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj
+        run: |
+          tmpfile=$(mktemp) && 
+          cat ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj | \
+          xmlstarlet edit --pf --omit-decl \
+          --update "//PackageReference[@Include='NewRelic.Agent.Internal.Profiler']/@Version" \
+          --value "${{ needs.package-and-deploy.outputs.package_version }}" > ${tmpFile} &&
+          cat ${tmpFile} > ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj &&
+          rm -f ${tmpFile}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@5b4a9f6a9e2af26e5f02351490b90d01eb8ec1e5 # v5.0.0
