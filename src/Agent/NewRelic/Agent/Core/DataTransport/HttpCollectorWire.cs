@@ -13,6 +13,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -92,58 +93,55 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 var httpClient = _httpClientFactory.CreateClient(connectionInfo.Proxy);
 
-                var request = new HttpRequestMessage
+                using (var request = new HttpRequestMessage { RequestUri = uri })
                 {
-                    RequestUri = uri
-                };
+                    request.Headers.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
+                    request.Headers.Add("Timeout", _configuration.CollectorTimeout.ToString());
 
+                    request.Headers.Add("Connection", "keep-alive");
+                    request.Headers.Add("Keep-Alive", "true");
+                    request.Headers.Add("ACCEPT-ENCODING", "gzip");
 
-                request.Headers.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
-                request.Headers.Add("Timeout", _configuration.CollectorTimeout.ToString());
+                    var content = new ByteArrayContent(requestPayload.Data);
+                    var encoding = (requestPayload.IsCompressed) ? requestPayload.CompressionType.ToLower() : "identity";
+                    content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                    content.Headers.Add("Content-Encoding", encoding);
+                    content.Headers.Add("Content-Length", requestPayload.Data.Length.ToString());
 
-                request.Headers.Add("Connection", "keep-alive");
-                request.Headers.Add("Keep-Alive", "true");
-                request.Headers.Add("ACCEPT-ENCODING", "gzip");
+                    request.Content = content;
 
-                var content = new ByteArrayContent(requestPayload.Data);
-                var encoding = (requestPayload.IsCompressed) ? requestPayload.CompressionType.ToLower() : "identity";
-                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-                content.Headers.Add("Content-Encoding", encoding);
-                content.Headers.Add("Content-Length", requestPayload.Data.Length.ToString());
-
-                request.Content = content;
-
-                foreach (var header in _requestHeadersMap)
-                {
-                    request.Headers.Add(header.Key, header.Value);
-                }
-
-                if (_configuration.PutForDataSend)
-                {
-                    request.Method = HttpMethod.Put;
-                }
-                else
-                {
-                    request.Method = HttpMethod.Post;
-                }
-
-                using (var response = httpClient.SendAsync(request).GetAwaiter().GetResult())
-                {
-                    var responseContent = GetResponseContent(response, requestGuid);
-
-                    _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(responseContent).Length);
-
-                    // Possibly combine these logs? makes parsing harder in tests...
-                    Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
-                    Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
-
-                    AuditLog(Direction.Received, Source.Collector, responseContent);
-                    if (!response.IsSuccessStatusCode)
+                    foreach (var header in _requestHeadersMap)
                     {
-                        ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);
+                        request.Headers.Add(header.Key, header.Value);
                     }
 
-                    return responseContent;
+                    if (_configuration.PutForDataSend)
+                    {
+                        request.Method = HttpMethod.Put;
+                    }
+                    else
+                    {
+                        request.Method = HttpMethod.Post;
+                    }
+
+                    using (var response = Task.Run(() => httpClient.SendAsync(request)).GetAwaiter().GetResult())
+                    {
+                        var responseContent = GetResponseContent(response, requestGuid);
+
+                        _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(responseContent).Length);
+
+                        // Possibly combine these logs? makes parsing harder in tests...
+                        Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
+                        Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
+
+                        AuditLog(Direction.Received, Source.Collector, responseContent);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);
+                        }
+
+                        return responseContent;
+                    }
                 }
             }
             catch (HttpRequestException)
@@ -152,6 +150,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     DiagnoseConnectionError(connectionInfo);
                 }
+
+                _httpClientFactory.ResetClient();
                 throw;
             }
         }

@@ -9,7 +9,8 @@ namespace NewRelic.Agent.Core.DataTransport
 {
     public interface IHttpClientFactory
     {
-        public HttpClient CreateClient(IWebProxy proxy);  
+        public HttpClient CreateClient(IWebProxy proxy);
+        void ResetClient();
     }
 
     public class HttpClientFactory : IHttpClientFactory
@@ -31,6 +32,12 @@ namespace NewRelic.Agent.Core.DataTransport
             }
 
             return _httpClient;
+        }
+
+        public void ResetClient()
+        {
+            var oldClient = Interlocked.Exchange(ref _httpClient, null);
+            oldClient?.Dispose();
         }
     }
 
