@@ -10,6 +10,7 @@ namespace ConsoleMultiFunctionApplicationCore
     {
         static void Main(string[] args)
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
             MultiFunctionApplication.Execute(args);
         }
     }
