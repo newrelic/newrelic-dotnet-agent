@@ -15,19 +15,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void GetIoBoundNoSpecialAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/IoBoundNoSpecialAsync";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetIoBoundConfigureAwaitFalseAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/IoBoundConfigureAwaitFalseAsync";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetCpuBoundTasksAsync()
         {
             var address = $"http://localhost:{Port}/AsyncAwait/CpuBoundTasksAsync";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
     }
 }

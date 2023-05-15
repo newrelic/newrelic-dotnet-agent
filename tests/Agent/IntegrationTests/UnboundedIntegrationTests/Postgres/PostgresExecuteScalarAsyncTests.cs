@@ -153,27 +153,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
     }
 
     [NetCoreTest]
-    public class PostgresSqlExecuteScalarAsyncTestsCore31 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class PostgresSqlExecuteScalarAsyncTestsCoreOldest : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public PostgresSqlExecuteScalarAsyncTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class PostgresSqlExecuteScalarAsyncTestsCore50 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public PostgresSqlExecuteScalarAsyncTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class PostgresSqlExecuteScalarAsyncTestsCore60 : PostgresSqlExecuteScalarAsyncTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public PostgresSqlExecuteScalarAsyncTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlExecuteScalarAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

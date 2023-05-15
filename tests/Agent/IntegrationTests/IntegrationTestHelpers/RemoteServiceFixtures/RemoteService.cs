@@ -79,7 +79,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             if (IsCoreApp && _publishApp)
             {
-                PublishWithDotnetExe(string.IsNullOrWhiteSpace(_targetFramework) ? "netcoreapp3.1" : _targetFramework);
+                PublishWithDotnetExe(string.IsNullOrWhiteSpace(_targetFramework) ? "net7.0" : _targetFramework);
                 CopyNewRelicHomeCoreClrDirectoryToRemote();
             }
             else if (_publishApp)

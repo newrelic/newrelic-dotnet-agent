@@ -22,9 +22,9 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
     }
 
     [NetCoreTest]
-    public class GloballyForceNewTransactionEnabledTestsCore31 : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureCore31>
+    public class GloballyForceNewTransactionEnabledTestsCoreOldest : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public GloballyForceNewTransactionEnabledTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public GloballyForceNewTransactionEnabledTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(true, fixture, output)
         {
         }
@@ -40,9 +40,9 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
     }
 
     [NetCoreTest]
-    public class GloballyForceNewTransactionDisabledTestsCore31 : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureCore31>
+    public class GloballyForceNewTransactionDisabledTestsCoreOldest : GloballyForceNewTransactionTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public GloballyForceNewTransactionDisabledTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public GloballyForceNewTransactionDisabledTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(false, fixture, output)
         {
         }

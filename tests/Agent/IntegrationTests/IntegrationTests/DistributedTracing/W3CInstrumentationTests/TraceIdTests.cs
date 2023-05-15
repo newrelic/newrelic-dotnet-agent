@@ -12,12 +12,12 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests
 {
     [NetCoreTest]
-    public class TraceIdTests : NewRelicIntegrationTest<AspNetCore3BasicWebApiApplicationFixture>
+    public class TraceIdTests : NewRelicIntegrationTest<AspNetCoreBasicWebApiApplicationFixture>
     {
-        private readonly AspNetCore3BasicWebApiApplicationFixture _fixture;
+        private readonly AspNetCoreBasicWebApiApplicationFixture _fixture;
         private string _traceId;
 
-        public TraceIdTests(AspNetCore3BasicWebApiApplicationFixture fixture, ITestOutputHelper output)
+        public TraceIdTests(AspNetCoreBasicWebApiApplicationFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;

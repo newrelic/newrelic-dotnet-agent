@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Newtonsoft.Json;
@@ -34,11 +35,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = string.Format("http://{0}:{1}/api/Values", DestinationServerName, Port);
-            var webClient = GetWebClient();
 
-            var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<List<string>>(resultJson);
-
+            var result = GetJson<List<string>>(address);
             Assert.NotNull(result);
             Assert.Equal(2, result.Count);
             Assert.Equal("value 1", result[0]);
@@ -48,33 +46,22 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get404()
         {
             var address = string.Format(@"http://{0}:{1}/api/404/", DestinationServerName, Port);
-            var webClient = GetWebClient();
 
-            try
-            {
-                webClient.DownloadString(address);
-                Assert.True(false, "Expected a 404 WebException.");
-            }
-            catch (WebException exception)
-            {
-                var httpWebResponse = exception.Response as HttpWebResponse;
-                Assert.NotNull(httpWebResponse);
-                Assert.Equal(HttpStatusCode.NotFound, httpWebResponse.StatusCode);
-            }
+            GetAndAssertStatusCode(address, HttpStatusCode.NotFound);
         }
 
         public void GetId()
         {
             const string id = "5";
             var address = string.Format("http://{0}:{1}/api/Values/{2}", DestinationServerName, Port, id);
-            DownloadJsonAndAssertEqual(address, id);
+            GetJsonAndAssertEqual(address, id);
         }
 
         public void GetData()
         {
             const string expected = "mything";
             var address = string.Format("http://{0}:{1}/api/Values?data={2}", DestinationServerName, Port, expected);
-            DownloadJsonAndAssertEqual(address, expected);
+            GetJsonAndAssertEqual(address, expected);
         }
 
         public void Post()
@@ -92,133 +79,113 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         private void PostImpl(string address)
         {
             const string body = "stuff";
-            var httpWebRequest = WebRequest.CreateHttp(address);
-            httpWebRequest.Method = "POST";
-            httpWebRequest.ContentType = "application/json";
-            httpWebRequest.Accept = "application/json";
-            httpWebRequest.Referer = "http://example.com/";
-            httpWebRequest.UserAgent = "FakeUserAgent";
-            httpWebRequest.Host = "fakehost:1234";
-            httpWebRequest.Headers.Add("foo", "bar");
 
-            var serializedBody = JsonConvert.SerializeObject(body);
-            var encoding = new ASCIIEncoding();
-            var bodyBytes = encoding.GetBytes(serializedBody);
-            httpWebRequest.ContentLength = bodyBytes.Length;
+            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+            {
+                request.Headers.Referrer = new Uri("http://example.com/");
+                request.Headers.Add("User-Agent", "FakeUserAgent");
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                request.Headers.Host = "fakehost:1234";
+                request.Headers.Add("foo", "bar");
 
-            Contract.Assert(serializedBody != null);
+                var serializedBody = JsonConvert.SerializeObject(body);
 
-            httpWebRequest.GetRequestStream().Write(bodyBytes, 0, bodyBytes.Length);
-            var response = (HttpWebResponse)httpWebRequest.GetResponse();
-            var receiveStream = response.GetResponseStream();
-            var encode = Encoding.GetEncoding("utf-8");
-            var readStream = new StreamReader(receiveStream, encode);
-            var resultJson = readStream.ReadToEnd();
-            var result = JsonConvert.DeserializeObject<string>(resultJson);
-            response.Close();
-            readStream.Close();
+                request.Content = new StringContent(serializedBody, Encoding.Default, "application/json");
 
-            Assert.NotNull(result);
-            Assert.Equal(body, result);
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    var resultJson = response.Content.ReadAsStringAsync().Result;
+                    var result = JsonConvert.DeserializeObject<string>(resultJson);
+                    Assert.NotNull(result);
+                    Assert.Equal(body, result);
+                }
+            }
         }
 
         public void ThrowException()
         {
             var address = string.Format(@"http://{0}:{1}/api/ThrowException/", DestinationServerName, Port);
-            var webClient = GetWebClient();
-            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+            GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError, GetHeaders());
         }
 
         public void InvokeBadMiddleware()
         {
             var address = string.Format(@"http://{0}:{1}/AsyncAwait/UseBadMiddleware", DestinationServerName, Port);
-            var webClient = GetWebClient();
-            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+            GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError, GetHeaders());
         }
 
         public void Async()
         {
             var address = string.Format("http://{0}:{1}/api/Async", DestinationServerName, Port);
-            var webClient = GetWebClient();
 
-            var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<List<string>>(resultJson);
-
+            var result = GetJson<List<string>>(address, GetHeaders());
             Assert.NotNull(result);
             Assert.Equal(2, result.Count);
         }
+
         public void GetIoBoundNoSpecialAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/IoBoundNoSpecialAsync";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetIoBoundConfigureAwaitFalseAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/IoBoundConfigureAwaitFalseAsync";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
         public void GetCpuBoundTasksAsync()
         {
             var address = $"http://localhost:{Port}/AsyncAwait/CpuBoundTasksAsync";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
         public void GetCustomMiddlewareIoBoundNoSpecialAsync()
         {
             var address = $"http://localhost:{Port}/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void ErrorResponse()
         {
             var address = $"http://localhost:{Port}/AsyncAwait/ErrorResponse";
 
-            var webClient = GetWebClient();
-            try
-            {
-                var response = webClient.DownloadString(address);
-            }
-            catch (WebException)
-            {
-                // This is expected behavior.  We need to catch this exception here to make sure it doesn't
-                // bubble up to the test framework and fail the test.
-            }
+            GetAndAssertSuccessStatus(address, false, GetHeaders());
         }
 
         public void GetManualTaskRunBlocked()
         {
             var address = $"http://localhost:{Port}/ManualAsync/TaskRunBlocked";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualTaskFactoryStartNewBlocked()
         {
             var address = $"http://localhost:{Port}/ManualAsync/TaskFactoryStartNewBlocked";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualNewThreadStartBlocked()
         {
             var address = $"http://localhost:{Port}/ManualAsync/NewThreadStartBlocked";
-            DownloadJsonAndAssertEqual(address, "Worked");
+            GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetBogusPath(string bogusPath)
         {
             var address = string.Format(@"http://{0}:{1}/{2}", DestinationServerName, Port, bogusPath);
-            var webClient = GetWebClient();
-            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+            GetAndAssertStatusCode(address, HttpStatusCode.NotFound, GetHeaders());
         }
 
-        public WebClient GetWebClient()
+        public IEnumerable<KeyValuePair<string, string>> GetHeaders()
         {
-            var webClient = new WebClient();
-            webClient.Headers.Add("accept", "application/json");
-            webClient.Headers.Add("referer", "http://example.com");
-            webClient.Headers.Add("user-agent", "FakeUserAgent");
-            webClient.Headers.Add("host", "fakehost");
-            webClient.Headers.Add("foo", "bar");
-            return webClient;
+            return new List<KeyValuePair<string, string>>()
+            {
+                new KeyValuePair<string, string>("accept", "application/json"),
+                new KeyValuePair<string, string>("referer", "http://example.com"),
+                new KeyValuePair<string, string>("user-agent", "FakeUserAgent"),
+                new KeyValuePair<string, string>("host", "fakehost"),
+                new KeyValuePair<string, string>("foo", "bar")
+            };
         }
     }
 

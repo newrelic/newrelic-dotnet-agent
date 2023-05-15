@@ -373,27 +373,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
     }
 
     [NetCoreTest]
-    public class Log4NetMetricsAndForwardingTestsNetCore60Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class Log4NetMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public Log4NetMetricsAndForwardingTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class Log4NetMetricsAndForwardingTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public Log4NetMetricsAndForwardingTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class Log4NetMetricsAndForwardingTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public Log4NetMetricsAndForwardingTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public Log4NetMetricsAndForwardingTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
@@ -413,31 +395,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
     }
 
     [NetCoreTest]
-    public class MELMetricsAndForwardingTestsNetCore60Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public MELMetricsAndForwardingTestsNetCore60Tests(
-            ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MELMetricsAndForwardingTestsNetCore50Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MELMetricsAndForwardingTestsNetCore50Tests(
-            ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
-        {
-        }
-    }
-
-    [NetCoreTest]
     public class
-        MELMetricsAndForwardingTestsNetCore31Tests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCore31>
+        MELMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MELMetricsAndForwardingTestsNetCore31Tests(
-            ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MELMetricsAndForwardingTestsNetCoreOldestTests(
+            ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
@@ -508,48 +470,12 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetCoreTest]
     public class
-        SerilogMetricsAndForwardingTestsNetCore60Tests : MetricsAndForwardingTestsBase<
-            ConsoleDynamicMethodFixtureCore60>
+        SerilogMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<
+            ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public SerilogMetricsAndForwardingTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
+        public SerilogMetricsAndForwardingTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture,
             ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Serilog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class
-        SerilogMetricsAndForwardingTestsNetCore50Tests : MetricsAndForwardingTestsBase<
-            ConsoleDynamicMethodFixtureCore50>
-    {
-        public SerilogMetricsAndForwardingTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture,
-            ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class
-        SerilogMetricsAndForwardingTestsNetCore31Tests : MetricsAndForwardingTestsBase<
-            ConsoleDynamicMethodFixtureCore31>
-    {
-        public SerilogMetricsAndForwardingTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture,
-            ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class
-        SerilogWebMetricsAndForwardingTestsNetCore60Tests : MetricsAndForwardingTestsBase<
-            ConsoleDynamicMethodFixtureCore60>
-    {
-        public SerilogWebMetricsAndForwardingTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
-            ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.SerilogWeb)
         {
         }
     }
@@ -608,34 +534,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetCoreTest]
     public class
-        NLogMetricsAndForwardingTestsNetCore60Tests : MetricsAndForwardingTestsBase<
-            ConsoleDynamicMethodFixtureCore60>
+        NLogMetricsAndForwardingTestsNetCoreOldestTests : MetricsAndForwardingTestsBase<
+            ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public NLogMetricsAndForwardingTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
-            ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class
-        NLogMetricsAndForwardingTestsNetCore50Tests : MetricsAndForwardingTestsBase<
-            ConsoleDynamicMethodFixtureCore50>
-    {
-        public NLogMetricsAndForwardingTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture,
-            ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class
-        NLogMetricsAndForwardingTestsNetCore31Tests : MetricsAndForwardingTestsBase<
-            ConsoleDynamicMethodFixtureCore31>
-    {
-        public NLogMetricsAndForwardingTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture,
+        public NLogMetricsAndForwardingTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture,
             ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {

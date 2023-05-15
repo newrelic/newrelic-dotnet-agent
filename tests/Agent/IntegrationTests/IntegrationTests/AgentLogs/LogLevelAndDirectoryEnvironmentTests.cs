@@ -84,23 +84,16 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
     }
 
     [NetCoreTest]
-    public class LogLevelAndDirectoryEnvironmentTests_core31 : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCore31>
+    public class LogLevelAndDirectoryEnvironmentTestsOldest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public LogLevelAndDirectoryEnvironmentTests_core31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public LogLevelAndDirectoryEnvironmentTestsOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output) { }
     }
 
     [NetCoreTest]
-    public class LogLevelAndDirectoryEnvironmentTests_net5 : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCore50>
+    public class LogLevelAndDirectoryEnvironmentTestsLatest : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public LogLevelAndDirectoryEnvironmentTests_net5(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output) { }
-    }
-
-    [NetCoreTest]
-    public class LogLevelAndDirectoryEnvironmentTests_net6 : LogLevelAndDirectoryEnvironmentTests<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public LogLevelAndDirectoryEnvironmentTests_net6(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public LogLevelAndDirectoryEnvironmentTestsLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output) { }
     }
 }

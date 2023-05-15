@@ -77,13 +77,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         {
             var expectedMainMethodSignature = "";
 
-            if (_fixture.GetType() == typeof(AspNetCoreWebApiWithCollectorFixture_net50))
+            if (_fixture.GetType() == typeof(AspNetCoreWebApiWithCollectorFixture))
             {
-                expectedMainMethodSignature = @"[""AspNetCore5BasicWebApiApplication.Program"",""Main"",0]";
-            }
-            else if (_fixture.GetType() == typeof(AspNetCoreWebApiWithCollectorFixture_net60))
-            {
-                expectedMainMethodSignature = @"[""AspNetCore6BasicWebApiApplication.Program"",""Main"",0]";
+                expectedMainMethodSignature = @"[""AspNetCoreBasicWebApiApplication.Program"",""Main"",0]";
             }
 
             NrAssert.Multiple(
@@ -124,16 +120,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         }
     }
 
-    public class ThreadProfileNet5Tests : ThreadProfileNetCoreTestsBase<AspNetCoreWebApiWithCollectorFixture_net50>
+    public class ThreadProfileNetCoreLatestTests : ThreadProfileNetCoreTestsBase<AspNetCoreWebApiWithCollectorFixture>
     {
-        public ThreadProfileNet5Tests(AspNetCoreWebApiWithCollectorFixture_net50 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-    public class ThreadProfileNet6Tests : ThreadProfileNetCoreTestsBase<AspNetCoreWebApiWithCollectorFixture_net60>
-    {
-        public ThreadProfileNet6Tests(AspNetCoreWebApiWithCollectorFixture_net60 fixture, ITestOutputHelper output)
+        public ThreadProfileNetCoreLatestTests(AspNetCoreWebApiWithCollectorFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

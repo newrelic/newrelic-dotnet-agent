@@ -23,44 +23,28 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/MSMQ/Msmq_Send?ignoreThisTransaction={ignoreThisTransaction}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void GetMessageQueue_Msmq_Receive()
         {
             var address = $"http://{DestinationServerName}:{Port}/MSMQ/Msmq_Receive";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void GetMessageQueue_Msmq_Peek()
         {
             var address = $"http://{DestinationServerName}:{Port}/MSMQ/Msmq_Peek";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void GetMessageQueue_Msmq_Purge()
         {
             var address = $"http://{DestinationServerName}:{Port}/MSMQ/Msmq_Purge";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion

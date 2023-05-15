@@ -85,9 +85,9 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
     }
 
     [NetCoreTest]
-    public class ConnectSetApplicationNameCore60Tests : ConnectSetApplicationNameTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class ConnectSetApplicationNameCoreOldestTests : ConnectSetApplicationNameTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public ConnectSetApplicationNameCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public ConnectSetApplicationNameCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

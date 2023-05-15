@@ -115,18 +115,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
     }
 
     [NetCoreTest]
-    public class Log4netLogLevelNetCore50Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class Log4netLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public Log4netLogLevelNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class Log4netLogLevelTestsNetCore31Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public Log4netLogLevelTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public Log4netLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
@@ -146,18 +137,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
     }
 
     [NetCoreTest]
-    public class MicrosoftLoggingLogLevelTestsNetCore50Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class MicrosoftLoggingLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MicrosoftLoggingLogLevelTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MicrosoftLoggingLogLevelTestsNetCore31Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MicrosoftLoggingLogLevelTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MicrosoftLoggingLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
@@ -213,33 +195,13 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
     }
 
     [NetCoreTest]
-    public class SerilogLogLevelTestsNetCore50Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class SerilogLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public SerilogLogLevelTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
+        public SerilogLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Serilog)
         {
         }
     }
-
-    [NetCoreTest]
-    public class SerilogLogLevelTestsNetCore31Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public SerilogLogLevelTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class SerilogWebLogLevelTestsNetCore60Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public SerilogWebLogLevelTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture,
-            ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.SerilogWeb)
-        {
-        }
-    }
-
     #endregion
 
     #region NLog
@@ -281,18 +243,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
     }
 
     [NetCoreTest]
-    public class NLogLogLevelTestsNetCore50Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class NLogLogLevelTestsNetCoreOldestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public NLogLogLevelTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NLogLogLevelTestsNetCore31Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public NLogLogLevelTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public NLogLogLevelTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
         }
