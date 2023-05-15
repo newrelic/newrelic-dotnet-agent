@@ -30,43 +30,27 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Get";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
         public void Couchbase_GetMultiple()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetMultiple";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_GetMultipleParallelOptions()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetMultipleParallelOptions";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_GetMultipleParallelOptionsWithRangeSize()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetMultipleParallelOptionsWithRangeSize";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_GetAndTouch()
@@ -75,44 +59,28 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetAndTouch?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_GetWithLock()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetWithLock";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_GetDocument()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetDocument";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_GetFromReplica()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetFromReplica";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion
@@ -123,11 +91,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_GetAndTouchAsync()
@@ -136,44 +100,28 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetAndTouchAsync?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_GetDocumentAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetDocumentAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_GetFromReplicaAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetFromReplicaAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_GetWithLockAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_GetWithLockAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion
@@ -186,11 +134,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Insert?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_InsertDocument()
@@ -199,11 +143,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_InsertDocument?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_InsertWithExpiration()
@@ -212,11 +152,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_InsertWithExpiration?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_InsertReplicatePersist()
@@ -225,11 +161,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_InsertReplicatePersist?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_InsertReplicatePersistWithExpiration()
@@ -238,11 +170,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_InsertReplicatePersistWithExpiration?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion
@@ -255,11 +183,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_InsertAsync?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_InsertWithExpirationAsync()
@@ -268,11 +192,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_InsertWithExpirationAsync?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_InsertReplicatePersistAsync()
@@ -281,11 +201,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_InsertReplicatePersistAsync?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_InsertReplicatePersistWithExpirationAsync()
@@ -294,11 +210,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_InsertReplicatePersistWithExpirationAsync?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion
@@ -309,88 +221,56 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Upsert";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_UpsertCASWithExpiration()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_UpsertCASWithExpiration";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_UpsertReplicatePersist()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_UpsertReplicatePersist";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_UpsertReplicatePersistWithExpiration()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_UpsertReplicatePersistWithExpiration";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_UpsertCASReplicatePersistWithExpiration()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_UpsertCASReplicatePersistWithExpiration";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_UpsertMultiple()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_UpsertMultiple";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_UpsertMultipleParallelOptions()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_UpsertMultipleParallelOptions";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_UpsertMultipleParallelOptionsWithRangeSize()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_UpsertMultipleParallelOptionsWithRangeSize";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion
@@ -401,22 +281,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_UpsertAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_UpsertDocument()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_UpsertDocument";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
 
         }
 
@@ -424,22 +296,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_UpsertCASWithExpirationAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_UpsertCASReplicatePersistWithExpirationAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_UpsertCASReplicatePersistWithExpirationAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion
@@ -452,11 +316,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_RemoveCAS?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_RemoveDocument()
@@ -465,11 +325,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_RemoveDocument?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_RemoveReplicatePersist()
@@ -478,11 +334,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_RemoveReplicatePersist?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_RemoveCASReplicatePersist()
@@ -491,11 +343,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_RemoveCASReplicatePersist?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_RemoveMultiple()
@@ -504,11 +352,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_RemoveMultiple?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_RemoveMultipleWithParallelOptions()
@@ -517,11 +361,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_RemoveMultipleWithParallelOptions?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_RemoveMultipleWithParallelOptionsWithRangeSize()
@@ -530,11 +370,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_RemoveMultipleWithParallelOptionsWithRangeSize?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
 
@@ -548,11 +384,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_RemoveAsync?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion
@@ -565,11 +397,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Replace?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_ReplaceDocument()
@@ -578,11 +406,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_ReplaceDocument?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_ReplaceCAS()
@@ -591,11 +415,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_ReplaceCAS?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_ReplaceWithExpiration()
@@ -604,11 +424,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_ReplaceWithExpiration?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_ReplaceCASWithExpiration()
@@ -617,11 +433,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_ReplaceCASWithExpiration?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_ReplaceReplicatePersist()
@@ -630,11 +442,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_ReplaceReplicatePersist?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_ReplaceCASReplicatePersist()
@@ -643,11 +451,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_ReplaceCASReplicatePersist?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_ReplaceCASReplicatePersistWithExpiration()
@@ -656,11 +460,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_ReplaceCASReplicatePersistWithExpiration?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion
@@ -673,11 +473,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_ReplaceAsync?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion
@@ -688,44 +484,28 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Query";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_QueryRequest()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_QueryRequest";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_SearchQuery()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_SearchQuery";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_ViewQuery()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_ViewQuery";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
         #endregion
 
@@ -735,41 +515,25 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_QueryAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
         public void Couchbase_QueryRequestAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_QueryRequestAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
         public void Couchbase_SearchQueryAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_SearchQueryAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
         public void Couchbase_ViewQueryAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_ViewQueryAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
         #endregion
 
@@ -779,44 +543,28 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Append";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_Prepend()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Prepend";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_Decrement()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Decrement";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_Increment()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Increment";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_Observe()
@@ -825,11 +573,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Observe?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_Touch()
@@ -838,11 +582,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Touch?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_Unlock()
@@ -851,33 +591,21 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Unlock?documentId={documentId}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_Exists()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Exists";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_Invoke()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_Invoke";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion
@@ -888,22 +616,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_ExistsAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void Couchbase_InvokeAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/Couchbase/Couchbase_InvokeAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         #endregion

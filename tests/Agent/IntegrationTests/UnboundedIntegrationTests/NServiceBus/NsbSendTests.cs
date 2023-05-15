@@ -104,27 +104,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbSendTestsCore31 : NsbSendTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class NsbSendTestsCoreOldest : NsbSendTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public NsbSendTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NsbSendTestsCore50 : NsbSendTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public NsbSendTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NsbSendTestsCore60 : NsbSendTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public NsbSendTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public NsbSendTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

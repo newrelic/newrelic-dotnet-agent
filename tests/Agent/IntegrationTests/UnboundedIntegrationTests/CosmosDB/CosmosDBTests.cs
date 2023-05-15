@@ -267,9 +267,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
 
 
     [NetCoreTest]
-    public class CosmosDBTestsCore : CosmosDBTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class CosmosDBTestsCore : CosmosDBTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public CosmosDBTestsCore(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public CosmosDBTestsCore(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
@@ -16,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void GetHello()
         {
             var address = $"http://{DestinationServerName}:{Port}/hello/Worked";
-            DownloadJsonAndAssertEqual(address, new HelloResponse("Worked"));
+            GetJsonAndAssertEqual(address, new HelloResponse("Worked"), new List<KeyValuePair<string, string>>() { new KeyValuePair<string, string>("Accept", "application/json")});
         }
 
         public class HelloResponse

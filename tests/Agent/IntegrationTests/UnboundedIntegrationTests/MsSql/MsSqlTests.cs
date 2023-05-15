@@ -191,33 +191,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
-    public class MsSqlTests_SystemDataSqlClient_Core60 : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public MsSqlTests_SystemDataSqlClient_Core60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser")
-        {
-        }
-    }
-
     [NetCoreTest]
-    public class MsSqlTests_SystemDataSqlClient_Core50 : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class MsSqlTests_SystemDataSqlClient_CoreOldest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MsSqlTests_SystemDataSqlClient_Core50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser")
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MsSqlTests_SystemDataSqlClient_Core31 : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MsSqlTests_SystemDataSqlClient_Core31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MsSqlTests_SystemDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -263,9 +240,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MsSqlTests_MicrosoftDataSqlClient_Core31 : MsSqlTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class MsSqlTests_MicrosoftDataSqlClient_CoreOldest : MsSqlTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MsSqlTests_MicrosoftDataSqlClient_Core31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MsSqlTests_MicrosoftDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,

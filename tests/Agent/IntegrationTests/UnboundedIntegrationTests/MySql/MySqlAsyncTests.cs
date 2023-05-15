@@ -168,27 +168,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetCoreTest]
-    public class MySqlAsyncTestsCore31 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class MySqlAsyncTestsCoreOldest : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MySqlAsyncTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class MySqlAsyncTestsCore50 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MySqlAsyncTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class MySqlAsyncTestsCore60 : MySqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public MySqlAsyncTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        public MySqlAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

@@ -121,18 +121,9 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
     }
 
     [NetCoreTest]
-    public class InfiniteTracingFlakyNetCore50Tests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class InfiniteTracingFlakyNetCoreOldestTests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public InfiniteTracingFlakyNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class InfiniteTracingFlakyNetCore31Tests : InfiniteTracingFlakyTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public InfiniteTracingFlakyNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public InfiniteTracingFlakyNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
