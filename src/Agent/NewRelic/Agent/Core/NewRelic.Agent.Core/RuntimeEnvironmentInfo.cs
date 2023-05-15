@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using NewRelic.Core.CodeAttributes;
 
 namespace NewRelic.Agent.Core
 {
@@ -15,6 +16,7 @@ namespace NewRelic.Agent.Core
     //
     // * Modifications include renaming the class and the addition of exception handling and logging.
 
+    [NrCoveredByIntegrationTests]
     public static class RuntimeEnvironmentInfo
     {
         private enum Platform
