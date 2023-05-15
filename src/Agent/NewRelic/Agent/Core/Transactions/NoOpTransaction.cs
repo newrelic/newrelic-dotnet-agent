@@ -8,6 +8,7 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.CodeAttributes;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ using System.Linq;
 
 namespace NewRelic.Agent.Core.Transactions
 {
+    [NrExcludeFromCodeCoverage]
     public class NoOpTransaction : ITransaction, ITransactionExperimental
     {
         public bool IsValid => false;
