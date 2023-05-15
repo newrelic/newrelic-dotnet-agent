@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -61,7 +62,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void Harvest()
+        protected override async Task HarvestAsync()
         {
             ICollection<ErrorTraceWireModel> errorTraceWireModels;
 
@@ -78,7 +79,7 @@ namespace NewRelic.Agent.Core.Aggregators
             if (errorTraceWireModels.Count <= 0)
                 return;
 
-            var responseStatus = DataTransportService.Send(errorTraceWireModels);
+            var responseStatus = await DataTransportService.SendAsync(errorTraceWireModels);
 
             HandleResponse(responseStatus, errorTraceWireModels);
         }

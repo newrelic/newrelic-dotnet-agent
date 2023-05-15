@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 
 #pragma warning disable 649 // Unassigned fields. This should be removed when we support thread profiling in the NETSTANDARD2_0 build.
 
@@ -216,11 +217,11 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         /// <summary>
         /// This is called by the sampler prior to terminating the native thread profiler which will reset all of the resources including the name cache.
         /// </summary>
-        public void SamplingComplete()
+        public async Task SamplingCompleteAsync()
         {
             if (_reportData)
             {
-                PerformAggregation();
+                await PerformAggregationAsync();
             }
         }
 
@@ -305,7 +306,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
         #region Aggregation Process
 
-        public void PerformAggregation()
+        public async Task PerformAggregationAsync()
         {
             try
             {
@@ -321,7 +322,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
                 var profileData = SerializeData();
 
-                _dataTransportService.SendThreadProfilingData(profileData);
+                await _dataTransportService.SendThreadProfilingDataAsync(profileData);
 
                 LogFailedProfiles();
 

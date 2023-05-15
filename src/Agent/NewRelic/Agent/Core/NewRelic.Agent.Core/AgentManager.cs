@@ -136,7 +136,7 @@ namespace NewRelic.Agent.Core
             _wrapperService = _container.Resolve<IWrapperService>();
 
             //We need to attempt to auto start the agent once all services have resolved
-            _container.Resolve<IConnectionManager>().AttemptAutoStart();
+            _container.Resolve<IConnectionManager>().AttemptAutoStartAsync();
 
             AgentServices.StartServices(_container);
 

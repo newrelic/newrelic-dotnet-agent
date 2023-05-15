@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _httpClientFactory = httpClientFactory;
         }
 
-        public string SendData(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid)
+        public async Task<string> SendDataAsync(string method, ConnectionInfo connectionInfo, string serializedData, Guid requestGuid)
         {
             try
             {
@@ -124,7 +124,7 @@ namespace NewRelic.Agent.Core.DataTransport
                         request.Method = HttpMethod.Post;
                     }
 
-                    using (var response = Task.Run(() => httpClient.SendAsync(request)).GetAwaiter().GetResult())
+                    using (var response = await httpClient.SendAsync(request))
                     {
                         var responseContent = GetResponseContent(response, requestGuid);
 

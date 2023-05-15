@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
@@ -43,7 +44,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        protected override void Harvest()
+        protected override async Task HarvestAsync()
         {
             var traceSamples = _transactionCollectors
                 .Where(t => t != null)
@@ -60,7 +61,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             LogUnencodedTraceData(traceWireModels);
 
-            var responseStatus = DataTransportService.Send(traceWireModels);
+            var responseStatus = await DataTransportService.SendAsync(traceWireModels);
             HandleResponse(responseStatus, traceSamples);
         }
 

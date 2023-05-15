@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metric;
@@ -61,7 +62,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 done = _metricStatsCollectionQueue.MergeMetrics(metric);
             }
         }
-        protected override void Harvest()
+        protected override async Task HarvestAsync()
         {
             Log.Info("Metric harvest starting.");
 
@@ -75,7 +76,7 @@ namespace NewRelic.Agent.Core.Aggregators
             oldMetrics.MergeUnscopedStats(MetricNames.SupportabilityMetricHarvestTransmit, MetricDataWireModel.BuildCountData());
             var metricsToSend = oldMetrics.ConvertToJsonForSending(_metricNameService);
 
-            var responseStatus = DataTransportService.Send(metricsToSend);
+            var responseStatus = await DataTransportService.SendAsync(metricsToSend);
             HandleResponse(responseStatus, metricsToSend);
 
             Log.Debug("Metric harvest finished.");

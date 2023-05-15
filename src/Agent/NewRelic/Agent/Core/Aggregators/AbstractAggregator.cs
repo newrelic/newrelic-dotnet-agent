@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
@@ -29,12 +30,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
         private void OnStopHarvestEvent(StopHarvestEvent obj)
         {
-            _scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
+            _scheduler.StopExecuting(() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult(), TimeSpan.FromSeconds(2));
         }
 
         public abstract void Collect(T wireModel);
 
-        protected abstract void Harvest();
+        protected abstract Task HarvestAsync();
 
         protected abstract bool IsEnabled { get; }
 
@@ -44,17 +45,17 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             if (IsEnabled)
             {
-                _scheduler.ExecuteEvery(Harvest, HarvestCycle);
+                _scheduler.ExecuteEvery(() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult(), HarvestCycle);
             }
             else
             {
-                _scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
+                _scheduler.StopExecuting(() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult(), TimeSpan.FromSeconds(2));
             }
         }
 
         private void OnPreCleanShutdown(PreCleanShutdownEvent obj)
         {
-            _scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
+            _scheduler.StopExecuting(() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult(), TimeSpan.FromSeconds(2));
 
             if (!_configuration.CollectorSendDataOnExit || !IsEnabled)
                 return;
@@ -63,13 +64,13 @@ namespace NewRelic.Agent.Core.Aggregators
             if (!(uptime.TotalMilliseconds > _configuration.CollectorSendDataOnExitThreshold))
                 return;
 
-            Harvest();
+            Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult();
         }
 
         public override void Dispose()
         {
             base.Dispose();
-            _scheduler.StopExecuting(Harvest);
+            _scheduler.StopExecuting(() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult());
         }
 
     }

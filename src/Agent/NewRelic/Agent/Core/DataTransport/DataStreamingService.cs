@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _healthReporter = agentHealthReporter;
         }
 
-        private async Task<int> WaitForResponse()
+        private async Task<int> WaitForResponseAsync()
         {
             var success = false;
             try
@@ -88,9 +88,9 @@ namespace NewRelic.Agent.Core.DataTransport
             return ConsumerID;
         }
 
-        public Task<int> GetAwaiter()
+        public Task<int> GetAwaiterAsync()
         {
-            return _task ?? (_task = WaitForResponse());
+            return _task ?? (_task = WaitForResponseAsync());
         }
 
         public TResponse RetrieveResponse()
@@ -456,7 +456,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 var tasksToWaitFor = _responseStreamsDic.Values
                     .Where(x => !x.IsInvalid)
-                    .Select(x => x.GetAwaiter())
+                    .Select(x => x.GetAwaiterAsync())
                     .ToArray();
 
                 if (tasksToWaitFor.Length == 0)
