@@ -156,10 +156,10 @@ function Copy-AgentRoot {
     
     if ($Linux) {
         if ($Architecture -like "x64") {
-            Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\linux-x64-release\libNewRelicProfiler.so" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\Release\netstandard2.0\profiler\linux_x64\libNewRelicProfiler.so" -Destination "$Destination" -Force 
         }
         if ($Architecture -like "ARM64") {
-            Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\linux-arm64-release\libNewRelicProfiler.so" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\Release\netstandard2.0\profiler\linux_arm64\libNewRelicProfiler.so" -Destination "$Destination" -Force 
         }
     }
     else {
@@ -170,10 +170,10 @@ function Copy-AgentRoot {
         }
 
         if ($Architecture -like "x64" ) {
-            Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\x64-Release\NewRelic.Profiler.dll" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\Release\netstandard2.0\profiler\x64\NewRelic.Profiler.dll" -Destination "$Destination" -Force 
         }
         else {
-            Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\x86-Release\NewRelic.Profiler.dll" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\Release\netstandard2.0\profiler\x86\NewRelic.Profiler.dll" -Destination "$Destination" -Force 
         }
     }
 
