@@ -24,6 +24,8 @@ namespace AspNetCoreMvcFrameworkApplication
 
         public static void Main(string[] args)
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
             var commandLine = string.Join(" ", args);
 
             _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";

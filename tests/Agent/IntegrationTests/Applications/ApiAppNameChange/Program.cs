@@ -18,6 +18,8 @@ namespace NewRelic.Agent.IntegrationTests.Applications.ApiAppNameChange
 
         static void Main(string[] args)
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
             if (Parser.Default == null)
                 throw new NullReferenceException("CommandLine.Parser.Default");
 

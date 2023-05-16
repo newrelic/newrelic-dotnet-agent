@@ -19,6 +19,8 @@ namespace NewRelic.Agent.IntegrationTests.Applications.AgentApiExecutor
 
         static void Main(string[] args)
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
             RealMain(args);
             Thread.Sleep(1000); //needed for OtherTransaction test
         }

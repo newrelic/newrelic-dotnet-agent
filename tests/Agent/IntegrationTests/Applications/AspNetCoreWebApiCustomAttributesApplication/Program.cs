@@ -15,6 +15,8 @@ namespace AspNetCoreWebApiCustomAttributesApplication
 
         public static void Main(string[] args)
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
             _port = AppLifecycleManager.GetPortFromArgs(args);
 
             var ct = new CancellationTokenSource();

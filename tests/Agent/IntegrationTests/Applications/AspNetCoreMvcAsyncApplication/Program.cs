@@ -15,6 +15,8 @@ namespace AspNetCoreMvcAsyncApplication
 
         public static void Main(string[] args)
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
             Thread.CurrentThread.Name = "NewRelic Main Test Application Thread";
 
             _port = AppLifecycleManager.GetPortFromArgs(args);

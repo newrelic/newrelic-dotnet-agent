@@ -16,6 +16,8 @@ namespace AspNetCoreMvcCoreFrameworkApplication
 
         public static void Main(string[] args)
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
             Task webHostTask = null;
             IntegrationTestingFrameworkUtil.RegisterProcessWithTestFrameworkAndInitialize(args, DefaultPort, out var eventWaitHandle, out var cancellationTokenSource, (allArgs, cts, port) => webHostTask = BuildWebHost(allArgs, port).RunAsync(cts.Token));
 
