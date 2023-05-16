@@ -2,12 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
+using System.Text;
+using NewRelic.SystemExtensions;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
-namespace NewRelic.SystemExtensions.UnitTests
+namespace NewRelic.Core.Tests.NewRelic.SystemExtensions
 {
     [TestFixture]
-    public class StringExtensions
+    public class StringExtensionsTests
     {
         [Test]
         public void when_maxLength_is_less_than_0_then_throws_exception()
@@ -27,6 +31,7 @@ namespace NewRelic.SystemExtensions.UnitTests
         [TestCase("foo", 0, "")]
         [TestCase("€€€", 3, "€€€")]
         [TestCase("€€€", 2, "€€")]
+        [TestCase("a\u0304\u0308bc\u0327", 3, "a\u0304\u0308bc\u0327")]
         public void TruncationByLength(string inputString, int maxLength, string expectedResult)
         {
             var actualResult = inputString.TruncateUnicodeStringByLength(maxLength);
@@ -81,6 +86,20 @@ namespace NewRelic.SystemExtensions.UnitTests
             Assert.AreEqual(expectedResult, source.ContainsAny(searchTargets, StringComparison.InvariantCulture));
         }
 
+        [Test]
+        public void ContainsAny_ReturnsFalse_IfSourceStringIsNull()
+        {
+            string source = null;
+            Assert.False(source.ContainsAny(new [] { "foo"}));
+        }
+
+        [Test]
+        public void ContainsAny_ReturnsFalse_IfSearchTargetsIsNull()
+        {
+            string source = "foo";
+            Assert.False(source.ContainsAny(null));
+        }
+
         [TestCase("foo bar zip zap", 'z', "foo bar ")]
         [TestCase("foo-bar-baz", '-', "foo")]
         [TestCase("foo☃bar☃baz", '☃', "foo")]
@@ -88,12 +107,17 @@ namespace NewRelic.SystemExtensions.UnitTests
         [TestCase("foo€bar€baz", '€', "foo")]
         [TestCase("€-€€-€€€", '-', "€")]
         [TestCase("http://www.google.com?query=blah", '?', "http://www.google.com")]
+        [TestCase("Some Random String", 'z', "Some Random String")]
         public void TrimAfterAChar(string source, char token, string expectedResult)
         {
-            if (source == null)
-                throw new ArgumentNullException("source");
-
             Assert.AreEqual(expectedResult, source.TrimAfterAChar(token));
+        }
+
+        [Test]
+        public void TrimAfterAChar_Throws_IfSourceIsNull()
+        {
+            string source = null;
+            Assert.Throws<ArgumentNullException>(() => source.TrimAfterAChar('x'));
         }
 
         [TestCase("abc123", 'x', 1, "abc123")]
@@ -166,6 +190,15 @@ namespace NewRelic.SystemExtensions.UnitTests
             var actualResult = sentence.CapitalizeEachWord(separator, removeSeparator);
 
             Assert.AreEqual(expectedResult, actualResult);
+        }
+
+        [TestCase("foo bar baz")]
+        [TestCase(null)]
+        public void SizeBytes(string testString)
+        {
+            var expectedSizeBytes = testString == null ? 0 : Encoding.UTF8.GetByteCount(testString);
+
+            Assert.AreEqual(expectedSizeBytes, testString.SizeBytes());
         }
     }
 }
