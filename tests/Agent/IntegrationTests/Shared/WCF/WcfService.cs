@@ -14,7 +14,10 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
     [ServiceBehavior(IncludeExceptionDetailInFaults = true)]
     public class WcfService : IWcfService
     {
-
+        public WcfService()
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+        }
         private readonly bool _printOutput = false;
         private const string TEST_ERROR_MESAGE = "WCF Service Testing Exception";
 

@@ -23,6 +23,8 @@ namespace HostedWebCore
 
         private static void Main(string[] args)
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
             string msg = "Firing up...args: " + string.Join(", ", args);
             Log("Firing up...args: " + string.Join(", ", args));
             Log("Starting directory: " + Directory.GetCurrentDirectory());

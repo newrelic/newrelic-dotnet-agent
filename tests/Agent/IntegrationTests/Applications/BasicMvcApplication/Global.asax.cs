@@ -44,6 +44,8 @@ namespace BasicMvcApplication
         /// </summary>
         private static void OverrideSslSettingsForMockNewRelic()
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
             ServicePointManager.ServerCertificateValidationCallback = delegate
             {
                 //force trust on all certificates for simplicity

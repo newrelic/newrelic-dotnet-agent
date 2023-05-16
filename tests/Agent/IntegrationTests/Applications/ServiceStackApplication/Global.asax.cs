@@ -10,6 +10,8 @@ namespace ServiceStackApplication
     {
         protected void Application_Start(object sender, EventArgs e)
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
             new AppHost().Init();
         }
     }

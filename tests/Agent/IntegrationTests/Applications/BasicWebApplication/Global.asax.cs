@@ -12,6 +12,8 @@ namespace BasicWebApplication
     {
         void Application_Start(object sender, EventArgs e)
         {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
             // Code that runs on application startup
             RouteConfig.RegisterRoutes(RouteTable.Routes);
         }
