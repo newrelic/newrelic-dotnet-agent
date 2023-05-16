@@ -9,7 +9,7 @@ Param(
     [ValidateSet("All","x64","x86")][string]$Architecture = "All",
     [string]$HomePath = "$env:NR_DEV_HOMEROOT",
     [string]$gpgKeyPath = "",
-    [switch]$SkipProfilerBuild = $false,
+    # [switch]$SkipProfilerBuild = $false,
     [switch]$KeepNewRelicConfig = $false,
     [switch]$SetSystemEnvironment = $false,
     [switch]$SetSessionEnvironment = $false
@@ -38,18 +38,18 @@ if (($Type -like "Linux" -or $Type -like "All" -or $Type -like "CoreAll" -or $Ty
 . "$rootDirectory\build\build_functions.ps1"
 $HomePath = Get-HomeRootPath $HomePath
 
-######################################
-# Profiler Build (Windows and Linux) #
-######################################
+# ######################################
+# # Profiler Build (Windows and Linux) #
+# ######################################
 
-if (-Not $SkipProfilerBuild) {
-    $profilerBuildScript = "$rootDirectory\src\Agent\NewRelic\Profiler\build\build.ps1"
-    & $profilerBuildScript
-    if ($LastExitCode -ne 0) {
-        Write-Host "Error in Profiler build script. Exiting with code: $LastExitCode.."
-        exit $LastExitCode
-    }
-}
+# if (-Not $SkipProfilerBuild) {
+#     $profilerBuildScript = "$rootDirectory\src\Agent\NewRelic\Profiler\build\build.ps1"
+#     & $profilerBuildScript
+#     if ($LastExitCode -ne 0) {
+#         Write-Host "Error in Profiler build script. Exiting with code: $LastExitCode.."
+#         exit $LastExitCode
+#     }
+# }
 
 #######################
 # Managed Agent Build #
