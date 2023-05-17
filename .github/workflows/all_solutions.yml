@@ -287,6 +287,9 @@ jobs:
       - name: Disable TLS 1.3
         run: |
           $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client"
+          if(!(Test-Path $registryPath)) {
+            New-Item -Path $registryPath -Force
+          }
           New-ItemProperty -Path $registryPath -Name "DisabledByDefault" -Value "1" -PropertyType DWORD -Force
           New-ItemProperty -Path $registryPath -Name "Enabled" -Value "0" -PropertyType DWORD -Force
         shell: powershell
@@ -504,6 +507,9 @@ jobs:
       - name: Disable TLS 1.3
         run: |
           $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client"
+          if(!(Test-Path $registryPath)) {
+            New-Item -Path $registryPath -Force
+          }
           New-ItemProperty -Path $registryPath -Name "DisabledByDefault" -Value "1" -PropertyType DWORD -Force
           New-ItemProperty -Path $registryPath -Name "Enabled" -Value "0" -PropertyType DWORD -Force
         shell: powershell
