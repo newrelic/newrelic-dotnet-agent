@@ -109,7 +109,6 @@ jobs:
           New-ItemProperty -Path $registryPath -Name "Enabled" -Value "0" -PropertyType DWORD -Force
         shell: powershell
 
-
       - name: Create and trust .NET development SSL certificate
         run: |
           dotnet dev-certs https --clean
