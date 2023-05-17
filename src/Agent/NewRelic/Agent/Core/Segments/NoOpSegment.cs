@@ -64,5 +64,10 @@ namespace NewRelic.Agent.Core.Segments
         {
             return this;
         }
+
+        public string GetCategory()
+        {
+            return string.Empty;
+        }
     }
 }

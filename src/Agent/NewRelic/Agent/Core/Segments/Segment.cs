@@ -17,6 +17,7 @@ using NewRelic.Agent.Core.Errors;
 using System.Diagnostics;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Utils;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Segments
 {
@@ -141,10 +142,7 @@ namespace NewRelic.Agent.Core.Segments
                 var endTime = _transactionSegmentState.GetRelativeTime();
                 RelativeEndTime = endTime;
 
-                if (Agent.Instance.StackExchangeRedisCache != null)
-                {
-                    Agent.Instance.StackExchangeRedisCache.Harvest(this);
-                }
+                Agent.Instance.StackExchangeRedisCache?.Harvest(this);
 
                 Finish();
 
@@ -431,6 +429,11 @@ namespace NewRelic.Agent.Core.Segments
         {
             SegmentNameOverride = name;
             return this;
+        }
+
+        public string GetCategory()
+        {
+            return EnumNameCache<SpanCategory>.GetName(Data.SpanCategory);
         }
     }
 }

@@ -68,5 +68,7 @@ namespace NewRelic.Agent.Api
         /// Removes this segment from the top of the agent's internal call stack. Should only be used for asynchronous methods. Calling EndSegment is sufficient for synchronous methods.
         /// </summary>
         void RemoveSegmentFromCallStack();
+
+        string GetCategory(); 
     }
 }

@@ -19,7 +19,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
     {
         private readonly EventWaitHandle _stopHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-        private readonly ConcurrentDictionary<ISegment, ProfilingSession> _sessionCache = new ConcurrentDictionary<ISegment, ProfilingSession>();
+        private readonly ConcurrentDictionary<ISegment, (WeakReference<ITransaction> transaction, ProfilingSession session)> _sessionCache = new ConcurrentDictionary<ISegment, (WeakReference<ITransaction> transaction, ProfilingSession session)>();
 
         private readonly IAgent _agent;
 
@@ -31,6 +31,8 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
 
             // Since the methodcall will not change, it is passed in from the instrumentation for reuse later.
             _invocationTargetHashCode = invocationTargetHashCode;
+
+            _agent.SimpleSchedulingService.StartExecuteEvery(CleanUp, _agent.Configuration.DefaultHarvestCycle, _agent.Configuration.DefaultHarvestCycle);
         }
 
         /// <summary>
@@ -45,15 +47,14 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                 return;
             }
 
-            // Get the transaction from the session
-            var weakTransaction = sessionData.UserToken as WeakReference<ITransaction>;
-            if (!(weakTransaction?.TryGetTarget(out var transaction) ?? false) || transaction.IsFinished)
+            // Get the transaction from the data
+            if (!(sessionData.transaction?.TryGetTarget(out var transaction) ?? false) || transaction.IsFinished)
             {
                 return;
             }
 
             var xTransaction = (ITransactionExperimental)transaction;
-            var commands = sessionData.FinishProfiling();
+            var commands = sessionData.session.FinishProfiling();
             foreach (var command in commands)
             {
                 // We need to build the relative start and stop time based on the transaction start time.
@@ -69,6 +70,20 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                 // This calls Finish and removes the segment from the callstack.
                 segment.EndStackExchangeRedis();
             }
+        }
+
+        private void CleanUp()
+        {
+            _agent.Logger.Log(Agent.Extensions.Logging.Level.Info, "Session cache size pre-cleanup " + _sessionCache.Count);
+            foreach (var pair in _sessionCache)
+            {
+                if (!(pair.Value.transaction?.TryGetTarget(out var txn) ?? false) || txn.IsFinished)
+                {
+                    _ = _sessionCache.TryRemove(pair.Key, out _);
+                }
+            }
+
+            _agent.Logger.Log(Agent.Extensions.Logging.Level.Info, "Session cache size post-cleanup " + _sessionCache.Count);
         }
 
         private ConnectionInfo GetConnectionInfo(EndPoint endpoint)
@@ -111,25 +126,23 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                 }
 
                 // Don't want to save data to a session to a NoOp - no way to clean it up easily or reliably.
+                // Don't want to save to a Datastore segment - could be another Redis segment or something else.
                 var segment = transaction.CurrentSegment;
-                if (!segment.IsValid)
+                if (!segment.IsValid || segment.GetCategory() == "Datastore")
                 {
                     return null;
                 }
 
-                return _sessionCache.GetOrAdd(segment, GetProfilingSession);
+                var sessiontoken = _sessionCache.GetOrAdd(segment, (s) => (new WeakReference<ITransaction>(transaction), new ProfilingSession()));
+                return sessiontoken.session;
             };
-        }
-
-        private ProfilingSession GetProfilingSession(ISegment segment)
-        {
-            return new ProfilingSession(new WeakReference<ITransaction>(_agent.CurrentTransaction, false));
         }
 
         // Clean up the handles, sessions, and wipe the dictionary.
         public void Dispose()
         {
             _stopHandle.Set();
+            _agent.SimpleSchedulingService.StopExecuting(CleanUp);
             _sessionCache.Clear();
             _stopHandle.Dispose();
         }
