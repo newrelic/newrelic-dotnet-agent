@@ -35,13 +35,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             _fixture.AddCommand($"{excerciserName} Wait 5000");
             _fixture.AddCommand($"{excerciserName} DropTable {_tableName}");
 
-
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
 
                     configModifier.ForceTransactionTraces();
 
@@ -52,8 +54,13 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(
                        instrumentationFilePath,
                         "", "enabled", "true");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
+
             _fixture.Initialize();
         }
 
