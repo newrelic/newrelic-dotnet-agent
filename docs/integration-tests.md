@@ -22,8 +22,6 @@ Install the "ASP.NET and web development" workload in the "Web & Cloud" category
 
 Depending on which version of Visual Studio you are using, you may have to install some or all of the following:
 
-* .NET Core 3.1
-* .NET 5
 * .NET 6
 * .NET 7
 * .NET Framework 4.7.1 targeting pack
