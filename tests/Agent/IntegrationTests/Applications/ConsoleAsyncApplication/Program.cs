@@ -19,35 +19,38 @@ namespace ConsoleAsyncApplication
 
         static void Main(string[] args)
         {
-            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
+            _applicationName =
+                Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
 
-            Console.WriteLine($"[{_applicationName}] Invoked with args: { string.Join(" ", args) }");
+            Console.WriteLine($"[{_applicationName}] Invoked with args: {string.Join(" ", args)}");
 
             var port = GetPortFromArgs(args) ?? DefaultPort;
 
-            Console.WriteLine($"[{_applicationName}] Parsed port: { port }");
+            Console.WriteLine($"[{_applicationName}] Parsed port: {port}");
 
             var cancellationTokenSource = new CancellationTokenSource();
 
             var eventWaitHandleName = "app_server_wait_for_all_request_done_" + port;
 
-            Console.WriteLine($"[{_applicationName}] Setting EventWaitHandle name to: { eventWaitHandleName }");
+            Console.WriteLine($"[{_applicationName}] Setting EventWaitHandle name to: {eventWaitHandleName}");
 
-            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName);
+            using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName))
+            {
 
-            CreatePidFile();
+                CreatePidFile();
 
-            var doWorkTask = Task.Run(async () => await DoWorkAsyncAwait());
-            doWorkTask.Wait();
+                var doWorkTask = Task.Run(async () => await DoWorkAsyncAwait());
+                doWorkTask.Wait();
 
-            var doFireAndForgetTask = Task.Run(async () => await DoAsyncFireAndForgetWork());
-            doFireAndForgetTask.Wait();
+                var doFireAndForgetTask = Task.Run(async () => await DoAsyncFireAndForgetWork());
+                doFireAndForgetTask.Wait();
 
-            DoWorkManualAsync();
+                DoWorkManualAsync();
 
-            DoSyncFireAndForgetWork();
+                DoSyncFireAndForgetWork();
 
-            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            }
         }
 
         private static async Task DoWorkAsyncAwait()
@@ -70,41 +73,47 @@ namespace ConsoleAsyncApplication
         public static async Task DoAsyncFireAndForgetWork()
         {
             var waitHandleName = "DoAsyncFireAndForgetWork_" + Guid.NewGuid().ToString();
-            var waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, waitHandleName);
-            const int waitSignalDelaySeconds = 30;
-
-            var asyncFireAndForgetCases = new AsyncFireAndForgetUseCases();
-
-            await asyncFireAndForgetCases.Async_AwaitedAsync();
-            await asyncFireAndForgetCases.Async_FireAndForget(waitHandle);
-            await asyncFireAndForgetCases.Async_Sync();
-
-            var finished = waitHandle.WaitOne(TimeSpan.FromSeconds(waitSignalDelaySeconds));
-
-            if (!finished)
+            using (var waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, waitHandleName))
             {
-                throw new Exception($"DoAsyncFireAndForgetWork did not receive expected singal '{waitHandleName}' within ${waitSignalDelaySeconds} seconds.");
+                const int waitSignalDelaySeconds = 30;
+
+                var asyncFireAndForgetCases = new AsyncFireAndForgetUseCases();
+
+                await asyncFireAndForgetCases.Async_AwaitedAsync();
+                await asyncFireAndForgetCases.Async_FireAndForget(waitHandle);
+                await asyncFireAndForgetCases.Async_Sync();
+
+                var finished = waitHandle.WaitOne(TimeSpan.FromSeconds(waitSignalDelaySeconds));
+
+                if (!finished)
+                {
+                    throw new Exception(
+                        $"DoAsyncFireAndForgetWork did not receive expected singal '{waitHandleName}' within ${waitSignalDelaySeconds} seconds.");
+                }
             }
         }
 
         public static void DoSyncFireAndForgetWork()
         {
             var waitHandleName = "DoSyncFireAndForgetWork_" + Guid.NewGuid().ToString();
-            var waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, waitHandleName);
-
-            const int waitSignalDelaySeconds = 30;
-
-            var syncFireAndForgetCases = new AsyncFireAndForgetUseCases();
-
-            syncFireAndForgetCases.Sync_AwaitedAsync();
-            syncFireAndForgetCases.Sync_FireAndForget(waitHandle);
-            syncFireAndForgetCases.Sync_Sync();
-
-            var finished = waitHandle.WaitOne(TimeSpan.FromSeconds(waitSignalDelaySeconds));
-
-            if (!finished)
+            using (var waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, waitHandleName))
             {
-                throw new Exception($"DoSyncFireAndForget did not receive expected singal '{waitHandleName}' within ${waitSignalDelaySeconds} seconds.");
+
+                const int waitSignalDelaySeconds = 30;
+
+                var syncFireAndForgetCases = new AsyncFireAndForgetUseCases();
+
+                syncFireAndForgetCases.Sync_AwaitedAsync();
+                syncFireAndForgetCases.Sync_FireAndForget(waitHandle);
+                syncFireAndForgetCases.Sync_Sync();
+
+                var finished = waitHandle.WaitOne(TimeSpan.FromSeconds(waitSignalDelaySeconds));
+
+                if (!finished)
+                {
+                    throw new Exception(
+                        $"DoSyncFireAndForget did not receive expected singal '{waitHandleName}' within ${waitSignalDelaySeconds} seconds.");
+                }
             }
         }
 
