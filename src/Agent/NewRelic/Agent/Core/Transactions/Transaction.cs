@@ -933,7 +933,7 @@ namespace NewRelic.Agent.Core.Transactions
         private int _totalNestedTransactionAttempts;
         private readonly int _transactionTracerMaxSegments;
 
-        public string TransactionGuid => _guid;
+        public string Guid => _guid;
         private string _guid;
 
         private volatile bool _ignoreAutoBrowserMonitoring;
@@ -1061,7 +1061,6 @@ namespace NewRelic.Agent.Core.Transactions
         public bool IgnoreAllBrowserMonitoring => _ignoreAllBrowserMonitoring;
 
         public bool Ignored => _ignored;
-        public string Guid => _guid;
 
         private readonly DateTime _startTime;
         public DateTime StartTime => _startTime;
