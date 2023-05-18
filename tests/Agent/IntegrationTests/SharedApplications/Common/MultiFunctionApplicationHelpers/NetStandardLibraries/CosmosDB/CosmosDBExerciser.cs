@@ -217,18 +217,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
 
                 Console.WriteLine("Creates HelloWorldStoredProc.js Stored procedure");
 
-#if NET5_0_OR_GREATER
-                var sproc = await cosmosScripts.CreateStoredProcedureAsync(
-                    new StoredProcedureProperties(
-                        scriptId,
-                        await File.ReadAllTextAsync("NetStandardLibraries/CosmosDB/StoredProcedures/HelloWorldStoredProc.js")));
+                string storedProcJs;
+#if NET6_0_OR_GREATER
+                storedProcJs = await File.ReadAllTextAsync("NetStandardLibraries/CosmosDB/StoredProcedures/HelloWorldStoredProc.js");
 #else
+                storedProcJs = File.ReadAllText("NetStandardLibraries/CosmosDB/StoredProcedures/HelloWorldStoredProc.js");
+#endif
                 var sproc = await cosmosScripts.CreateStoredProcedureAsync(
                     new StoredProcedureProperties(
                         scriptId,
-                        File.ReadAllText("NetStandardLibraries/CosmosDB/StoredProcedures/HelloWorldStoredProc.js")));
+                        storedProcJs));
 
-#endif
                 Console.WriteLine("Executes HelloWorldStoredProc.js stored procedure");
 
                 var response = await container.Scripts.ExecuteStoredProcedureAsync<string>(
