@@ -16,7 +16,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
     {
 
         private readonly bool _printOutput = false;
-        private const string TEST_ERROR_MESAGE = "WCF Service Testing Exception";
+        private const string TEST_ERROR_MESSAGE = "WCF Service Testing Exception";
 
 #region Supporting GetData
 
@@ -149,7 +149,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
             NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("custom key", "custom value");
             NewRelic.Api.Agent.NewRelic.GetAgent().CurrentTransaction.AddCustomAttribute("custom foo", "custom bar");
 
-            throw new Exception(TEST_ERROR_MESAGE);
+            throw new Exception(TEST_ERROR_MESSAGE);
         }
 
         public string EndAsyncThrowExceptionAtStart(IAsyncResult result)
@@ -205,7 +205,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
             }
 
 
-            throw new Exception(TEST_ERROR_MESAGE);
+            throw new Exception(TEST_ERROR_MESSAGE);
         }
 
 
@@ -226,7 +226,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Wcf
 
             if (throwException)
             {
-                throw new Exception(TEST_ERROR_MESAGE);
+                throw new Exception(TEST_ERROR_MESSAGE);
             }
 
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;

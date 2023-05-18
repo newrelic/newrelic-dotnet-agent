@@ -112,7 +112,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task ReplaceOneAsync()
         {
-            Collection.InsertOne(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" });
+            await Collection.InsertOneAsync(new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" });
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Mr.Slate");
             await Collection.ReplaceOneAsync(filter, new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" });
         }
@@ -140,7 +140,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<UpdateResult> UpdateOneAsync()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Dino Flintstone" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Dino 'Async' Flintstone");
             var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "Dinosaur 'Async' Flintstone");
@@ -170,7 +170,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         {
             var doc1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Willma Flintstone" };
             var doc2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Pebbles Flintstone" };
-            Collection.InsertMany(new List<CustomMongoDbEntity>() { doc1, doc2 });
+            await Collection.InsertManyAsync(new List<CustomMongoDbEntity>() { doc1, doc2 });
 
             var filter = Builders<CustomMongoDbEntity>.Filter.In("Name", new List<string> { "Willma Flintstone", "Pebbles Flintstone" });
             var update = Builders<CustomMongoDbEntity>.Update.Set("familyName", "Flintstone 'Async'");
@@ -201,7 +201,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<DeleteResult> DeleteOneAsync()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Barney 'Async' Rubble" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Barney 'Async' Rubble");
             var result = await Collection.DeleteOneAsync(filter);
@@ -230,7 +230,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         {
             var document1 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Betty 'Async' Rubble" };
             var document2 = new CustomMongoDbEntity { Id = new ObjectId(), Name = "BamBam 'Async' Rubble" };
-            Collection.InsertMany(new List<CustomMongoDbEntity>() { document1, document2 });
+            await Collection.InsertManyAsync(new List<CustomMongoDbEntity>() { document1, document2 });
 
             var filter = Builders<CustomMongoDbEntity>.Filter.In("Name", new List<string> { "Betty 'Async' Rubble", "BamBam 'Async' Rubble" });
             var result = await Collection.DeleteManyAsync(filter);
@@ -260,7 +260,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<IAsyncCursor<CustomMongoDbEntity>> FindAsync()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Mr. Slate" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var cursor = await Collection.FindAsync(filter);
@@ -286,7 +286,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<CustomMongoDbEntity> FindOneAndDeleteAsync()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "The Great 'Async' Gazoo" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var entity = await Collection.FindOneAndDeleteAsync(filter);
@@ -319,7 +319,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<CustomMongoDbEntity> FindOneAndReplaceAsync()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Joe 'Async' Rockhead" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
 
             var replaceDoc = new CustomMongoDbEntity { Id = document.Id, Name = "Joe 'Async' Rockhead's Doppelganger" };
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
@@ -353,7 +353,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<CustomMongoDbEntity> FindOneAndUpdateAsync()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Roxy 'Async' Rubble" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
 
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq(x => x.Id, document.Id);
             var update = Builders<CustomMongoDbEntity>.Update.Set("Name", "'Async' Rubble");
@@ -431,8 +431,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
             Collection.InsertOne(document);
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
-
+#if NET462
             return Collection.Count(filter);
+#else
+            return Collection.CountDocuments(filter);
+#endif
         }
 
         [LibraryMethod]
@@ -441,10 +444,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<long> CountAsync()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
-
+#if NET462
             return await Collection.CountAsync(filter);
+#else
+            return await Collection.CountDocumentsAsync(filter);
+#endif
         }
 
         [LibraryMethod]
@@ -465,7 +471,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<IAsyncCursor<string>> DistinctAsync()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
             return await Collection.DistinctAsync<string>("Name", filter);
@@ -492,6 +498,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             BsonJavaScript reduce = new BsonJavaScript(reduceJs);
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
+#pragma warning disable CS0618 // obsolete
             MapReduceOptions<CustomMongoDbEntity, BsonDocument> options = new MapReduceOptions<CustomMongoDbEntity, BsonDocument>
             {
                 Filter = filter,
@@ -499,6 +506,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             };
 
             return Collection.MapReduce(map, reduce, options);
+#pragma warning restore CS0618
         }
 
         [LibraryMethod]
@@ -507,7 +515,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<IAsyncCursor<BsonDocument>> MapReduceAsync()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
 
             var mapJs = @"function mapF() {
 							emit(this.name, 1);
@@ -522,6 +530,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             BsonJavaScript reduce = new BsonJavaScript(reduceJs);
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
 
+#pragma warning disable CS0618 // obsolete
             MapReduceOptions<CustomMongoDbEntity, BsonDocument> options = new MapReduceOptions<CustomMongoDbEntity, BsonDocument>
             {
                 Filter = filter,
@@ -529,6 +538,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             };
 
             return await Collection.MapReduceAsync(map, reduce, options);
+#pragma warning restore CS0618
         }
 
 #if NET471_OR_GREATER || NETCOREAPP
@@ -561,7 +571,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             try
             {
                 var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-                Collection.InsertOne(document);
+                await Collection.InsertOneAsync(document);
                 await Collection.WatchAsync();
 
                 return "Ok";
@@ -620,7 +630,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<string> DropCollectionAsync()
         {
             var collectionName = "dropTestCollectionAsync";
-            Db.CreateCollection(collectionName);
+            await Db.CreateCollectionAsync(collectionName);
             var collection = Db.GetCollection<BsonDocument>(collectionName);
             await Db.DropCollectionAsync(collectionName);
             return collection.CollectionNamespace.CollectionName;
@@ -708,7 +718,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
             Collection.InsertOne(document);
+#if NET462
             Collection.Indexes.CreateOne(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name));
+#else
+            Collection.Indexes.CreateOne(new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)));
+#endif
             return 1;
         }
 
@@ -718,8 +732,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<int> CreateOneAsync()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
+#if NET462
             await Collection.Indexes.CreateOneAsync(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name));
+#else
+            await Collection.Indexes.CreateOneAsync(new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)));
+#endif
             return 1;
         }
 
@@ -741,7 +759,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<int> CreateManyAsync()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
 
             var result = await Collection.Indexes.CreateManyAsync(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
             return result.Count();
@@ -777,7 +795,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public async Task DropOneAsync()
         {
-            Collection.Indexes.CreateMany(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
+            await Collection.Indexes.CreateManyAsync(new[] { new CreateIndexModel<CustomMongoDbEntity>(Builders<CustomMongoDbEntity>.IndexKeys.Ascending(k => k.Name)) });
             await Collection.Indexes.DropOneAsync("Name_1");
         }
 
@@ -857,7 +875,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         public async Task<int> GetNextBatchAsync()
         {
 
-            Collection.InsertMany(new[]
+            await Collection.InsertManyAsync(new[]
             {
                 new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" },
                 new CustomMongoDbEntity { Id = new ObjectId(), Name = "Alan Flintstone" }
