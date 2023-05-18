@@ -88,7 +88,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 
             using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
             {
-                await connection.OpenAsync();
+                connection.Open();
 
                 using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'", connection))
                 {
@@ -169,7 +169,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 
             using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
             {
-                await connection.OpenAsync();
+                connection.Open();
 
                 using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = @FN", connection))
                 {

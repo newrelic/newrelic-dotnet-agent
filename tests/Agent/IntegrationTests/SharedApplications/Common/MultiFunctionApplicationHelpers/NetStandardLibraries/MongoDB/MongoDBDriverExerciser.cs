@@ -431,11 +431,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
             Collection.InsertOne(document);
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
-#if NET462
             return Collection.Count(filter);
-#else
-            return Collection.CountDocuments(filter);
-#endif
         }
 
         [LibraryMethod]
@@ -446,11 +442,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
             await Collection.InsertOneAsync(document);
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
-#if NET462
             return await Collection.CountAsync(filter);
-#else
-            return await Collection.CountDocumentsAsync(filter);
-#endif
         }
 
         [LibraryMethod]
