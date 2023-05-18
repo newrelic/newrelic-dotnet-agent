@@ -77,7 +77,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 LogTlsConfiguration();
 
                 var preconnectResult = SendPreconnectRequest();
-                _connectionInfo = new ConnectionInfo(_configuration, preconnectResult.RedirectHost);
+                //_connectionInfo = new ConnectionInfo(_configuration, preconnectResult.RedirectHost);
 
                 ValidateAgentTokenSettingToPoliciesReceived(preconnectResult.SecurityPolicies);
 
