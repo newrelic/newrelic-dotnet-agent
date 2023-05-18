@@ -33,30 +33,27 @@ namespace NewRelic.Agent.IntegrationTests.Applications.AgentApiExecutor
                 return;
 
             // Create handle that RemoteApplication expects
-            var eventWaitHandle =
-                new EventWaitHandle(false, EventResetMode.ManualReset, "app_server_wait_for_all_request_done_" + program.Port);
-
-            CreatePidFile();
-
-            Api.Agent.NewRelic.StartAgent();
-
-            SomeSlowMethod();
-
-            Api.Agent.NewRelic.RecordMetric("MyMetric", 3.14159F);
-            Api.Agent.NewRelic.NoticeError(new Exception("Rawr!"));
-
-            var errorAttributes = new Dictionary<string, string>
+            using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset,
+                       "app_server_wait_for_all_request_done_" + program.Port))
             {
-                {"hey", "dude"},
-                {"faz", "baz"},
-            };
-            Api.Agent.NewRelic.NoticeError(new Exception("Rawr!"), errorAttributes);
 
-            SomeOtherMethod();
+                CreatePidFile();
 
-            // Wait for the test harness to tell us to shut down
-            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+                Api.Agent.NewRelic.StartAgent();
 
+                SomeSlowMethod();
+
+                Api.Agent.NewRelic.RecordMetric("MyMetric", 3.14159F);
+                Api.Agent.NewRelic.NoticeError(new Exception("Rawr!"));
+
+                var errorAttributes = new Dictionary<string, string> { { "hey", "dude" }, { "faz", "baz" }, };
+                Api.Agent.NewRelic.NoticeError(new Exception("Rawr!"), errorAttributes);
+
+                SomeOtherMethod();
+
+                // Wait for the test harness to tell us to shut down
+                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

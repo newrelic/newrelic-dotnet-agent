@@ -18,8 +18,10 @@ namespace AspNetCoreMvcCoreFrameworkApplication
         {
             Task webHostTask = null;
             IntegrationTestingFrameworkUtil.RegisterProcessWithTestFrameworkAndInitialize(args, DefaultPort, out var eventWaitHandle, out var cancellationTokenSource, (allArgs, cts, port) => webHostTask = BuildWebHost(allArgs, port).RunAsync(cts.Token));
-
-            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            using (eventWaitHandle)
+            {
+                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            }
 
             cancellationTokenSource.Cancel();
 

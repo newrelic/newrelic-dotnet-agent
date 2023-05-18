@@ -34,9 +34,12 @@ namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
             var baseAddress = string.Format(@"http://*:{0}/", Port);
             using (WebApp.Start<Startup>(baseAddress))
             {
-                var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + Port.ToString());
-                CreatePidFile();
-                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+                using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset,
+                           "app_server_wait_for_all_request_done_" + Port.ToString()))
+                {
+                    CreatePidFile();
+                    eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+                }
             }
         }
 

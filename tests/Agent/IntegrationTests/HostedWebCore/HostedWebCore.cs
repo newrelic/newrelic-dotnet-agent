@@ -59,9 +59,12 @@ namespace HostedWebCore
         {
             StartWebServer();
             //The HWC creates this shutdown event and waits for the test runner to set so that it can shutdown.  
-            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset, "app_server_wait_for_all_request_done_" + _port.ToString());
-            CreatePidFile();
-            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(ServerTimeoutShutdownMinutes));
+            using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset,
+                       "app_server_wait_for_all_request_done_" + _port.ToString()))
+            {
+                CreatePidFile();
+                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(ServerTimeoutShutdownMinutes));
+            }
         }
 
         private void StartWebServer()
