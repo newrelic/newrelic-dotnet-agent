@@ -71,12 +71,6 @@ namespace NewRelic.Agent.Core.Aggregators
             Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
         }
 
-        [Test]
-        public void Harvest_cycle_should_match_default_cycle()
-        {
-            Assert.AreEqual(TimeSpan.FromMinutes(1), _harvestCycle);
-        }
-
         #region Aggregation
 
         [Test]

@@ -2149,6 +2149,30 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private TimeSpan? _sqlTracesHarvestCycleOverride = null;
+        public TimeSpan SqlTracesHarvestCycle
+        {
+            get
+            {
+                if (_sqlTracesHarvestCycleOverride.HasValue)
+                {
+                    return _sqlTracesHarvestCycleOverride.Value;
+                }
+
+                if (_newRelicAppSettings.TryGetValue("OverrideSqlTracesHarvestCycle", out var harvestCycle))
+                {
+                    if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                    {
+                        Log.Info("SQL traces harvest cycle overridden to " + parsedHarvestCycle + " seconds.");
+                        _sqlTracesHarvestCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                        return _sqlTracesHarvestCycleOverride.Value;
+                    }
+                }
+
+                return DefaultHarvestCycle;
+            }
+        }
+
         #endregion
 
         #region Helpers
