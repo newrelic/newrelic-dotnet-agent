@@ -34,6 +34,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _fixture.AddCommand("MongoDBDriverExerciser RunCommand");
             _fixture.AddCommand("MongoDBDriverExerciser RunCommandAsync");
 
+            _fixture.AddActions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                }
+            );
+
             _fixture.Initialize();
         }
 
