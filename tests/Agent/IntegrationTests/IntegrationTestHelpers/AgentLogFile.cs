@@ -49,7 +49,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             } while (timeTaken.Elapsed < timeout);
 
             if (throwIfNotFound)
-                throw new Exception($"Waited {timeout.Seconds}s but didn't find an agent log matching {Path.Combine(logDirectoryPath, searchPattern)}.");
+                throw new Exception($"Waited {timeout.TotalSeconds:N0}s but didn't find an agent log matching {Path.Combine(logDirectoryPath, searchPattern)}.");
         }
 
         public override IEnumerable<string> GetFileLines()

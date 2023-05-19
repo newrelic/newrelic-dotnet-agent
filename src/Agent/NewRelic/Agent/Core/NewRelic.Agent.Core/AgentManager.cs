@@ -18,6 +18,7 @@ using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace NewRelic.Agent.Core
 {
@@ -281,7 +282,7 @@ namespace NewRelic.Agent.Core
                     }
                 }
 
-                Log.Debug($".NET Runtime Version (from System.Environment.Version): {System.Environment.Version}");
+                Log.Debug($".NET Runtime Version: {RuntimeInformation.FrameworkDescription}");
             }
 
         }
