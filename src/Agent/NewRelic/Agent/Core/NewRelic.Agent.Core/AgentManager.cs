@@ -281,7 +281,7 @@ namespace NewRelic.Agent.Core
                     }
                 }
 
-                Log.Debug($"System.Environment.Version: {System.Environment.Version}");
+                Log.Debug($".NET Runtime Version (from System.Environment.Version): {System.Environment.Version}");
             }
 
         }
