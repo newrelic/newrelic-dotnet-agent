@@ -5,6 +5,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
@@ -237,6 +238,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
             if (_configurationService.Configuration.PayloadSuccessMetricsEnabled)
             {
+                var validSegment = segment as Segment;
+                var segmentString = validSegment != null ? validSegment?.ToStringForFinestLogging() : segment?.ToString();
+                Log.Finest($"Generated DT payload for segment: `{segmentString}`");
                 _agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadSuccess();
             }
 
