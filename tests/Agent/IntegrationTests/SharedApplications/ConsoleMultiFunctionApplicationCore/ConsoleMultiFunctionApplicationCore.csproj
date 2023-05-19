@@ -18,6 +18,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.6.40">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Common\MultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj" />
     <ProjectReference Include="..\Common\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
   </ItemGroup>
