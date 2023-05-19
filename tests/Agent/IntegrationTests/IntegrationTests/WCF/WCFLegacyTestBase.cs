@@ -141,8 +141,6 @@ namespace NewRelic.Agent.IntegrationTests.WCF
                     _fixture.RemoteApplication.NewRelicConfig.SetOrDeleteDistributedTraceEnabled(_tracingTestOption == TracingTestOption.DT ? true : null as bool?);
                     _fixture.RemoteApplication.NewRelicConfig.SetCATEnabled(_tracingTestOption == TracingTestOption.CAT);
 
-                    _fixture.RemoteApplication.NewRelicConfig.ConfigureFasterMetricsHarvestCycle(15);
-
                     GenerateFixtureCommands();
 
                     _fixture.SetTimeout(TimeSpan.FromMinutes(5));
