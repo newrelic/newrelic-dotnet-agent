@@ -19,7 +19,7 @@ namespace AspNetCoreMvcFrameworkApplication.Controllers
                 var result = await client.GetStringAsync("http://www.newrelic.com");
             }
 
-            task.Wait();
+            await task;
             return "Worked";
         }
 

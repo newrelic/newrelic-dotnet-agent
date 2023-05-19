@@ -12,8 +12,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 {
     public class BasicMvcApplication : RemoteApplicationFixture
     {
-        private readonly HttpClient _httpClient = new HttpClient();
-
         public const string ExpectedTransactionName = @"WebTransaction/MVC/DefaultController/Index";
 
         public BasicMvcApplication() : base(new RemoteWebApplication("BasicMvcApplication", ApplicationType.Unbounded))
