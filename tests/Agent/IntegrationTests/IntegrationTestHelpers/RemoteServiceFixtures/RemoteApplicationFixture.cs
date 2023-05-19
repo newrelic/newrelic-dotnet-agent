@@ -233,16 +233,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 try
                 {
                     var retryTest = false;
-                    var exceptionInExerciseApplication = false;
+                    var retryMessage = "";
                     var applicationHadNonZeroExitCode = false;
-
 
                     do
                     {
                         TestLogger?.WriteLine("Test Home" + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
 
                         // reset these for each loop iteration
-                        exceptionInExerciseApplication = false;
                         applicationHadNonZeroExitCode = false;
                         retryTest = false;
 
@@ -264,8 +262,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         catch (Exception ex)
                         {
-                            exceptionInExerciseApplication = true;
+                            retryTest = true;
                             TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.ToString());
+                            retryMessage = "Exception thrown.";
                         }
                         finally
                         {
@@ -301,10 +300,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                             TestLogger?.WriteLine($"Remote application exited with a {(applicationHadNonZeroExitCode ? "failure" : "success")} exit code of {formattedExitCode}.");
 
-                            if (applicationHadNonZeroExitCode && _errorsToRetryOn.Contains((uint)RemoteApplication.ExitCode.Value) && (numberOfTries < MaxTries))
+                            if (applicationHadNonZeroExitCode && _errorsToRetryOn.Contains((uint)RemoteApplication.ExitCode.Value))
                             {
-                                var message = $"{formattedExitCode} is a known error. Retrying test.";
-                                TestLogger?.WriteLine(message);
+                                retryMessage = $"{formattedExitCode} is a known error.";
+                                retryTest = true;
+                            }
+
+                            if (retryTest && (numberOfTries < MaxTries))
+                            {
+                                TestLogger?.WriteLine(retryMessage + " Retrying test.");
                                 Thread.Sleep(1000);
                                 numberOfTries++;
                             }
