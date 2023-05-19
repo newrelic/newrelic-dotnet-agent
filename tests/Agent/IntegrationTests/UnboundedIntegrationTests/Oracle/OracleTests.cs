@@ -23,12 +23,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _fixture.Actions
+
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
 
                     configModifier.ForceTransactionTraces();
 
@@ -40,8 +44,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
                 exerciseApplication: () =>
                 {
                     _fixture.GetOracle();
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
+
             _fixture.Initialize();
         }
 
