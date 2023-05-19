@@ -3250,6 +3250,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(60, defaultConfig.ErrorTracesHarvestCycle.TotalSeconds);
             Assert.AreEqual(60, defaultConfig.GetAgentCommandsCycle.TotalSeconds);
             Assert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
+            Assert.AreEqual(60, defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
         }
 
         [TestCase(null)]
@@ -3340,6 +3341,24 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
             Assert.AreEqual(60, defaultConfig.GetAgentCommandsCycle.TotalSeconds);
+        }
+
+        [TestCase(null)]
+        [TestCase("0")]
+        [TestCase("-1")]
+        [TestCase("")]
+        [TestCase("a")]
+        public void HarvestCycleOverride_SqlTraces_NotValidValueSet(string value)
+        {
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideSqlTracesHarvestCycle",
+                value = value
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.AreEqual(60, defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
         }
 
         [Test]
@@ -3460,6 +3479,30 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             });
 
             Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.GetAgentCommandsCycle.Seconds);
+        }
+
+        [Test]
+        public void HarvestCycleOverride_SqlTraces_ValidValueSet()
+        {
+            var expectedSeconds = "10";
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideSqlTracesHarvestCycle",
+                value = expectedSeconds
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
+
+            // Test that the backing field is used after the initial call and not changed.
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideSqlTracesHarvestCycle",
+                value = "100"
+            });
+
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
         }
 
         #endregion

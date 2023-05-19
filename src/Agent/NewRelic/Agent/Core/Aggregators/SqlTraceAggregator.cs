@@ -7,6 +7,7 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -30,6 +31,8 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             _agentHealthReporter = agentHealthReporter;
         }
+
+        protected override TimeSpan HarvestCycle => _configuration.SqlTracesHarvestCycle;
 
         protected override bool IsEnabled => _configuration.SlowSqlEnabled;
 

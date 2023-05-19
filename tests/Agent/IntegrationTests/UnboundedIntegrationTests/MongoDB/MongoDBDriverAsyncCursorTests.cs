@@ -28,6 +28,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _fixture.AddCommand("MongoDBDriverExerciser GetNextBatch");
             _fixture.AddCommand("MongoDBDriverExerciser GetNextBatchAsync");
 
+            _fixture.AddActions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                }
+            );
+
             _fixture.Initialize();
             _mongoUrl = mongoUrl;
         }

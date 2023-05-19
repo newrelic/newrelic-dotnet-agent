@@ -25,26 +25,29 @@ namespace ThreadProfileStressTest
                 return true;
             };
 
-            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
+            _applicationName =
+                Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
 
-            Console.WriteLine($"[{_applicationName}] Invoked with args: { string.Join(" ", args) }");
+            Console.WriteLine($"[{_applicationName}] Invoked with args: {string.Join(" ", args)}");
 
             var port = GetPortFromArgs(args) ?? DefaultPort;
 
-            Console.WriteLine($"[{_applicationName}] Parsed port: { port }");
+            Console.WriteLine($"[{_applicationName}] Parsed port: {port}");
 
             var eventWaitHandleName = "app_server_wait_for_all_request_done_" + port;
 
             Console.WriteLine("[{0}] Setting EventWaitHandle name to: {1}", _applicationName, eventWaitHandleName);
 
-            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName);
+            using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName))
+            {
 
-            DoTheThing(port);
+                DoTheThing(port);
 
-            //Give the application up to an additional 3 minutes before automatically terminating the app
-            //so that there is enough time for the thread profiler session to complete and data to be sent
-            //to the collector.
-            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(3));
+                //Give the application up to an additional 3 minutes before automatically terminating the app
+                //so that there is enough time for the thread profiler session to complete and data to be sent
+                //to the collector.
+                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(3));
+            }
         }
 
         static void DoTheThing(string port)
@@ -60,8 +63,10 @@ namespace ThreadProfileStressTest
             Console.WriteLine("[{0}] Waiting for signal to start the thread stress test.", _applicationName);
 
             var eventWaitHandleName = $"thread_profile_stress_begin_{port}";
-            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName);
-            eventWaitHandle.WaitOne(TimeSpan.FromSeconds(90));
+            using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName))
+            {
+                eventWaitHandle.WaitOne(TimeSpan.FromSeconds(90));
+            }
 
             Console.WriteLine("[{0}] Starting the thread stress test.", _applicationName);
 

@@ -40,9 +40,12 @@ namespace AspNetCoreMvcFrameworkAsyncApplication
             var ct = new CancellationTokenSource();
             var task = BuildWebHost(args).RunAsync(ct.Token);
 
-            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + _port);
-            CreatePidFile();
-            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset,
+                       "app_server_wait_for_all_request_done_" + _port))
+            {
+                CreatePidFile();
+                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            }
 
             ct.Cancel();
 

@@ -31,8 +31,6 @@ namespace ApplicationLifecycle
 
         private static readonly bool _isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
-        private static EventWaitHandle _eventWaitHandle;
-
         private static string ApplicationName
         {
             get
@@ -97,14 +95,11 @@ namespace ApplicationLifecycle
             }
             else
             {
-                _eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownChannelPrefix + port);
-                _eventWaitHandle.WaitOne(TimeSpan.FromMinutes(MinutesToWait));
+                using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownChannelPrefix + port))
+                {
+                    eventWaitHandle.WaitOne(TimeSpan.FromMinutes(MinutesToWait));
+                }
             }
-        }
-
-        public static void CreateEventWaitHandle(string port)
-        {
-            _eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownChannelPrefix + port);
         }
 
         public static void CreatePidFile()

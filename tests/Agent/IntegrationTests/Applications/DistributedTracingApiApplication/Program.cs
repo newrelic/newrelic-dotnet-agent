@@ -54,25 +54,28 @@ namespace NewRelic.Agent.IntegrationTests.Applications.DistributedTracingApiAppl
                 return;
 
             // Create handle that RemoteApplication expects
-            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset, "app_server_wait_for_all_request_done_" + program.Port);
-
-            CreatePidFile();
-
-
-            _agent = Api.Agent.NewRelic.GetAgent();
-
-            if (Array.IndexOf(args, "w3c") >= 0)
+            using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset,
+                       "app_server_wait_for_all_request_done_" + program.Port))
             {
-                CallInsertDTHeaders();
-                CallAcceptDTHeaders();
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
 
-            // wait for the test harness to tell us to shut down
-            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+                CreatePidFile();
+
+
+                _agent = Api.Agent.NewRelic.GetAgent();
+
+                if (Array.IndexOf(args, "w3c") >= 0)
+                {
+                    CallInsertDTHeaders();
+                    CallAcceptDTHeaders();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                // wait for the test harness to tell us to shut down
+                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            }
         }
 
         [Transaction]
