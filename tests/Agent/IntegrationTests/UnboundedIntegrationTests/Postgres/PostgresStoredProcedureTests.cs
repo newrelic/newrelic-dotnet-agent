@@ -26,12 +26,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 
             _fixture.AddCommand($"PostgresSqlExerciser ParameterizedStoredProcedure {_procedureName}");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
 
                     configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
@@ -40,11 +43,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "datastoreTracer", "queryParameters" }, "enabled", "true");
+                },
+                exerciseApplication: () =>
+                {
+                    // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)); // must be 2 minutes since this can take a while.
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
-
-            // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
-            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
 
             _fixture.Initialize();
         }
