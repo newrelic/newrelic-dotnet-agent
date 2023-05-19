@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -21,6 +22,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private Action _setupConfiguration;
         private Action _exerciseApplication;
+        private HashSet<uint> _errorsToRetryOn = new HashSet<uint>
+        {
+            0xC000_0005     // System.AccessViolationException. This is a .NET bug that
+                            // is supposed to be fixed but we're still seeing
+                            // https://github.com/dotnet/runtime/issues/62145
+        };
 
         public Dictionary<string, string> EnvironmentVariables;
 
@@ -88,8 +95,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             set { RemoteApplication.KeepWorkingDirectory = value; }
         }
 
-        // We think that the test retry loop may be masking real problems and/or actually causing them, so we've disabled it for now
-        protected virtual int MaxTries => 1;
+        // Tests are only retried if they return a known error not related to the test
+        protected virtual int MaxTries => 3;
 
         public void DisableAsyncLocalCallStack()
         {
@@ -190,9 +197,21 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             return this;
         }
 
+        public void AddErrorToRetryOn(uint error)
+        {
+            _errorsToRetryOn.Add(error);
+        }
+
         private void ExerciseApplication()
         {
             _exerciseApplication?.Invoke();
+        }
+
+        private string FormatExitCode(int? exitCode)
+        {
+            if (exitCode == null) return "[null]";
+            if (Math.Abs(exitCode.Value) < 10) return exitCode.Value.ToString();
+            return exitCode.Value.ToString("X8");
         }
 
         public virtual void Initialize()
@@ -278,14 +297,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                             RemoteApplication.WaitForExit();
 
                             applicationHadNonZeroExitCode = RemoteApplication.ExitCode != 0;
+                            var formattedExitCode = FormatExitCode(RemoteApplication.ExitCode);
 
-                            TestLogger?.WriteLine($"Remote application exited with a {(applicationHadNonZeroExitCode ? "failure" : "success")} exit code of {RemoteApplication.ExitCode}.");
+                            TestLogger?.WriteLine($"Remote application exited with a {(applicationHadNonZeroExitCode ? "failure" : "success")} exit code of {formattedExitCode}.");
 
-                            retryTest = exceptionInExerciseApplication || applicationHadNonZeroExitCode;
-
-                            if (retryTest)
+                            if (applicationHadNonZeroExitCode && _errorsToRetryOn.Contains((uint)RemoteApplication.ExitCode.Value) && (numberOfTries < MaxTries))
                             {
-                                var message = $"Retrying test. Exception caught when exercising test app = {exceptionInExerciseApplication}, application had non-zero exit code = {applicationHadNonZeroExitCode}.";
+                                var message = $"{formattedExitCode} is a known error. Retrying test.";
                                 TestLogger?.WriteLine(message);
                                 Thread.Sleep(1000);
                                 numberOfTries++;
