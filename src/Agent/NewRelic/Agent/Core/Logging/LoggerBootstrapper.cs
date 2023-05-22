@@ -4,12 +4,8 @@
 using NewRelic.Agent.Core.Config;
 using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using NewRelic.Agent.Core.Logging;
-#if NETSTANDARD2_0
 using System.Runtime.InteropServices;
-#endif
+using System.Text;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -24,12 +20,16 @@ namespace NewRelic.Agent.Core
         /// <summary>
         /// The name of the event log to log to.
         /// </summary>
+#pragma warning disable CS0414
         private static readonly string EventLogName = "Application";
+#pragma warning restore CS0414
 
-		/// <summary>
-		/// The event source name.
-		/// </summary>
-		private static readonly string EventLogSourceName = "New Relic .NET Agent";
+        /// <summary>
+        /// The event source name.
+        /// </summary>
+#pragma warning disable CS0414
+        private static readonly string EventLogSourceName = "New Relic .NET Agent";
+#pragma warning restore CS0414
 
         ///// <summary>
         ///// The numeric level of the Audit log.
@@ -60,7 +60,8 @@ namespace NewRelic.Agent.Core
                 .Enrich.With(new ProcessIdEnricher())
                 .MinimumLevel.Information()
                 .ConfigureInMemoryLogSink()
-                .ConfigureEventLogSink()
+                // TODO: implement event log sink
+                //.ConfigureEventLogSink()
                 // TODO: Remove console log sink when in-memory sink is implemented
                 .ConfigureConsoleSink();
 
@@ -79,6 +80,7 @@ namespace NewRelic.Agent.Core
             var loggerConfig = new LoggerConfiguration()
                 .Enrich.With(new ThreadIdEnricher())
                 .Enrich.With(new ProcessIdEnricher())
+                .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                 .ConfigureFileSink(config)
                 .ConfigureAuditLogSink(config)
                 .ConfigureDebugSink();
@@ -142,38 +144,30 @@ namespace NewRelic.Agent.Core
             return loggerConfiguration;
         }
 
-        /// <summary>
-        /// Add the Event Log sink if running on Windows
-        /// </summary>
-        /// <param name="loggerConfiguration"></param>
-        private static LoggerConfiguration ConfigureEventLogSink(this LoggerConfiguration loggerConfiguration)
-        {
-            var addEventLogSink = true;
+        // TODO: Implement EventLog support, see commented package reference in Core.csproj
+        ///// <summary>
+        ///// Add the Event Log sink if running on Windows
+        ///// </summary>
+        ///// <param name="loggerConfiguration"></param>
+        //private static LoggerConfiguration ConfigureEventLogSink(this LoggerConfiguration loggerConfiguration)
+        //{
+        //    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        //        return loggerConfiguration;
 
-#if NETSTANDARD2_0
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                addEventLogSink = false;
-            }
-#endif
+        //    loggerConfiguration
+        //        .WriteTo.Logger(configuration =>
+        //        {
+        //            ExcludeAuditLog(configuration);
+        //            configuration
+        //                .WriteTo.EventLog(
+        //                    source: EventLogSourceName,
+        //                    logName: EventLogName,
+        //                    restrictedToMinimumLevel: LogEventLevel.Warning
+        //                );
+        //        });
 
-            if (addEventLogSink)
-            {
-                loggerConfiguration
-                    .WriteTo.Logger(configuration =>
-                    {
-                        ExcludeAuditLog(configuration);
-                        configuration
-                            .WriteTo.EventLog(
-                                source: EventLogSourceName,
-                                logName: EventLogName,
-                                restrictedToMinimumLevel: LogEventLevel.Warning
-                            );
-                    });
-            }
-
-            return loggerConfiguration;
-        }
+        //    return loggerConfiguration;
+        //}
 
         /// <summary>
         /// Configure the debug sink
@@ -185,7 +179,6 @@ namespace NewRelic.Agent.Core
                 .WriteTo.Logger(configuration =>
                 {
                     configuration
-                        .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                         .ExcludeAuditLog()
                         .WriteTo.Debug(formatter: new CustomTextFormatter());
                 });
@@ -202,7 +195,6 @@ namespace NewRelic.Agent.Core
                 .WriteTo.Logger(configuration =>
                 {
                     configuration
-                        .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                         .ExcludeAuditLog()
                         .WriteTo.Console(formatter: new CustomTextFormatter());
                 });
@@ -224,15 +216,15 @@ namespace NewRelic.Agent.Core
                     .Logger(configuration =>
                     {
                         configuration
-                            .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                             .ExcludeAuditLog()
                             .ConfigureRollingLogSink(logFileName, new CustomTextFormatter());
                     });
             }
             catch (Exception)
             {
-                // Fallback to the event log sink if we cannot setup a file logger.
-                loggerConfiguration.ConfigureEventLogSink();
+                // TODO uncomment when EventLogSink is supported
+                //// Fallback to the event log sink if we cannot setup a file logger.
+                //loggerConfiguration.ConfigureEventLogSink();
             }
 
             return loggerConfiguration;
