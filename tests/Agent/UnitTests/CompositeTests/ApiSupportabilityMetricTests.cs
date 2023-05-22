@@ -112,6 +112,14 @@ namespace CompositeTests
         }
 
         [Test]
+        public void SetErrorGroupCallback()
+        {
+            AgentApi.SetErrorGroupCallback(null);
+
+            HarvestAndValidateMetric("SetErrorGroupCallback");
+        }
+
+        [Test]
         public void SetTransactionName()
         {
             CallAgentApiMethodRequiringTransaction(() => AgentApi.SetTransactionName("custom", "transactionName"), "SetTransactionName");

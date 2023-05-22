@@ -4,6 +4,7 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
 using NewRelic.Testing.Assertions;
@@ -675,6 +676,66 @@ namespace CompositeTests
             //Use the WebTransaction metric which should contain the response time
             var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "WebTransaction");
             Assert.LessOrEqual(timingMetric.Data.Value1, upperBoundStopWatch.Elapsed.TotalSeconds);
+        }
+
+        [Test]
+        public void TransactionShouldBeRemovedFromContextStorageWhenResponseTimeIsCaptured()
+        {
+            // Setup a transaction where fire and forget async work is tracked
+            var transaction = _agent.CreateTransaction(
+                isWeb: false,
+                category: "category",
+                transactionDisplayName: "transactionName",
+                doNotTrackAsUnitOfWork: true);
+            var segment = _agent.StartTransactionSegmentOrThrow("fireAndForgetSegment");
+            transaction.Hold();
+            // Response time should be tracked and the current transaction removed from storage.
+            transaction.End();
+
+            var transactionAfterCallToEnd = _agent.CurrentTransaction;
+
+            // The fire and forget segment ends and then releases the transaction
+            segment.End();
+            transaction.Release();
+
+            _compositeTestAgent.Harvest();
+
+            //Use the OtherTransaction/all metric to confirm that the transaction was transformed and harvested
+            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "OtherTransaction/all");
+            NrAssert.Multiple(
+                    () => Assert.IsFalse(transactionAfterCallToEnd.IsValid, "The current transaction should be the NoOpTransaction."),
+                    () => Assert.AreEqual(1.0, timingMetric.Data.Value0, "The transaction should be harvested.")
+                );
+        }
+
+        [Test]
+        public void TransactionShouldNotBeRemovedFromContextStorageWhenResponseTimeIsNotCaptured()
+        {
+            // Setup a transaction where fire and forget async work is tracked
+            var transaction = _agent.CreateTransaction(
+                isWeb: false,
+                category: "category",
+                transactionDisplayName: "transactionName",
+                doNotTrackAsUnitOfWork: true);
+            var segment = _agent.StartTransactionSegmentOrThrow("fireAndForgetSegment");
+            transaction.Hold();
+            // Response time should be tracked and the current transaction removed from storage.
+            transaction.End(captureResponseTime: false);
+
+            var transactionAfterCallToEnd = _agent.CurrentTransaction;
+
+            // The fire and forget segment ends and then releases the transaction
+            segment.End();
+            transaction.Release();
+
+            _compositeTestAgent.Harvest();
+
+            //Use the OtherTransaction/all metric to confirm that the transaction was transformed and harvested
+            var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "OtherTransaction/all");
+            NrAssert.Multiple(
+                    () => Assert.IsTrue(transactionAfterCallToEnd.IsValid, "The current transaction should not be the NoOpTransaction."),
+                    () => Assert.AreEqual(1.0, timingMetric.Data.Value0, "The transaction should be harvested.")
+                );
         }
     }
 }

@@ -57,11 +57,14 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public ActionResult SimulateLostTransaction()
+        public async Task<ActionResult> SimulateLostTransaction()
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
-            WebRequest.Create("https://www.newrelic.com").GetResponse();
+            using (var client = new HttpClient())
+            {
+                using var _ = await client.GetAsync("https://www.newrelic.com");
+            }
 
             // Simulate lost transaction by clearing HttpContext
             HttpContext?.Items?.Clear();
@@ -80,8 +83,15 @@ namespace BasicMvcApplication.Controllers
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
             // Do at least one request with a base address to ensure that we handle combining URLs correctly
-            await new HttpClient { BaseAddress = new Uri("https://www.newrelic.com") }.GetStringAsync("/about");
-            await new HttpClient().GetStringAsync("https://docs.newrelic.com");
+            using (var httpClient = new HttpClient { BaseAddress = new Uri("https://www.newrelic.com") })
+            {
+                await httpClient.GetStringAsync("/about");
+            }
+
+            using (var httpClient = new HttpClient())
+            {
+                await httpClient.GetStringAsync("https://docs.newrelic.com");
+            }
 
             return "Worked";
         }
@@ -138,11 +148,14 @@ namespace BasicMvcApplication.Controllers
             return View("Index");
         }
 
-        public string Chained(string chainedServerName, string chainedPortNumber, string chainedAction)
+
+        public string ChainedWebRequest(string chainedServerName, string chainedPortNumber, string chainedAction)
         {
             var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
             var httpWebRequest = WebRequest.Create(address);
             httpWebRequest.GetResponse();
+#pragma warning restore SYSLIB0014
 
             return "Worked";
         }

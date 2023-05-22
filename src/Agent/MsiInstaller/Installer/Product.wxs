@@ -373,8 +373,8 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
 
       <!-- Wrappers -->
-      <Component Id="Asp35WrapperComponent" Guid="{E80B97F6-1FC0-4432-B9BF-8833F0C6D62D}">
-        <File Id="Asp35WrapperFile" Name="NewRelic.Providers.Wrapper.Asp35.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Asp35.dll"/>
+      <Component Id="AspNetWrapperComponent" Guid="{E80B97F6-1FC0-4432-B9BF-8833F0C6D62D}">
+        <File Id="AspNetWrapperFile" Name="NewRelic.Providers.Wrapper.AspNet.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AspNet.dll"/>
       </Component>
       <Component Id="Mvc3WrapperComponent" Guid="{71F61B42-0543-442F-A925-79D95A16591C}">
         <File Id="Mvc3WrapperFile" Name="NewRelic.Providers.Wrapper.Mvc3.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Mvc3.dll"/>
@@ -439,6 +439,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CouchbaseWrapperComponent" Guid="{21A0A03D-4799-4D8B-B6DB-553DD66C7020}">
         <File Id="CouchbaseWrapperFile" Name="NewRelic.Providers.Wrapper.Couchbase.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Couchbase.dll"/>
       </Component>
+      <Component Id="CosmosDbWrapperComponent" Guid="{C72D656C-B55D-4690-9BD7-9343096D4553}">
+        <File Id="CosmosDbWrapperFile" Name="NewRelic.Providers.Wrapper.CosmosDb.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.CosmosDb.dll"/>
+      </Component>
 
       <Component Id="OwinWrapperComponent" Guid="{FC044DC6-52D8-42C6-A9FE-CB9425EF5811}">
         <File Id="OwinWrapperFile" Name="NewRelic.Providers.Wrapper.Owin.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Owin.dll"/>
@@ -457,6 +460,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="MicrosoftExtensionsLoggingWrapperComponent" Guid="{33598C6C-BF8E-4AFC-A6C1-56310CEE61D7}">
         <File Id="MicrosoftExtensionsLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll"/>
+      </Component>
+      <Component Id="ElasticsearchWrapperComponent" Guid="{9C233889-69DD-4B8B-A1A6-ABAC6E27A716}">
+        <File Id="ElasticsearchWrapperFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Elasticsearch.dll"/>
       </Component>
 
       <!-- Reference libraries -->
@@ -496,6 +502,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreRabbitMqWrapperComponent" Guid="{758394DD-AB71-4E58-8E18-BF1135F8B2C2}">
         <File Id="CoreRabbitMqWrapperFile" Name="NewRelic.Providers.Wrapper.RabbitMq.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.RabbitMq.dll"/>
       </Component>
+      <Component Id="CoreCosmosDbWrapperComponent" Guid="{3855755F-2A69-43EC-AE31-8D778E4B41E2}">
+        <File Id="CoreCosmosDbWrapperFile" Name="NewRelic.Providers.Wrapper.CosmosDb.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.CosmosDb.dll"/>
+      </Component>
       <Component Id="CoreLog4NetLoggingWrapperComponent" Guid="{882392E9-9403-41EC-9321-9C6E53781744}">
         <File Id="CoreLog4NetLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.Log4NetLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Log4NetLogging.dll"/>
       </Component>
@@ -507,6 +516,12 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreNLogLoggingWrapperComponent" Guid="{897C07B8-AF97-4BA3-B6F3-26395A02147E}">
         <File Id="CoreNLogLoggingWrapperFile" Name="NewRelic.Providers.Wrapper.NLogLogging.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.NLogLogging.dll"/>
+      </Component>
+      <Component Id="CoreNServiceBusWrapperComponent" Guid="{E315AE98-119D-4E46-BACB-C28CF6016C19}">
+        <File Id="CoreNServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.NServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.NServiceBus.dll"/>
+      </Component>  
+      <Component Id="CoreElasticsearchWrapperComponent" Guid="{531A713C-B46C-41C8-8B21-49CBD4C0A459}">
+        <File Id="CoreElasticsearchWrapperFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Elasticsearch.dll"/>
       </Component>
 
       <!-- Reference libraries -->
@@ -520,8 +535,8 @@ SPDX-License-Identifier: Apache-2.0
 
     <!-- Wrapper Instrumentation Files-->
     <ComponentGroup Id="NewRelic.Agent.Extensions.Instrumentation" Directory="FrameworkExtensionsFolder">
-      <Component Id="Asp35InstrumentationComponent" Guid="{7DF74F2A-701D-4E6B-BF6B-E63D6AEBF35B}">
-        <File Id="Asp35InstrumentationFile" Name="NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml"/>
+      <Component Id="AspNetInstrumentationComponent" Guid="{7DF74F2A-701D-4E6B-BF6B-E63D6AEBF35B}">
+        <File Id="AspNetInstrumentationFile" Name="NewRelic.Providers.Wrapper.AspNet.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AspNet.Instrumentation.xml"/>
       </Component>
       <Component Id="AspNetCoreInstrumentationComponent" Guid="{EB9739C4-BC22-4A31-86F1-D52035FF0281}">
         <File Id="AspNetCoreInstrumentationFile" Name="NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml"/>
@@ -592,6 +607,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CouchbaseInstrumentationComponent" Guid="{03FA7D3A-3368-45B1-92B8-19DA97A659B8}">
         <File Id="CouchbaseInstrumentationFile" Name="NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml"/>
       </Component>
+      <Component Id="CosmosDbInstrumentationComponent" Guid="{56DEAF3E-5F51-4C47-82E5-1C2D0FF4E7DD}">
+        <File Id="CosmosDbInstrumentationFile" Name="NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml"/>
+      </Component>
       <Component Id="MiscInstrumentationComponent" Guid="{EE12546C-A328-49A7-84BE-B9A556ADA0A8}">
         <File Id="MiscInstrumentationFile" Name="NewRelic.Providers.Wrapper.Misc.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml"/>
       </Component>
@@ -606,6 +624,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="MicrosoftExtensionsLoggingInstrumentationComponent" Guid="{FE0A1615-93B7-4355-AE20-D5C2E1ABE56C}">
         <File Id="MicrosoftExtensionsLoggingFile" Name="NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.Instrumentation.xml"/>
+      </Component>
+      <Component Id="ElasticsearchInstrumentationComponent" Guid="{42D85537-D0AB-44EB-8BE5-4B2EEB26DE91}">
+        <File Id="ElasticsearchInstrumentationFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 
@@ -634,6 +655,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="CoreRabbitMqInstrumentationComponent" Guid="{1CDC18CC-992A-4386-BC4D-DE87A85D9568}">
         <File Id="CoreRabbitMqInstrumentationFile" Name="NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml"/>
       </Component>
+      <Component Id="CoreCosmosDbInstrumentationComponent" Guid="{1B6D4139-9217-4A03-94D0-D6E3AFFE0A8E}">
+        <File Id="CoreCosmosDbInstrumentationFile" Name="NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.CosmosDb.Instrumentation.xml"/>
+      </Component>
       <Component Id="CoreLog4NetLoggingInstrumentationComponent" Guid="{A40554DF-870C-477C-8910-1113A221820C}">
         <File Id="CoreLog4NetLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.Log4NetLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Log4NetLogging.Instrumentation.xml"/>
       </Component>
@@ -645,6 +669,12 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreNLogLoggingInstrumentationComponent" Guid="{D9A87E74-C43B-4ACD-BF6C-DC082FEDD777}">
         <File Id="CoreNLogLoggingInstrumentationFile" Name="NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.NLogLogging.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreNServiceBusInstrumentationComponent" Guid="{1FE0856C-08E4-4397-9C6A-939EA8E953AE}">
+        <File Id="CoreNServiceBusInstrumentationFile" Name="NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreElasticsearchInstrumentationComponent" Guid="{02EFBFF6-9DA8-4138-A03F-E9502B631A76}">
+        <File Id="CoreElasticsearchInstrumentationFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 

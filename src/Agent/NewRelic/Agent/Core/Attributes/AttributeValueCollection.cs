@@ -37,11 +37,12 @@ namespace NewRelic.Agent.Core.Attributes
         IEnumerable<IAttributeValue> GetAttributeValues(AttributeClassification classification);
 
         IDictionary<string, object> GetAttributeValuesDic(AttributeClassification classification);
+
+        IDictionary<string, object> GetAllAttributeValuesDic();
     }
 
     public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCollection where TAttrib : IAttributeValue
     {
-
         private static AttributeDestinations[] _allTargetModelTypes;
 
         public static AttributeDestinations[] AllTargetModelTypes => _allTargetModelTypes
@@ -53,7 +54,8 @@ namespace NewRelic.Agent.Core.Attributes
         public const int MaxCountUserAttrib = 64;
         public const int MaxCountAllAttrib = 255;
 
-        protected static readonly AttributeClassification[] _allClassifications = new[] { AttributeClassification.Intrinsics, AttributeClassification.AgentAttributes, AttributeClassification.UserAttributes };
+        // In priority order: user < intrinsics < agent
+        protected static readonly AttributeClassification[] _allClassifications = new[] { AttributeClassification.UserAttributes, AttributeClassification.Intrinsics, AttributeClassification.AgentAttributes };
 
         private int _intrinsicAttributeCount;
         private int _agentAttributeCount;
@@ -133,6 +135,21 @@ namespace NewRelic.Agent.Core.Attributes
             foreach (var attribVal in GetAttribValuesImpl(classification))
             {
                 result[attribVal.AttributeDefinition.Name] = attribVal.Value;
+            }
+
+            return result;
+        }
+
+        public IDictionary<string, object> GetAllAttributeValuesDic()
+        {
+            var result = new Dictionary<string, object>();
+            foreach (var classification in _allClassifications)
+            {
+                foreach (var attribVal in GetAttribValuesImpl(classification))
+                {
+                    // This will overwrite existing values in the order of: user < intrinsic < agent
+                    result[attribVal.AttributeDefinition.Name] = attribVal.Value;
+                }
             }
 
             return result;
@@ -503,6 +520,11 @@ namespace NewRelic.Agent.Core.Attributes
         }
 
         public IDictionary<string, object> GetAttributeValuesDic(AttributeClassification classification)
+        {
+            return _emptyAttribDic;
+        }
+
+        public IDictionary<string, object> GetAllAttributeValuesDic()
         {
             return _emptyAttribDic;
         }

@@ -79,7 +79,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             if (IsCoreApp && _publishApp)
             {
-                PublishWithDotnetExe(string.IsNullOrWhiteSpace(_targetFramework) ? "netcoreapp3.1" : _targetFramework);
+                PublishWithDotnetExe(string.IsNullOrWhiteSpace(_targetFramework) ? "net7.0" : _targetFramework);
                 CopyNewRelicHomeCoreClrDirectoryToRemote();
             }
             else if (_publishApp)
@@ -113,6 +113,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             var deployPath = Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName);
 
             TestLogger?.WriteLine($"[RemoteService]: Publishing to {deployPath}.");
+
+            var sw = new Stopwatch();
+            sw.Start();
 
             var runtime = Utilities.CurrentRuntime;
             var process = new Process();
@@ -173,7 +176,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 }
             }
 
-            Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath}");
+            sw.Stop();
+            Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath} in {sw.Elapsed}");
         }
 
         private object GetPublishLockObjectForCoreApp()

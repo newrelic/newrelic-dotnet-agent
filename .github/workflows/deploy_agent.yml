@@ -34,6 +34,10 @@ on:
         required: true
         default: 'true'
 
+permissions:
+  contents: read
+  packages: read
+  
 env:
   DOTNET_NOLOGO: true
 
@@ -43,8 +47,14 @@ jobs:
     name: Get and Publish Deploy Artifacts Locally
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
       - name: Download Deploy Artifacts
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: all_solutions.yml
@@ -54,14 +64,14 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/build/BuildArtifacts
           if-no-files-found: error
 
       - name: Upload Deploy Tooling Locally
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: deploy-tooling
           path: ${{ github.workspace }}/deploy/
@@ -75,7 +85,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\staging_dir
@@ -126,12 +136,13 @@ jobs:
         shell: pwsh
 
   index-download-site:
+    needs: deploy-downloadsite
     name: Rebuild indexes on the download site
     if: ${{ github.event.inputs.indexdownloadsite == 'true' }}
     uses: ./.github/workflows/build_download_site_index_files.yml
     strategy:
       matrix:
-        prefix: ["dot_net_agent/latest_release", "dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}"]
+        prefix: ["dot_net_agent/latest_release", "dot_net_agent/previous_releases"]
     with:
       prefix: ${{ matrix.prefix }}
       aws-region: "us-east-1"
@@ -149,7 +160,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir
@@ -235,6 +246,11 @@ jobs:
     name: Deploy Linux to APT and YUM
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        with:
+          egress-policy: audit
+
       - name: Install dos2unix
         run: |
           sudo apt-get update -y
@@ -242,13 +258,13 @@ jobs:
         shell: bash
         
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
 
       - name: Download Deploy Tooling
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: deploy-tooling
           path: ${{ github.workspace }}/deploy
@@ -258,7 +274,7 @@ jobs:
         run: |
           filePath="/tmp/gpg.tar.bz2"
           echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
-          echo "::set-output name=filePath::$filePath"
+          echo "filePath=$filePath" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Move Artifacts and GPG Key to Staging Location

@@ -4,6 +4,7 @@
 
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,12 +16,11 @@ namespace AspNetCoreDistTracingApplication.Controllers
         {
             try
             {
-                string result = null;
-
-                var client = new WebClient();
-                result = await client.DownloadStringTaskAsync(new Uri(nextUrl));
-
-                return result;
+                using (var httpClient = new HttpClient())
+                {
+                    var result = await httpClient.GetStringAsync(nextUrl);
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -30,8 +30,10 @@ namespace AspNetCoreDistTracingApplication.Controllers
 
         public string WebRequestCallNext(string nextUrl)
         {
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
             var httpWebRequest = WebRequest.Create(nextUrl);
             httpWebRequest.GetResponse();
+#pragma warning restore SYSLIB0014
             return "Worked";
         }
     }

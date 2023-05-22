@@ -14,14 +14,25 @@ on:
 env:
   DOTNET_NOLOGO: true
 
+permissions:
+  contents: read
+
 jobs:
 
   get-external-artifacts:
+    permissions:
+      actions: read  # for dawidd6/action-download-artifact to query and download artifacts
+      pull-requests: read  # for dawidd6/action-download-artifact to query commit hash
     name: Get and Publish Deploy Artifacts Locally
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        with:
+          egress-policy: audit 
+
       - name: Download Deploy Artifacts
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: awslambda_release.yml
@@ -31,7 +42,7 @@ jobs:
           repo: ${{ github.repository }}
       
       - name: Upload Deploy Artifacts Locally
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}
@@ -47,7 +58,7 @@ jobs:
 
     steps:
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}\working_dir

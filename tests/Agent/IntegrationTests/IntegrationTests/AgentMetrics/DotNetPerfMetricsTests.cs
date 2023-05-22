@@ -24,9 +24,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
     }
 
     [NetCoreTest]
-    public class DotNetPerfMetricsTestsCore31 : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCore31>
+    public class DotNetPerfMetricsTestsCoreOldest : DotNetPerfMetricsTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public DotNetPerfMetricsTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public DotNetPerfMetricsTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
@@ -126,6 +126,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
                 {
                     Fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
                     Fixture.RemoteApplication.AddAppSetting("NewRelic.EventListenerSamplersEnabled", "true");
+                    Fixture.RemoteApplication.NewRelicConfig.ConfigureFasterMetricsHarvestCycle(10);
                 }
             );
 
@@ -163,14 +164,13 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         public void ExpectedMetricValues_Threadpool()
         {
             var metrics = Fixture.AgentLog.GetMetrics()
-                .Where(x => string.IsNullOrWhiteSpace(x.MetricSpec.Scope))
-                .ToDictionary(x => x.MetricSpec.Name, x => x.Values);
+                .Where(x => string.IsNullOrWhiteSpace(x.MetricSpec.Scope)).ToList();
 
-            var minInUseWrk = metrics[METRICNAME_THREADPOOL_WORKER_INUSE].Min;
-            var maxAvailWrk = metrics[METRICNAME_THREADPOOL_WORKER_AVAILABLE].Max;
+            var minInUseWrk = metrics.Where(x => x.MetricSpec.Name == METRICNAME_THREADPOOL_WORKER_INUSE).First().Values.Min;
+            var maxAvailWrk = metrics.Where(x => x.MetricSpec.Name == METRICNAME_THREADPOOL_WORKER_AVAILABLE).First().Values.Max;
 
-            var minInUseCmplt = metrics[METRICNAME_THREADPOOL_COMPLETION_INUSE].Min;
-            var maxAvailCmplt = metrics[METRICNAME_THREADPOOL_COMPLETION_AVAILABLE].Max;
+            var minInUseCmplt = metrics.Where(x => x.MetricSpec.Name == METRICNAME_THREADPOOL_COMPLETION_INUSE).First().Values.Min;
+            var maxAvailCmplt = metrics.Where(x => x.MetricSpec.Name == METRICNAME_THREADPOOL_COMPLETION_AVAILABLE).First().Values.Max;
 
             NrAssert.Multiple
             (

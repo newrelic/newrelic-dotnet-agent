@@ -4,6 +4,7 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Exceptions;
+using NewRelic.Core;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
@@ -44,6 +45,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public const int ProtocolVersion = 17;
         private const int CompressMinimumByteLength = 20;
         private const string EmptyResponseBody = "{}";
+        private const string LicenseKeyParameterName = "license_key";
 
         private bool _diagnoseConnectionError = true;
         private readonly IConfiguration _configuration;
@@ -73,7 +75,6 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 var uri = GetUri(method, connectionInfo);
 
-                Log.DebugFormat("Request({0}): About to Invoke \"{1}\" with : {2}", requestGuid, method, serializedData);
                 AuditLog(Direction.Sent, Source.InstrumentedApp, uri.ToString());
                 AuditLog(Direction.Sent, Source.InstrumentedApp, serializedData);
 
@@ -130,7 +131,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     var responseContent = GetResponseContent(response, requestGuid);
 
-                    _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(response.Content.ToString()).Length);
+                    _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(responseContent).Length);
 
                     // Possibly combine these logs? makes parsing harder in tests...
                     Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
@@ -157,7 +158,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private static void AuditLog(Direction direction, Source source, string uri)
         {
-            var message = string.Format(AuditLogFormat, direction, source, uri);
+            var message = string.Format(AuditLogFormat, direction, source, Strings.ObfuscateLicenseKeyInAuditLog(uri, LicenseKeyParameterName));
             Logging.AuditLog.Log(message);
         }
 
@@ -165,7 +166,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var uri = new StringBuilder("/agent_listener/invoke_raw_method?method=")
                 .Append(method)
-                .Append("&license_key=")
+                .Append($"&{LicenseKeyParameterName}=")
                 .Append(_configuration.AgentLicenseKey)
                 .Append("&marshal_format=json")
                 .Append("&protocol_version=")
@@ -198,16 +199,10 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             try
             {
-                var responseStream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+                var responseStream = response.Content?.ReadAsStreamAsync().GetAwaiter().GetResult();
 
                 if (responseStream == null)
-                {
-                    throw new NullReferenceException("responseStream");
-                }
-                if (response.Headers == null)
-                {
-                    throw new NullReferenceException("response.Headers");
-                }
+                    return EmptyResponseBody;
 
                 var contentTypeEncoding = response.Content.Headers.ContentEncoding;
                 if (contentTypeEncoding.Contains("gzip"))
@@ -245,7 +240,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
 
             // P17: Not supposed to read/use the exception message in the connect response body. We are still going to log it, carefully, since it is very useful for support.
-            Log.ErrorFormat("Request({0}): Received HTTP status code {1} with message {2}", requestGuid, statusCode.ToString(), responseText);
+            Log.ErrorFormat("Request({0}): Received HTTP status code {1} with message {2}. Request content was: {3}", requestGuid, statusCode.ToString(), responseText, serializedData);
 
             throw new HttpException(statusCode, responseText);
         }
@@ -291,5 +286,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 Log.Error(message);
             }
         }
+
     }
 }

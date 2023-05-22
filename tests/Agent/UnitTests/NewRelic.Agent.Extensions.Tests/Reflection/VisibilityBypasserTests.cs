@@ -552,5 +552,63 @@ namespace NewRelic.Reflection.UnitTests
         {
             Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GenerateTypeFactory<bool, int, PublicOuter>());
         }
+
+        [Test]
+        public void test_input_validation()
+        {
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(null, "foo", "bar"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>("foo", null, "bar"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>("foo", "bar", null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(null, "foo"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(typeof(string), null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(null, "foo"));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>(null, "foo", "bar"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>("foo", null, "bar"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>("foo", "bar", null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>(null, "foo"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>(typeof(string), null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>(null, "foo"));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, PublicOuter>(null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<string>(null, "foo", "bar"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<string>("foo", null, "foo"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<string>("foo", "bar", null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter, string>(null, "foo", "bar"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter, string>("foo", null, "bar"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter, string>("foo", "bar", null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter>(null, "foo", "bar", "baz"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter>("foo", null, "bar", "baz"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter>("foo", "bar", null, "baz"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter>("foo", "bar", null, "baz"));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(null, "foo"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(typeof(string), null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, string>(null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(null, "foo", "bar"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("foo", null, "foo"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("foo", "bar", null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GeneratePropertySetter<string>(null, "foo"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GeneratePropertySetter<string>("foo", null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateTypeFactory(null, "foo"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateTypeFactory("foo", null));
+                                                                                   
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateTypeFactory<string>(null, "foo"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateTypeFactory<string>("foo", null));
+
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateTypeFactory<string, string>(null, "foo"));
+            Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateTypeFactory<string, string>("foo", null));
+        }
     }
 }

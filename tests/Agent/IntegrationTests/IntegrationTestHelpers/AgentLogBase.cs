@@ -58,10 +58,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string TransactionHasAlreadyCapturedResponseTimeLogLineRegEx = FinestLogLinePrefixRegex + @"Transaction has already captured the response time(.*)";
 
         // SetApplicationName related messages
-        public const string SetApplicationnameAPICalledDuringCollectMethodLogLineRegex = WarnLogLinePrefixRegex + "The runtime configuration was updated during connect";
+        public const string SetApplicationnameAPICalledDuringConnectMethodLogLineRegex = WarnLogLinePrefixRegex + "The runtime configuration was updated during connect";
         public const string AttemptReconnectLogLineRegex = InfoLogLinePrefixRegex + "Will attempt to reconnect in \\d{2,3} seconds";
 
         // Infinite trace
+        public const string SpanStreamingServiceConnectedLogLineRegex = InfoLogLinePrefixRegex + @"SpanStreamingService: gRPC channel to endpoint (.*) connected.(.*)";
         public const string SpanStreamingSuccessfullySentLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Attempting to send (\d+) item\(s\) - Success";
         public const string SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Received gRPC Server response messages: (\d+)";
         public const string SpanStreamingResponseGrpcError = FinestLogLinePrefixRegex + @"ResponseStreamWrapper: consumer \d+ - gRPC RpcException encountered while handling gRPC server responses: (.*)";

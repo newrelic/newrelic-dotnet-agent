@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
@@ -20,12 +21,15 @@ namespace NewRelic.Agent.Core.Commands
 
         private readonly IScheduler _scheduler;
 
-        public CommandService(IDataTransportService dataTransportService, IScheduler scheduler)
+        private readonly IConfigurationService _configurationService;
+
+        public CommandService(IDataTransportService dataTransportService, IScheduler scheduler, IConfigurationService configurationService)
         {
             _dataTransportService = dataTransportService;
+            _configurationService = configurationService;
             _scheduler = scheduler;
 
-            _scheduler.ExecuteEvery(GetAndExecuteAgentCommands, TimeSpan.FromMinutes(1));
+            _scheduler.ExecuteEvery(GetAndExecuteAgentCommands, _configurationService.Configuration.GetAgentCommandsCycle);
         }
 
         public override void Dispose()

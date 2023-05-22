@@ -21,10 +21,10 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         /// <summary>
         /// Used to signal the background thread to terminate and stop sampling
         /// </summary>
-        private ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
+        private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
 
         private Thread _samplingWorker = null;
-        private INativeMethods _nativeMethods;
+        private readonly INativeMethods _nativeMethods;
 
         public ThreadProfilingSampler(INativeMethods nativeMethods)
         {

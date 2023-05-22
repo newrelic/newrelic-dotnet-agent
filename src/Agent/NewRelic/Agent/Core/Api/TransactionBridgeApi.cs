@@ -177,5 +177,31 @@ namespace NewRelic.Agent.Core.Api
                 }
             }
         }
+
+        /// <summary>
+        /// Sets a User Id to be associated with this transaction.
+        /// </summary>
+        /// <param name="userid">The User Id for this transaction.</param>
+        public void SetUserId(string userid)
+        {
+
+            try
+            {
+                _apiSupportabilityMetricCounters.Record(ApiMethod.SetUserId);
+
+                _transaction.SetUserId(userid);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    Log.Error($"Error in SetUserId: {ex}");
+                }
+                catch (Exception)
+                {
+                    //Swallow the error
+                }
+            }
+        }
     }
 }

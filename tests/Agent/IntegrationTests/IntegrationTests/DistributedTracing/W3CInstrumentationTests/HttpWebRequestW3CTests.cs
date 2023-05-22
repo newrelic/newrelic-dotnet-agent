@@ -12,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
 {
     /// <summary>
     /// Test W3C support when chaining multiple requests by using WebRequest.
-    /// Instrumentations occur in this test are Asp35 and HttpWebRequest.
+    /// Instrumentations occur in this test are AspNet and HttpWebRequest.
     /// </summary>
     [NetFrameworkTest]
     public class HttpWebRequestW3CTests : W3CTestBase<RemoteServiceFixtures.FrameworkTracingChainFixture>
@@ -37,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
         [Fact]
         public override void RootSpanAttributes()
         {
-            var senderRootSpanEvent = SenderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/DefaultController/Chained").FirstOrDefault();
+            var senderRootSpanEvent = SenderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/DefaultController/ChainedWebRequest").FirstOrDefault();
             var externalSpanEvent = SenderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == $"External/{_fixture.SenderApplication.DestinationServerName}/Stream/GET").FirstOrDefault();
 
             var receiverRootSpanEvent = ReceiverAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/DefaultController/Index").FirstOrDefault();

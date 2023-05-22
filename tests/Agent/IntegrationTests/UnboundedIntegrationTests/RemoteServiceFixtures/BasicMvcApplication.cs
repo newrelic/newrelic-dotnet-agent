@@ -4,6 +4,7 @@
 
 using System;
 using System.Net;
+using System.Net.Http;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -21,22 +22,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Redis/StackExchangeRedis";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void GetStackExchangeRedisStrongName()
         {
             var address = $"http://{DestinationServerName}:{Port}/Redis/StackExchangeRedisStrongName";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
 
@@ -44,23 +37,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Redis/StackExchangeRedisAsync";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void GetStackExchangeRedisAsyncStrongName()
         {
             var address = $"http://{DestinationServerName}:{Port}/Redis/StackExchangeRedisAsyncStrongName";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
-
     }
 }

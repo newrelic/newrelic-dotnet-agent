@@ -93,5 +93,30 @@ namespace NewRelic.Api.Agent
                 return _noOpTransaction.CurrentSpan;
             }
         }
+
+        private static bool _isSetUserIdAvailable = true;
+        /// <summary>
+        /// Sets a User Id to be associated with this transaction.
+        /// </summary>
+        /// <param name="userid">The User Id for this transaction.</param>
+        public void SetUserId(string userid)
+        {
+            if (!_isSetUserIdAvailable)
+            {
+                return;
+            }
+
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(userid))
+                {
+                    _wrappedTransaction.SetUserId(userid);
+                }
+            }
+            catch (RuntimeBinderException)
+            {
+                _isSetUserIdAvailable = false;
+            }
+        }
     }
 }

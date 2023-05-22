@@ -87,7 +87,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                         using ResponseMessage response = await iterator.ReadNextAsync();
                         using (StreamReader sr = new StreamReader(response.Content))
                         {
-                            var a = sr.ReadToEnd();
+                            var a = await sr.ReadToEndAsync();
                             Assert.False(string.IsNullOrEmpty(a));
                         }
                     }
@@ -217,10 +217,16 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
 
                 Console.WriteLine("Creates HelloWorldStoredProc.js Stored procedure");
 
+                string storedProcJs;
+#if NET6_0_OR_GREATER
+                storedProcJs = await File.ReadAllTextAsync("NetStandardLibraries/CosmosDB/StoredProcedures/HelloWorldStoredProc.js");
+#else
+                storedProcJs = File.ReadAllText("NetStandardLibraries/CosmosDB/StoredProcedures/HelloWorldStoredProc.js");
+#endif
                 var sproc = await cosmosScripts.CreateStoredProcedureAsync(
                     new StoredProcedureProperties(
                         scriptId,
-                        File.ReadAllText("NetStandardLibraries/CosmosDB/StoredProcedures/HelloWorldStoredProc.js")));
+                        storedProcJs));
 
                 Console.WriteLine("Executes HelloWorldStoredProc.js stored procedure");
 
@@ -270,7 +276,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                     using (StreamReader sr = new StreamReader(response.Content))
                     using (JsonTextReader jtr = new JsonTextReader(sr))
                     {
-                        JObject result = JObject.Load(jtr);
+                        JObject result = await JObject.LoadAsync(jtr);
                         Assert.NotNull(result);
                         Console.WriteLine($"\n Query returned {result["Documents"].Count()} documents.");
                     }

@@ -33,44 +33,28 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/Oracle/Oracle?tableName={TableName}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void GetOracleAsync()
         {
             var address = $"http://{DestinationServerName}:{Port}/Oracle/OracleAsync?tableName={TableName}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void GetEnterpriseLibraryOracle()
         {
             var address = $"http://{DestinationServerName}:{Port}/Oracle/EnterpriseLibraryOracle?tableName={TableName}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         public void OracleParameterizedStoredProcedure(string procedureName)
         {
             var address = $"http://{DestinationServerName}:{Port}/Oracle/OracleParameterizedStoredProcedure?procedureName={procedureName}";
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
+            GetStringAndAssertIsNotNull(address);
         }
 
         private static string GenerateTableName()

@@ -16,6 +16,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
         private static Action<object, string> _setFormattedMessage;
         private static Func<object, object> _getLevel;
         private static Func<object, string> _getFormattedMessage;
+        private static Func<object, string> _messageGetter;
         private static Func<object, DateTime> _getTimestamp;
         private static Func<object, Exception> _getLogException;
         private static Func<object, IDictionary<object, object>> _getPropertiesDictionary;
@@ -69,10 +70,28 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             {
                 return;
             }
+            var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
+
+            // This wrapper for NLog uses a belt-and-suspenders approach to decorating log output. We first try to decorate the Message property,
+            // then get the FormattedMessage property and check to see if it is decorated. If not, decorate the FormattedMessage backing field directly.
+            // Note: this still does not work for all log messages, particularly the messages output by ASP.NET Core when NLog.Web.AspNetCore is used.
+
+            var messageGetter = _messageGetter ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(logEventType, "Message");
+
+            var originalMessage = messageGetter(logEvent);
+
+            var messageSetter = VisibilityBypasser.Instance.GeneratePropertySetter<string>(logEvent, "Message");
+
+            messageSetter(originalMessage + " " + formattedMetadata);
 
             var getFormattedMessageFunc = GetFormattedMessageFunc(logEventType);
             var formattedMessage = getFormattedMessageFunc(logEvent);
             if (string.IsNullOrWhiteSpace(formattedMessage))
+            {
+                return;
+            }
+
+            if (LoggingHelpers.ContainsLinkingToken(formattedMessage))
             {
                 return;
             }
@@ -89,8 +108,8 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             }
 
             var setFormattedMessage = _setFormattedMessage ??= VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(logEventType, formattedMessageName);
-            var formattedMetadata = LoggingHelpers.GetFormattedLinkingMetadata(agent);
             setFormattedMessage(logEvent, formattedMessage + " " + formattedMetadata);
+
         }
 
         private Func<object, string> GetFormattedMessageFunc(Type logEventType)

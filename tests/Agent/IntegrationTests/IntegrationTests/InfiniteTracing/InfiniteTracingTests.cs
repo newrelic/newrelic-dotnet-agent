@@ -24,12 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"InfiniteTracingTester StartAgent");
-
-            // Give the agent time to warm up... If we send a span too soon, it will be sent via DT (span_event_data) instead of 8T (gRPC)
-            _fixture.AddCommand("RootCommands DelaySeconds 15"); 
-
-            _fixture.AddCommand($"InfiniteTracingTester Make8TSpan");
+            _fixture.AddCommand("InfiniteTracingTester StartAgent");
 
             _fixture.AddActions(
                 setupConfiguration: () =>
@@ -43,6 +38,12 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                 },
                 exerciseApplication: () =>
                 {
+                    // Wait for 8T to connect
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanStreamingServiceConnectedLogLineRegex, TimeSpan.FromSeconds(15));
+                    // Now send the command to make the 8T Span
+                    _fixture.SendCommand("InfiniteTracingTester Make8TSpan");
+                    // Now wait to see that the 8T spans were sent successfully
+                    _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullySentLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
                     _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
                 }
 
@@ -108,18 +109,9 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
     }
 
     [NetCoreTest]
-    public class InfiniteTracingNetCore50Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCore50>
+    public class InfiniteTracingNetCoreOldestTests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public InfiniteTracingNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class InfiniteTracingNetCore31Tests : InfiniteTracingTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public InfiniteTracingNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public InfiniteTracingNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

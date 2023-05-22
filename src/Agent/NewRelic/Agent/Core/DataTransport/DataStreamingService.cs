@@ -2,19 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Core.Logging;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
-using System.Linq;
-using NewRelic.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Net;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Collections;
+using NewRelic.Core;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.DataTransport
@@ -136,6 +137,8 @@ namespace NewRelic.Agent.Core.DataTransport
         private readonly IAgentTimerService _agentTimerService;
         private readonly IEnvironment _environment;
 
+        private const string LicenseKeyHeaderName = "license_key";
+
         private readonly IConfigurationService _configSvc;
         protected IConfiguration _configuration => _configSvc?.Configuration;
 
@@ -180,7 +183,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var headers = new Metadata();
 
             headers.Add(new Metadata.Entry("agent_run_token", _configuration.AgentRunId.ToString()));
-            headers.Add(new Metadata.Entry("license_key", _configuration.AgentLicenseKey));
+            headers.Add(new Metadata.Entry(LicenseKeyHeaderName, _configuration.AgentLicenseKey));
 
             if (_configuration.RequestHeadersMap != null)
             {
@@ -212,7 +215,23 @@ namespace NewRelic.Agent.Core.DataTransport
 
             if (Log.IsFinestEnabled)
             {
-                var parametersString = string.Join(",", headers.Select(x => $"{x.Key}={x.Value}"));
+                var parametersString = string.Empty;
+                foreach(var header in headers)
+                {
+                    if (parametersString.Length > 0)
+                    {
+                        parametersString += ",";
+                    }
+                    if (header.Key == LicenseKeyHeaderName)
+                    {
+                        var obfuscatedLicenseKey = Strings.ObfuscateLicenseKey(header.Value);
+                        parametersString += $"{header.Key}={obfuscatedLicenseKey}";
+                    }
+                    else
+                    {
+                        parametersString += $"{header.Key}={header.Value}";
+                    }
+                }
                 LogMessage(LogLevel.Finest, $"Creating gRPC Metadata ({parametersString})");
             }
 

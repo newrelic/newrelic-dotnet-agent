@@ -10,6 +10,7 @@ using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Configuration.UnitTest
@@ -86,6 +87,53 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 Assert.IsTrue(wasCalled);
             }
 
+        }
+
+        // Responding to ErrorGroupCallbackUpdateEvent is an implementation detail. These tests aren't terribly valuable at the moment, but give us at least some light coverage.
+        [TestFixture]
+        public class Event_ErrorGroupCallbackUpdateEvent
+        {
+            private ConfigurationService _configurationService;
+            private Func<IReadOnlyDictionary<string, object>, string> _callback = dict => "errorGroup";
+
+            [SetUp]
+            public void SetUp()
+            {
+                _configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>());
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                _configurationService.Dispose();
+            }
+
+            [Test]
+            public void publishes_ErrorGroupCallbackUpdateEvent()
+            {
+                var wasCalled = false;
+                using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
+                {
+                    EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(_callback));
+                }
+
+                Assert.IsTrue(wasCalled);
+            }
+
+            [Test]
+            public void publishes_ErrorGroupCallbackUpdateEvent_SameCallback_DoesNotUpdateConfig()
+            {
+                // call this test to setup the initial callback
+                publishes_ErrorGroupCallbackUpdateEvent();
+
+                var wasCalled = false;
+                using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
+                {
+                    EventBus<ErrorGroupCallbackUpdateEvent>.Publish(new ErrorGroupCallbackUpdateEvent(_callback));
+                }
+
+                Assert.IsFalse(wasCalled);
+            }
         }
 
         [TestFixture, Category("Configuration")]

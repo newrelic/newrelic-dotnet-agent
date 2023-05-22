@@ -17,6 +17,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="JustMock" Version="2020.1.113.1" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -26,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Parsing\Parsing.csproj" />
+    <ProjectReference Include="$(RootProjectDirectory)\tests\Agent\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />

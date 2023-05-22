@@ -15,5 +15,8 @@ namespace NewRelic.Collections
 
         // Represents the count of items that has been attempted to be added to the capped collection.
         int GetAddAttemptsCount();
+
+        // Gets the current count of dropped items and resets the counter to 0
+        int GetAndResetDroppedItemCount();
     }
 }

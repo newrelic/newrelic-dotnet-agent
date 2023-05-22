@@ -3,6 +3,7 @@
 
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.CodeAttributes;
 using NewRelic.Core.Logging;
 using NewRelic.TypeInstantiation;
 using System;
@@ -12,6 +13,7 @@ using System.Linq;
 
 namespace NewRelic.Agent.Core.Utilities
 {
+    [NrCoveredByIntegrationTests]
     public class ExtensionsLoader
     {
         /// <summary>
@@ -37,14 +39,14 @@ namespace NewRelic.Agent.Core.Utilities
 
                 { "ResolveAppWrapper",                                                                              Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Owin.dll") },
 
-                { "Asp35.CreateEventExecutionStepsTracer",                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
-                { "Asp35.ExecuteStepTracer",                                                                        Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
-                { "Asp35.FinishPipelineRequestTracer",                                                              Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
-                { "Asp35.OnErrorTracer",                                                                            Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
-                { "Asp35.GetRouteDataTracer",                                                                       Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
-                { "Asp35.CallHandlerTracer",                                                                        Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
-                { "Asp35.FilterTracer",                                                                             Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
-                { "Asp35.AspPagesTransactionNameTracer",                                                            Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
+                { "AspNet.CreateEventExecutionStepsTracer",                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNet.dll") },
+                { "AspNet.ExecuteStepTracer",                                                                        Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNet.dll") },
+                { "AspNet.FinishPipelineRequestTracer",                                                              Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNet.dll") },
+                { "AspNet.OnErrorTracer",                                                                            Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNet.dll") },
+                { "AspNet.GetRouteDataTracer",                                                                       Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNet.dll") },
+                { "AspNet.CallHandlerTracer",                                                                        Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNet.dll") },
+                { "AspNet.FilterTracer",                                                                             Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNet.dll") },
+                { "AspNet.AspPagesTransactionNameTracer",                                                            Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNet.dll") },
 
                 { "OdbcCommandTracer",                                                                              Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
                 { "OleDbCommandTracer",                                                                             Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },

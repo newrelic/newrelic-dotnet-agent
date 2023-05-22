@@ -26,16 +26,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 
             _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithoutHandlers");
             _fixture.AddCommand("NServiceBusDriver PublishEventInTransaction");
-            _fixture.AddCommand("RootCommands DelaySeconds 5");
-            _fixture.AddCommand("NServiceBusDriver StopNServiceBus");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.SetLogLevel("finest");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(30));
+                    _fixture.SendCommand("NServiceBusDriver StopNServiceBus");
                 }
             );
 
@@ -100,27 +104,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbPublishTestsCore31 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class NsbPublishTestsCoreOldest : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public NsbPublishTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NsbPublishTestsCore50 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public NsbPublishTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NsbPublishTestsCore60 : NsbPublishTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public NsbPublishTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public NsbPublishTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

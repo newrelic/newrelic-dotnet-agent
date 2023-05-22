@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.OracleClient" />
     <Reference Include="System.Messaging" />
@@ -36,7 +37,7 @@
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Core\Core.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
-    <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Asp35\Asp35.csproj" />
+    <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\AspNet\AspNet.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Parsing\Parsing.csproj" />
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />

@@ -10,6 +10,8 @@ namespace NewRelic.Agent.Core.Commands
 {
     public class ThreadProfilerCommandArgs
     {
+        private bool _ignoreMinMinimumSamplingDuration;
+
         public const float MinimumSamplingFrequencySeconds = 0.1F;   // 1/10 of a second
         public const float MinimumSamplingDurationSeconds = 120;       // 2 minutes
 
@@ -24,15 +26,17 @@ namespace NewRelic.Agent.Core.Commands
         public readonly uint Duration;
         public readonly bool ReportData;
 
-        public ThreadProfilerCommandArgs(IDictionary<string, object> arguments)
+        public ThreadProfilerCommandArgs(IDictionary<string, object> arguments, bool ignoreMinMinimumSamplingDuration)
         {
+            _ignoreMinMinimumSamplingDuration = ignoreMinMinimumSamplingDuration;
+
             var profileId = arguments.GetValueOrDefault("profile_id");
             if (profileId != null)
                 int.TryParse(profileId.ToString(), out ProfileId);
 
             Frequency = ParseFloatArgument(arguments, "sample_period", DefaultSamplingFrequencySeconds, MinimumSamplingFrequencySeconds, MaximumSamplingFrequencySeconds);
 
-            Duration = ParseFloatArgument(arguments, "duration", DefaultSamplingDurationSeconds, MinimumSamplingDurationSeconds, MaximumSamplingDurationSeconds);
+            Duration = ParseFloatArgument(arguments, "duration", DefaultSamplingDurationSeconds, ignoreMinMinimumSamplingDuration ? 0 : MinimumSamplingDurationSeconds, MaximumSamplingDurationSeconds);
 
             ReportData = ParseBooleanArgument(arguments, "report_data", true);
         }

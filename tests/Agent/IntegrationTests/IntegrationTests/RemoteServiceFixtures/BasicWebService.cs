@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
-using System.IO;
-using System.Net;
-using System.Xml.Linq;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -23,18 +23,16 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/HelloWorld";
 
-            var request = (HttpWebRequest)WebRequest.Create(address);
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = 0;
-            var response = request.GetResponse();
-            var responseStream = response.GetResponseStream();
-            var reader = new StreamReader(responseStream);
-            var responseString = reader.ReadToEnd();
-            reader.Close();
-            response.Close();
+            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+            {
+                request.Content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>());
 
-            Assert.Contains("Hello World", responseString);
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    var responseString = response.Content.ReadAsStringAsync().Result;
+                    Assert.Contains("Hello World", responseString);
+                }
+            }
         }
 
         public void InvokeServiceSoap()
@@ -49,38 +47,33 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 			    </soap12:Body>
 			</soap12:Envelope>";
 
-            var doc = XDocument.Parse(soapEnvelope);
             var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/HelloWorld";
 
-            var request = (HttpWebRequest)WebRequest.Create(address);
-            request.ContentType = "application/soap+xml; charset=utf-8";
-            request.Method = "POST";
-
-            //insert SOAP envelope into the request
-            using (var stream = request.GetRequestStream())
+            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
             {
-                doc.Save(stream);
+                request.Content = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
+
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    var responseData = response.Content.ReadAsStringAsync().Result;
+                    Assert.Contains("Hello World", responseData);
+                }
             }
-
-            var response = request.GetResponse();
-
-            using (var reader = new StreamReader(response.GetResponseStream()))
-            {
-                Assert.Contains("Hello World", XDocument.Load(reader).ToString());
-            }
-
         }
 
         public void ThrowExceptionHttp()
         {
             var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/ThrowException";
 
-            var request = (HttpWebRequest)WebRequest.Create(address);
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = 0;
+            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+            {
+                request.Content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>());
 
-            Assert.Throws<WebException>(() => request.GetResponse());
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    Assert.False(response.IsSuccessStatusCode);
+                }
+            }
         }
 
         public void ThrowExceptionSoap()
@@ -95,21 +88,17 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 			    </soap12:Body>
 			</soap12:Envelope>";
 
-            var doc = XDocument.Parse(soapEnvelope);
             var address = $"http://{DestinationServerName}:{Port}/BasicWebService.asmx/ThrowException";
 
-            var request = (HttpWebRequest)WebRequest.Create(address);
-            request.ContentType = "application/soap+xml; charset=utf-8";
-            request.Method = "POST";
-
-            //insert SOAP envelope into the request
-            using (var stream = request.GetRequestStream())
+            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
             {
-                doc.Save(stream);
+                request.Content = new StringContent(soapEnvelope, Encoding.UTF8, "text/xml");
+
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    Assert.False(response.IsSuccessStatusCode);
+                }
             }
-
-            Assert.Throws<WebException>(() => request.GetResponse());
-
         }
     }
 }

@@ -32,20 +32,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             lock (_usedPortLock)
             {
-                for (var countAttempts = 0; countAttempts < maxAttempts; countAttempts++)
+                var countAttempts = 0;
+                do
                 {
                     var potentialPort = _randomNumberDiety.Next(portPoolSize) + minPortID;
-                    if (!_usedPorts.Contains(potentialPort) && IsPortAvailable(potentialPort))
+                    if (_usedPorts.Contains(potentialPort) && _usedPorts.Count <= 10000)
+                    {
+                        continue;
+                    }
+
+                    if (IsPortAvailable(potentialPort))
                     {
                         _usedPorts.Add(potentialPort);
                         return potentialPort;
                     }
-                }
+                    countAttempts++;
+                } while (countAttempts < maxAttempts);
             }
 
             throw new Exception($"Unable to obtain port after {maxAttempts} attempts.");
         }
-
 
         //Checks if something outside our current test run instance is currently using the port.
         //This does not prevent us from getting into a conflict with another process taking that port after this check,

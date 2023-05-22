@@ -23,9 +23,9 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
     }
 
     [NetCoreTest]
-    public class AttributeInstrumentationTestsCore31 : AttributeInstrumentationTests<ConsoleDynamicMethodFixtureCore31>
+    public class AttributeInstrumentationTestsCoreOldest : AttributeInstrumentationTests<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public AttributeInstrumentationTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public AttributeInstrumentationTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
