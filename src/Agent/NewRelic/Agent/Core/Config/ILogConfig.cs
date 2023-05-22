@@ -9,9 +9,6 @@ namespace NewRelic.Agent.Core.Config
 
         string GetFullLogFileName();
 
-        bool FileLockingModelSpecified { get; }
-        configurationLogFileLockingModel FileLockingModel { get; }
-
         bool Console { get; }
 
         bool IsAuditLogEnabled { get; }

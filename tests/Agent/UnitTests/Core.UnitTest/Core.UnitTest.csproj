@@ -44,11 +44,6 @@
     <ProjectReference Include="..\NewRelic.Agent.TestUtilities\NewRelic.Agent.TestUtilities.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="$(RootProjectDirectory)\src\Agent\Shared\SharedLog4NetRepository.cs">
-      <Link>Properties\SharedLog4NetRepository.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="BrowserMonitoring\rum_loader_insertion_location\basic.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
