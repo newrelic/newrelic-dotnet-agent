@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Labels
 {
     public class LabelsService : ILabelsService
     {
-        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(LabelsService));
+        private readonly Serilog.ILogger Log = Serilog.Log.Logger;
 
         private const int MaxLabels = 64;
         private const int MaxLength = 255;
@@ -45,18 +45,18 @@ namespace NewRelic.Agent.Core.Labels
                     .ToList();
 
                 if (labels.Count == MaxLabels)
-                    Log.WarnFormat("Maximum number of labels reached, some may have been dropped.");
+                    Log.Warning("Maximum number of labels reached, some may have been dropped.");
 
                 return labels;
             }
             catch (Exception exception)
             {
-                Log.WarnFormat("Failed to parse labels configuration string: {0}", exception);
+                Log.Warning("Failed to parse labels configuration string: {0}", exception);
                 return Enumerable.Empty<Label>();
             }
         }
 
-        private static Label CreateLabelFromString(string typeAndValueString)
+        private Label CreateLabelFromString(string typeAndValueString)
         {
             if (typeAndValueString == null)
                 throw new ArgumentNullException("typeAndValueString");
@@ -87,11 +87,11 @@ namespace NewRelic.Agent.Core.Labels
             return new Label(typeTruncated, valueTruncated);
         }
 
-        private static string Truncate(string value)
+        private string Truncate(string value)
         {
             var result = value.TruncateUnicodeStringByLength(MaxLength);
             if (result.Length != value.Length)
-                Log.WarnFormat("Truncated label key from {0} to {1}", value, result);
+                Log.Warning("Truncated label key from {0} to {1}", value, result);
 
             return result;
         }

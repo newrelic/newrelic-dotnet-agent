@@ -1301,8 +1301,6 @@ namespace NewRelic.Agent.Core.Config
         
         private bool auditLogField;
         
-        private System.Nullable<configurationLogFileLockingModel> fileLockingModelField;
-        
         /// <summary>
         /// configurationLog class constructor
         /// </summary>
@@ -1378,42 +1376,6 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.auditLogField = value;
-            }
-        }
-        
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public configurationLogFileLockingModel fileLockingModel
-        {
-            get
-            {
-                if (this.fileLockingModelField.HasValue)
-                {
-                    return this.fileLockingModelField.Value;
-                }
-                else
-                {
-                    return default(configurationLogFileLockingModel);
-                }
-            }
-            set
-            {
-                this.fileLockingModelField = value;
-            }
-        }
-        
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool fileLockingModelSpecified
-        {
-            get
-            {
-                return this.fileLockingModelField.HasValue;
-            }
-            set
-            {
-                if (value==false)
-                {
-                    this.fileLockingModelField = null;
-                }
             }
         }
         
