@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Serilog;
 using Serilog.Core;
-using Serilog.Events;
 using Serilog.Formatting;
 using Logger = NewRelic.Agent.Core.Logging.Logger;
 
@@ -30,11 +29,6 @@ namespace NewRelic.Agent.Core
 #pragma warning disable CS0414
         private static readonly string EventLogSourceName = "New Relic .NET Agent";
 #pragma warning restore CS0414
-
-        ///// <summary>
-        ///// The numeric level of the Audit log.
-        ///// </summary>
-        //private static int AuditLogLevel = 150000;
 
         /// <summary>
         /// The string name of the Audit log level.
@@ -157,13 +151,13 @@ namespace NewRelic.Agent.Core
         //    loggerConfiguration
         //        .WriteTo.Logger(configuration =>
         //        {
-        //            ExcludeAuditLog(configuration);
         //            configuration
-        //                .WriteTo.EventLog(
-        //                    source: EventLogSourceName,
-        //                    logName: EventLogName,
-        //                    restrictedToMinimumLevel: LogEventLevel.Warning
-        //                );
+        //            .ExcludeAuditLog()
+        //            .WriteTo.EventLog(
+        //                source: EventLogSourceName,
+        //                logName: EventLogName,
+        //                restrictedToMinimumLevel: LogEventLevel.Warning
+        //            );
         //        });
 
         //    return loggerConfiguration;
@@ -220,8 +214,9 @@ namespace NewRelic.Agent.Core
                             .ConfigureRollingLogSink(logFileName, new CustomTextFormatter());
                     });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Serilog.Log.Logger.Warning(ex, "Unexpected exception when configuring file sink. Falling back to EventLog sink.");
                 // TODO uncomment when EventLogSink is supported
                 //// Fallback to the event log sink if we cannot setup a file logger.
                 //loggerConfiguration.ConfigureEventLogSink();
@@ -244,7 +239,7 @@ namespace NewRelic.Agent.Core
                 .Logger(configuration =>
                 {
                     configuration
-                        .MinimumLevel.Fatal()
+                        .MinimumLevel.Fatal() // We've hijacked Fatal log level as the level to use when writing an audit log
                         .IncludeOnlyAuditLog()
                         .ConfigureRollingLogSink(logFileName, new CustomAuditLogTextFormatter());
                 });
@@ -270,7 +265,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception exception)
             {
-                Serilog.Log.Logger.Warning(exception, $"Unable to write logfile at \"{fileName}\"", fileName);
+                Serilog.Log.Logger.Warning(exception, $"Unable to write logfile at \"{fileName}\"");
                 throw;
             }
 
@@ -289,7 +284,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception exception)
             {
-                Serilog.Log.Logger.Error(exception, $"Unable to configure file logging for \"{fileName}\"");
+                Serilog.Log.Logger.Warning(exception, $"Unexpected exception while configuring file logging for \"{fileName}\"");
                 throw;
             }
         }
