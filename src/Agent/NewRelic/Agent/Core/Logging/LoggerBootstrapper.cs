@@ -10,6 +10,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Formatting;
 using Logger = NewRelic.Agent.Core.Logging.Logger;
+using NewRelic.Agent.Core.Logging;
 
 namespace NewRelic.Agent.Core
 {
@@ -53,11 +54,9 @@ namespace NewRelic.Agent.Core
                 .Enrich.With(new ThreadIdEnricher())
                 .Enrich.With(new ProcessIdEnricher())
                 .MinimumLevel.Information()
-                .ConfigureInMemoryLogSink()
+                .ConfigureInMemoryLogSink();
                 // TODO: implement event log sink
-                //.ConfigureEventLogSink()
-                // TODO: Remove console log sink when in-memory sink is implemented
-                .ConfigureConsoleSink();
+                //.ConfigureEventLogSink();
 
             // set the global Serilog logger to our startup logger instance, this gets replaced when ConfigureLogger() is called
             Serilog.Log.Logger = startupLoggerConfig.CreateLogger();
@@ -103,13 +102,12 @@ namespace NewRelic.Agent.Core
 
         private static void EchoInMemoryLogsToConfiguredLogger(Serilog.ILogger configuredLogger)
         {
-            // TODO: copy logs from inMemory logger and emit them to Serilog.Log.Logger
-            // possible example:
-            //foreach (LogEvent logEvent in InMemorySink.Instance.LogEvents)
-            //{
-            //    configuredLogger.Write(logEvent.Level, logEvent.Exception, logEvent.MessageTemplate.Render(logEvent.Properties));
-            //}
-            //InMemorySink.Instance.Dispose();
+            while (InMemorySink.Instance.LogEvents.TryDequeue(out var logEvent))
+            {
+                configuredLogger.Write(logEvent);
+            }
+
+            InMemorySink.Instance.Dispose();
         }
 
         /// <summary>
@@ -133,9 +131,14 @@ namespace NewRelic.Agent.Core
 
         private static LoggerConfiguration ConfigureInMemoryLogSink(this LoggerConfiguration loggerConfiguration)
         {
-            // TODO Configure the (yet-to-be-implemented) in-memory sink
-
-            return loggerConfiguration;
+            // formatter not needed since this will be pushed to other sinks for output.
+            return loggerConfiguration
+                .WriteTo.Logger(configuration =>
+                {
+                    configuration
+                        .ExcludeAuditLog()
+                        .WriteTo.Sink(InMemorySink.Instance);
+                });
         }
 
         // TODO: Implement EventLog support, see commented package reference in Core.csproj
