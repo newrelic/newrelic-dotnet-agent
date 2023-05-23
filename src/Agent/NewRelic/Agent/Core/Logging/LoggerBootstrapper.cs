@@ -4,7 +4,6 @@
 using NewRelic.Agent.Core.Config;
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
 using Serilog;
 using Serilog.Core;
@@ -31,15 +30,9 @@ namespace NewRelic.Agent.Core
         private static readonly string EventLogSourceName = "New Relic .NET Agent";
 #pragma warning restore CS0414
 
-        /// <summary>
-        /// The string name of the Audit log level.
-        /// </summary>
-        private static string AuditLogLevelName = "Audit";
-
         // Watch out!  If you change the time format that the agent puts into its log files, other log parsers may fail.
         //private static ILayout AuditLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %level: %message\r\n");
         //private static ILayout FileLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %6level: [pid: %property{pid}, tid: %property{threadid}] %message\r\n");
-
 
         private static LoggingLevelSwitch _loggingLevelSwitch = new LoggingLevelSwitch();
 
@@ -61,7 +54,7 @@ namespace NewRelic.Agent.Core
                 //.ConfigureEventLogSink();
 
             // set the global Serilog logger to our startup logger instance, this gets replaced when ConfigureLogger() is called
-            Serilog.Log.Logger = startupLoggerConfig.CreateLogger();
+            Log.Logger = startupLoggerConfig.CreateLogger();
         }
 
         /// <summary>
@@ -85,24 +78,17 @@ namespace NewRelic.Agent.Core
                 loggerConfig = loggerConfig.ConfigureConsoleSink();
             }
 
-            var startupLogger = Serilog.Log.Logger;
-
             // configure the global singleton logger instance (which remains specific to the Agent by way of ILRepack)
             var configuredLogger = loggerConfig.CreateLogger();
 
             EchoInMemoryLogsToConfiguredLogger(configuredLogger);
 
-            Serilog.Log.Logger = configuredLogger;
+            Log.Logger = configuredLogger;
 
             NewRelic.Core.Logging.Log.Initialize(new Logger());
         }
 
-        /// <summary>
-        /// Gets a string identifying the Audit log level
-        /// </summary>
-        public static string GetAuditLevel() => AuditLogLevelName;
-
-        private static void EchoInMemoryLogsToConfiguredLogger(Serilog.ILogger configuredLogger)
+        private static void EchoInMemoryLogsToConfiguredLogger(ILogger configuredLogger)
         {
             foreach (var logEvent in _inMemorySink.LogEvents)
             {
@@ -116,20 +102,7 @@ namespace NewRelic.Agent.Core
         /// Sets the log level for logger to either the level provided by the config or an public default.
         /// </summary>
         /// <param name="config">The LogConfig to look for the level setting in.</param>
-        private static void SetupLogLevel(ILogConfig config)
-        {
-            _loggingLevelSwitch.MinimumLevel = config.LogLevel.MapToSerilogLogLevel();
-        }
-
-        // TODO: implement but don't use log4net log levels enum
-        //private static bool IsLogLevelDeprecated(Level level)
-        //{
-        //    foreach (var l in DeprecatedLogLevels)
-        //    {
-        //        if (l.Name.Equals(level.Name, StringComparison.InvariantCultureIgnoreCase)) return true;
-        //    }
-        //    return false;
-        //}
+        private static void SetupLogLevel(ILogConfig config) => _loggingLevelSwitch.MinimumLevel = config.LogLevel.MapToSerilogLogLevel();
 
         private static LoggerConfiguration ConfigureInMemoryLogSink(this LoggerConfiguration loggerConfiguration)
         {
@@ -221,7 +194,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Serilog.Log.Logger.Warning(ex, "Unexpected exception when configuring file sink. Falling back to EventLog sink.");
+                Log.Logger.Warning(ex, "Unexpected exception when configuring file sink. Falling back to EventLog sink.");
                 // TODO uncomment when EventLogSink is supported
                 //// Fallback to the event log sink if we cannot setup a file logger.
                 //loggerConfiguration.ConfigureEventLogSink();
@@ -270,7 +243,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception exception)
             {
-                Serilog.Log.Logger.Warning(exception, $"Unable to write logfile at \"{fileName}\"");
+                Log.Logger.Warning(exception, $"Unable to write logfile at \"{fileName}\"");
                 throw;
             }
 
@@ -289,7 +262,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception exception)
             {
-                Serilog.Log.Logger.Warning(exception, $"Unexpected exception while configuring file logging for \"{fileName}\"");
+                Log.Logger.Warning(exception, $"Unexpected exception while configuring file logging for \"{fileName}\"");
                 throw;
             }
         }
@@ -297,14 +270,13 @@ namespace NewRelic.Agent.Core
         private static LoggerConfiguration IncludeOnlyAuditLog(this LoggerConfiguration loggerConfiguration)
         {
             return loggerConfiguration.Filter.ByIncludingOnly(logEvent =>
-                logEvent.Properties.ContainsKey(AuditLogLevelName));
+                logEvent.Properties.ContainsKey(LogLevelExtensions.AuditLevel));
 
         }
         private static LoggerConfiguration ExcludeAuditLog(this LoggerConfiguration loggerConfiguration)
         {
             return loggerConfiguration.Filter.ByExcluding(logEvent =>
-                logEvent.Properties.ContainsKey(AuditLogLevelName));
-
+                logEvent.Properties.ContainsKey(LogLevelExtensions.AuditLevel));
         }
 
     }
