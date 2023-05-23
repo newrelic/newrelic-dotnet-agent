@@ -11,6 +11,7 @@ using NUnit.Framework;
 using log4net.Appender;
 using log4net.Core;
 using System.IO;
+using NewRelic.Agent.Core.Logging;
 
 namespace NewRelic.Agent.Core
 {
@@ -367,8 +368,6 @@ namespace NewRelic.Agent.Core
 
             Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
         }
-
-
 
         static private ILogConfig GetLogConfig(string logLevel)
         {
