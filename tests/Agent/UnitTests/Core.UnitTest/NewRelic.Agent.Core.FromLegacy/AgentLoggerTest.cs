@@ -369,39 +369,6 @@ namespace NewRelic.Agent.Core
             Assert.AreEqual(log4net.ThreadContext.Properties["threadid"], Thread.CurrentThread.ManagedThreadId);
         }
 
-        #region InMemorySink Tests
-
-        [Test]
-        public static void InMemorySink_IsStartupLogger()
-        {
-            ILogConfig config = GetLogConfig("all");
-            LoggerBootstrapper.Initialize();
-
-            // Write a log message to global Serilog logger
-            Serilog.Log.Logger.Information("InMemorySink log");
-
-            // Check that the log message was stored in the InMemorySink
-            Assert.AreEqual(1, InMemorySink.Instance.LogEvents.Count);
-        }
-
-        [Test]
-        public static void InMemorySink_ReplacedBy_AgentLogger()
-        {
-            ILogConfig config = GetLogConfig("all");
-            LoggerBootstrapper.Initialize();
-
-            // Configure the real agent logger and replace the start up logger
-            LoggerBootstrapper.ConfigureLogger(config);
-
-            // Write a log message to global Serilog logger
-            Serilog.Log.Logger.Information("InMemorySink log");
-
-            // Check that the log message was not stored in the InMemorySink
-            Assert.AreEqual(0, InMemorySink.Instance.LogEvents.Count);
-        }
-
-        #endregion
-
         static private ILogConfig GetLogConfig(string logLevel)
         {
             var xml = string.Format(

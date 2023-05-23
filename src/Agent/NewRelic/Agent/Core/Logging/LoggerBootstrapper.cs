@@ -43,6 +43,8 @@ namespace NewRelic.Agent.Core
 
         private static LoggingLevelSwitch _loggingLevelSwitch = new LoggingLevelSwitch();
 
+        private static InMemorySink _inMemorySink = new InMemorySink();
+
         public static void UpdateLoggingLevel(string newLogLevel)
         {
             _loggingLevelSwitch.MinimumLevel = newLogLevel.MapToSerilogLogLevel();
@@ -102,12 +104,12 @@ namespace NewRelic.Agent.Core
 
         private static void EchoInMemoryLogsToConfiguredLogger(Serilog.ILogger configuredLogger)
         {
-            while (InMemorySink.Instance.LogEvents.TryDequeue(out var logEvent))
+            foreach (var logEvent in _inMemorySink.LogEvents)
             {
                 configuredLogger.Write(logEvent);
             }
 
-            InMemorySink.Instance.Dispose();
+            _inMemorySink.Dispose();
         }
 
         /// <summary>
@@ -137,7 +139,7 @@ namespace NewRelic.Agent.Core
                 {
                     configuration
                         .ExcludeAuditLog()
-                        .WriteTo.Sink(InMemorySink.Instance);
+                        .WriteTo.Sink(_inMemorySink);
                 });
         }
 

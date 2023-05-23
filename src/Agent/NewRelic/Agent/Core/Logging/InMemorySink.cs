@@ -2,42 +2,44 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using Serilog.Configuration;
-using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Logging
 {
     public class InMemorySink : ILogEventSink, IDisposable
     {
-        private static readonly InMemorySink _instance = new InMemorySink();
+        private readonly ConcurrentQueue<LogEvent> _logEvents;
 
-        public readonly ConcurrentQueue<LogEvent> LogEvents;
-
-        public static InMemorySink Instance
+        public InMemorySink()
         {
-            get
-            {
-                return _instance;
-            }
-        }
-
-        protected InMemorySink()
-        {
-            LogEvents = new ConcurrentQueue<LogEvent>();
+            _logEvents = new ConcurrentQueue<LogEvent>();
         }
 
         public void Emit(LogEvent logEvent)
         {
-            LogEvents.Enqueue(logEvent);
+            _logEvents.Enqueue(logEvent);
+        }
+
+        public IEnumerable<LogEvent> LogEvents
+        {
+            get
+            {
+                return _logEvents;
+            }
+        }
+
+        public void Clear()
+        {
+            while (_logEvents.TryDequeue(out _))
+            { }
         }
 
         public void Dispose()
         {
-            while (LogEvents.TryDequeue(out _))
-            { }
+            Clear();
         }
     }
 }
