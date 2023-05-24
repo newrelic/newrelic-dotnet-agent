@@ -50,8 +50,8 @@ namespace NewRelic.Agent.Core
                 .Enrich.With(new ProcessIdEnricher())
                 .MinimumLevel.Information()
                 .ConfigureInMemoryLogSink();
-                // TODO: implement event log sink
-                //.ConfigureEventLogSink();
+            // TODO: implement event log sink
+            //.ConfigureEventLogSink();
 
             // set the global Serilog logger to our startup logger instance, this gets replaced when ConfigureLogger() is called
             Log.Logger = startupLoggerConfig.CreateLogger();
@@ -164,12 +164,14 @@ namespace NewRelic.Agent.Core
         private static LoggerConfiguration ConfigureConsoleSink(this LoggerConfiguration loggerConfiguration)
         {
             return loggerConfiguration
-                .WriteTo.Logger(configuration =>
-                {
-                    configuration
-                        .ExcludeAuditLog()
-                        .WriteTo.Console(formatter: new CustomTextFormatter());
-                });
+                .WriteTo.Async(a =>
+                    a.Logger(configuration =>
+                    {
+                        configuration
+                            .ExcludeAuditLog()
+                            .WriteTo.Console(formatter: new CustomTextFormatter());
+                    })
+                );
         }
 
         /// <summary>
@@ -185,12 +187,14 @@ namespace NewRelic.Agent.Core
             {
                 loggerConfiguration
                     .WriteTo
-                    .Logger(configuration =>
-                    {
-                        configuration
-                            .ExcludeAuditLog()
-                            .ConfigureRollingLogSink(logFileName, new CustomTextFormatter());
-                    });
+                    .Async(a =>
+                        a.Logger(configuration =>
+                            {
+                                configuration
+                                    .ExcludeAuditLog()
+                                    .ConfigureRollingLogSink(logFileName, new CustomTextFormatter());
+                            })
+                        );
             }
             catch (Exception ex)
             {
@@ -250,15 +254,16 @@ namespace NewRelic.Agent.Core
             try
             {
                 return loggerConfiguration
-                    .WriteTo.File(
-                        path: fileName,
-                        formatter: textFormatter,
-                        fileSizeLimitBytes: 50 * 1024 * 1024,
-                        encoding: Encoding.UTF8,
-                        rollOnFileSizeLimit: true,
-                        retainedFileCountLimit: 4,
-                        buffered: false
-                    );
+                    .WriteTo
+                    .File(path: fileName,
+                            formatter: textFormatter,
+                            fileSizeLimitBytes: 50 * 1024 * 1024,
+                            encoding: Encoding.UTF8,
+                            rollOnFileSizeLimit: true,
+                            retainedFileCountLimit: 4,
+                            shared: true,
+                            buffered: false
+                            );
             }
             catch (Exception exception)
             {
