@@ -10,25 +10,14 @@ using Serilog.Core;
 using Serilog.Formatting;
 using Logger = NewRelic.Agent.Core.Logging.Logger;
 using NewRelic.Agent.Core.Logging;
+#if NETFRAMEWORK
+using Serilog.Events;
+#endif
 
 namespace NewRelic.Agent.Core
 {
     public static class LoggerBootstrapper
     {
-
-        /// <summary>
-        /// The name of the event log to log to.
-        /// </summary>
-#pragma warning disable CS0414
-        private static readonly string EventLogName = "Application";
-#pragma warning restore CS0414
-
-        /// <summary>
-        /// The event source name.
-        /// </summary>
-#pragma warning disable CS0414
-        private static readonly string EventLogSourceName = "New Relic .NET Agent";
-#pragma warning restore CS0414
 
         // Watch out!  If you change the time format that the agent puts into its log files, other log parsers may fail.
         //private static ILayout AuditLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %level: %message\r\n");
@@ -49,9 +38,8 @@ namespace NewRelic.Agent.Core
                 .Enrich.With(new ThreadIdEnricher())
                 .Enrich.With(new ProcessIdEnricher())
                 .MinimumLevel.Information()
-                .ConfigureInMemoryLogSink();
-            // TODO: implement event log sink
-            //.ConfigureEventLogSink();
+                .ConfigureInMemoryLogSink()
+                .ConfigureEventLogSink();
 
             // set the global Serilog logger to our startup logger instance, this gets replaced when ConfigureLogger() is called
             Log.Logger = startupLoggerConfig.CreateLogger();
@@ -116,30 +104,30 @@ namespace NewRelic.Agent.Core
                 });
         }
 
-        // TODO: Implement EventLog support, see commented package reference in Core.csproj
-        ///// <summary>
-        ///// Add the Event Log sink if running on Windows
-        ///// </summary>
-        ///// <param name="loggerConfiguration"></param>
-        //private static LoggerConfiguration ConfigureEventLogSink(this LoggerConfiguration loggerConfiguration)
-        //{
-        //    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        //        return loggerConfiguration;
+        /// <summary>
+        /// Add the Event Log sink if running on .NET Framework
+        /// </summary>
+        /// <param name="loggerConfiguration"></param>
+        private static LoggerConfiguration ConfigureEventLogSink(this LoggerConfiguration loggerConfiguration)
+        {
+#if NETFRAMEWORK
+            const string eventLogName = "Application";
+            const string eventLogSourceName = "New Relic .NET Agent";
 
-        //    loggerConfiguration
-        //        .WriteTo.Logger(configuration =>
-        //        {
-        //            configuration
-        //            .ExcludeAuditLog()
-        //            .WriteTo.EventLog(
-        //                source: EventLogSourceName,
-        //                logName: EventLogName,
-        //                restrictedToMinimumLevel: LogEventLevel.Warning
-        //            );
-        //        });
-
-        //    return loggerConfiguration;
-        //}
+            loggerConfiguration
+                    .WriteTo.Logger(configuration =>
+                    {
+                        configuration
+                        .ExcludeAuditLog()
+                        .WriteTo.EventLog(
+                            source: eventLogSourceName,
+                            logName: eventLogName,
+                            restrictedToMinimumLevel: LogEventLevel.Warning
+                        );
+                    });
+#endif
+            return loggerConfiguration;
+        }
 
         /// <summary>
         /// Configure the debug sink
@@ -198,10 +186,12 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Logger.Warning(ex, "Unexpected exception when configuring file sink. Falling back to EventLog sink.");
-                // TODO uncomment when EventLogSink is supported
-                //// Fallback to the event log sink if we cannot setup a file logger.
-                //loggerConfiguration.ConfigureEventLogSink();
+                Log.Logger.Warning(ex, "Unexpected exception when configuring file sink.");
+#if NETFRAMEWORK
+                // Fallback to the event log sink if we cannot setup a file logger.
+                Log.Logger.Warning("Falling back to EventLog sink.");
+                loggerConfiguration.ConfigureEventLogSink();
+#endif
             }
 
             return loggerConfiguration;
