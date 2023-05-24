@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core
     public class LoggerBootstrapperTest
     {
         [Test]
-        public static void no_log_levels_are_enabled_when_config_log_is_off()
+        public static void No_log_levels_are_enabled_when_config_log_is_off()
         {
             ILogConfig config = GetLogConfig("off");
             LoggerBootstrapper.Initialize();
@@ -30,13 +30,19 @@ namespace NewRelic.Agent.Core
         }
 
         [Test]
-        public static void IsFinestEnabled_is_true_when_config_log_is_all()
+        public static void All_log_levels_are_enabled_when_config_log_is_all()
         {
             ILogConfig config = GetLogConfig("all");
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
 
-            Assert.That(Log.IsFinestEnabled);
+            NrAssert.Multiple(
+                () => Assert.IsTrue(Log.IsFinestEnabled),
+                () => Assert.IsTrue(Log.IsDebugEnabled),
+                () => Assert.IsTrue(Log.IsInfoEnabled),
+                () => Assert.IsTrue(Log.IsWarnEnabled),
+                () => Assert.IsTrue(Log.IsErrorEnabled)
+            );
         }
 
         [Test]
