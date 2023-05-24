@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Core
                 case LogEventLevel.Warning:
                     return "WARN";
                 case LogEventLevel.Error:
-                    return "ERR";
+                    return "ERROR";
                 default:
                     throw new ArgumentOutOfRangeException(nameof(logEventLevel), logEventLevel, null);
             }
