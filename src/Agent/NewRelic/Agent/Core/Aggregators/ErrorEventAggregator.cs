@@ -8,6 +8,7 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
@@ -70,6 +71,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override void Harvest()
         {
+            Log.Finest("Error Event harvest starting.");
+
             ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>> originalErrorEvents;
             ConcurrentList<ErrorEventWireModel> originalSyntheticsErrorEvents;
 
@@ -97,6 +100,8 @@ namespace NewRelic.Agent.Core.Aggregators
             var responseStatus = DataTransportService.Send(eventHarvestData, aggregatedEvents);
 
             HandleResponse(responseStatus, aggregatedEvents);
+
+            Log.Finest("Error Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

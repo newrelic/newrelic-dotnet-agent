@@ -7,6 +7,7 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
@@ -66,6 +67,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override void Harvest()
         {
+            Log.Finest("Custom Event harvest starting.");
+
             ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>> originalCustomEvents;
 
             _readerWriterLockSlim.EnterWriteLock();
@@ -87,6 +90,8 @@ namespace NewRelic.Agent.Core.Aggregators
             var responseStatus = DataTransportService.Send(customEvents);
 
             HandleResponse(responseStatus, customEvents);
+
+            Log.Finest("Custom Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
