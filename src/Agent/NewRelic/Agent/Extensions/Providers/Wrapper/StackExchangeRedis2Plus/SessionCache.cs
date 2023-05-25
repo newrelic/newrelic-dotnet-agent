@@ -77,6 +77,12 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
             _agent.Logger.Log(Agent.Extensions.Logging.Level.Info, "Session cache size pre-cleanup " + _sessionCache.Count);
             foreach (var pair in _sessionCache)
             {
+                if (pair.Key.IsDone)
+                {
+                    _ = _sessionCache.TryRemove(pair.Key, out _);
+                    continue;
+                }
+
                 if (!(pair.Value.transaction?.TryGetTarget(out var txn) ?? false) || txn.IsFinished)
                 {
                     _ = _sessionCache.TryRemove(pair.Key, out _);
@@ -128,7 +134,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                 // Don't want to save data to a session to a NoOp - no way to clean it up easily or reliably.
                 // Don't want to save to a Datastore segment - could be another Redis segment or something else.
                 var segment = transaction.CurrentSegment;
-                if (!segment.IsValid || segment.GetCategory() == "Datastore")
+                if (!segment.IsValid || segment.IsDone || segment.GetCategory() == "Datastore")
                 {
                     return null;
                 }

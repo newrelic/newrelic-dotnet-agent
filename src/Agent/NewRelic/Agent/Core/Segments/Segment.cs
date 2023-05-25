@@ -107,7 +107,13 @@ namespace NewRelic.Agent.Core.Segments
             SpanId = segment.SpanId;
         }
 
+        public bool IsDone
+        {
+            get { return RelativeEndTime.HasValue; }
+        }
+
         public bool IsValid => true;
+
         public bool DurationShouldBeDeductedFromParent { get; set; } = false;
 
         public bool AlwaysDeductChildDuration { private get; set; } = false;
