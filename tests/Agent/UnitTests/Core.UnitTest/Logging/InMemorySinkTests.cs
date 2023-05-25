@@ -1,4 +1,7 @@
-﻿using NUnit.Framework;
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using NUnit.Framework;
 using Serilog.Events;
 using System;
 using System.Linq;
