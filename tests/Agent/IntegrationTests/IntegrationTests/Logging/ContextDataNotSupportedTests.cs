@@ -60,7 +60,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
                 },
                 exerciseApplication: () =>
                 {
-                    Thread.Sleep(TimeSpan.FromSeconds(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.LogDataLogLineRegex, TimeSpan.FromSeconds(30));
                 }
             );
 
@@ -108,27 +108,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     }
 
     [NetCoreTest]
-    public class ContextDataNotSupportedNetCore60Tests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class ContextDataNotSupportedNetCoreOldestTests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public ContextDataNotSupportedNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.DummyMEL)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class ContextDataNotSupportedNetCore50Tests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public ContextDataNotSupportedNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.DummyMEL)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class ContextDataNotSupportedNetCore31Tests : ContextDataNotSupportedTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public ContextDataNotSupportedNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public ContextDataNotSupportedNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.DummyMEL)
         {
         }

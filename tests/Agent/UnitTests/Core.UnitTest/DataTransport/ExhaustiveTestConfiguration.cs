@@ -204,6 +204,8 @@ namespace NewRelic.Agent.Core.DataTransport
             { "eight", new[] { "eight1", "eight2" } },
         };
 
+        public Func<IReadOnlyDictionary<string, object>, string> ErrorGroupCallback => dict => "my error group";
+
         public Dictionary<string, string> RequestHeadersMap => new Dictionary<string, string>
         {
             { "one", "1" },
@@ -424,6 +426,18 @@ namespace NewRelic.Agent.Core.DataTransport
         public IEnumerable<string> ContextDataInclude => new[] { "attr1", "attr2"};
 
         public IEnumerable<string> ContextDataExclude => new[] { "attr1", "attr2" };
+
+        public TimeSpan MetricsHarvestCycle => TimeSpan.FromMinutes(1);
+
+        public TimeSpan TransactionTracesHarvestCycle => TimeSpan.FromMinutes(1);
+
+        public TimeSpan ErrorTracesHarvestCycle => TimeSpan.FromMinutes(1);
+
+        public TimeSpan GetAgentCommandsCycle => TimeSpan.FromMinutes(1);
+
+        public TimeSpan DefaultHarvestCycle => TimeSpan.FromMinutes(1);
+
+        public TimeSpan SqlTracesHarvestCycle => TimeSpan.FromMinutes(1);
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {

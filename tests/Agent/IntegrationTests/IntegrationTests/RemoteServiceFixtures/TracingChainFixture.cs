@@ -111,17 +111,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             const string action = "Index";
             var queryString = $"?chainedServerName={ReceiverApplication.DestinationServerName}&chainedPortNumber={ReceiverApplication.Port}&chainedAction={action}";
 
-            var address = $"http://{DestinationServerName}:{Port}/Default/Chained{queryString}";
+            var address = $"http://{DestinationServerName}:{Port}/Default/ChainedWebRequest{queryString}";
 
-            using (var httpClient = new HttpClient())
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, address))
             {
-                var httpRequestMessage = new HttpRequestMessage { RequestUri = new Uri(address), Method = HttpMethod.Get };
                 foreach (var header in headers)
                 {
                     httpRequestMessage.Headers.Add(header.Key, header.Value);
                 }
 
-                return Task.Run(() => httpClient.SendAsync(httpRequestMessage)).Result.Headers;
+                using (var httpResponseMessage = _httpClient.SendAsync(httpRequestMessage).Result)
+                {
+                    return httpResponseMessage.Headers;
+                }
             }
         }
 
@@ -136,7 +138,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[{nameof(OwinTracingChainFixture)}]: Starting A -> B request chain with URL: {senderUrl}");
 
-            DownloadStringAndAssertContains(senderUrl, "Worked", headers);
+            GetStringAndAssertContains(senderUrl, "Worked", headers);
         }
 
         public void ExecuteTraceRequestChainRestSharp(IEnumerable<KeyValuePair<string, string>> headers)
@@ -144,7 +146,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var secondCallUrl = $"http://localhost:{ReceiverApplication.Port}/api/RestAPI";
             var firstCallUrl = $"http://localhost:{SenderApplication.Port}/DistributedTracing/MakeExternalCallUsingRestClient?externalCallUrl={secondCallUrl}";
 
-            DownloadStringAndAssertEqual(firstCallUrl, "Worked", headers);
+            GetStringAndAssertEqual(firstCallUrl, "Worked", headers);
         }
     }
 }

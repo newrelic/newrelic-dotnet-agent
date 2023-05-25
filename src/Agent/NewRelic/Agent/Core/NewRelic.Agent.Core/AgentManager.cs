@@ -18,6 +18,7 @@ using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace NewRelic.Agent.Core
 {
@@ -69,15 +70,8 @@ namespace NewRelic.Agent.Core
         {
             get
             {
-                try
-                {
-                    return Singleton.ExistingInstance;
-                }
-                catch (NullReferenceException)
-                {
-                    // The singleton pointer may be null if we instrument a method that's invoked in the agent constructor.
-                    return DisabledAgentManager;
-                }
+                // The singleton pointer may be null if we instrument a method that's invoked in the agent constructor.
+                return Singleton?.ExistingInstance ?? DisabledAgentManager;
             }
         }
 
@@ -184,12 +178,6 @@ namespace NewRelic.Agent.Core
 
             StartServices();
             LogInitialized();
-            LogTlsConfiguration();
-        }
-
-        private void LogTlsConfiguration()
-        {
-            Log.Info($"TLS Configuration (System.Net.ServicePointManager.SecurityProtocol): {System.Net.ServicePointManager.SecurityProtocol}");
         }
 
         private void LogInitialized()
@@ -294,6 +282,7 @@ namespace NewRelic.Agent.Core
                     }
                 }
 
+                Log.Debug($".NET Runtime Version: {RuntimeInformation.FrameworkDescription}");
             }
 
         }

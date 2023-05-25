@@ -72,7 +72,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.StackExchangeRedi
         [Transaction]
         public async Task DoSomeWorkAsync()
         {
-            using (var redis = ConnectionMultiplexer.ConnectAsync(GetRedisConnectionOptions()).Result)
+            using (var redis = await ConnectionMultiplexer.ConnectAsync(GetRedisConnectionOptions()))
             {
                 // KeyRename throws an exception if the key doesn't exist, which can be a problem if this
                 // code is run in parallel. Make sure we have a unique one

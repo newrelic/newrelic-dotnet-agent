@@ -4,7 +4,7 @@
 
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using System;
-using System.Net;
+using System.Net.Http;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 
@@ -56,15 +56,10 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
             // start up the agent before the client is initialized since this can happen prior to connect.
             // Tried StartAgent from the API, but that still resulted in flickers, due I beleive to the call completing fast.
             // Reaching out to google takes a bit of time and give the agent more time to spin up.
-            try
+
+            using (var client = new HttpClient())
             {
-                var wc = new WebClient();
-                var s = wc.DownloadString(new Uri("https://www.google.com/"));
-                var l = s.Length;
-            }
-            catch
-            {
-                //do nothing and prevent an error from occurring.
+                client.GetAsync(new Uri("https://www.google.com/")).Wait();
             }
         }
     }

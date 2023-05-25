@@ -4,15 +4,17 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
+using System.Web;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 using Telerik.JustMock;
+using HttpException = NewRelic.Agent.Core.Exceptions.HttpException;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -83,6 +85,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         [TestCase("ForceRestartException")]
         [TestCase("HttpException")]
+        [TestCase("HttpRequestException")]
         [TestCase("SocketException")]
         [TestCase("IOException")]
         [TestCase("OperationCanceledException")]
@@ -96,6 +99,9 @@ namespace NewRelic.Agent.Core.DataTransport
                     break;
                 case "HttpException":
                     ex = new HttpException(HttpStatusCode.MethodNotAllowed, null);
+                    break;
+                case "HttpRequestException":
+                    ex = new HttpRequestException();
                     break;
                 case "SocketException":
                     ex = new SocketException();

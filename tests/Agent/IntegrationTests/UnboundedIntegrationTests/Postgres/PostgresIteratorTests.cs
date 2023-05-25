@@ -25,12 +25,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 
             _fixture.AddCommand($"PostgresSqlExerciser IteratorTest");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
 
                     configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
@@ -39,11 +42,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 
                     var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
                     CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "DataReaderTracer", "enabled", "true");
+                },
+                exerciseApplication: () =>
+                {
+                    // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)); // must be 2 minutes since this can take a while.
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
-
-            // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
-            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
 
             _fixture.Initialize();
         }
@@ -129,27 +135,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
     }
 
     [NetCoreTest]
-    public class PostgresSqlIteratorTestsCore31 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class PostgresSqlIteratorTestsCoreOldest : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public PostgresSqlIteratorTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class PostgresSqlIteratorTestsCore50 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public PostgresSqlIteratorTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class PostgresSqlIteratorTestsCore60 : PostgresSqlIteratorTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public PostgresSqlIteratorTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlIteratorTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

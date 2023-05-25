@@ -32,7 +32,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
                     var customRequestHeaders = new Dictionary<string, string> { { "foo", "bar" } };
 
                     _fixture.PostWithTestHeaders(customRequestHeaders);
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
         }
@@ -88,7 +88,9 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
                     configModifier.SetAllowAllHeaders(true)
                         .ForceTransactionTraces()
                         .EnableSpanEvents(true);
@@ -131,7 +133,9 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
                     configModifier.SetAllowAllHeaders(true)
                         .ForceTransactionTraces()
                         .EnableSpanEvents(true);
@@ -175,7 +179,9 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.EnvironmentVaria
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
                     configModifier.SetAllowAllHeaders(true)
                         .ForceTransactionTraces()
                         .EnableSpanEvents(true);

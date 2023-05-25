@@ -149,3 +149,9 @@ src/Agent/_profilerBuild/*Debug
 build/Linux/keys
 
 tests/TestResults/*
+
+# ignore profiler binaries - they're now pulled from a NuGet package (see Home.csproj)
+/src/Agent/_profilerBuild/linux-arm64-release/libNewRelicProfiler.so
+/src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
+/src/Agent/_profilerBuild/x64-Release/NewRelic.Profiler.dll
+/src/Agent/_profilerBuild/x86-Release/NewRelic.Profiler.dll

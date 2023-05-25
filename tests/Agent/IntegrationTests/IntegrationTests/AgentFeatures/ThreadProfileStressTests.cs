@@ -26,6 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                     configModifier.SetLogLevel("debug");
+                    configModifier.ConfigureFasterGetAgentCommandsCycle(10);
                 },
                 exerciseApplication: () =>
                 {
@@ -34,7 +35,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 
                     fixture.TestLogger?.WriteLine("[ThreadProfileStressTests] Requesting a thread profile run at {0} ms.", stopWatch.ElapsedMilliseconds);
                     fixture.TriggerThreadProfile();
-                    fixture.AgentLog.WaitForLogLine(AgentLogBase.ThreadProfileStartingLogLineRegex, TimeSpan.FromMinutes(3));
+                    fixture.AgentLog.WaitForLogLine(AgentLogBase.ThreadProfileStartingLogLineRegex, TimeSpan.FromMinutes(1));
                     fixture.TestLogger?.WriteLine("[ThreadProfileStressTests] Thread profile run detected at {0} ms.", stopWatch.ElapsedMilliseconds);
 
                     //Wait for the thread profile run to begin before triggering the scenario because if we don't the agent has to compete with process
@@ -44,7 +45,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                     //We need to wait long enough for the thread profile run to finish
                     try
                     {
-                        var threadProfileMatch = fixture.AgentLog.WaitForLogLine(AgentLogBase.ThreadProfileDataLogLineRegex, TimeSpan.FromMinutes(3));
+                        var threadProfileMatch = fixture.AgentLog.WaitForLogLine(AgentLogBase.ThreadProfileDataLogLineRegex, TimeSpan.FromMinutes(2));
                         _threadProfileString = threadProfileMatch.Value;
                         fixture.TestLogger?.WriteLine("[ThreadProfileStressTests] Retrieved thread profile at {0} ms.", stopWatch.ElapsedMilliseconds);
                     }

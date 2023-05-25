@@ -26,16 +26,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 
             _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithoutHandlers");
             _fixture.AddCommand("NServiceBusDriver SendCommandInTransaction");
-            _fixture.AddCommand("RootCommands DelaySeconds 5");
-            _fixture.AddCommand("NServiceBusDriver StopNServiceBus");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.SetLogLevel("finest");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(30));
+                    _fixture.SendCommand("NServiceBusDriver StopNServiceBus");
                 }
             );
 
@@ -100,27 +104,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbSendTestsCore31 : NsbSendTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class NsbSendTestsCoreOldest : NsbSendTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public NsbSendTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NsbSendTestsCore50 : NsbSendTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public NsbSendTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NsbSendTestsCore60 : NsbSendTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public NsbSendTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public NsbSendTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

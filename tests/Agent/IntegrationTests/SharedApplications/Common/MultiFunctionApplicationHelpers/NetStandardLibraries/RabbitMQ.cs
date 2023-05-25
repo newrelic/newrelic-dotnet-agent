@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // See this project's .csproj file for target framework => RabbitMQ.Client version mappings
-#if NET48_OR_GREATER || NET5_0_OR_GREATER
+#if NET48_OR_GREATER || NET6_0_OR_GREATER
 #define RABBIT6PLUS
 #endif
 
@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;

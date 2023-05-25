@@ -89,7 +89,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private IDistributedTracePayloadHandler _distributedTracePayloadHandler;
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
-
         private ILogEventAggregator _logEventAggregator;
 
         private Action _harvestAction;
@@ -385,7 +384,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.That(actualMetrics.Keys, Is.EquivalentTo(expectedMetrics));
             foreach (var actual in actualMetrics)
             {
-#warning Spec-Check! in the case of a transaction with an error, should the Apdex, ApdexAll, and Apdex/TransactionName metrics have a value of zero
                 if (!isError || !(actual.Key == "ApdexAll" || actual.Key == "Apdex" || actual.Key == "Apdex/TransactionName"))
                 {
                     Assert.That(actual.Value.Value0, Is.EqualTo(1), actual.Key);
@@ -800,8 +798,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvents = new List<ErrorEventWireModel>();
             var errorTraces = new List<ErrorTraceWireModel>();
 
-            _errorTraceMaker = new ErrorTraceMaker(_configurationService);
-            _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
+            _errorTraceMaker = new ErrorTraceMaker(_configurationService, _attribDefSvc, _agentTimerService);
+            _errorEventMaker = new ErrorEventMaker(_attribDefSvc, _configurationService, _agentTimerService);
 
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
             Mock.Arrange(() => _errorEventAggregator.Collect(Arg.IsAny<ErrorEventWireModel>())).DoInstead<ErrorEventWireModel>(errorEvent => errorEvents.Add(errorEvent));
@@ -865,8 +863,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvents = new List<ErrorEventWireModel>();
             var errorTraces = new List<ErrorTraceWireModel>();
 
-            _errorTraceMaker = new ErrorTraceMaker(_configurationService);
-            _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
+            _errorTraceMaker = new ErrorTraceMaker(_configurationService, _attribDefSvc, _agentTimerService);
+            _errorEventMaker = new ErrorEventMaker(_attribDefSvc, _configurationService, _agentTimerService);
 
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
             Mock.Arrange(() => _errorEventAggregator.Collect(Arg.IsAny<ErrorEventWireModel>())).DoInstead<ErrorEventWireModel>(errorEvent => errorEvents.Add(errorEvent));

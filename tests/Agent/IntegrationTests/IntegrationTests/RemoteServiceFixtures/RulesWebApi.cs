@@ -46,19 +46,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Sleep()
         {
             var address = string.Format("http://{0}:{1}/api/Sleep", DestinationServerName, Port);
-            DownloadJsonAndAssertEqual(address, "Great success");
+            GetJsonAndAssertEqual(address, "Great success");
         }
 
         public void SegmentTerm()
         {
             var address = string.Format("http://{0}:{1}/api/SegmentTerm", DestinationServerName, Port);
-            DownloadJsonAndAssertEqual(address, "Great success");
+            GetJsonAndAssertEqual(address, "Great success");
         }
 
         public void UrlRule()
         {
             var address = string.Format("http://{0}:{1}/api/UrlRule", DestinationServerName, Port);
-            DownloadJsonAndAssertEqual(address, "Great success");
+            GetJsonAndAssertEqual(address, "Great success");
         }
     }
 }

@@ -792,6 +792,82 @@ namespace CompositeTests
             SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.AgentAttributes, spanWithError);
         }
 
+        [Test]
+        public void SegmentEnd_StackExchangeRedis_EndCreatesSegment()
+        {
+            var tx = _agent.CreateTransaction(
+                isWeb: false,
+                category: "testing",
+                transactionDisplayName: "test",
+                doNotTrackAsUnitOfWork: true);
+            var segment = _agent.StartStackExchangeRedisDatastoreRequestSegmentOrThrow("set", DatastoreVendor.Redis, TimeSpan.Zero, TimeSpan.FromMilliseconds(1));
+            segment.EndStackExchangeRedis();
+            tx.End();
+
+            _compositeTestAgent.Harvest();
+
+            var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+            Assert.AreEqual(2, spanEvents.Length);
+
+            var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+            {
+                new ExpectedAttribute { Key = "name", Value = "Datastore/operation/Redis/set" },
+                new ExpectedAttribute { Key = "category", Value = "datastore" },
+            };
+
+            var datastoreSpan= spanEvents[1];
+            SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.Intrinsics, datastoreSpan);
+        }
+
+        [Test]
+        public void SegmentEnd_StackExchangeRedis_SessionCacheIsNull_HarvestNotCalled()
+        {
+            _agent.StackExchangeRedisCache = null;
+            var tx = _agent.CreateTransaction(
+                isWeb: false,
+                category: "testing",
+                transactionDisplayName: "test",
+                doNotTrackAsUnitOfWork: true);
+            var segment = _agent.StartCustomSegmentOrThrow("parentSegment");
+
+            segment.End();
+            tx.End();
+
+            _compositeTestAgent.Harvest();
+
+            var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+            Assert.AreEqual(2, spanEvents.Length);
+        }
+
+        [Test]
+        public void SegmentEnd_StackExchangeRedis_SessionCacheNotNull_HarvestCalled()
+        {
+            _agent.StackExchangeRedisCache = new StackExchangeRedisCacheMock(_agent);
+            var tx = _agent.CreateTransaction(
+                isWeb: false,
+                category: "testing",
+                transactionDisplayName: "test",
+                doNotTrackAsUnitOfWork: true);
+            var segment = _agent.StartCustomSegmentOrThrow("parentSegment");
+
+            segment.End();
+            tx.End();
+
+            _compositeTestAgent.Harvest();
+
+            var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+            Assert.AreEqual(3, spanEvents.Length);
+
+            var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+            {
+                new ExpectedAttribute { Key = "name", Value = "Datastore/operation/Redis/set" },
+                new ExpectedAttribute { Key = "category", Value = "datastore" },
+            };
+
+            var datastoreSpan = spanEvents[2];
+            SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.Intrinsics, datastoreSpan);
+        }
+
         #region Helper methods
 
         private static TransactionTraceSegment GetFirstSegmentOrThrow()
@@ -809,5 +885,27 @@ namespace CompositeTests
         }
 
         #endregion Helper methods
+    }
+
+    public class StackExchangeRedisCacheMock : NewRelic.Agent.Extensions.Helpers.IStackExchangeRedisCache
+    {
+        private IAgent _agent;
+
+        public StackExchangeRedisCacheMock(IAgent agent)
+        {
+            _agent = agent;
+        }
+
+        public void Dispose()
+        {
+            // Do nothing
+        }
+
+        public void Harvest(ISegment segment)
+        {
+            // Create a segment if callled so we can test it
+            var testSegment = _agent.StartStackExchangeRedisDatastoreRequestSegmentOrThrow("set", DatastoreVendor.Redis, TimeSpan.Zero, TimeSpan.FromMilliseconds(1));
+            testSegment.EndStackExchangeRedis();
+        }
     }
 }

@@ -4,12 +4,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [10.10.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.9.1...v10.10.0) (2023-04-26)
+
 
 ### New Features
 
+* Add additional logging when RUM injection is being skipped. ([#1561](https://github.com/newrelic/newrelic-dotnet-agent/issues/1561)) ([e1b8eca](https://github.com/newrelic/newrelic-dotnet-agent/commit/e1b8eca24fc63671a8ea1bafaebabbb9f3b29cb2))
+* Add instrumentation for .NET Elasticsearch clients. ([#1575](https://github.com/newrelic/newrelic-dotnet-agent/issues/1575)) ([8e49d7b](https://github.com/newrelic/newrelic-dotnet-agent/commit/8e49d7bfc22df88abc96a6ebc2518a7be8a1d29b))
+* Move TLS config logging closer to connect. ([#1562](https://github.com/newrelic/newrelic-dotnet-agent/issues/1562)) ([0ff3ddd](https://github.com/newrelic/newrelic-dotnet-agent/commit/0ff3ddde1c8c0aed3b0a3c1aaf4c59e7ddc3837c))
+
+
+### Fixes
+
+* Add missing instrumentation to MSI installer ([#1569](https://github.com/newrelic/newrelic-dotnet-agent/issues/1569)) ([b65b117](https://github.com/newrelic/newrelic-dotnet-agent/commit/b65b1170d7649ab6e82a9796f235925ca147393c))
+* Add NServiceBus instrumentation to the MSI installer for .NET Core/5+. ([#1576](https://github.com/newrelic/newrelic-dotnet-agent/issues/1576)) ([3cae03e](https://github.com/newrelic/newrelic-dotnet-agent/commit/3cae03eacbfb4b2c250abb3a35047190571d35a6))
+* IsOsPlatform() can fail on older .NET Framework Versions ([#1552](https://github.com/newrelic/newrelic-dotnet-agent/issues/1552)) ([699c205](https://github.com/newrelic/newrelic-dotnet-agent/commit/699c2056883e4548c025e3ee893e215400899e0e))
+
+## [10.9.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.9.0...v10.9.1) (2023-04-10)
+
+### Fixes
+
+* Allow StackExchange.Redis v2+ profiling to start outside of a transaction. ([#1501](https://github.com/newrelic/newrelic-dotnet-agent/issues/1501)) ([#1504](https://github.com/newrelic/newrelic-dotnet-agent/issues/1504)) ([925d016](https://github.com/newrelic/newrelic-dotnet-agent/commit/925d016c145b50b75a3b3401de303f5fa9a64609))
+* allow the agent to accept multiple versions of legacy NR distributed tracing headers ([#1489](https://github.com/newrelic/newrelic-dotnet-agent/issues/1489)) ([23ee241](https://github.com/newrelic/newrelic-dotnet-agent/commit/23ee24141ad44afa39e3f35f93aa2ae7570acb72))
+* Fix a memory leak when using StackExchange.Redis v2+. ([#1473](https://github.com/newrelic/newrelic-dotnet-agent/issues/1473)) ([#1504](https://github.com/newrelic/newrelic-dotnet-agent/issues/1504)) ([925d016](https://github.com/newrelic/newrelic-dotnet-agent/commit/925d016c145b50b75a3b3401de303f5fa9a64609))
+* Retry connection on HttpRequestException error ([#1514](https://github.com/newrelic/newrelic-dotnet-agent/issues/1514)) ([#1484](https://github.com/newrelic/newrelic-dotnet-agent/issues/1484)) ([99b520e](https://github.com/newrelic/newrelic-dotnet-agent/commit/99b520e271df4357f8ea62cad2403884edb4d856))
+
+## [10.9.0] - 2023-03-28
+
+### New Errors inbox features
+* **User tracking**: You can now see the number of users impacted by an error group. Identify the end user with the setUserId method.
+* **Error fingerprint**: Are your error occurrences grouped poorly? Set your own error fingerprint via a callback function.
+
+### New Features
+* Agent API now supports associating a User Id with the current transaction. See our [ITransaction API documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/itransaction/#setuserid) for more details.  [#1420](https://github.com/newrelic/newrelic-dotnet-agent/pull/1420)
+* Agent API now supports providing a callback to determine what error group an exception should be grouped under. See our [SetErrorGroupCallback API documentation](https://docs.newrelic.com/docs/apm/agents/net-agent/net-agent-api/seterrorgroupcallback-net-agent-api/) for more details. [#1434](https://github.com/newrelic/newrelic-dotnet-agent/pull/1434)
+* Adds the `Supportability/Logging/Forwarding/Dropped` metric to track the number of log messages that were dropped due to capacity constraints. [#1470](https://github.com/newrelic/newrelic-dotnet-agent/pull/1470)
+
 ### Fixes
 * Reduce redundant collector request data payload logging in the agent log at DEBUG level. [#1449](https://github.com/newrelic/newrelic-dotnet-agent/pull/1449)
+* Fixes [#1459](https://github.com/newrelic/newrelic-dotnet-agent/issues/1459), a regression in NLog local decoration when logging messages with object parameters. [#1480](https://github.com/newrelic/newrelic-dotnet-agent/pull/1480)
 
 ### Other
 * Renamed `NewRelic.Providers.Wrapper.Asp35` to `NewRelic.Providers.Wrapper.AspNet` since this wrapper instruments multiple versions of ASP.NET. Updated installers to remove old `Asp35` artifacts. [#1448](https://github.com/newrelic/newrelic-dotnet-agent/pull/1448)
@@ -22,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 * Fixes [#1353](https://github.com/newrelic/newrelic-dotnet-agent/issues/1353) so that out-of-process .Net Core web applications are instrumented according to the <applicationPools> setting in newrelic.config. [1392](https://github.com/newrelic/newrelic-dotnet-agent/pull/1392)
 * Update NLog to improve local log decoration coverage. [#1393](https://github.com/newrelic/newrelic-dotnet-agent/pull/1393)
+* Fixes [#1353](https://github.com/newrelic/newrelic-dotnet-agent/issues/1353) so that out-of-process .Net Core web applications are instrumented according to the <applicationPools> setting in newrelic.config. [1392](https://github.com/newrelic/newrelic-dotnet-agent/pull/1392)
 
 ## [10.7.0] - 2023-02-14
 
@@ -587,7 +621,8 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.8.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.9.0...HEAD
+[10.9.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.8.0...v10.9.0    
 [10.8.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.7.0...v10.8.0
 [10.7.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.6.0...v10.7.0
 [10.6.0]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.5.1...v10.6.0

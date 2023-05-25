@@ -160,27 +160,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
     }
 
     [NetCoreTest]
-    public class RabbitMqTestsCore60 : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class RabbitMqTestsCoreOldest : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public RabbitMqTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class RabbitMqTestsCore50 : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public RabbitMqTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class RabbitMqTestsCore31 : RabbitMqTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public RabbitMqTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public RabbitMqTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

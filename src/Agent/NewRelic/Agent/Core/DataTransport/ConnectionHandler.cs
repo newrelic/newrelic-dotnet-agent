@@ -74,6 +74,7 @@ namespace NewRelic.Agent.Core.DataTransport
             try
             {
                 ValidateNotBothHsmAndSecurityPolicies(_configuration);
+                LogTlsConfiguration();
 
                 var preconnectResult = SendPreconnectRequest();
                 _connectionInfo = new ConnectionInfo(_configuration, preconnectResult.RedirectHost);
@@ -110,6 +111,11 @@ namespace NewRelic.Agent.Core.DataTransport
                 Log.Error($"Unable to connect to the New Relic service at {_connectionInfo} : {e}");
                 throw;
             }
+        }
+
+        private void LogTlsConfiguration()
+        {
+            Log.Info($"Current TLS Configuration (System.Net.ServicePointManager.SecurityProtocol): {System.Net.ServicePointManager.SecurityProtocol}");
         }
 
         private void GenerateSpanEventsHarvestLimitMetrics(SingleEventHarvestConfig spanEventHarvestConfig)

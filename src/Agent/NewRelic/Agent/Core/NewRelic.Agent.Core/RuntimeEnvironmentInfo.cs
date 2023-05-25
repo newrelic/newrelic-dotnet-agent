@@ -3,7 +3,7 @@
 
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
+using NewRelic.Core.CodeAttributes;
 
 namespace NewRelic.Agent.Core
 {
@@ -16,6 +16,7 @@ namespace NewRelic.Agent.Core
     //
     // * Modifications include renaming the class and the addition of exception handling and logging.
 
+    [NrCoveredByIntegrationTests]
     public static class RuntimeEnvironmentInfo
     {
         private enum Platform
@@ -75,20 +76,22 @@ namespace NewRelic.Agent.Core
 
         private static string GetFreeBSDVersion()
         {
+#if NETSTANDARD2_0
             // This is same as sysctl kern.version
             // FreeBSD 11.0-RELEASE-p1 FreeBSD 11.0-RELEASE-p1 #0 r306420: Thu Sep 29 01:43:23 UTC 2016     root@releng2.nyi.freebsd.org:/usr/obj/usr/src/sys/GENERIC
             // What we want is major release as minor releases should be compatible.
-            String version = RuntimeInformation.OSDescription;
+            String version = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
             try
             {
                 // second token up to first dot
-                return RuntimeInformation.OSDescription.Split()[1].Split('.')[0];
+                return System.Runtime.InteropServices.RuntimeInformation.OSDescription.Split()[1].Split('.')[0];
             }
             catch (Exception ex)
             {
                 log4net.ILog logger = log4net.LogManager.GetLogger(typeof(RuntimeEnvironmentInfo));
                 logger.Debug($"Unable to report Operating System: Unexpected exception in GetFreeBSDVersion: {ex}");
             }
+#endif
             return string.Empty;
         }
 
@@ -185,24 +188,28 @@ namespace NewRelic.Agent.Core
 
         private static Platform DetermineOSPlatform()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+#if NETSTANDARD2_0
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
             {
                 return Platform.Windows;
             }
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
             {
                 return Platform.Linux;
             }
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX))
             {
                 return Platform.Darwin;
             }
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("FREEBSD")))
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Create("FREEBSD")))
             {
                 return Platform.FreeBSD;
             }
 
             return Platform.Unknown;
+#else
+            return Platform.Windows;
+#endif
         }
     }
 }

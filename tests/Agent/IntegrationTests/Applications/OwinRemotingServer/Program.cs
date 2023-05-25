@@ -52,11 +52,15 @@ namespace OwinRemotingServer
             var httpChannel = new HttpChannel(propertiesHttp, clientProviderHttp, serverProviderHttp);
             ChannelServices.RegisterChannel(httpChannel, false);
 
-            RemotingConfiguration.RegisterWellKnownServiceType(typeof(MyMarshalByRefClass), "GetObject", WellKnownObjectMode.SingleCall);
+            RemotingConfiguration.RegisterWellKnownServiceType(typeof(MyMarshalByRefClass), "GetObject",
+                WellKnownObjectMode.SingleCall);
 
-            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + Port.ToString());
-            CreatePidFile();
-            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset,
+                       "app_server_wait_for_all_request_done_" + Port.ToString()))
+            {
+                CreatePidFile();
+                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            }
         }
 
         private static void CreatePidFile()

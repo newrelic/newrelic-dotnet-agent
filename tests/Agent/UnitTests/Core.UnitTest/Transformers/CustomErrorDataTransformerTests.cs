@@ -3,11 +3,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -33,6 +35,8 @@ namespace NewRelic.Agent.Core.Transformers
 
         private IErrorEventAggregator _errorEventAggregator;
 
+        private IAgentTimerService _agentTimerService;
+
         [SetUp]
         public void SetUp()
         {
@@ -41,12 +45,12 @@ namespace NewRelic.Agent.Core.Transformers
             Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
             Mock.Arrange(() => _configuration.CaptureCustomParameters).Returns(true);
             Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
-            
 
+            _agentTimerService = Mock.Create<IAgentTimerService>();
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
-            _errorTraceMaker = new ErrorTraceMaker(configurationService);
+            _errorTraceMaker = new ErrorTraceMaker(configurationService, _attribDefSvc, _agentTimerService);
             _errorTraceAggregator = Mock.Create<IErrorTraceAggregator>();
-            _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
+            _errorEventMaker = new ErrorEventMaker(_attribDefSvc, configurationService, _agentTimerService);
             _errorEventAggregator = Mock.Create<IErrorEventAggregator>();
 
             _customErrorDataTransformer = new CustomErrorDataTransformer(configurationService, _attribDefSvc, _errorTraceMaker, _errorTraceAggregator, _errorEventMaker, _errorEventAggregator);
@@ -56,7 +60,7 @@ namespace NewRelic.Agent.Core.Transformers
         public void Transform_SendsErrorTraceToAggregator()
         {
             float priority = 0.5f;
-            _customErrorDataTransformer.Transform(MakeError(), priority);
+            _customErrorDataTransformer.Transform(MakeError(), priority, string.Empty);
 
             Mock.Assert(() => _errorTraceAggregator.Collect(Arg.IsAny<ErrorTraceWireModel>()));
         }
@@ -66,7 +70,7 @@ namespace NewRelic.Agent.Core.Transformers
         {
             float priority = 0.5f;
 
-            _customErrorDataTransformer.Transform(MakeError(), priority);
+            _customErrorDataTransformer.Transform(MakeError(), priority, string.Empty);
 
             Mock.Assert(() => _errorEventAggregator.Collect(Arg.IsAny<ErrorEventWireModel>()));
         }
@@ -90,7 +94,7 @@ namespace NewRelic.Agent.Core.Transformers
             var errorType = "ErrorType";
             var stackTrace = "StackTrace";
 
-            var errorData = new ErrorData(errorMsg, errorType, stackTrace, errorNoticedAt, errorCustomParameters, false);
+            var errorData = new ErrorData(errorMsg, errorType, stackTrace, errorNoticedAt, errorCustomParameters, false, null);
 
             // ACT
             var errorTrace = _errorTraceMaker.GetErrorTrace( attribValues, errorData);
@@ -118,14 +122,32 @@ namespace NewRelic.Agent.Core.Transformers
             Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(false);
 
             float priority = 0.5f;
-            _customErrorDataTransformer.Transform(MakeError(), priority);
+            _customErrorDataTransformer.Transform(MakeError(), priority, string.Empty);
 
             Mock.Assert(() => _errorTraceAggregator.Collect(Arg.IsAny<ErrorTraceWireModel>()), Occurs.Never());
         }
 
+        [Test]
+        [TestCase("CustomUserId", true)]
+        [TestCase("", false)]
+        [TestCase(" ", false)]
+        [TestCase(null, false)]
+        public void Transform_SetsEndUserIdAttributeWhenNotNullOrWhitespace(string expectedUserId, bool attributeShouldExist)
+        {
+            _customErrorDataTransformer.Transform(MakeError(), 0.5f, expectedUserId);
+
+            Mock.Assert(() => _errorTraceAggregator.Collect(
+                Arg.Matches<ErrorTraceWireModel>(errorTraceWireModel =>
+                    errorTraceWireModel.Attributes.AgentAttributes.ContainsKey(_attribDefs.EndUserId.Name) == attributeShouldExist)));
+
+            Mock.Assert(() => _errorEventAggregator.Collect(
+                Arg.Matches<ErrorEventWireModel>(errorEventWireModel =>
+                    errorEventWireModel.AttributeValues.GetAttributeValuesDic(AttributeClassification.AgentAttributes).ContainsKey(_attribDefs.EndUserId.Name) == attributeShouldExist)));
+        }
+
         private ErrorData MakeError(ReadOnlyDictionary<string, object> attributes = null)
         {
-            return new ErrorData("error message", "error.type", null, System.DateTime.UtcNow, attributes, false);
+            return new ErrorData("error message", "error.type", null, System.DateTime.UtcNow, attributes, false, null);
         }
     }
 }

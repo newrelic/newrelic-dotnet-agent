@@ -10,20 +10,20 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"SerilogSumologicApplication";
         private const string ExecutableName = @"SerilogSumologicApplication.exe";
-        public SerilogSumologicFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "netcoreapp3.1", ApplicationType.Bounded, true, true, true))
+        public SerilogSumologicFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true))
         {
         }
 
         public void SyncControllerMethod()
         {
             var address = $"http://localhost:{Port}/Home/SyncControllerMethod";
-            DownloadStringAndAssertContains(address, "<html>");
+            GetStringAndAssertContains(address, "<html>");
         }
 
         public void AsyncControllerMethod()
         {
             var address = $"http://localhost:{Port}/Home/AsyncControllerMethod";
-            DownloadStringAndAssertContains(address, "<html>");
+            GetStringAndAssertContains(address, "<html>");
         }
     }
 }

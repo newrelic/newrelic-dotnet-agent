@@ -26,12 +26,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 
             _fixture.AddCommand($"PostgresSqlExerciser ParameterizedStoredProcedureAsync {_procedureName}");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
 
                     configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
@@ -40,11 +43,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "datastoreTracer", "queryParameters" }, "enabled", "true");
+                },
+                exerciseApplication: () =>
+                {
+                    // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)); // must be 2 minutes since this can take a while.
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
-
-            // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
-            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
 
             _fixture.Initialize();
         }
@@ -138,27 +144,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
     }
 
     [NetCoreTest]
-    public class PostgresSqlStoredProcedureAsyncTestsCore31 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class PostgresSqlStoredProcedureAsyncTestsCoreOldest : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public PostgresSqlStoredProcedureAsyncTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class PostgresSqlStoredProcedureAsyncTestsCore50 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public PostgresSqlStoredProcedureAsyncTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class PostgresSqlStoredProcedureAsyncTestsCore60 : PostgresSqlStoredProcedureAsyncTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public PostgresSqlStoredProcedureAsyncTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlStoredProcedureAsyncTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

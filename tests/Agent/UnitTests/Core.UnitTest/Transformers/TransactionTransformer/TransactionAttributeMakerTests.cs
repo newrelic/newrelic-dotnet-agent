@@ -30,6 +30,7 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Telerik.JustMock;
 
@@ -1720,7 +1721,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         private ErrorData MakeErrorData(bool isErrorExpected = false)
         {
-            return new ErrorData("message", "type", "stacktrace", DateTime.UtcNow, new ReadOnlyDictionary<string, object>(new Dictionary<string, object>() { { "userErrorAttributeKey", "userErrorAttributeValue" } }), isErrorExpected);
+            return new ErrorData("message", "type", "stacktrace", DateTime.UtcNow, new ReadOnlyDictionary<string, object>(new Dictionary<string, object>() { { "userErrorAttributeKey", "userErrorAttributeValue" } }), isErrorExpected, null);
         }
 
         private void AssertAttributeShouldBeAvailableFor(IAttributeValueCollection attribValues, string attribName, params AttributeDestinations[] destinations)

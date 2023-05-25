@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -21,10 +22,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private Action _setupConfiguration;
         private Action _exerciseApplication;
+        private HashSet<uint> _errorsToRetryOn = new HashSet<uint>
+        {
+            0xC000_0005     // System.AccessViolationException. This is a .NET bug that
+                            // is supposed to be fixed but we're still seeing
+                            // https://github.com/dotnet/runtime/issues/62145
+        };
 
         public Dictionary<string, string> EnvironmentVariables;
 
         private bool _initialized;
+
+        protected readonly HttpClient _httpClient = new HttpClient();
 
         public void SetTestClassType(Type testClassType)
         {
@@ -86,8 +95,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             set { RemoteApplication.KeepWorkingDirectory = value; }
         }
 
-        // We think that the test retry loop may be masking real problems and/or actually causing them, so we've disabled it for now
-        protected virtual int MaxTries => 1;
+        // Tests are only retried if they return a known error not related to the test
+        protected virtual int MaxTries => 3;
 
         public void DisableAsyncLocalCallStack()
         {
@@ -188,9 +197,21 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             return this;
         }
 
+        public void AddErrorToRetryOn(uint error)
+        {
+            _errorsToRetryOn.Add(error);
+        }
+
         private void ExerciseApplication()
         {
             _exerciseApplication?.Invoke();
+        }
+
+        private string FormatExitCode(int? exitCode)
+        {
+            if (exitCode == null) return "[null]";
+            if (Math.Abs(exitCode.Value) < 10) return exitCode.Value.ToString();
+            return exitCode.Value.ToString("X8");
         }
 
         public virtual void Initialize()
@@ -212,16 +233,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 try
                 {
                     var retryTest = false;
-                    var exceptionInExerciseApplication = false;
+                    var retryMessage = "";
                     var applicationHadNonZeroExitCode = false;
-
 
                     do
                     {
                         TestLogger?.WriteLine("Test Home" + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
 
                         // reset these for each loop iteration
-                        exceptionInExerciseApplication = false;
                         applicationHadNonZeroExitCode = false;
                         retryTest = false;
 
@@ -243,8 +262,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         catch (Exception ex)
                         {
-                            exceptionInExerciseApplication = true;
+                            retryTest = true;
                             TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.ToString());
+                            retryMessage = "Exception thrown.";
                         }
                         finally
                         {
@@ -276,15 +296,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                             RemoteApplication.WaitForExit();
 
                             applicationHadNonZeroExitCode = RemoteApplication.ExitCode != 0;
+                            var formattedExitCode = FormatExitCode(RemoteApplication.ExitCode);
 
-                            TestLogger?.WriteLine($"Remote application exited with a {(applicationHadNonZeroExitCode ? "failure" : "success")} exit code of {RemoteApplication.ExitCode}.");
+                            TestLogger?.WriteLine($"Remote application exited with a {(applicationHadNonZeroExitCode ? "failure" : "success")} exit code of {formattedExitCode}.");
 
-                            retryTest = exceptionInExerciseApplication || applicationHadNonZeroExitCode;
-
-                            if (retryTest)
+                            if (applicationHadNonZeroExitCode && _errorsToRetryOn.Contains((uint)RemoteApplication.ExitCode.Value))
                             {
-                                var message = $"Retrying test. Exception caught when exercising test app = {exceptionInExerciseApplication}, application had non-zero exit code = {applicationHadNonZeroExitCode}.";
-                                TestLogger?.WriteLine(message);
+                                retryMessage = $"{formattedExitCode} is a known error.";
+                                retryTest = true;
+                            }
+
+                            if (retryTest && (numberOfTries < MaxTries))
+                            {
+                                TestLogger?.WriteLine(retryMessage + " Retrying test.");
                                 Thread.Sleep(1000);
                                 numberOfTries++;
                             }
@@ -326,8 +350,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             RemoteApplication.Shutdown();
             RemoteApplication.Dispose();
-
-            RemoteApplication.ReleasePort();
         }
 
         public virtual void WriteProcessOutputToLog()
@@ -340,19 +362,32 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             return RemoteApplication.CapturedOutput.ReturnProcessOutput();
         }
 
-        protected string DownloadStringAndAssertEqual(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers = null)
+        protected string GetStringAndAssertEqual(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers = null)
         {
-            var webClient = new WebClient();
+            string result;
 
-            if (headers != null)
+            if (headers == null)
             {
-                foreach (var header in headers)
+                result = _httpClient.GetStringAsync(address).Result; // throws an AggregateException if there's a problem making the call
+            }
+            else
+            {
+                using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, address))
                 {
-                    webClient.Headers.Add(header.Key, header.Value);
+                    if (headers != null)
+                    {
+                        foreach (var header in headers)
+                        {
+                            requestMessage.Headers.Add(header.Key, header.Value);
+                        }
+                    }
+
+                    using (var response = _httpClient.SendAsync(requestMessage).Result)
+                    {
+                        result = response.Content.ReadAsStringAsync().Result;
+                    }
                 }
             }
-
-            var result = webClient.DownloadString(address);
 
             Assert.NotNull(result);
             if (expectedResult != null)
@@ -361,14 +396,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
 
             return result;
+
         }
 
-        protected string DownloadStringAndAssertContains(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers)
+        protected string GetStringAndAssertContains(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers = null)
         {
-            using (var httpClient = new HttpClient())
+            using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, address))
             {
-                var requestMessage = new HttpRequestMessage(HttpMethod.Get, address);
-
                 if (headers != null)
                 {
                     foreach (var header in headers)
@@ -377,32 +411,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     }
                 }
 
-                var result = httpClient.SendAsync(requestMessage).Result;
-                var body = result.Content.ReadAsStringAsync().Result;
-
-                Assert.NotNull(result);
-
-                if (expectedResult != null)
+                using (var response = _httpClient.SendAsync(requestMessage).Result)
                 {
-                    Assert.Contains(expectedResult, body);
-                }
+                    var result = response.Content.ReadAsStringAsync().Result;
 
-                return body;
+                    Assert.NotNull(result);
+
+                    if (expectedResult != null)
+                    {
+                        Assert.Contains(expectedResult, result);
+                    }
+
+                    return result;
+                }
             }
         }
 
-        protected string DownloadStringAndAssertContains(string address, string expectedResult)
+        protected T GetJsonAndAssertEqual<T>(string address, T expectedResult, List<KeyValuePair<string, string>> headers = null)
         {
-            return DownloadStringAndAssertContains(address, expectedResult, null);
-        }
-
-        protected T DownloadJsonAndAssertEqual<T>(string address, T expectedResult)
-        {
-            var webClient = new WebClient();
-            webClient.Headers.Add("accept", "application/json");
-
-            var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<T>(resultJson);
+            var result = GetJson<T>(address, headers);
 
             Assert.NotEqual(default(T), result);
 
@@ -412,6 +439,99 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
 
             return result;
+        }
+
+        protected string GetStringAndAssertIsNotNull(string address)
+        {
+            var result = _httpClient.GetStringAsync(address).Result;
+            Assert.NotNull(result);
+            return result;
+        }
+
+        protected void GetStringAndIgnoreResult(string address, List<KeyValuePair<string, string>> headers = null)
+        {
+            using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, address))
+            {
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        requestMessage.Headers.Add(header.Key, header.Value);
+                    }
+                }
+
+                _httpClient.SendAsync(requestMessage).Wait();
+            }
+        }
+
+        protected string GetString(string address) => _httpClient.GetStringAsync(address).Result;
+
+        protected T GetJson<T>(string address, IEnumerable<KeyValuePair<string, string>> headers = null)
+        {
+            if (headers == null)
+            {
+                var result = _httpClient.GetStringAsync(address).Result;
+                var jsonResult = JsonConvert.DeserializeObject<T>(result);
+                return jsonResult;
+            }
+            else
+            {
+                using (var request = new HttpRequestMessage(HttpMethod.Get, address))
+                {
+                    if (headers != null)
+                    {
+                        foreach (var header in headers)
+                        {
+                            request.Headers.Add(header.Key, header.Value);
+                        }
+                    }
+
+                    using (var response = _httpClient.SendAsync(request).Result)
+                    {
+                        var result = response.Content.ReadAsStringAsync().Result;
+                        var jsonResult = JsonConvert.DeserializeObject<T>(result);
+                        return jsonResult;
+                    }
+                }
+            }
+        }
+
+        protected void GetAndAssertStatusCode(string address, HttpStatusCode expectedStatusCode, IEnumerable<KeyValuePair<string, string>> headers = null)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Get, address))
+            {
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        request.Headers.Add(header.Key, header.Value);
+                    }
+                }
+
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    Assert.Equal(expectedStatusCode, response.StatusCode);
+                }
+            }
+        }
+
+        protected void GetAndAssertSuccessStatus(string address, bool expectedSuccessStatus, IEnumerable<KeyValuePair<string, string>> headers = null)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Get, address))
+            {
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        request.Headers.Add(header.Key, header.Value);
+                    }
+                }
+
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    Assert.Equal(expectedSuccessStatus, response.IsSuccessStatusCode);
+                }
+            }
         }
     }
 }

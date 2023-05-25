@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
@@ -20,7 +21,7 @@ using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Segments
 {
-    public class DatastoreSegmentData : AbstractSegmentData
+    public class DatastoreSegmentData : AbstractSegmentData, IDatastoreSegmentData
     {
         private readonly static ConnectionInfo EmptyConnectionInfo = new ConnectionInfo(null, null, null);
 
@@ -222,6 +223,11 @@ namespace NewRelic.Agent.Core.Segments
             AttribDefs.PeerAddress.TrySetValue(attribVals, $"{Host}:{PortPathOrId}");
             AttribDefs.PeerHostname.TrySetValue(attribVals, Host);
             AttribDefs.SpanKind.TrySetDefault(attribVals);
+        }
+
+        public void SetConnectionInfo(ConnectionInfo connInfo)
+        {
+            _connectionInfo = connInfo;
         }
     }
 }

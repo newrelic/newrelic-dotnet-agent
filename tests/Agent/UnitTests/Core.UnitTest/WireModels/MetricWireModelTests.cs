@@ -3,6 +3,8 @@
 
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Core;
 using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -24,6 +26,70 @@ namespace NewRelic.Agent.Core.WireModels
         {
             Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
 
+        }
+
+        [Test]
+        public void MetricWireModelStartsWithNameInString()
+        {
+            var metricData = MetricDataWireModel.BuildGaugeValue(1);
+            var wireModel = MetricWireModel.BuildMetric(_metricNameService, "originalName", null, metricData);
+
+            var wireModelString = wireModel.ToString();
+
+            Assert.AreEqual("originalName ()NewRelic.Agent.Core.WireModels.MetricDataWireModel", wireModelString);
+        }
+
+        [Test]
+        public void ScopedMetricWireModelStartsWithNameInString()
+        {
+            var metricData = MetricDataWireModel.BuildGaugeValue(1);
+            var actual = MetricWireModel.BuildMetric(_metricNameService, "originalName", "theScope", metricData);
+
+            // The code currently uses the type name of the data value and is not worth testing
+            StringAssert.StartsWith("originalName (theScope)", actual.ToString());
+        }
+
+        [Test]
+        public void MetricWireModelUsesReferenceEquals()
+        {
+            var metricData = MetricDataWireModel.BuildGaugeValue(1);
+            var metricWireModel = MetricWireModel.BuildMetric(_metricNameService, "originalName", "theScope", metricData);
+
+            Assert.IsTrue(metricWireModel.Equals(metricWireModel));
+        }
+
+        [TestCase("metric", "scope", 1, "metric", "scope", 1, ExpectedResult = true)]
+        [TestCase("metric", "scope", 1, "metric", "scope", 2, ExpectedResult = false)]
+        [TestCase("metric", "scope1", 1, "metric", "scope2", 1, ExpectedResult = false)]
+        [TestCase("metric1", "scope", 1, "metric2", "scope", 1, ExpectedResult = false)]
+        public bool MetricWireModelComparesItsData(string firstMetricName, string firstMetricScope, float firstMetricValue,
+            string secondMetricName, string secondMetricScope, float secondMetricValue)
+        {
+            var first = MetricWireModel.BuildMetric(_metricNameService, firstMetricName, firstMetricScope, MetricDataWireModel.BuildGaugeValue(firstMetricValue));
+            var second = MetricWireModel.BuildMetric(_metricNameService, secondMetricName, secondMetricScope, MetricDataWireModel.BuildGaugeValue(secondMetricValue));
+
+            return first.Equals(second);
+        }
+
+        [Test]
+        public void MetricWireModelDoesNotEqualNull()
+        {
+            var metricWireModel = MetricWireModel.BuildMetric(_metricNameService, "originalName", null, null);
+
+            Assert.IsFalse(metricWireModel.Equals(null));
+        }
+
+        [TestCase("metric", "scope", 1, "metric", "scope", 1, ExpectedResult = false)]
+        [TestCase("metric", "scope", 1, "metric", "scope", 2, ExpectedResult = false)]
+        [TestCase("metric", "scope1", 1, "metric", "scope2", 1, ExpectedResult = false)]
+        [TestCase("metric1", "scope", 1, "metric2", "scope", 1, ExpectedResult = false)]
+        public bool MetricWireModelHashCodeUsesNameAndData(string firstMetricName, string firstMetricScope, float firstMetricValue,
+            string secondMetricName, string secondMetricScope, float secondMetricValue)
+        {
+            var first = MetricWireModel.BuildMetric(_metricNameService, firstMetricName, firstMetricScope, MetricDataWireModel.BuildGaugeValue(firstMetricValue));
+            var second = MetricWireModel.BuildMetric(_metricNameService, secondMetricName, secondMetricScope, MetricDataWireModel.BuildGaugeValue(secondMetricValue));
+
+            return first.GetHashCode().Equals(second.GetHashCode());
         }
 
         #region AddMetricsToEngine
@@ -134,7 +200,7 @@ namespace NewRelic.Agent.Core.WireModels
             var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope",
                 MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(7), TimeSpan.FromSeconds(5)));
 
-            var mergedMetric = MetricWireModel.Merge(new[] { metric1, metric2 });
+            var mergedMetric = MetricWireModel.Merge(metric1, metric2);
 
             NrAssert.Multiple(
                 () => Assert.AreEqual("DotNet/name", mergedMetric.MetricName.Name),
@@ -285,6 +351,23 @@ namespace NewRelic.Agent.Core.WireModels
         #region Build Metrics
 
         [Test]
+        public void BuildMetricWireModelUsesOriginalName()
+        {
+            var actual = MetricWireModel.BuildMetric(_metricNameService, "originalName", null, null);
+            Assert.AreEqual("originalName", actual.MetricName.Name);
+        }
+
+        [Test]
+        public void BuildMetricWireModelReturnsNullWhenNameIsNull()
+        {
+            var mockNameService = Mock.Create<IMetricNameService>();
+            Mock.Arrange(() => mockNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(null);
+
+            var actual = MetricWireModel.BuildMetric(mockNameService, "originalName", null, null);
+            Assert.IsNull(actual);
+        }
+
+        [Test]
         public void BuildAggregateData()
         {
             var one = MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(4));
@@ -352,6 +435,286 @@ namespace NewRelic.Agent.Core.WireModels
             );
         }
 
+        [TestCase(true, "CPU/WebTransaction")]
+        [TestCase(false, "CPU/OtherTransaction")]
+        public void BuildCpuTimeRollupMetric(bool isWebTransaction, string expectedMetricName)
+        {
+            var actual = _metricBuilder.TryBuildCpuTimeRollupMetric(isWebTransaction, TimeSpan.FromSeconds(2));
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual(expectedMetricName, actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(2, actual.Data.Value1)
+            );
+        }
+
+        [TestCase(Metric.MetricNames.WebTransactionPrefix, "CPU/WebTransaction/transactionName")]
+        [TestCase(Metric.MetricNames.OtherTransactionPrefix, "CPU/OtherTransaction/transactionName")]
+        public void BuildCpuTimeMetric(string transactionPrefix, string expectedMetricName)
+        {
+            var transactionMetricName = new TransactionMetricName(transactionPrefix, "transactionName");
+            var actual = _metricBuilder.TryBuildCpuTimeMetric(transactionMetricName, TimeSpan.FromSeconds(2));
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual(expectedMetricName, actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(2, actual.Data.Value1)
+            );
+        }
+
+        [Test]
+        public void BuildSupportabilityGaugeMetric()
+        {
+            var actual = _metricBuilder.TryBuildSupportabilityGaugeMetric("metricName", 2);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/metricName", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(2, actual.Data.Value1)
+            );
+        }
+
+        [Test]
+        public void BuildDotnetCoreVersionMetric()
+        {
+            var actual = _metricBuilder.TryBuildDotnetCoreVersionMetric(DotnetCoreVersion.Other);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/Dotnet/NetCore/Other", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildAgentVersionByHostMetric()
+        {
+            var actual = _metricBuilder.TryBuildAgentVersionByHostMetric("hostName", "10.0.0.0");
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/AgentVersion/hostName/10.0.0.0", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildMetricHarvestAttemptMetric()
+        {
+            var actual = _metricBuilder.TryBuildMetricHarvestAttemptMetric();
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/MetricHarvest/transmit", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildTransactionEventReservoirResizedMetric()
+        {
+            var actual = _metricBuilder.TryBuildTransactionEventReservoirResizedMetric();
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/AnalyticsEvents/TryResizeReservoir", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildTransactionEventsRecollectedMetric()
+        {
+            var actual = _metricBuilder.TryBuildTransactionEventsRecollectedMetric(2);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/AnalyticsEvents/TotalEventsRecollected", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(2, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildCustomEventReservoirResizedMetric()
+        {
+            var actual = _metricBuilder.TryBuildCustomEventReservoirResizedMetric();
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/Events/Customer/TryResizeReservoir", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildCustomEventsRecollectedMetric()
+        {
+            var actual = _metricBuilder.TryBuildCustomEventsRecollectedMetric(2);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/Events/Customer/TotalEventsRecollected", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(2, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildErrorTracesRecollectedMetric()
+        {
+            var actual = _metricBuilder.TryBuildErrorTracesRecollectedMetric(2);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/Errors/TotalErrorsRecollected", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(2, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildSqlTracesRecollectedMetric()
+        {
+            var actual = _metricBuilder.TryBuildSqlTracesRecollectedMetric(2);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/SqlTraces/TotalSqlTracesRecollected", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(2, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildFeatureEnabledMetric()
+        {
+            var actual = _metricBuilder.TryBuildFeatureEnabledMetric("featureName");
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/FeatureEnabled/featureName", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [TestCase(true, 1)]
+        [TestCase(false, 0)]
+        public void BuildLinuxOsMetric(bool isLinux, float expectedCount)
+        {
+            var actual = _metricBuilder.TryBuildLinuxOsMetric(isLinux);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/OS/Linux", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(expectedCount, actual.Data.Value1)
+            );
+        }
+
+        [Test]
+        public void BuildBootIdErrorMetric()
+        {
+            var actual = _metricBuilder.TryBuildBootIdError();
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/utilization/boot_id/error", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildKubernetesUsabilityErrorMetric()
+        {
+            var actual = _metricBuilder.TryBuildKubernetesUsabilityError();
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/utilization/kubernetes/error", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildAwsUsabilityErrorMetric()
+        {
+            var actual = _metricBuilder.TryBuildAwsUsabilityError();
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/utilization/aws/error", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildAzureUsabilityErrorMetric()
+        {
+            var actual = _metricBuilder.TryBuildAzureUsabilityError();
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/utilization/azure/error", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildPcfUsabilityErrorMetric()
+        {
+            var actual = _metricBuilder.TryBuildPcfUsabilityError();
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/utilization/pcf/error", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildGcpUsabilityErrorMetric()
+        {
+            var actual = _metricBuilder.TryBuildGcpUsabilityError();
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/utilization/gcp/error", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildSupportabilityEndpointMethodErrorAttemptsMetric()
+        {
+            var actual = _metricBuilder.TryBuildSupportabilityEndpointMethodErrorAttempts("endpoint");
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/Agent/Collector/endpoint/Attempts", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(1, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildSupportabilityPayloadsDroppedDueToMaxPayloadLimitMetric()
+        {
+            var actual = _metricBuilder.TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit("endpoint", 2);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/DotNet/Collector/MaxPayloadSizeLimit/endpoint", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(2, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildSupportabilityLoggingEventsDroppedMetric()
+        {
+            var actual = _metricBuilder.TryBuildSupportabilityLoggingEventsDroppedMetric(2);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual("Supportability/Logging/Forwarding/Dropped", actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(2, actual.Data.Value0)
+            );
+        }
+
         #endregion
 
         #region DistributedTracing
@@ -367,6 +730,9 @@ namespace NewRelic.Agent.Core.WireModels
                 new TestCaseData( "TryBuildAcceptPayloadIgnoredMajorVersion", "Supportability/DistributedTrace/AcceptPayload/Ignored/MajorVersion"),
                 new TestCaseData( "TryBuildAcceptPayloadIgnoredNull", "Supportability/DistributedTrace/AcceptPayload/Ignored/Null"),
                 new TestCaseData( "TryBuildCreatePayloadException", "Supportability/DistributedTrace/CreatePayload/Exception"),
+                new TestCaseData( "TryBuildTraceContextAcceptException", "Supportability/TraceContext/Accept/Exception"),
+                new TestCaseData( "TryBuildTraceContextTraceStateParseException", "Supportability/TraceContext/TraceState/Parse/Exception"),
+                new TestCaseData( "TryBuildTraceContextCreateException", "Supportability/TraceContext/Create/Exception")
             };
         }
 

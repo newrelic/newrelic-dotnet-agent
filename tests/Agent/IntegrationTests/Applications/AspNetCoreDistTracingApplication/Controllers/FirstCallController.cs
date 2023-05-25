@@ -14,12 +14,14 @@ namespace AspNetCoreDistTracingApplication.Controllers
     {
         public async Task<string> CallNext(string nextUrl)
         {
-            var client = new HttpClient();
 
             try
             {
-                var result = await client.GetStringAsync(nextUrl);
-                return result;
+                using (var client = new HttpClient())
+                {
+                    var result = await client.GetStringAsync(nextUrl);
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -30,8 +32,10 @@ namespace AspNetCoreDistTracingApplication.Controllers
 
         public string WebRequestCallNext(string nextUrl)
         {
+#pragma warning disable SYSLIB0014 // obsolete usage is ok here
             var httpWebRequest = WebRequest.Create(nextUrl);
             httpWebRequest.GetResponse();
+#pragma warning restore SYSLIB0014
             return "Worked";
         }
     }

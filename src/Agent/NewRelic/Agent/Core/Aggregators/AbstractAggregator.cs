@@ -15,7 +15,6 @@ namespace NewRelic.Agent.Core.Aggregators
         protected readonly IDataTransportService DataTransportService;
         private readonly IScheduler _scheduler;
         private readonly IProcessStatic _processStatic;
-        protected readonly TimeSpan DefaultHarvestCycle = TimeSpan.FromMinutes(1);
 
         protected AbstractAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic)
         {
@@ -39,7 +38,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected abstract bool IsEnabled { get; }
 
-        protected virtual TimeSpan HarvestCycle => DefaultHarvestCycle;
+        protected virtual TimeSpan HarvestCycle => _configuration.DefaultHarvestCycle;
 
         private void OnAgentConnected(AgentConnectedEvent _)
         {

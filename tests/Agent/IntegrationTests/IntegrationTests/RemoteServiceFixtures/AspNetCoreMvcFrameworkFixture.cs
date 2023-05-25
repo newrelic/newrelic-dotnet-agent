@@ -3,6 +3,7 @@
 
 
 using System.Net;
+using System.Net.Http;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -21,40 +22,42 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = $"http://localhost:{Port}/";
-            DownloadStringAndAssertContains(address, "<html>");
+            GetStringAndAssertContains(address, "<html>");
         }
 
         public void GetCORSPreflight()
         {
             var address = $"http://localhost:{Port}/Home/About";
-            var request = (HttpWebRequest)WebRequest.Create(address);
-            request.Method = "OPTIONS";
-            request.Headers.Add("Origin", "http://example.com");
-            request.Headers.Add("Access-Control-Request-Method", "GET");
-            request.Headers.Add("Access-Control-Request-Headers", "X-Requested-With");
 
-            var response = (HttpWebResponse)request.GetResponse();
-            Assert.True(response.StatusCode == HttpStatusCode.NoContent);
+            using (var request = new HttpRequestMessage(HttpMethod.Options, address))
+            {
+                request.Headers.Add("Origin", "http://example.com");
+                request.Headers.Add("Access-Control-Request-Method", "GET");
+                request.Headers.Add("Access-Control-Request-Headers", "X-Requested-With");
+
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+                }
+            }
         }
 
         public void ThrowException()
         {
             var address = $"http://localhost:{Port}/Home/ThrowException";
-            var webClient = new WebClient();
-
-            Assert.Throws<System.Net.WebException>(() => webClient.DownloadString(address));
+            GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
         }
 
         public void GetWithData(string requestParameter)
         {
             var address = $"http://localhost:{Port}/Home/Query?data={requestParameter}";
-            DownloadStringAndAssertContains(address, "<html>");
+            GetStringAndAssertContains(address, "<html>");
         }
 
         public void GetCallAsyncExternal()
         {
             var address = $"http://localhost:{Port}/DetachWrapper/CallAsyncExternal";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
     }
 }

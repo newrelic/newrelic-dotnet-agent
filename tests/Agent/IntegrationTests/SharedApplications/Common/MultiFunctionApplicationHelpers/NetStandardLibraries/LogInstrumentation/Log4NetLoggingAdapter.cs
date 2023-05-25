@@ -57,6 +57,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             _log.Logger.Log(logEvent);
         }
 
+        public void InfoWithParam(string message, object param)
+        {
+            _log.InfoFormat(message, param);
+        }
+
         public void Warn(string message)
         {
             _log.Warn(message);
@@ -128,6 +133,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             throw new System.NotImplementedException();
 #endif
         }
+
     }
 
     /// <summary>

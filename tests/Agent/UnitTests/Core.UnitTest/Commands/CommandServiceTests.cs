@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using Newtonsoft.Json;
@@ -25,7 +26,7 @@ namespace NewRelic.Agent.Core.Commands
         public void TestProcessCommand()
         {
             var command = new PingCommand();
-            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
+            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>(), Mock.Create<IConfigurationService>());
             commandService.AddCommands(command);
             var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[1,{name:\"ping\",arguments:{}}],[2,{name:\"ping\",arguments:{}}]]");
 
@@ -38,7 +39,7 @@ namespace NewRelic.Agent.Core.Commands
         public void TestRestartCommand()
         {
             var command = new RestartCommand();
-            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
+            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>(), Mock.Create<IConfigurationService>());
             commandService.AddCommands(command);
             var serverCommand = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"restart\",arguments:{}}]]");
 
@@ -52,7 +53,7 @@ namespace NewRelic.Agent.Core.Commands
         public void verify_start_profiler_command_gets_processed()
         {
             var command = new MockCommand("start_profiler");
-            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
+            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>(), Mock.Create<IConfigurationService>());
             commandService.AddCommands(command);
             var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"start_profiler\",arguments:{}}]]");
 
@@ -67,7 +68,7 @@ namespace NewRelic.Agent.Core.Commands
             var command = new MockCommand("start_profiler");
             command.RequiredArguments.Add("profile_id");
 
-            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
+            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>(), Mock.Create<IConfigurationService>());
             commandService.AddCommands(command);
             var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"start_profiler\",arguments:{}}]]");
 
@@ -78,7 +79,7 @@ namespace NewRelic.Agent.Core.Commands
         public void verify_stop_profiler_command_gets_processed()
         {
             var command = new MockCommand("stop_profiler");
-            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
+            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>(), Mock.Create<IConfigurationService>());
             commandService.AddCommands(command);
             var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"stop_profiler\",arguments:{}}]]");
 

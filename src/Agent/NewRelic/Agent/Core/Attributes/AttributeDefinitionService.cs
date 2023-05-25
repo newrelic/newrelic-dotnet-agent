@@ -53,6 +53,8 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> ErrorMessage { get; }
         AttributeDefinition<string, string> ErrorType { get; }
         AttributeDefinition<string, string> ErrorEventSpanId { get; }
+        AttributeDefinition<string, string> ErrorGroup { get; }
+        AttributeDefinition<string, string> EndUserId { get; }
         AttributeDefinition<float, double> ExternalCallCount { get; }
         AttributeDefinition<float, double> ExternalDuration { get; }
         AttributeDefinition<string, string> Guid { get; }
@@ -582,6 +584,30 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<bool, bool> SpanIsErrorExpected => _spanIsErrorExpected ?? (_spanIsErrorExpected =
             AttributeDefinitionBuilder.CreateBool("error.expected", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _errorGroup;
+        public AttributeDefinition<string, string> ErrorGroup => _errorGroup ?? (_errorGroup =
+            AttributeDefinitionBuilder.CreateString("error.group.name", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace)
+                .WithConvert(IgnoreEmptyAndWhitespaceErrorGroupValues)
+                .Build(_attribFilter));
+
+        private static string IgnoreEmptyAndWhitespaceErrorGroupValues(string errorGroupValue)
+        {
+            if (!string.IsNullOrWhiteSpace(errorGroupValue))
+            {
+                return errorGroupValue;
+            }
+
+            return null;
+        }
+
+        private AttributeDefinition<string, string> _endUserId;
+        public AttributeDefinition<string, string> EndUserId => _endUserId ?? (_endUserId =
+            AttributeDefinitionBuilder.CreateString("enduser.id", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace,
+                           AttributeDestinations.TransactionTrace, AttributeDestinations.TransactionEvent)
                 .Build(_attribFilter));
 
         private AttributeDefinition<DateTime, long> _timestamp;

@@ -11,6 +11,15 @@ env:
   DOTNET_NOLOGO: true
   NR_DEV_BUILD_HOME: false
 
+
+# only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
 
   run-unit-tests:
@@ -21,12 +30,12 @@ jobs:
       test_results_path: tests\TestResults
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
 
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a # v3.0.3
         with:
           dotnet-version: 7.x
           dotnet-quality: 'ga'
@@ -38,12 +47,12 @@ jobs:
         run: dotnet test --verbosity minimal --no-restore --settings tests\UnitTests.runsettings --results-directory ${{ env.test_results_path }}
 
       - name: Upload coverage reports to Codecov.io
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
         with:
             directory: ${{ env.test_results_path }}
 
       - name: Upload coverage report artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
             name: UnitTestResults # Artifact name        
             path: ${{ env.test_results_path }} # Directory containing files to upload

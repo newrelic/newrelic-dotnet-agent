@@ -14,13 +14,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
     [NetCoreTest]
-    public class AspNetCoreGenericWebHostTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCore3FeaturesFixture>
+    public class AspNetCoreGenericWebHostTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>
     {
-        private readonly RemoteServiceFixtures.AspNetCore3FeaturesFixture _fixture;
+        private readonly RemoteServiceFixtures.AspNetCoreFeaturesFixture _fixture;
 
         private const int ExpectedTransactionCount = 2;
 
-        public AspNetCoreGenericWebHostTests(RemoteServiceFixtures.AspNetCore3FeaturesFixture fixture, ITestOutputHelper output)
+        public AspNetCoreGenericWebHostTests(RemoteServiceFixtures.AspNetCoreFeaturesFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
@@ -32,14 +32,17 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
                 },
                 exerciseApplication: () =>
                 {
                     _fixture.Get();
                     _fixture.ThrowException();
 
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(2));
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

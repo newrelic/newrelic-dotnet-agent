@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+
+    <!--7.x NEST/Elasticsearch.Net -->
+    <tracerFactory name="RequestWrapper">
+      <match assemblyName="Elasticsearch.Net" className="Elasticsearch.Net.Transport`1">
+        <exactMethodMatcher methodName="Request" parameters="Elasticsearch.Net.HttpMethod,System.String,Elasticsearch.Net.PostData,Elasticsearch.Net.IRequestParameters" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="RequestWrapper">
+      <match assemblyName="Elasticsearch.Net" className="Elasticsearch.Net.Transport`1">
+        <exactMethodMatcher methodName="RequestAsync" parameters="Elasticsearch.Net.HttpMethod,System.String,System.Threading.CancellationToken,Elasticsearch.Net.PostData,Elasticsearch.Net.IRequestParameters" />
+      </match>
+    </tracerFactory>
+
+    <!--8.x Elastic.Clients.Elasticsearch -->
+    <tracerFactory name="RequestWrapper">
+      <match assemblyName="Elastic.Transport" className="Elastic.Transport.DefaultHttpTransport`1">
+        <exactMethodMatcher methodName="Request" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters" />
+      </match>
+    </tracerFactory>
+
+    <tracerFactory name="RequestWrapper">
+      <match assemblyName="Elastic.Transport" className="Elastic.Transport.DefaultHttpTransport`1">
+        <exactMethodMatcher methodName="RequestAsync" parameters="Elastic.Transport.HttpMethod,System.String,Elastic.Transport.PostData,Elastic.Transport.RequestParameters,System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
+
+  </instrumentation>
+</extension>

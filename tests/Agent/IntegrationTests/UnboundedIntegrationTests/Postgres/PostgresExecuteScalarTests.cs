@@ -27,22 +27,28 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 
             _fixture.AddCommand($"PostgresSqlExerciser ExecuteScalar");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
 
                     configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
+                },
+                exerciseApplication: () =>
+                {
+                    // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)); // must be 2 minutes since this can take a while.
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
-
-            // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
-            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
 
             _fixture.Initialize();
         }
@@ -154,27 +160,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
     }
 
     [NetCoreTest]
-    public class PostgresSqlExecuteScalarTestsCore31 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class PostgresSqlExecuteScalarTestsCoreOldest : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public PostgresSqlExecuteScalarTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class PostgresSqlExecuteScalarTestsCore50 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public PostgresSqlExecuteScalarTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class PostgresSqlExecuteScalarTestsCore60 : PostgresSqlExecuteScalarTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public PostgresSqlExecuteScalarTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output)
+        public PostgresSqlExecuteScalarTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output)
         {
 
         }

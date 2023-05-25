@@ -37,7 +37,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
                     // applicationLogging metrics and forwarding enabled by default
                     configModifier
                     .SetLogForwardingMaxSamplesStored(1) // must be 1 since 0 causes it to return the default
-                    .EnableDistributedTrace()
                     .SetLogLevel("debug");
                 }
             );
@@ -92,27 +91,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
     }
 
     [NetCoreTest]
-    public class Log4netZeroMaxSamplesStoredTestsNetCore60Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class Log4netZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public Log4netZeroMaxSamplesStoredTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class Log4netZeroMaxSamplesStoredTestsNetCore50Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public Log4netZeroMaxSamplesStoredTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Log4net)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class Log4netZeroMaxSamplesStoredTestsNetCore31Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public Log4netZeroMaxSamplesStoredTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public Log4netZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
@@ -132,27 +113,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
     }
 
     [NetCoreTest]
-    public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCore60Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MicrosoftLoggingZeroMaxSamplesStoredTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCore50Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MicrosoftLoggingZeroMaxSamplesStoredTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.MicrosoftLogging)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCore31Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MicrosoftLoggingZeroMaxSamplesStoredTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
@@ -208,27 +171,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
     }
 
     [NetCoreTest]
-    public class SerilogZeroMaxSamplesStoredTestsNetCore60Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class SerilogZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public SerilogZeroMaxSamplesStoredTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class SerilogZeroMaxSamplesStoredTestsNetCore50Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public SerilogZeroMaxSamplesStoredTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.Serilog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class SerilogZeroMaxSamplesStoredTestsNetCore31Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public SerilogZeroMaxSamplesStoredTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public SerilogZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Serilog)
         {
         }
@@ -275,27 +220,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
     }
 
     [NetCoreTest]
-    public class NLogZeroMaxSamplesStoredTestsNetCore60Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class NLogZeroMaxSamplesStoredTestsNetCoreOldestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public NLogZeroMaxSamplesStoredTestsNetCore60Tests(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NLogZeroMaxSamplesStoredTestsNetCore50Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public NLogZeroMaxSamplesStoredTestsNetCore50Tests(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, LoggingFramework.NLog)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NLogZeroMaxSamplesStoredTestsNetCore31Tests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public NLogZeroMaxSamplesStoredTestsNetCore31Tests(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public NLogZeroMaxSamplesStoredTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
         }

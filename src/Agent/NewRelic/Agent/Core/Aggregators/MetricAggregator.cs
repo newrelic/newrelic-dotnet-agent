@@ -1,6 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -43,6 +44,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
             _metricStatsCollectionQueue = CreateMetricStatsCollectionQueue();
         }
+
+        protected override TimeSpan HarvestCycle => _configuration.MetricsHarvestCycle;
 
         public MetricStatsCollectionQueue StatsCollectionQueue => _metricStatsCollectionQueue;
 

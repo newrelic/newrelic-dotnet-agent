@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -24,27 +25,20 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = $"http://{DestinationServerName}:{Port}/WebForm1.aspx";
-            DownloadStringAndAssertContains(address, "<html");
+            GetStringAndAssertContains(address, "<html");
         }
 
         public void GetSlow()
         {
             var address = $"http://{DestinationServerName}:{Port}/WebFormSlow.aspx";
-            DownloadStringAndAssertContains(address, "<html");
+            GetStringAndAssertContains(address, "<html");
         }
 
         public void Get404()
         {
             var address = $"http://{DestinationServerName}:{Port}/WebFormThatDoesNotExist.aspx";
 
-            try
-            {
-                new WebClient().DownloadString(address);
-            }
-            catch (Exception)
-            {
-                // swallow
-            }
+            GetAndAssertStatusCode(address, HttpStatusCode.NotFound);
         }
 
         public void GetWithQueryString(IEnumerable<KeyValuePair<string, string>> parameters, bool expectException)
@@ -56,7 +50,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var exceptionOccurred = false;
             try
             {
-                var result = new WebClient().DownloadString(address);
+                var result = _httpClient.GetStringAsync(address).Result;
                 Assert.NotNull(result);
             }
             catch

@@ -997,66 +997,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Assert.AreEqual(traceMetadata.IsSampled, testIsSampled);
         }
 
-        [TestCase("Newrelic", "payload", true)]
-        [TestCase("NewRelic", "payload", true)]
-        [TestCase("newrelic", "payload", true)]
-        [TestCase("Fred", null, false)]
-        public void TryGetDistributedTracePayload_ReturnsValidPayloadOrNull(string key, string expectedPayload, bool expectedResult)
-        {
-            var headers = new List<KeyValuePair<string, string>>();
-            headers.Add(new KeyValuePair<string, string>(key, expectedPayload));
-
-            var actualResult = _agent.TryGetDistributedTracePayloadFromHeaders(headers, out var actualPayload);
-
-            NrAssert.Multiple(
-                () => Assert.AreEqual(expectedPayload, actualPayload),
-                () => Assert.AreEqual(expectedResult, actualResult)
-            );
-        }
-
-        [Test]
-        public void TryGetDistributedTracePayload_HeaderCollectionTests_NullHeader()
-        {
-            TryGetDistributedTracePayload_HeaderCollectionTests(null, null, false);
-        }
-
-        [Test]
-        public void TryGetDistributedTracePayload_HeaderCollectionTests_EmptyHeader()
-        {
-            TryGetDistributedTracePayload_HeaderCollectionTests(new List<KeyValuePair<string, string>>(), null, false);
-        }
-
-        [Test]
-        public void TryGetDistributedTracePayload_HeaderCollectionTests_OneItemWithoutDTHeader()
-        {
-            var oneItemWithoutDTHeader = new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>("Fred", "Wilma") };
-
-            TryGetDistributedTracePayload_HeaderCollectionTests(oneItemWithoutDTHeader, null, false);
-        }
-
-        [Test]
-        public void TryGetDistributedTracePayload_HeaderCollectionTests_MultipleItemsWithDTHeader()
-        {
-            var multipleItemsWithDTHeader = new List<KeyValuePair<string, string>>
-            {
-                new KeyValuePair<string, string>("Fred", "Wilma"),
-                new KeyValuePair<string, string>("Barney", "Betty"),
-                new KeyValuePair<string, string>(DistributedTraceHeaderName, "payload")
-            };
-
-            TryGetDistributedTracePayload_HeaderCollectionTests(multipleItemsWithDTHeader, "payload", true);
-        }
-
-        private void TryGetDistributedTracePayload_HeaderCollectionTests(List<KeyValuePair<string, string>> headers, string expectedPayload, bool expectedResult)
-        {
-            var actualResult = _agent.TryGetDistributedTracePayloadFromHeaders(headers, out var actualPayload);
-
-            NrAssert.Multiple(
-                () => Assert.AreEqual(expectedPayload, actualPayload),
-                () => Assert.AreEqual(expectedResult, actualResult)
-            );
-        }
-
         #endregion Distributed Trace
 
         #region TraceMetadata
@@ -1438,8 +1378,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             // Access the private collection of events to get the number of add attempts.
             var privateAccessor = new PrivateAccessor(_logEventAggregator);
             var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
-
             var logEvent = logEvents?.FirstOrDefault()?.Data;
+
             Assert.AreEqual(0, logEvents.Count);
             Assert.IsNull(logEvent);
         }

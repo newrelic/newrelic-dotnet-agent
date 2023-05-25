@@ -22,8 +22,6 @@ Install the "ASP.NET and web development" workload in the "Web & Cloud" category
 
 Depending on which version of Visual Studio you are using, you may have to install some or all of the following:
 
-* .NET Core 3.1
-* .NET 5
 * .NET 6
 * .NET 7
 * .NET Framework 4.7.1 targeting pack
@@ -141,7 +139,7 @@ The integration tests require round-trip communication with valid New Relic acco
 
   1. Create a `secrets.json` file using the template below or copy the [example](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/tests/Agent/IntegrationTests/UnboundedServices/example-secrets.json).  **Do *not* place the `secrets.json` file within your local repo folder.**
   2. Replace the license key placeholders in the `secrets.json` template with actual license keys.
-      * The `REPLACE_WITH_HIGH_SECURITY_LICENSE_KEY` and `REPLACE_WITH_SECURITY_POLICIES_CONFIGURABLE_LICENSE_KEY` are placeholders for license keys from a [HSM](https://docs.newrelic.com/docs/agents/manage-apm-agents/configuration/high-security-mode)-enabled account and a [CSP](https://docs.newrelic.com/docs/agents/manage-apm-agents/configuration/enable-configurable-security-policies)-enabled account, respectively.
+      * The `REPLACE_WITH_HIGH_SECURITY_LICENSE_KEY` and `REPLACE_WITH_SECURITY_POLICIES_CONFIGURABLE_LICENSE_KEY` are placeholders for license keys from a [HSM](https://docs.newrelic.com/docs/agents/manage-apm-agents/configuration/high-security-mode)-enabled account and a CSP-enabled account, respectively.
       * To find your license keys, visit [this page](https://docs.newrelic.com/docs/accounts/accounts-billing/account-setup/new-relic-license-key/).
 
 * Once placeholder values have been replaced with actual values:

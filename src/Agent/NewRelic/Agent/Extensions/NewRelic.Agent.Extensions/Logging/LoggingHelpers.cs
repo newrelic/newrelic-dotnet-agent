@@ -8,6 +8,7 @@ namespace NewRelic.Agent.Extensions.Logging
 {
     public static class LoggingHelpers
     {
+        private const string LinkingToken = "NR-LINKING";
         private const string EntityName = "entity.name";
         private const string EntityGuid = "entity.guid";
         private const string Hostname = "hostname";
@@ -50,7 +51,12 @@ namespace NewRelic.Agent.Extensions.Logging
 
             // This is a positional blob so we want the delimiters left in when no data is  present.
             // NR-LINKING|{entity.guid}|{hostname}|{trace.id}|{span.id}|
-            return "NR-LINKING|" + entityGuid + "|" + hostname + "|" + traceId + "|" + spanId + "|" + entityName + "|";
+            return LinkingToken + "|" + entityGuid + "|" + hostname + "|" + traceId + "|" + spanId + "|" + entityName + "|";
+        }
+
+        public static bool ContainsLinkingToken(string text)
+        {
+            return text.Contains(LinkingToken);
         }
     }
 }

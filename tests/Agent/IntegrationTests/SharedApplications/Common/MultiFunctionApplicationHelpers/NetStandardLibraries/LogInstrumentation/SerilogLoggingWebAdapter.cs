@@ -1,7 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NET6_0
+#if NET7_0
 
 using System;
 using System.Collections.Generic;
@@ -43,6 +43,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             var result = _client.GetStringAsync(_uriBase + "testContext?message=" + message + "&contextData=" + contextString).Result;
         }
 
+        public void InfoWithParam(string message, object param)
+        {
+            throw new NotImplementedException();
+        }
 
         public void Warn(string message)
         {
