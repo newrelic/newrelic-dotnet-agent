@@ -53,8 +53,6 @@ namespace NewRelic.Agent.Core.Logging
                 case Level.Error:
                     _logger.Error(messageString);
                     break;
-                default:
-                    break;
             }
         }
 
@@ -86,10 +84,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void ErrorFormat(string format, params object[] args)
         {
-            if (IsErrorEnabled)
-            {
-                _logger.Error(string.Format(format, args));
-            }
+            _logger.Error(string.Format(format, args));
         }
 
         #endregion Error
@@ -122,10 +117,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void WarnFormat(string format, params object[] args)
         {
-            if (IsWarnEnabled)
-            {
-                _logger.Warning(string.Format(format, args));
-            }
+            _logger.Warning(string.Format(format, args));
         }
 
         #endregion Warn
@@ -158,10 +150,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void InfoFormat(string format, params object[] args)
         {
-            if (IsInfoEnabled)
-            {
-                _logger.Information(string.Format(format, args));
-            }
+            _logger.Information(string.Format(format, args));
         }
 
         #endregion Info
@@ -194,10 +183,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void DebugFormat(string format, params object[] args)
         {
-            if (IsDebugEnabled)
-            {
-                _logger.Debug(string.Format(format, args));
-            }
+            _logger.Debug(string.Format(format, args));
         }
 
         #endregion Debug
@@ -230,11 +216,7 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void FinestFormat(string format, params object[] args)
         {
-            if (IsFinestEnabled)
-            {
-                var formattedMessage = string.Format(format, args);
-                _logger.Verbose(formattedMessage);
-            }
+            _logger.Verbose(string.Format(format, args));
         }
 
         #endregion Finest

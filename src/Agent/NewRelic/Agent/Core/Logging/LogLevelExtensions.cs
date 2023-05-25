@@ -8,7 +8,7 @@ using Serilog.Events;
 
 namespace NewRelic.Agent.Core
 {
-    internal static class LogLevelExtensions
+    public static class LogLevelExtensions
     {
         private static readonly List<string> DeprecatedLogLevels = new List<string>() { "Alert", "Critical", "Emergency", "Fatal", "Finer", "Trace", "Notice", "Severe", "Verbose", "Fine" };
         public static bool IsLogLevelDeprecated(this string level) => DeprecatedLogLevels.Any(l => l.Equals(level, StringComparison.InvariantCultureIgnoreCase));
@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core
                 case "OFF":
                     // moderately hack-ish, but setting the level to something higher than Fatal disables logs as per https://stackoverflow.com/a/30864356/2078975
                     return (LogEventLevel)1 + (int)LogEventLevel.Fatal;
-                case AuditLevel:
+                case "AUDIT":
                     Serilog.Log.Logger.Warning("Log level was set to \"Audit\" which is not a valid log level. To enable audit logging, set the auditLog configuration option to true. Log level will be treated as INFO for this run.");
                     return LogEventLevel.Information;
                 default:
