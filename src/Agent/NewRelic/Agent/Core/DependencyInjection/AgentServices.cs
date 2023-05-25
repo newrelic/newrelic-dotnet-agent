@@ -204,6 +204,8 @@ namespace NewRelic.Agent.Core.DependencyInjection
             }
             container.Register<NewRelicCore.DistributedTracing.ITracePriorityManager, NewRelicCore.DistributedTracing.TracePriorityManager>();
 
+            container.Register<UpdatedLoadedModulesService, UpdatedLoadedModulesService>();
+
             container.Build();
         }
 
@@ -215,6 +217,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Resolve<AssemblyResolutionService>();
             container.Resolve<ITransactionFinalizer>();
             container.Resolve<IAgentHealthReporter>();
+            container.Resolve<UpdatedLoadedModulesService>();
 #if NETFRAMEWORK
 			// Start GCSampler on separate thread due to delay in collecting Instance Names,
 			// which can stall application startup and cause the app start to timeout
