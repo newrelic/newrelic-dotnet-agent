@@ -45,6 +45,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 case "NLOG":
                     _log = new NLogLoggingAdapter();
                     break;
+                case "SITECORE":
+#if NET48_OR_GREATER
+                    _log = new SitecoreLoggingAdapter();
+#endif
+                    break;
                 default:
                     throw new System.ArgumentNullException(nameof(loggingFramework));
             }

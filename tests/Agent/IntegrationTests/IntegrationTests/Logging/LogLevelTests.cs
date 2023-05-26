@@ -253,4 +253,25 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
 
     #endregion
 
+    #region Sitecore
+
+    [NetFrameworkTest]
+    public class SitecoreLogLevelTestsFWLatestTests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public SitecoreLogLevelTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.Sitecore)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class SitecoreLogLevelTestsFW480Tests : LogLevelTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public SitecoreLogLevelTestsFW480Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.Sitecore)
+        {
+        }
+    }
+
+    #endregion
 }

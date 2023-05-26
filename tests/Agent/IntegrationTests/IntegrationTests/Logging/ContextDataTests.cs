@@ -34,7 +34,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         {
             _fixture = fixture;
             _loggingFramework = loggingFramework;
-            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+            _fixture.SetTimeout(TimeSpan.FromMinutes(20));
             _fixture.TestLogger = output;
 
             _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework}");
@@ -260,4 +260,23 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     }
 
     #endregion
+
+    #region Sitecore
+    public class SitecoreContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public SitecoreContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.Sitecore)
+        {
+        }
+    }
+
+    public class SitecoreContextDataFW48Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public SitecoreContextDataFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.Sitecore)
+        {
+        }
+    }
+
+    #endregion // Sitecore
 }
