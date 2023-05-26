@@ -46,6 +46,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
                 exerciseApplication: () =>
                 {
                     _fixture.GetOracleAsync();
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );

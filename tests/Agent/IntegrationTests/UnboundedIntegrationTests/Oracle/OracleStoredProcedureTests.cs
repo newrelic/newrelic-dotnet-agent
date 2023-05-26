@@ -46,6 +46,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
                 exerciseApplication: () =>
                 {
                     _fixture.OracleParameterizedStoredProcedure(_procedureName);
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2));
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
