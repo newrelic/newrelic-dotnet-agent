@@ -10,6 +10,7 @@ using Serilog.Core;
 using Serilog.Formatting;
 using Logger = NewRelic.Agent.Core.Logging.Logger;
 using NewRelic.Agent.Core.Logging;
+using Serilog.Templates;
 #if NETFRAMEWORK
 using Serilog.Events;
 #endif
@@ -23,6 +24,9 @@ namespace NewRelic.Agent.Core
         //private static ILayout AuditLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %level: %message\r\n");
         //private static ILayout FileLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %6level: [pid: %property{pid}, tid: %property{threadid}] %message\r\n");
 
+        private static ExpressionTemplate AuditLogLayout = new ExpressionTemplate("{UtcDateTime(@t):yyyy-MM-dd HH:mm:ss,fff} NewRelic Audit: {@m}\n");
+        private static ExpressionTemplate FileLogLayout = new ExpressionTemplate("{UtcDateTime(@t):yyyy-MM-dd HH:mm:ss,fff} NewRelic {NRLogLevel,6}: [pid: {@p['pid']}, tid: {@p['tid']}] {@m}\n{@x}");
+
         private static LoggingLevelSwitch _loggingLevelSwitch = new LoggingLevelSwitch();
 
         private static InMemorySink _inMemorySink = new InMemorySink();
@@ -35,8 +39,7 @@ namespace NewRelic.Agent.Core
         public static void Initialize()
         {
             var startupLoggerConfig = new LoggerConfiguration()
-                .Enrich.With(new ThreadIdEnricher())
-                .Enrich.With(new ProcessIdEnricher())
+                .Enrich.With(new ThreadIdEnricher(), new ProcessIdEnricher(), new NrLogLevelEnricher())
                 .MinimumLevel.Information()
                 .ConfigureInMemoryLogSink()
                 .ConfigureEventLogSink();
@@ -54,11 +57,10 @@ namespace NewRelic.Agent.Core
             SetupLogLevel(config);
 
             var loggerConfig = new LoggerConfiguration()
-                .Enrich.With(new ThreadIdEnricher())
-                .Enrich.With(new ProcessIdEnricher())
                 .MinimumLevel.ControlledBy(_loggingLevelSwitch)
-                .ConfigureFileSink(config)
                 .ConfigureAuditLogSink(config)
+                .Enrich.With(new ThreadIdEnricher(), new ProcessIdEnricher(), new NrLogLevelEnricher())
+                .ConfigureFileSink(config)
                 .ConfigureDebugSink();
 
             if (config.Console)
@@ -122,7 +124,8 @@ namespace NewRelic.Agent.Core
                         .WriteTo.EventLog(
                             source: eventLogSourceName,
                             logName: eventLogName,
-                            restrictedToMinimumLevel: LogEventLevel.Warning
+                            restrictedToMinimumLevel: LogEventLevel.Warning,
+                            outputTemplate: "{Level}: {Message}{NewLine}{Exception}"
                         );
                     });
 #endif
@@ -140,7 +143,7 @@ namespace NewRelic.Agent.Core
                 {
                     configuration
                         .ExcludeAuditLog()
-                        .WriteTo.Debug(formatter: new CustomTextFormatter());
+                        .WriteTo.Debug(FileLogLayout);
                 });
 #endif
             return loggerConfiguration;
@@ -157,7 +160,7 @@ namespace NewRelic.Agent.Core
                     {
                         configuration
                             .ExcludeAuditLog()
-                            .WriteTo.Console(formatter: new CustomTextFormatter());
+                            .WriteTo.Console(FileLogLayout);
                     })
                 );
         }
@@ -180,7 +183,7 @@ namespace NewRelic.Agent.Core
                             {
                                 configuration
                                     .ExcludeAuditLog()
-                                    .ConfigureRollingLogSink(logFileName, new CustomTextFormatter());
+                                    .ConfigureRollingLogSink(logFileName, FileLogLayout);
                             })
                         );
             }
@@ -213,7 +216,7 @@ namespace NewRelic.Agent.Core
                     configuration
                         .MinimumLevel.Fatal() // We've hijacked Fatal log level as the level to use when writing an audit log
                         .IncludeOnlyAuditLog()
-                        .ConfigureRollingLogSink(logFileName, new CustomAuditLogTextFormatter());
+                        .ConfigureRollingLogSink(logFileName, AuditLogLayout);
                 });
         }
 
@@ -261,18 +264,5 @@ namespace NewRelic.Agent.Core
                 throw;
             }
         }
-
-        private static LoggerConfiguration IncludeOnlyAuditLog(this LoggerConfiguration loggerConfiguration)
-        {
-            return loggerConfiguration.Filter.ByIncludingOnly(logEvent =>
-                logEvent.Properties.ContainsKey(LogLevelExtensions.AuditLevel));
-
-        }
-        private static LoggerConfiguration ExcludeAuditLog(this LoggerConfiguration loggerConfiguration)
-        {
-            return loggerConfiguration.Filter.ByExcluding(logEvent =>
-                logEvent.Properties.ContainsKey(LogLevelExtensions.AuditLevel));
-        }
-
     }
 }
