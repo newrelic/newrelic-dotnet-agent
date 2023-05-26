@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core
         //private static ILayout FileLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %6level: [pid: %property{pid}, tid: %property{threadid}] %message\r\n");
 
         private static ExpressionTemplate AuditLogLayout = new ExpressionTemplate("{UtcDateTime(@t):yyyy-MM-dd HH:mm:ss,fff} NewRelic Audit: {@m}\n");
-        private static ExpressionTemplate FileLogLayout = new ExpressionTemplate("{UtcDateTime(@t):yyyy-MM-dd HH:mm:ss,fff} NewRelic {NRLogLevel,6}: [pid: {@p['pid']}, tid: {@p['tid']}] {@m}\n{@x}");
+        private static ExpressionTemplate FileLogLayout = new ExpressionTemplate("{UtcDateTime(@t):yyyy-MM-dd HH:mm:ss,fff} NewRelic {NRLogLevel,6}: [pid: {pid}, tid: {tid}] {@m}\n{@x}");
 
         private static LoggingLevelSwitch _loggingLevelSwitch = new LoggingLevelSwitch();
 

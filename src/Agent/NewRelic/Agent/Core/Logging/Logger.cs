@@ -84,7 +84,8 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void ErrorFormat(string format, params object[] args)
         {
-            _logger.Error(string.Format(format, args));
+            if (IsErrorEnabled)
+                _logger.Error(format, args);
         }
 
         #endregion Error
@@ -117,7 +118,8 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void WarnFormat(string format, params object[] args)
         {
-            _logger.Warning(string.Format(format, args));
+            if (IsWarnEnabled)
+                _logger.Warning(format, args);
         }
 
         #endregion Warn
@@ -150,7 +152,8 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void InfoFormat(string format, params object[] args)
         {
-            _logger.Information(string.Format(format, args));
+            if (IsInfoEnabled)
+                _logger.Information(format, args);
         }
 
         #endregion Info
@@ -183,7 +186,8 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void DebugFormat(string format, params object[] args)
         {
-            _logger.Debug(string.Format(format, args));
+            if (IsDebugEnabled)
+                _logger.Debug(format, args);
         }
 
         #endregion Debug
@@ -216,7 +220,8 @@ namespace NewRelic.Agent.Core.Logging
         /// </summary>
         public void FinestFormat(string format, params object[] args)
         {
-            _logger.Verbose(string.Format(format, args));
+            if (IsFinestEnabled)
+                _logger.Verbose(format, args);
         }
 
         #endregion Finest
