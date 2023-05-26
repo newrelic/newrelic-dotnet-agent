@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             {
                 ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
                 bucket.UpdateTree(null);
-                Assert.IsTrue(logging.HasMessageBeginingWith("fids passed to UpdateTree is null"));
+                Assert.IsTrue(logging.HasMessageBeginningWith("fids passed to UpdateTree is null"));
             }
         }
 

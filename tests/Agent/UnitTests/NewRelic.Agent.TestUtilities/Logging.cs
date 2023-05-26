@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using NewRelic.Agent.Core.Logging;
 using Serilog.Events;
@@ -66,7 +65,7 @@ namespace NewRelic.Agent.TestUtilities
         /// </summary>
         /// <param name="segment"></param>
         /// <returns></returns>
-        public bool HasMessageBeginingWith(string segment) => _inMemorySink.LogEvents.Any(item => item.RenderMessage().StartsWith(segment));
+        public bool HasMessageBeginningWith(string segment) => _inMemorySink.LogEvents.Any(item => item.RenderMessage().StartsWith(segment));
 
         /// <summary>
         /// checks for messages that begins with a segment
