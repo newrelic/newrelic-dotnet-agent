@@ -1,5 +1,10 @@
 <a href="https://opensource.newrelic.com/oss-category/#community-plus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Plus.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"><img alt="New Relic Open Source community plus project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"></picture></a>
 
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![build_status](https://github.com/newrelic/newrelic-dotnet-agent/actions/workflows/all_solutions.yml/badge.svg?event=schedule)](https://github.com/newrelic/newrelic-dotnet-agent/actions/workflows/all_solutions.yml)
+[![codecov](https://codecov.io/gh/newrelic/newrelic-dotnet-agent/branch/main/graph/badge.svg?token=VKV9XDVJ2U)](https://codecov.io/gh/newrelic/newrelic-dotnet-agent)
+[![OpenSSF
+Scorecard](https://api.securityscorecards.dev/projects/github.com/newrelic/newrelic-dotnet-agent/badge)](https://api.securityscorecards.dev/projects/github.com/newrelic/newrelic-dotnet-agent)
 # New Relic Monitoring for .NET
 
 #### .NET Agent
