@@ -586,22 +586,6 @@ namespace NewRelic.Agent.Core.Config
             return "newrelic_agent_" + Strings.SafeFileName(name) + ".log";
         }
 
-        public bool FileLockingModelSpecified
-        {
-            get
-            {
-                return fileLockingModelSpecified;
-            }
-        }
-
-        public configurationLogFileLockingModel FileLockingModel
-        {
-            get
-            {
-                return fileLockingModel;
-            }
-        }
-
         public bool Console
         {
             get

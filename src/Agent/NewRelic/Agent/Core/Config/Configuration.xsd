@@ -347,19 +347,6 @@
                             </xs:annotation>
                         </xs:attribute>
 
-                        <xs:attribute name="fileLockingModel">
-                            <xs:annotation>
-                                <xs:documentation>
-                                    Controls how agent-produced log files are to be locked.	Experimental.
-                                </xs:documentation>
-                            </xs:annotation>
-                            <xs:simpleType>
-                                <xs:restriction base="xs:string">
-                                    <xs:enumeration value="exclusive"/>
-                                    <xs:enumeration value="minimal"/>
-                                </xs:restriction>
-                            </xs:simpleType>
-                        </xs:attribute>
                     </xs:complexType>
                 </xs:element>
 
