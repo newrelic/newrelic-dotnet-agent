@@ -16,5 +16,10 @@ namespace NewRelic.Agent.Core.WireModels
         {
             LoadedModules = new List<LoadedModuleWireModel>();
         }
+
+        public void Clear()
+        {
+            LoadedModules.Clear();
+        }
     }
 }

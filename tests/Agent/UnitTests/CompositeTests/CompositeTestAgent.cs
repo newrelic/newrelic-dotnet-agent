@@ -73,6 +73,8 @@ namespace CompositeTests
 
         public List<ISpanEventWireModel> SpanEvents { get; } = new List<ISpanEventWireModel>();
 
+        public LoadedModuleWireModelCollection LoadedModules { get; } = new LoadedModuleWireModelCollection();
+
         public configuration LocalConfiguration { get; }
 
         public ServerConfiguration ServerConfiguration { get; }
@@ -103,6 +105,7 @@ namespace CompositeTests
             ErrorTraces.Clear();
             ErrorEvents.Clear();
             SpanEvents.Clear();
+            LoadedModules.Clear();
         }
 
         public List<SqlTraceWireModel> SqlTraces { get; } = new List<SqlTraceWireModel>();
@@ -201,6 +204,9 @@ namespace CompositeTests
                 .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, ErrorEvents));
             Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
                 .Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, SpanEvents));
+            Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>()))
+                .Returns(SaveDataAndReturnSuccess(LoadedModules));
+
 
             EnableAggregators();
         }
@@ -234,6 +240,19 @@ namespace CompositeTests
             {
                 if (datas != null)
                     dataBucket.AddRange(datas);
+
+                return DataTransportResponseStatus.RequestSuccessful;
+            };
+        }
+
+        private static Func<LoadedModuleWireModelCollection, DataTransportResponseStatus> SaveDataAndReturnSuccess(LoadedModuleWireModelCollection dataBucket)
+        {
+            return datas =>
+            {
+                if (datas != null)
+                {
+                    dataBucket = datas;
+                }
 
                 return DataTransportResponseStatus.RequestSuccessful;
             };
