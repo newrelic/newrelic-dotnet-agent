@@ -85,6 +85,8 @@ namespace NewRelic.Agent.Core
                     return "WARN";
                 case LogEventLevel.Error:
                     return "ERROR";
+                case LogEventLevel.Fatal: // Fatal is the level we use for Audit log messages
+                    return AuditLevel;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(logEventLevel), logEventLevel, null);
             }

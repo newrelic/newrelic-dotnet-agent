@@ -157,8 +157,10 @@ namespace NewRelic.Agent.Core.Logging.Tests
         [Test]
         public void ErrorFormat_CallsSerilogLoggerError()
         {
+            Mock.Arrange(() => _serilogLogger.IsEnabled(Arg.IsAny<LogEventLevel>())).Returns(true);
+
             _logger.ErrorFormat(_testFormat, _testArgs);
-            Mock.Assert(() => _serilogLogger.Error(Arg.AnyString), Occurs.Once());
+            Mock.Assert(() => _serilogLogger.Error(Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         // Warn methods
@@ -180,8 +182,10 @@ namespace NewRelic.Agent.Core.Logging.Tests
         [Test]
         public void WarnFormat_CallsSerilogLoggerWarning()
         {
+            Mock.Arrange(() => _serilogLogger.IsEnabled(Arg.IsAny<LogEventLevel>())).Returns(true);
+
             _logger.WarnFormat(_testFormat, _testArgs);
-            Mock.Assert(() => _serilogLogger.Warning(Arg.AnyString), Occurs.Once());
+            Mock.Assert(() => _serilogLogger.Warning(Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         // Info methods
@@ -203,9 +207,10 @@ namespace NewRelic.Agent.Core.Logging.Tests
         [Test]
         public void InfoFormat_CallsSerilogLoggerInformation()
         {
+            Mock.Arrange(() => _serilogLogger.IsEnabled(Arg.IsAny<LogEventLevel>())).Returns(true);
 
             _logger.InfoFormat(_testFormat, _testArgs);
-            Mock.Assert(() => _serilogLogger.Information(Arg.AnyString), Occurs.Once());
+            Mock.Assert(() => _serilogLogger.Information(Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         // Debug methods
@@ -227,8 +232,10 @@ namespace NewRelic.Agent.Core.Logging.Tests
         [Test]
         public void DebugFormat_CallsSerilogLoggerDebug()
         {
+            Mock.Arrange(() => _serilogLogger.IsEnabled(Arg.IsAny<LogEventLevel>())).Returns(true);
+
             _logger.DebugFormat(_testFormat, _testArgs);
-            Mock.Assert(() => _serilogLogger.Debug(Arg.AnyString), Occurs.Once());
+            Mock.Assert(() => _serilogLogger.Debug(Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
         [TearDown]
         public void TearDown()

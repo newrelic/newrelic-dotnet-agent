@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Core
         [Test]
         public static void IsDebugEnabled_is_true_when_config_log_is_debug()
         {
-            ILogConfig config = GetLogConfig("debug");
+            ILogConfig config = LogConfigFixtureWithConsoleLogEnabled("debug"); // just to increase code coverage
             LoggerBootstrapper.Initialize();
             LoggerBootstrapper.ConfigureLogger(config);
             Assert.That(Log.IsDebugEnabled);
@@ -111,7 +111,7 @@ namespace NewRelic.Agent.Core
             Assert.IsFalse(config.Console);
         }
 
-        static private ILogConfig GetLogConfig(string logLevel)
+        private static ILogConfig GetLogConfig(string logLevel)
         {
             var xml = string.Format(
                 "<configuration xmlns=\"urn:newrelic-config\">" +
@@ -130,7 +130,7 @@ namespace NewRelic.Agent.Core
             return configuration.LogConfig;
         }
 
-        static private ILogConfig LogConfigFixtureWithAuditLogEnabled(string logLevel)
+        private static ILogConfig LogConfigFixtureWithAuditLogEnabled(string logLevel)
         {
             var xml = string.Format(
                 "<configuration xmlns=\"urn:newrelic-config\">" +
@@ -149,7 +149,7 @@ namespace NewRelic.Agent.Core
             return configuration.LogConfig;
         }
 
-        static private ILogConfig LogConfigFixtureWithConsoleLogEnabled(string logLevel)
+        private static ILogConfig LogConfigFixtureWithConsoleLogEnabled(string logLevel)
         {
             var xml = string.Format(
                 "<configuration xmlns=\"urn:newrelic-config\">" +
