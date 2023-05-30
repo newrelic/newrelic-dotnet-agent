@@ -229,7 +229,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             {
                 if (File.Exists(pidFilePath))
                 {
-                    Console.Write("Done." + Environment.NewLine);
+                    CapturedOutput.WriteProcessOutputToLog("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening");
                     return;
                 }
                 Thread.Sleep(Timing.TimeBetweenFileExistChecks);
@@ -248,7 +248,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 }
             }
 
-            if (captureStandardOutput)
+            //if (captureStandardOutput)
             {
                 CapturedOutput.WriteProcessOutputToLog("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening");
             }

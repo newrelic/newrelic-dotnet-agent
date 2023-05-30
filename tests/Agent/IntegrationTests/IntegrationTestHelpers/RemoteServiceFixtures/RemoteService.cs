@@ -285,7 +285,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             if (RemoteProcess.HasExited && RemoteProcess.ExitCode != 0)
             {
-                if (captureStandardOutput)
+                //if (captureStandardOutput)
                 {
                     CapturedOutput.WriteProcessOutputToLog("[RemoteService]: Start");
                 }
@@ -309,7 +309,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             {
                 if (File.Exists(pidFilePath))
                 {
-                    Console.WriteLine("[" + DateTime.Now + "] PID file " + pidFilePath + " found...");
+                    CapturedOutput.WriteProcessOutputToLog("[RemoteService]: WaitForAppServerToStartListening");
                     return;
                 }
                 Thread.Sleep(Timing.TimeBetweenFileExistChecks);
@@ -328,7 +328,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 }
             }
 
-            if (captureStandardOutput)
+            //if (captureStandardOutput)
             {
                 CapturedOutput.WriteProcessOutputToLog("[RemoteService]: WaitForAppServerToStartListening");
             }
