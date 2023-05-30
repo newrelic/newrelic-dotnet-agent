@@ -229,7 +229,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             {
                 if (File.Exists(pidFilePath))
                 {
-                    CapturedOutput.WriteProcessOutputToLog("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening");
+                    //CapturedOutput.WriteProcessOutputToLog("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening", false);
                     return;
                 }
                 Thread.Sleep(Timing.TimeBetweenFileExistChecks);

@@ -156,7 +156,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             var timeout = timeoutOrZero ?? TimeSpan.Zero;
 
-            _remoteApplication.TestLogger?.WriteLine($"{Timestamp} WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds} seconds. Minimum count: {minimumCount}");
+            _remoteApplication.TestLogger?.WriteLine($"WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds} seconds. Minimum count: {minimumCount}");
 
             var timeTaken = Stopwatch.StartNew();
             do
@@ -164,7 +164,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 var matches = TryGetLogLines(regularExpression).ToList();
                 if (matches.Count >= minimumCount)
                 {
-                    _remoteApplication.TestLogger?.WriteLine($"{Timestamp} WaitForLogLines  Matched expression: {regularExpression}.");
+                    _remoteApplication.TestLogger?.WriteLine($"WaitForLogLines  Matched expression: {regularExpression}.");
                     return matches;
                 }
 

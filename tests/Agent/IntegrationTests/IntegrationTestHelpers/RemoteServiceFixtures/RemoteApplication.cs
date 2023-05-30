@@ -490,6 +490,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             public string StandardOutput { get; set; } = string.Empty;
             public string StandardError { get; set; } = string.Empty;
+            private string _name;
+            private int _id;
             private Thread _standardOutputThread;
             private Thread _standardErrorThread;
             private readonly ITestLogger _testLogger;
@@ -513,6 +515,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 {
                     StartCapturingForProcess(process);
                 }
+                _name = process.ProcessName;
+                _id = process.Id;
             }
 
             private void StartCapturingForProcess(Process process)
@@ -548,20 +552,35 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 _standardErrorThread?.Join(TimeSpan.FromMinutes(2));
             }
 
-            public void WriteProcessOutputToLog(string processDescription)
+            private void WriteToLog(string message)
             {
-                WaitForOutput();
+                var lines = message.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                foreach (var line in lines)
+                {
+                    _testLogger?.WriteLine($"[{_name} ({_id})] {line}");
+                }
+            }
 
-                _testLogger?.WriteLine("");
-                _testLogger?.WriteLine($"====== {processDescription} standard output log =====");
-                _testLogger?.WriteLine(StandardOutput);
-                _testLogger?.WriteLine($"----- {processDescription} end of standard output log  -----");
+            public void WriteProcessOutputToLog(string processDescription, bool wait = true)
+            {
+                if (wait)
+                {
+                    WaitForOutput();
+                }
 
-                _testLogger?.WriteLine("");
-                _testLogger?.WriteLine($"====== {processDescription} standard error log =====");
-                _testLogger?.WriteLine(StandardError);
-                _testLogger?.WriteLine($"----- {processDescription} end of standard error log -----");
-                _testLogger?.WriteLine("");
+                if (!string.IsNullOrWhiteSpace(StandardOutput))
+                {
+                    WriteToLog($"====== standard output log =====");
+                    WriteToLog(StandardOutput);
+                    WriteToLog($"----- end of standard output log  -----");
+                }
+
+                if (!string.IsNullOrWhiteSpace(StandardError))
+                {
+                    WriteToLog($"====== standard error log =====");
+                    WriteToLog(StandardError);
+                    WriteToLog($"----- end of standard error log  -----");
+                }
             }
 
             public string ReturnProcessOutput()

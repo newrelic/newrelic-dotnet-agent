@@ -17,6 +17,11 @@ namespace ThreadProfileStressTest
         private const string DefaultPort = "5001";
         private static string _applicationName;
 
+        private static void Log(string message)
+        {
+            Console.WriteLine($"{DateTime.Now} [{_applicationName} ({Process.GetCurrentProcess().Id})] {message}");
+        }
+
         static void Main(string[] args)
         {
             ServicePointManager.ServerCertificateValidationCallback = delegate
@@ -28,15 +33,15 @@ namespace ThreadProfileStressTest
             _applicationName =
                 Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
 
-            Console.WriteLine($"[{_applicationName}] Invoked with args: {string.Join(" ", args)}");
+            Log($"Invoked with args: {string.Join(" ", args)}");
 
             var port = GetPortFromArgs(args) ?? DefaultPort;
 
-            Console.WriteLine($"[{_applicationName}] Parsed port: {port}");
+            Log($"Parsed port: {port}");
 
             var eventWaitHandleName = "app_server_wait_for_all_request_done_" + port;
 
-            Console.WriteLine("[{0}] Setting EventWaitHandle name to: {1}", _applicationName, eventWaitHandleName);
+            Log($"Setting EventWaitHandle name to: {eventWaitHandleName}");
 
             using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName))
             {
@@ -60,7 +65,7 @@ namespace ThreadProfileStressTest
             //the agent's log directory and corresponding log file is created.
             CreatePidFile();
 
-            Console.WriteLine("[{0}] Waiting for signal to start the thread stress test.", _applicationName);
+            Log("Waiting for signal to start the thread stress test.");
 
             var eventWaitHandleName = $"thread_profile_stress_begin_{port}";
             using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName))
@@ -68,7 +73,7 @@ namespace ThreadProfileStressTest
                 eventWaitHandle.WaitOne(TimeSpan.FromSeconds(90));
             }
 
-            Console.WriteLine("[{0}] Starting the thread stress test.", _applicationName);
+            Log("Starting the thread stress test.");
 
             //Create and Destroy threads often so that we are likely to encounter a situation where the thread profiler
             //will attempt to walk the stack of a thread that has already been destroyed. This is to help catch a problem
@@ -88,7 +93,7 @@ namespace ThreadProfileStressTest
             }
 
             sw.Stop();
-            Console.WriteLine("[{0}] Stopping the thread stress test.", _applicationName);
+            Log("Stopping the thread stress test.");
         }
 
         [NewRelic.Api.Agent.Transaction(Web = false)]
