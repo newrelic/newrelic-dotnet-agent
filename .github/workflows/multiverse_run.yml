@@ -62,7 +62,7 @@ jobs:
         shell: bash
 
       - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a # v3.0.3
+        uses: actions/setup-dotnet@3447fd6a9f9e57506b15f895c5b76d3b197dc7c2 # v3.2.0
         with:
           dotnet-version: '3.1.100'
 
@@ -107,7 +107,7 @@ jobs:
           egress-policy: audit 
 
       - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a # v3.0.3
+        uses: actions/setup-dotnet@3447fd6a9f9e57506b15f895c5b76d3b197dc7c2 # v3.2.0
         with:
           dotnet-version: '3.1.100'
 
@@ -131,7 +131,7 @@ jobs:
         shell: bash
 
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@ba1486788b0490a235422264426c45848eac35c6 # 4.4.1
+        uses: JamesIves/github-pages-deploy-action@22a6ee251d6f13c6ab1ecb200d974f1a6feb1b8d # 4.4.2
         with:
           branch: gh-pages
           folder: .
