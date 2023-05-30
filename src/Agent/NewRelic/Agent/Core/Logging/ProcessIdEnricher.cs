@@ -11,9 +11,11 @@ namespace NewRelic.Agent.Core
     [NrExcludeFromCodeCoverage]
     internal class ProcessIdEnricher : ILogEventEnricher
     {
+        private static int _pid = new ProcessStatic().GetCurrentProcess().Id;
+
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("pid", new ProcessStatic().GetCurrentProcess().Id));
+            logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("pid", _pid));
         }
     }
 }
