@@ -1392,19 +1392,6 @@ namespace NewRelic.Agent.Core.Config
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
     [System.SerializableAttribute()]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
-    public enum configurationLogFileLockingModel
-    {
-        
-        /// <remarks/>
-        exclusive,
-        
-        /// <remarks/>
-        minimal,
-    }
-    
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
-    [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
     public partial class configurationInstrumentation
