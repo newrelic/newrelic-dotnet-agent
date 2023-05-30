@@ -21,11 +21,6 @@ namespace NewRelic.Agent.Core.WireModels
             LoadedModules = new List<LoadedModuleWireModel>();
         }
 
-        public void Clear()
-        {
-            LoadedModules.Clear();
-        }
-
         public static LoadedModuleWireModelCollection Build(IList<Assembly> assemblies)
         {
             var loadedModulesCollection = new LoadedModuleWireModelCollection();

@@ -2,10 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -14,6 +12,7 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NUnit.Framework;
 using Telerik.JustMock;
+using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -59,7 +58,8 @@ namespace NewRelic.Agent.Core.Utilities
         {
             LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
             Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>()))
-                .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules);
+                .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
+                .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
 
             _getLoadedModulesAction();
 
@@ -70,11 +70,36 @@ namespace NewRelic.Agent.Core.Utilities
         }
 
         [Test]
-        public void GetLoadedModules_DoesNot_SendDuplicateModules()
+        public void GetLoadedModules_NoNewModules()
         {
             LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
             Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>()))
-                .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules);
+                .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
+                .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.RequestSuccessful);
+
+            _getLoadedModulesAction();
+
+            var initialModules = loadedModulesCollection.LoadedModules;
+
+            // double sure that no new modules are loaded.
+            _getLoadedModulesAction();
+
+            _ = loadedModulesCollection.LoadedModules;
+
+            _getLoadedModulesAction();
+
+            var loadedModules = loadedModulesCollection.LoadedModules;
+
+            Assert.AreEqual(initialModules.Count, loadedModules.Count);
+        }
+
+        [Test]
+        public void GetLoadedModules_SendError_DuplciatesNotSaved()
+        {
+            LoadedModuleWireModelCollection loadedModulesCollection = (LoadedModuleWireModelCollection)null;
+            var result = Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<LoadedModuleWireModelCollection>()))
+                .DoInstead<LoadedModuleWireModelCollection>(modules => loadedModulesCollection = modules)
+                .Returns<DataTransportResponseStatus>(DataTransportResponseStatus.Discard);
 
             _getLoadedModulesAction();
 
@@ -82,9 +107,11 @@ namespace NewRelic.Agent.Core.Utilities
 
             _getLoadedModulesAction();
 
-            var secondloadedModules = loadedModulesCollection.LoadedModules;
+            var loadedModules = loadedModulesCollection.LoadedModules;
 
-            Assert.Greater(initialModules.Count, secondloadedModules.Count);
+            Assert.Greater(initialModules.Count, 0);
+            Assert.Greater(loadedModules.Count, 0);
+            Assert.AreEqual(initialModules.Count, loadedModules.Count);
         }
     }
 }
