@@ -21,7 +21,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 
         public RabbitMqW3cTracingTests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)  : base(fixture)
         {
-            fixture.TestLogger = output;
+            fixture.SetLogger(output);
             fixture.Actions
             (
                 setupConfiguration: () =>

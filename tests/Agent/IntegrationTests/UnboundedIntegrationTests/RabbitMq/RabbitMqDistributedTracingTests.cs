@@ -21,7 +21,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         public RabbitMqDistributedTracingTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
-            fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             // RabbitMQ SendRecieve uses the BasicGet method to receive, which does not process incoming tracing payloads
             _fixture.AddCommand($"RabbitMQ SendReceive {_sendReceiveQueue} TestMessage");

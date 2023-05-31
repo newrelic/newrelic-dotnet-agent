@@ -23,7 +23,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         protected MySqlConnectorTestBase(TFixture fixture, ITestOutputHelper output, string testAction) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand($"MySqlConnectorExerciser {testAction}");
 

@@ -22,7 +22,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
         protected NServiceBus5ReceiveTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand("NServiceBusSetup Setup");
             _fixture.AddCommand("NServiceBusReceiverHost Start");

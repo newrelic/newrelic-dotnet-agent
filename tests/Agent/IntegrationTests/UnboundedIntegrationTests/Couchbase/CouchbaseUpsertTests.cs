@@ -21,7 +21,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase
         public CouchbaseUpsertTests(RemoteServiceFixtures.CouchbaseBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions
             (
                 setupConfiguration: () =>

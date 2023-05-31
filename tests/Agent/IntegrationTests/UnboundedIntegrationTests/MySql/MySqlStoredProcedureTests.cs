@@ -23,7 +23,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         protected MySqlStoredProcedureTestsBase(TFixture fixture, ITestOutputHelper output, bool paramsWithAtSigns) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _paramsWithAtSigns = paramsWithAtSigns;
 
             _fixture.AddCommand($"MySqlExerciser CreateAndExecuteStoredProcedure {_procedureName} {paramsWithAtSigns}");

@@ -36,7 +36,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
         protected ElasticsearchTestsBase(TFixture fixture, ITestOutputHelper output, ClientType clientType) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _clientType = clientType;
 
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));

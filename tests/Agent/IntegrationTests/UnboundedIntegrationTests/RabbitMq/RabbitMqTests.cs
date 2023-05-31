@@ -29,7 +29,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         protected RabbitMqTestsBase(TFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
 
             _fixture.AddCommand($"RabbitMQ SendReceive {_sendReceiveQueue} TestMessage");

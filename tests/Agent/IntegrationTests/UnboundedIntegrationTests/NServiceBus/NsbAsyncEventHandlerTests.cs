@@ -21,7 +21,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
         protected NsbAsyncEventHandlerTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.SetTimeout(TimeSpan.FromMinutes(3));
 
             _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithAsyncEventHandler");

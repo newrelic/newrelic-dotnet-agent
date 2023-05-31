@@ -25,7 +25,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         public MongoDBDriverCollectionTestsBase(TFixture fixture, ITestOutputHelper output, string mongoUrl, bool clientSupportsWatchMethods = true) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _mongoUrl = mongoUrl;
             _clientSupportsWatchMethods = clientSupportsWatchMethods;
 

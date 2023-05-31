@@ -21,7 +21,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         public PostgresSqlIteratorAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand($"PostgresSqlExerciser AsyncIteratorTest");
 

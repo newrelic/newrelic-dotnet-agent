@@ -22,7 +22,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
         public OracleTests(RemoteServiceFixtures.OracleBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddActions
             (

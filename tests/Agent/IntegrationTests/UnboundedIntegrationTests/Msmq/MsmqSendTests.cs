@@ -20,7 +20,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
         public MsmqSendTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand($"MSMQExerciser Create {_queueNum}");
             _fixture.AddCommand($"MSMQExerciser Send {_queueNum} false");

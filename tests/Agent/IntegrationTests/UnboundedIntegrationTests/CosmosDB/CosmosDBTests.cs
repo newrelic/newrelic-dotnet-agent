@@ -24,7 +24,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
         protected CosmosDBTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
 

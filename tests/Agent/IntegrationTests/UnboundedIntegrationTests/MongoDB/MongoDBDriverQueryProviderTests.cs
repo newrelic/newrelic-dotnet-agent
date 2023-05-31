@@ -22,7 +22,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         public MongoDBDriverQueryProviderTestsBase(TFixture fixture, ITestOutputHelper output, string mongoUrl)  : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _mongoUrl = mongoUrl;
 
             _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");

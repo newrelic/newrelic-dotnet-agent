@@ -22,7 +22,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
         public PostgresSqlStoredProcedureTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand($"PostgresSqlExerciser ParameterizedStoredProcedure {_procedureName}");
 
