@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.WireModels
             _baseAssemblyName.Version = new Version(BaseAssemblyVersion);
             _baseAssemblyName.SetPublicKeyToken(Encoding.ASCII.GetBytes(BasePublicKeyToken));
 
-            _baseTestAssembly= new TestAssembly();
+            _baseTestAssembly = new TestAssembly();
             _baseTestAssembly.SetAssemblyName = _baseAssemblyName;
             _baseTestAssembly.SetDynamic = true; // false uses on disk assembly and this won'y have one.
             _baseTestAssembly.SetHashCode = BaseHashCode;
