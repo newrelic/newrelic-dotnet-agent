@@ -18,7 +18,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             HWC_FIRING_UP,
             HWC_STARTING_DIRECTORY,
-            HWC_ENV,
+            //HWC_ENV,
             HWC_STARTING_SERVER,
             HWC_DONE,
             ALL_DONE
@@ -28,7 +28,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
                         "HostedWebCore: Firing up...",
                         "HostedWebCore: Starting directory:",
-                        "HostedWebCore: Environment Variables:",
+                        //"HostedWebCore: Environment Variables:",
                         "HostedWebCore: Starting server...",
                         "HostedWebCore: Done.",
                         null

@@ -28,7 +28,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             try
             {
-                _xunitOutput?.WriteLine($"{DateTime.Now} [Test Runner ({Process.GetCurrentProcess().Id})] {message}");
+                // Temporary to track down failures
+                Console.WriteLine($"{DateTime.Now} [Test Runner ({Process.GetCurrentProcess().Id})] {message}");
+                //_xunitOutput?.WriteLine($"{DateTime.Now} [Test Runner ({Process.GetCurrentProcess().Id})] {message}");
             }
             catch
             {

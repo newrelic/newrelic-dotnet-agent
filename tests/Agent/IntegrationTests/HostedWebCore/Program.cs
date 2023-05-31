@@ -30,7 +30,7 @@ namespace HostedWebCore
             {
                 environmentVariables.Append($"  {de.Key} = {de.Value}; ");
             }
-            Log("Environment Variables: " + environmentVariables.ToString());
+            //Log("Environment Variables: " + environmentVariables.ToString());
 
             if (Parser.Default == null)
                 throw new NullReferenceException("CommandLine.Parser.Default");
