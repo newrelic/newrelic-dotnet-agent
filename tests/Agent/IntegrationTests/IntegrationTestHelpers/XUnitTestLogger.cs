@@ -26,12 +26,20 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public void WriteLine(string message)
         {
-            _xunitOutput?.WriteLine($"{DateTime.Now} [Test Runner ({Process.GetCurrentProcess().Id})] {message}");
+            try
+            {
+                _xunitOutput?.WriteLine($"{DateTime.Now} [Test Runner ({Process.GetCurrentProcess().Id})] {message}");
+            }
+            catch
+            {
+                // This will throw if we try to log something in a background thread after
+                // the test has finished. TODO: Is this hiding any bugs?
+            }
         }
 
         public void WriteLine(string format, params object[] args)
         {
-            _xunitOutput?.WriteLine($"{DateTime.Now} [Test Runner ({Process.GetCurrentProcess().Id})] {string.Format(format, args)}");
+            WriteLine(string.Format(format, args));
         }
     }
 }

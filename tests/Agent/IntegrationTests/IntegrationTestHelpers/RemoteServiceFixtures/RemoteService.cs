@@ -165,7 +165,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     Console.WriteLine($"[{DateTime.Now}] dotnet.exe exits with code {process.ExitCode}");
                 }
 
-                processOutput.WriteProcessOutputToLog("[RemoteService]: PublishCoreApp");
+                //processOutput.WriteProcessOutputToLog("[RemoteService]: PublishCoreApp");
 
                 if (!process.HasExited || process.ExitCode != 0)
                 {
@@ -287,7 +287,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             {
                 //if (captureStandardOutput)
                 {
-                    CapturedOutput.WriteProcessOutputToLog("[RemoteService]: Start");
+                    //CapturedOutput.WriteProcessOutputToLog("[RemoteService]: Start");
                 }
                 throw new Exception("App server shutdown unexpectedly.");
             }
@@ -309,7 +309,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             {
                 if (File.Exists(pidFilePath))
                 {
-                    CapturedOutput.WriteProcessOutputToLog("[RemoteService]: WaitForAppServerToStartListening");
+                    //CapturedOutput.WriteProcessOutputToLog("[RemoteService]: WaitForAppServerToStartListening");
                     return;
                 }
                 Thread.Sleep(Timing.TimeBetweenFileExistChecks);
@@ -330,7 +330,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             //if (captureStandardOutput)
             {
-                CapturedOutput.WriteProcessOutputToLog("[RemoteService]: WaitForAppServerToStartListening");
+                //CapturedOutput.WriteProcessOutputToLog("[RemoteService]: WaitForAppServerToStartListening");
             }
 
             Assert.True(false, "Remote process never generated a .pid file!");

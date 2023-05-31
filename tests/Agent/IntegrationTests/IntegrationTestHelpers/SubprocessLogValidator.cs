@@ -51,13 +51,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             {
                 testLogger?.WriteLine("LogValidator: in state '" + currentState + "' with line: '" + line + "'");
 
-                int splitAt = line.IndexOf("] ");
-                if (splitAt == -1 || line.Length <= splitAt + "] ".Length)
-                {
-                    Fail("badly formatted line: '" + line + "'");
-                }
-
-                if (!line.Substring(splitAt + "] ".Length).StartsWith(expected[(int)currentState]))
+                if (!line.StartsWith(expected[(int)currentState]))
                 {
                     Fail("unexpected line: " + line);
                 }

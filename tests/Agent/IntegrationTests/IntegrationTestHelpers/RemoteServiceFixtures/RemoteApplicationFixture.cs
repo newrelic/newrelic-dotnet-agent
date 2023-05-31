@@ -280,7 +280,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                             if (captureStandardOutput)
                             {
-                                RemoteApplication.CapturedOutput.WriteProcessOutputToLog("RemoteApplication:");
+                                //RemoteApplication.CapturedOutput.WriteProcessOutputToLog("RemoteApplication:");
 
                                 // Most of our tests run in HostedWebCore, but some don't, e.g. the self-hosted
                                 // WCF tests. For the HWC tests we carefully validate the console output in order
@@ -288,7 +288,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                                 // hosted tests, unfortunately, we just punt that.
                                 if (RemoteApplication.ValidateHostedWebCoreOutput)
                                 {
-                                    SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
+                                    SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.ReturnProcessOutput(), TestLogger);
                                 }
                                 else
                                 {
@@ -361,7 +361,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public virtual void WriteProcessOutputToLog()
         {
-            RemoteApplication.CapturedOutput.WriteProcessOutputToLog("Remote application:");
+            //RemoteApplication.CapturedOutput.WriteProcessOutputToLog("Remote application:");
         }
 
         public virtual string ReturnProcessOutput()

@@ -8,6 +8,7 @@ using System.Diagnostics.Contracts;
 using CommandLine;
 using System.IO;
 using System.Text;
+using System.Diagnostics;
 
 namespace HostedWebCore
 {
@@ -15,10 +16,7 @@ namespace HostedWebCore
     {
         private static void Log(string format)
         {
-            string prefix = string.Format("[{0} {1}-{2}] HostedWebCore: ", DateTime.Now,
-                    System.Diagnostics.Process.GetCurrentProcess().Id,
-                    System.Threading.Thread.CurrentThread.ManagedThreadId);
-            Console.WriteLine(prefix + format);
+            Console.WriteLine($"HostedWebCore: {format}");
         }
 
         private static void Main(string[] args)

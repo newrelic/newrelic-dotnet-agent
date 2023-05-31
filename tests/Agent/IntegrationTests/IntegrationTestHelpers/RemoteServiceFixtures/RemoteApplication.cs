@@ -136,7 +136,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public abstract void CopyToRemote();
 
-        public abstract void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = false, bool doProfile = true);
+        public abstract void Start(string commandLineArguments, Dictionary<string, string> environmentVariables, bool captureStandardOutput = true, bool doProfile = true);
 
         #endregion
 
@@ -519,13 +519,35 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 _id = process.Id;
             }
 
+            private void Log(string text)
+            {
+                _testLogger.WriteLine($"[{_name} ({_id})] {text}");
+            }
+
             private void StartCapturingForProcess(Process process)
             {
                 _standardOutputThread = new Thread(() =>
                 {
-                    using (var reader = process.StandardOutput)
+                    try
                     {
-                        StandardOutput = reader.ReadToEnd();
+                        using (var reader = process.StandardOutput)
+                        {
+                            string text;
+                            while (!process.HasExited)
+                            {
+                                text = reader.ReadLine();
+                                if (string.IsNullOrWhiteSpace(text))
+                                {
+                                    continue;
+                                }
+                                Log(text);
+                                StandardOutput += text + Environment.NewLine;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Done?
                     }
                 })
                 {
@@ -535,9 +557,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 _standardErrorThread = new Thread(() =>
                 {
-                    using (var reader = process.StandardError)
+                    try
                     {
-                        StandardError = reader.ReadToEnd();
+                        using (var reader = process.StandardError)
+                        {
+                            string text;
+                            while (!process.HasExited)
+                            {
+                                text = reader.ReadLine();
+                                if (string.IsNullOrWhiteSpace(text))
+                                {
+                                    continue;
+                                }
+                                Log(text);
+                                StandardError += text + Environment.NewLine;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Done?
                     }
                 })
                 {
@@ -564,6 +603,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 }
             }
 
+            /*
             public void WriteProcessOutputToLog(string processDescription, bool wait = true)
             {
                 if (wait)
@@ -585,6 +625,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     WriteToLog($"----- end of standard error log  -----");
                 }
             }
+            */
 
             public string ReturnProcessOutput()
             {

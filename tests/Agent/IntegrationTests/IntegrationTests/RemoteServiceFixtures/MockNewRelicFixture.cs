@@ -137,12 +137,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
                 RemoteApplication.AgentLog.WaitForLogLine(AgentLogFile.ShutdownLogLineRegex, TimeSpan.FromMinutes(2));
                 MockNewRelicApplication.Shutdown();
-                MockNewRelicApplication.CapturedOutput?.WriteProcessOutputToLog("MockNewRelic application:");
+                //MockNewRelicApplication.CapturedOutput?.WriteProcessOutputToLog("MockNewRelic application:");
             }
             catch (Exception)
             {
                 MockNewRelicApplication.Shutdown();
-                MockNewRelicApplication.CapturedOutput?.WriteProcessOutputToLog("MockNewRelic application:");
+                //MockNewRelicApplication.CapturedOutput?.WriteProcessOutputToLog("MockNewRelic application:");
                 throw;
             }
         }
@@ -163,7 +163,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public override void WriteProcessOutputToLog()
         {
-            MockNewRelicApplication.CapturedOutput.WriteProcessOutputToLog("MockNewRelic application:");
+            //MockNewRelicApplication.CapturedOutput.WriteProcessOutputToLog("MockNewRelic application:");
             base.WriteProcessOutputToLog();
         }
     }

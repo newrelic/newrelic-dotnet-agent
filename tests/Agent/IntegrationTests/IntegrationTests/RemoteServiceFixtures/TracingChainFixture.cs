@@ -43,7 +43,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public override void ShutdownRemoteApplication()
         {
             ReceiverApplication.Shutdown();
-            ReceiverApplication.CapturedOutput?.WriteProcessOutputToLog($"{nameof(ReceiverApplication)} application:");
+            //ReceiverApplication.CapturedOutput?.WriteProcessOutputToLog($"{nameof(ReceiverApplication)} application:");
 
             base.ShutdownRemoteApplication();
         }
