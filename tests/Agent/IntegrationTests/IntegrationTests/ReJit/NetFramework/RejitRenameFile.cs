@@ -32,7 +32,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
 
             _renameOriginalFileFilePath = _fixture.RemoteApplication.DestinationExtensionsDirectoryPath + @"\Integration.Testing.RenameOriginalXmlFileTest.xml";
 
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions(
                 setupConfiguration: () =>
                 {

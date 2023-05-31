@@ -21,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
         public ErrorTraceWebApi(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper testLogger) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = testLogger;
+            _fixture.SetLogger(testLogger);
             _fixture.Actions
             (
                 setupConfiguration: () =>

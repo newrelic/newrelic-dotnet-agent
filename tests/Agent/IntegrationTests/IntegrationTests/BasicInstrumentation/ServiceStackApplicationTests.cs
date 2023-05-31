@@ -21,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         public ServiceStackApplicationTests(ServiceStackApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions
             (
                 exerciseApplication: () =>

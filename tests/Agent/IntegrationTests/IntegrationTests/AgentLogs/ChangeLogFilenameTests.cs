@@ -34,7 +34,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         public ChangeLogFilenameTestsBase(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output, ConfigSettingTestCase testCase) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _testCase = testCase;
             _fixture.Actions
             (

@@ -20,7 +20,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
         public TransactionUserIdTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
-            Fixture.TestLogger = output;
+            fixture.SetLogger(output);
 
             Fixture.AddCommand("ApiCalls TestSetTransactionUserId CustomUserId");
 

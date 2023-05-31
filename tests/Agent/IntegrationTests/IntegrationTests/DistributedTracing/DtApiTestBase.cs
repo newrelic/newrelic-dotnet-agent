@@ -25,7 +25,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
         public DtApiTestBase(DistributedTracingApiFixture fixture, ITestOutputHelper output, TracingTestOption tracingTestOption) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.CommandLineArguments = tracingTestOption == TracingTestOption.W3cAndNewrelicHeaders ? "w3c" : null;
 
             _fixture.Actions

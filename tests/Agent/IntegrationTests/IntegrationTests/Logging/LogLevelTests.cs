@@ -22,7 +22,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
 
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework}");
             _fixture.AddCommand($"LoggingTester ConfigureWithInfoLevelEnabled");

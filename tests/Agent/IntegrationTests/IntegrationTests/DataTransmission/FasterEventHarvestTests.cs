@@ -34,7 +34,7 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
         public FasterEventHarvestTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
-            Fixture.TestLogger = output;
+            fixture.SetLogger(output);
 
             Fixture.AddCommand($"FasterEventHarvest Test");
 

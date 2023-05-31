@@ -27,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
         {
             _fixture = fixture;
             var assemblyName = _fixture.AssemblyName;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions
             (
                 setupConfiguration: () =>

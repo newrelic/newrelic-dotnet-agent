@@ -19,7 +19,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         public InstrumentationLoaderTests(RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _output = output;
 
@@ -66,7 +66,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         public InstrumentationLoaderTestsCore(RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.Actions
             (

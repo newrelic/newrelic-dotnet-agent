@@ -19,7 +19,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         public SerilogSumologicSyncTests(RemoteServiceFixtures.SerilogSumologicFixture fixture, ITestOutputHelper output, bool synchronousMethodFirst = true) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions
             (
                 exerciseApplication: () =>

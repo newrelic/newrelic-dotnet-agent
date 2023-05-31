@@ -61,7 +61,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
             ForceNewTransaction = forceNewTransaction;
 
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.EnvironmentVariables.Add("NEW_RELIC_FORCE_NEW_TRANSACTION_ON_NEW_THREAD", ForceNewTransaction ? "true" : "false");
 

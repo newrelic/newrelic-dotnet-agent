@@ -19,7 +19,7 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
         {
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(1));
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand($"ApiCalls TestSetApplicationName NewIntegrationTestName");
 

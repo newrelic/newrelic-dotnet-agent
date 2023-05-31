@@ -118,7 +118,7 @@ public abstract class DotNetPerfMetricsTests<TFixture> : NewRelicIntegrationTest
 	public DotNetPerfMetricsTests(TFixture fixture, ITestOutputHelper output)
 	{
 		Fixture = fixture;
-		Fixture.TestLogger = output;
+		fixture.SetLogger(output);
 		
 		///////////////////////////////////////////////////////////////////////////////////////
 		//Here is where you would add the commands you would like to invoke

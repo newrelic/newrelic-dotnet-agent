@@ -116,7 +116,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         public DotNetPerfMetricsTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
-            Fixture.TestLogger = output;
+            fixture.SetLogger(output);
 
             Fixture.AddCommand($"PerformanceMetrics Test {THREADPOOL_WORKER_MAX} {THREADPOOL_COMPLETION_MAX}");
 

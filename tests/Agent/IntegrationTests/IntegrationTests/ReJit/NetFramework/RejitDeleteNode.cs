@@ -30,7 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
 
             var deleteNodeFilePath = _fixture.RemoteApplication.DestinationExtensionsDirectoryPath + @"\Integration.Testing.DeleteNodeTest.xml";
 
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions(
                 setupConfiguration: () =>
                 {

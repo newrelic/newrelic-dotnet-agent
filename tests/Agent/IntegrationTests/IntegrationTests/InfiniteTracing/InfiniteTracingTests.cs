@@ -22,7 +22,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         {
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand("InfiniteTracingTester StartAgent");
 

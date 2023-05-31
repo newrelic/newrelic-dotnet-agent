@@ -25,7 +25,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
             : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions
             (
                 setupConfiguration: () =>

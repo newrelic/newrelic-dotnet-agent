@@ -20,7 +20,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions
             (
                 exerciseApplication: ExerciseApplication

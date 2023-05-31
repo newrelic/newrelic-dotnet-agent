@@ -30,7 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         {
             _fixture = fixture;
 
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions(
                 setupConfiguration: () =>
                 {

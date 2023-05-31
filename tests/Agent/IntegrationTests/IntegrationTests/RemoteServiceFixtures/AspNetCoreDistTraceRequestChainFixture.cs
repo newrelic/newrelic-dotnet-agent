@@ -64,7 +64,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         protected RemoteService SetupDistributedTracingApplication()
         {
             var service = new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true);
-            service.TestLogger = new XUnitTestLogger(TestLogger);
+            service.TestLogger = TestLogger;
             service.DeleteWorkingSpace();
             service.CopyToRemote();
 

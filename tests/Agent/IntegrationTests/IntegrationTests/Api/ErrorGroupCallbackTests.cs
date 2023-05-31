@@ -24,7 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
         public ErrorGroupCallbackTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
-            Fixture.TestLogger = output;
+            fixture.SetLogger(output);
 
             Fixture.AddCommand($"ApiCalls TestSetErrorGroupCallback");
             Fixture.AddCommand("AttributeInstrumentation MakeWebTransactionWithException");

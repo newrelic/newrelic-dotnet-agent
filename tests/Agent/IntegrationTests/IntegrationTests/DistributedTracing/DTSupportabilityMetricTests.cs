@@ -19,7 +19,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
         public DTSupportabilityMetricTests(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.Actions
             (

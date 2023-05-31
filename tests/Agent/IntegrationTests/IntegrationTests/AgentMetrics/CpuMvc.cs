@@ -21,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
             : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = testLogger;
+            _fixture.SetLogger(testLogger);
             _fixture.Actions
             (
                 setupConfiguration: () =>

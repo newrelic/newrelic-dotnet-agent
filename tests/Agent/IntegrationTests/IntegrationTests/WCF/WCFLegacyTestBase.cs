@@ -115,7 +115,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
             ) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _bindingToTest = bindingToTest;
             _clientInvocationMethodsToTest = clientInvocationsToTest.ToArray();

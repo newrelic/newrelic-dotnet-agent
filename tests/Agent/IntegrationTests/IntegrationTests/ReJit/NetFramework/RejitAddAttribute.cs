@@ -31,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
 
             var addAttributeFilePath = _fixture.RemoteApplication.DestinationExtensionsDirectoryPath + @"\Integration.Testing.AddAttributeTest.xml";
 
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions(
                 setupConfiguration: () =>
                 {

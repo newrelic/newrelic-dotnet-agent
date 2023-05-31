@@ -187,7 +187,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         public ConsoleAsyncForceNewTransactionTests(ConsoleAsyncFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
-            Fixture.TestLogger = output;
+            fixture.SetLogger(output);
             Fixture.Actions
             (
                 setupConfiguration: () =>

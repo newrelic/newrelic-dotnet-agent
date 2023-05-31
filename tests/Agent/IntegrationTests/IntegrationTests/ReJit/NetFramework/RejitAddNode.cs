@@ -30,7 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
 
             var addNodeFilePath = _fixture.RemoteApplication.DestinationExtensionsDirectoryPath + @"\Integration.Testing.AddNodeTest.xml";
 
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions(
                 setupConfiguration: () =>
                 {

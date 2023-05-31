@@ -557,7 +557,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 var lines = message.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                 foreach (var line in lines)
                 {
-                    _testLogger?.WriteLine($"[{_name} ({_id})] {line}");
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        _testLogger?.WriteLine($"[{_name} ({_id})] {line}");
+                    }
                 }
             }
 

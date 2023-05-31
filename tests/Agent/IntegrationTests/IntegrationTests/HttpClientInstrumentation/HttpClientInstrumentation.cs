@@ -28,7 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
             : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.AddActions(
                 setupConfiguration: () =>
                 {

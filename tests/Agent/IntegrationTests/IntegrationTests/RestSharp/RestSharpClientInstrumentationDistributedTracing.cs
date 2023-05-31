@@ -25,7 +25,7 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
         {
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand($"RestSharpService StartService {_fixture.RemoteApplication.Port}");
             _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} GET false");

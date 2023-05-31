@@ -29,7 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
         public W3CTestBase(T fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.Actions
             (

@@ -31,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
             _logHelpers = hostingModelOption == HostingModel.Self ? (IWCFLogHelpers)new WCFLogHelpers_SelfHosted(fixture) : new WCFLogHelpers_IISHosted(fixture);
 
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions
             (
                 setupConfiguration: () =>

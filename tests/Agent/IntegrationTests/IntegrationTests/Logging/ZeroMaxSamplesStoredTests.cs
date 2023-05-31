@@ -18,7 +18,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         {
             _fixture = fixture;
             _fixture.SetTimeout(System.TimeSpan.FromMinutes(2));
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand($"LoggingTester SetFramework {loggingFramework}");
             _fixture.AddCommand($"LoggingTester Configure");

@@ -82,7 +82,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public string DestinationNewRelicExtensionsDirectoryPath => RemoteApplication.DestinationNewRelicExtensionsDirectoryPath;
 
-        public ITestOutputHelper TestLogger { get; set; }
+        public XUnitTestLogger TestLogger { get => _logger; }
+
+        private XUnitTestLogger _logger;
+
+        public void SetLogger(ITestOutputHelper logger)
+        {
+            _logger = new XUnitTestLogger(logger);
+        }
 
         public bool UseLocalConfig
         {
@@ -244,7 +251,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         applicationHadNonZeroExitCode = false;
                         retryTest = false;
 
-                        RemoteApplication.TestLogger = new XUnitTestLogger(TestLogger);
+                        RemoteApplication.TestLogger = TestLogger;
 
                         RemoteApplication.DeleteWorkingSpace();
 

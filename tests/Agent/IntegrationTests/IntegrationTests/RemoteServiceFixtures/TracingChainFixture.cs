@@ -83,7 +83,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             {
                 receiverApplication = new RemoteService(_applicationDirectoryName, _executableName, _targetFramework, ApplicationType.Bounded, createsPidFile: true, isCoreApp: false, publishApp: false);
             }
-            receiverApplication.TestLogger = new XUnitTestLogger(TestLogger);
+            receiverApplication.TestLogger = TestLogger;
             receiverApplication.DeleteWorkingSpace();
             receiverApplication.CopyToRemote();
 

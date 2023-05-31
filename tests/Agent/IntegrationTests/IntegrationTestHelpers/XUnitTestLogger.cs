@@ -31,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public void WriteLine(string format, params object[] args)
         {
-            _xunitOutput?.WriteLine($"{DateTime.Now} [({Process.GetCurrentProcess().Id})] {string.Format(format, args)}");
+            _xunitOutput?.WriteLine($"{DateTime.Now} [Test Runner ({Process.GetCurrentProcess().Id})] {string.Format(format, args)}");
         }
     }
 }

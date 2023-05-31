@@ -24,7 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.CodeLevelMetrics
         public WebApi2CodeAttributeTests(WebApiAsyncFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions
             (
                 setupConfiguration: () =>

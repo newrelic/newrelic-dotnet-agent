@@ -19,7 +19,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 
         public ThreadProfileStressTests(ThreadProfileStressTestWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
         {
-            fixture.TestLogger = output;
+            fixture.SetLogger(output);
 
             fixture.AddActions(
                 setupConfiguration: () =>

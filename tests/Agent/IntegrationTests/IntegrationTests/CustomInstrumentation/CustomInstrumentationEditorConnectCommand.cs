@@ -21,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         public CustomInstrumentationEditorConnectCommand(MvcWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddActions(
                 setupConfiguration: () =>

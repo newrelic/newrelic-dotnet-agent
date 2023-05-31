@@ -19,7 +19,7 @@ namespace ThreadProfileStressTest
 
         private static void Log(string message)
         {
-            Console.WriteLine($"{DateTime.Now} [{_applicationName} ({Process.GetCurrentProcess().Id})] {message}");
+            Console.WriteLine($"{DateTime.Now} {message}");
         }
 
         static void Main(string[] args)

@@ -53,7 +53,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         public AttributeInstrumentationTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
-            Fixture.TestLogger = output;
+            fixture.SetLogger(output);
 
             foreach (var testCommand in TestCommands)
             {

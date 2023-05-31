@@ -39,7 +39,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(false, "Hosted Web Core log failed validation: " + msg);
         }
 
-        public static void ValidateHostedWebCoreConsoleOutput(string log, ITestOutputHelper testLogger)
+        public static void ValidateHostedWebCoreConsoleOutput(string log, XUnitTestLogger testLogger)
         {
             StringReader reader = new StringReader(log);
             ValidatorState currentState = ValidatorState.HWC_FIRING_UP;

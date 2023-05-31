@@ -21,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
         public OtherTransactionAsync(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.Actions
             (
                 setupConfiguration: () =>

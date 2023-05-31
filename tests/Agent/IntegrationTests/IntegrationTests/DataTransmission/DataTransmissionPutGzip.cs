@@ -23,7 +23,7 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
         public DataTransmissionPutGzip(MvcWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddActions(
                 setupConfiguration: () =>

@@ -21,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
             _fixture = fixture;
             _appDomainCachingDisabled = appDomainCachingDisabled;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
 

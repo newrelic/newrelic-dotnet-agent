@@ -41,7 +41,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
         public ApiCallsTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
-            Fixture.TestLogger = output;
+            fixture.SetLogger(output);
 
             foreach (var apiCall in ApiCalls)
             {

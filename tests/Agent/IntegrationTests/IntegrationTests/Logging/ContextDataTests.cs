@@ -35,7 +35,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
             _fixture = fixture;
             _loggingFramework = loggingFramework;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework}");
             _fixture.AddCommand($"LoggingTester Configure");

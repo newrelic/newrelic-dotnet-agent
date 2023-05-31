@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
                     var environmentVariables = new Dictionary<string, string>();
 
-                    MockNewRelicApplication.TestLogger = new XUnitTestLogger(TestLogger);
+                    MockNewRelicApplication.TestLogger = TestLogger;
                     MockNewRelicApplication.DeleteWorkingSpace();
                     MockNewRelicApplication.CopyToRemote();
                     MockNewRelicApplication.Start(string.Empty, environmentVariables, doProfile: false);

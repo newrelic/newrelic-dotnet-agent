@@ -23,7 +23,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         public ThreadProfileTests(MvcWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
 
             _fixture.AddActions(
                 setupConfiguration: () =>

@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
         public InfiniteTracingFlakyTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
-            _fixture.TestLogger = output;
+            _fixture.SetLogger(output);
             _fixture.SetTimeout(TimeSpan.FromMinutes(3));
 
             // Ensure the trace observer will throw an error on every request
