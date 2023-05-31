@@ -50,34 +50,35 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.AddCommand($"ElasticsearchExerciser SetClient {clientType}");
 
             // Async operations
-
             _fixture.AddCommand($"ElasticsearchExerciser IndexAsync");
-
             _fixture.AddCommand($"ElasticsearchExerciser SearchAsync");
-
             _fixture.AddCommand($"ElasticsearchExerciser IndexManyAsync");
-
             _fixture.AddCommand($"ElasticsearchExerciser MultiSearchAsync");
 
             // Sync operations
-
             _fixture.AddCommand($"ElasticsearchExerciser Index");
-
             _fixture.AddCommand($"ElasticsearchExerciser Search");
-
             _fixture.AddCommand($"ElasticsearchExerciser IndexMany");
-
             _fixture.AddCommand($"ElasticsearchExerciser MultiSearch");
-
             _fixture.AddCommand($"ElasticsearchExerciser GenerateError");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
+
                     configModifier.ForceTransactionTraces();
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
 

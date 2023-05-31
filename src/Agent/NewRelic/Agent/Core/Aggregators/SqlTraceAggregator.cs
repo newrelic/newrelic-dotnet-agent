@@ -6,6 +6,7 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
@@ -46,6 +47,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override void Harvest()
         {
+            Log.Finest("SQL Trace harvest starting.");
+
             IDictionary<long, SqlTraceWireModel> oldSqlTraces;
             lock (_sqlTraceLock)
             {
@@ -65,6 +68,8 @@ namespace NewRelic.Agent.Core.Aggregators
             var responseStatus = DataTransportService.Send(slowestTraces);
 
             HandleResponse(responseStatus, slowestTraces);
+
+            Log.Finest("SQL Trace harvest finished.");
         }
 
         private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<SqlTraceWireModel> traces)
