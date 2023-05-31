@@ -239,6 +239,19 @@ namespace CompositeTests
             };
         }
 
+        private static Func<LoadedModuleWireModelCollection, DataTransportResponseStatus> SaveDataAndReturnSuccess(LoadedModuleWireModelCollection dataBucket)
+        {
+            return datas =>
+            {
+                if (datas != null)
+                {
+                    dataBucket = datas;
+                }
+
+                return DataTransportResponseStatus.RequestSuccessful;
+            };
+        }
+
         public void Dispose()
         {
             //Force the created transaction to finish if necessary so that it won't be garbage collected and harvested
