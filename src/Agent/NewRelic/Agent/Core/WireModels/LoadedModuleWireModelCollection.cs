@@ -134,22 +134,24 @@ namespace NewRelic.Agent.Core.WireModels
                     return false;
                 }
 
-                using (var stream = File.OpenRead(location))
+                using (var fs = new FileStream(location, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    using (var sha1 = SHA1.Create())
+                    var sha1 = SHA1.Create();
+                    var sha512 = SHA512.Create();
+                    var buffer = new byte[4096]; // 4KB
+                    int bytesRead;
+                    while ((bytesRead = fs.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        var hash = sha1.ComputeHash(stream);
-                        sha1FileHash = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                        sha1.TransformBlock(buffer, 0, bytesRead, null, 0);
+                        sha512.TransformBlock(buffer, 0, bytesRead, null, 0);
                     }
 
-                    // reset stream position to allow another read
-                    stream.Position = 0;
-
-                    using (var sha512 = SHA512.Create())
-                    {
-                        var hash = sha512.ComputeHash(stream);
-                        sha512FileHash = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-                    }
+                    sha1.TransformFinalBlock(buffer, 0, 0);
+                    sha512.TransformFinalBlock(buffer, 0, 0);
+                    sha1FileHash = BitConverter.ToString(sha1.Hash).Replace("-", "").ToLowerInvariant();
+                    sha512FileHash = BitConverter.ToString(sha512.Hash).Replace("-", "").ToLowerInvariant();
+                    sha1.Dispose();
+                    sha512.Dispose();
                 }
 
                 return true;
