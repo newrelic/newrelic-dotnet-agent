@@ -193,6 +193,32 @@ namespace NewRelic.Agent.Core.WireModels
             Assert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
             Assert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
         }
+
+        [Test]
+        public void ErrorsHandled_PublickeyToken()
+        {
+            var evilAssembly = new EvilTestAssembly(_baseTestAssembly);
+            evilAssembly.GetName().SetPublicKeyToken(null);
+
+            var assemblies = new List<Assembly>();
+            assemblies.Add(evilAssembly);
+
+            var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
+
+            Assert.AreEqual(1, loadedModules.LoadedModules.Count);
+
+            var loadedModule = loadedModules.LoadedModules[0];
+
+            Assert.AreEqual(BaseAssemblyName, loadedModule.AssemblyName);
+            Assert.AreEqual(BaseAssemblyVersion, loadedModule.Version);
+            Assert.AreEqual(BaseAssemblyName, loadedModule.Data["namespace"]);
+            Assert.AreEqual(BaseHashCode.ToString(), loadedModule.Data["assemblyHashCode"]);
+            Assert.False(loadedModule.Data.ContainsKey("publicKeyToken"));
+            Assert.AreEqual(BaseCompanyName, loadedModule.Data["Implementation-Vendor"]);
+            Assert.AreEqual(BaseCopyrightValue, loadedModule.Data["copyright"]);
+            Assert.False(loadedModule.Data.ContainsKey("sha1Checksum"));
+            Assert.False(loadedModule.Data.ContainsKey("sha512Checksum"));
+        }
     }
 
     public class TestAssembly : Assembly
