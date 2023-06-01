@@ -333,16 +333,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 finally
                 {
-                    TestLogger?.WriteLine("===== Begin Agent log file =====");
+                    TestLogger?.WriteLineOnFailure("===== Begin Agent log file =====");
                     try
                     {
-                        TestLogger?.WriteLine(AgentLog.GetFullLogAsString());
+                        TestLogger?.WriteLineOnFailure(AgentLog.GetFullLogAsString());
                     }
                     catch (Exception)
                     {
-                        TestLogger?.WriteLine("No log file found.");
+                        TestLogger?.WriteLineOnFailure("No log file found.");
                     }
-                    TestLogger?.WriteLine("----- End of Agent log file -----");
+                    TestLogger?.WriteLineOnFailure("----- End of Agent log file -----");
 
                 }
             }

@@ -24,6 +24,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
         }
 
+        public void WriteLineOnFailure(string message)
+        {
+            _xunitOutput?.WriteLine($"{DateTime.Now} [Test Runner ({Process.GetCurrentProcess().Id})] {message}");
+        }
+
         public void WriteLine(string message)
         {
             try
