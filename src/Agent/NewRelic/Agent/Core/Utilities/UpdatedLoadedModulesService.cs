@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
@@ -12,17 +13,18 @@ namespace NewRelic.Agent.Core.Utilities
 {
     public class UpdatedLoadedModulesService : DisposableService
     {
-        private static readonly TimeSpan _timeBetweenExecutions = TimeSpan.FromMinutes(1);
-
         private readonly IList<string> _loadedModulesSeen = new List<string>();
         private readonly IScheduler _scheduler;
         private readonly IDataTransportService _dataTransportService;
+        private readonly IConfigurationService _configurationService;
+        private IConfiguration _configuration => _configurationService?.Configuration;
 
-        public UpdatedLoadedModulesService(IScheduler scheduler, IDataTransportService dataTransportService)
+        public UpdatedLoadedModulesService(IScheduler scheduler, IDataTransportService dataTransportService, IConfigurationService configurationService)
         {
+            _configurationService = configurationService;
             _dataTransportService = dataTransportService;
             _scheduler = scheduler;
-            _scheduler.ExecuteEvery(GetLoadedModules, _timeBetweenExecutions);
+            _scheduler.ExecuteEvery(GetLoadedModules, _configuration.UpdateLoadedModulesCycle);
         }
 
         private void GetLoadedModules()
