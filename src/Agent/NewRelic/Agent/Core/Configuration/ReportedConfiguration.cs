@@ -638,6 +638,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("sql_traces.harvest_cycle")]
         public TimeSpan SqlTracesHarvestCycle => _configuration.SqlTracesHarvestCycle;
 
+        [JsonProperty("update_loaded_modules.cycle")]
+        public TimeSpan UpdateLoadedModulesCycle => _configuration.UpdateLoadedModulesCycle;
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return _configuration.GetAppSettings();

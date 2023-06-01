@@ -32,7 +32,11 @@ namespace NewRelic.Agent.Core.Utilities
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
             Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
+            Mock.Arrange(() => configuration.UpdateLoadedModulesCycle).Returns(TimeSpan.FromMinutes(1));
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+
+            var configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configurationService.Configuration).Returns(configuration);
 
             _dataTransportService = Mock.Create<IDataTransportService>();
 
@@ -41,7 +45,7 @@ namespace NewRelic.Agent.Core.Utilities
             Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
                 .DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _getLoadedModulesAction = action; _harvestCycle = harvestCycle; });
 
-            _updatedLoadedModulesService = new UpdatedLoadedModulesService(scheduler, _dataTransportService);
+            _updatedLoadedModulesService = new UpdatedLoadedModulesService(scheduler, _dataTransportService, configurationService);
 
             EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
         }
