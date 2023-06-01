@@ -439,6 +439,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public TimeSpan SqlTracesHarvestCycle => TimeSpan.FromMinutes(1);
 
+        public TimeSpan UpdateLoadedModulesCycle => TimeSpan.FromMinutes(1);
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return new Dictionary<string, string>

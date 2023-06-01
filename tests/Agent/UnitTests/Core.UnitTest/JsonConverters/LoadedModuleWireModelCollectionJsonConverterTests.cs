@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.Utilities
         [Test]
         public void LoadedModuleWireModelCollectionIsJsonSerializable()
         {
-            var expected = @"""Jars""[[""MyTestAssembly"",""1.0.0"",{""namespace"":""MyTestAssembly"",""publicKeyToken"":""7075626C69636B6579746F6B656E"",""assemblyHashCode"":""42"",""Implementation-Vendor"":""MyCompany"",""copyright"":""Copyright 2008""}]]";
+            var expected = @"[""Jars"",[[""MyTestAssembly"",""1.0.0"",{""namespace"":""MyTestAssembly"",""publicKeyToken"":""7075626C69636B6579746F6B656E"",""assemblyHashCode"":""42"",""Implementation-Vendor"":""MyCompany"",""copyright"":""Copyright 2008""}]]]";
 
             var baseAssemblyName = new AssemblyName();
             baseAssemblyName.Name = BaseAssemblyName;
@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.Utilities
             assemblies.Add(baseTestAssembly);
             var loadedModules = LoadedModuleWireModelCollection.Build(assemblies);
 
-            var serialized = JsonConvert.SerializeObject(loadedModules, Formatting.None);
+            var serialized = JsonConvert.SerializeObject(new[] { loadedModules }, Formatting.None);
             Assert.AreEqual(expected, serialized);
         }
     }
