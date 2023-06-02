@@ -28,12 +28,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
             _fixture.AddCommand($"MySqlExerciser CreateAndExecuteStoredProcedure {_procedureName} {paramsWithAtSigns}");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
 
                     configModifier.ForceTransactionTraces();
                     configModifier.SetLogLevel("finest");
@@ -42,11 +45,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "datastoreTracer", "queryParameters" }, "enabled", "true");
+                },
+                exerciseApplication: () =>
+                {
+                    // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)); // must be 2 minutes since this can take a while.
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
-
-            // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
-            _fixture.AddActions(exerciseApplication: () => _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)));
 
             _fixture.Initialize();
         }
@@ -183,59 +189,22 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     }
 
     [NetCoreTest]
-    public class MySqlStoredProcedureTestsWithAtSignsCore31 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class MySqlStoredProcedureTestsWithAtSignsCoreOldest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MySqlStoredProcedureTestsWithAtSignsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MySqlStoredProcedureTestsWithAtSignsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output, true)
         {
 
         }
     }
 
     [NetCoreTest]
-    public class MySqlStoredProcedureTestsWithoutAtSignsCore31 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class MySqlStoredProcedureTestsWithoutAtSignsCoreOldest : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MySqlStoredProcedureTestsWithoutAtSignsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MySqlStoredProcedureTestsWithoutAtSignsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output) : base(fixture, output, false)
         {
 
         }
     }
-
-    [NetCoreTest]
-    public class MySqlStoredProcedureTestsWithAtSignsCore50 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MySqlStoredProcedureTestsWithAtSignsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output, true)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class MySqlStoredProcedureTestsWithoutAtSignsCore50 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MySqlStoredProcedureTestsWithoutAtSignsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output) : base(fixture, output, false)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class MySqlStoredProcedureTestsWithAtSignsCore60 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public MySqlStoredProcedureTestsWithAtSignsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output, true)
-        {
-
-        }
-    }
-
-    [NetCoreTest]
-    public class MySqlStoredProcedureTestsWithoutAtSignsCore60 : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public MySqlStoredProcedureTestsWithoutAtSignsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output) : base(fixture, output, false)
-        {
-
-        }
-    }
-
     [NetCoreTest]
     public class MySqlStoredProcedureTestsWithAtSignsCore : MySqlStoredProcedureTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {

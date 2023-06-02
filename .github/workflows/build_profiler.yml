@@ -1,34 +1,361 @@
-name: Build .NET Agent Profiler
+name: Build and Package Profiler
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  #push:
-  #  branches: [ "main" ]
-  #pull_request:
-  #  branches: [ "main" ]
+  # run this workflow on a push to any branch other than main or a feature branch
+  push:
+    branches-ignore:
+      - main
+      - "feature/**"
 
-  # Allows you to run this workflow manually from the Actions tab
+  # this workflow can be called from another workflow
+  workflow_call:
+    inputs:
+      force-build:
+        description: 'Force a build, even if no files are changed'
+        required: true
+        type: boolean
+  
+  # this workflow can be invoked manually
   workflow_dispatch:
+    inputs:
+      force-build:
+        description: 'Force a build, even if no files are changed'
+        required: true
+        default: true
+        type: boolean
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+permissions:
+  contents: read
+
+# only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
+concurrency:
+  group: build-profiler-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  scripts_path: ${{ github.workspace }}\build\scripts
+  tools_path: ${{ github.workspace }}\build\Tools
+  DOTNET_NOLOGO: true
+
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+  check-for-changes:
+    name: Check for Updated Profiler Files
+    runs-on: ubuntu-22.04
+    permissions:
+      pull-requests: read
+    outputs:
+      profiler_src: ${{ steps.filter.outputs.profiler_src }}
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      #- uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Checkout
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          fetch-depth: 0
 
-      # Runs a set of commands using the runners shell
-      #- name: Run a multi-line script
-      #  run: |
-      #    echo Add other actions to build,
-      #    echo test, and deploy your project.
+      - name: Look for modified files
+        uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+        id: filter
+        with:
+          base: ${{ github.ref }}
+          filters: |
+            profiler_src:
+              - 'src/Agent/NewRelic/Profiler/**'
+          list-files: 'csv'
+
+  build-windows-profiler:
+    needs: check-for-changes
+    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
+    name: Build Windows Profiler
+    runs-on: windows-2019 # required because it includes Windows SDK 10.0.18362.0
+
+    env:
+      profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
+      profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
+      output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          fetch-depth: 0
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
+
+      - name: Clean out _profilerBuild directory
+        run: |
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-x64-release" -Recurse -Force  -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-arm64-release" -Recurse -Force  -ErrorAction SilentlyContinue
+        shell: powershell
+
+      - name: Build x64
+        run: |
+          Write-Host "List NuGet Sources"
+          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+          Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+          MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
+        shell: powershell
+
+      - name: Build x86
+        run: |
+          Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+          MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
+        shell: powershell
+
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: profiler
+          path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
+          if-no-files-found: error
+
+  build-linux-x64-profiler:
+    needs: check-for-changes
+    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
+    name: Build Linux x64 Profiler
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+
+    steps:
+      # intentionally disabled for this job, when enabled it causes a failure in the Build Linux Profiler step
+      # - name: Harden Runner
+      #   uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
+      #   with:
+      #     egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          fetch-depth: 0
+
+      - name: Clean out _profilerBuild directory
+        run: |
+          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
+        shell: bash
+
+      - name: Build Linux Profler
+        run: |
+          cd ${{ env.profiler_path }}
+          docker-compose build build
+          docker-compose run build
+        shell: bash
+
+      - name: Move Profiler to staging folder
+        run: |
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
+        shell: bash
+
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: profiler
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          if-no-files-found: error
+
+  build-linux-arm64-profiler:
+    needs: check-for-changes
+    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
+    name: Build Linux ARM64 Profiler
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      packages: write # for uraimo/run-on-arch-action to cache docker images
+
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          fetch-depth: 0
+
+      - name: Clean out _profilerBuild directory
+        run: |
+          rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.* || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-x64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release || true
+          rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
+        shell: bash
+
+      - uses: uraimo/run-on-arch-action@a8003307a739516fdd80ee6d3da8924db811b8da # v2.5.0
+        name: Run commands
+        id: runcmd
+        with:
+          arch: aarch64
+          distro: ubuntu18.04
+          githubToken: ${{ github.token }}
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y wget curl git dos2unix software-properties-common make binutils libc++-dev clang-3.9 lldb-3.9 build-essential
+            echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
+            wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+            mkdir /root/git
+            cd /root/git
+            git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
+            curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
+            chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
+            ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
+            rm /usr/bin/cc || true
+            ln -s /usr/bin/clang-3.9 /usr/bin/cc
+            rm /usr/bin/c++ || true
+            ln -s /usr/bin/clang++-3.9 /usr/bin/c++
+          dockerRunArgs: |
+            --volume "${{ env.profiler_path }}:/profiler"
+          run: |
+            cd /profiler
+            chmod 777 ./linux/build_profiler.sh
+            ./linux/build_profiler.sh
+
+      - name: Move Profiler to staging folder
+        run: |
+          mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/
+          mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-arm64-release/libNewRelicProfiler.so
+        shell: bash
+
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: profiler
+          path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+          if-no-files-found: error
+
+  package-and-deploy:
+    needs:
+      [
+        check-for-changes,
+        build-windows-profiler,
+        build-linux-x64-profiler,
+        build-linux-arm64-profiler,
+      ]
+    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
+    name: Package and Deploy Profiler NuGet
+    runs-on: windows-2022
+
+    env:
+      myget_source: https://www.myget.org/F/newrelic/api/v2/package
+
+    outputs:
+      package_version: ${{ steps.agentVersion.outputs.version }}
+  
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          fetch-depth: 0
+
+      - name: Download Profiler Artifacts to working Directory
+        uses: actions/download-artifact/@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: profiler
+          path: ${{ github.workspace }}/_workingDir
+      
+      - name: Determine Package Version from Git history
+        id: agentVersion
+        run: |
+          # get latest agent version tag
+          $agentVersion = git describe --match v* --abbrev=0 HEAD --tags
+          # get commit count since that tag
+          $getRevCmd = "git rev-list $agentVersion..HEAD --count HEAD"
+          $agentRev = Invoke-Expression $getRevCmd
+          # if count is > 0, add the rev to the version
+          if ($agentRev -gt 0) { $agentVersion = $agentVersion + "." + $agentRev}
+          # remove the leading "v" from the version number
+          $agentVersion = $agentVersion.substring(1)
+          echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
+        shell: powershell
+
+      - name: Stage files in working directory
+        run: |
+          New-Item "${{ github.workspace }}/_workingDir/images" -Type "directory"
+          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/images/*.*" -Destination "${{ github.workspace }}/_workingDir/images"
+          New-Item "${{ github.workspace }}/_workingDir/build" -Type "directory"
+          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/build/*.*" -Destination "${{ github.workspace }}/_workingDir/build"
+          Copy-Item -Path "${{ github.workspace }}/build/Packaging/NugetProfiler/readme.md" -Destination "${{ github.workspace }}/_workingDir"
+
+      - name: Pack Profiler NuGet Package
+        run: |
+          New-Item "${{ github.workspace }}/_workingDir/NugetProfiler" -Type "directory"
+          nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version ${{ steps.agentVersion.outputs.version }} -Verbosity detailed
+        shell: powershell
+
+      - name: Setup MyGet API Key
+        run: |
+          nuget.exe setApiKey ${{ secrets.MYGET_APIKEY }} -Source ${{ env.myget_source }}
+        shell: powershell
+
+      - name: Deploy Profiler Package to MyGet
+        run: |
+          $packageName = Get-ChildItem ${{ github.workspace }}/_workingDir/NugetProfiler/NewRelic.Agent.Internal.Profiler.*.nupkg -Name
+          $packagePath = Convert-Path ${{ github.workspace }}//_workingDir/NugetProfiler/$packageName
+          $version = $packageName.TrimStart('NewRelic.Agent.Internal.Profiler').TrimStart('.').TrimEnd('.nupkg')
+          nuget.exe push $packagePath -Source ${{ env.myget_source }}
+        shell: powershell
+
+  update-nuget-reference:
+    name: Update Profiler Nuget Reference
+    runs-on: ubuntu-22.04
+    needs: package-and-deploy
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        with:
+          egress-policy: audit
+
+      - name: Install xmlstarlet
+        run: |
+          sudo apt-get install -y xmlstarlet
+
+      - name: Checkout
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        with:
+          fetch-depth: 0
+
+      - name: Update Profiler Package Reference to Latest Version
+        run: |
+          cat ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj | \
+          xmlstarlet edit --pf --omit-decl \
+          --update "//PackageReference[@Include='NewRelic.Agent.Internal.Profiler']/@Version" \
+          --value "${{ needs.package-and-deploy.outputs.package_version }}" > ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp &&
+          cat ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp > ${{ github.workspace }}/src/Agent/NewRelic/Home/Home.csproj &&
+          rm -f ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@284f54f989303d2699d373481a0cfa13ad5a6666 # v5.0.1
+        with:
+            commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}."
+            title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}"
+            branch: profiler-nuget-updates/${{ github.ref_name }}
+            labels: |
+              profiler nuget
+              automated pr
+            delete-branch: true
+            add-paths: |
+              src/Agent/NewRelic/Home/Home.csproj

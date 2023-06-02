@@ -29,31 +29,35 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
 
             _fixture.AddCommand($"CosmosDBExerciser StartAgent");
-
             _fixture.AddCommand($"CosmosDBExerciser CreateReadAndDeleteDatabase {UniqueDbName}");
-
             _fixture.AddCommand($"CosmosDBExerciser CreateReadAndDeleteContainers {UniqueDbName} {_testContainerName}");
-
             _fixture.AddCommand($"CosmosDBExerciser CreateAndReadItems {UniqueDbName} {_testContainerName}");
-
             _fixture.AddCommand($"CosmosDBExerciser CreateAndQueryItems {UniqueDbName} {_testContainerName}");
 
             var itemsToCreate = 20;
-
             _fixture.AddCommand($"CosmosDBExerciser CreateItemsConcurrentlyAsync {UniqueDbName} {_testContainerName} {itemsToCreate}");
-
             _fixture.AddCommand($"CosmosDBExerciser CreateAndExecuteStoredProc {UniqueDbName} {_testContainerName}");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
+
                     configModifier.ForceTransactionTraces();
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainEnabled", "true");
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
 
@@ -68,22 +72,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadFeedDatabase", metricScope = expectedTransactionName, callCount = 2 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 2 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-
             var spanEvents = _fixture.AgentLog.GetSpanEvents();
-
             var traceId = spanEvents.Where(@event => @event.IntrinsicAttributes["name"].ToString().Equals(expectedTransactionName)).FirstOrDefault().IntrinsicAttributes["traceId"];
-
             var operationDatastoreSpans = spanEvents.Where(@event => @event.IntrinsicAttributes["traceId"].ToString().Equals(traceId) && @event.IntrinsicAttributes["name"].ToString().Contains("Datastore/operation/CosmosDB"));
-
 
             NrAssert.Multiple
             (
@@ -100,15 +97,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/DeleteCollection", metricScope = expectedTransactionName, callCount = 1 }
             };
 
@@ -127,13 +119,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, callCount = 1 },
 
                 //From calling Container.CreateItemStreamAsync() and Container.CreateItemAsync()
@@ -165,13 +153,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, callCount = 1 },
 
                 //From calling Container.CreateItemStreamAsync() and Container.CreateItemAsync()
@@ -183,7 +167,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
                 //From calling Container.GetItemQueryIterator() and Container.GetItemQueryStreamIterator()
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/QueryDocument", metricScope = expectedTransactionName, callCount = 2 }
             };
-
 
             var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
             {
@@ -212,13 +195,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/BatchDocument", metricScope = expectedTransactionName, callCount = 1 }
             };
 
@@ -235,11 +214,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
-
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/ReadCollection", metricScope = expectedTransactionName, callCount = 1 },
 
                 //From calling Scripts.CreateStoredProcedureAsync()
@@ -267,9 +243,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
 
 
     [NetCoreTest]
-    public class CosmosDBTestsCore : CosmosDBTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class CosmosDBTestsCore : CosmosDBTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public CosmosDBTestsCore(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public CosmosDBTestsCore(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

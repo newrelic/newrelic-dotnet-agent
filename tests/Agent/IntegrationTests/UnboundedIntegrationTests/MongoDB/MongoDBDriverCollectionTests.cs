@@ -70,6 +70,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _fixture.AddCommand("MongoDbDriverExerciser BulkWriteAsync");
             _fixture.AddCommand("MongoDbDriverExerciser Aggregate");
 
+            _fixture.AddActions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                }
+            );
+
             _fixture.Initialize();
         }
 
@@ -369,27 +383,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     }
 
     [NetCoreTest]
-    public class MongoDBDriverCollectionTestsCore60 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class MongoDBDriverCollectionTestsCoreOldest : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MongoDBDriverCollectionTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MongoDBDriverCollectionTestsCore50 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MongoDBDriverCollectionTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MongoDBDriverCollectionTestsCore31 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MongoDBDriverCollectionTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MongoDBDriverCollectionTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
         {
         }

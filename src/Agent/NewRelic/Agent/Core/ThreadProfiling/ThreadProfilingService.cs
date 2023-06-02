@@ -296,6 +296,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             PruningList.Add(node);
         }
 
+        // for unit testing only
         public int GetTotalBucketNodeCount()
         {
             return _threadProfilingBucket.GetNodeCount();
@@ -531,6 +532,14 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 return typeMethodNames;
             }
             return new FidTypeMethodName[0];
+        }
+
+        public bool IgnoreMinMinimumSamplingDuration
+        {
+            get
+            {
+                return _configuration.GetAgentCommandsCycle != _configuration.DefaultHarvestCycle;
+            }
         }
     }
 }

@@ -6,7 +6,9 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -31,6 +33,8 @@ namespace NewRelic.Agent.Core.Aggregators
             _agentHealthReporter = agentHealthReporter;
         }
 
+        protected override TimeSpan HarvestCycle => _configuration.SqlTracesHarvestCycle;
+
         protected override bool IsEnabled => _configuration.SlowSqlEnabled;
 
         public override void Collect(SqlTraceStatsCollection sqlTraceStats)
@@ -43,6 +47,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override void Harvest()
         {
+            Log.Finest("SQL Trace harvest starting.");
+
             IDictionary<long, SqlTraceWireModel> oldSqlTraces;
             lock (_sqlTraceLock)
             {
@@ -62,6 +68,8 @@ namespace NewRelic.Agent.Core.Aggregators
             var responseStatus = DataTransportService.Send(slowestTraces);
 
             HandleResponse(responseStatus, slowestTraces);
+
+            Log.Finest("SQL Trace harvest finished.");
         }
 
         private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<SqlTraceWireModel> traces)

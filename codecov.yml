@@ -5,23 +5,25 @@
 #
 codecov:
   branch: main
-  require_ci_to_pass: no
+  require_ci_to_pass: false # codecov won't wait for all other CI status to pass before sending its status
   notify:
-    wait_for_ci: no
+    wait_for_ci: false
 coverage:
+  range: "80..100" # 80% or higher is green
   status:
-    project:
+    project:  # project-level settings (i.e., main branch)
+      default:
+        target: auto # target coverage is based on current base commit
+        threshold: 0.5% # code coverage can drop by 0.5% below the base commit's coverage and still be successful
+        if_ci_failed: error 
+        informational: false  # if true, status will pass regardless regardless of other settings
+    patch: # pull request status
       default:
         target: auto
-        threshold: 1% # code coverage can drop by 1% and still be successful
-        if_ci_failed: success 
-        informational: true  # if true, status will pass regardless regardless of other settings
-    patch:
-      default:
-        target: auto
-        threshold: 1% # code coverage can drop by 1% and still be successful
-        if_ci_failed: success 
-        informational: true  # if true, status will pass regardless regardless of other settings
+        threshold: 80% # 80% of changed code in a PR must have code coverage for the CI to pass
+        if_ci_failed: error 
+        informational: false  # if true, status will pass regardless regardless of other settings
+        only_pulls: true # individual commits to a branch will not be considered, only pull requests
 comment:
   layout: "reach, diff, files" # change to "reach, diff, flags, files" if we start using flags
   behavior: default # new comment will be posted or existing comment will be edited

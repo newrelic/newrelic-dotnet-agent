@@ -12,7 +12,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="JustMock" Version="2020.1.113.1" />
-    <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
     <PackageReference Include="MoreLinq" Version="2.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
@@ -24,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.OracleClient" />
     <Reference Include="System.Messaging" />
@@ -41,11 +41,6 @@
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Parsing\Parsing.csproj" />
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
     <ProjectReference Include="..\NewRelic.Agent.TestUtilities\NewRelic.Agent.TestUtilities.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="$(RootProjectDirectory)\src\Agent\Shared\SharedLog4NetRepository.cs">
-      <Link>Properties\SharedLog4NetRepository.cs</Link>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="BrowserMonitoring\rum_loader_insertion_location\basic.html">

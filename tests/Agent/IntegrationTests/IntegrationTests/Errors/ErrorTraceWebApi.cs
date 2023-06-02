@@ -29,7 +29,8 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                     var newRelicConfig = fixture.DestinationNewRelicConfigFilePath;
 
                     var configModifier = new NewRelicConfigModifier(newRelicConfig);
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(10);
                     CommonUtils.DeleteXmlNodeFromNewRelicConfig(newRelicConfig, new[] { "configuration", "errorCollector" }, "ignoreClasses");
                     CommonUtils.DeleteXmlNodeFromNewRelicConfig(newRelicConfig, new[] { "configuration", "errorCollector" }, "ignoreStatusCodes");
 
@@ -38,7 +39,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 exerciseApplication: () =>
                 {
                     _fixture.ThrowException();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.ErrorTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();

@@ -17,10 +17,11 @@ using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Agent.Configuration;
-using System.Runtime.InteropServices;
+using NewRelic.Core.CodeAttributes;
 
 namespace NewRelic.Agent.Core
 {
+    [NrExcludeFromCodeCoverage]
     [JsonConverter(typeof(EnvironmentConverter))]
     public class Environment
     {
@@ -46,14 +47,16 @@ namespace NewRelic.Agent.Core
 
                 AddVariable("OS", () => System.Environment.OSVersion?.VersionString);
 
+#if NETSTANDARD2_0
                 // report linux distro name and version when appropriate
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                // This API is only supported on .net FX 4.7 + so limiting it
+                // to .net core since that is the one affected. 
+                if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
                 {
                     AddVariable("Linux Distro Name", () => RuntimeEnvironmentInfo.OperatingSystem);
                     AddVariable("Linux Distro Version", () => RuntimeEnvironmentInfo.OperatingSystemVersion);
                 }
 
-#if NETSTANDARD2_0
                 // This API is only supported on .net FX 4.7 + so limiting it
                 // to .net core since that is the one affected. 
                 AddVariable(".NET Version", () => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription.ToString());

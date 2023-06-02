@@ -357,11 +357,5 @@ namespace NewRelic.Agent.Core.Aggregators
             Assert.IsTrue(unsentMetrics.Any(_ => _.MetricName.Name == "DotNet/metric2" && _.Data.Value0 == 1));
             Assert.IsTrue(unsentMetrics.Any(_ => _.MetricName.Name == "Supportability/MetricHarvest/transmit" && _.Data.Value0 == 2));
         }
-
-        [Test]
-        public void Harvest_cycle_should_match_default_cycle()
-        {
-            Assert.AreEqual(TimeSpan.FromMinutes(1), _harvestCycle);
-        }
     }
 }

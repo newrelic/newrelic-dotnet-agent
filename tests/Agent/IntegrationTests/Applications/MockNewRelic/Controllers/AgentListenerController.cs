@@ -159,7 +159,7 @@ namespace MockNewRelic.Controllers
             var threadProfileArguments = new Dictionary<string, object>();
             threadProfileArguments["profile_id"] = -1;
             threadProfileArguments["sample_period"] = 0.1F; //Agent enforces minimums
-            threadProfileArguments["duration"] = 120; //Agent enforces minimums
+            threadProfileArguments["duration"] = 30; //Override is setup for tests so this value will work
 
             var threadProfileDetails = new CommandDetails("start_profiler", threadProfileArguments);
             var threadProfileCommand = new AgentCommand(-1, threadProfileDetails);

@@ -1,4 +1,4 @@
-name: build_download_site_index_files
+name: Build Download Site Index Files
 run-name: Indexing ${{ inputs.bucket }}/${{ inputs.prefix }} in ${{inputs.aws-region}} (dry-run=${{inputs.dry-run}}) by @${{ github.actor }}
 
 on:
@@ -43,6 +43,10 @@ on:
         default: true
         type: boolean  
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   s3-build-index:
     name: Build index.html files
@@ -51,7 +55,7 @@ jobs:
       image: ghcr.io/newrelic/s3indexer
     steps:
       - name: Login to AWS
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef # v2.0.0
         with:
           aws-region: ${{ inputs.aws-region }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}

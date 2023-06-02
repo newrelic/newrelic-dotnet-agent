@@ -27,8 +27,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 case "SERILOG":
                     _log = new SerilogLoggingAdapter();
                     break;
-                case "SERILOGWEB": // .NET 6.0 ONLY
-#if NET6_0    
+                case "SERILOGWEB": // .NET 7.0 ONLY
+#if NET7_0    
                     _log = new SerilogLoggingWebAdapter();
 #endif
                     break;
@@ -155,32 +155,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         public static async Task CreateSingleLogMessageInTransactionAsync(string message, string level)
         {
             await Task.Run(() => CreateSingleLogMessage(message, level));
-        }
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        [LibraryMethod]
-        public static async Task CreateSingleLogMessageAsyncNoAwait(string message, string level)
-        {
-            _ = Task.Run(() => CreateSingleLogMessage(message, level));
-        }
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-
-        public static async Task CreateSingleLogMessageInTransactionAsyncNoAwait(string message, string level)
-        {
-            _ = Task.Run(() => CreateSingleLogMessage(message, level));
-        }
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-
-        [LibraryMethod]
-        [Transaction]
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static async Task CreateSingleLogMessageInTransactionAsyncNoAwaitWithDelay(string message, string level)
-        {
-            _ = Task.Run(() => CreateSingleLogMessage(message, level));
-            await Task.Delay(1000);
         }
 
         [LibraryMethod]

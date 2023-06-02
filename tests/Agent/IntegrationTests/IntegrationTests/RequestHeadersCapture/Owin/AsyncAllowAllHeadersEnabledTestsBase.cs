@@ -34,13 +34,15 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
                     configModifier.EnableDistributedTrace();
                     configModifier.ForceTransactionTraces();
                     configModifier.AddAttributesInclude("request.parameters.*");
-
+                    configModifier.ConfigureFasterMetricsHarvestCycle(10);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(10);
+                    configModifier.ConfigureFasterSpanEventsHarvestCycle(10);
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
                 },
                 exerciseApplication: () =>
                 {
                     _fixture.PostAsync();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
             _fixture.Initialize();
@@ -56,7 +58,6 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.Owin
                 { "request.uri", "/AsyncAwait/SimplePostAsync" },
 
                 // Captured headers
-                { "request.headers.connection", "Keep-Alive" },
                 { "request.headers.accept", "application/json" },
                 { "request.headers.host", "fakehost:1234" },
                 { "request.headers.referer", "http://example.com/" },

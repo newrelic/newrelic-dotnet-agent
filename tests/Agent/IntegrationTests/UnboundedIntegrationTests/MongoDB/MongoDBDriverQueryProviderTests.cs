@@ -29,6 +29,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _fixture.AddCommand("MongoDBDriverExerciser ExecuteModel");
             _fixture.AddCommand("MongoDBDriverExerciser ExecuteModelAsync");
 
+            _fixture.AddActions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
+                }
+            );
+
             _fixture.Initialize();
         }
 
@@ -113,27 +127,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     }
 
     [NetCoreTest]
-    public class MongoDBDriverQueryProviderTestsCore60 : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class MongoDBDriverQueryProviderTestsCoreOldest : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MongoDBDriverQueryProviderTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MongoDBDriverQueryProviderTestsCore50 : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MongoDBDriverQueryProviderTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MongoDBDriverQueryProviderTestsCore31 : MongoDBDriverQueryProviderTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MongoDBDriverQueryProviderTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MongoDBDriverQueryProviderTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
         {
         }

@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 
 namespace NewRelic.Agent.Core.DataTransport
@@ -105,6 +106,12 @@ namespace NewRelic.Agent.Core.DataTransport
             catch (HttpException ex)
             {
                 HandleHttpErrorResponse(ex);
+            }
+            // Occurs when the agent is unable to connect to APM. The request failed due to an underlying
+            // issue such as network connectivity, DNS failure, server certificate validation or timeout.
+            catch (HttpRequestException)
+            {
+                ScheduleRestart();
             }
             // Occurs when the agent connects to APM but the connection gets aborted by the collector
             catch (SocketException)

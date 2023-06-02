@@ -18,7 +18,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void GetWithQueryString()
         {
             var address = $"http://{DestinationServerName}:{Port}/home?key=value";
-            DownloadStringAndAssertContains(address, "GET");
+            GetStringAndAssertContains(address, "GET");
         }
 
 

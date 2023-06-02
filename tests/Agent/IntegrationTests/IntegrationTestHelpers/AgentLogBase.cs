@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -58,16 +59,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string TransactionHasAlreadyCapturedResponseTimeLogLineRegEx = FinestLogLinePrefixRegex + @"Transaction has already captured the response time(.*)";
 
         // SetApplicationName related messages
-        public const string SetApplicationnameAPICalledDuringCollectMethodLogLineRegex = WarnLogLinePrefixRegex + "The runtime configuration was updated during connect";
+        public const string SetApplicationnameAPICalledDuringConnectMethodLogLineRegex = WarnLogLinePrefixRegex + "The runtime configuration was updated during connect";
         public const string AttemptReconnectLogLineRegex = InfoLogLinePrefixRegex + "Will attempt to reconnect in \\d{2,3} seconds";
 
         // Infinite trace
+        public const string SpanStreamingServiceConnectedLogLineRegex = InfoLogLinePrefixRegex + @"SpanStreamingService: gRPC channel to endpoint (.*) connected.(.*)";
         public const string SpanStreamingSuccessfullySentLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Attempting to send (\d+) item\(s\) - Success";
         public const string SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Received gRPC Server response messages: (\d+)";
         public const string SpanStreamingResponseGrpcError = FinestLogLinePrefixRegex + @"ResponseStreamWrapper: consumer \d+ - gRPC RpcException encountered while handling gRPC server responses: (.*)";
         
         // ContextData related messages
         public const string ContextDataNotSupportedLogLineRegex = WarnLogLinePrefixRegex + @".* Context data is not supported for this logging framework.";
+
+        public AgentLogBase(RemoteApplication remoteApplication)
+        {
+            _remoteApplication = remoteApplication;
+        }
+
+        private RemoteApplication _remoteApplication;
 
         public abstract IEnumerable<string> GetFileLines();
 
@@ -147,19 +156,23 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             var timeout = timeoutOrZero ?? TimeSpan.Zero;
 
+            _remoteApplication.TestLogger?.WriteLine($"{Timestamp} WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds} seconds. Minimum count: {minimumCount}");
+
             var timeTaken = Stopwatch.StartNew();
             do
             {
                 var matches = TryGetLogLines(regularExpression).ToList();
                 if (matches.Count >= minimumCount)
                 {
+                    _remoteApplication.TestLogger?.WriteLine($"{Timestamp} WaitForLogLines  Matched expression: {regularExpression}.");
                     return matches;
                 }
 
                 Thread.Sleep(TimeSpan.FromMilliseconds(100));
             } while (timeTaken.Elapsed < timeout);
 
-            var message = $"Log line did not appear a minimum of {minimumCount} times within {timeout.TotalSeconds} seconds.  Expected line expression: {regularExpression}";
+            var message = $"{Timestamp} Log line did not appear a minimum of {minimumCount} times within {timeout.TotalSeconds} seconds.  Expected line expression: {regularExpression}";
+            _remoteApplication.TestLogger?.WriteLine(message);
             throw new Exception(message);
         }
 
@@ -520,5 +533,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         }
 
         #endregion LogData
+
+        private string Timestamp
+        {
+            get
+            {
+                // Matches agent log date-time format
+                return DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss,fff");
+            }
+        }
     }
 }

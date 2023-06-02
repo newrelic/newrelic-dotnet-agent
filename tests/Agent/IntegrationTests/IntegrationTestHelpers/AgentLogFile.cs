@@ -9,6 +9,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -19,7 +20,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public bool Found => File.Exists(_filePath);
 
-        public AgentLogFile(string logDirectoryPath, string fileName = "", TimeSpan? timeoutOrZero = null, bool throwIfNotFound = true)
+        public AgentLogFile(string logDirectoryPath, RemoteApplication remoteApplication, string fileName = "", TimeSpan? timeoutOrZero = null, bool throwIfNotFound = true)
+            : base(remoteApplication)
         {
             Contract.Assert(logDirectoryPath != null);
 
@@ -49,7 +51,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             } while (timeTaken.Elapsed < timeout);
 
             if (throwIfNotFound)
-                throw new Exception("No agent log file found.");
+                throw new Exception($"Waited {timeout.TotalSeconds:N0}s but didn't find an agent log matching {Path.Combine(logDirectoryPath, searchPattern)}.");
         }
 
         public override IEnumerable<string> GetFileLines()

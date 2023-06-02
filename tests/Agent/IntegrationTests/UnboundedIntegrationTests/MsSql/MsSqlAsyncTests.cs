@@ -35,13 +35,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             _fixture.AddCommand($"{excerciserName} Wait 5000");
             _fixture.AddCommand($"{excerciserName} DropTable {_tableName}");
 
-
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
 
                     configModifier.ForceTransactionTraces();
 
@@ -52,8 +54,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                     CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(
                        instrumentationFilePath,
                         "", "enabled", "true");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
+
             _fixture.Initialize();
         }
 
@@ -197,33 +205,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MsSqlAsyncTests_SystemDataSqlClient_Core60 : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore60>
+    public class MsSqlAsyncTests_SystemDataSqlClient_CoreOldest : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MsSqlAsyncTests_SystemDataSqlClient_Core60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser")
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MsSqlAsyncTests_SystemDataSqlClient_Core50 : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public MsSqlAsyncTests_SystemDataSqlClient_Core50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(
-                  fixture: fixture,
-                  output: output,
-                  excerciserName: "SystemDataSqlClientExerciser")
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class MsSqlAsyncTests_SystemDataSqlClient_Core31 : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore31>
-    {
-        public MsSqlAsyncTests_SystemDataSqlClient_Core31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MsSqlAsyncTests_SystemDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -270,9 +254,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MsSqlAsyncTests_MicrosoftDataSqlClient_Core31 : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class MsSqlAsyncTests_MicrosoftDataSqlClient_CoreOldest : MsSqlAsyncTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MsSqlAsyncTests_MicrosoftDataSqlClient_Core31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
+        public MsSqlAsyncTests_MicrosoftDataSqlClient_CoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,

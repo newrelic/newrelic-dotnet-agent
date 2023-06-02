@@ -7,7 +7,9 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -41,6 +43,8 @@ namespace NewRelic.Agent.Core.Aggregators
             _readerWriterLock.Dispose();
         }
 
+        protected override TimeSpan HarvestCycle => _configuration.ErrorTracesHarvestCycle;
+
         protected override bool IsEnabled => _configuration.ErrorCollectorEnabled;
 
         public override void Collect(ErrorTraceWireModel errorTraceWireModel)
@@ -60,6 +64,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override void Harvest()
         {
+            Log.Finest("Error Trace harvest starting.");
+
             ICollection<ErrorTraceWireModel> errorTraceWireModels;
 
             _readerWriterLock.EnterWriteLock();
@@ -78,6 +84,8 @@ namespace NewRelic.Agent.Core.Aggregators
             var responseStatus = DataTransportService.Send(errorTraceWireModels);
 
             HandleResponse(responseStatus, errorTraceWireModels);
+
+            Log.Finest("Error Trace harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

@@ -26,16 +26,20 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 
             _fixture.AddCommand("NServiceBusDriver StartNServiceBusWithAsyncEventHandler");
             _fixture.AddCommand("NServiceBusDriver PublishEvent");
-            _fixture.AddCommand("RootCommands DelaySeconds 5");
-            _fixture.AddCommand("NServiceBusDriver StopNServiceBus");
 
-            _fixture.Actions
+            _fixture.AddActions
             (
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.SetLogLevel("finest");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(30));
+                    _fixture.SendCommand("NServiceBusDriver StopNServiceBus");
                 }
             );
 
@@ -106,27 +110,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
     }
 
     [NetCoreTest]
-    public class NsbAsyncEventHandlerTestsCore31 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureCore31>
+    public class NsbAsyncEventHandlerTestsCoreOldest : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public NsbAsyncEventHandlerTestsCore31(ConsoleDynamicMethodFixtureCore31 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NsbAsyncEventHandlerTestsCore50 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureCore50>
-    {
-        public NsbAsyncEventHandlerTestsCore50(ConsoleDynamicMethodFixtureCore50 fixture, ITestOutputHelper output)
-            : base(fixture, output)
-        {
-        }
-    }
-
-    [NetCoreTest]
-    public class NsbAsyncEventHandlerTestsCore60 : NsbAsyncEventHandlerTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public NsbAsyncEventHandlerTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+        public NsbAsyncEventHandlerTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

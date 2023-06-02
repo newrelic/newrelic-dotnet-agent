@@ -12,13 +12,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
     [NetCoreTest]
-    public class AspNetCoreCollectibleAssemblyContextTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCore3FeaturesFixture>
+    public class AspNetCoreCollectibleAssemblyContextTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreFeaturesFixture>
     {
-        private readonly RemoteServiceFixtures.AspNetCore3FeaturesFixture _fixture;
+        private readonly RemoteServiceFixtures.AspNetCoreFeaturesFixture _fixture;
 
         private const int ExpectedTransactionCount = 2;
 
-        public AspNetCoreCollectibleAssemblyContextTests(RemoteServiceFixtures.AspNetCore3FeaturesFixture fixture, ITestOutputHelper output)
+        public AspNetCoreCollectibleAssemblyContextTests(RemoteServiceFixtures.AspNetCoreFeaturesFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;

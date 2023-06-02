@@ -17,13 +17,14 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Util
     public static class IntegrationTestingFrameworkUtil
     {
 
-        public static EventWaitHandle RegisterProcessWithTestFramework(string[] args, string defaultPort)
-        {
-            RegisterProcessWithTestFrameworkAndInitialize(args, defaultPort, out var eventWaitHandle, out var cancellationTokenSource, (_, __, ___) => { });
-
-            return eventWaitHandle;
-        }
-
+        /// <summary>
+        /// Caller must dispose eventWaitHandle!
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="defaultPort"></param>
+        /// <param name="eventWaitHandle"></param>
+        /// <param name="cancellationTokenSource"></param>
+        /// <param name="initializationAction"></param>
         public static void RegisterProcessWithTestFrameworkAndInitialize(string[] args, string defaultPort, out EventWaitHandle eventWaitHandle, out CancellationTokenSource cancellationTokenSource, Action<string[], CancellationTokenSource, string> initializationAction)
         {
             var applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetEntryAssembly().CodeBase).LocalPath) + ".exe";

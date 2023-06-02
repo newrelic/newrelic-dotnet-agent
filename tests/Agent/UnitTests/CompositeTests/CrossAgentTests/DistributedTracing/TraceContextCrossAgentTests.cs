@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using Castle.Core.Internal;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -137,7 +136,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                 carrier.Add(key, value);
             });
 
-            testData.OutboundPayloadsSettings?.ForEach(payloadSettings =>
+            testData.OutboundPayloadsSettings?.ToList().ForEach(payloadSettings =>
             {
                 _agent.CurrentTransaction.InsertDistributedTraceHeaders(insertedHeaders, setHeaders);
 
@@ -148,6 +147,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 
                 insertedHeaders.Clear();
             });
+
             segment.End();
             transaction.End();
         }
@@ -161,8 +161,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                 {
                     var ingestHeaderSet = new List<KeyValuePair<string, string>>();
 
-                    headerSet.Headers.ForEach
-                    (header =>
+                    headerSet.Headers?.ToList().ForEach(header =>
                     {
 
                         if (header.Key.Equals("newrelic"))
@@ -295,7 +294,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                 }
             }
 
-            payloadSettings.Expected?.ForEach(expected =>
+            payloadSettings.Expected?.ToList().ForEach(expected =>
             {
                 switch (expected.Substring(0, expected.IndexOf('.')))
                 {
@@ -313,7 +312,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
                 }
             });
 
-            payloadSettings.Unexpected?.ForEach(unexpected =>
+            payloadSettings.Unexpected?.ToList().ForEach(unexpected =>
             {
                 switch (unexpected.Substring(0, unexpected.IndexOf('.')))
                 {

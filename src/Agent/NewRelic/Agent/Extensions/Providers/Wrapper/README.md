@@ -22,7 +22,7 @@ Unless there is a good, concrete reason to group logical wrappers together we sh
 
 1. Update assembly info
 	* Replace contents inside **AssemblyInfo.cs** with the following:
-```xml
+```cs
 using System.Reflection;
 
 [assembly: AssemblyTitle("<your_assembly_name>")]
@@ -96,7 +96,7 @@ _**NOTE:** Make sure to add the same version of the library that all other proje
 2. Add a Wrapper class for the method specified in the instrumentation file
 	* Add a new file to the project called `<framework_method>Wrapper.cs`
 	* Copy and paste the following contents:
-```xml
+```cs
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.WRAPPERNAMESPACE

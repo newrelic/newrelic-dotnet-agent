@@ -20,43 +20,43 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void GetIoBoundNoSpecialAsync()
         {
             var address = $"http://localhost:{Port}/AsyncAwaitTest/IoBoundNoSpecialAsync";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetCustomMiddlewareIoBoundNoSpecialAsync()
         {
             var address = $"http://localhost:{Port}/AsyncAwaitTest/CustomMiddlewareIoBoundNoSpecialAsync";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetIoBoundConfigureAwaitFalseAsync()
         {
             var address = $"http://localhost:{Port}/AsyncAwaitTest/IoBoundConfigureAwaitFalseAsync";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetCpuBoundTasksAsync()
         {
             var address = $"http://localhost:{Port}/AsyncAwaitTest/CpuBoundTasksAsync";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetManualTaskRunBlocked()
         {
             var address = $"http://localhost:{Port}/ManualAsync/TaskRunBlocked";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetManualTaskFactoryStartNewBlocked()
         {
             var address = $"http://localhost:{Port}/ManualAsync/TaskFactoryStartNewBlocked";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetManualNewThreadStartBlocked()
         {
             var address = $"http://localhost:{Port}/ManualAsync/NewThreadStartBlocked";
-            DownloadStringAndAssertEqual(address, "Worked");
+            GetStringAndAssertEqual(address, "Worked");
         }
 
     }

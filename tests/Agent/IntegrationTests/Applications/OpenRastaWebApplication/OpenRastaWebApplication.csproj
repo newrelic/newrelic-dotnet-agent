@@ -100,6 +100,11 @@
     <PackageReference Include="Microsoft.AspNet.Razor">
       <Version>2.0.30506</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers">
+      <Version>17.6.40</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="openrasta-codecs-webforms">
       <Version>2.5.5</Version>
     </PackageReference>

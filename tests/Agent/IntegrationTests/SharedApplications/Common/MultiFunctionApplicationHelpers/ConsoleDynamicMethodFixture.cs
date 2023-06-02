@@ -81,20 +81,6 @@ namespace MultiFunctionApplicationHelpers
         }
     }
 
-    public class ConsoleDynamicMethodFixtureCore31 : ConsoleDynamicMethodFixtureCoreSpecificVersion
-    {
-        public ConsoleDynamicMethodFixtureCore31() : base("netcoreapp3.1")
-        {
-        }
-    }
-
-    public class ConsoleDynamicMethodFixtureCore50 : ConsoleDynamicMethodFixtureCoreSpecificVersion
-    {
-        public ConsoleDynamicMethodFixtureCore50() : base("net5.0")
-        {
-        }
-    }
-
     public class ConsoleDynamicMethodFixtureCore60 : ConsoleDynamicMethodFixtureCoreSpecificVersion
     {
         public ConsoleDynamicMethodFixtureCore60() : base("net6.0")
@@ -108,6 +94,45 @@ namespace MultiFunctionApplicationHelpers
         {
         }
     }
+
+    /// <summary>
+    /// Use this fixture to test against the oldest supported .NET version.
+    /// If you need to test against a feature that belongs to a specific .net core version, then consider
+    /// using one of the existing specific version fixtures, or create a new specific version.
+    /// When testing newer .net core preview releases, this targetFramework version should be updated.
+    /// </summary>
+    public class ConsoleDynamicMethodFixtureCoreOldest : ConsoleDynamicMethodFixtureCore60
+    {
+        public ConsoleDynamicMethodFixtureCoreOldest()
+        {
+        }
+    }
+
+    /// <summary>
+    /// Use this fixture for High Security Mode tests
+    /// </summary>
+    public class ConsoleDynamicMethodFixtureCoreOldestHSM : ConsoleDynamicMethodFixtureCore60
+    {
+        public override string TestSettingCategory { get { return "HSM"; } }
+        public ConsoleDynamicMethodFixtureCoreOldestHSM()
+        {
+        }
+
+    }
+
+    /// <summary>
+    /// Use this fixture for Configurable Security Policy tests
+    /// </summary>
+    public class ConsoleDynamicMethodFixtureCoreOldestCSP : ConsoleDynamicMethodFixtureCore60
+    {
+        public override string TestSettingCategory { get { return "CSP"; } }
+        public ConsoleDynamicMethodFixtureCoreOldestCSP()
+        {
+        }
+
+    }
+
+
 
     /// <summary>
     /// Use this fixture if you don't care about which .net core version the test application should use.
@@ -164,8 +189,6 @@ namespace MultiFunctionApplicationHelpers
     {
         protected static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
 
-        protected override int MaxTries => 1;
-
         private List<string> _commands = new List<string>();
 
         public new RemoteConsoleApplication RemoteApplication => base.RemoteApplication as RemoteConsoleApplication;
@@ -184,6 +207,16 @@ namespace MultiFunctionApplicationHelpers
             return this;
         }
 
+        public void SendCommand(string cmd)
+        {
+            if (!RemoteApplication.IsRunning)
+            {
+                throw new Exception($"Remote Process has exited, Cannot execute command: {cmd}");
+            }
+
+            RemoteApplication.WriteToStandardInput(cmd);
+        }
+
         public ConsoleDynamicMethodFixture(string applicationDirectoryName, string executableName, string targetFramework, bool isCoreApp, TimeSpan timeout)
             : base(new RemoteConsoleApplication(applicationDirectoryName, executableName, targetFramework, ApplicationType.Shared, isCoreApp, isCoreApp)
                   .SetTimeout(timeout)
@@ -193,12 +226,7 @@ namespace MultiFunctionApplicationHelpers
             {
                 foreach (var cmd in _commands)
                 {
-                    if (!RemoteApplication.IsRunning)
-                    {
-                        throw new Exception($"Remote Process has exited, Cannot execute command: {cmd}");
-                    }
-
-                    RemoteApplication.WriteToStandardInput(cmd);
+                    SendCommand(cmd);
                 }
             });
         }

@@ -27,7 +27,7 @@ namespace BasicMvcCoreApplication
         {
             var commandLine = string.Join(" ", args);
 
-            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
+            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().Location).LocalPath) + ".exe";
 
             Console.WriteLine($"[{_applicationName}] Joined args: {commandLine}");
 
@@ -41,9 +41,12 @@ namespace BasicMvcCoreApplication
             var ct = new CancellationTokenSource();
             var task = BuildWebHost(args).RunAsync(ct.Token);
 
-            var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + _port);
-            CreatePidFile();
-            eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset,
+                       "app_server_wait_for_all_request_done_" + _port))
+            {
+                CreatePidFile();
+                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            }
 
             ct.Cancel();
 
@@ -60,7 +63,7 @@ namespace BasicMvcCoreApplication
         {
             var pid = Process.GetCurrentProcess().Id;
             var applicationDirectory =
-                Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath),
+                Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().Location).LocalPath),
                     _applicationName);
             var pidFilePath = applicationDirectory + ".pid";
 
