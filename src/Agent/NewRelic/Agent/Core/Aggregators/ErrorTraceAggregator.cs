@@ -7,6 +7,7 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
@@ -64,6 +65,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override async Task HarvestAsync()
         {
+            Log.Finest("Error Trace harvest starting.");
+
             ICollection<ErrorTraceWireModel> errorTraceWireModels;
 
             _readerWriterLock.EnterWriteLock();
@@ -82,6 +85,8 @@ namespace NewRelic.Agent.Core.Aggregators
             var responseStatus = await DataTransportService.SendAsync(errorTraceWireModels);
 
             HandleResponse(responseStatus, errorTraceWireModels);
+
+            Log.Finest("Error Trace harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

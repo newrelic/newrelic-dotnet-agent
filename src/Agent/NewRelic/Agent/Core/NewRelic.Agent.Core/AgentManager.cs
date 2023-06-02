@@ -18,6 +18,7 @@ using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace NewRelic.Agent.Core
 {
@@ -281,6 +282,7 @@ namespace NewRelic.Agent.Core
                     }
                 }
 
+                Log.Debug($".NET Runtime Version: {RuntimeInformation.FrameworkDescription}");
             }
 
         }
@@ -371,7 +373,7 @@ namespace NewRelic.Agent.Core
             finally
             {
                 Dispose();
-                log4net.LogManager.Shutdown();
+                Serilog.Log.CloseAndFlush();
             }
         }
 

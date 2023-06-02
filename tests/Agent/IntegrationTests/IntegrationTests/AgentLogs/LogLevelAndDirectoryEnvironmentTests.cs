@@ -46,9 +46,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         [Fact]
         public void AgentLog()
         {
-            var configLocation = new AgentLogFile(_configLogDirectory, throwIfNotFound: false);
-            var generalEnvLocation = new AgentLogFile(_generalEnvLogDirectory, throwIfNotFound: false);
-            var profilerEnvLocation = new AgentLogFile(_profilerEnvLogDirectory, throwIfNotFound: false);
+            var configLocation = new AgentLogFile(_configLogDirectory, _fixture.RemoteApplication, throwIfNotFound: false);
+            var generalEnvLocation = new AgentLogFile(_generalEnvLogDirectory, _fixture.RemoteApplication, throwIfNotFound: false);
+            var profilerEnvLocation = new AgentLogFile(_profilerEnvLogDirectory, _fixture.RemoteApplication, throwIfNotFound: false);
 
             Assert.False(configLocation.Found);
             Assert.True(generalEnvLocation.Found);

@@ -77,6 +77,12 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteXmlReader" />
       </match>
 
+      <!-- Oracle Devart driver -->
+      <match assemblyName="Devart.Data.Oracle" className="Devart.Data.Oracle.OracleCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+      </match>
+
       <!-- MySql (official) driver -->
       <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand">
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />

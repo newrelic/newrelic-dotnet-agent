@@ -8,6 +8,7 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
@@ -70,6 +71,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override async Task HarvestAsync()
         {
+            Log.Finest("Transaction Event harvest starting.");
+
             IResizableCappedCollection<PrioritizedNode<TransactionEventWireModel>> originalTransactionEvents;
             ConcurrentList<TransactionEventWireModel> originalSyntheticsTransactionEvents;
             _readerWriterLock.EnterWriteLock();
@@ -96,6 +99,8 @@ namespace NewRelic.Agent.Core.Aggregators
             var responseStatus = await DataTransportService.SendAsync(eventHarvestData, aggregatedEvents);
 
             HandleResponse(responseStatus, aggregatedEvents);
+
+            Log.Finest("Transaction Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

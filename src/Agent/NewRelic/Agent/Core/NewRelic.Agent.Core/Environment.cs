@@ -17,9 +17,11 @@ using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using NewRelic.Agent.Configuration;
+using NewRelic.Core.CodeAttributes;
 
 namespace NewRelic.Agent.Core
 {
+    [NrExcludeFromCodeCoverage]
     [JsonConverter(typeof(EnvironmentConverter))]
     public class Environment
     {

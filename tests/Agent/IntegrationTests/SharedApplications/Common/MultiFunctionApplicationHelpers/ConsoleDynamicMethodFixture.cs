@@ -189,8 +189,6 @@ namespace MultiFunctionApplicationHelpers
     {
         protected static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
 
-        protected override int MaxTries => 1;
-
         private List<string> _commands = new List<string>();
 
         public new RemoteConsoleApplication RemoteApplication => base.RemoteApplication as RemoteConsoleApplication;

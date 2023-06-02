@@ -3,6 +3,8 @@
 
 using System;
 using System.IO;
+using NewRelic.Core.CodeAttributes;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core
 {
@@ -15,6 +17,7 @@ namespace NewRelic.Agent.Core
     //
     // * Modifications include renaming the class and the addition of exception handling and logging.
 
+    [NrCoveredByIntegrationTests]
     public static class RuntimeEnvironmentInfo
     {
         private enum Platform
@@ -86,8 +89,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(RuntimeEnvironmentInfo));
-                logger.Debug($"Unable to report Operating System: Unexpected exception in GetFreeBSDVersion: {ex}");
+                Serilog.Log.Logger.Debug(ex, "Unable to report Operating System: Unexpected exception in GetFreeBSDVersion.");
             }
 #endif
             return string.Empty;
@@ -150,8 +152,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                log4net.ILog logger = log4net.LogManager.GetLogger(typeof(RuntimeEnvironmentInfo));
-                logger.Debug($"Unable to report Operating System: Unexpected exception in LoadDistroInfo: {ex}");
+                Serilog.Log.Logger.Debug(ex, $"Unable to report Operating System: Unexpected exception in LoadDistroInfo.");
             }
 
             return result;

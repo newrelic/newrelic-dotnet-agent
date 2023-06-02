@@ -374,5 +374,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideGetAgentCommandsCycle", seconds.ToString(), "urn:newrelic-config");
             return this;
         }
+
+        public NewRelicConfigModifier ConfigureFasterSqlTracesHarvestCycle(int seconds)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideSqlTracesHarvestCycle", seconds.ToString(), "urn:newrelic-config");
+            return this;
+        }
     }
 }

@@ -225,7 +225,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             {
                 _agent.CurrentTransaction.End();
 
-                var foundResponseTimeAlreadyCapturedMessage = logging.HasMessageBeginingWith("Transaction has already captured the response time.");
+                var foundResponseTimeAlreadyCapturedMessage = logging.HasMessageBeginningWith("Transaction has already captured the response time.");
                 Assert.False(foundResponseTimeAlreadyCapturedMessage);
             }
         }

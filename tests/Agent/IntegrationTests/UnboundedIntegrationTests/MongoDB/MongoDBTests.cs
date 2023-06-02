@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -22,7 +23,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             (
                 setupConfiguration: () =>
                 {
-
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
                 },
                 exerciseApplication: () =>
                 {
@@ -44,6 +47,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
                     _fixture.Validate();
                     _fixture.ParallelScanAs();
                     _fixture.CreateCollection();
+
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.MetricDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
 

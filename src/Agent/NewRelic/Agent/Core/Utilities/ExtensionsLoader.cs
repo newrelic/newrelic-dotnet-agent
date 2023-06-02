@@ -3,6 +3,7 @@
 
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.CodeAttributes;
 using NewRelic.Core.Logging;
 using NewRelic.TypeInstantiation;
 using System;
@@ -12,6 +13,7 @@ using System.Linq;
 
 namespace NewRelic.Agent.Core.Utilities
 {
+    [NrCoveredByIntegrationTests]
     public class ExtensionsLoader
     {
         /// <summary>

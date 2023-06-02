@@ -12,6 +12,7 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -68,6 +69,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override async Task HarvestAsync()
         {
+            Log.Finest("Log Event harvest starting.");
+
             var originalLogEvents = GetAndResetLogEvents(GetReservoirSize());
             var aggregatedEvents = originalLogEvents.Where(node => node != null).Select(node => node.Data).ToList();
 
@@ -97,6 +100,8 @@ namespace NewRelic.Agent.Core.Aggregators
             var responseStatus = await DataTransportService.SendAsync(modelsCollection);
 
             HandleResponse(responseStatus, aggregatedEvents);
+
+            Log.Finest("Log Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

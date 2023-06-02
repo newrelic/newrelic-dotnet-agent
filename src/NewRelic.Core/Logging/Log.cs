@@ -51,10 +51,7 @@ namespace NewRelic.Core.Logging
         /// </summary>
         public static void ErrorFormat(string format, params object[] args)
         {
-            if (IsErrorEnabled)
-            {
-                Logger.Error(string.Format(format, args));
-            }
+            Logger.ErrorFormat(format, args);
         }
 
         #endregion Error
@@ -87,10 +84,7 @@ namespace NewRelic.Core.Logging
         /// </summary>
         public static void WarnFormat(string format, params object[] args)
         {
-            if (IsWarnEnabled)
-            {
-                Logger.Warn(string.Format(format, args));
-            }
+            Logger.WarnFormat(format, args);
         }
 
         #endregion Warn
@@ -123,10 +117,7 @@ namespace NewRelic.Core.Logging
         /// </summary>
         public static void InfoFormat(string format, params object[] args)
         {
-            if (IsInfoEnabled)
-            {
-                Logger.Info(string.Format(format, args));
-            }
+            Logger.InfoFormat(format, args);
         }
 
         #endregion Info
@@ -151,7 +142,7 @@ namespace NewRelic.Core.Logging
         /// </summary>
         public static void Debug(Exception exception)
         {
-            Logger.Debug(exception.ToString());
+            Logger.Debug(exception);
         }
 
         /// <summary>
@@ -159,10 +150,7 @@ namespace NewRelic.Core.Logging
         /// </summary>
         public static void DebugFormat(string format, params object[] args)
         {
-            if (Logger.IsDebugEnabled)
-            {
-                Logger.Debug(string.Format(format, args));
-            }
+            Logger.DebugFormat(format, args);
         }
 
         #endregion Debug
@@ -195,10 +183,7 @@ namespace NewRelic.Core.Logging
         /// </summary>
         public static void FinestFormat(string format, params object[] args)
         {
-            if (IsFinestEnabled)
-            {
-                Logger.FinestFormat(format, args);
-            }
+            Logger.FinestFormat(format, args);
         }
 
         #endregion Finest
@@ -250,11 +235,6 @@ namespace NewRelic.Core.Logging
                     Finest(message);
                     break;
             }
-        }
-
-        public static void LogException(LogLevel level, Exception ex)
-        {
-            LogMessage(level, ex.ToString());
         }
     }
 }

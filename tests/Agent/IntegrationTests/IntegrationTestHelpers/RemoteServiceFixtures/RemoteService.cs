@@ -114,6 +114,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[RemoteService]: Publishing to {deployPath}.");
 
+            var sw = new Stopwatch();
+            sw.Start();
+
             var runtime = Utilities.CurrentRuntime;
             var process = new Process();
             var startInfo = new ProcessStartInfo();
@@ -173,7 +176,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 }
             }
 
-            Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath}");
+            sw.Stop();
+            Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath} in {sw.Elapsed}");
         }
 
         private object GetPublishLockObjectForCoreApp()
