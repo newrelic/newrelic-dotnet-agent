@@ -9,6 +9,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 {
     public class LoadedModuleWireModelCollectionJsonConverter : JsonConverter<LoadedModuleWireModelCollection>
     {
+        // The payload is labeled "Jars" since the collector method was originally meant for and used by Java.
         private const string JarsName = "Jars";
 
         public override LoadedModuleWireModelCollection ReadJson(JsonReader reader, Type objectType, LoadedModuleWireModelCollection existingValue, bool hasExistingValue, JsonSerializer serializer)
