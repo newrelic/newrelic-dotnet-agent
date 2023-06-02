@@ -30,12 +30,14 @@ namespace NewRelic.Agent.Core.Commands
             _configurationService = configurationService;
             _scheduler = scheduler;
 
-            _scheduler.ExecuteEvery(() => Task.Run(async () => await GetAndExecuteAgentCommandsAsync()).GetAwaiter().GetResult(), _configurationService.Configuration.GetAgentCommandsCycle);
+            _scheduler.ExecuteEvery(GetAndExecuteAgentCommandsAction, _configurationService.Configuration.GetAgentCommandsCycle);
         }
+
+        private void GetAndExecuteAgentCommandsAction() => Task.Run(async () => await GetAndExecuteAgentCommandsAsync()).GetAwaiter().GetResult();
 
         public override void Dispose()
         {
-            _scheduler.StopExecuting(() => Task.Run(async () => await GetAndExecuteAgentCommandsAsync()).GetAwaiter().GetResult());
+            _scheduler.StopExecuting(GetAndExecuteAgentCommandsAction);
         }
 
         public void AddCommands(params ICommand[] commands)

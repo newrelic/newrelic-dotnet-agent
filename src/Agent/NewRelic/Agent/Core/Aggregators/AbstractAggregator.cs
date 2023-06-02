@@ -30,8 +30,10 @@ namespace NewRelic.Agent.Core.Aggregators
 
         private void OnStopHarvestEvent(StopHarvestEvent obj)
         {
-            _scheduler.StopExecuting(() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult(), TimeSpan.FromSeconds(2));
+            _scheduler.StopExecuting(HarvestAction, TimeSpan.FromSeconds(2));
         }
+
+        private void HarvestAction() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult();
 
         public abstract void Collect(T wireModel);
 
@@ -45,17 +47,17 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             if (IsEnabled)
             {
-                _scheduler.ExecuteEvery(() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult(), HarvestCycle);
+                _scheduler.ExecuteEvery(HarvestAction, HarvestCycle);
             }
             else
             {
-                _scheduler.StopExecuting(() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult(), TimeSpan.FromSeconds(2));
+                _scheduler.StopExecuting(HarvestAction, TimeSpan.FromSeconds(2));
             }
         }
 
         private void OnPreCleanShutdown(PreCleanShutdownEvent obj)
         {
-            _scheduler.StopExecuting(() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult(), TimeSpan.FromSeconds(2));
+            _scheduler.StopExecuting(HarvestAction, TimeSpan.FromSeconds(2));
 
             if (!_configuration.CollectorSendDataOnExit || !IsEnabled)
                 return;
@@ -70,7 +72,7 @@ namespace NewRelic.Agent.Core.Aggregators
         public override void Dispose()
         {
             base.Dispose();
-            _scheduler.StopExecuting(() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult());
+            _scheduler.StopExecuting(HarvestAction);
         }
 
     }
