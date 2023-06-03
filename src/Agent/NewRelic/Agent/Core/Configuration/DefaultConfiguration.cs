@@ -2173,6 +2173,30 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private TimeSpan? _updateLoadedModulesCycleOverride = null;
+        public TimeSpan UpdateLoadedModulesCycle
+        {
+            get
+            {
+                if (_updateLoadedModulesCycleOverride.HasValue)
+                {
+                    return _updateLoadedModulesCycleOverride.Value;
+                }
+
+                if (_newRelicAppSettings.TryGetValue("OverrideUpdateLoadedModulesCycle", out var harvestCycle))
+                {
+                    if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                    {
+                        Log.Info("Update loaded modules cycle overridden to " + parsedHarvestCycle + " seconds.");
+                        _updateLoadedModulesCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                        return _updateLoadedModulesCycleOverride.Value;
+                    }
+                }
+
+                return DefaultHarvestCycle;
+            }
+        }
+
         #endregion
 
         #region Helpers

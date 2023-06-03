@@ -42,6 +42,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string SpanEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""span_event_data"" with : (.*)";
         public const string ErrorEventDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""error_event_data"" with : (.*)";
         public const string ThreadProfileDataLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""profile_data"" with : (.*)";
+        public const string UpdateLoadedModulesLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invoked ""update_loaded_modules"" with : (.*)";
 
         // Collector responses
         public const string ConnectResponseLogLineRegex = DebugLogLinePrefixRegex + @"Request\(.{36}\): Invocation of ""connect"" yielded response : {""return_value"":{""agent_run_id""(.*)";
@@ -452,6 +453,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #endregion
 
+        #region Connect Data
+
         public ConnectData GetConnectData()
         {
             var json = TryGetLogLines(ConnectLogLineRegex)
@@ -490,6 +493,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             return result;
         }
+
+        #endregion
 
         #region Metrics
 
@@ -533,6 +538,23 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         }
 
         #endregion LogData
+
+        #region UpdateLoadedModules
+
+        public IEnumerable<UpdateLoadedModulesPayload> GetUpdateLoadedModulesPayloads()
+        {
+            return TryGetLogLines(UpdateLoadedModulesLogLineRegex)
+                .Select(match => TryExtractJson(match, 1))
+                .Select(json => JsonConvert.DeserializeObject<UpdateLoadedModulesPayload>(json))
+                .Where(errorEvent => errorEvent != null);
+        }
+
+        public IEnumerable<UpdateLoadedModulesAssembly> GetUpdateLoadedModulesAeemblies()
+        {
+            return GetUpdateLoadedModulesPayloads().SelectMany(payload => payload.Assemblies);
+        }
+
+        #endregion
 
         private string Timestamp
         {

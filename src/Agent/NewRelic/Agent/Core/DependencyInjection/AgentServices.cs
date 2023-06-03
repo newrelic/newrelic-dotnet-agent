@@ -204,6 +204,8 @@ namespace NewRelic.Agent.Core.DependencyInjection
             }
             container.Register<NewRelicCore.DistributedTracing.ITracePriorityManager, NewRelicCore.DistributedTracing.TracePriorityManager>();
 
+            container.Register<UpdatedLoadedModulesService, UpdatedLoadedModulesService>();
+
             container.Build();
         }
 
@@ -231,6 +233,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Resolve<ThreadStatsSampler>().Start();
             container.Resolve<ConfigurationTracker>();
             container.Resolve<LiveInstrumentationServerConfigurationListener>();
+            container.Resolve<UpdatedLoadedModulesService>();
         }
     }
 }
