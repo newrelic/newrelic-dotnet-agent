@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.11.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.10.0...v10.11.0) (2023-06-03)
+
+
+### Notice
+
+* The Dotnet VMs UI page is now available for .NET CLR performance metrics. There is a new New Relic APM UI page available called "Dotnet VMs" that displays the data the .NET agent collects about an application's CLR performance.  See the [performance metrics documentaton](https://docs.newrelic.com/docs/apm/agents/net-agent/other-features/net-performance-metrics/) for more details. ([cc7cede](https://github.com/newrelic/newrelic-dotnet-agent/commit/cc7cedecc113812b5f7274e7a6bf1aa5a2511720))
+
+
+### Fixes
+
+* Clearing transaction context for held transactions and async WCF client instrumentation timing. ([#1608](https://github.com/newrelic/newrelic-dotnet-agent/issues/1608)) ([db9a48e](https://github.com/newrelic/newrelic-dotnet-agent/commit/db9a48e50b66c345fd53ff64b296025d03da77bb))
+* Stop double injecting headers with HttpClient on .NET Framework ([#1679](https://github.com/newrelic/newrelic-dotnet-agent/issues/1679)) ([e8bdc34](https://github.com/newrelic/newrelic-dotnet-agent/commit/e8bdc34072f044e7b056dd2ce773f184aed3bfe5))
+
+
+### New Features
+
+* Add detailed assembly reporting to enable Vulnerability Management support. ([#1685](https://github.com/newrelic/newrelic-dotnet-agent/issues/1685)) ([f249753](https://github.com/newrelic/newrelic-dotnet-agent/commit/f2497536dadb34caded7aa916b5f404ebf19e52a))
+* Adds minimal support for Devart Oracle client. ([181a628](https://github.com/newrelic/newrelic-dotnet-agent/commit/181a628ff1cb7a0f0b7a347378644782f085f3ab))
+* Use Serilog instead of log4net for internal logging.  ([#1661](https://github.com/newrelic/newrelic-dotnet-agent/issues/1661)) ([51080df](https://github.com/newrelic/newrelic-dotnet-agent/commit/51080df3848e36e0b6aa29b6cb9a0e94a1638b6f))
+
 ## [10.10.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.9.1...v10.10.0) (2023-04-26)
 
 
