@@ -139,7 +139,7 @@ namespace NewRelic.Agent.Core.Wrapper
 
                         segment.End();
                         transaction.End(captureResponseTime: !transactionAlreadyExists);
-                    }), TaskScheduler.FromCurrentSynchronizationContext());
+                    }), TaskScheduler.FromCurrentSynchronizationContext()).GetAwaiter().GetResult();
                 }
                 else
                 {
@@ -152,7 +152,7 @@ namespace NewRelic.Agent.Core.Wrapper
 
                         segment.End();
                         transaction.End(captureResponseTime: !transactionAlreadyExists);
-                    }), TaskContinuationOptions.ExecuteSynchronously);
+                    }), TaskContinuationOptions.ExecuteSynchronously).GetAwaiter().GetResult();
                 }
             }
         }

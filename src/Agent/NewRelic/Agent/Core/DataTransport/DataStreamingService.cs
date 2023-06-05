@@ -521,12 +521,16 @@ namespace NewRelic.Agent.Core.DataTransport
             }
 
             _responseStreamsDic.Clear();
+#pragma warning disable VSTHRD110
             Task.Run(() => ManageResponseStreams(CancellationToken));
+#pragma warning restore VSTHRD110
 
             //Start up the workers
             for (var i = 0; i < _configuration.InfiniteTracingTraceCountConsumers; i++)
             {
+#pragma warning disable VSTHRD110
                 Task.Run(() => ExecuteConsumer(_collection));
+#pragma warning restore VSTHRD110
             }
 
             CancellationToken.WaitHandle.WaitOne();
@@ -803,7 +807,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Task.Run(() =>
             {
                 Restart(collection);
-            });
+            }).GetAwaiter().GetResult();
         }
 
         /// <summary>

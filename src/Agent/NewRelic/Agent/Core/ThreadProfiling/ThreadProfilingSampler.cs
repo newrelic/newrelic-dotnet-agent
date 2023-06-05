@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             bool createWorker = 0 == Interlocked.CompareExchange(ref _workerRunning, 1, 0);
             if (createWorker)
             {
-                async void ThreadStart() => await InternalPolling_WaitCallbackAsync(frequencyInMsec, durationInMsec, sampleSink, nativeMethods);
+                void ThreadStart() => InternalPolling_WaitCallbackAsync(frequencyInMsec, durationInMsec, sampleSink, nativeMethods).GetAwaiter().GetResult();
 
                 _samplingWorker = new Thread(ThreadStart)
                 {
