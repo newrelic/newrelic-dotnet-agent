@@ -17,6 +17,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Telerik.JustMock;
 using NewRelic.Testing.Assertions;
 
@@ -155,7 +156,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var actualReservoirSize = int.MaxValue;
             var actualEventsSeen = int.MaxValue;
             var sentEvents = null as IEnumerable<ISpanEventWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
                 .DoInstead<EventHarvestData, IEnumerable<ISpanEventWireModel>>((eventHarvestData, events) =>
                 {
                     sentEvents = events;
@@ -207,11 +208,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
                 .Returns<EventHarvestData, IEnumerable<SpanAttributeValueCollection>>((_, events) =>
                 {
                     sendCalled = true;
-                    return DataTransportResponseStatus.RequestSuccessful;
+                    return Task.FromResult(DataTransportResponseStatus.RequestSuccessful);
                 });
 
             // Act
@@ -226,11 +227,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
             // Arrange
             IEnumerable<SpanAttributeValueCollection> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
                 .Returns<EventHarvestData, IEnumerable<SpanAttributeValueCollection>>((_, events) =>
                 {
                     sentEvents = events;
-                    return DataTransportResponseStatus.Discard;
+                    return Task.FromResult(DataTransportResponseStatus.Discard);
                 });
 
             CollectSpanEvents(2);
@@ -250,11 +251,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
             const int eventCount = 2;
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
                 .Returns<EventHarvestData, IEnumerable<ISpanEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
-                    return DataTransportResponseStatus.Retain;
+                    return Task.FromResult(DataTransportResponseStatus.Retain);
                 });
 
             CollectSpanEvents(eventCount);
@@ -277,13 +278,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
             // Arrange
             var firstTime = true;
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
                 .Returns<EventHarvestData, IEnumerable<ISpanEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
                     var returnValue = firstTime ? DataTransportResponseStatus.Retain : DataTransportResponseStatus.RequestSuccessful;
                     firstTime = false;
-                    return returnValue;
+                    return Task.FromResult(returnValue);
                 });
 
             CollectSpanEvents(eventCount);
@@ -314,11 +315,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
                 .Returns<EventHarvestData, IEnumerable<ISpanEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
-                    return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
+                    return Task.FromResult(DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
                 });
 
             CollectSpanEvents(eventCount);
@@ -339,11 +340,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
             const int eventCount = 1;
             // Arrange
             IEnumerable<SpanAttributeValueCollection> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
                 .Returns<EventHarvestData, IEnumerable<SpanAttributeValueCollection>>((_, events) =>
                 {
                     sentEvents = events;
-                    return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
+                    return Task.FromResult(DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
                 });
 
             CollectSpanEvents(eventCount);

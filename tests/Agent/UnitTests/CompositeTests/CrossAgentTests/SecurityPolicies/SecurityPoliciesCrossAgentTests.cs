@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Config;
@@ -63,13 +64,13 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
         }
 
         [TestCaseSource(nameof(SecurityPoliciesTestDatas))]
-        public void SecurityPolicies_CrossAgentTests(SecurityPoliciesTestData testData)
+        public async Task SecurityPolicies_CrossAgentTests(SecurityPoliciesTestData testData)
         {
             InitializeStartingPolicySettings(testData);
             InitializePreconnectResponse(testData);
             InitializeConnectResponse();
 
-            RunConnectProcess();
+            await RunConnectProcessAsync();
 
             ValidateShutdownSignal(testData);
             ValidatePoliciesSentToConnect(testData);
@@ -138,26 +139,26 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
         {
             var securityPolicies = JsonConvert.SerializeObject(testData.SecurityPolicies);
 
-            Mock.Arrange(() => _collectorWire.SendData("preconnect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
-                .Returns("{'return_value': { 'redirect_host': '', 'security_policies': " + securityPolicies + "}}");
+            Mock.Arrange(() => _collectorWire.SendDataAsync("preconnect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
+                .ReturnsAsync("{'return_value': { 'redirect_host': '', 'security_policies': " + securityPolicies + "}}");
         }
 
         private void InitializeConnectResponse()
         {
             var jsonString = JsonConvert.SerializeObject(_compositeTestAgent.ServerConfiguration);
-            Mock.Arrange(() => _collectorWire.SendData("connect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
-                .Returns((Func<string, ConnectionInfo, string, string>)((method, connectionInfo, serializedData) =>
+            Mock.Arrange(() => _collectorWire.SendDataAsync("connect", Arg.IsAny<ConnectionInfo>(), Arg.IsAny<string>(), Arg.IsAny<Guid>()))
+                .ReturnsAsync((Func<string, ConnectionInfo, string, string>)((method, connectionInfo, serializedData) =>
                 {
                     _connectRawData = serializedData;
                     return $"{{'return_value': {jsonString} }}";
                 }));
         }
 
-        private void RunConnectProcess()
+        private async Task RunConnectProcessAsync()
         {
             try
             {
-                _connectionHandler.Connect();
+                await _connectionHandler.ConnectAsync();
             }
             catch (SecurityPoliciesValidationException)
             {

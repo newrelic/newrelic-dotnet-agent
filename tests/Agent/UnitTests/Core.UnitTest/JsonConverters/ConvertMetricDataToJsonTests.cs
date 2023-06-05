@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.JsonConverters
         [Test]
         public void Serialize_NoErrors()
         {
-            Assert.DoesNotThrow(() => _connectionHandler.SendDataRequest<object>("metric_data", _wellformedMetricData));
+            Assert.DoesNotThrowAsync(async () => await _connectionHandler.SendDataRequestAsync<object>("metric_data", _wellformedMetricData));
         }
 
         [Test]

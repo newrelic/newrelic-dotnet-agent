@@ -17,6 +17,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -75,7 +76,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var configuration = GetDefaultConfiguration(int.MaxValue);
             var sentEvents = null as IEnumerable<TransactionEventWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
                 .DoInstead<IEnumerable<TransactionEventWireModel>>(events => sentEvents = events);
             var transactionEventWireModel = new TransactionEventWireModel(_attribValues, false, 0.3f);
             _transactionEventAggregator.Collect(transactionEventWireModel);
@@ -95,7 +96,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEvents = null as IEnumerable<TransactionEventWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
                 .DoInstead<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) => sentEvents = events);
 
             var eventsToSend = new[]
@@ -131,7 +132,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var expectedEventsSeen = eventsToSend.Length;
 
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
                 .DoInstead<EventHarvestData, IEnumerable<TransactionEventWireModel>>((eventHarvestData, events) =>
                 {
                     actualReservoirSize = eventHarvestData.ReservoirSize;
@@ -177,10 +178,10 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.1f));
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.2f));
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
-                    return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
+                    return Task.FromResult(DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
                 });
 
             // Act
@@ -195,11 +196,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
                 .Returns<IEnumerable<TransactionEventWireModel>>(events =>
                 {
                     sendCalled = true;
-                    return DataTransportResponseStatus.RequestSuccessful;
+                    return Task.FromResult(DataTransportResponseStatus.RequestSuccessful);
                 });
 
             // Act
@@ -214,11 +215,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<TransactionEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
                     sentEvents = events;
-                    return DataTransportResponseStatus.RequestSuccessful;
+                    return Task.FromResult(DataTransportResponseStatus.RequestSuccessful);
                 });
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.1f));
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.2f));
@@ -237,11 +238,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<TransactionEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
                     sentEvents = events;
-                    return DataTransportResponseStatus.Discard;
+                    return Task.FromResult(DataTransportResponseStatus.Discard);
                 });
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.1f));
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.2f));
@@ -260,11 +261,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
-                    return DataTransportResponseStatus.Retain;
+                    return Task.FromResult(DataTransportResponseStatus.Retain);
                 });
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.1f));
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.2f));
@@ -284,11 +285,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
                     sentEventCount = events.Count();
-                    return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
+                    return Task.FromResult(DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
                 });
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.1f));
             _transactionEventAggregator.Collect(new TransactionEventWireModel(_attribValues, false, 0.2f));
@@ -308,11 +309,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<TransactionEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
                 .Returns<EventHarvestData, IEnumerable<TransactionEventWireModel>>((_, events) =>
                 {
                     sentEvents = events;
-                    return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
+                    return Task.FromResult(DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
                 });
             var transactionEventWireModel = new TransactionEventWireModel(_attribValues, false, 0.3f);
             _transactionEventAggregator.Collect(transactionEventWireModel);

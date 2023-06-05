@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -85,7 +86,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var configuration = GetDefaultConfiguration(int.MaxValue);
             var sentEvents = null as IEnumerable<CustomEventWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
                 .DoInstead<IEnumerable<CustomEventWireModel>>(events => sentEvents = events);
             _customEventAggregator.Collect(Mock.Create<CustomEventWireModel>());
 
@@ -106,7 +107,7 @@ namespace NewRelic.Agent.Core.Aggregators
             Mock.Arrange(() => configuration.CustomEventsMaximumSamplesStored).Returns(2);  //set the reservoir to only two
             Mock.Arrange(() => configuration.ConfigurationVersion).Returns(configuration.ConfigurationVersion + 1);
             var sentEvents = Enumerable.Empty<CustomEventWireModel>();
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
                 .DoInstead<IEnumerable<CustomEventWireModel>>(events => sentEvents = events);
 
             //ordered by priority descending
@@ -147,7 +148,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEvents = null as IEnumerable<CustomEventWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
                 .DoInstead<IEnumerable<CustomEventWireModel>>(events => sentEvents = events);
 
             //ordered by priority descending
@@ -198,11 +199,8 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             _customEventAggregator.Collect(new CustomEventWireModel(0.1f, GetCustomEventAttribs()));
             _customEventAggregator.Collect(new CustomEventWireModel(0.2f, GetCustomEventAttribs()));
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
-                .Returns<IEnumerable<CustomEventWireModel>>(events =>
-                {
-                    return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
-                });
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+                .ReturnsAsync(DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
 
             // Act
             _harvestAction();
@@ -216,11 +214,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
                 .Returns<IEnumerable<CustomEventWireModel>>(events =>
                 {
                     sendCalled = true;
-                    return DataTransportResponseStatus.RequestSuccessful;
+                    return Task.FromResult(DataTransportResponseStatus.RequestSuccessful);
                 });
 
             // Act
@@ -235,11 +233,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<CustomEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
                 .Returns<IEnumerable<CustomEventWireModel>>(events =>
                 {
                     sentEvents = events;
-                    return DataTransportResponseStatus.RequestSuccessful;
+                    return Task.FromResult(DataTransportResponseStatus.RequestSuccessful);
                 });
 
             _customEventAggregator.Collect(new CustomEventWireModel(0.1f, GetCustomEventAttribs()));
@@ -259,11 +257,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<CustomEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
                 .Returns<IEnumerable<CustomEventWireModel>>(events =>
                 {
                     sentEvents = events;
-                    return DataTransportResponseStatus.Discard;
+                    return Task.FromResult(DataTransportResponseStatus.Discard);
                 });
             _customEventAggregator.Collect(new CustomEventWireModel(0.1f, GetCustomEventAttribs()));
             _customEventAggregator.Collect(new CustomEventWireModel(0.2f, GetCustomEventAttribs()));
@@ -282,11 +280,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
                 .Returns<IEnumerable<CustomEventWireModel>>(events =>
                 {
                     sentEventCount = events.Count();
-                    return DataTransportResponseStatus.Retain;
+                    return Task.FromResult(DataTransportResponseStatus.Retain);
                 });
             _customEventAggregator.Collect(new CustomEventWireModel(0.1f, GetCustomEventAttribs()));
             _customEventAggregator.Collect(new CustomEventWireModel(0.2f, GetCustomEventAttribs()));
@@ -306,11 +304,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentEventCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
                 .Returns<IEnumerable<CustomEventWireModel>>(events =>
                 {
                     sentEventCount = events.Count();
-                    return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
+                    return Task.FromResult(DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
                 });
             _customEventAggregator.Collect(new CustomEventWireModel(0.1f, GetCustomEventAttribs()));
             _customEventAggregator.Collect(new CustomEventWireModel(0.11f, GetCustomEventAttribs()));
@@ -330,11 +328,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<CustomEventWireModel> sentEvents = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
                 .Returns<IEnumerable<CustomEventWireModel>>(events =>
                 {
                     sentEvents = events;
-                    return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
+                    return Task.FromResult(DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
                 });
             _customEventAggregator.Collect(new CustomEventWireModel(0.1f, GetCustomEventAttribs()));
             _harvestAction();

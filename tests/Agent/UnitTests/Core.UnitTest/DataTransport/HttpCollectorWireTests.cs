@@ -51,7 +51,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         [TestCase(false)]
         [TestCase(true)]
-        public void SendData_ShouldSendRequestWithValidParameters(bool usePutForSend)
+        public async Task SendData_ShouldSendRequestWithValidParameters(bool usePutForSend)
         {
             // Arrange
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
@@ -71,7 +71,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var collectorWire = CreateHttpCollectorWire();
 
             // Act
-            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+            var response = await collectorWire.SendDataAsync("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
             Assert.AreEqual("{}", response);
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
-        public void SendData_ShouldReturnEmptyResponseBody_WhenResponseContentIsNull()
+        public async Task SendData_ShouldReturnEmptyResponseBody_WhenResponseContentIsNull()
         {
             // Arrange
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
@@ -99,7 +99,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var collectorWire = CreateHttpCollectorWire();
 
             // Act
-            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+            var response = await collectorWire.SendDataAsync("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
             Assert.AreEqual("{}", response);
@@ -108,7 +108,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
-        public void SendData_ShouldReturnEmptyResponse_WhenResponseContentIsEmpty()
+        public async Task SendData_ShouldReturnEmptyResponse_WhenResponseContentIsEmpty()
         {
             // Arrange
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var collectorWire = CreateHttpCollectorWire();
 
             // Act
-            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+            var response = await collectorWire.SendDataAsync("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
             Assert.AreEqual("{}", response);
@@ -136,7 +136,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
-        public void SendData_DecompressesGZipResponse()
+        public async Task SendData_DecompressesGZipResponse()
         {
             // Arrange
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var collectorWire = CreateHttpCollectorWire();
 
             // Act
-            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+            var response = await collectorWire.SendDataAsync("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
             Assert.AreEqual(serializedData, response);
@@ -180,7 +180,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         [Test]
-        public void SendData_ReturnsEmptyResponse_WhenGZipResponseIsInvalid()
+        public async Task SendData_ReturnsEmptyResponse_WhenGZipResponseIsInvalid()
         {
             // Arrange
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
@@ -217,7 +217,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var collectorWire = CreateHttpCollectorWire();
 
             // Act
-            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+            var response = await collectorWire.SendDataAsync("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
             Assert.AreEqual("{}", response);
@@ -245,7 +245,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var collectorWire = CreateHttpCollectorWire();
 
             // Act and Assert
-            Assert.Throws<HttpRequestException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
+            Assert.ThrowsAsync<HttpRequestException>(async () => await collectorWire.SendDataAsync("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
             Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
             Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
@@ -271,14 +271,14 @@ namespace NewRelic.Agent.Core.DataTransport
             var collectorWire = CreateHttpCollectorWire();
 
             // Act and Assert
-            Assert.Throws<HttpException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
+            Assert.ThrowsAsync<HttpException>(async () => await collectorWire.SendDataAsync("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
             Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
             Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
         }
 
         [Test]
-        public void SendData_ShouldDropPayload_WhenPayloadSizeExceedsMaxSize()
+        public async Task SendData_ShouldDropPayload_WhenPayloadSizeExceedsMaxSize()
         {
             // Arrange
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
@@ -298,7 +298,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var collectorWire = CreateHttpCollectorWire();
 
             // Act
-            var result = collectorWire.SendData("test_method", connectionInfo, largeSerializedData, Guid.NewGuid());
+            var result = await collectorWire.SendDataAsync("test_method", connectionInfo, largeSerializedData, Guid.NewGuid());
 
             // Assert
             Assert.AreEqual("{}", result);

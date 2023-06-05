@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -81,7 +82,7 @@ namespace NewRelic.Agent.Core.Aggregators
             // Arrange
             var configuration = GetDefaultConfiguration(int.MaxValue);
             var sentErrors = null as IEnumerable<ErrorTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
                 .DoInstead<IEnumerable<ErrorTraceWireModel>>(errors => sentErrors = errors);
             _errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
 
@@ -102,7 +103,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentErrors = null as IEnumerable<ErrorTraceWireModel>;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
                 .DoInstead<IEnumerable<ErrorTraceWireModel>>(errors => sentErrors = errors);
             var errorsToSend = new[]
             {
@@ -125,11 +126,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sendCalled = false;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
-                    sendCalled = true;
-                    return DataTransportResponseStatus.RequestSuccessful;
+                    sendCalled = true;  
+                    return Task.FromResult(DataTransportResponseStatus.RequestSuccessful);
                 });
 
             // Act
@@ -148,11 +149,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<ErrorTraceWireModel> sentErrors = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
                     sentErrors = errors;
-                    return DataTransportResponseStatus.RequestSuccessful;
+                    return Task.FromResult(DataTransportResponseStatus.RequestSuccessful);
                 });
             _errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
             _errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
@@ -171,11 +172,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<ErrorTraceWireModel> sentErrors = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
                     sentErrors = errors;
-                    return DataTransportResponseStatus.Discard;
+                    return Task.FromResult(DataTransportResponseStatus.Discard);
                 });
             _errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
             _errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
@@ -194,11 +195,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             var sentErrorsCount = int.MinValue;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
                     sentErrorsCount = errors.Count();
-                    return DataTransportResponseStatus.Retain;
+                    return Task.FromResult(DataTransportResponseStatus.Retain);
                 });
             _errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
 
@@ -216,11 +217,11 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             // Arrange
             IEnumerable<ErrorTraceWireModel> sentErrors = null;
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
                     sentErrors = errors;
-                    return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
+                    return Task.FromResult(DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard);
                 });
             _errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
 
@@ -269,10 +270,10 @@ namespace NewRelic.Agent.Core.Aggregators
         public void error_trace_recollected_is_reported_to_agent_health()
         {
             // Arrange
-            Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendAsync(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
                 .Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
                 {
-                    return DataTransportResponseStatus.Retain;
+                    return Task.FromResult(DataTransportResponseStatus.Retain);
                 });
             _errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
             _harvestAction();

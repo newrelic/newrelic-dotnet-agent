@@ -17,7 +17,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="JustMock" Version="2020.1.113.1" />
+    <PackageReference Include="JustMock" Version="2023.2.601.35" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.DataTransport;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -113,7 +114,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         }
 
         [Test]
-        public void FullCycleTest_IsSuccessful()
+        public async Task FullCycleTest_IsSuccessful()
         {
 
             // Arrange
@@ -131,7 +132,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             var actualModels = new List<ThreadProfilingModel>();
             Mock.Arrange(() =>
-                    _dataTransportService.SendThreadProfilingData(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()))
+                    _dataTransportService.SendThreadProfilingDataAsync(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()))
                 .DoInstead((IEnumerable<ThreadProfilingModel> models) =>
                 {
                     actualModels.AddRange(models);
@@ -147,11 +148,11 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             _threadProfilingService.Start();
             _threadProfilingService.StartThreadProfilingSession(1, 60000, 120000);
             _threadProfilingService.SampleAcquired(threadSnapshots);
-            _threadProfilingService.SamplingComplete();
+            await _threadProfilingService.SamplingCompleteAsync();
             _threadProfilingService.Stop();
 
             // Assert
-            Mock.Assert(() => _dataTransportService.SendThreadProfilingData(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()), Occurs.Once());
+            Mock.Assert(() => _dataTransportService.SendThreadProfilingDataAsync(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()), Occurs.Once());
             Assert.AreEqual(1, actualModels.Count);
             Assert.AreEqual(2, actualModels[0].TotalThreadCount);
             Assert.AreEqual(1, actualModels[0].NumberOfSamples);
@@ -162,14 +163,14 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         }
 
         [Test]
-        public void PerformAggregation_HandlesException()
+        public async Task PerformAggregation_HandlesException()
         {
-            Mock.Arrange(() => _dataTransportService.SendThreadProfilingData(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()))
+            Mock.Arrange(() => _dataTransportService.SendThreadProfilingDataAsync(Arg.IsAny<IEnumerable<ThreadProfilingModel>>()))
                 .Throws(new Exception("Test Exception", new Exception("Test Inner Exception")));
 
             try
             {
-                _threadProfilingService.PerformAggregation();
+                await _threadProfilingService.PerformAggregationAsync();
             }
             catch
             {
