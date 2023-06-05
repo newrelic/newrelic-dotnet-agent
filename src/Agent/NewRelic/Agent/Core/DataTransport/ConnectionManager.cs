@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     return;
 
                 if (_configuration.CollectorSyncStartup || _configuration.CollectorSendDataOnExit)
-                    await ConnectAsync();
+                    await ConnectInternalAsync();
                 else
                     _scheduler.ExecuteOnce(() =>
                     {
@@ -95,9 +95,21 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private async Task ConnectAsync()
         {
+            await _syncObject.WaitAsync();
             try
             {
-                await _syncObject.WaitAsync();
+                await ConnectInternalAsync();
+            }
+            finally
+            {
+                _syncObject.Release();
+            }
+        }
+
+        private async Task ConnectInternalAsync()
+        {
+            try
+            {
                 _runtimeConfigurationUpdated = false;
                 await _connectionHandler.ConnectAsync();
 
@@ -147,10 +159,6 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 ImmediateShutdown(ex.Message);
             }
-            finally
-            {
-                _syncObject.Release();
-            }
         }
 
         private async Task DisconnectAsync()
@@ -158,12 +166,17 @@ namespace NewRelic.Agent.Core.DataTransport
             await _syncObject.WaitAsync();
             try
             {
-                await _connectionHandler.DisconnectAsync();
+                await DisconnectInternalAsync();
             }
             finally
             {
                 _syncObject.Release();
             }
+        }
+
+        private async Task DisconnectInternalAsync()
+        {
+            await _connectionHandler.DisconnectAsync();
         }
 
         private async Task ReconnectAsync()
@@ -173,8 +186,8 @@ namespace NewRelic.Agent.Core.DataTransport
             await _syncObject.WaitAsync();
             try
             {
-                await DisconnectAsync();
-                await ConnectAsync();
+                await DisconnectInternalAsync();
+                await ConnectInternalAsync();
             }
             finally
             {
