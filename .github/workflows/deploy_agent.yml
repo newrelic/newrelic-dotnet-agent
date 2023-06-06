@@ -5,7 +5,7 @@ on:
     inputs:
       agent_version:
         description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
-        default: '10.9.0'
+        default: '10.10.0'
         required: true        
       run_id:
         description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
@@ -341,7 +341,6 @@ jobs:
           curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
         shell: bash
 
-
   deploy-release-notes:
     needs: get-external-artifacts
     if: ${{ github.event.inputs.deploy-release-notes == 'true' }}
@@ -350,7 +349,7 @@ jobs:
     steps:
 
       - name: Download Deploy Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: deploy-artifacts
           path: ${{ github.workspace }}/
