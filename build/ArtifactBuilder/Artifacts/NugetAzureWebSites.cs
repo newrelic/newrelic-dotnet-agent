@@ -89,8 +89,8 @@ namespace ArtifactBuilder.Artifacts
 
             // The two packages have different naming conventions
             var fileName = Platform == "x64" ?
-                $"NewRelic.Azure.WebSites.{Platform}.{_frameworkAgentComponents.Version}.nupkg" :
-                $"NewRelic.Azure.WebSites.{_frameworkAgentComponents.Version}.nupkg";
+                $"NewRelic.Azure.WebSites.{Platform}.{_frameworkAgentComponents.MaybeSemanticVersion}.nupkg" :
+                $"NewRelic.Azure.WebSites.{_frameworkAgentComponents.MaybeSemanticVersion}.nupkg";
             var nugetFile = Path.Join(OutputDirectory, fileName);
 
             NuGetHelpers.Unpack(nugetFile, unpackDir);

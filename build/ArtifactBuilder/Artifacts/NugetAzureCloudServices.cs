@@ -78,7 +78,7 @@ namespace ArtifactBuilder.Artifacts
         private string Unpack()
         {
             var unpackDir = Path.Join(OutputDirectory, "unpacked");
-            var nugetFile = Path.Join(OutputDirectory, $"NewRelicWindowsAzure.{_frameworkAgentComponents.Version}.nupkg");
+            var nugetFile = Path.Join(OutputDirectory, $"NewRelicWindowsAzure.{_frameworkAgentComponents.MaybeSemanticVersion}.nupkg");
             NuGetHelpers.Unpack(nugetFile, unpackDir);
             return unpackDir;
         }
