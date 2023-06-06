@@ -82,7 +82,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 else
                     _scheduler.ExecuteOnce(() =>
                     {
-                        Task.Run(async () => await ConnectAsync()).GetAwaiter().GetResult();
+                        Task.Run(ConnectAsync).GetAwaiter().GetResult();
                     }, TimeSpan.Zero);
 
                 _started = true;
@@ -224,7 +224,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Log.InfoFormat("Will attempt to reconnect in {0} seconds", _retryTime.TotalSeconds);
             _scheduler.ExecuteOnce(() =>
             {
-                Task.Run(async () => await ConnectAsync()).GetAwaiter().GetResult();
+                Task.Run(ConnectAsync).GetAwaiter().GetResult();
             }, _retryTime);
 
             _connectionAttempt = Math.Min(_connectionAttempt + 1, ConnectionRetryBackoffSequence.Length - 1);
@@ -275,23 +275,23 @@ namespace NewRelic.Agent.Core.DataTransport
 
             _scheduler.ExecuteOnce(() =>
             {
-                Task.Run(async () => await ConnectAsync()).GetAwaiter().GetResult();
+                Task.Run(ConnectAsync).GetAwaiter().GetResult();
             }, TimeSpan.Zero);
         }
 
         private void OnStartAgent(StartAgentEvent eventData)
         {
-            Task.Run(async () => await StartAsync()).GetAwaiter().GetResult();
+            Task.Run(StartAsync).GetAwaiter().GetResult();
         }
 
         private void OnRestartAgent(RestartAgentEvent eventData)
         {
-            Task.Run(async () => await ReconnectAsync()).GetAwaiter().GetResult();
+            Task.Run(ReconnectAsync).GetAwaiter().GetResult();
         }
 
         private void OnCleanShutdown(CleanShutdownEvent eventData)
         {
-            Task.Run(async () => await DisconnectAsync()).GetAwaiter().GetResult();
+            Task.Run(DisconnectAsync).GetAwaiter().GetResult();
         }
 
         #endregion Event handlers

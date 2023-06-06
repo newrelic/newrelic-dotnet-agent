@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _scheduler.StopExecuting(HarvestAction, TimeSpan.FromSeconds(2));
         }
 
-        private void HarvestAction() => Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult();
+        private void HarvestAction() => Task.Run(HarvestAsync).GetAwaiter().GetResult();
 
         public abstract void Collect(T wireModel);
 
@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.Aggregators
             if (!(uptime.TotalMilliseconds > _configuration.CollectorSendDataOnExitThreshold))
                 return;
 
-            Task.Run(async () => await HarvestAsync()).GetAwaiter().GetResult();
+            Task.Run(HarvestAsync).GetAwaiter().GetResult();
         }
 
         public override void Dispose()

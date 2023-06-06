@@ -19,6 +19,7 @@ using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core
 {
@@ -137,7 +138,11 @@ namespace NewRelic.Agent.Core
             _wrapperService = _container.Resolve<IWrapperService>();
 
             //We need to attempt to auto start the agent once all services have resolved
-            _container.Resolve<IConnectionManager>().AttemptAutoStartAsync().GetAwaiter().GetResult();
+            Task.Run(() =>
+            {
+                var connectionManager = _container.Resolve<IConnectionManager>();
+                return connectionManager.AttemptAutoStartAsync();
+            }).GetAwaiter().GetResult();
 
             AgentServices.StartServices(_container);
 

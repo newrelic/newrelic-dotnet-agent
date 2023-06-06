@@ -804,10 +804,12 @@ namespace NewRelic.Agent.Core.DataTransport
                 return;
             }
 
+#pragma warning disable VSTHRD110 // Observe result of async calls
             Task.Run(() =>
             {
                 Restart(collection);
-            }).GetAwaiter().GetResult();
+            });
+#pragma warning restore VSTHRD110 // Observe result of async calls
         }
 
         /// <summary>
