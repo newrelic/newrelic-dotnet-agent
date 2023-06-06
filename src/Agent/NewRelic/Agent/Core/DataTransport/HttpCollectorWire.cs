@@ -124,23 +124,32 @@ namespace NewRelic.Agent.Core.DataTransport
                         request.Method = HttpMethod.Post;
                     }
 
-                    using (var response = await httpClient.SendAsync(request))
+                    try
                     {
-                        var responseContent = GetResponseContent(response, requestGuid);
-
-                        _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(responseContent).Length);
-
-                        // Possibly combine these logs? makes parsing harder in tests...
-                        Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
-                        Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
-
-                        AuditLog(Direction.Received, Source.Collector, responseContent);
-                        if (!response.IsSuccessStatusCode)
+                        Log.DebugFormat("Request({0}): Invoking httpClient.SendAsync()", requestGuid);
+                        using (var response = await httpClient.SendAsync(request))
                         {
-                            ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);
-                        }
+                            var responseContent = GetResponseContent(response, requestGuid);
 
-                        return responseContent;
+                            _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, uncompressedByteCount, new UTF8Encoding().GetBytes(responseContent).Length);
+
+                            // Possibly combine these logs? makes parsing harder in tests...
+                            Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
+                            Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
+
+                            AuditLog(Direction.Received, Source.Collector, responseContent);
+                            if (!response.IsSuccessStatusCode)
+                            {
+                                ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);
+                            }
+
+                            return responseContent;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Debug(e);
+                        throw;
                     }
                 }
             }

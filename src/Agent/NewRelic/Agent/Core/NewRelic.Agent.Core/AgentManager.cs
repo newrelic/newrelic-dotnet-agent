@@ -138,11 +138,18 @@ namespace NewRelic.Agent.Core
             _wrapperService = _container.Resolve<IWrapperService>();
 
             //We need to attempt to auto start the agent once all services have resolved
-            Task.Run(() =>
+
+            // MT Innovation Days: The connect needs to be synchronous, but any attempt at waiting
+            // causes the Agent to die when it invokes httpClient.SendAsync() for the first time.
+            // No errors if we don't try to wait, but that causes other problems. Maybe we need some kind of
+            // global flag to tell us when the agent is connected and all other processing waits on that? 
+            var autoStartTask  = Task.Run(async () =>
             {
+                Log.Debug("Attempting AutoStartAsync");
                 var connectionManager = _container.Resolve<IConnectionManager>();
-                return connectionManager.AttemptAutoStartAsync();
-            }).GetAwaiter().GetResult();
+                await connectionManager.AttemptAutoStartAsync();
+                Log.Debug("AutoStartAsync complete");
+            });//.GetAwaiter().GetResult();
 
             AgentServices.StartServices(_container);
 
