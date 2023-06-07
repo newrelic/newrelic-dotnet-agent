@@ -10,7 +10,7 @@ on:
         default: "1"
         type: string
       testMode:
-        description: "If checked, no notification message will be sent to the team channel."
+        description: "If checked, no notification message will be sent to the team channel, nor will any Github issues be created."
         type: boolean
         default: false
 
@@ -71,15 +71,21 @@ jobs:
             NEW_RELIC_HOST: staging-collector.newrelic.com
             NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
             nugets:
-                 "system.data.sqlclient
+                 "elasticsearch.net
+                 elastic.clients.elasticsearch
+                 log4net
+                 microsoft.extensions.logging
                  microsoft.data.sqlclient
+                 microsoft.net.http
                  mongocsharpdriver
                  mongodb.driver
                  mysql.data
                  mysqlconnector
-                 stackexchange.redis
+                 nest
+                 nlog
                  rabbitmq.client
-                 microsoft.net.http
                  restsharp
-                 serilog"
+                 serilog
+                 stackexchange.redis
+                 system.data.sqlclient"
                  
