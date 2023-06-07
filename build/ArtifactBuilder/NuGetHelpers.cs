@@ -8,10 +8,18 @@ namespace ArtifactBuilder
     {
         private static readonly string _nugetPath = Path.Combine(FileHelpers.GetRepoRootDirectory(), @"Build\Tools\nuget.exe");
 
-        public static void Pack(string nuspecFilePath, string outputDirectory)
+        public static string Pack(string nuspecFilePath, string outputDirectory)
         {
             var parameters = $@"Pack -NoPackageAnalysis ""{nuspecFilePath}"" -OutputDirectory ""{outputDirectory}""";
-            var process = Process.Start(_nugetPath, parameters);
+            var process = new Process();
+
+            var startInfo = new ProcessStartInfo
+                {
+                    FileName = _nugetPath, Arguments = parameters, RedirectStandardOutput = true
+                };
+            process.StartInfo = startInfo;
+
+            process.Start();
             process.WaitForExit(30000);
             if (!process.HasExited)
             {
@@ -22,6 +30,23 @@ namespace ArtifactBuilder
             {
                 throw new Exception($"Nuget pack failed with exit code {process.ExitCode}.");
             }
+
+            var stdOut = process.StandardOutput;
+            var output = stdOut.ReadToEnd();
+            Console.WriteLine(output);
+
+            // output is expected to look like:
+            // Attempting to build package from 'NewRelic.Azure.WebSites.x64.nuspec'.
+            // Successfully created package 'C:\Source\Repos\newrelic-dotnet-agent\Build\BuildArtifacts\NugetAzureWebSites-x64\NewRelic.Azure.WebSites.x64.10.11.0.nupkg'.
+
+            // so split on single quotes and take the 4th element in the resulting array
+            var packagePath = output.Split('\'')[3];
+            var nugetFileName = Path.GetFileName(packagePath);
+            if (string.IsNullOrEmpty(nugetFileName))
+                throw new PackagingException("NuGet package filename was not successfully parsed.");
+
+            return nugetFileName;
+
         }
 
         public static void Unpack(string nupkgFile, string outputDirectory)
