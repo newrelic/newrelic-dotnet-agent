@@ -24,6 +24,8 @@ jobs:
   nuget-slack-notifications:
     name: Check for core technology package updates
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     continue-on-error: false
     
     env:
@@ -60,6 +62,7 @@ jobs:
 
         env:
             DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
+            DOTTY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             CORECLR_ENABLE_PROFILING: 1
             CORECLR_NEWRELIC_HOME: ${{ env.scan-tool-path }}/bin/Debug/net6.0/newrelic
             CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
