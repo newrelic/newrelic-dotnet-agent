@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace ArtifactBuilder
 {
@@ -14,9 +15,11 @@ namespace ArtifactBuilder
             var process = new Process();
 
             var startInfo = new ProcessStartInfo
-                {
-                    FileName = _nugetPath, Arguments = parameters, RedirectStandardOutput = true
-                };
+            {
+                FileName = _nugetPath,
+                Arguments = parameters,
+                RedirectStandardOutput = true
+            };
             process.StartInfo = startInfo;
 
             process.Start();
@@ -39,14 +42,21 @@ namespace ArtifactBuilder
             // Attempting to build package from 'NewRelic.Azure.WebSites.x64.nuspec'.
             // Successfully created package 'C:\Source\Repos\newrelic-dotnet-agent\Build\BuildArtifacts\NugetAzureWebSites-x64\NewRelic.Azure.WebSites.x64.10.11.0.nupkg'.
 
-            // so split on single quotes and take the 4th element in the resulting array
-            var packagePath = output.Split('\'')[3];
-            var nugetFileName = Path.GetFileName(packagePath);
-            if (string.IsNullOrEmpty(nugetFileName))
-                throw new PackagingException("NuGet package filename was not successfully parsed.");
+            // capture the full path
+            var regex = ".*Successfully created package '(.*)'.*";
+            var matches = Regex.Match(output, regex);
+            if (matches.Success && matches.Groups.Count > 1)
+            {
+                var packagePath = matches.Groups[1].Value;
 
-            return nugetFileName;
+                // verify the file exists, then return the filename
+                if (File.Exists(packagePath))
+                {
+                    return Path.GetFileName(packagePath);
+                }
+            }
 
+            throw new PackagingException("Failed to parse NuGet package filename.");
         }
 
         public static void Unpack(string nupkgFile, string outputDirectory)
