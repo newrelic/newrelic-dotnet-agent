@@ -83,10 +83,16 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteNonQuery" />
       </match>
 
-      <!-- MySql (official) driver -->
-      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand">
+      <!-- MySql (official) driver-->
+
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand" maxVersion="8.0.33">
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
         <exactMethodMatcher methodName="ExecuteNonQuery" />
+      </match>
+
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand" minVersion="8.0.33">
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Boolean,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
       </match>
 
       <!-- MySql CoreLabs driver -->
@@ -227,9 +233,14 @@ SPDX-License-Identifier: Apache-2.0
       </match>
 
       <!-- MySql (official) driver -->
-      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlDataReader">
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlDataReader" maxVersion="8.0.33">
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" />
+      </match>
+
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlDataReader" minVersion="8.0.33">
+        <exactMethodMatcher methodName="NextResultAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ReadAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
       </match>
 
       <!-- MySqlConnector 0.x -->
