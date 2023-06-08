@@ -157,13 +157,15 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
         private ITransaction SetupTransaction(HttpRequest request)
         {
             var path = request.Path.Value;
-            path = "/".Equals(path) ? "ROOT" : path.Substring(1);
+
+            // if path is empty, consider it the same as /
+            path = request.Path == PathString.Empty || path.Equals("/") ? "ROOT" : path.Substring(1);
 
             var transaction = _agent.CreateTransaction(
-                isWeb: true,
-                category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
-                transactionDisplayName: path,
-                doNotTrackAsUnitOfWork: true);
+                    isWeb: true,
+                    category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+                    transactionDisplayName: path,
+                    doNotTrackAsUnitOfWork: true);
 
             transaction.SetRequestMethod(request.Method);
             transaction.SetUri(request.Path);
