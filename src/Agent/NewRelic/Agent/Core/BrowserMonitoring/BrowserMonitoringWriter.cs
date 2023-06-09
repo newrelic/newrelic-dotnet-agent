@@ -9,7 +9,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 {
     public class BrowserMonitoringWriter
     {
-        private readonly Func<string> _getJsScript;
+        private Func<string> _getJsScript;
 
         private static readonly Regex XUaCompatibleFilter = new Regex(@"(<\s*meta[^>]+http-equiv[\s]*=[\s]*['""]x-ua-compatible['""][^>]*>)", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnoreCase);
         private static readonly Regex CharsetFilter = new Regex(@"(<\s*meta[^>]+charset\s*=[^>]*>)", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnoreCase);
@@ -52,6 +52,17 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         // Specification for Javascript insertion: https://newrelic.atlassian.net/wiki/spaces/eng/pages/50299103/BAM+Agent+Auto-Instrumentation
         public virtual string WriteScriptHeaders(string content)
         {
+            // look for <html> tag, see if it's preceeded by a single quote - if so, escape single quotes in the RUM script
+            // this occurs in cases (such as WebResource.axd scripts) where we've decided that the content type is one we should
+            // inject, but the actual content is a script that injects the html (such as into a frame). If that script uses single
+            // quotes around the html, we have to escape any single quotes in the RUM script to ensure the resulting html is valid.
+            if (HtmlTagIsInSingleQuote(content))
+            {
+                // replace the func that returns the RUM script with one that returns the RUM script after escaping any single quotes
+                var originalGetJsScriptFunc = _getJsScript;
+                _getJsScript = () => EscapeSingleQuotes(originalGetJsScriptFunc);
+            }
+
             var openingHeadTagIndex = FindFirstOpeningHeadTag(content);
 
             // No <HEAD> tag. Attempt to insert before <BODY> tag (not a great fallback option).
@@ -69,7 +80,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             if ((xUaCompatibleFilterMatch.Success || charsetFilterMatch.Success) && (xUaCompatibleFilterMatch.Index < closingHeadTagIndex || charsetFilterMatch.Index > closingHeadTagIndex))
             {
                 var match = charsetFilterMatch;
-                if(xUaCompatibleFilterMatch.Index > charsetFilterMatch.Index)
+                if (xUaCompatibleFilterMatch.Index > charsetFilterMatch.Index)
                 {
                     match = xUaCompatibleFilterMatch;
                 }
@@ -95,5 +106,24 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             return content.Replace(headOpeningTag, jsScriptWithHeadPrefix, StringComparison.InvariantCultureIgnoreCase, 1);
         }
 
+        private bool HtmlTagIsInSingleQuote(string content)
+        {
+            var htmlOpenTagWithSingleQuoteIndex = content.IndexOf("'<html>", StringComparison.InvariantCultureIgnoreCase);
+            if (htmlOpenTagWithSingleQuoteIndex > 0)
+            {
+                // verify the closing html tag is followed by a single quote and that it occurs after the opening tag
+                var htmlCloseTagWithSingleQuoteIndex = content.IndexOf("</html'>", StringComparison.InvariantCultureIgnoreCase);
+
+                return htmlCloseTagWithSingleQuoteIndex > htmlOpenTagWithSingleQuoteIndex;
+            }
+
+            return false;
+        }
+
+        private string EscapeSingleQuotes(Func<string> script)
+        {
+            var s = script();
+            return s.Replace("\'", "\\\'");
+        }
     }
 }

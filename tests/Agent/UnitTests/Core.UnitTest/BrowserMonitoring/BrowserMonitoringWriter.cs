@@ -11,7 +11,10 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
     public class Class_BrowserMonitoringWriter
     {
         private readonly string _jsScript =
-                    "<script type=\"text/javascript\">window.NREUM||(NREUM={});NREUM.info = {\"beacon\":\"staging-beacon-N.newrelic.com\",\"errorBeacon:\":\"staging-jserror.newrelic.com\",\"licenseKey\":\"a4fa192fe5\",\"applicationID\":\"48102\",\"transactionName\":\"ZlIAbEACVxFYVkBbDV8YJldGLVwWelpaRhBeWw5dQExxDVRQG3sMVVIa\",\"queueTime\":\"0\",\"applicationTime\":\"37\", \"customString\":\"$1\", \"ttGuid\":\"BD0436479135FF3F\",\"agent\":\"js-agent.newrelic.com/nr-248.min.js\"}</script>";
+            "<script type=\"text/javascript\">window.NREUM||(NREUM={});NREUM.info = {\"beacon\":\"staging-beacon-N.newrelic.com\",\"errorBeacon:\":\"staging-jserror.newrelic.com\",\"licenseKey\":\"a4fa192fe5\",\"applicationID\":\"48102\",\"transactionName\":\"ZlIAbEACVxFYVkBbDV8YJldGLVwWelpaRhBeWw5dQExxDVRQG3sMVVIa\",\"queueTime\":\"0\",\"applicationTime\":\"37\", \"customString\":\"$1\", \"ttGuid\":\"BD0436479135FF3F\",\"agent\":\"js-agent.newrelic.com/nr-248.min.js\"}</script>";
+
+        private readonly string _jsScriptWithSingleQuotes =
+            "<script type=\"text/javascript\">window.NREUM||(NREUM={});NREUM.info = {\"beacon\":\"staging-beacon-N.newrelic.com\",\"errorBeacon:\":\"staging-jserror.newrelic.com\",\"licenseKey\":\"a4fa192fe5\",\"applicationID\":\"48102\",\"transactionName\":\"ZlIAbEACVxFYVkBbDV8YJldGLVwWelpaRhBeWw5dQExxDVRQG3sMVVIa\",\"queueTime\":\"0\",\"applicationTime\":\"37\", \"customString\":\"$1\", \"ttGuid\":\"BD0436479135FF3F\",\"agent\":\"js-agent.newrelic.com/nr-248.min.js\"};let o=(()=>{if(n)return window;throw new Error('New Relic browser agent shutting down due to error.')})();</script>";
 
         [Test]
         public void empty_input_results_in_empty_output()
@@ -61,8 +64,12 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         public void html_without_head_tag_but_with_body_text_in_script()
         {
             // ARRANGE
-            string content = "<html> <body><script type=\"text/javascript\">var thing = \"<body\";</script><p>Yo Adrian!</p> </body></html>";
-            string expected = string.Format("<html> {0}<body><script type=\"text/javascript\">var thing = \"<body\";</script><p>Yo Adrian!</p> </body></html>", _jsScript);
+            string content =
+                "<html> <body><script type=\"text/javascript\">var thing = \"<body\";</script><p>Yo Adrian!</p> </body></html>";
+            string expected =
+                string.Format(
+                    "<html> {0}<body><script type=\"text/javascript\">var thing = \"<body\";</script><p>Yo Adrian!</p> </body></html>",
+                    _jsScript);
 
             // ACT
             BrowserMonitoringWriter writer = new BrowserMonitoringWriter(() => _jsScript);
@@ -108,7 +115,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         {
             // ARRANGE
             string content = "<html><head bestevar='Boston Red Sox'></head><body><p>YoAdrian!</p></body></html>";
-            string expected = string.Format("<html><head bestevar='Boston Red Sox'>{0}</head><body><p>YoAdrian!</p></body></html>", _jsScript);
+            string expected =
+                string.Format("<html><head bestevar='Boston Red Sox'>{0}</head><body><p>YoAdrian!</p></body></html>",
+                    _jsScript);
 
             // ACT
             BrowserMonitoringWriter writer = new BrowserMonitoringWriter(() => _jsScript);
@@ -180,10 +189,10 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                                        "<meta name=\"viewport\" content=\"width=device-width\" />" +
                                        "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=9\">";
             string contentRemaining = "<link href=\"/MVC4-WebApp-Performance/Content/site.css\" rel=\"stylesheet\"/>" +
-                "<script src=\"/MVC4-WebApp-Performance/Scripts/modernizr-2.6.2.js\"></script>" +
-                "<script src=\"/mvc3_rum/Scripts/jquery-1.7.1.min.js\" type=\"text/javascript\"></script>" +
-                "<script src=\"/mvc3_rum/Scripts/modernizr-2.5.3.js\" type=\"text/javascript\"></script>" +
-                "</head><body><p>YoAdrian!</p></body></html>";
+                                      "<script src=\"/MVC4-WebApp-Performance/Scripts/modernizr-2.6.2.js\"></script>" +
+                                      "<script src=\"/mvc3_rum/Scripts/jquery-1.7.1.min.js\" type=\"text/javascript\"></script>" +
+                                      "<script src=\"/mvc3_rum/Scripts/modernizr-2.5.3.js\" type=\"text/javascript\"></script>" +
+                                      "</head><body><p>YoAdrian!</p></body></html>";
 
             string expected = string.Format("{0}{1}{2}", contentUpToXUATag, _jsScript, contentRemaining);
 
@@ -205,7 +214,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                                       "document.write(\"<script type=\"text/javascript\"> <head></head> }" +
                                       "</script></body></html>";
 
-            string expected = string.Format("{0}{1}{2}{3}", contentUpToHead, _jsScript, contentPartTwo, contentPartThree);
+            string expected = string.Format("{0}{1}{2}{3}", contentUpToHead, _jsScript, contentPartTwo,
+                contentPartThree);
 
             // ACT
             BrowserMonitoringWriter writer = new BrowserMonitoringWriter(() => _jsScript);
@@ -216,7 +226,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         }
 
         [Test]
-        public void html_with_simple_openclose_head_tags_and_script_with_embedded_head_that_has_X_UA_COMPATIBLE_meta_tag()
+        public void
+            html_with_simple_openclose_head_tags_and_script_with_embedded_head_that_has_X_UA_COMPATIBLE_meta_tag()
         {
             // ARRANGE
             string contentUpToHead = "<html><head>";
@@ -225,7 +236,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                                       "document.write(\"<script type=\"text/javascript\"> <head><meta http-equiv=\"X-UA-Compatible\" content=\"IE=9\"></head> }" +
                                       "</script></body></html>";
 
-            string expected = string.Format("{0}{1}{2}{3}", contentUpToHead, _jsScript, contentPartTwo, contentPartThree);
+            string expected = string.Format("{0}{1}{2}{3}", contentUpToHead, _jsScript, contentPartTwo,
+                contentPartThree);
 
             // ACT
             BrowserMonitoringWriter writer = new BrowserMonitoringWriter(() => _jsScript);
@@ -272,5 +284,24 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var result = writer.WriteScriptHeaders(data);
             Assert.AreEqual(expected, result);
         }
+
+        [Test]
+        public void frame_document_write_using_single_quotes_injection_escapes_RUM_single_quotes()
+        {
+            var upToBody = "xmlRequestFrame.document.write('<html>";
+            var restOfScript = "<body><form method=\"post\"><input type=\"hidden\" name=\"__CALLBACKLOADSCRIPT\" value=\"t\"></form></body></html>');";
+            var data =
+                 upToBody + restOfScript;
+
+            var expected = $"{upToBody}{EscapeSingleQuotes(_jsScriptWithSingleQuotes)}{restOfScript}";
+
+            var writer = new BrowserMonitoringWriter(() => _jsScriptWithSingleQuotes);
+
+            var result = writer.WriteScriptHeaders(data);
+
+            Assert.AreEqual(expected, result);
+        }
+
+        private string EscapeSingleQuotes(string script) => script.Replace("\'", "\\\'");
     }
 }
