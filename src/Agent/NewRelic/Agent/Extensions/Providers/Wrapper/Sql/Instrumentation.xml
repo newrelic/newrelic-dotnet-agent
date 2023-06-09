@@ -25,6 +25,7 @@ SPDX-License-Identifier: Apache-2.0
     </tracerFactory>
 
 
+    <!-- NOTE: Only put non-async instrumentation points in this tracerFactory, async methods go in SqlCommandTracerAsync (below) -->
     <tracerFactory name="SqlCommandTracer">
 
       <!-- built in MS SQL driver (framework) -->
@@ -84,15 +85,10 @@ SPDX-License-Identifier: Apache-2.0
       </match>
 
       <!-- MySql (official) driver-->
-
+      <!-- Starting in 8.0.33 the non-async methods are just passthroughs to async methods which are instrumented in the SqlCommandTracerAsync factory -->
       <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand" maxVersion="8.0.33">
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
         <exactMethodMatcher methodName="ExecuteNonQuery" />
-      </match>
-
-      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand" minVersion="8.0.33">
-        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Boolean,System.Threading.CancellationToken" />
-        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
       </match>
 
       <!-- MySql CoreLabs driver -->
@@ -136,6 +132,7 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
+    <!-- NOTE: Only put async instrumentation points in this tracerFactory, non-async methods go in SqlCommandTracer (above) -->
     <tracerFactory name="SqlCommandTracerAsync">
 
       <!-- built in MS SQL driver (framework) -->
@@ -163,6 +160,13 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ExecuteXmlReaderAsync" parameters="System.Threading.CancellationToken" />
+      </match>
+
+      <!-- MySql (official) driver-->
+      <!-- Prior to 8.0.33 we instrument non-async methods in the SqlCommandTracer factory above -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand" minVersion="8.0.33">
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Boolean,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
       </match>
 
       <!-- MySqlConnector 0.x -->
