@@ -199,6 +199,7 @@ SPDX-License-Identifier: Apache-2.0
     </tracerFactory>
 
     <!-- DataReader methods. DISABLED by default due to possible performance impact. Set enabled to "true" (or omit completely) to enable this instrumentation. -->
+    <!-- NOTE: this tracer factory is for non-async method instrumentation only.  For async methods, use the DataReaderTracerAsync factory below -->
     <tracerFactory name="DataReaderTracer" enabled="false">
       <!-- built in MS SQL driver (framework) -->
       <match assemblyName="System.Data" className="System.Data.SqlClient.SqlDataReader">
@@ -237,14 +238,10 @@ SPDX-License-Identifier: Apache-2.0
       </match>
 
       <!-- MySql (official) driver -->
+      <!-- In version 8.0.33 these methods became async and are instrumented in the DataReaderTracerAsync factory below -->
       <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlDataReader" maxVersion="8.0.33">
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" />
-      </match>
-
-      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlDataReader" minVersion="8.0.33">
-        <exactMethodMatcher methodName="NextResultAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
-        <exactMethodMatcher methodName="ReadAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
       </match>
 
       <!-- MySqlConnector 0.x -->
@@ -281,6 +278,7 @@ SPDX-License-Identifier: Apache-2.0
       </match>
     </tracerFactory>
 
+    <!-- NOTE: this tracer factory is for async method instrumentation only.  For non-async methods, use the DataReaderTracer factory above -->
     <tracerFactory name="DataReaderTracerAsync" enabled="false">
       <!-- built in MS SQL driver (framework) -->
       <match assemblyName="System.Data" className="System.Data.SqlClient.SqlDataReader">
@@ -297,6 +295,12 @@ SPDX-License-Identifier: Apache-2.0
       <match assemblyName="Microsoft.Data.SqlClient" className="Microsoft.Data.SqlClient.SqlDataReader">
         <exactMethodMatcher methodName="NextResultAsync" />
         <exactMethodMatcher methodName="ReadAsync" />
+      </match>
+
+      <!-- Prior to version 8.0.33 these methods were synchroous and are instrumented in the DataReaderTracer factory above -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlDataReader" minVersion="8.0.33">
+        <exactMethodMatcher methodName="NextResultAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ReadAsync" parameters="System.Boolean,System.Threading.CancellationToken" />
       </match>
 
       <!-- MySqlConnector 0.x -->
