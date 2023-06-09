@@ -52,7 +52,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         // Specification for Javascript insertion: https://newrelic.atlassian.net/wiki/spaces/eng/pages/50299103/BAM+Agent+Auto-Instrumentation
         public virtual string WriteScriptHeaders(string content)
         {
-            // look for <html> tag, see if it's preceeded by a single quote - if so, escape single quotes in the RUM script
+            // look for an <html> tag, see if it's preceeded by a single quote - if so, escape single quotes in the RUM script
             // this occurs in cases (such as WebResource.axd scripts) where we've decided that the content type is one we should
             // inject, but the actual content is a script that injects the html (such as into a frame). If that script uses single
             // quotes around the html, we have to escape any single quotes in the RUM script to ensure the resulting html is valid.
