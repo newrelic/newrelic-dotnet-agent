@@ -264,7 +264,7 @@ namespace InstallerActions
             {
                 if (Directory.Exists(path))
                 {
-                    Directory.Delete(path, true);
+                    SaferFileUtils.DeleteDirectoryAndContents(path);
                     LogSuccess("Folder deleted at '{0}'.", path);
                 }
                 else
@@ -285,7 +285,7 @@ namespace InstallerActions
             {
                 if (File.Exists(path))
                 {
-                    File.Delete(path);
+                    SaferFileUtils.FileDelete(path);
                     LogSuccess("File deleted at '{0}'.", path);
                 }
                 else
@@ -480,7 +480,7 @@ namespace InstallerActions
                 session.Log("Attempting to move file from {0} to {1}.", sourcePath, destinationPath);
                 try
                 {
-                    File.Copy(sourcePath, destinationPath);
+                    SaferFileUtils.FileCopy(sourcePath, destinationPath);
                     session.Log("Moved file from {0} to {1}.", sourcePath, destinationPath);
                 }
                 catch (IOException)
@@ -561,7 +561,7 @@ namespace InstallerActions
                 // If the subfolder already exists don't try to copy.
                 if (Directory.Exists(destinationPath)) continue;
 
-                Directory.Move(sourceDirectoryPath, destinationPath);
+                SaferFileUtils.DirectoryMove(sourceDirectoryPath, destinationPath);
             }
 
             // Copy all the files in the root of the directory.
@@ -571,9 +571,145 @@ namespace InstallerActions
                 string fileName = Path.GetFileName(sourceFilePath);
                 string destinationPath = destination + fileName;
 
-                File.Copy(sourceFilePath, destinationPath, true);
-                File.Delete(sourceFilePath);
+                SaferFileUtils.FileCopy(sourceFilePath, destinationPath, true);
+                SaferFileUtils.FileDelete(sourceFilePath);
             }
+        }
+    }
+
+    /// <summary>
+    /// This class is wrapper around the standard File and Directory classes
+    /// that will check the file and directory structure for symlinks and junctions
+    /// before attempting to copy or delete the file or directory. This code uses
+    /// the presence of reparse points to approximate the usage of junctions or
+    /// symlinks. No agent file or directory is expected to have a reparse point
+    /// defined.
+    /// </summary>
+    internal static class SaferFileUtils
+    {
+        internal static void FileCopy(string source, string destination)
+        {
+            if (!FileIsSafeToUse(source))
+            {
+                return;
+            }
+
+            File.Copy(source, destination);
+        }
+
+        internal static void FileCopy(string source, string destination, bool overwrite)
+        {
+            if (!FileIsSafeToUse(source))
+            {
+                return;
+            }
+
+            File.Copy(source, destination, overwrite);
+        }
+
+        internal static void FileDelete(string fileNameAndPath)
+        {
+            if (!FileIsSafeToUse(fileNameAndPath))
+            {
+                return;
+            }
+
+            File.Delete(fileNameAndPath);
+        }
+
+        internal static void DeleteDirectoryAndContents(string path)
+        {
+            if (!DirectoryIsSafeToUse(path))
+            {
+                return;
+            }
+
+            Directory.Delete(path, true);
+        }
+
+        internal static void DirectoryMove(string source, string destination)
+        {
+            if (!DirectoryIsSafeToUse(source))
+            {
+                return;
+            }
+
+            Directory.Move(source, destination);
+        }
+
+        private static bool FileIsSafeToUse(string fileNameAndPath)
+        {
+            if (!File.Exists(fileNameAndPath))
+            {
+                return false;
+            }
+
+            var fileInfo = new FileInfo(fileNameAndPath);
+
+            if (FileSystemReportsAReparsePoint(fileInfo))
+            {
+                return false;
+            }
+
+            for (var directory = fileInfo.Directory; directory != null; directory = directory.Parent)
+            {
+                if (FileSystemReportsAReparsePoint(directory))
+                {
+                    return false;
+                }
+            }
+
+            return DirectoryAndParentsAreSafe(fileInfo.Directory);
+        }
+
+        private static bool DirectoryIsSafeToUse(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                return false;
+            }
+
+            var directory = new DirectoryInfo(path);
+            if (!DirectoryAndParentsAreSafe(directory))
+            {
+                return false;
+            }
+
+            foreach (var childDirectory in directory.GetDirectories("*", SearchOption.AllDirectories))
+            {
+                if (FileSystemReportsAReparsePoint(childDirectory))
+                {
+                    return false;
+                }
+            }
+
+            foreach (var childFile in directory.GetFiles("*", SearchOption.AllDirectories))
+            {
+                if (FileSystemReportsAReparsePoint(childFile))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool DirectoryAndParentsAreSafe(DirectoryInfo directoryToCheck)
+        {
+            for (var directory = directoryToCheck; directory != null; directory = directory.Parent)
+            {
+                if (FileSystemReportsAReparsePoint(directory))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool FileSystemReportsAReparsePoint(FileSystemInfo fsInfo)
+        {
+            return (fsInfo.Attributes & System.IO.FileAttributes.ReparsePoint) != 0;
         }
     }
 }
