@@ -36,6 +36,7 @@ namespace NewRelic.Agent.Core.Utilities
                 { "BuildCommonServicesWrapper",                                                                     Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
                 { "GenericHostWebHostBuilderExtensionsWrapper",                                                     Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
                 { "NewRelic.Providers.Wrapper.AspNetCore.InvokeActionMethodAsync",                                  Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
+                { "NewRelic.Providers.Wrapper.AspNetCore.EndpointRouting.Invoke",                                   Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
 
                 { "ResolveAppWrapper",                                                                              Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Owin.dll") },
 

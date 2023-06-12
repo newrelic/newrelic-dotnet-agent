@@ -9,6 +9,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using System;
 using System.Threading.Tasks;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore
 {
@@ -37,6 +38,8 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 
             var transactionName = CreateTransactionName(actionDescriptor);
 
+            agent.Logger.Log(Agent.Extensions.Logging.Level.Debug,$"InvokeActionMethodAsyncWrapper set transaction name to {transactionName}");
+
             transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
 
             var controllerTypeInfo = controllerContext.ActionDescriptor.ControllerTypeInfo;
@@ -60,6 +63,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
             var actionName = actionDescriptor.ActionName;
 
             var transactionName = $"{controllerName}/{actionName}";
+
 
             foreach (var parameter in actionDescriptor.Parameters)
             {
