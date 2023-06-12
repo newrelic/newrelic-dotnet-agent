@@ -533,5 +533,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 }
             }
         }
+
+        protected void PostAndAssertSuccessStatus(string address, bool expectedSuccessStatus, IEnumerable<KeyValuePair<string, string>> headers = null)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Post, address))
+            {
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        request.Headers.Add(header.Key, header.Value);
+                    }
+                }
+
+                using (var response = _httpClient.SendAsync(request).Result)
+                {
+                    Assert.Equal(expectedSuccessStatus, response.IsSuccessStatusCode);
+                }
+            }
+        }
     }
 }

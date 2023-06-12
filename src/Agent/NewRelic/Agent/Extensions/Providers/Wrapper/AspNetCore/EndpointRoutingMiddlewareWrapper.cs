@@ -33,22 +33,17 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 
             agent.Logger.Log(Agent.Extensions.Logging.Level.Debug,$"EndpointRoutingMiddlewareWrapper set transaction name to {transactionName}");
 
-            transaction.SetWebTransactionName(WebTransactionType.ASP, transactionName, TransactionNamePriority.FrameworkHigh);
+            transaction.SetWebTransactionName(WebTransactionType.ASP, transactionName, TransactionNamePriority.Uri); // TODO: What priority is correct here?
 
-            //var controllerTypeInfo = controllerContext.ActionDescriptor.ControllerTypeInfo;
-            ////Framework uses ControllerType.Action for these metrics & transactions. WebApi is Controller.Action for both
-            ////Taking opinionated stance to do ControllerType.MethodName for segments. Controller/Action for transactions
-            //var controllerTypeName = controllerTypeInfo.Name;
-            //var methodName = controllerContext.ActionDescriptor.MethodInfo.Name;
+            // TODO: This probably isn't right - copied from `OtherTransactionWrapper`
+            // for minimal api, Invoke() is going to eventually invoke the delegate that is mapped to this route. Not sure a segment is helpful here?
+            var typeName = instrumentedMethodCall.MethodCall.Method.Type.FullName ?? "<unknown>";
+            var methodName = instrumentedMethodCall.MethodCall.Method.MethodName;
+            var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
+                ? transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
+                : transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
 
-            // TODO: figure out what to do here - Minimal APIs don't have a controller or method name to pull in
-            var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, "controllerTypeName", "methodName");
-
-            var segmentApi = segment.GetExperimentalApi();
-            segmentApi.UserCodeNamespace = "controllerTypeInfo.FullName";
-            segmentApi.UserCodeFunction = "methodName";
-
-            return Delegates.GetAsyncDelegateFor<Task>(agent, segment, TaskContinueWithOption.None);
+            return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
         }
 
         private static string CreateTransactionName(HttpRequest request)
