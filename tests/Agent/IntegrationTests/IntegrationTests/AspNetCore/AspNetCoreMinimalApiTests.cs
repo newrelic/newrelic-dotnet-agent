@@ -51,8 +51,8 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
             // verify that separate transactions were created for the GET and POST endpoint
             var list = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/minimalapi/Get", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/minimalapi/Post", callCount = 1 }
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/minimalapi (Get)", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/minimalapi (Post)", callCount = 1 }
             };
             Assertions.MetricsExist(list, metrics);
         }

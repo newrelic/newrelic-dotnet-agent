@@ -23,11 +23,5 @@ SPDX-License-Identifier: Apache-2.0
 				<exactMethodMatcher methodName="InvokeActionMethodAsync" />
 			</match>
 		</tracerFactory>
-
-    <tracerFactory name="NewRelic.Providers.Wrapper.AspNetCore.EndpointRouting.Invoke">
-      <match assemblyName="Microsoft.AspNetCore.Routing" className="Microsoft.AspNetCore.Routing.EndpointRoutingMiddleware">
-        <exactMethodMatcher methodName="Invoke" />
-      </match>
-    </tracerFactory>
   </instrumentation>
 </extension>

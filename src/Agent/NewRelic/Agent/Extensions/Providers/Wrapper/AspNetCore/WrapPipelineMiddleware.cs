@@ -7,6 +7,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using NewRelic.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore
 {
@@ -159,7 +160,8 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
             var path = request.Path.Value;
 
             // if path is empty, consider it the same as /
-            path = request.Path == PathString.Empty || path.Equals("/") ? "ROOT" : path.Substring(1);
+            // tack on the request method at the end
+            path = $"{(request.Path == PathString.Empty || path.Equals("/") ? "ROOT" : path.Substring(1))} ({request.Method.ToLower().CapitalizeWord()})";
 
             var transaction = _agent.CreateTransaction(
                     isWeb: true,
