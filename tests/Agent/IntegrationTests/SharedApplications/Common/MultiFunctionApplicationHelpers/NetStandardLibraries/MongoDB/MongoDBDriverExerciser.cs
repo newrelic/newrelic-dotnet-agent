@@ -429,6 +429,31 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<IAsyncCursor<CustomMongoDbEntity>> AggregateAsync()
+        {
+
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            Collection.InsertOne(document);
+
+            var match = new BsonDocument
+            {
+                {
+                    "$match",
+                    new BsonDocument
+                    {
+                        { "Name", "Fred Flintstone" }
+                    }
+                }
+            };
+
+            var pipeline = new[] { match };
+            var result = Collection.AggregateAsync<CustomMongoDbEntity>(pipeline);
+            return await result;
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public long Count()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
@@ -496,6 +521,29 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 
             return await Collection.DistinctAsync<string>("Name", filter);
         }
+
+// EstimatedDocumentCount{Async} did not exist in driver version 2.3 which is bound to net462 in MultiFunctionApplicationHelpers.csproj
+#if !MONGODRIVER23
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public long EstimatedDocumentCount()
+        {
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            Collection.InsertOne(document);
+            return Collection.EstimatedDocumentCount();
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<long> EstimatedDocumentCountAsync()
+        {
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            await Collection.InsertOneAsync(document);
+            return await Collection.EstimatedDocumentCountAsync();
+        }
+#endif
 
         [LibraryMethod]
         [Transaction]

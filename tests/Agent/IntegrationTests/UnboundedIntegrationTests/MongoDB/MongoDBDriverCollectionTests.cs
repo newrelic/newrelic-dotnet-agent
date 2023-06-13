@@ -61,6 +61,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _fixture.AddCommand("MongoDbDriverExerciser BulkWrite");
             _fixture.AddCommand("MongoDbDriverExerciser BulkWriteAsync");
             _fixture.AddCommand("MongoDbDriverExerciser Aggregate");
+            _fixture.AddCommand("MongoDbDriverExerciser AggregateAsync");
 
             // the following commands are unavailable in MongoDB.Driver version 2.3
             if (_driverVersion > MongoDBDriverVersion.OldestSupportedOnFramework)
@@ -69,6 +70,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
                 _fixture.AddCommand("MongoDbDriverExerciser WatchAsync");
                 _fixture.AddCommand("MongoDbDriverExerciser CountDocuments");
                 _fixture.AddCommand("MongoDbDriverExerciser CountDocumentsAsync");
+                _fixture.AddCommand("MongoDbDriverExerciser EstimatedDocumentCount");
+                _fixture.AddCommand("MongoDbDriverExerciser EstimatedDocumentCountAsync");
             }
 
             _fixture.AddActions
@@ -129,11 +132,13 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         [InlineData("BulkWrite", MongoDBDriverVersion.OldestSupportedOnFramework)]
         [InlineData("BulkWriteAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
         [InlineData("Aggregate", MongoDBDriverVersion.OldestSupportedOnFramework)]
-        //[InlineData("AggregateAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("AggregateAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
 
         // Methods unavailable in driver version 2.3
         [InlineData("CountDocuments", MongoDBDriverVersion.OldestSupportedOnCore)]
         [InlineData("CountDocumentsAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("EstimatedDocumentCount", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("EstimatedDocumentCountAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
         [InlineData("Watch", MongoDBDriverVersion.OldestSupportedOnCore)]
         [InlineData("WatchAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
         public void CheckForMethodMetrics(string methodName, MongoDBDriverVersion minVersion)

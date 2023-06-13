@@ -12,6 +12,7 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="CountAsync"/>
         <exactMethodMatcher methodName="CountDocumentsAsync"/>
         <exactMethodMatcher methodName="DistinctAsync"/>
+        <exactMethodMatcher methodName="EstimatedDocumentCountAsync"/>
         <exactMethodMatcher methodName="FindAsync"/>
         <exactMethodMatcher methodName="FindOneAndDeleteAsync"/>
         <exactMethodMatcher methodName="FindOneAndReplaceAsync"/>
@@ -24,6 +25,7 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="Count"/>
         <exactMethodMatcher methodName="CountDocuments"/>
         <exactMethodMatcher methodName="Distinct"/>
+        <exactMethodMatcher methodName="EstimatedDocumentCount"/>
         <exactMethodMatcher methodName="FindSync"/>
         <exactMethodMatcher methodName="FindOneAndDelete"/>
         <exactMethodMatcher methodName="FindOneAndReplace"/>
