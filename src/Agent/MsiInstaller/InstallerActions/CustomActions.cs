@@ -264,7 +264,7 @@ namespace InstallerActions
             {
                 if (Directory.Exists(path))
                 {
-                    SaferFileUtils.DeleteDirectoryAndContents(path);
+                    SaferFileUtils.DeleteDirectoryAndContents(path, this);
                     LogSuccess("Folder deleted at '{0}'.", path);
                 }
                 else
@@ -285,7 +285,7 @@ namespace InstallerActions
             {
                 if (File.Exists(path))
                 {
-                    SaferFileUtils.FileDelete(path);
+                    SaferFileUtils.FileDelete(path, this);
                     LogSuccess("File deleted at '{0}'.", path);
                 }
                 else
@@ -480,7 +480,7 @@ namespace InstallerActions
                 session.Log("Attempting to move file from {0} to {1}.", sourcePath, destinationPath);
                 try
                 {
-                    SaferFileUtils.FileCopy(sourcePath, destinationPath);
+                    SaferFileUtils.FileCopy(sourcePath, destinationPath, this);
                     session.Log("Moved file from {0} to {1}.", sourcePath, destinationPath);
                 }
                 catch (IOException)
@@ -543,7 +543,7 @@ namespace InstallerActions
             }
         }
 
-        private static void CopyFolderContents(string source, string destination)
+        private void CopyFolderContents(string source, string destination)
         {
             if (source == null) return;
             if (destination == null) return;
@@ -561,7 +561,7 @@ namespace InstallerActions
                 // If the subfolder already exists don't try to copy.
                 if (Directory.Exists(destinationPath)) continue;
 
-                SaferFileUtils.DirectoryMove(sourceDirectoryPath, destinationPath);
+                SaferFileUtils.DirectoryMove(sourceDirectoryPath, destinationPath, this);
             }
 
             // Copy all the files in the root of the directory.
@@ -571,8 +571,8 @@ namespace InstallerActions
                 string fileName = Path.GetFileName(sourceFilePath);
                 string destinationPath = destination + fileName;
 
-                SaferFileUtils.FileCopy(sourceFilePath, destinationPath, true);
-                SaferFileUtils.FileDelete(sourceFilePath);
+                SaferFileUtils.FileCopy(sourceFilePath, destinationPath, true, this);
+                SaferFileUtils.FileDelete(sourceFilePath, this);
             }
         }
     }
@@ -587,57 +587,62 @@ namespace InstallerActions
     /// </summary>
     internal static class SaferFileUtils
     {
-        internal static void FileCopy(string source, string destination)
+        internal static void FileCopy(string source, string destination, MySession logger)
         {
-            if (!FileIsSafeToUse(source))
+            if (!FileIsSafeToUse(source, logger))
             {
+                logger.Log("{0} was not copied.", source);
                 return;
             }
 
             File.Copy(source, destination);
         }
 
-        internal static void FileCopy(string source, string destination, bool overwrite)
+        internal static void FileCopy(string source, string destination, bool overwrite, MySession logger)
         {
-            if (!FileIsSafeToUse(source))
+            if (!FileIsSafeToUse(source, logger))
             {
+                logger.Log("{0} was not copied.", source);
                 return;
             }
 
             File.Copy(source, destination, overwrite);
         }
 
-        internal static void FileDelete(string fileNameAndPath)
+        internal static void FileDelete(string fileNameAndPath, MySession logger)
         {
-            if (!FileIsSafeToUse(fileNameAndPath))
+            if (!FileIsSafeToUse(fileNameAndPath, logger))
             {
+                logger.Log("{0} was not deleted.", fileNameAndPath);
                 return;
             }
 
             File.Delete(fileNameAndPath);
         }
 
-        internal static void DeleteDirectoryAndContents(string path)
+        internal static void DeleteDirectoryAndContents(string path, MySession logger)
         {
-            if (!DirectoryIsSafeToUse(path))
+            if (!DirectoryIsSafeToUse(path, logger))
             {
+                logger.Log("{0} was not deleted.", path);
                 return;
             }
 
             Directory.Delete(path, true);
         }
 
-        internal static void DirectoryMove(string source, string destination)
+        internal static void DirectoryMove(string source, string destination, MySession logger)
         {
-            if (!DirectoryIsSafeToUse(source))
+            if (!DirectoryIsSafeToUse(source, logger))
             {
+                logger.Log("{0} was not moved.", source);
                 return;
             }
 
             Directory.Move(source, destination);
         }
 
-        private static bool FileIsSafeToUse(string fileNameAndPath)
+        private static bool FileIsSafeToUse(string fileNameAndPath, MySession logger)
         {
             if (!File.Exists(fileNameAndPath))
             {
@@ -646,23 +651,23 @@ namespace InstallerActions
 
             var fileInfo = new FileInfo(fileNameAndPath);
 
-            if (FileSystemReportsAReparsePoint(fileInfo))
+            if (FileSystemReportsAReparsePoint(fileInfo, logger))
             {
                 return false;
             }
 
             for (var directory = fileInfo.Directory; directory != null; directory = directory.Parent)
             {
-                if (FileSystemReportsAReparsePoint(directory))
+                if (FileSystemReportsAReparsePoint(directory, logger))
                 {
                     return false;
                 }
             }
 
-            return DirectoryAndParentsAreSafe(fileInfo.Directory);
+            return DirectoryAndParentsAreSafe(fileInfo.Directory, logger);
         }
 
-        private static bool DirectoryIsSafeToUse(string path)
+        private static bool DirectoryIsSafeToUse(string path, MySession logger)
         {
             if (!Directory.Exists(path))
             {
@@ -670,14 +675,14 @@ namespace InstallerActions
             }
 
             var directory = new DirectoryInfo(path);
-            if (!DirectoryAndParentsAreSafe(directory))
+            if (!DirectoryAndParentsAreSafe(directory, logger))
             {
                 return false;
             }
 
             foreach (var childDirectory in directory.GetDirectories("*", SearchOption.AllDirectories))
             {
-                if (FileSystemReportsAReparsePoint(childDirectory))
+                if (FileSystemReportsAReparsePoint(childDirectory, logger))
                 {
                     return false;
                 }
@@ -685,7 +690,7 @@ namespace InstallerActions
 
             foreach (var childFile in directory.GetFiles("*", SearchOption.AllDirectories))
             {
-                if (FileSystemReportsAReparsePoint(childFile))
+                if (FileSystemReportsAReparsePoint(childFile, logger))
                 {
                     return false;
                 }
@@ -694,11 +699,11 @@ namespace InstallerActions
             return true;
         }
 
-        private static bool DirectoryAndParentsAreSafe(DirectoryInfo directoryToCheck)
+        private static bool DirectoryAndParentsAreSafe(DirectoryInfo directoryToCheck, MySession logger)
         {
             for (var directory = directoryToCheck; directory != null; directory = directory.Parent)
             {
-                if (FileSystemReportsAReparsePoint(directory))
+                if (FileSystemReportsAReparsePoint(directory, logger))
                 {
                     return false;
                 }
@@ -707,9 +712,15 @@ namespace InstallerActions
             return true;
         }
 
-        private static bool FileSystemReportsAReparsePoint(FileSystemInfo fsInfo)
+        private static bool FileSystemReportsAReparsePoint(FileSystemInfo fsInfo, MySession logger)
         {
-            return (fsInfo.Attributes & System.IO.FileAttributes.ReparsePoint) != 0;
+            if((fsInfo.Attributes & System.IO.FileAttributes.ReparsePoint) != 0)
+            {
+                logger.Log("Reparse point detected for {0}.", fsInfo.FullName);
+                return true;
+            }
+
+            return false;
         }
     }
 }
