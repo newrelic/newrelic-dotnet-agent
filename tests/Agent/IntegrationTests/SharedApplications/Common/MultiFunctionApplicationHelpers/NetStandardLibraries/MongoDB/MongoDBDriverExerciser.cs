@@ -1,6 +1,10 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+// A number of methods tested here do not exist in MongoDB.Driver version 2.3 which is the oldest we support. It is bound to the net462 TFM in MultiFunctionApplicationHelpers.csproj
+#if NET462
+#define MONGODRIVER23
+#endif
 
 using System.Collections.Generic;
 using System.Linq;
@@ -43,7 +47,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         }
 
 
-        #region Drop
+#region Drop
 
         public void DropDatabase(string databaseName)
         {
@@ -51,7 +55,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         }
 
 #endregion Drop
-
 
 #region Insert
 
@@ -445,6 +448,31 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return await Collection.CountAsync(filter);
         }
 
+// CountDocuments{Async} did not exist in driver version 2.3 which is bound to net462 in MultiFunctionApplicationHelpers.csproj
+#if !MONGODRIVER23
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public long CountDocuments()
+        {
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            Collection.InsertOne(document);
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
+            return Collection.CountDocuments(filter);
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<long> CountDocumentsAsync()
+        {
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            await Collection.InsertOneAsync(document);
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
+            return await Collection.CountDocumentsAsync(filter);
+        }
+#endif
+
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -533,8 +561,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 #pragma warning restore CS0618
         }
 
-#if NET471_OR_GREATER || NETCOREAPP
-        //This call will throw exception because the Watch() method only work with MongoDb replica sets, but it is fine as long as the method is executed. 
+#if !MONGODRIVER23
+        // This call will throw an exception because the Watch() method only works with MongoDb replica sets, but it is fine as long as the method is executed. 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -554,7 +582,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             }
         }
 
-        //This call will throw exception because the Watch() method only work with MongoDb replica sets, but it is fine as long as the method is executed.
+        // This call will throw an exception because the Watch() method only works with MongoDb replica sets, but it is fine as long as the method is executed.
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]

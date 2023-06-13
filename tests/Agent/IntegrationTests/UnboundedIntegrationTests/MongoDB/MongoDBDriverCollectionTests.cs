@@ -16,18 +16,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        private bool _clientSupportsWatchMethods;
+        private bool _clientVersion23;
 
         private string _mongoUrl;
 
         private readonly string DatastorePath = "Datastore/statement/MongoDB/myCollection";
 
-        public MongoDBDriverCollectionTestsBase(TFixture fixture, ITestOutputHelper output, string mongoUrl, bool clientSupportsWatchMethods = true) : base(fixture)
+        public MongoDBDriverCollectionTestsBase(TFixture fixture, ITestOutputHelper output, string mongoUrl, bool clientVersion23 = false) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _mongoUrl = mongoUrl;
-            _clientSupportsWatchMethods = clientSupportsWatchMethods;
+            _clientVersion23 = clientVersion23;
 
             _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
             _fixture.AddCommand("MongoDbDriverExerciser Count");
@@ -37,11 +37,13 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _fixture.AddCommand("MongoDbDriverExerciser MapReduce");
             _fixture.AddCommand("MongoDbDriverExerciser MapReduceAsync");
 
-            // watch and watchasync are unavailable in MongoDB.Driver version 2.3
-            if (_clientSupportsWatchMethods)
+            // the following commands are unavailable in MongoDB.Driver version 2.3
+            if (!_clientVersion23)
             {
                 _fixture.AddCommand("MongoDbDriverExerciser Watch");
                 _fixture.AddCommand("MongoDbDriverExerciser WatchAsync");
+                _fixture.AddCommand("MongoDbDriverExerciser CountDocuments");
+                _fixture.AddCommand("MongoDbDriverExerciser CountDocumentsAsync");
             }
 
             _fixture.AddCommand("MongoDbDriverExerciser InsertOne");
@@ -111,6 +113,26 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         }
 
         [Fact]
+        public void CountDocuments()
+        {
+            if (!_clientVersion23)
+            {
+                var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/CountDocuments");
+                Assert.NotNull(m);
+            }
+        }
+
+        [Fact]
+        public void CountDocumentsAsync()
+        {
+            if (!_clientVersion23)
+            {
+                var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/CountDocumentsAsync");
+                Assert.NotNull(m);
+            }
+        }
+
+        [Fact]
         public void Distinct()
         {
             var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/Distinct");
@@ -141,7 +163,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         [Fact]
         public void Watch()
         {
-            if (_clientSupportsWatchMethods)
+            if (!_clientVersion23)
             {
                 var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/Watch");
                 Assert.NotNull(m);
@@ -151,7 +173,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         [Fact]
         public void WatchAsync()
         {
-            if (_clientSupportsWatchMethods)
+            if (!_clientVersion23)
             {
                 var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/WatchAsync");
                 Assert.NotNull(m);
@@ -368,7 +390,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         public MongoDBDriverCollectionTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             // FW462 is testing MongoDB.Driver version 2.3, which needs to connect to the 3.2 server
             // 2.3 doesn't support the Watch/WatchAsync methods
-            : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString, false)
+            : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString, clientVersion23: true)
         {
         }
     }
