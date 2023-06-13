@@ -6,7 +6,9 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http.Features;
 using NewRelic.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore
@@ -74,6 +76,18 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
             try
             {
                 await _next(context);
+
+                // try to decorate minimal API requests with the request method (GET / POST / etc)
+                // some requests (like css / js / etc.) don't have an IEndpointFeature
+                // minimal API requests have an IEndpointFeature with an HttpMethodMetadata instance in the Metadata collection
+                // "normal" requests have an IEndpointFeature but not an HttpMethodMetadata instance
+                // TODO: Figure out how to (reliably) get access to IEndpointFeature -- it's in a deprecated AspNetCore package, somewhere...
+                var endpoint = context.Features.Get<IEndpointFeature>()?.Endpoint;
+                if (endpoint?.Metadata?.Any(m => m.GetType().FullName == "Microsoft.AspNetCore.Routing.HttpMethodMetadata") == true)
+                {
+                    transaction!.SetWebTransactionName(WebTransactionType.ASP, $"{GetRequestPath(context.Request)} ({context.Request!.Method.ToLower().CapitalizeWord()})", TransactionNamePriority.FrameworkLow);
+                }
+
                 EndTransaction(segment, transaction, context, null);
             }
             catch (Exception ex)
@@ -157,11 +171,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 
         private ITransaction SetupTransaction(HttpRequest request)
         {
-            var path = request.Path.Value;
-
-            // if path is empty, consider it the same as /
-            // tack on the request method at the end
-            path = $"{(request.Path == PathString.Empty || path.Equals("/") ? "ROOT" : path.Substring(1))} ({request.Method.ToLower().CapitalizeWord()})";
+            var path = GetRequestPath(request);
 
             var transaction = _agent.CreateTransaction(
                     isWeb: true,
@@ -184,6 +194,16 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
             }
 
             return transaction;
+        }
+
+        private static string GetRequestPath(HttpRequest request)
+        {
+            var path = request.Path.Value;
+
+            // if path is empty, consider it the same as /
+            // tack on the request method at the end
+            path = request.Path == PathString.Empty || path.Equals("/") ? "ROOT" : path.Substring(1);
+            return path;
         }
 
         private void ProcessHeaders(HttpContext httpContext)
