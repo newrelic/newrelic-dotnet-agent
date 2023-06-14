@@ -1,11 +1,12 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-// A number of methods tested here do not exist in MongoDB.Driver version 2.3 which is the oldest we support. It is bound to the net462 TFM in MultiFunctionApplicationHelpers.csproj
+// Several methods exercised here do not exist in MongoDB.Driver version 2.3 which is the oldest we support on .NET Framework. It is bound to the net462 TFM in MultiFunctionApplicationHelpers.csproj
 #if NET462
 #define MONGODRIVER2_3
 #endif
 
+// Some methods exercised here do not exist in MongoDB.Driver version 2.8.1 which is the oldest we support on .NET Core. It is bound to the net6.0 TFM in MultiFunctionApplicationHelpers.csproj
 #if NET6_0
 #define MONGODRIVER2_8_1
 #endif
@@ -799,6 +800,27 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             var collections = cursor.ToList();
             return collections.Count;
         }
+
+#if !MONGODRIVER2_3
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public int ListCollectionNames()
+        {
+            var collections = Db.ListCollectionNames().ToList();
+            return collections.Count();
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<int> ListCollectionNamesAsync()
+        {
+            var cursor = await Db.ListCollectionNamesAsync();
+            var collections = cursor.ToList();
+            return collections.Count;
+        }
+#endif
 
         [LibraryMethod]
         [Transaction]

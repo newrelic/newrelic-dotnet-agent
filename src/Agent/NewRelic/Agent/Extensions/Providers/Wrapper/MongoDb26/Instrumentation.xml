@@ -46,19 +46,21 @@ SPDX-License-Identifier: Apache-2.0
 
   <tracerFactory name="MongoDatabaseWrapper">
     <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoDatabaseImpl">
-    <exactMethodMatcher methodName="CreateCollection"/>
-    <exactMethodMatcher methodName="CreateView"/>
-    <exactMethodMatcher methodName="DropCollection"/>
-    <exactMethodMatcher methodName="ListCollections"/>
-    <exactMethodMatcher methodName="RenameCollection"/>
-    <exactMethodMatcher methodName="RunCommand"/>
+      <exactMethodMatcher methodName="CreateCollection"/>
+      <exactMethodMatcher methodName="CreateView"/>
+      <exactMethodMatcher methodName="DropCollection"/>
+      <exactMethodMatcher methodName="ListCollections"/>
+      <exactMethodMatcher methodName="ListCollectionNames"/>
+      <exactMethodMatcher methodName="RenameCollection"/>
+      <exactMethodMatcher methodName="RunCommand"/>
 
-    <exactMethodMatcher methodName="CreateCollectionAsync"/>
-    <exactMethodMatcher methodName="CreateViewAsync"/>
-    <exactMethodMatcher methodName="DropCollectionAsync"/>
-    <exactMethodMatcher methodName="ListCollectionsAsync"/>
-    <exactMethodMatcher methodName="RenameCollectionAsync"/>
-    <exactMethodMatcher methodName="RunCommandAsync"/>
+      <exactMethodMatcher methodName="CreateCollectionAsync"/>
+      <exactMethodMatcher methodName="CreateViewAsync"/>
+      <exactMethodMatcher methodName="DropCollectionAsync"/>
+      <exactMethodMatcher methodName="ListCollectionsAsync"/>
+      <exactMethodMatcher methodName="ListCollectionNamesAsync"/>
+      <exactMethodMatcher methodName="RenameCollectionAsync"/>
+      <exactMethodMatcher methodName="RunCommandAsync"/>
     </match>
   </tracerFactory>
 
