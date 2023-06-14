@@ -197,7 +197,8 @@ namespace NewRelic.Agent.Core.Configuration
                 {
                     lock (_lockObj)
                     {
-                        _agentEnabledAppSettingParsed = bool.TryParse(_configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled"), out _appSettingAgentEnabled);
+                        _agentEnabledAppSettingParsed ??= bool.TryParse(_configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled"),
+                            out _appSettingAgentEnabled);
                     }
                 }
 
