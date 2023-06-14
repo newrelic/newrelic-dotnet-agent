@@ -1,4 +1,4 @@
-version: '2.1'
+version: '3.4'
 
 services:
 
@@ -19,3 +19,12 @@ services:
             - .:/profiler
             - $CORECLR_NEWRELIC_HOME:/agent
         working_dir: /profiler/linux/
+    build_arm64:
+        platform: linux/arm64/v8
+        build:
+            context: linux/.
+            dockerfile: Arm64Dockerfile
+        command: bash -c "dos2unix ./build_profiler.sh && chmod 777 build_profiler.sh && ./build_profiler.sh"
+        volumes:
+            - .:/profiler
+        working_dir: /profiler/linux
