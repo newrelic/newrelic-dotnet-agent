@@ -56,9 +56,31 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void AgentEnabledShouldPassThroughToLocalConfig()
         {
             Assert.IsTrue(_defaultConfig.AgentEnabled);
+
+            _localConfig.agentEnabled = false;
+            Assert.IsFalse(_defaultConfig.AgentEnabled);
+
             _localConfig.agentEnabled = true;
             Assert.IsTrue(_defaultConfig.AgentEnabled);
-            _localConfig.agentEnabled = false;
+        }
+
+        [Test]
+        public void AgentEnabledShouldUseCachedAppSetting()
+        {
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled")).Returns("false");
+
+            Assert.IsFalse(_defaultConfig.AgentEnabled);
+            Assert.IsFalse(_defaultConfig.AgentEnabled);
+
+            Mock.Assert(() => _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled"), Occurs.Once());
+        }
+
+        [Test]
+        public void AgentEnabledShouldPreferAppSettingOverLocalConfig()
+        {
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled")).Returns("false");
+            _localConfig.agentEnabled = true;
+
             Assert.IsFalse(_defaultConfig.AgentEnabled);
         }
 

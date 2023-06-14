@@ -183,22 +183,31 @@ namespace NewRelic.Agent.Core.Configuration
 
         public object AgentRunId { get { return _serverConfiguration.AgentRunId; } }
 
-        private bool? _agentEnabled;
+        private bool _agentEnabled;
+
+        private static string _agentEnabledAppSettingString;
+        private static bool? _agentEnabledAppSettingRead;
+        private static bool _agentEnabledAppSettingParsed;
+
+
         public virtual bool AgentEnabled
         {
             get
             {
-                if (_agentEnabled.HasValue)
-                    return _agentEnabled.Value;
+                // read from app setting one time only and cache the result in a static
+                if (!_agentEnabledAppSettingRead.HasValue)
+                {
+                    _agentEnabledAppSettingString = _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled");
+                    _agentEnabledAppSettingRead = true;
 
-                var agentEnabledAsString = _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled");
+                    _agentEnabledAppSettingParsed = bool.TryParse(_agentEnabledAppSettingString, out _agentEnabled);
+                }
 
-                if (!bool.TryParse(agentEnabledAsString, out var agentEnabled))
+                // read from local config if we couldn't parse from app settings
+                if (!_agentEnabledAppSettingParsed)
                     _agentEnabled = _localConfiguration.agentEnabled;
 
-                _agentEnabled = agentEnabled;
-
-                return _agentEnabled.Value;
+                return _agentEnabled;
             }
         }
 
@@ -2686,6 +2695,7 @@ namespace NewRelic.Agent.Core.Configuration
             TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
 
         private bool? _codeLevelMetricsEnabled;
+
         public bool CodeLevelMetricsEnabled
         {
             get
