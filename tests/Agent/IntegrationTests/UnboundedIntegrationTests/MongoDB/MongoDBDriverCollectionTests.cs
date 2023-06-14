@@ -74,6 +74,13 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
                 _fixture.AddCommand("MongoDbDriverExerciser EstimatedDocumentCountAsync");
             }
 
+            // the following commands are unavailable in MongoDB.Driver versions <2.11
+            if (_driverVersion >= MongoDBDriverVersion.AtLeast2_11)
+            {
+                _fixture.AddCommand("MongoDbDriverExerciser AggregateToCollection");
+                _fixture.AddCommand("MongoDbDriverExerciser AggregateToCollectionAsync");
+            }
+
             _fixture.AddActions
             (
                 setupConfiguration: () =>
@@ -141,6 +148,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         [InlineData("EstimatedDocumentCountAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
         [InlineData("Watch", MongoDBDriverVersion.OldestSupportedOnCore)]
         [InlineData("WatchAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
+
+        //Methods availabile in driver versions >= 2.11
+        [InlineData("AggregateToCollection", MongoDBDriverVersion.AtLeast2_11)]
+        [InlineData("AggregateToCollectionAsync", MongoDBDriverVersion.AtLeast2_11)]
+
         public void CheckForMethodMetrics(string methodName, MongoDBDriverVersion minVersion)
         {
             if (_driverVersion >= minVersion)
@@ -156,7 +168,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverCollectionTestsFWLatest : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MongoDBDriverCollectionTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.GreaterThan211)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -165,7 +177,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverCollectionTestsFW48 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public MongoDBDriverCollectionTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.GreaterThan211)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -174,7 +186,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverCollectionTestsFW471 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MongoDBDriverCollectionTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.GreaterThan211)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -194,7 +206,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverCollectionTestsCoreLatest : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MongoDBDriverCollectionTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.GreaterThan211)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -212,7 +224,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     {
         OldestSupportedOnFramework, // 2.3
         OldestSupportedOnCore, // 2.8.1
-        GreaterThan211 // 2.11 or greater
+        AtLeast2_11 // 2.11 or greater
     }
 
 }

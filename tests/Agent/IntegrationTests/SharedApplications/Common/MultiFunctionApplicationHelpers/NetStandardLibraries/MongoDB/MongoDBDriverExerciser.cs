@@ -3,7 +3,11 @@
 
 // A number of methods tested here do not exist in MongoDB.Driver version 2.3 which is the oldest we support. It is bound to the net462 TFM in MultiFunctionApplicationHelpers.csproj
 #if NET462
-#define MONGODRIVER23
+#define MONGODRIVER2_3
+#endif
+
+#if NET6_0
+#define MONGODRIVER2_8_1
 #endif
 
 using System.Collections.Generic;
@@ -12,7 +16,6 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using MongoDB.Driver.Linq;
 using System.Threading.Tasks;
-using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System.Runtime.CompilerServices;
 using NewRelic.Api.Agent;
@@ -433,7 +436,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         {
 
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
-            Collection.InsertOne(document);
+            await Collection.InsertOneAsync(document);
 
             var match = new BsonDocument
             {
@@ -450,6 +453,80 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             var result = Collection.AggregateAsync<CustomMongoDbEntity>(pipeline);
             return await result;
         }
+
+#if !MONGODRIVER2_3 && !MONGODRIVER2_8_1
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void AggregateToCollection()
+        {
+
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            Collection.InsertOne(document);
+
+            var matchStage = new BsonDocument
+            {
+                {
+                    "$match",
+                    new BsonDocument
+                    {
+                        { "Name", "Fred Flintstone" }
+                    }
+                }
+            };
+
+            var outStage = new BsonDocument
+            {
+                {
+                    "$out",
+                    new BsonDocument
+                    {
+                        { "db", _dbName },
+                        { "coll", _defaultCollectionName }
+                    }
+                }
+            };
+
+            var pipeline = new[] { matchStage, outStage };
+            Collection.AggregateToCollection<CustomMongoDbEntity>(pipeline);
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task AggregateToCollectionAsync()
+        {
+
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            await Collection.InsertOneAsync(document);
+
+            var matchStage = new BsonDocument
+            {
+                {
+                    "$match",
+                    new BsonDocument
+                    {
+                        { "Name", "Fred Flintstone" }
+                    }
+                }
+            };
+
+            var outStage = new BsonDocument
+            {
+                {
+                    "$out",
+                    new BsonDocument
+                    {
+                        { "db", _dbName },
+                        { "coll", _defaultCollectionName }
+                    }
+                }
+            };
+
+            var pipeline = new[] { matchStage, outStage };
+            await Collection.AggregateToCollectionAsync<CustomMongoDbEntity>(pipeline);
+        }
+#endif
 
         [LibraryMethod]
         [Transaction]
@@ -474,7 +551,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         }
 
 // CountDocuments{Async} did not exist in driver version 2.3 which is bound to net462 in MultiFunctionApplicationHelpers.csproj
-#if !MONGODRIVER23
+#if !MONGODRIVER2_3
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -523,7 +600,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         }
 
 // EstimatedDocumentCount{Async} did not exist in driver version 2.3 which is bound to net462 in MultiFunctionApplicationHelpers.csproj
-#if !MONGODRIVER23
+#if !MONGODRIVER2_3
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -609,7 +686,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 #pragma warning restore CS0618
         }
 
-#if !MONGODRIVER23
+#if !MONGODRIVER2_3
         // This call will throw an exception because the Watch() method only works with MongoDb replica sets, but it is fine as long as the method is executed. 
         [LibraryMethod]
         [Transaction]

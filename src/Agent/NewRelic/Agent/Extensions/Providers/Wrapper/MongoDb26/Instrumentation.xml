@@ -8,6 +8,7 @@ SPDX-License-Identifier: Apache-2.0
     <tracerFactory name="MongoCollectionImplWrapper">
       <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCollectionImpl`1">
         <exactMethodMatcher methodName="AggregateAsync"/>
+        <exactMethodMatcher methodName="AggregateToCollectionAsync"/>
         <exactMethodMatcher methodName="BulkWriteAsync"/>
         <exactMethodMatcher methodName="CountAsync"/>
         <exactMethodMatcher methodName="CountDocumentsAsync"/>
@@ -19,8 +20,9 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="FindOneAndUpdateAsync"/>
         <exactMethodMatcher methodName="MapReduceAsync"/>
         <exactMethodMatcher methodName="WatchAsync"/>
-      
+
         <exactMethodMatcher methodName="Aggregate"/>
+        <exactMethodMatcher methodName="AggregateToCollection"/>
         <exactMethodMatcher methodName="BulkWrite"/>
         <exactMethodMatcher methodName="Count"/>
         <exactMethodMatcher methodName="CountDocuments"/>
