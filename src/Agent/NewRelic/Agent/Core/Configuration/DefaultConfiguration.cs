@@ -183,8 +183,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public object AgentRunId { get { return _serverConfiguration.AgentRunId; } }
 
-        private static bool? _agentEnabledAppSettingRead;
-        private static bool _agentEnabledAppSettingParsed;
+        private static bool? _agentEnabledAppSettingParsed;
         private static bool _appSettingAgentEnabled;
         private static readonly object _lockObj = new object();
 
@@ -193,20 +192,17 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                // read from app setting one time only and cache the result in a static
-                if (!_agentEnabledAppSettingRead.HasValue)
+                // read from app setting one time only and cache the result
+                if (!_agentEnabledAppSettingParsed.HasValue)
                 {
                     lock (_lockObj)
                     {
-                        var agentEnabledAppSettingString = _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled");
-                        _agentEnabledAppSettingRead = true;
-
-                        _agentEnabledAppSettingParsed = bool.TryParse(agentEnabledAppSettingString, out _appSettingAgentEnabled);
+                        _agentEnabledAppSettingParsed = bool.TryParse(_configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled"), out _appSettingAgentEnabled);
                     }
                 }
 
                 // read from local config if we couldn't parse from app settings
-                return _agentEnabledAppSettingParsed ? _appSettingAgentEnabled : _localConfiguration.agentEnabled;
+                return _agentEnabledAppSettingParsed.Value ? _appSettingAgentEnabled : _localConfiguration.agentEnabled;
             }
         }
 
