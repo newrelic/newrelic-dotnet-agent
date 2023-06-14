@@ -183,17 +183,22 @@ namespace NewRelic.Agent.Core.Configuration
 
         public object AgentRunId { get { return _serverConfiguration.AgentRunId; } }
 
+        private bool? _agentEnabled;
         public virtual bool AgentEnabled
         {
             get
             {
+                if (_agentEnabled.HasValue)
+                    return _agentEnabled.Value;
+
                 var agentEnabledAsString = _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled");
 
-                bool agentEnabled;
-                if (!bool.TryParse(agentEnabledAsString, out agentEnabled))
-                    return _localConfiguration.agentEnabled;
+                if (!bool.TryParse(agentEnabledAsString, out var agentEnabled))
+                    _agentEnabled = _localConfiguration.agentEnabled;
 
-                return agentEnabled;
+                _agentEnabled = agentEnabled;
+
+                return _agentEnabled.Value;
             }
         }
 
