@@ -368,7 +368,11 @@ SPDX-License-Identifier: Apache-2.0
       <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection">
         <exactMethodMatcher methodName="Open"/>
       </match>
-
+      <!-- Up until 8.0.33, OpenAsync was not actually async -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection" maxVersion="8.0.33">
+        <exactMethodMatcher methodName="OpenAsync"/>
+      </match>
+      
       <!-- MySqlConnector 0.x -->
       <match assemblyName="MySqlConnector" className="MySql.Data.MySqlClient.MySqlConnection">
         <exactMethodMatcher methodName="Open" />
@@ -389,6 +393,61 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="Open" parameters="System.Boolean,System.Threading.CancellationToken"/>
       </match>
     </tracerFactory>
+
+    <!-- DbConnection.OpenAsync() -->
+    <tracerFactory name="OpenConnectionTracerAsync">
+      <!-- built in MS SQL driver (framework) -->
+      <match assemblyName="System.Data" className="System.Data.SqlClient.SqlConnection">
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken" />
+      </match>
+
+      <!-- built in MS SQL driver (core / nuget) -->
+      <match assemblyName="System.Data.SqlClient" className="System.Data.SqlClient.SqlConnection">
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken" />
+      </match>
+
+      <!-- MS SQL flagship data access driver -->
+      <match assemblyName="Microsoft.Data.SqlClient" className="Microsoft.Data.SqlClient.SqlConnection">
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken" />
+      </match>
+
+      <!-- Oracle vendor driver -->
+      <match assemblyName="Oracle.DataAccess" className="Oracle.DataAccess.Client.OracleConnection">
+        <exactMethodMatcher methodName="OpenAsync"/>
+      </match>
+
+      <!-- Oracle vendor driver for ManagedDataAccess -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleConnection">
+        <exactMethodMatcher methodName="OpenAsync"/>
+      </match>
+
+      <!-- MySql (official) driver -->
+      <!-- Up until 8.0.33, OpenAsync was not actually async -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection" minVersion="8.0.33">
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken"/>
+      </match>
+
+      <!-- MySqlConnector 0.x -->
+      <match assemblyName="MySqlConnector" className="MySql.Data.MySqlClient.MySqlConnection">
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Nullable`1[MySqlConnector.Protocol.Serialization.IOBehavior],System.Threading.CancellationToken" />
+      </match>
+
+      <!-- MySqlConnector 1.x -->
+      <match assemblyName="MySqlConnector" className="MySqlConnector.MySqlConnection">
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Nullable`1[MySqlConnector.Protocol.Serialization.IOBehavior],System.Threading.CancellationToken" />
+      </match>
+
+      <!-- IBM DB2 driver -->
+      <match assemblyName="IBM.Data.DB2" className="IBM.Data.DB2.DB2Connection">
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken" />
+      </match>
+
+      <!-- Npgsql Postgres data provider -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlConnection">
+        <exactMethodMatcher methodName="OpenAsync" parameters="System.Threading.CancellationToken"/>
+      </match>
+    </tracerFactory>
+
 
   </instrumentation>
 </extension>

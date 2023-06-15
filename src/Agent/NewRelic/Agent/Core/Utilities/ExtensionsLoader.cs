@@ -62,7 +62,9 @@ namespace NewRelic.Agent.Core.Utilities
                 { "DataReaderWrapperAsync",                                                                         Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
 
                 { "OpenConnectionTracer",                                                                           Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+                { "OpenConnectionTracerAsync",                                                                           Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
                 { "OpenConnectionWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+                { "OpenConnectionWrapperAsync",                                                                     Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
 
                 //The NewRelic.Providers.Wrapper.SerilogLogging.dll depends on the Serilog.dll; therefore, it should
                 //only be loaded by the agent when Serilog is used otherwise assembly load exception will occur.
