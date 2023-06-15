@@ -183,8 +183,9 @@ namespace NewRelic.Agent.Core.Configuration
 
         public object AgentRunId { get { return _serverConfiguration.AgentRunId; } }
 
-        private static bool? _agentEnabledAppSettingParsed;
-        private static bool _appSettingAgentEnabled;
+        // protected to allow unit test wrapper to manipulate
+        protected static bool? _agentEnabledAppSettingParsed;
+        protected static bool _appSettingAgentEnabled;
         private static readonly object _lockObj = new object();
 
 
