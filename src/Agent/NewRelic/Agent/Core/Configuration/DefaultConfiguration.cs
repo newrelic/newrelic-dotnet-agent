@@ -183,17 +183,28 @@ namespace NewRelic.Agent.Core.Configuration
 
         public object AgentRunId { get { return _serverConfiguration.AgentRunId; } }
 
+        // protected to allow unit test wrapper to manipulate
+        protected static bool? _agentEnabledAppSettingParsed;
+        protected static bool _appSettingAgentEnabled;
+        private static readonly object _lockObj = new object();
+
+
         public virtual bool AgentEnabled
         {
             get
             {
-                var agentEnabledAsString = _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled");
+                // read from app setting one time only and cache the result
+                if (!_agentEnabledAppSettingParsed.HasValue)
+                {
+                    lock (_lockObj)
+                    {
+                        _agentEnabledAppSettingParsed ??= bool.TryParse(_configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled"),
+                            out _appSettingAgentEnabled);
+                    }
+                }
 
-                bool agentEnabled;
-                if (!bool.TryParse(agentEnabledAsString, out agentEnabled))
-                    return _localConfiguration.agentEnabled;
-
-                return agentEnabled;
+                // read from local config if we couldn't parse from app settings
+                return _agentEnabledAppSettingParsed.Value ? _appSettingAgentEnabled : _localConfiguration.agentEnabled;
             }
         }
 
@@ -2681,6 +2692,7 @@ namespace NewRelic.Agent.Core.Configuration
             TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
 
         private bool? _codeLevelMetricsEnabled;
+
         public bool CodeLevelMetricsEnabled
         {
             get
