@@ -31,7 +31,8 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        with:
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
@@ -108,7 +109,8 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        with:
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
           fetch-depth: 0
 
       - name: Download NewRelic.OpenTracing.AmazonLambda.Tracer

@@ -38,7 +38,8 @@ jobs:
           egress-policy: audit # Leave it audit mode
 
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        with:
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
           fetch-depth: 0
 
       - name: Add agent via nuget and then build the tool

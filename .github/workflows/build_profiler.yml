@@ -53,7 +53,8 @@ jobs:
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        with:
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
           fetch-depth: 0
 
       - name: Look for modified files
@@ -79,7 +80,8 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        with:
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
@@ -134,7 +136,8 @@ jobs:
       #     egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        with:
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
           fetch-depth: 0
 
       - name: Clean out _profilerBuild directory
@@ -185,7 +188,8 @@ jobs:
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        with:
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
           fetch-depth: 0
 
       - name: Clean out _profilerBuild directory
@@ -259,7 +263,8 @@ jobs:
   
     steps:
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        with:
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
           fetch-depth: 0
 
       - name: Download Profiler Artifacts to working Directory
@@ -329,7 +334,8 @@ jobs:
           sudo apt-get install -y xmlstarlet
 
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        with:
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
           fetch-depth: 0
 
       - name: Update Profiler Package Reference to Latest Version
