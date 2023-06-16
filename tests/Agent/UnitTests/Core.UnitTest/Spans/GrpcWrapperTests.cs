@@ -7,7 +7,12 @@ using System.Threading;
 using NUnit.Framework;
 using NewRelic.Agent.Core.DataTransport;
 using System.Threading.Tasks;
+
+#if NETFRAMEWORK
 using GrpcChannel = Grpc.Core.Channel;
+#else
+using Grpc.Net.Client;
+#endif
 
 namespace NewRelic.Agent.Core.GrpcWrapper.Tests
 {
@@ -75,7 +80,7 @@ namespace NewRelic.Agent.Core.GrpcWrapper.Tests
                 _ex = ex;
             }
 
-            protected override AsyncDuplexStreamingCall<FakeGrpcRequest, FakeGrpcResponse> CreateStreamsImpl(Channel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
+            protected override AsyncDuplexStreamingCall<FakeGrpcRequest, FakeGrpcResponse> CreateStreamsImpl(GrpcChannel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
             {
                 if (_ex != null)
                 {
