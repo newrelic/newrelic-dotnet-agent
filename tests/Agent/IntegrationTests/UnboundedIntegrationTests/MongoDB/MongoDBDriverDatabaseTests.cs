@@ -49,6 +49,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             {
                 _fixture.AddCommand("MongoDBDriverExerciser AggregateDB");
                 _fixture.AddCommand("MongoDBDriverExerciser AggregateDBAsync");
+                _fixture.AddCommand("MongoDBDriverExerciser AggregateDBToCollection");
+                _fixture.AddCommand("MongoDBDriverExerciser AggregateDBToCollectionAsync");
             }
 
             _fixture.AddActions
@@ -101,6 +103,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         // Methods not available in driver version 2.8
         [InlineData("Aggregate", MongoDBDriverVersion.AtLeast2_11)]
         [InlineData("AggregateAsync", MongoDBDriverVersion.AtLeast2_11)]
+        [InlineData("AggregateToCollection", MongoDBDriverVersion.AtLeast2_11)]
+        [InlineData("AggregateToCollectionAsync", MongoDBDriverVersion.AtLeast2_11)]
         public void CheckForOperationMetrics(string operationName, MongoDBDriverVersion minVersion)
         {
             if (_driverVersion >= minVersion)

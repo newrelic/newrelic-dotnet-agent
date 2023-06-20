@@ -47,6 +47,7 @@ SPDX-License-Identifier: Apache-2.0
   <tracerFactory name="MongoDatabaseWrapper">
     <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoDatabaseImpl">
       <exactMethodMatcher methodName="Aggregate"/>
+      <exactMethodMatcher methodName="AggregateToCollection"/>
       <exactMethodMatcher methodName="CreateCollection"/>
       <exactMethodMatcher methodName="CreateView"/>
       <exactMethodMatcher methodName="DropCollection"/>
@@ -56,6 +57,7 @@ SPDX-License-Identifier: Apache-2.0
       <exactMethodMatcher methodName="RunCommand"/>
 
       <exactMethodMatcher methodName="AggregateAsync"/>
+      <exactMethodMatcher methodName="AggregateToCollectionAsync"/>
       <exactMethodMatcher methodName="CreateCollectionAsync"/>
       <exactMethodMatcher methodName="CreateViewAsync"/>
       <exactMethodMatcher methodName="DropCollectionAsync"/>

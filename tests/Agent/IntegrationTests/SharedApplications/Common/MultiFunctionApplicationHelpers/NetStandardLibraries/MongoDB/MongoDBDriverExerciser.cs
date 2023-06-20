@@ -778,6 +778,70 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return result.FirstOrDefault().ToString();
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void AggregateDBToCollection()
+        {
+            var listLocalSessions = new BsonDocument
+            {
+                {
+                    "$listLocalSessions",
+                    new BsonDocument
+                    {
+                        // empty
+                    }
+                }
+            };
+
+            var outStage = new BsonDocument
+            {
+                {
+                    "$out",
+                    new BsonDocument
+                    {
+                        { "db", _dbName },
+                        { "coll", _defaultCollectionName }
+                    }
+                }
+            };
+
+            var pipeline = new[] { listLocalSessions, outStage };
+            Db.AggregateToCollection<BsonDocument>(pipeline);
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task AggregateDBToCollectionAsync()
+        {
+            var listLocalSessions = new BsonDocument
+            {
+                {
+                    "$listLocalSessions",
+                    new BsonDocument
+                    {
+                        // empty
+                    }
+                }
+            };
+
+            var outStage = new BsonDocument
+            {
+                {
+                    "$out",
+                    new BsonDocument
+                    {
+                        { "db", _dbName },
+                        { "coll", _defaultCollectionName }
+                    }
+                }
+            };
+
+            var pipeline = new[] { listLocalSessions, outStage };
+            await Db.AggregateToCollectionAsync<BsonDocument>(pipeline);
+        }
+
 #endif
 
         [LibraryMethod]
