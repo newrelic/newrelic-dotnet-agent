@@ -43,6 +43,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             {
                 _fixture.AddCommand("MongoDBDriverExerciser ListCollectionNames");
                 _fixture.AddCommand("MongoDBDriverExerciser ListCollectionNamesAsync");
+                _fixture.AddCommand("MongoDBDriverExerciser WatchDB");
+                _fixture.AddCommand("MongoDBDriverExerciser WatchDBAsync");
             }
 
             if (_driverVersion > MongoDBDriverVersion.OldestSupportedOnCore)
@@ -100,6 +102,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         // Methods not available in driver version 2.3
         [InlineData("ListCollectionNames", MongoDBDriverVersion.OldestSupportedOnCore)]
         [InlineData("ListCollectionNamesAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("Watch", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("WatchAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
         // Methods not available in driver version 2.8
         [InlineData("Aggregate", MongoDBDriverVersion.AtLeast2_11)]
         [InlineData("AggregateAsync", MongoDBDriverVersion.AtLeast2_11)]

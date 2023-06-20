@@ -21,6 +21,7 @@ using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System.Runtime.CompilerServices;
 using NewRelic.Api.Agent;
 using System;
+using System.Web.Http.Results;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 {
@@ -732,7 +733,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 
         #endregion
 
-        #region Database
+#region Database
 
 #if !MONGODRIVER2_3 && !MONGODRIVER2_8_1
 
@@ -984,9 +985,44 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return result.ToString();
         }
 
-#endregion
+#if !MONGODRIVER2_3
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public string WatchDB()
+        {
+            try
+            {
+                var result = Db.Watch();
+                return "Ok";
+            }
+            catch (MongoCommandException)
+            {
+                return "Got exception but it is ok!";
+            }
+        }
 
-#region IndexManager
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<string> WatchDBAsync()
+        {
+            try
+            {
+                var result = await Db.WatchAsync();
+                return "Ok";
+            }
+            catch (MongoCommandException)
+            {
+                return "Got exception but it is ok!";
+            }
+        }
+
+#endif
+
+        #endregion
+
+        #region IndexManager
 
         [LibraryMethod]
         [Transaction]
