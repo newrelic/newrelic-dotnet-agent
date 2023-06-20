@@ -730,9 +730,55 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         }
 #endif
 
-#endregion
+        #endregion
 
-#region Database
+        #region Database
+
+#if !MONGODRIVER2_3 && !MONGODRIVER2_8_1
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public string AggregateDB()
+        {
+            var listLocalSessions = new BsonDocument
+            {
+                {
+                    "$listLocalSessions",
+                    new BsonDocument
+                    {
+                        // empty
+                    }
+                }
+            };
+
+            var pipeline = new[] { listLocalSessions };
+            var result = Db.Aggregate<BsonDocument>(pipeline);
+            return result.FirstOrDefault().ToString();
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<string> AggregateDBAsync()
+        {
+            var listLocalSessions = new BsonDocument
+            {
+                {
+                    "$listLocalSessions",
+                    new BsonDocument
+                    {
+                        // empty
+                    }
+                }
+            };
+
+            var pipeline = new[] { listLocalSessions };
+            var result = await Db.AggregateAsync<BsonDocument>(pipeline);
+            return result.FirstOrDefault().ToString();
+        }
+
+#endif
 
         [LibraryMethod]
         [Transaction]
