@@ -30,55 +30,57 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _driverVersion = driverVersion;
 
             _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
-            _fixture.AddCommand("MongoDbDriverExerciser Count");
-            _fixture.AddCommand("MongoDbDriverExerciser CountAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser Distinct");
-            _fixture.AddCommand("MongoDbDriverExerciser DistinctAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser MapReduce");
-            _fixture.AddCommand("MongoDbDriverExerciser MapReduceAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser InsertOne");
-            _fixture.AddCommand("MongoDbDriverExerciser InsertOneAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser InsertMany");
-            _fixture.AddCommand("MongoDbDriverExerciser InsertManyAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser ReplaceOne");
-            _fixture.AddCommand("MongoDbDriverExerciser ReplaceOneAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser UpdateOne");
-            _fixture.AddCommand("MongoDbDriverExerciser UpdateOneAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser UpdateMany");
-            _fixture.AddCommand("MongoDbDriverExerciser UpdateManyAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser DeleteOne");
-            _fixture.AddCommand("MongoDbDriverExerciser DeleteOneAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser DeleteMany");
-            _fixture.AddCommand("MongoDbDriverExerciser DeleteManyAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser FindSync");
-            _fixture.AddCommand("MongoDbDriverExerciser FindAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndDelete");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndDeleteAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndReplace");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndReplaceAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndUpdate");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndUpdateAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser BulkWrite");
-            _fixture.AddCommand("MongoDbDriverExerciser BulkWriteAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser Aggregate");
+            // Async methods first
             _fixture.AddCommand("MongoDbDriverExerciser AggregateAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser BulkWriteAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser CountAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteManyAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteOneAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser DistinctAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndDeleteAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndReplaceAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndUpdateAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser InsertManyAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser InsertOneAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser MapReduceAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser ReplaceOneAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateManyAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateOneAsync");
+             // Then sync methods
+            _fixture.AddCommand("MongoDbDriverExerciser Aggregate");
+            _fixture.AddCommand("MongoDbDriverExerciser BulkWrite");
+            _fixture.AddCommand("MongoDbDriverExerciser Count");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteMany");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteOne");
+            _fixture.AddCommand("MongoDbDriverExerciser Distinct");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndDelete");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndReplace");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndUpdate");
+            _fixture.AddCommand("MongoDbDriverExerciser FindSync");
+            _fixture.AddCommand("MongoDbDriverExerciser MapReduce");
+            _fixture.AddCommand("MongoDbDriverExerciser InsertMany");
+            _fixture.AddCommand("MongoDbDriverExerciser InsertOne");
+            _fixture.AddCommand("MongoDbDriverExerciser ReplaceOne");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateMany");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateOne");
 
             // the following commands are unavailable in MongoDB.Driver version 2.3
             if (_driverVersion > MongoDBDriverVersion.OldestSupportedOnFramework)
             {
-                _fixture.AddCommand("MongoDbDriverExerciser Watch");
+                _fixture.AddCommand("MongoDbDriverExerciser CountDocumentsAsync");
+                _fixture.AddCommand("MongoDbDriverExerciser EstimatedDocumentCountAsync");
                 _fixture.AddCommand("MongoDbDriverExerciser WatchAsync");
                 _fixture.AddCommand("MongoDbDriverExerciser CountDocuments");
-                _fixture.AddCommand("MongoDbDriverExerciser CountDocumentsAsync");
                 _fixture.AddCommand("MongoDbDriverExerciser EstimatedDocumentCount");
-                _fixture.AddCommand("MongoDbDriverExerciser EstimatedDocumentCountAsync");
+                _fixture.AddCommand("MongoDbDriverExerciser Watch");
             }
 
             // the following commands are unavailable in MongoDB.Driver versions <2.11
             if (_driverVersion >= MongoDBDriverVersion.AtLeast2_11)
             {
-                _fixture.AddCommand("MongoDbDriverExerciser AggregateToCollection");
                 _fixture.AddCommand("MongoDbDriverExerciser AggregateToCollectionAsync");
+                _fixture.AddCommand("MongoDbDriverExerciser AggregateToCollection");
             }
 
             _fixture.AddActions

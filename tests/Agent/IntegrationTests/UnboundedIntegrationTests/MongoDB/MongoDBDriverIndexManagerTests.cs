@@ -25,16 +25,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _mongoUrl = mongoUrl;
 
             _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
-            _fixture.AddCommand("MongoDBDriverExerciser CreateOne");
-            _fixture.AddCommand("MongoDBDriverExerciser CreateOneAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser CreateMany");
+            // Async methods first
             _fixture.AddCommand("MongoDBDriverExerciser CreateManyAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser DropAll");
+            _fixture.AddCommand("MongoDBDriverExerciser CreateOneAsync");
             _fixture.AddCommand("MongoDBDriverExerciser DropAllAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser DropOne");
             _fixture.AddCommand("MongoDBDriverExerciser DropOneAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser List");
             _fixture.AddCommand("MongoDBDriverExerciser ListAsync");
+            // Then sync
+            _fixture.AddCommand("MongoDBDriverExerciser CreateMany");
+            _fixture.AddCommand("MongoDBDriverExerciser CreateOne");
+            _fixture.AddCommand("MongoDBDriverExerciser DropAll");
+            _fixture.AddCommand("MongoDBDriverExerciser DropOne");
+            _fixture.AddCommand("MongoDBDriverExerciser List");
 
             _fixture.AddActions
             (

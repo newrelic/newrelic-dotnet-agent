@@ -28,31 +28,33 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _driverVersion = driverVersion;
 
             _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
-            _fixture.AddCommand("MongoDBDriverExerciser CreateCollection");
+             // Async methods first
             _fixture.AddCommand("MongoDBDriverExerciser CreateCollectionAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser DropCollection");
             _fixture.AddCommand("MongoDBDriverExerciser DropCollectionAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser ListCollections");
             _fixture.AddCommand("MongoDBDriverExerciser ListCollectionsAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser RenameCollection");
             _fixture.AddCommand("MongoDBDriverExerciser RenameCollectionAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser RunCommand");
             _fixture.AddCommand("MongoDBDriverExerciser RunCommandAsync");
+            // Then sync methods
+            _fixture.AddCommand("MongoDBDriverExerciser CreateCollection");
+            _fixture.AddCommand("MongoDBDriverExerciser DropCollection");
+            _fixture.AddCommand("MongoDBDriverExerciser ListCollections");
+            _fixture.AddCommand("MongoDBDriverExerciser RenameCollection");
+            _fixture.AddCommand("MongoDBDriverExerciser RunCommand");
 
             if (_driverVersion > MongoDBDriverVersion.OldestSupportedOnFramework)
             {
-                _fixture.AddCommand("MongoDBDriverExerciser ListCollectionNames");
                 _fixture.AddCommand("MongoDBDriverExerciser ListCollectionNamesAsync");
-                _fixture.AddCommand("MongoDBDriverExerciser WatchDB");
                 _fixture.AddCommand("MongoDBDriverExerciser WatchDBAsync");
+                _fixture.AddCommand("MongoDBDriverExerciser ListCollectionNames");
+                _fixture.AddCommand("MongoDBDriverExerciser WatchDB");
             }
 
             if (_driverVersion > MongoDBDriverVersion.OldestSupportedOnCore)
             {
-                _fixture.AddCommand("MongoDBDriverExerciser AggregateDB");
                 _fixture.AddCommand("MongoDBDriverExerciser AggregateDBAsync");
-                _fixture.AddCommand("MongoDBDriverExerciser AggregateDBToCollection");
                 _fixture.AddCommand("MongoDBDriverExerciser AggregateDBToCollectionAsync");
+                _fixture.AddCommand("MongoDBDriverExerciser AggregateDB");
+                _fixture.AddCommand("MongoDBDriverExerciser AggregateDBToCollection");
             }
 
             _fixture.AddActions

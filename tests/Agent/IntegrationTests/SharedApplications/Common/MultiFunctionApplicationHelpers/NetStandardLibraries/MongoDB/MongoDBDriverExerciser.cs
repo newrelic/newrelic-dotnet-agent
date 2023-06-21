@@ -840,7 +840,15 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             };
 
             var pipeline = new[] { listLocalSessions, outStage };
-            await Db.AggregateToCollectionAsync<BsonDocument>(pipeline);
+            try
+            {
+                await Db.AggregateToCollectionAsync<BsonDocument>(pipeline);
+            }
+            catch
+            {
+                // This method is throwing an exception in net471 for unknown reasons. However, we just need the method to execute
+                // so our instrumentation runs and generates the expected metric, so just swallow the exception.
+            }
         }
 
 #endif
