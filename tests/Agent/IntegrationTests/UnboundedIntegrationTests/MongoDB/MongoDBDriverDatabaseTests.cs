@@ -15,24 +15,47 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
         private string _mongoUrl;
+        private MongoDBDriverVersion _driverVersion;
 
-        public MongoDBDriverDatabaseTestsBase(TFixture fixture, ITestOutputHelper output, string mongoUrl)  : base(fixture)
+        private readonly string DatastoreStatementPathBase = "Datastore/statement/MongoDB";
+        private readonly string DatastoreOperationPathBase = "Datastore/operation/MongoDB";
+
+        public MongoDBDriverDatabaseTestsBase(TFixture fixture, ITestOutputHelper output, string mongoUrl, MongoDBDriverVersion driverVersion)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _mongoUrl = mongoUrl;
+            _driverVersion = driverVersion;
 
             _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
-            _fixture.AddCommand("MongoDBDriverExerciser CreateCollection");
+             // Async methods first
             _fixture.AddCommand("MongoDBDriverExerciser CreateCollectionAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser DropCollection");
             _fixture.AddCommand("MongoDBDriverExerciser DropCollectionAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser ListCollections");
             _fixture.AddCommand("MongoDBDriverExerciser ListCollectionsAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser RenameCollection");
             _fixture.AddCommand("MongoDBDriverExerciser RenameCollectionAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser RunCommand");
             _fixture.AddCommand("MongoDBDriverExerciser RunCommandAsync");
+            // Then sync methods
+            _fixture.AddCommand("MongoDBDriverExerciser CreateCollection");
+            _fixture.AddCommand("MongoDBDriverExerciser DropCollection");
+            _fixture.AddCommand("MongoDBDriverExerciser ListCollections");
+            _fixture.AddCommand("MongoDBDriverExerciser RenameCollection");
+            _fixture.AddCommand("MongoDBDriverExerciser RunCommand");
+
+            if (_driverVersion > MongoDBDriverVersion.OldestSupportedOnFramework)
+            {
+                _fixture.AddCommand("MongoDBDriverExerciser ListCollectionNamesAsync");
+                _fixture.AddCommand("MongoDBDriverExerciser WatchDBAsync");
+                _fixture.AddCommand("MongoDBDriverExerciser ListCollectionNames");
+                _fixture.AddCommand("MongoDBDriverExerciser WatchDB");
+            }
+
+            if (_driverVersion > MongoDBDriverVersion.OldestSupportedOnCore)
+            {
+                _fixture.AddCommand("MongoDBDriverExerciser AggregateDBAsync");
+                _fixture.AddCommand("MongoDBDriverExerciser AggregateDBToCollectionAsync");
+                _fixture.AddCommand("MongoDBDriverExerciser AggregateDB");
+                _fixture.AddCommand("MongoDBDriverExerciser AggregateDBToCollection");
+            }
 
             _fixture.AddActions
             (
@@ -60,92 +83,50 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             Assert.NotNull(m);
         }
 
-        [Fact]
-        public void CreateCollection()
+        [Theory]
+        [InlineData("createTestCollection", "CreateCollection")]
+        [InlineData("createTestCollectionAsync", "CreateCollectionAsync")]
+        [InlineData("dropTestCollection", "DropCollection")]
+        [InlineData("dropTestCollectionAsync", "DropCollectionAsync")]
+        public void CheckForStatementMetrics(string collectionName, string operationName)
         {
-            var m = _fixture.AgentLog.GetMetricByName("Datastore/statement/MongoDB/createTestCollection/CreateCollection");
-
+            var m = _fixture.AgentLog.GetMetricByName($"{DatastoreStatementPathBase}/{collectionName}/{operationName}");
             Assert.NotNull(m);
         }
 
-        [Fact]
-        public void CreateCollectionAsync()
+        [Theory]
+        [InlineData("ListCollections", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("ListCollectionsAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("RenameCollection", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("RenameCollectionAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("RunCommand", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("RunCommandAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        // Methods not available in driver version 2.3
+        [InlineData("ListCollectionNames", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("ListCollectionNamesAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("Watch", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("WatchAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
+        // Methods not available in driver version 2.8
+        [InlineData("Aggregate", MongoDBDriverVersion.AtLeast2_11)]
+        [InlineData("AggregateAsync", MongoDBDriverVersion.AtLeast2_11)]
+        [InlineData("AggregateToCollection", MongoDBDriverVersion.AtLeast2_11)]
+        [InlineData("AggregateToCollectionAsync", MongoDBDriverVersion.AtLeast2_11)]
+        public void CheckForOperationMetrics(string operationName, MongoDBDriverVersion minVersion)
         {
-            var m = _fixture.AgentLog.GetMetricByName("Datastore/statement/MongoDB/createTestCollectionAsync/CreateCollectionAsync");
-
-            Assert.NotNull(m);
+            if (_driverVersion >= minVersion)
+            {
+                var m = _fixture.AgentLog.GetMetricByName($"{DatastoreOperationPathBase}/{operationName}");
+                Assert.NotNull(m);
+            }
         }
 
-        [Fact]
-        public void DropCollection()
-        {
-            var m = _fixture.AgentLog.GetMetricByName("Datastore/statement/MongoDB/dropTestCollection/DropCollection");
-
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void DropCollectionAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName("Datastore/statement/MongoDB/dropTestCollectionAsync/DropCollectionAsync");
-
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void ListCollections()
-        {
-            var m = _fixture.AgentLog.GetMetricByName("Datastore/operation/MongoDB/ListCollections");
-
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void ListCollectionsAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName("Datastore/operation/MongoDB/ListCollectionsAsync");
-
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void RenameCollection()
-        {
-            var m = _fixture.AgentLog.GetMetricByName("Datastore/operation/MongoDB/RenameCollection");
-
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void RenameCollectionAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName("Datastore/operation/MongoDB/RenameCollectionAsync");
-
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void RunCommand()
-        {
-            var m = _fixture.AgentLog.GetMetricByName("Datastore/operation/MongoDB/RunCommand");
-
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void RunCommandAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName("Datastore/operation/MongoDB/RunCommandAsync");
-
-            Assert.NotNull(m);
-        }
     }
 
     [NetFrameworkTest]
     public class MongoDBDriverDatabaseTestsFWLatest : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MongoDBDriverDatabaseTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -154,7 +135,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverDatabaseTestsFW48 : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public MongoDBDriverDatabaseTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -163,7 +144,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverDatabaseTestsFW471 : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MongoDBDriverDatabaseTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -173,7 +154,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     {
         public MongoDBDriverDatabaseTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             // FW462 is testing MongoDB.Driver version 2.3, which needs to connect to the 3.2 server
-            : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString)
+            : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString, MongoDBDriverVersion.OldestSupportedOnFramework)
         {
         }
     }
@@ -182,7 +163,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverDatabaseTestsCoreLatest : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MongoDBDriverDatabaseTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -191,7 +172,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverDatabaseTestsCoreOldest : MongoDBDriverDatabaseTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MongoDBDriverDatabaseTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.OldestSupportedOnCore)
         {
         }
     }

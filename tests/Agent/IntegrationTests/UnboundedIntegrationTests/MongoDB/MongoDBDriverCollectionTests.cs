@@ -16,59 +16,72 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
 
-        private bool _clientSupportsWatchMethods;
+        private MongoDBDriverVersion _driverVersion;
 
         private string _mongoUrl;
 
         private readonly string DatastorePath = "Datastore/statement/MongoDB/myCollection";
 
-        public MongoDBDriverCollectionTestsBase(TFixture fixture, ITestOutputHelper output, string mongoUrl, bool clientSupportsWatchMethods = true) : base(fixture)
+        public MongoDBDriverCollectionTestsBase(TFixture fixture, ITestOutputHelper output, string mongoUrl, MongoDBDriverVersion driverVersion) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _mongoUrl = mongoUrl;
-            _clientSupportsWatchMethods = clientSupportsWatchMethods;
+            _driverVersion = driverVersion;
 
             _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
-            _fixture.AddCommand("MongoDbDriverExerciser Count");
+            // Async methods first
+            _fixture.AddCommand("MongoDbDriverExerciser AggregateAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser BulkWriteAsync");
             _fixture.AddCommand("MongoDbDriverExerciser CountAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser Distinct");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteManyAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteOneAsync");
             _fixture.AddCommand("MongoDbDriverExerciser DistinctAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser MapReduce");
+            _fixture.AddCommand("MongoDbDriverExerciser FindAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndDeleteAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndReplaceAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndUpdateAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser InsertManyAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser InsertOneAsync");
             _fixture.AddCommand("MongoDbDriverExerciser MapReduceAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser ReplaceOneAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateManyAsync");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateOneAsync");
+             // Then sync methods
+            _fixture.AddCommand("MongoDbDriverExerciser Aggregate");
+            _fixture.AddCommand("MongoDbDriverExerciser BulkWrite");
+            _fixture.AddCommand("MongoDbDriverExerciser Count");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteMany");
+            _fixture.AddCommand("MongoDbDriverExerciser DeleteOne");
+            _fixture.AddCommand("MongoDbDriverExerciser Distinct");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndDelete");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndReplace");
+            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndUpdate");
+            _fixture.AddCommand("MongoDbDriverExerciser FindSync");
+            _fixture.AddCommand("MongoDbDriverExerciser MapReduce");
+            _fixture.AddCommand("MongoDbDriverExerciser InsertMany");
+            _fixture.AddCommand("MongoDbDriverExerciser InsertOne");
+            _fixture.AddCommand("MongoDbDriverExerciser ReplaceOne");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateMany");
+            _fixture.AddCommand("MongoDbDriverExerciser UpdateOne");
 
-            // watch and watchasync are unavailable in MongoDB.Driver version 2.3
-            if (_clientSupportsWatchMethods)
+            // the following commands are unavailable in MongoDB.Driver version 2.3
+            if (_driverVersion > MongoDBDriverVersion.OldestSupportedOnFramework)
             {
-                _fixture.AddCommand("MongoDbDriverExerciser Watch");
+                _fixture.AddCommand("MongoDbDriverExerciser CountDocumentsAsync");
+                _fixture.AddCommand("MongoDbDriverExerciser EstimatedDocumentCountAsync");
                 _fixture.AddCommand("MongoDbDriverExerciser WatchAsync");
+                _fixture.AddCommand("MongoDbDriverExerciser CountDocuments");
+                _fixture.AddCommand("MongoDbDriverExerciser EstimatedDocumentCount");
+                _fixture.AddCommand("MongoDbDriverExerciser Watch");
             }
 
-            _fixture.AddCommand("MongoDbDriverExerciser InsertOne");
-            _fixture.AddCommand("MongoDbDriverExerciser InsertOneAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser InsertMany");
-            _fixture.AddCommand("MongoDbDriverExerciser InsertManyAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser ReplaceOne");
-            _fixture.AddCommand("MongoDbDriverExerciser ReplaceOneAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser UpdateOne");
-            _fixture.AddCommand("MongoDbDriverExerciser UpdateOneAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser UpdateMany");
-            _fixture.AddCommand("MongoDbDriverExerciser UpdateManyAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser DeleteOne");
-            _fixture.AddCommand("MongoDbDriverExerciser DeleteOneAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser DeleteMany");
-            _fixture.AddCommand("MongoDbDriverExerciser DeleteManyAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser FindSync");
-            _fixture.AddCommand("MongoDbDriverExerciser FindAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndDelete");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndDeleteAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndReplace");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndReplaceAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndUpdate");
-            _fixture.AddCommand("MongoDbDriverExerciser FindOneAndUpdateAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser BulkWrite");
-            _fixture.AddCommand("MongoDbDriverExerciser BulkWriteAsync");
-            _fixture.AddCommand("MongoDbDriverExerciser Aggregate");
+            // the following commands are unavailable in MongoDB.Driver versions <2.11
+            if (_driverVersion >= MongoDBDriverVersion.AtLeast2_11)
+            {
+                _fixture.AddCommand("MongoDbDriverExerciser AggregateToCollectionAsync");
+                _fixture.AddCommand("MongoDbDriverExerciser AggregateToCollection");
+            }
 
             _fixture.AddActions
             (
@@ -96,241 +109,59 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             Assert.NotNull(m);
         }
 
-        [Fact]
-        public void Count()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/Count");
-            Assert.NotNull(m);
-        }
+        [Theory]
+        [InlineData("Count", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("CountAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("Distinct", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("DistinctAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("MapReduce", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("MapReduceAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("InsertOne", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("InsertOneAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("InsertMany", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("InsertManyAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("ReplaceOne", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("ReplaceOneAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("UpdateOne", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("UpdateOneAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("UpdateMany", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("UpdateManyAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("DeleteOne", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("DeleteOneAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("DeleteMany", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("DeleteManyAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("FindSync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("FindAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("FindOneAndDelete", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("FindOneAndDeleteAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("FindOneAndReplace", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("FindOneAndReplaceAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("FindOneAndUpdate", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("FindOneAndUpdateAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("BulkWrite", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("BulkWriteAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("Aggregate", MongoDBDriverVersion.OldestSupportedOnFramework)]
+        [InlineData("AggregateAsync", MongoDBDriverVersion.OldestSupportedOnFramework)]
 
-        [Fact]
-        public void CountAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/CountAsync");
-            Assert.NotNull(m);
-        }
+        // Methods unavailable in driver version 2.3
+        [InlineData("CountDocuments", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("CountDocumentsAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("EstimatedDocumentCount", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("EstimatedDocumentCountAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("Watch", MongoDBDriverVersion.OldestSupportedOnCore)]
+        [InlineData("WatchAsync", MongoDBDriverVersion.OldestSupportedOnCore)]
 
-        [Fact]
-        public void Distinct()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/Distinct");
-            Assert.NotNull(m);
-        }
+        //Methods availabile in driver versions >= 2.11
+        [InlineData("AggregateToCollection", MongoDBDriverVersion.AtLeast2_11)]
+        [InlineData("AggregateToCollectionAsync", MongoDBDriverVersion.AtLeast2_11)]
 
-        [Fact]
-        public void DistinctAsync()
+        public void CheckForMethodMetrics(string methodName, MongoDBDriverVersion minVersion)
         {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/DistinctAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void MapReduce()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/MapReduce");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void MapReduceAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/MapReduceAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void Watch()
-        {
-            if (_clientSupportsWatchMethods)
+            if (_driverVersion >= minVersion)
             {
-                var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/Watch");
-                Assert.NotNull(m);
+                var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/{methodName}");
+                Assert.True(m != null, $"Did not find metric for db operation named {methodName}");
             }
-        }
-
-        [Fact]
-        public void WatchAsync()
-        {
-            if (_clientSupportsWatchMethods)
-            {
-                var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/WatchAsync");
-                Assert.NotNull(m);
-            }
-        }
-
-        [Fact]
-        public void InsertOne()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/InsertOne");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void InsertOneAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/InsertOneAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void InsertMany()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/InsertMany");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void InsertManyAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/InsertManyAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void ReplaceOne()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/ReplaceOne");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void ReplaceOneAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/ReplaceOneAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void UpdateOne()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/UpdateOne");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void UpdateOneAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/UpdateOneAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void UpdateMany()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/UpdateMany");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void UpdateManyAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/UpdateManyAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void DeleteOne()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/DeleteOne");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void DeleteOneAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/DeleteOneAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void DeleteMany()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/DeleteMany");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void DeleteManyAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/DeleteManyAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void FindSync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/FindSync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void FindAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/FindAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void FindOneAndDelete()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/FindOneAndDelete");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void FindOneAndDeleteAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/FindOneAndDeleteAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void FindOneAndReplace()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/FindOneAndReplace");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void FindOneAndReplaceAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/FindOneAndReplaceAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void FindOneAndUpdate()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/FindOneAndUpdate");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void FindOneAndUpdateAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/FindOneAndUpdateAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void BulkWrite()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/BulkWrite");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void BulkWriteAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/BulkWriteAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void Aggregate()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/Aggregate");
-            Assert.NotNull(m);
         }
 
     }
@@ -339,7 +170,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverCollectionTestsFWLatest : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
         public MongoDBDriverCollectionTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -348,7 +179,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverCollectionTestsFW48 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFW48>
     {
         public MongoDBDriverCollectionTestsFW48(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -357,7 +188,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverCollectionTestsFW471 : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
         public MongoDBDriverCollectionTestsFW471(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -368,7 +199,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         public MongoDBDriverCollectionTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             // FW462 is testing MongoDB.Driver version 2.3, which needs to connect to the 3.2 server
             // 2.3 doesn't support the Watch/WatchAsync methods
-            : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString, false)
+            : base(fixture, output, MongoDbConfiguration.MongoDb3_2ConnectionString, MongoDBDriverVersion.OldestSupportedOnFramework)
         {
         }
     }
@@ -377,7 +208,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverCollectionTestsCoreLatest : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
         public MongoDBDriverCollectionTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.AtLeast2_11)
         {
         }
     }
@@ -386,9 +217,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
     public class MongoDBDriverCollectionTestsCoreOldest : MongoDBDriverCollectionTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
         public MongoDBDriverCollectionTestsCoreOldest(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
-            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString)
+            : base(fixture, output, MongoDbConfiguration.MongoDb6_0ConnectionString, MongoDBDriverVersion.OldestSupportedOnCore)
         {
         }
+    }
+
+    public enum MongoDBDriverVersion
+    {
+        OldestSupportedOnFramework, // 2.3
+        OldestSupportedOnCore, // 2.8.1
+        AtLeast2_11 // 2.11 or greater
     }
 
 }
