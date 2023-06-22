@@ -13,7 +13,7 @@ namespace NewRelic.Agent.Core.Logging
         private static Lazy<ILogger> _lazyAuditLogger = new Lazy<ILogger>(() =>
             Serilog.Log.Logger.ForContext(LogLevelExtensions.AuditLevel, LogLevelExtensions.AuditLevel));
 
-        public static bool IsAuditLogEnabled { get; private set; }
+        public static bool IsAuditLogEnabled { get; set; } //setter is public only for unit tests, not expected to be use anywhere else
 
         /// <summary>
         /// Logs <paramref name="message"/> at the AUDIT level. This log level should be used only as dictated by the security team to satisfy auditing requirements.
@@ -25,14 +25,17 @@ namespace NewRelic.Agent.Core.Logging
                 _lazyAuditLogger.Value.Fatal(message);
         }
 
-        internal static LoggerConfiguration IncludeOnlyAuditLog(this LoggerConfiguration loggerConfiguration)
+        public static LoggerConfiguration IncludeOnlyAuditLog(this LoggerConfiguration loggerConfiguration)
         {
-            IsAuditLogEnabled = true; // set a flag so we can short-circuit when audit log is not enabled
+            IsAuditLogEnabled = true; // set a flag so Log() can short-circuit when audit log is not enabled
 
             return loggerConfiguration.Filter.ByIncludingOnly($"{LogLevelExtensions.AuditLevel} is not null");
         }
-        internal static LoggerConfiguration ExcludeAuditLog(this LoggerConfiguration loggerConfiguration)
+
+        public static LoggerConfiguration ExcludeAuditLog(this LoggerConfiguration loggerConfiguration)
         {
+            IsAuditLogEnabled = false; // set a flag so Log() can short-circuit when audit log is not enabled
+
             return loggerConfiguration.Filter.ByIncludingOnly($"{LogLevelExtensions.AuditLevel} is null");
         }
     }
