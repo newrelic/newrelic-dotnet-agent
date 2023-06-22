@@ -17,6 +17,8 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
 {
     public class SessionCache : IStackExchangeRedisCache
     {
+        private const string SessionCacheCleanupSupportabilityMetricName = "Supportability/Dotnet/RedisSessionCacheCleanup/Count";
+
         private readonly EventWaitHandle _stopHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 
         private readonly ConcurrentDictionary<ISegment, (WeakReference<ITransaction> transaction, ProfilingSession session)> _sessionCache = new ConcurrentDictionary<ISegment, (WeakReference<ITransaction> transaction, ProfilingSession session)>();
@@ -74,7 +76,8 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
 
         private void CleanUp()
         {
-            _agent.Logger.Log(Agent.Extensions.Logging.Level.Info, "Session cache size pre-cleanup " + _sessionCache.Count);
+            var cacheSizePreCleanup = _sessionCache.Count;
+
             foreach (var pair in _sessionCache)
             {
                 if (pair.Key.IsDone)
@@ -89,7 +92,8 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                 }
             }
 
-            _agent.Logger.Log(Agent.Extensions.Logging.Level.Info, "Session cache size post-cleanup " + _sessionCache.Count);
+            _agent.RecordSupportabilityMetric(SessionCacheCleanupSupportabilityMetricName, _sessionCache.Count - cacheSizePreCleanup);
+
         }
 
         private ConnectionInfo GetConnectionInfo(EndPoint endpoint)
