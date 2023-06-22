@@ -334,9 +334,9 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var collectorWire = CreateHttpCollectorWire();
 
-            // ensure that .ForContext() just returns the mock logger instance
+            var mockForContextLogger = Mock.Create<ILogger>();
             Mock.Arrange(() => _mockILogger.ForContext(Arg.AnyString, Arg.AnyObject, false))
-                .Returns(() => _mockILogger);
+                .Returns(() => mockForContextLogger);
 
             AuditLog.IsAuditLogEnabled = isEnabled;
 
@@ -344,7 +344,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
-            Mock.Assert(() => _mockILogger.Fatal(Arg.AnyString), isEnabled ? Occurs.Exactly(3) : Occurs.Never());
+            Mock.Assert(() => mockForContextLogger.Fatal(Arg.AnyString), isEnabled ? Occurs.Exactly(3) : Occurs.Never());
         }
     }
 

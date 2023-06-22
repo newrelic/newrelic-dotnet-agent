@@ -48,9 +48,9 @@ namespace NewRelic.Agent.Core.Logging.Tests
         [TestCase(true)]
         public void Log_OnlyLogsWhenAuditLogEnabled(bool logEnabled)
         {
-            // ensure that .ForContext() just returns the mock logger instance
+            var mockForContextLogger = Mock.Create<ILogger>();
             Mock.Arrange(() => _mockILogger.ForContext(Arg.AnyString, Arg.AnyObject, false))
-                .Returns(() => _mockILogger);
+                .Returns(() => mockForContextLogger);
         
             AuditLog.IsAuditLogEnabled = logEnabled;
 
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
 
             AuditLog.Log(message);
 
-            Mock.Assert(() => _mockILogger.Fatal(message), logEnabled ? Occurs.Once() : Occurs.Never());
+            Mock.Assert(() => mockForContextLogger.Fatal(message), logEnabled ? Occurs.Once() : Occurs.Never());
         }
     }
 }
