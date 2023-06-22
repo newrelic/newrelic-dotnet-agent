@@ -10,10 +10,21 @@ namespace NewRelic.Agent.Core.Logging
     public static class AuditLog
     {
         // a lazy ILogger instance that injects an "Audit" property
-        private static Lazy<ILogger> _lazyAuditLogger = new Lazy<ILogger>(() =>
-            Serilog.Log.Logger.ForContext(LogLevelExtensions.AuditLevel, LogLevelExtensions.AuditLevel));
+        private static Lazy<ILogger> _lazyAuditLogger = LazyAuditLogger();
 
         public static bool IsAuditLogEnabled { get; set; } //setter is public only for unit tests, not expected to be use anywhere else
+
+        // for unit tests only
+        public static void ResetLazyLogger()
+        {
+            _lazyAuditLogger = LazyAuditLogger();
+        }
+
+        private static Lazy<ILogger> LazyAuditLogger()
+        {
+            return new Lazy<ILogger>(() =>
+                Serilog.Log.Logger.ForContext(LogLevelExtensions.AuditLevel, LogLevelExtensions.AuditLevel));
+        }
 
         /// <summary>
         /// Logs <paramref name="message"/> at the AUDIT level. This log level should be used only as dictated by the security team to satisfy auditing requirements.

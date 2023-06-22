@@ -39,7 +39,6 @@ namespace NewRelic.Agent.Core.DataTransport
 
             _mockILogger = Mock.Create<ILogger>();
             Log.Logger = _mockILogger;
-
         }
 
         private HttpCollectorWire CreateHttpCollectorWire(Dictionary<string, string> requestHeadersMap = null)
@@ -314,12 +313,12 @@ namespace NewRelic.Agent.Core.DataTransport
             Assert.AreEqual(false, _mockHttpMessageHandler.SendAsyncInvoked);
         }
 
-        [Test]
         [TestCase(false)]
         [TestCase(true)]
         public void SendData_ShouldNotCallAuditLog_UnlessAuditLogIsEnabled(bool isEnabled)
         {
             // Arrange
+            AuditLog.ResetLazyLogger();
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
             Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024);
 
@@ -341,7 +340,7 @@ namespace NewRelic.Agent.Core.DataTransport
             AuditLog.IsAuditLogEnabled = isEnabled;
 
             // Act
-            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+            var _ = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
             Mock.Assert(() => mockForContextLogger.Fatal(Arg.AnyString), isEnabled ? Occurs.Exactly(3) : Occurs.Never());

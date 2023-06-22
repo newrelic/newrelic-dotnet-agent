@@ -20,7 +20,14 @@ namespace NewRelic.Agent.Core.Logging.Tests
             Log.Logger = _mockILogger;
 
             // reset state for each test
+            AuditLog.ResetLazyLogger();
             AuditLog.IsAuditLogEnabled = false;
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            AuditLog.ResetLazyLogger();
         }
 
         [Test]
@@ -43,9 +50,8 @@ namespace NewRelic.Agent.Core.Logging.Tests
             Assert.False(AuditLog.IsAuditLogEnabled);
         }
 
-        [Test]
-        [TestCase(false)]
         [TestCase(true)]
+        [TestCase(false)]
         public void Log_OnlyLogsWhenAuditLogEnabled(bool logEnabled)
         {
             var mockForContextLogger = Mock.Create<ILogger>();
