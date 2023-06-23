@@ -77,7 +77,6 @@ jobs:
                  microsoft.extensions.logging
                  microsoft.data.sqlclient
                  microsoft.net.http
-                 mongocsharpdriver
                  mongodb.driver
                  mysql.data
                  mysqlconnector
