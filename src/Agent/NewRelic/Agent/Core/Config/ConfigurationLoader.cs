@@ -111,6 +111,14 @@ namespace NewRelic.Agent.Core.Config
 				value = new ValueWithProvenance<string>(ConfigurationManager.AppSettings[key],
 					"ConfigurationManager app setting");
 			}
+#else
+            if (value?.Value == null)
+            {
+                var configMgrStatic = new ConfigurationManagerStatic();
+                var configValue = configMgrStatic.GetAppSetting(key);
+                if (configValue != null)
+                    value = new ValueWithProvenance<string>(configValue, configMgrStatic.AppSettingsFilePath);
+            }
 #endif
             return value;
         }
