@@ -9,6 +9,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      build-for-release:
+        description: 'Set to "true" when manually building for a release. Otherwise, "False"'
+        required: true
+        default: 'false'
 
   schedule:
     - cron: "0 9 * * *"
@@ -91,7 +96,7 @@ jobs:
           if-no-files-found: error
 
       - name: Convert Code Signing Certificate Into File
-        if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
+        if: ${{ github.event.release }} || (github.event_name == 'workflow_dispatch' && ${{ inputs.build-for-release == 'true' }})
         id: write_cert
         run: |
           $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
@@ -101,14 +106,14 @@ jobs:
         shell: powershell
 
       - name: Install Code Signing Certificate
-        if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
+        if: ${{ github.event.release }} || (github.event_name == 'workflow_dispatch' && ${{ inputs.build-for-release == 'true' }})
         run: |
           Write-Host "certutil.exe -f -user -p <passphrase> -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot"
           certutil.exe -f -user -p ${{ secrets.CERT_PASSPHRASE }} -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot
         shell: powershell
 
       - name: Create Self-signed code signing cert
-        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && ${{ inputs.build-for-release != 'true' }}) || github.event_name == 'schedule'
         run: |
           Write-Host "New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)"
           New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)
