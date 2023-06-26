@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.12.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.12.0...v10.12.1) (2023-06-26)
+
+
+### Fixes
+
+* Resolved an issue in the `all_solutions.yml` workflow where the MSI installers were built with a self-signed certificate rather than the production code signing certificate. ([386a277](https://github.com/newrelic/newrelic-dotnet-agent/commit/386a27705701a07d591a95f95830bda27898d255))
+
 ## [10.12.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.11.0...v10.12.0) (2023-06-23)
 
 
