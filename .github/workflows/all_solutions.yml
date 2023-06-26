@@ -46,6 +46,9 @@ jobs:
       agentVersion: ${{ steps.agentVersion.outputs.version }}
 
     steps:
+      - name: echo event name and input value
+        run: echo ${{ github.event_name }} - ${{ github.event.inputs.build-for-release }}
+
       - name: Checkout
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
@@ -114,7 +117,7 @@ jobs:
         shell: powershell
 
       - name: Create Self-signed code signing cert
-        if: github.event_name == 'pull_request' || ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'false' }} || github.event_name == 'schedule'
+        if: ${{ github.event_name == 'pull_request' }} || ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'false' }} || ${{ github.event_name == 'schedule' }}
         run: |
           Write-Host "New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)"
           New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)
