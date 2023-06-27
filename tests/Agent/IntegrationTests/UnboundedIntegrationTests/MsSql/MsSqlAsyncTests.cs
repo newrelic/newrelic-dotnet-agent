@@ -22,13 +22,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         private readonly string _expectedTransactionName;
 
         private readonly string _tableName;
+        private readonly string _libraryName;
 
-        public MsSqlAsyncTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName) : base(fixture)
+        public MsSqlAsyncTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName, string libraryName) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
             _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlAsync";
             _tableName = Utilities.GenerateTableName();
+            _libraryName = libraryName;
 
             _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
             _fixture.AddCommand($"{excerciserName} MsSqlAsync {_tableName}");
@@ -81,6 +83,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/all", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
 
+                new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/OpenAsync", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)}/default", callCount = expectedDatastoreCallCount},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 2 },
@@ -103,7 +106,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 // The operation metric should not be scoped because the statement metric is scoped instead
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 3, metricScope = _expectedTransactionName },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 1, metricScope = _expectedTransactionName },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", callCount = 1, metricScope = _expectedTransactionName }
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", callCount = 1, metricScope = _expectedTransactionName },
+
+                // Don't double count the open
+                new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/Open" },
             };
             var expectedTransactionTraceSegments = new List<string>
             {
@@ -187,7 +193,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "SystemDataExerciser")
+                  excerciserName: "SystemDataExerciser",
+                  libraryName: "System.Data.SqlClient")
         {
         }
     }
@@ -199,7 +206,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "SystemDataSqlClientExerciser")
+                  excerciserName: "SystemDataSqlClientExerciser",
+                  libraryName: "System.Data.SqlClient")
         {
         }
     }
@@ -211,7 +219,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "SystemDataSqlClientExerciser")
+                  excerciserName: "SystemDataSqlClientExerciser",
+                  libraryName: "System.Data.SqlClient")
         {
         }
     }
@@ -223,7 +232,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser")
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  libraryName: "Microsoft.Data.SqlClient")
         {
         }
     }
@@ -235,7 +245,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser")
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  libraryName: "Microsoft.Data.SqlClient")
         {
         }
     }
@@ -248,7 +259,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser")
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  libraryName: "Microsoft.Data.SqlClient")
         {
         }
     }
@@ -260,7 +272,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser")
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  libraryName: "Microsoft.Data.SqlClient")
         {
         }
     }
