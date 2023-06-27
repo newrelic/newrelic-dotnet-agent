@@ -76,7 +76,7 @@ namespace BasicMvcApplication.Controllers
 
             using (var connection = new OracleConnection(connectionString))
             {
-                connection.Open();
+                await connection.OpenAsync();
 
                 using (var command = new OracleCommand("SELECT DEGREE FROM user_tables WHERE ROWNUM <= 1", connection))
                 {

@@ -64,7 +64,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open", callCount = 1},
+                new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/OpenAsync", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", callCount = expectedDatastoreCallCount},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1 },
@@ -75,7 +75,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 				// The datastore operation happened outside a web transaction so there should be no allWeb metrics
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allWeb" },
-
+                // Don't double count the Open
+                new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open" },
 				// The operation metric should not be scoped because the statement metric is scoped instead
 				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedTransactionName },
             };
