@@ -641,6 +641,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("update_loaded_modules.cycle")]
         public TimeSpan UpdateLoadedModulesCycle => _configuration.UpdateLoadedModulesCycle;
 
+        [JsonProperty("stackexchangeredis_cleanup.cycle")]
+        public TimeSpan StackExchangeRedisCleanupCycle => _configuration.StackExchangeRedisCleanupCycle;
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return _configuration.GetAppSettings();

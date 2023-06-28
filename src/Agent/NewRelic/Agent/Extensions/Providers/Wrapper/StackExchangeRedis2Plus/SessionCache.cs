@@ -34,7 +34,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
             // Since the methodcall will not change, it is passed in from the instrumentation for reuse later.
             _invocationTargetHashCode = invocationTargetHashCode;
 
-            _agent.SimpleSchedulingService.StartExecuteEvery(CleanUp, _agent.Configuration.DefaultHarvestCycle, _agent.Configuration.DefaultHarvestCycle);
+            _agent.SimpleSchedulingService.StartExecuteEvery(CleanUp, _agent.Configuration.StackExchangeRedisCleanupCycle, _agent.Configuration.StackExchangeRedisCleanupCycle);
         }
 
         /// <summary>
@@ -65,7 +65,8 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
 
                 // This new segment maker accepts relative start and stop times since we will be starting and ending(RemoveSegmentFromCallStack) the segment immediately.
                 // This also sets the segment as a Leaf.
-                var segment = xTransaction.StartStackExchangeRedisSegment(_invocationTargetHashCode, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, command.Command),
+                var segment = xTransaction.StartStackExchangeRedisSegment(_invocationTargetHashCode,
+                    ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, command.Command),
                     GetConnectionInfo(command.EndPoint), relativeStartTime, relativeEndTime);
 
                 // This version of End does not set the end time or check for redis Harvests
@@ -76,27 +77,24 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
 
         private void CleanUp()
         {
-            var cacheSizePreCleanup = _sessionCache.Count;
-
+            var cleanedSessions = 0;
             foreach (var pair in _sessionCache)
             {
                 lock (pair.Key)
                 {
-                    if (pair.Key.IsDone)
+                    if (pair.Key.IsDone
+                        || !(pair.Value.transaction?.TryGetTarget(out var txn) ?? false)
+                        || txn.IsFinished)
                     {
-                        _ = _sessionCache.TryRemove(pair.Key, out _);
-                        continue;
-                    }
-
-                    if (!(pair.Value.transaction?.TryGetTarget(out var txn) ?? false) || txn.IsFinished)
-                    {
-                        _ = _sessionCache.TryRemove(pair.Key, out _);
+                        if (_sessionCache.TryRemove(pair.Key, out _))
+                        {
+                            cleanedSessions++;
+                        }
                     }
                 }
             }
 
-            _agent.RecordSupportabilityMetric(SessionCacheCleanupSupportabilityMetricName, _sessionCache.Count - cacheSizePreCleanup);
-
+            _agent.RecordSupportabilityMetric(SessionCacheCleanupSupportabilityMetricName, cleanedSessions);
         }
 
         private ConnectionInfo GetConnectionInfo(EndPoint endpoint)
@@ -151,6 +149,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                         session = sessiontoken.session;
                     }
                 }
+
                 return session;
             };
         }
