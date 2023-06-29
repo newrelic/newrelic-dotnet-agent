@@ -69,12 +69,12 @@ jobs:
           echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
         shell: powershell
 
-      - name: Archive NewRelic.NuGetHelper
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-        with:
-          name: NewRelic.NuGetHelper
-          path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\bin
-          if-no-files-found: error
+      # - name: Archive NewRelic.NuGetHelper
+      #   uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+      #   with:
+      #     name: NewRelic.NuGetHelper
+      #     path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\bin
+      #     if-no-files-found: error
 
       - name: Archive NewRelic.Agent.Extensions
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
@@ -747,11 +747,11 @@ jobs:
           name: rpm-build-artifacts
           path: src/_build/CoreArtifacts
 
-      - name: Download NewRelic.NuGetHelper
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: NewRelic.NuGetHelper
-          path: build/NewRelic.NuGetHelper/bin
+      # - name: Download NewRelcd \source\reic.NuGetHelper
+      #   uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      #   with:
+      #     name: NewRelic.NuGetHelper
+      #     path: build/NewRelic.NuGetHelper/bin
 
       - name: Download NewRelic.Agent.Extensions
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -764,6 +764,11 @@ jobs:
         with:
           name: NewRelic.OpenTracing.AmazonLambda.Tracer
           path: src/AwsLambda/AwsLambdaOpenTracer/bin/Release/netstandard2.0-ILRepacked
+
+      - name: Build NewRelic.NuGetHelper
+        run: |
+          MSBuild.exe -restore -m -p:Configuration=Release ${{ github.workspace }}\build\NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj  
+        shell: powershell
 
       - name: Run ArtifactBuilder
         run: |
