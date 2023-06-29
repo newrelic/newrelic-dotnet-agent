@@ -50,6 +50,8 @@ namespace ArtifactBuilder.Artifacts
 
             if (TryGetMsiPath(out var msiPath))
             {
+                ValidateCodeSigningCertificate(msiPath);
+
                 FileHelpers.CopyFile(msiPath, OutputDirectory);
                 File.WriteAllText($@"{OutputDirectory}\checksum.sha256", FileHelpers.GetSha256Checksum(msiPath));
             }
@@ -399,5 +401,10 @@ namespace ArtifactBuilder.Artifacts
             return expectedComponents;
         }
 
+        private void ValidateCodeSigningCertificate(string msiPath)
+        {
+            if (!SecurityHelpers.VerifyEmbeddedSignature(msiPath, out var errorMessage))
+                throw new PackagingException($"Code signing certificate is not valid. {errorMessage}");
+        }
     }
 }
