@@ -591,7 +591,7 @@ jobs:
 
   create-package-rpm:
     needs: build-fullagent-msi
-    if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
+    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
     name: Create RPM Package
     runs-on: ubuntu-22.04
 
@@ -659,7 +659,7 @@ jobs:
 
   create-package-deb:
     needs: build-fullagent-msi
-    if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
+    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
     name: Create Debian package
     runs-on: ubuntu-22.04
 
@@ -713,7 +713,7 @@ jobs:
 
   run-artifactbuilder:
     needs: [create-package-rpm, create-package-deb]
-    if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
+    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
     name: Run ArtifactBuilder
     runs-on: windows-2022
 
@@ -784,7 +784,7 @@ jobs:
       contents: write
     name: Build and Publish Multiverse Testing Suite
     needs: build-fullagent-msi
-    if: ${{ github.event.release }}
+    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/multiverse_run.yml@main
     with:
       agentVersion: ${{ needs.build-fullagent-msi.outputs.agentVersion }}
