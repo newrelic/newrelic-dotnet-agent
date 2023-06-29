@@ -3,10 +3,12 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.StackExchangeRedis2Plus;
@@ -365,10 +367,29 @@ namespace CompositeTests
 
         #endregion
 
+        [Test]
+        public void Cleanup_IsScheduled()
+        {
+            var agent = _compositeTestAgent.GetAgent();
+            var sessionCache = new SessionCache(agent, 0);
+
+            var sssFieldType = typeof(SimpleSchedulingService).GetField("_executingActions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var value = sssFieldType.GetValue(agent.SimpleSchedulingService) as List<Action>;
+
+            var cleanupAction = value.FirstOrDefault(a => a.Method.Name == "CleanUp");
+
+            Assert.NotNull(cleanupAction);
+
+            sessionCache.Dispose();
+
+            var noAction = value.FirstOrDefault(a => a.Method.Name == "CleanUp");
+
+            Assert.Null(noAction);
+        }
+
         private int GetSessionCacheSize(SessionCache sessionCache)
         {
-            var sessionCacheType = typeof(SessionCache);
-            var cacheFieldType = sessionCacheType.GetField("_sessionCache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var cacheFieldType = typeof(SessionCache).GetField("_sessionCache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var value = cacheFieldType.GetValue(sessionCache) as ConcurrentDictionary<ISegment, (WeakReference<ITransaction> transaction, ProfilingSession session)>;
 
             return value.Count;

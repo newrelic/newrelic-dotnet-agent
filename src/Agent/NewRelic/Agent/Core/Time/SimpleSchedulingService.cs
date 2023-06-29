@@ -38,6 +38,8 @@ namespace NewRelic.Agent.Core.Time
                 _scheduler.StopExecuting(executingAction);
             }
 
+            _executingActions.Clear();
+
             base.Dispose();
         }
     }
