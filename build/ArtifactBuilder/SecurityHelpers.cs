@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ArtifactBuilder
 {
@@ -160,7 +161,19 @@ namespace ArtifactBuilder
             [In] WinTrustData pWVTData
         );
 
-        public static bool VerifyEmbeddedSignature(string fileName)
+        const uint FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100;
+        const uint FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200;
+        const uint FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000;
+
+        [DllImport("kernel32.dll", CharSet=CharSet.Unicode)]
+        static extern uint FormatMessage (
+            uint dwFlags, IntPtr lpSource,
+            uint dwMessageId, uint dwLanguageId, 
+            [Out] StringBuilder lpBuffer,
+            uint nSize, IntPtr lpArguments
+        );
+
+        public static bool VerifyEmbeddedSignature(string fileName, out string errorMessage)
         {
             WinTrustFileInfo winTrustFileInfo = null;
             WinTrustData winTrustData = null;
@@ -175,7 +188,21 @@ namespace ArtifactBuilder
                 winTrustData = new WinTrustData(winTrustFileInfo);
 
                 var result = WinVerifyTrust(INVALID_HANDLE_VALUE, action, winTrustData);
-                return (result == WinVerifyTrustResult.Success);
+                if (result == WinVerifyTrustResult.Success)
+                {
+                    errorMessage = null;
+                    return true;
+                }
+
+                var sb = new StringBuilder(1024);
+                var charCount = FormatMessage(
+                    FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 
+                    IntPtr.Zero, (uint)result, 0,
+                    sb, (uint)sb.Capacity, IntPtr.Zero);
+
+                errorMessage = $"Error result: {result:X} - {sb.ToString(0, (int)charCount)}";
+
+                return false;
             }
             finally
             {

@@ -403,8 +403,8 @@ namespace ArtifactBuilder.Artifacts
 
         private void ValidateCodeSigningCertificate(string msiPath)
         {
-            if (!SecurityHelpers.VerifyEmbeddedSignature(msiPath))
-                throw new PackagingException("Code signing certificate is not valid or not trusted.");
+            if (!SecurityHelpers.VerifyEmbeddedSignature(msiPath, out var errorMessage))
+                throw new PackagingException($"Code signing certificate is not valid. {errorMessage}");
         }
     }
 }
