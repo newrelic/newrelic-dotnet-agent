@@ -752,6 +752,9 @@ jobs:
           name: NewRelic.OpenTracing.AmazonLambda.Tracer
           path: src/AwsLambda/AwsLambdaOpenTracer/bin/Release/netstandard2.0-ILRepacked
 
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
+        
       - name: Build NewRelic.NuGetHelper
         run: |
           MSBuild.exe -restore -m -p:Configuration=Release ${{ github.workspace }}\build\NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj  
