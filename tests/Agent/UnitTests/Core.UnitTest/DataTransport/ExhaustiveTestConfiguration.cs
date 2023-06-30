@@ -441,6 +441,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public TimeSpan UpdateLoadedModulesCycle => TimeSpan.FromMinutes(1);
 
+        public TimeSpan StackExchangeRedisCleanupCycle => TimeSpan.FromMinutes(1);
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return new Dictionary<string, string>

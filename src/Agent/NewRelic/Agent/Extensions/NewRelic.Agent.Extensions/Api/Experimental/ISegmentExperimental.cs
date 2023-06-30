@@ -44,5 +44,15 @@ namespace NewRelic.Agent.Api.Experimental
         /// </summary>
         string UserCodeNamespace { get; set; }
 
+        /// <summary>
+        /// Returns the category of the segment.
+        /// </summary>
+        /// <returns>Category of the segment.</returns>
+        string GetCategory();
+
+        /// <summary>
+        /// Will be true if a relative end time has been set on the segment.  In most situations, this is only set when a segment is ended.
+        /// </summary>
+        bool IsDone { get; }
     }
 }

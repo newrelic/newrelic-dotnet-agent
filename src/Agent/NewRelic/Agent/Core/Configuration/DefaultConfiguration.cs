@@ -2208,6 +2208,30 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private TimeSpan? _stackExchangeRedisCleanupCycleOverride = null;
+        public TimeSpan StackExchangeRedisCleanupCycle
+        {
+            get
+            {
+                if (_stackExchangeRedisCleanupCycleOverride.HasValue)
+                {
+                    return _stackExchangeRedisCleanupCycleOverride.Value;
+                }
+
+                if (_newRelicAppSettings.TryGetValue("OverrideStackExchangeRedisCleanupCycle", out var harvestCycle))
+                {
+                    if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                    {
+                        Log.Info("StackExchange.Redis cleanup cycle overridden to " + parsedHarvestCycle + " seconds.");
+                        _stackExchangeRedisCleanupCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                        return _stackExchangeRedisCleanupCycleOverride.Value;
+                    }
+                }
+
+                return DefaultHarvestCycle;
+            }
+        }
+
         #endregion
 
         #region Helpers

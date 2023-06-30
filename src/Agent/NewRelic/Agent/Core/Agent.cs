@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
@@ -64,6 +65,7 @@ namespace NewRelic.Agent.Core
         private readonly ILogContextDataFilter _logContextDataFilter;
         private Extensions.Logging.ILogger _logger;
         private volatile IStackExchangeRedisCache _stackExchangeRedisCache;
+        private readonly ISimpleSchedulingService _simpleSchedulingService;
 
         public Agent(ITransactionService transactionService, ITransactionTransformer transactionTransformer,
             IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker,
@@ -72,7 +74,7 @@ namespace NewRelic.Agent.Core
             IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker,
             IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService,
             IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory, ICATSupportabilityMetricCounters catMetricCounters,
-            ILogEventAggregator logEventAggregator, ILogContextDataFilter logContextDataFilter)
+            ILogEventAggregator logEventAggregator, ILogContextDataFilter logContextDataFilter, ISimpleSchedulingService simpleSchedulingService)
         {
             _transactionService = transactionService;
             _transactionTransformer = transactionTransformer;
@@ -93,6 +95,7 @@ namespace NewRelic.Agent.Core
             _catMetricCounters = catMetricCounters;
             _logEventAggregator = logEventAggregator;
             _logContextDataFilter = logContextDataFilter;
+            _simpleSchedulingService = simpleSchedulingService;
 
             Instance = this;
         }
@@ -388,6 +391,11 @@ namespace NewRelic.Agent.Core
         #endregion GetLinkingMetadata
 
         #region ExperimentalApi
+
+        public ISimpleSchedulingService SimpleSchedulingService
+        {
+            get { return _simpleSchedulingService; }
+        }
 
         public IStackExchangeRedisCache StackExchangeRedisCache
         {
