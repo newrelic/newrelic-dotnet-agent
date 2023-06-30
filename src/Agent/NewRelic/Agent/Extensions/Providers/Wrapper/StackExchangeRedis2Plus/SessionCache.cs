@@ -82,28 +82,33 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
         private void CleanUp()
         {
             var cleanedSessions = 0;
-            foreach (var pair in _sessionCache)
-            {
-                // This can happen outside the lock since the object transaction was garbage collected.
-                if (!(pair.Value.transaction?.TryGetTarget(out _) ?? false))
-                {
-                    if (_sessionCache.TryRemove(pair.Key, out _))
-                    {
-                        cleanedSessions++;
-                    }
-                }
 
-                lock (pair.Key)
+            try
+            {
+                foreach (var pair in _sessionCache)
                 {
-                    if (((ISegmentExperimental)pair.Key).IsDone)
+                    // This can happen outside the lock since the object transaction was garbage collected.
+                    if (!(pair.Value.transaction?.TryGetTarget(out _) ?? false))
                     {
                         if (_sessionCache.TryRemove(pair.Key, out _))
                         {
                             cleanedSessions++;
                         }
                     }
+
+                    lock (pair.Key)
+                    {
+                        if (((ISegmentExperimental)pair.Key).IsDone)
+                        {
+                            if (_sessionCache.TryRemove(pair.Key, out _))
+                            {
+                                cleanedSessions++;
+                            }
+                        }
+                    }
                 }
             }
+            catch { } // Don't want to log here, just want to prevent collection problems from breaking things.
 
             _agent.RecordSupportabilityMetric(SessionCacheCleanupSupportabilityMetricName, cleanedSessions);
         }
