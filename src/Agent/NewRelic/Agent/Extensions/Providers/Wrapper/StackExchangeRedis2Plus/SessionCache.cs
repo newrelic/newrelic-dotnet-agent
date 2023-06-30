@@ -43,14 +43,18 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
         /// <param name="hostSegment">Segment being finalized.</param>
         public void Harvest(ISegment hostSegment)
         {
-            // If we can't remove the session, it doesn't exist, so do nothing and return.
-            if (!_sessionCache.TryRemove(hostSegment, out var sessionData))
+            (WeakReference<ITransaction> transaction, ProfilingSession session) sessionData;
+            lock (hostSegment)
             {
-                return;
+                // If we can't remove the session, it doesn't exist, so do nothing and return.
+                if (!_sessionCache.TryRemove(hostSegment, out sessionData))
+                {
+                    return;
+                }
             }
-
-            // Get the transaction from the data
-            if (!(sessionData.transaction?.TryGetTarget(out var transaction) ?? false) || transaction.IsFinished)
+            
+            // Get the transaction from the data.
+            if (!(sessionData.transaction?.TryGetTarget(out var transaction) ?? false))
             {
                 return;
             }
@@ -80,11 +84,18 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
             var cleanedSessions = 0;
             foreach (var pair in _sessionCache)
             {
+                // This can happen outside the lock since the object transaction was garbage collected.
+                if (!(pair.Value.transaction?.TryGetTarget(out _) ?? false))
+                {
+                    if (_sessionCache.TryRemove(pair.Key, out _))
+                    {
+                        cleanedSessions++;
+                    }
+                }
+
                 lock (pair.Key)
                 {
-                    if (pair.Key.IsDone
-                        || !(pair.Value.transaction?.TryGetTarget(out var txn) ?? false)
-                        || txn.IsFinished)
+                    if (((ISegmentExperimental)pair.Key).IsDone)
                     {
                         if (_sessionCache.TryRemove(pair.Key, out _))
                         {
@@ -139,11 +150,17 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
                 // Don't want to save data to a session to a NoOp - no way to clean it up easily or reliably.
                 // Don't want to save to a Datastore segment - could be another Redis segment or something else.
                 var segment = transaction.CurrentSegment;
-                ProfilingSession session = null;
 
+                // These don't change over time so they don't need to be in the lock.
+                if (!segment.IsValid || ((ISegmentExperimental)segment).GetCategory() == "Datastore")
+                {
+                    return null;
+                }
+
+                ProfilingSession session = null;
                 lock (segment)
                 {
-                    if (segment.IsValid && !segment.IsDone && segment.GetCategory() != "Datastore")
+                    if (!((ISegmentExperimental)segment).IsDone)
                     {
                         var sessiontoken = _sessionCache.GetOrAdd(segment, (s) => (new WeakReference<ITransaction>(transaction), new ProfilingSession()));
                         session = sessiontoken.session;

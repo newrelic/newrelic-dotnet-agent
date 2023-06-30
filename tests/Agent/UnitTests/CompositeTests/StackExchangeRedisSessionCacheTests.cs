@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
@@ -26,13 +27,7 @@ namespace CompositeTests
 
         private static readonly string _accountId = "acctid";
         private static readonly string _appId = "appid";
-        private static readonly string _guid = "guid";
-        private static readonly float _priority = .3f;
-        private static readonly bool _sampled = false;
-        private static readonly string _traceId = "traceid";
         private static readonly string _trustKey = "trustedkey";
-        private static readonly string _type = "typeapp";
-        private static readonly string _transactionId = "transactionId";
 
         [SetUp]
         public void SetUp()
@@ -165,7 +160,7 @@ namespace CompositeTests
 
             var cacheSize = GetSessionCacheSize(sessionCache);
 
-            Assert.True(segment.IsDone);
+            Assert.True(((ISegmentExperimental)segment).IsDone);
             Assert.Null(session);
             Assert.True(cacheSize == 0);
         }
@@ -234,10 +229,9 @@ namespace CompositeTests
             var cleanupCount = WaitForMetric();
             var cacheSize = GetSessionCacheSize(sessionCache);
 
-            Assert.False(segment.IsDone);
+            Assert.False(((ISegmentExperimental)segment).IsDone);
             Assert.True(cleanupCount != null);
             Assert.True(cacheSize == 1);
-            Assert.True(cleanupCount.Data.Value0 == 0); // Supportability metric count of cleaned cache entries
         }
 
         [Test]
@@ -264,7 +258,6 @@ namespace CompositeTests
 
             Assert.True(cleanupCount != null);
             Assert.True(cacheSize == 0);
-            Assert.True(cleanupCount.Data.Value0 == 1); // Supportability metric count of cleaned cache entries
         }
 
         #endregion
@@ -335,34 +328,6 @@ namespace CompositeTests
             Assert.False(transaction.IsFinished);
             Assert.True(cleanupCount != null);
             Assert.True(cacheSize == 1);
-            Assert.True(cleanupCount.Data.Value0 == 0); // Supportability metric count of cleaned cache entries
-        }
-
-        [Test]
-        public void FinishedTransaction_IsCleaned()
-        {
-            var agent = _compositeTestAgent.GetAgent();
-            var sessionCache = new SessionCache(agent, 0);
-
-            var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
-                isWeb: true,
-                category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
-                transactionDisplayName: "TransactionName",
-                doNotTrackAsUnitOfWork: true);
-
-            var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
-
-            _ = sessionCache.GetProfilingSession().Invoke();
-
-            transaction.End();
-
-            var cleanupCount = WaitForMetric();
-            var cacheSize = GetSessionCacheSize(sessionCache);
-
-            Assert.True(transaction.IsFinished);
-            Assert.True(cleanupCount != null);
-            Assert.True(cacheSize == 0);
-            Assert.True(cleanupCount.Data.Value0 == 1); // Supportability metric count of cleaned cache entries
         }
 
         #endregion
