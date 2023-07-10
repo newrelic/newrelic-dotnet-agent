@@ -415,6 +415,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool LogDecoratorEnabled => true;
 
+        public IEnumerable<string> LogLevelDenylist => new List<string> { "testlevel" } ;
+
         public bool AppDomainCachingDisabled => true;
 
         public bool ForceNewTransactionOnNewThread => true;
