@@ -599,6 +599,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("application_logging.local_decorating.enabled")]
         public bool LogDecoratorEnabled => _configuration.LogDecoratorEnabled;
 
+        [JsonProperty("application_logging.log_level_denylist")]
+        public IEnumerable<string> LogLevelDenylist => _configuration.LogLevelDenylist;
+
         [JsonProperty("agent.app_domain_caching_disabled")]
         public bool AppDomainCachingDisabled => _configuration.AppDomainCachingDisabled;
 
