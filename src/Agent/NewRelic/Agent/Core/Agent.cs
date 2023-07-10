@@ -408,7 +408,7 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
         }
 
-        public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException,Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId)
+        public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException, Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId)
         {
             _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
 
@@ -420,8 +420,8 @@ namespace NewRelic.Agent.Core
                 normalizedLevel = string.IsNullOrWhiteSpace(level) ? "UNKNOWN" : level.ToUpper();
             }
 
-            // we want to ignore case so that we don't have to normalize the deny-list values
-            if (_configurationService.Configuration.LogLevelDenylist.Contains(normalizedLevel, StringComparer.OrdinalIgnoreCase))
+            // LogLevelDenyList is already uppercase
+            if (normalizedLevel != string.Empty && _configurationService.Configuration.LogLevelDenylist.Contains(normalizedLevel))
             {
                 return;
             }
@@ -438,7 +438,7 @@ namespace NewRelic.Agent.Core
 
                 var logMessage = getLogMessage(logEvent);
                 var logException = getLogException(logEvent);
-                
+
                 // exit quickly if the message and exception are missing
                 if (string.IsNullOrWhiteSpace(logMessage) && logException is null)
                 {
