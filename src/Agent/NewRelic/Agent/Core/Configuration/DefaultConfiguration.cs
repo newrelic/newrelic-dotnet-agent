@@ -1991,12 +1991,12 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         private HashSet<string> _logLevelDenyList;
-        public virtual HashSet<string> LogLevelDenylist
+        public virtual HashSet<string> LogLevelDenyList
         {
             get
             {
                 return _logLevelDenyList ??= new HashSet<string>(
-                    EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.logLevelDenylist,
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.logLevelDenyList,
                             "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_LOG_LEVEL_DENYLIST")
                         ?.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.ToUpper())

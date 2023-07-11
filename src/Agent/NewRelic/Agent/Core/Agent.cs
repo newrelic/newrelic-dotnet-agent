@@ -421,7 +421,7 @@ namespace NewRelic.Agent.Core
             }
 
             // LogLevelDenyList is already uppercase
-            if (normalizedLevel != string.Empty && _configurationService.Configuration.LogLevelDenylist.Contains(normalizedLevel))
+            if (normalizedLevel != string.Empty && _configurationService.Configuration.LogLevelDenyList.Contains(normalizedLevel))
             {
                 return;
             }

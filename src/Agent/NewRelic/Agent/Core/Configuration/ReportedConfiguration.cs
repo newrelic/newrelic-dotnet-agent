@@ -593,14 +593,14 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("application_logging.forwarding.max_samples_stored")]
         public int LogEventsMaxSamplesStored => _configuration.LogEventsMaxSamplesStored;
 
+        [JsonProperty("application_logging.forwarding.log_level_denylist")]
+        public HashSet<string> LogLevelDenyList => _configuration.LogLevelDenyList;
+
         [JsonProperty("application_logging.harvest_cycle")]
         public TimeSpan LogEventsHarvestCycle => _configuration.LogEventsHarvestCycle;
 
         [JsonProperty("application_logging.local_decorating.enabled")]
         public bool LogDecoratorEnabled => _configuration.LogDecoratorEnabled;
-
-        [JsonProperty("application_logging.log_level_denylist")]
-        public HashSet<string> LogLevelDenylist => _configuration.LogLevelDenylist;
 
         [JsonProperty("agent.app_domain_caching_disabled")]
         public bool AppDomainCachingDisabled => _configuration.AppDomainCachingDisabled;

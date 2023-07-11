@@ -190,7 +190,7 @@ namespace NewRelic.Agent.Configuration
         int LogEventsMaxSamplesStored { get; }
         TimeSpan LogEventsHarvestCycle { get; }
         bool LogDecoratorEnabled { get; }
-        HashSet<string> LogLevelDenylist { get; }
+        HashSet<string> LogLevelDenyList { get; }
         bool ContextDataEnabled { get; }
         IEnumerable<string> ContextDataInclude { get; }
         IEnumerable<string> ContextDataExclude { get; }
