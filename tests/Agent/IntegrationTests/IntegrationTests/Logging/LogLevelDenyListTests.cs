@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
@@ -56,7 +57,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
         }
 
         [Fact]
-        public void LogLinesPerLevelMetricsExist()
+        public void LoggingMetricsExist()
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -64,6 +65,11 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "ERROR"), callCount = 1 },
 
                 new Assertions.ExpectedMetric { metricName = "Logging/lines", callCount = 2 },
+
+                new Assertions.ExpectedMetric { metricName = "Logging/denied/" + LogUtils.GetLevelName(_loggingFramework, "DEBUG"), callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = "Logging/denied/" + LogUtils.GetLevelName(_loggingFramework, "INFO"), callCount = 1 },
+
+                new Assertions.ExpectedMetric { metricName = "Logging/denied", callCount = 2 },
             };
             var notExpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -71,7 +77,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                 new Assertions.ExpectedMetric { metricName = "Logging/lines/" + LogUtils.GetLevelName(_loggingFramework, "INFO") }
             };
 
-            var actualMetrics = _fixture.AgentLog.GetMetrics();
+            var actualMetrics = _fixture.AgentLog.GetMetrics().ToList();
             Assertions.MetricsExist(expectedMetrics, actualMetrics);
             Assertions.MetricsDoNotExist(notExpectedMetrics, actualMetrics);
         }

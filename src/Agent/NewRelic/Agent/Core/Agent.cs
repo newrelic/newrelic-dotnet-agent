@@ -423,6 +423,9 @@ namespace NewRelic.Agent.Core
             // LogLevelDenyList is already uppercase
             if (normalizedLevel != string.Empty && _configurationService.Configuration.LogLevelDenyList.Contains(normalizedLevel))
             {
+                if (_configurationService.Configuration.LogMetricsCollectorEnabled)
+                    _agentHealthReporter.IncrementLogDeniedCount(normalizedLevel);
+
                 return;
             }
 
