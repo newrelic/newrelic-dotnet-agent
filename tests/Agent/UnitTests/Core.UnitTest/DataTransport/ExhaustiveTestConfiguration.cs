@@ -415,7 +415,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool LogDecoratorEnabled => true;
 
-        public HashSet<string> LogLevelDenylist => new HashSet<string> { "testlevel1, testlevel2" } ;
+        public HashSet<string> LogLevelDenyList => new HashSet<string> { "testlevel1, testlevel2" } ;
 
         public bool AppDomainCachingDisabled => true;
 
