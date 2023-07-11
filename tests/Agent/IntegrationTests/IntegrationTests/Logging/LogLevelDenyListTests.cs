@@ -43,9 +43,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
                     configModifier
                         .EnableApplicationLogging()
                         .EnableLogForwarding()
-                        .SetLogForwardingLogLevelDenyList("debug,info")
+                        .SetLogForwardingLogLevelDenyList($"{LogUtils.GetLevelName(_loggingFramework, "DEBUG")},{LogUtils.GetLevelName(_loggingFramework, "INFO")}")
                         .SetLogLevel("debug");
-
                 },
                 exerciseApplication: () =>
                 {
@@ -74,7 +73,6 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             Assertions.MetricsExist(expectedMetrics, actualMetrics);
-
             Assertions.MetricsDoNotExist(notExpectedMetrics, actualMetrics);
         }
 
