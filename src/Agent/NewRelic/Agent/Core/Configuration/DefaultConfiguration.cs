@@ -1990,10 +1990,20 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public virtual HashSet<string> LogLevelDenylist =>
-            new HashSet<string>(EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.logLevelDenylist, "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_LOG_LEVEL_DENYLIST")
-                                ?.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.ToUpper())
-                                ?? Enumerable.Empty<string>());
+        private HashSet<string> _logLevelDenyList;
+        public virtual HashSet<string> LogLevelDenylist
+        {
+            get
+            {
+                return _logLevelDenyList ??= new HashSet<string>(
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.logLevelDenylist,
+                            "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_LOG_LEVEL_DENYLIST")
+                        ?.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.ToUpper())
+                    ?? Enumerable.Empty<string>());
+            }
+        }
+
         #endregion
 
         public virtual bool AppDomainCachingDisabled
