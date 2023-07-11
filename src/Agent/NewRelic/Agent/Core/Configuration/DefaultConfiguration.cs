@@ -1990,13 +1990,17 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        public virtual IEnumerable<string> LogLevelDenylist
+        private HashSet<string> _logLevelDenyList;
+        public virtual HashSet<string> LogLevelDenyList
         {
             get
             {
-                return EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.logLevelDenylist,
-                    "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_LOG_LEVEL_DENYLIST")
-                    .Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                return _logLevelDenyList ??= new HashSet<string>(
+                    EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.logLevelDenyList,
+                            "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_LOG_LEVEL_DENYLIST")
+                        ?.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.ToUpper())
+                    ?? Enumerable.Empty<string>());
             }
         }
 
