@@ -1,4 +1,4 @@
-FROM debian:stable-slim
+FROM debian:buster-20230703-slim
 
 RUN apt-get update && apt-get install -y \
     apt-utils \
