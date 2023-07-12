@@ -1995,12 +1995,23 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                return _logLevelDenyList ??= new HashSet<string>(
-                    EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.logLevelDenyList,
-                            "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_LOG_LEVEL_DENYLIST")
-                        ?.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(s => s.ToUpper())
-                    ?? Enumerable.Empty<string>());
+                if (_logLevelDenyList == null)
+                {
+                    _logLevelDenyList = new HashSet<string>(
+                        EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.logLevelDenyList,
+                                "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_LOG_LEVEL_DENYLIST")
+                            ?.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.ToUpper())
+                        ?? Enumerable.Empty<string>());
+
+                    if (_logLevelDenyList.Count > 0)
+                    {
+                        var logLevels = string.Join(",", _logLevelDenyList);
+                        Log.Info($"Log Level Filtering is enabled for the following levels: {logLevels}");
+                    }
+                }
+
+                return _logLevelDenyList;
             }
         }
 

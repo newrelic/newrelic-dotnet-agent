@@ -11,14 +11,14 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 {
-    public abstract class logLevelDenyListTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class LogLevelDenyListTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
         private LoggingFramework _loggingFramework;
 
 
-        public logLevelDenyListTestsBase(TFixture fixture, ITestOutputHelper output,
+        public LogLevelDenyListTestsBase(TFixture fixture, ITestOutputHelper output,
             LoggingFramework loggingFramework) : base(fixture)
         {
             _fixture = fixture;
@@ -86,45 +86,45 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
     #region log4net
 
     [NetFrameworkTest]
-    public class Log4NetlogLevelDenyListTestsFWLatestTests : logLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class Log4NetLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public Log4NetlogLevelDenyListTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public Log4NetLogLevelDenyListTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4NetlogLevelDenyListTestsFW471Tests : logLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFW471>
+    public class Log4NetLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFW471>
     {
-        public Log4NetlogLevelDenyListTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
+        public Log4NetLogLevelDenyListTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class Log4NetlogLevelDenyListTestsFW462Tests : logLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class Log4NetLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public Log4NetlogLevelDenyListTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public Log4NetLogLevelDenyListTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetlogLevelDenyListTestsNetCoreLatestTests : logLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class Log4NetLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public Log4NetlogLevelDenyListTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public Log4NetLogLevelDenyListTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
     }
 
     [NetCoreTest]
-    public class Log4NetlogLevelDenyListTestsNetCoreOldestTests : logLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+    public class Log4NetLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public Log4NetlogLevelDenyListTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        public Log4NetLogLevelDenyListTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
@@ -134,9 +134,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
     #region MEL
 
     [NetCoreTest]
-    public class MELlogLevelDenyListTestsNetCoreLatestTests : logLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MELLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public MELlogLevelDenyListTestsNetCoreLatestTests(
+        public MELLogLevelDenyListTestsNetCoreLatestTests(
             ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
@@ -145,9 +145,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetCoreTest]
     public class
-        MELlogLevelDenyListTestsNetCoreOldestTests : logLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+        MELLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public MELlogLevelDenyListTestsNetCoreOldestTests(
+        public MELLogLevelDenyListTestsNetCoreOldestTests(
             ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
@@ -156,9 +156,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetFrameworkTest]
     public class
-    MELlogLevelDenyListTestsFWLatestTests : logLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    MELLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public MELlogLevelDenyListTestsFWLatestTests(
+        public MELLogLevelDenyListTestsFWLatestTests(
             ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
@@ -171,10 +171,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetFrameworkTest]
     public class
-        SeriloglogLevelDenyListTestsFWLatestTests : logLevelDenyListTestsBase<
+        SerilogLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFWLatest>
     {
-        public SeriloglogLevelDenyListTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture,
+        public SerilogLogLevelDenyListTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture,
             ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Serilog)
         {
@@ -183,10 +183,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetFrameworkTest]
     public class
-        SeriloglogLevelDenyListTestsFW471Tests : logLevelDenyListTestsBase<
+        SerilogLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFW471>
     {
-        public SeriloglogLevelDenyListTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
+        public SerilogLogLevelDenyListTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
             ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Serilog)
         {
@@ -195,10 +195,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetFrameworkTest]
     public class
-        SeriloglogLevelDenyListTestsFW462Tests : logLevelDenyListTestsBase<
+        SerilogLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFW462>
     {
-        public SeriloglogLevelDenyListTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
+        public SerilogLogLevelDenyListTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
             ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Serilog)
         {
@@ -207,10 +207,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetCoreTest]
     public class
-        SeriloglogLevelDenyListTestsNetCoreLatestTests : logLevelDenyListTestsBase<
+        SerilogLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public SeriloglogLevelDenyListTestsNetCoreLatestTests(
+        public SerilogLogLevelDenyListTestsNetCoreLatestTests(
             ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Serilog)
         {
@@ -219,10 +219,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetCoreTest]
     public class
-        SeriloglogLevelDenyListTestsNetCoreOldestTests : logLevelDenyListTestsBase<
+        SerilogLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public SeriloglogLevelDenyListTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture,
+        public SerilogLogLevelDenyListTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture,
             ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Serilog)
         {
@@ -235,10 +235,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetFrameworkTest]
     public class
-        NLoglogLevelDenyListTestsFWLatestTests : logLevelDenyListTestsBase<
+        NLogLogLevelDenyListTestsFWLatestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFWLatest>
     {
-        public NLoglogLevelDenyListTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture,
+        public NLogLogLevelDenyListTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture,
             ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
@@ -247,10 +247,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetFrameworkTest]
     public class
-        NLoglogLevelDenyListTestsFW471Tests : logLevelDenyListTestsBase<
+        NLogLogLevelDenyListTestsFW471Tests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFW471>
     {
-        public NLoglogLevelDenyListTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
+        public NLogLogLevelDenyListTestsFW471Tests(ConsoleDynamicMethodFixtureFW471 fixture,
             ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
@@ -259,10 +259,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetFrameworkTest]
     public class
-        NLoglogLevelDenyListTestsFW462Tests : logLevelDenyListTestsBase<
+        NLogLogLevelDenyListTestsFW462Tests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureFW462>
     {
-        public NLoglogLevelDenyListTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
+        public NLogLogLevelDenyListTestsFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture,
             ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
@@ -271,10 +271,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetCoreTest]
     public class
-        NLoglogLevelDenyListTestsNetCoreLatestTests : logLevelDenyListTestsBase<
+        NLogLogLevelDenyListTestsNetCoreLatestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public NLoglogLevelDenyListTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture,
+        public NLogLogLevelDenyListTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture,
             ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
@@ -283,10 +283,10 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
 
     [NetCoreTest]
     public class
-        NLoglogLevelDenyListTestsNetCoreOldestTests : logLevelDenyListTestsBase<
+        NLogLogLevelDenyListTestsNetCoreOldestTests : LogLevelDenyListTestsBase<
             ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public NLoglogLevelDenyListTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture,
+        public NLogLogLevelDenyListTestsNetCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture,
             ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
