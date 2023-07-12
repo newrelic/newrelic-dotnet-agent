@@ -418,15 +418,15 @@ namespace NewRelic.Agent.Core
             {
                 var level = getLevel(logEvent).ToString();
                 normalizedLevel = string.IsNullOrWhiteSpace(level) ? "UNKNOWN" : level.ToUpper();
-            }
 
-            // LogLevelDenyList is already uppercase
-            if (normalizedLevel != string.Empty && _configurationService.Configuration.LogLevelDenyList.Contains(normalizedLevel))
-            {
-                if (_configurationService.Configuration.LogMetricsCollectorEnabled)
-                    _agentHealthReporter.IncrementLogDeniedCount(normalizedLevel);
+                // LogLevelDenyList is already uppercase, so don't need case-insensitive lookup
+                if (_configurationService.Configuration.LogLevelDenyList.Contains(normalizedLevel))
+                {
+                    if (_configurationService.Configuration.LogMetricsCollectorEnabled)
+                        _agentHealthReporter.IncrementLogDeniedCount(normalizedLevel);
 
-                return;
+                    return;
+                }
             }
 
             if (_configurationService.Configuration.LogMetricsCollectorEnabled)
