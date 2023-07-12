@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Castle.MicroKernel;
 using Telerik.JustMock;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Spans;
@@ -1269,6 +1270,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         {
             Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
                 .Returns(true);
+            Mock.Arrange(() => _configurationService.Configuration.LogMetricsCollectorEnabled)
+                .Returns(true);
             Mock.Arrange(() => _configurationService.Configuration.ContextDataEnabled)
                 .Returns(true);
 
@@ -1305,6 +1308,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Assert.AreEqual(traceId, logEvent.TraceId);
             Assert.AreEqual(contextData, logEvent.ContextData);
             Assert.IsNotNull(logEvent.Priority);
+
+            Mock.Assert(() => _agentHealthReporter.IncrementLogLinesCount(Arg.AnyString), Occurs.Once());
         }
 
         [Test]
@@ -1746,6 +1751,55 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Assert.AreEqual(1, logEvents.Count);
             Assert.IsNotNull(logEvent);
             Assert.IsNull(logEvent.ContextData);
+        }
+
+        [Test]
+        public void RecordLogMessage_WithDenyList_DropsMessageAndIncrementsDeniedCount()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+            Mock.Arrange(() => _configurationService.Configuration.LogMetricsCollectorEnabled)
+                .Returns(true);
+            Mock.Arrange(() => _configurationService.Configuration.ContextDataEnabled)
+                .Returns(false);
+            Mock.Arrange(() => _configurationService.Configuration.LogLevelDenyList)
+                .Returns(new HashSet<string>() { "DEBUG" });
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            var message = "message";
+            var exception = NotNewRelic.ExceptionBuilder.BuildException("exception message");
+            var fixedStackTrace = string.Join(" \n", StackTraces.ScrubAndTruncate(exception.StackTrace, 300));
+            var contextData = new Dictionary<string, object>() {
+                { "key1", "value1" },
+                { "key2", 1 } };
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => exception;
+            Func<object, Dictionary<string, object>> getContextDataFunc = (l) => contextData;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            SetupTransaction();
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            var priority = transaction.Priority;
+            transaction.HarvestLogEvents();
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, getContextDataFunc, spanId, traceId);
+
+            var privateAccessor = new PrivateAccessor(_logEventAggregator);
+            var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
+
+            Assert.AreEqual(0, logEvents.Count);
+            Mock.Assert(() => _agentHealthReporter.IncrementLogDeniedCount(Arg.AnyString), Occurs.Once());
+
+
         }
 
         #endregion
