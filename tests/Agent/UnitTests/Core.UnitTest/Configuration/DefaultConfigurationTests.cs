@@ -2781,6 +2781,16 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
+        public void ApplicationLogging_ForwardingLogLevelDeniedList_HasCorrectValue()
+        {
+            _localConfig.applicationLogging.forwarding.logLevelDenyList = " SomeValue, SomeOtherValue  ";
+
+            Assert.AreEqual(2, _defaultConfig.LogLevelDenyList.Count);
+            Assert.True(_defaultConfig.LogLevelDenyList.Contains("SOMEVALUE"));
+            Assert.True(_defaultConfig.LogLevelDenyList.Contains("SOMEOTHERVALUE"));
+        }
+
+        [Test]
         public void LogEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
         {
             const string LogEventHarvestLimitKey = "log_event_data";
