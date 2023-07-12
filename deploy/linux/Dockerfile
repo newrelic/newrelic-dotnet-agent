@@ -1,4 +1,4 @@
-FROM debian:buster-20230202-slim
+FROM debian:buster-20230703-slim@sha256:cddb688e1263b9752275b064171ef6ac9c70ae21a77c774339aecfb53690b9a1
 
 RUN apt-get update && apt-get install -y \
     apt-utils \

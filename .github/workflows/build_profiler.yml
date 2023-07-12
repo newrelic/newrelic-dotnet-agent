@@ -47,7 +47,7 @@ jobs:
       profiler_src: ${{ steps.filter.outputs.profiler_src }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -183,7 +183,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
         with:
           egress-policy: audit
 
@@ -325,7 +325,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
         with:
           egress-policy: audit
 
@@ -348,7 +348,7 @@ jobs:
           rm -f ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@284f54f989303d2699d373481a0cfa13ad5a6666 # v5.0.1
+        uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # v5.0.2
         with:
             commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}."
             title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}"

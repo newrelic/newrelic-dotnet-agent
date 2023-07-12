@@ -4,105 +4,119 @@ Copyright 2020 New Relic Corporation. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
 <extension xmlns="urn:newrelic-extension">
-	<instrumentation>
-		<tracerFactory name="MongoCollectionImplWrapper">
-			<match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCollectionImpl`1">
-				<exactMethodMatcher methodName="AggregateAsync"/>
-				<exactMethodMatcher methodName="BulkWriteAsync"/>
-				<exactMethodMatcher methodName="CountAsync"/>
-				<exactMethodMatcher methodName="DistinctAsync"/>
-				<exactMethodMatcher methodName="FindAsync"/>
-				<exactMethodMatcher methodName="FindOneAndDeleteAsync"/>
-				<exactMethodMatcher methodName="FindOneAndReplaceAsync"/>
-				<exactMethodMatcher methodName="FindOneAndUpdateAsync"/>
-				<exactMethodMatcher methodName="MapReduceAsync"/>
-				<exactMethodMatcher methodName="WatchAsync"/>
-			
-				<exactMethodMatcher methodName="Aggregate"/>
-				<exactMethodMatcher methodName="BulkWrite"/>
-				<exactMethodMatcher methodName="Count"/>
-				<exactMethodMatcher methodName="Distinct"/>
-				<exactMethodMatcher methodName="FindSync"/>
-				<exactMethodMatcher methodName="FindOneAndDelete"/>
-				<exactMethodMatcher methodName="FindOneAndReplace"/>
-				<exactMethodMatcher methodName="FindOneAndUpdate"/>
-				<exactMethodMatcher methodName="MapReduce"/>
-				<exactMethodMatcher methodName="Watch"/>
-			</match>
-		</tracerFactory>
+  <instrumentation>
+    <tracerFactory name="MongoCollectionImplWrapper">
+      <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCollectionImpl`1">
+        <exactMethodMatcher methodName="AggregateAsync"/>
+        <exactMethodMatcher methodName="AggregateToCollectionAsync"/>
+        <exactMethodMatcher methodName="BulkWriteAsync"/>
+        <exactMethodMatcher methodName="CountAsync"/>
+        <exactMethodMatcher methodName="CountDocumentsAsync"/>
+        <exactMethodMatcher methodName="DistinctAsync"/>
+        <exactMethodMatcher methodName="EstimatedDocumentCountAsync"/>
+        <exactMethodMatcher methodName="FindAsync"/>
+        <exactMethodMatcher methodName="FindOneAndDeleteAsync"/>
+        <exactMethodMatcher methodName="FindOneAndReplaceAsync"/>
+        <exactMethodMatcher methodName="FindOneAndUpdateAsync"/>
+        <exactMethodMatcher methodName="MapReduceAsync"/>
+        <exactMethodMatcher methodName="WatchAsync"/>
 
-	<tracerFactory name="AsyncCursorWrapper">
-	  <match assemblyName="MongoDB.Driver.Core" className="MongoDB.Driver.Core.Operations.AsyncCursor`1">
-		<exactMethodMatcher methodName="GetNextBatch"/>
-		<exactMethodMatcher methodName="GetNextBatchAsync"/>
-	  </match>
-	</tracerFactory>
+        <exactMethodMatcher methodName="Aggregate"/>
+        <exactMethodMatcher methodName="AggregateToCollection"/>
+        <exactMethodMatcher methodName="BulkWrite"/>
+        <exactMethodMatcher methodName="Count"/>
+        <exactMethodMatcher methodName="CountDocuments"/>
+        <exactMethodMatcher methodName="Distinct"/>
+        <exactMethodMatcher methodName="EstimatedDocumentCount"/>
+        <exactMethodMatcher methodName="FindSync"/>
+        <exactMethodMatcher methodName="FindOneAndDelete"/>
+        <exactMethodMatcher methodName="FindOneAndReplace"/>
+        <exactMethodMatcher methodName="FindOneAndUpdate"/>
+        <exactMethodMatcher methodName="MapReduce"/>
+        <exactMethodMatcher methodName="Watch"/>
+      </match>
+    </tracerFactory>
 
-	<tracerFactory name="MongoDatabaseWrapper">
-	  <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoDatabaseImpl">
-		<exactMethodMatcher methodName="CreateCollection"/>
-		<exactMethodMatcher methodName="CreateView"/>
-		<exactMethodMatcher methodName="DropCollection"/>
-		<exactMethodMatcher methodName="ListCollections"/>
-		<exactMethodMatcher methodName="RenameCollection"/>
-		<exactMethodMatcher methodName="RunCommand"/>
+  <tracerFactory name="AsyncCursorWrapper">
+    <match assemblyName="MongoDB.Driver.Core" className="MongoDB.Driver.Core.Operations.AsyncCursor`1">
+    <exactMethodMatcher methodName="GetNextBatch"/>
+    <exactMethodMatcher methodName="GetNextBatchAsync"/>
+    </match>
+  </tracerFactory>
 
-		<exactMethodMatcher methodName="CreateCollectionAsync"/>
-		<exactMethodMatcher methodName="CreateViewAsync"/>
-		<exactMethodMatcher methodName="DropCollectionAsync"/>
-		<exactMethodMatcher methodName="ListCollectionsAsync"/>
-		<exactMethodMatcher methodName="RenameCollectionAsync"/>
-		<exactMethodMatcher methodName="RunCommandAsync"/>
-	  </match>
-	</tracerFactory>
+  <tracerFactory name="MongoDatabaseWrapper">
+    <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoDatabaseImpl">
+      <exactMethodMatcher methodName="Aggregate"/>
+      <exactMethodMatcher methodName="AggregateToCollection"/>
+      <exactMethodMatcher methodName="CreateCollection"/>
+      <exactMethodMatcher methodName="CreateView"/>
+      <exactMethodMatcher methodName="DropCollection"/>
+      <exactMethodMatcher methodName="ListCollections"/>
+      <exactMethodMatcher methodName="ListCollectionNames"/>
+      <exactMethodMatcher methodName="RenameCollection"/>
+      <exactMethodMatcher methodName="RunCommand"/>
+      <exactMethodMatcher methodName="Watch"/>
 
-	<tracerFactory name="MongoQueryProviderImplWrapper">
-	  <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.Linq.MongoQueryProviderImpl`1">
-		<exactMethodMatcher methodName="ExecuteModel"/>
-		<exactMethodMatcher methodName="ExecuteModelAsync"/>
-	  </match>
-	</tracerFactory>
+      <exactMethodMatcher methodName="AggregateAsync"/>
+      <exactMethodMatcher methodName="AggregateToCollectionAsync"/>
+      <exactMethodMatcher methodName="CreateCollectionAsync"/>
+      <exactMethodMatcher methodName="CreateViewAsync"/>
+      <exactMethodMatcher methodName="DropCollectionAsync"/>
+      <exactMethodMatcher methodName="ListCollectionsAsync"/>
+      <exactMethodMatcher methodName="ListCollectionNamesAsync"/>
+      <exactMethodMatcher methodName="RenameCollectionAsync"/>
+      <exactMethodMatcher methodName="RunCommandAsync"/>
+      <exactMethodMatcher methodName="WatchAsync"/>
+    </match>
+  </tracerFactory>
 
-	<tracerFactory name="MongoIndexManagerBaseWrapper">
-	  <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoIndexManagerBase`1">
-		<exactMethodMatcher methodName="CreateOne"/>
-		<exactMethodMatcher methodName="CreateOneAsync"/>
-	  </match>
-	</tracerFactory>
+  <tracerFactory name="MongoQueryProviderImplWrapper">
+    <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.Linq.MongoQueryProviderImpl`1">
+    <exactMethodMatcher methodName="ExecuteModel"/>
+    <exactMethodMatcher methodName="ExecuteModelAsync"/>
+    </match>
+  </tracerFactory>
 
-	<tracerFactory name="MongoIndexManagerWrapper">
-	  <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCollectionImpl`1+MongoIndexManager">
-		<exactMethodMatcher methodName="CreateMany"/>
-		<exactMethodMatcher methodName="DropAll"/>
-		<exactMethodMatcher methodName="DropOne"/>
-		<exactMethodMatcher methodName="List"/>
+  <tracerFactory name="MongoIndexManagerBaseWrapper">
+    <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoIndexManagerBase`1">
+    <exactMethodMatcher methodName="CreateOne"/>
+    <exactMethodMatcher methodName="CreateOneAsync"/>
+    </match>
+  </tracerFactory>
 
-		<exactMethodMatcher methodName="CreateManyAsync"/>
-		<exactMethodMatcher methodName="DropAllAsync"/>
-		<exactMethodMatcher methodName="DropOneAsync"/>
-		<exactMethodMatcher methodName="ListAsync"/>
-	  </match>
-	</tracerFactory>
+  <tracerFactory name="MongoIndexManagerWrapper">
+    <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCollectionImpl`1+MongoIndexManager">
+    <exactMethodMatcher methodName="CreateMany"/>
+    <exactMethodMatcher methodName="DropAll"/>
+    <exactMethodMatcher methodName="DropOne"/>
+    <exactMethodMatcher methodName="List"/>
 
-	<tracerFactory name="MongoCollectionBaseWrapper">
-	  <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCollectionBase`1">
-		<exactMethodMatcher methodName="DeleteMany"/>
-		<exactMethodMatcher methodName="DeleteOne"/>
-		<exactMethodMatcher methodName="InsertOne"/>
-		<exactMethodMatcher methodName="InsertMany"/>
-		<exactMethodMatcher methodName="ReplaceOne"/>
-		<exactMethodMatcher methodName="UpdateMany"/>
-		<exactMethodMatcher methodName="UpdateOne"/>
+    <exactMethodMatcher methodName="CreateManyAsync"/>
+    <exactMethodMatcher methodName="DropAllAsync"/>
+    <exactMethodMatcher methodName="DropOneAsync"/>
+    <exactMethodMatcher methodName="ListAsync"/>
+    </match>
+  </tracerFactory>
 
-		<exactMethodMatcher methodName="DeleteManyAsync"/>
-		<exactMethodMatcher methodName="DeleteOneAsync"/>
-		<exactMethodMatcher methodName="InsertOneAsync"/>
-		<exactMethodMatcher methodName="InsertManyAsync"/>
-		<exactMethodMatcher methodName="ReplaceOneAsync"/>
-		<exactMethodMatcher methodName="UpdateManyAsync"/>
-		<exactMethodMatcher methodName="UpdateOneAsync"/>
-	  </match>
-	</tracerFactory>
+  <tracerFactory name="MongoCollectionBaseWrapper">
+    <match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCollectionBase`1">
+    <exactMethodMatcher methodName="DeleteMany"/>
+    <exactMethodMatcher methodName="DeleteOne"/>
+    <exactMethodMatcher methodName="InsertOne"/>
+    <exactMethodMatcher methodName="InsertMany"/>
+    <exactMethodMatcher methodName="ReplaceOne"/>
+    <exactMethodMatcher methodName="UpdateMany"/>
+    <exactMethodMatcher methodName="UpdateOne"/>
+
+    <exactMethodMatcher methodName="DeleteManyAsync"/>
+    <exactMethodMatcher methodName="DeleteOneAsync"/>
+    <exactMethodMatcher methodName="InsertOneAsync"/>
+    <exactMethodMatcher methodName="InsertManyAsync"/>
+    <exactMethodMatcher methodName="ReplaceOneAsync"/>
+    <exactMethodMatcher methodName="UpdateManyAsync"/>
+    <exactMethodMatcher methodName="UpdateOneAsync"/>
+    </match>
+  </tracerFactory>
 
   </instrumentation>
 </extension>

@@ -58,6 +58,11 @@ namespace NewRelic.Agent.Core.Aggregators
 
         public void CollectWithPriority(IList<LogEventWireModel> logEventWireModels, float priority)
         {
+            if (logEventWireModels == null)
+            {
+                return;
+            }
+
             for (int i = 0; i < logEventWireModels.Count; i++)
             {
                 _agentHealthReporter.ReportLoggingEventCollected();

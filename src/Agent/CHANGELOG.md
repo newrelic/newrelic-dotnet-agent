@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.12.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.12.0...v10.12.1) (2023-06-26)
+
+
+### Fixes
+
+* Resolved an issue in the `all_solutions.yml` workflow where the MSI installers were built with a self-signed certificate rather than the production code signing certificate. ([386a277](https://github.com/newrelic/newrelic-dotnet-agent/commit/386a27705701a07d591a95f95830bda27898d255))
+
+## [10.12.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.11.0...v10.12.0) (2023-06-23)
+
+
+### New Features
+
+* add instrumentation for newer MongoDB.Client methods ([#1732](https://github.com/newrelic/newrelic-dotnet-agent/issues/1732)) ([1aa5680](https://github.com/newrelic/newrelic-dotnet-agent/commit/1aa5680a8f7f855895203a45b8dfcc5059d656e0))
+* add support for MySql.Data version 8.0.33+ ([#1708](https://github.com/newrelic/newrelic-dotnet-agent/issues/1708)) ([69d15df](https://github.com/newrelic/newrelic-dotnet-agent/commit/69d15dfbed178fb5698695253160ae12a4f7a410))
+
+
+### Fixes
+
+* Add more validation to msi installer. ([#1716](https://github.com/newrelic/newrelic-dotnet-agent/issues/1716)) ([d7bb7f2](https://github.com/newrelic/newrelic-dotnet-agent/commit/d7bb7f290beae8394599cee1ea9b3213cf2dc473))
+* Cache the AgentEnabled setting value. ([#1723](https://github.com/newrelic/newrelic-dotnet-agent/issues/1723)) ([1624938](https://github.com/newrelic/newrelic-dotnet-agent/commit/1624938ab48b63c1fa6e98037d74976dbc8186da))
+* Exclude WebResource.axd and ScriptResource.axd from browser instrumentation (via default config). ([#1711](https://github.com/newrelic/newrelic-dotnet-agent/issues/1711)) ([2fcce95](https://github.com/newrelic/newrelic-dotnet-agent/commit/2fcce95093ed4ef6d1efe67489c8d1ae6c9b29e6))
+* Format and log audit-level messages only when audit logging is enabled. ([#1734](https://github.com/newrelic/newrelic-dotnet-agent/issues/1734)) ([f71521f](https://github.com/newrelic/newrelic-dotnet-agent/commit/f71521f2540311e97d13646ff6d6524dfcc3965f))
+* Handle empty Request.Path values in AspNetCore middleware wrapper. ([#1704](https://github.com/newrelic/newrelic-dotnet-agent/issues/1704)) ([8b734a5](https://github.com/newrelic/newrelic-dotnet-agent/commit/8b734a59a53cfd218322d83acbe9d7eb4e7cc055))
+* Include config file path in the "Agent is disabled " message on all platforms. ([#1727](https://github.com/newrelic/newrelic-dotnet-agent/issues/1727)) ([1a56612](https://github.com/newrelic/newrelic-dotnet-agent/commit/1a5661243eaa84683694e022fe9806768b8af9f7))
+* Update install script to correctly stop and restart IIS. ([#1740](https://github.com/newrelic/newrelic-dotnet-agent/issues/1740)) ([3b91dff](https://github.com/newrelic/newrelic-dotnet-agent/commit/3b91dff0ad9aa2fc4218cd85d28fb6d0892cc7fb))
+
 ## [10.11.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.10.0...v10.11.0) (2023-06-03)
 
 
