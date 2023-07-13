@@ -1659,7 +1659,7 @@
                                     <xs:attribute name="logLevelDenyList" type="xs:string" use="optional">
                                         <xs:annotation>
                                             <xs:documentation>
-                                                A comma-separated, case-insensitive, list of log levels that should be ignored and not sent up to New Relic.
+                                                A comma-separated, case-insensitive, list of log level names from the selected logging framework that should be ignored and not sent up to New Relic.
                                             </xs:documentation>
                                         </xs:annotation>
                                     </xs:attribute>
