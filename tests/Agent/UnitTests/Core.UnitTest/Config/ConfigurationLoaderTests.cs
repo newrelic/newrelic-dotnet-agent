@@ -1,6 +1,8 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if NETFRAMEWORK
+
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -24,7 +26,6 @@ namespace NewRelic.Agent.Core.Config
             Assert.IsNull(valueWithProvenance.Value);
         }
 
-#if NETFRAMEWORK
         [Test]
         public void GetWebConfigAppSetting_WebApp_ReturnsSettingsForApp()
         {
@@ -73,7 +74,6 @@ namespace NewRelic.Agent.Core.Config
                 Assert.IsNull(valueWithProvenance.Value);
             }
         }
-#endif
 
         [Test]
         public void GetConfigSetting_NonWebApp_ReturnsConfigurationManagerSetting()
@@ -83,7 +83,6 @@ namespace NewRelic.Agent.Core.Config
             Assert.IsNull(valueWithProvenance.Value);
         }
 
-#if NETFRAMEWORK
         [Test]
         public void GetConfigSetting_WebApp_ReturnsWebAppSetting()
         {
@@ -101,7 +100,6 @@ namespace NewRelic.Agent.Core.Config
                 Assert.AreEqual("bar", valueWithProvenance.Value);
             }
         }
-#endif
 
         [Test]
         public void GetAgentConfigFileName_ThrowsExceptionWhenNoneFound()
@@ -114,7 +112,6 @@ namespace NewRelic.Agent.Core.Config
             }
         }
 
-#if NETFRAMEWORK
         [Test]
         public void GetAgentConfigFileName_ReturnsConfigFileFromAppConfig()
         {
@@ -171,7 +168,6 @@ namespace NewRelic.Agent.Core.Config
                 StringAssert.Contains("Could not find newrelic.config", actualException.Message);
             }
         }
-#endif
 
         [Test]
         public void TryGetAgentConfigFileFromAppRoot_ReturnsNullIfNoAppPath()
@@ -179,9 +175,7 @@ namespace NewRelic.Agent.Core.Config
             using (var staticMocks = new ConfigurationLoaderStaticMocks())
             {
                 ReplaceNewRelicHomeWithNullIfNecessary(staticMocks);
-#if NETFRAMEWORK
                 staticMocks.UseAppDomainAppVirtualPathFunc(() => "testVirtualPath");
-#endif
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
                 StringAssert.Contains("Could not find newrelic.config", actualException.Message);
             }
@@ -192,10 +186,8 @@ namespace NewRelic.Agent.Core.Config
         {
             using (var staticMocks = new ConfigurationLoaderStaticMocks())
             {
-#if NETFRAMEWORK
                 staticMocks.UseAppDomainAppVirtualPathFunc(() => "testVirtualPath");
                 staticMocks.UseAppDomainAppPathFunc(() => "testPath");
-#endif
                 staticMocks.UseFileExistsFunc(_ => false);
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
@@ -208,10 +200,8 @@ namespace NewRelic.Agent.Core.Config
         {
             using (var staticMocks = new ConfigurationLoaderStaticMocks())
             {
-#if NETFRAMEWORK
                 staticMocks.UseAppDomainAppVirtualPathFunc(() => "testVirtualPath");
                 staticMocks.UseAppDomainAppPathFunc(() => "testPath");
-#endif
                 staticMocks.UseFileExistsFunc(_ => throw new Exception("Exception from FileExists call"));
 
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
@@ -224,10 +214,8 @@ namespace NewRelic.Agent.Core.Config
         {
             using (var staticMocks = new ConfigurationLoaderStaticMocks())
             {
-#if NETFRAMEWORK
                 staticMocks.UseAppDomainAppVirtualPathFunc(() => "testVirtualPath");
                 staticMocks.UseAppDomainAppPathFunc(() => "testPath");
-#endif
                 staticMocks.UseFileExistsFunc(f => f.Contains("testPath"));
 
 
@@ -582,30 +570,25 @@ namespace NewRelic.Agent.Core.Config
 
         private class ConfigurationLoaderStaticMocks : IDisposable
         {
-#if NETFRAMEWORK
             private readonly Func<string> _originalGetAppDomainAppId;
             private readonly Func<string> _originalGetAppDomainAppVirtualPath;
             private readonly Func<string> _originalGetAppDomainAppPath;
             private readonly Func<string, System.Configuration.Configuration> _originalOpenWebConfiguration;
-#endif
             private readonly Func<string, bool> _originalFileExists;
             private readonly Func<string, string> _originalPathGetDirectoryName;
             private readonly Func<string> _originalGetNewRelicHome;
 
             public ConfigurationLoaderStaticMocks()
             {
-#if NETFRAMEWORK
                 _originalGetAppDomainAppId = ConfigurationLoader.GetAppDomainAppId;
                 _originalGetAppDomainAppVirtualPath = ConfigurationLoader.GetAppDomainAppVirtualPath;
                 _originalGetAppDomainAppPath = ConfigurationLoader.GetAppDomainAppPath;
                 _originalOpenWebConfiguration = ConfigurationLoader.OpenWebConfiguration;
-#endif
                 _originalFileExists = ConfigurationLoader.FileExists;
                 _originalPathGetDirectoryName = ConfigurationLoader.PathGetDirectoryName;
                 _originalGetNewRelicHome = ConfigurationLoader.GetNewRelicHome;
             }
 
-#if NETFRAMEWORK
             public void UseAppDomainAppIdFunc(Func<string> appDomainAppIdFunc)
             {
                 ConfigurationLoader.GetAppDomainAppId = appDomainAppIdFunc;
@@ -625,7 +608,6 @@ namespace NewRelic.Agent.Core.Config
             {
                 ConfigurationLoader.OpenWebConfiguration = openWebConfigurationFunc;
             }
-#endif
 
             public void UseFileExistsFunc(Func<string, bool> fileExistsFunc)
             {
@@ -644,12 +626,10 @@ namespace NewRelic.Agent.Core.Config
 
             public void Dispose()
             {
-#if NETFRAMEWORK
                 ConfigurationLoader.GetAppDomainAppId = _originalGetAppDomainAppId;
                 ConfigurationLoader.GetAppDomainAppVirtualPath = _originalGetAppDomainAppVirtualPath;
                 ConfigurationLoader.GetAppDomainAppPath = _originalGetAppDomainAppPath;
                 ConfigurationLoader.OpenWebConfiguration = _originalOpenWebConfiguration;
-#endif
                 ConfigurationLoader.FileExists = _originalFileExists;
                 ConfigurationLoader.PathGetDirectoryName = _originalPathGetDirectoryName;
                 ConfigurationLoader.GetNewRelicHome = _originalGetNewRelicHome;
@@ -681,3 +661,4 @@ namespace NewRelic.Agent.Core.Config
         }
     }
 }
+#endif
