@@ -203,7 +203,12 @@ namespace NewRelic.Agent.Core.CrossAgentTests
         {
             get
             {
-                var dllPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+#if NETFRAMEWORK
+                var location = Assembly.GetExecutingAssembly().CodeBase;
+#else
+                var location = Assembly.GetExecutingAssembly().Location;
+#endif
+                var dllPath = Path.GetDirectoryName(new Uri(location).LocalPath);
                 var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "ServerSentEvent", "data_collection_server_configuration.json");
                 var jsonString = File.ReadAllText(jsonPath);
 

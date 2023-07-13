@@ -41,7 +41,9 @@ namespace NewRelic.Agent.Core.DependencyInjection
             using (var container = AgentServices.GetContainer())
             {
                 AgentServices.RegisterServices(container);
+#if NETFRAMEWORK
                 container.ReplaceRegistration(configurationService);
+#endif
 
                 Assert.DoesNotThrow(() => container.Resolve<IWrapperService>());
                 Assert.DoesNotThrow(() => AgentServices.StartServices(container));
