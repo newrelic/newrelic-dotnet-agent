@@ -408,7 +408,7 @@ namespace NewRelic.Agent.Core
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
         }
 
-        public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException,Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId)
+        public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException, Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId)
         {
             _agentHealthReporter.ReportLogForwardingFramework(frameworkName);
 
@@ -418,6 +418,15 @@ namespace NewRelic.Agent.Core
             {
                 var level = getLevel(logEvent).ToString();
                 normalizedLevel = string.IsNullOrWhiteSpace(level) ? "UNKNOWN" : level.ToUpper();
+
+                // LogLevelDenyList is already uppercase, so don't need case-insensitive lookup
+                if (_configurationService.Configuration.LogLevelDenyList.Contains(normalizedLevel))
+                {
+                    if (_configurationService.Configuration.LogMetricsCollectorEnabled)
+                        _agentHealthReporter.IncrementLogDeniedCount(normalizedLevel);
+
+                    return;
+                }
             }
 
             if (_configurationService.Configuration.LogMetricsCollectorEnabled)
@@ -432,7 +441,7 @@ namespace NewRelic.Agent.Core
 
                 var logMessage = getLogMessage(logEvent);
                 var logException = getLogException(logEvent);
-                
+
                 // exit quickly if the message and exception are missing
                 if (string.IsNullOrWhiteSpace(logMessage) && logException is null)
                 {

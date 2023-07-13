@@ -208,6 +208,15 @@ namespace NewRelic.Agent.Core.Metrics
         }
 
         [Test]
+        public static void MetricNamesTest_Logging()
+        {
+            Assert.That(MetricNames.GetLoggingMetricsLinesName(), Is.EqualTo("Logging/lines"));
+            Assert.That(MetricNames.GetLoggingMetricsDeniedName(), Is.EqualTo("Logging/denied"));
+            Assert.That(MetricNames.GetLoggingMetricsLinesBySeverityName("foo"), Is.EqualTo("Logging/lines/foo"));
+            Assert.That(MetricNames.GetLoggingMetricsDeniedBySeverityName("foo"), Is.EqualTo("Logging/denied/foo"));
+        }
+
+        [Test]
         public static void MetricNamesTest_AnalyticEvents()
         {
             Assert.That(MetricNames.SupportabilityTransactionEventsSent,

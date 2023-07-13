@@ -593,6 +593,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("application_logging.forwarding.max_samples_stored")]
         public int LogEventsMaxSamplesStored => _configuration.LogEventsMaxSamplesStored;
 
+        [JsonProperty("application_logging.forwarding.log_level_denylist")]
+        public HashSet<string> LogLevelDenyList => _configuration.LogLevelDenyList;
+
         [JsonProperty("application_logging.harvest_cycle")]
         public TimeSpan LogEventsHarvestCycle => _configuration.LogEventsHarvestCycle;
 

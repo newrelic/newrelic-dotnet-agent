@@ -142,6 +142,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportSupportabilityDataUsage(string api, string apiArea, long dataSent, long dataReceived);
 
         void IncrementLogLinesCount(string logLevel);
+        void IncrementLogDeniedCount(string logLevel);
         void ReportLoggingEventCollected();
         void ReportLoggingEventsSent(int count);
         void ReportLoggingEventsDropped(int droppedCount);

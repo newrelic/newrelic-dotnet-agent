@@ -262,6 +262,11 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.IncrementLogLinesCount("DEBUG");
             _agentHealthReporter.IncrementLogLinesCount("FINEST");
             _agentHealthReporter.IncrementLogLinesCount("MISSING_LEVEL");
+            _agentHealthReporter.IncrementLogDeniedCount("INFO");
+            _agentHealthReporter.IncrementLogDeniedCount("DEBUG");
+            _agentHealthReporter.IncrementLogDeniedCount("FINEST");
+            _agentHealthReporter.IncrementLogDeniedCount("MISSING_LEVEL");
+
             _agentHealthReporter.CollectLoggingMetrics();
 
             var infoLevelLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines/INFO");
@@ -270,8 +275,14 @@ namespace NewRelic.Agent.Core.AgentHealth
             var missingLevelLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines/MISSING_LEVEL");
             var allLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/lines");
 
+            var infoLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/denied/INFO");
+            var debugLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/denied/DEBUG");
+            var finestLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/denied/FINEST");
+            var missingLevelDeniedLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/denied/MISSING_LEVEL");
+            var allDeniedLines = _publishedMetrics.First(metric => metric.MetricName.Name == "Logging/denied");
+
             NrAssert.Multiple(
-                () => Assert.AreEqual(5, _publishedMetrics.Count),
+                () => Assert.AreEqual(10, _publishedMetrics.Count),
                 () => Assert.AreEqual($"Logging/lines/INFO", infoLevelLines.MetricName.Name),
                 () => Assert.AreEqual(1, infoLevelLines.Data.Value0),
                 () => Assert.AreEqual($"Logging/lines/DEBUG", debugLevelLines.MetricName.Name),
@@ -281,7 +292,17 @@ namespace NewRelic.Agent.Core.AgentHealth
                 () => Assert.AreEqual($"Logging/lines/MISSING_LEVEL", missingLevelLines.MetricName.Name),
                 () => Assert.AreEqual(1, missingLevelLines.Data.Value0),
                 () => Assert.AreEqual($"Logging/lines", allLines.MetricName.Name),
-                () => Assert.AreEqual(4, allLines.Data.Value0)
+                () => Assert.AreEqual(4, allLines.Data.Value0),
+                () => Assert.AreEqual($"Logging/denied/INFO", infoLevelDeniedLines.MetricName.Name),
+                () => Assert.AreEqual(1, infoLevelDeniedLines.Data.Value0),
+                () => Assert.AreEqual($"Logging/denied/DEBUG", debugLevelDeniedLines.MetricName.Name),
+                () => Assert.AreEqual(1, debugLevelDeniedLines.Data.Value0),
+                () => Assert.AreEqual($"Logging/denied/FINEST", finestLevelDeniedLines.MetricName.Name),
+                () => Assert.AreEqual(1, finestLevelDeniedLines.Data.Value0),
+                () => Assert.AreEqual($"Logging/denied/MISSING_LEVEL", missingLevelDeniedLines.MetricName.Name),
+                () => Assert.AreEqual(1, missingLevelDeniedLines.Data.Value0),
+                () => Assert.AreEqual($"Logging/denied", allDeniedLines.MetricName.Name),
+                () => Assert.AreEqual(4, allDeniedLines.Data.Value0)
                 );
         }
 
@@ -290,7 +311,12 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             _agentHealthReporter.ReportLoggingEventCollected();
             _agentHealthReporter.ReportLoggingEventsSent(2);
+            _agentHealthReporter.ReportLoggingEventsDropped(3);
             _agentHealthReporter.ReportLogForwardingFramework("log4net");
+
+            _agentHealthReporter.ReportLogForwardingEnabledWithFramework("Framework1");
+            _agentHealthReporter.ReportLogForwardingEnabledWithFramework("Framework2");
+
             _agentHealthReporter.CollectMetrics();
 
 
@@ -298,10 +324,13 @@ namespace NewRelic.Agent.Core.AgentHealth
             {
                 { "Supportability/Logging/Forwarding/Seen", 1 },
                 { "Supportability/Logging/Forwarding/Sent", 2 },
+                { "Supportability/Logging/Forwarding/Dropped", 3 },
                 { "Supportability/Logging/Metrics/DotNET/enabled", 1 },
                 { "Supportability/Logging/Forwarding/DotNET/enabled", 1 },
                 { "Supportability/Logging/LocalDecorating/DotNET/enabled", 1 },
-                { "Supportability/Logging/DotNET/log4net/enabled", 1 }
+                { "Supportability/Logging/DotNET/log4net/enabled", 1 },
+                { "Supportability/Logging/Forwarding/DotNET/Framework1/enabled", 1},
+                { "Supportability/Logging/Forwarding/DotNET/Framework2/enabled", 1}
             };
             var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
 
@@ -312,18 +341,24 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void LoggingFrameworkOnlyReportedOnce()
         {
             _agentHealthReporter.ReportLogForwardingFramework("log4net");
+            _agentHealthReporter.ReportLogForwardingEnabledWithFramework("log4net");
             _agentHealthReporter.CollectMetrics();
 
             Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/DotNET/log4net/enabled"));
+            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/Forwarding/DotNET/log4net/enabled"));
 
             // Clear out captured metrics, and recollect
             _publishedMetrics = new List<MetricWireModel>();
             _agentHealthReporter.ReportLogForwardingFramework("log4net");
+            _agentHealthReporter.ReportLogForwardingEnabledWithFramework("log4net");
             _agentHealthReporter.ReportLogForwardingFramework("serilog");
+            _agentHealthReporter.ReportLogForwardingEnabledWithFramework("serilog");
             _agentHealthReporter.CollectMetrics();
 
             Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/DotNET/serilog/enabled"));
             Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/DotNET/log4net/enabled"));
+            Assert.True(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/Forwarding/DotNET/serilog/enabled"));
+            Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/Logging/Forwarding/DotNET/log4net/enabled"));
         }
 
         [Test]
