@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net462;net7.0</TargetFrameworks>
     <RootNamespace>CompositeTests</RootNamespace>
@@ -27,8 +27,7 @@
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="1.1.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
-    <PackageReference Include="Castle.Core" Version="5.1.1" />
-    <PackageReference Include="Castle.Windsor" Version="4.4.1" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <Reference Include="Microsoft.CSharp" />

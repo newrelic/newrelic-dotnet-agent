@@ -3,6 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+#if NETSTANDARD
+using Autofac;
+#endif
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {
@@ -17,7 +20,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             where TInterface2 : class
             where TConcrete : class, TInterface1, TInterface2;
 
-        void Register<TInterface>(TInterface instance)
+        void RegisterInstance<TInterface>(TInterface instance)
             where TInterface : class;
 
         void RegisterFactory<TInterface>(Func<TInterface> func)
@@ -31,5 +34,9 @@ namespace NewRelic.Agent.Core.DependencyInjection
         IEnumerable<T> ResolveAll<T>();
 
         void Build();
+
+#if NETSTANDARD
+        void ReplaceRegistrations();
+#endif
     }
 }

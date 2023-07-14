@@ -149,26 +149,31 @@ namespace CompositeTests
             AgentServices.RegisterServices(_container);
 
             // Replace existing registrations with mocks before resolving any services
-            _container.ReplaceRegistration(mockEnvironment);
-            _container.ReplaceRegistration<IEnumerable<IContextStorageFactory>>(transactionContextFactories);
-            _container.ReplaceRegistration<ICallStackManagerFactory>(
+            _container.ReplaceInstanceRegistration(mockEnvironment);
+            _container.ReplaceInstanceRegistration<IEnumerable<IContextStorageFactory>>(transactionContextFactories);
+            _container.ReplaceInstanceRegistration<ICallStackManagerFactory>(
                 new TestCallStackManagerFactory());
-            _container.ReplaceRegistration(wrappers);
-            _container.ReplaceRegistration(dataTransportService);
-            _container.ReplaceRegistration(scheduler);
-            _container.ReplaceRegistration(NativeMethods);
+            _container.ReplaceInstanceRegistration(wrappers);
+            _container.ReplaceInstanceRegistration(dataTransportService);
+            _container.ReplaceInstanceRegistration(scheduler);
+            _container.ReplaceInstanceRegistration(NativeMethods);
 
-            _container.ReplaceRegistration(Mock.Create<ICATSupportabilityMetricCounters>());
+            _container.ReplaceInstanceRegistration(Mock.Create<ICATSupportabilityMetricCounters>());
 
             if (!_shouldAllowThreads)
             {
-                _container.ReplaceRegistration(threadPoolStatic);
+                _container.ReplaceInstanceRegistration(threadPoolStatic);
             }
 
-            _container.ReplaceRegistration(configurationManagerStatic);
+            _container.ReplaceInstanceRegistration(configurationManagerStatic);
+
+#if NET
+            _container.ReplaceRegistrations(); // creates a new scope, registering the replacement instances from all .ReplaceRegistration() calls above
+#endif
 
             InstrumentationService = _container.Resolve<IInstrumentationService>();
             InstrumentationWatcher = _container.Resolve<InstrumentationWatcher>();
+
             AgentServices.StartServices(_container);
 
             DisableAgentInitializer();

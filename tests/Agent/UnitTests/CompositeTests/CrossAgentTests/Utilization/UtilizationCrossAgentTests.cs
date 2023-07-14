@@ -208,7 +208,13 @@ namespace CompositeTests.CrossAgentTests.Utilization
         {
             var testCaseDatas = new List<TestCaseData>();
 
-            var dllPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            string location;
+#if NETFRAMEWORK
+            location = Assembly.GetExecutingAssembly().CodeBase;
+#else
+            location = Assembly.GetExecutingAssembly().Location;
+#endif            
+            var dllPath = Path.GetDirectoryName(new Uri(location).LocalPath);
             var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "Utilization", "utilization_json.json");
             var jsonString = File.ReadAllText(jsonPath);
 

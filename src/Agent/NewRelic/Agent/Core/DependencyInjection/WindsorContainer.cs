@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 					.Named(typeof(TInterface1).FullName + "," + typeof(TInterface2).FullName + "-" + typeof(TConcrete).FullName));
 		}
 
-		public void Register<TInterface>(TInterface instance) where TInterface : class
+		public void RegisterInstance<TInterface>(TInterface instance) where TInterface : class
 		{
 			_windsorContainer.Register(Component.For<TInterface>().Instance(instance));
 		}
