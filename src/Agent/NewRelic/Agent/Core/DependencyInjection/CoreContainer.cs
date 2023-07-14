@@ -36,9 +36,10 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
         public void ReplaceRegistrations()
         {
-            scope.Dispose(); // dump the existing scope
+            // create a new nested scope, registering the requested replacement instances
+            scope = scope.BeginLifetimeScope(ReplaceRegistrations);
 
-            scope = this.container.BeginLifetimeScope(ReplaceRegistrations); // create a new scope, registering all replacement instances
+            _registrationsToReplace.Clear();
         }
 
         private void ReplaceRegistrations(ContainerBuilder builder)
