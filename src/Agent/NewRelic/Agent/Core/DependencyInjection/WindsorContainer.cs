@@ -71,7 +71,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			_windsorContainer.Register(Component.For<TInterface>().UsingFactoryMethod(func));
 		}
 
-		public void ReplaceRegistration<TInterface>(TInterface instance)
+		public void ReplaceInstanceRegistration<TInterface>(TInterface instance)
 			where TInterface : class
 		{
 			var guid = Guid.NewGuid().ToString();

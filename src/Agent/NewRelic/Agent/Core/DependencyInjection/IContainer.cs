@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
         void RegisterFactory<TInterface>(Func<TInterface> func)
             where TInterface : class;
 
-        void ReplaceRegistration<TInterface>(TInterface instance)
+        void ReplaceInstanceRegistration<TInterface>(TInterface instance)
             where TInterface : class;
 
         T Resolve<T>();
