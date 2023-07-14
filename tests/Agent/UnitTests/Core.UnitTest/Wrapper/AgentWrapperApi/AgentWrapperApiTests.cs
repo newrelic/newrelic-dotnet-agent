@@ -34,10 +34,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Castle.MicroKernel;
 using Telerik.JustMock;
 using NewRelic.Agent.Api.Experimental;
-using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.TestUtilities;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.WireModels;
@@ -46,7 +44,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Collections;
 using NewRelic.Agent.Core.Utils;
-using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {

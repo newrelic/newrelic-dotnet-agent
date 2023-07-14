@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.Metrics
         {
             if (_configuration.WebTransactionsApdex.TryGetValue(transactionName, out double apdexT))
             {
-                return TimeSpan.FromSeconds(Convert.ToSingle(apdexT));
+                return TimeSpan.FromSeconds(apdexT);
             }
             return null;
         }
