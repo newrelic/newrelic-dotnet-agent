@@ -1031,6 +1031,55 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
         #endregion TraceID Tests
 
+        [TestCase(true)]
+        [TestCase(true, "")]
+        [TestCase(true, "k1=v1", "k2=v2")]
+        [TestCase(false)]
+        [TestCase(false, "")]
+        [TestCase(false, "k1=v1", "k2=v2")]
+        public void W3C_BuildTracestate_EmptyVendors_NoCommas(bool hasIncomingPayload, params string[] vendorState)
+        {
+            // Arrange
+            Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
+
+            var transaction = BuildMockTransaction(hasIncomingPayload: hasIncomingPayload, sampled: true);
+
+            var transactionGuid = GuidGenerator.GenerateNewRelicGuid();
+            Mock.Arrange(() => transaction.Guid).Returns(transactionGuid);
+
+            var expectedSpanGuid = GuidGenerator.GenerateNewRelicGuid();
+            var segment = Mock.Create<ISegment>();
+            Mock.Arrange(() => segment.SpanId).Returns(expectedSpanGuid);
+
+            Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+
+            var headers = new List<KeyValuePair<string, string>>();
+            var setHeaders = new Action<List<KeyValuePair<string, string>>, string, string>((carrier, key, value) =>
+            {
+                carrier.Add(new KeyValuePair<string, string>(key, value));
+            });
+
+            var tracingState = Mock.Create<ITracingState>();
+
+            var vendorStateEntries = vendorState.ToList();
+
+            Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
+            Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
+
+            Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(
+                Arg.IsAny<List<KeyValuePair<string, string>>>(),
+                Arg.IsAny<Action<List<KeyValuePair<string, string>>, string, string>>()))
+                    .DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, headers, setHeaders));
+
+            // Act
+            transaction.InsertDistributedTraceHeaders(headers, setHeaders);
+
+            var tracestateHeaderValue = headers.Where(header => header.Key == TracestateHeaderName).Select(header => header.Value).FirstOrDefault();
+
+            Assert.That(!tracestateHeaderValue.EndsWith(","), "W3C Tracestate string has a trailing comma.");
+        }
+
         #endregion
 
         #region Supportability Metrics
