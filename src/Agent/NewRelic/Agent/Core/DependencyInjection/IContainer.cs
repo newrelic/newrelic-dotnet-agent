@@ -3,9 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-#if NETSTANDARD
-using Autofac;
-#endif
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {

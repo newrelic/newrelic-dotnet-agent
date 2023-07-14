@@ -51,6 +51,8 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
         public void Dispose()
         {
+            scope?.Dispose();
+            container?.Dispose();
         }
 
         public void Register<TInterface, TConcrete>()
