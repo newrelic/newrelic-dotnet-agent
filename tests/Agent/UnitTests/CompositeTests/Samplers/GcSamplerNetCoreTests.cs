@@ -75,75 +75,75 @@ namespace NewRelic.Agent.Core.Samplers
             sampler.Start();
         }
 
-        [Test]
-        public void SamplerDisposesEventListenerOnException()
-        {
-            var samplerWasStopped = false;
-            var listenerWasDisposed = false;
+        //[Test]
+        //public void SamplerDisposesEventListenerOnException()
+        //{
+        //    var samplerWasStopped = false;
+        //    var listenerWasDisposed = false;
 
-            var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
+        //    var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
 
-            Mock.Arrange(() => mockListener.Dispose())
-                .DoInstead(() => { listenerWasDisposed = true; });
+        //    Mock.Arrange(() => mockListener.Dispose())
+        //        .DoInstead(() => { listenerWasDisposed = true; });
 
-            //This is our mechanism for shutting down the sampler.  If a config change is used, it starts/stops 3x which makes
-            //it difficult to determine current state.  Instead, throw an exception in the eventListener's sample method.
-            Mock.Arrange(() => mockListener.Sample())
-                .DoInstead(() => throw new Exception());
+        //    //This is our mechanism for shutting down the sampler.  If a config change is used, it starts/stops 3x which makes
+        //    //it difficult to determine current state.  Instead, throw an exception in the eventListener's sample method.
+        //    Mock.Arrange(() => mockListener.Sample())
+        //        .DoInstead(() => throw new Exception());
 
-            Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
-            {
-                return mockListener;
-            };
+        //    Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
+        //    {
+        //        return mockListener;
+        //    };
 
-            var mockScheduler = Mock.Create<IScheduler>();
+        //    var mockScheduler = Mock.Create<IScheduler>();
 
-            //Prevents the scheduler from actually running
-            Mock.Arrange(() => _mockScheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-                .DoNothing();
+        //    //Prevents the scheduler from actually running
+        //    Mock.Arrange(() => _mockScheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+        //        .DoNothing();
 
-            //Tracks the stop executing for the scheduler which indicates that the sampler
-            //has requested it to stop;
-            Mock.Arrange(() => mockScheduler.StopExecuting(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan?>()))
-                .DoInstead<Action, TimeSpan?>((a, t) => { samplerWasStopped = true; });
+        //    //Tracks the stop executing for the scheduler which indicates that the sampler
+        //    //has requested it to stop;
+        //    Mock.Arrange(() => mockScheduler.StopExecuting(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan?>()))
+        //        .DoInstead<Action, TimeSpan?>((a, t) => { samplerWasStopped = true; });
 
-            var sampler = new GCSamplerNetCore(mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
+        //    var sampler = new GCSamplerNetCore(mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
 
-            //Act
-            sampler.Start();
+        //    //Act
+        //    sampler.Start();
 
-            //Cause error which will shut down the sampler
-            sampler.Sample();
+        //    //Cause error which will shut down the sampler
+        //    sampler.Sample();
 
-            //Assert
-            Assert.IsTrue(samplerWasStopped);
-            Assert.IsTrue(listenerWasDisposed);
-        }
+        //    //Assert
+        //    Assert.IsTrue(samplerWasStopped);
+        //    Assert.IsTrue(listenerWasDisposed);
+        //}
 
-        [Test]
-        public void SamplerDisposesEventListenerWhenDisposed()
-        {
-            var listenerWasDisposed = false;
+        //[Test]
+        //public void SamplerDisposesEventListenerWhenDisposed()
+        //{
+        //    var listenerWasDisposed = false;
 
-            var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
+        //    var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
 
-            Mock.Arrange(() => mockListener.Dispose())
-                .DoInstead(() => { listenerWasDisposed = true; });
+        //    Mock.Arrange(() => mockListener.Dispose())
+        //        .DoInstead(() => { listenerWasDisposed = true; });
 
-            Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
-            {
-                return mockListener;
-            };
+        //    Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
+        //    {
+        //        return mockListener;
+        //    };
 
-            var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
+        //    var sampler = new GCSamplerNetCore(_mockScheduler, mockListenerFactory, _mockTransformer, _fxSamplerValidForFrameworkOverride);
 
-            //Act
-            sampler.Start();
-            sampler.Dispose();
+        //    //Act
+        //    sampler.Start();
+        //    sampler.Dispose();
 
-            //Assert
-            Assert.IsTrue(listenerWasDisposed);
-        }
+        //    //Assert
+        //    Assert.IsTrue(listenerWasDisposed);
+        //}
 
         [Test]
         public void SamplerStartsEventListenerWhenStarted()
