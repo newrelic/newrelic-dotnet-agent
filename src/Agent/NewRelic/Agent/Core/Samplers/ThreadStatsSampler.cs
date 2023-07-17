@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.Samplers
         {
             base.Dispose();
             _listener?.StopListening();
-            _listener?.Dispose();
+            //_listener?.Dispose();
             _listener = null;
         }
     }
