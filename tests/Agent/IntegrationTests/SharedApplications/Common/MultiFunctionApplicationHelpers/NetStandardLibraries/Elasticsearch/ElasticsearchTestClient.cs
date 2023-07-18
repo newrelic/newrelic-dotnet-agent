@@ -14,7 +14,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         protected const string IndexName = "flights";   // Must be lowercase!
         protected const string BadIndexName = "_ILLEGAL";
 
-        protected Uri Address = new Uri(ElasticSearchConfiguration.ElasticServer);
+        protected abstract Uri Address
+        {
+            get;
+        }
 
         public ElasticsearchTestClient() { }
 

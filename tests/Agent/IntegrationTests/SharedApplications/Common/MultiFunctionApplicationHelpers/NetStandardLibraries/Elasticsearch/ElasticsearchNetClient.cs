@@ -14,13 +14,21 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
     internal class ElasticsearchNetClient : ElasticsearchTestClient
     {
         private ElasticLowLevelClient _client;
+        protected override Uri Address
+        {
+            get
+            {
+                return new Uri(ElasticSearch7Configuration.ElasticServer);
+            }
+        }
+
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Connect()
         {
             var settings = new ConnectionConfiguration(Address)
-                .BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
-                    ElasticSearchConfiguration.ElasticPassword)
+                .BasicAuthentication(ElasticSearch7Configuration.ElasticUserName,
+                    ElasticSearch7Configuration.ElasticPassword)
                 .RequestTimeout(TimeSpan.FromMinutes(2));
 
             _client = new ElasticLowLevelClient(settings);

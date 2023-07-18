@@ -26,7 +26,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
         protected readonly ConsoleDynamicMethodFixture _fixture;
 
-        protected readonly string _host = GetHostFromElasticServer(ElasticSearchConfiguration.ElasticServer);
+        protected readonly string _host;
 
         protected readonly ClientType _clientType;
 
@@ -39,13 +39,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             _fixture.TestLogger = output;
             _clientType = clientType;
 
-            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
+            _host = GetHostFromElasticServer(_clientType);
 
-            if (_clientType != ClientType.ElasticClients)
-            {
-                // This lets 7.x clients work with an 8.x server
-                _fixture.SetAdditionalEnvironmentVariable("ELASTIC_CLIENT_APIVERSIONING", "true");
-            }
+            _fixture.SetTimeout(TimeSpan.FromMinutes(2));
 
             _fixture.AddCommand($"ElasticsearchExerciser SetClient {clientType}");
 
@@ -180,8 +176,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             );
         }
 
-        private static string GetHostFromElasticServer(string elasticServer)
+        private static string GetHostFromElasticServer(ClientType clientType)
         {
+            var elasticServer = clientType == ClientType.ElasticClients ? ElasticSearchConfiguration.ElasticServer : ElasticSearch7Configuration.ElasticServer;
+  
             if (elasticServer.StartsWith("https://"))
             {
                 return elasticServer.Remove(0, "https://".Length);
