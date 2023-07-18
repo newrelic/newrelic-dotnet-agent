@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.13.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.12.1...v10.13.0) (2023-07-14)
+
+
+### Security
+
+* Update Grpc.Net.Client library to address Dependabot alerts. ([#1768](https://github.com/newrelic/newrelic-dotnet-agent/issues/1768)) ([#1769](https://github.com/newrelic/newrelic-dotnet-agent/issues/1769)) ([eee7564](https://github.com/newrelic/newrelic-dotnet-agent/commit/eee7564cbe79b653ad7909af36f09c9a64cdb731))
+
+
+### New Features
+
+* Add support for filtering log events based on a list of log levels so that they are not forwarded to New Relic. Also adds new logging metrics to count the total number of filtered log events (Logging/denied). Refer to our [application logging configuration](https://docs.newrelic.com/docs/apm/agents/net-agent/configuration/net-agent-configuration/#application_logging) documentation for more details. ([#1760](https://github.com/newrelic/newrelic-dotnet-agent/issues/1760)) ([#1761](https://github.com/newrelic/newrelic-dotnet-agent/issues/1761)) ([#1762](https://github.com/newrelic/newrelic-dotnet-agent/issues/1762)) ([#1766](https://github.com/newrelic/newrelic-dotnet-agent/issues/1766)) ([aadce3a](https://github.com/newrelic/newrelic-dotnet-agent/commit/aadce3a09f9fe3c77a93f557686f1ddc26fc6169))
+* Instrument OpenAsync() for SQL libraries. ([#1725](https://github.com/newrelic/newrelic-dotnet-agent/issues/1725)) ([a695ce6](https://github.com/newrelic/newrelic-dotnet-agent/commit/a695ce6de7e56bc3f803c9b9f6c8c09b30c106fd))
+
+
+### Fixes
+
+* Refactor StackExchange.Redis v2+ instrumentation to eliminate potential memory leaks. ([902b025](https://github.com/newrelic/newrelic-dotnet-agent/commit/902b025c8c420b8bc288b15d914b47aabc1bd426))
+* Remove invalid trailing comma added to W3C tracestate header. ([#1779](https://github.com/newrelic/newrelic-dotnet-agent/issues/1779)) ([790a3b7](https://github.com/newrelic/newrelic-dotnet-agent/commit/790a3b75dd7609d76638ea3625a9289f58b24378))
+* Update the MSI UI to clean up formatting and readability issues. ([#1748](https://github.com/newrelic/newrelic-dotnet-agent/issues/1748)) ([3fbc543](https://github.com/newrelic/newrelic-dotnet-agent/commit/3fbc54310ed3989f915e6f39b27ef8867ed573db))
+
 ## [10.12.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.12.0...v10.12.1) (2023-06-26)
 
 
