@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.TestUtilities;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -80,12 +81,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
         {
             var testCaseDatas = new List<TestCaseData>();
 
-            string location;
-#if NETFRAMEWORK
-            location = Assembly.GetExecutingAssembly().CodeBase;
-#else
-            location = Assembly.GetExecutingAssembly().Location;
-#endif            
+            string location = Assembly.GetExecutingAssembly().GetLocation();
             var dllPath = Path.GetDirectoryName(new Uri(location).LocalPath);
             var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "SecurityPolicies", "security_policies.json");
             var jsonString = File.ReadAllText(jsonPath);
