@@ -8,7 +8,7 @@ using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {
-    public class CoreContainer : IContainer
+    public class AgentContainer : IContainer
     {
 
         private readonly ContainerBuilder _builder;
@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
         private bool _disposedValue;
         private readonly Dictionary<Type, object> _registrationsToReplace = new Dictionary<Type, object>();
 
-        public CoreContainer()
+        public AgentContainer()
         {
             _builder = new ContainerBuilder();
         }

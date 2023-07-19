@@ -52,7 +52,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
     {
         public static IContainer GetContainer()
         {
-            return new CoreContainer();
+            return new AgentContainer();
         }
 
         /// <summary>
