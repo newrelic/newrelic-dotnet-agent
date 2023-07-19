@@ -32,8 +32,6 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
         void Build();
 
-#if NETSTANDARD
         void ReplaceRegistrations();
-#endif
     }
 }

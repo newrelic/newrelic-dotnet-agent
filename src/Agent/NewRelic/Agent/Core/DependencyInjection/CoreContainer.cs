@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NETSTANDARD2_0
 using System;
 using System.Collections.Generic;
 using Autofac;
@@ -84,13 +83,11 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
         public T Resolve<T>()
         {
-            Check(typeof(T));
             return _scope.Resolve<T>();
         }
 
         public IEnumerable<T> ResolveAll<T>()
         {
-            Check(typeof(T));
             try
             {
                 return _scope.Resolve<IEnumerable<T>>();
@@ -101,13 +98,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
                 throw;
             }
         }
-        private void Check(Type type)
-        {
-            if (_scope == null)
-            {
-                throw new Exception("Resolve invoked with uninitialized container for " + type);
-            }
-        }
+
 
         protected virtual void Dispose(bool disposing)
         {
@@ -134,4 +125,3 @@ namespace NewRelic.Agent.Core.DependencyInjection
         }
     }
 }
-#endif

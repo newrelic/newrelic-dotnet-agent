@@ -166,10 +166,7 @@ namespace CompositeTests
             }
 
             _container.ReplaceInstanceRegistration(configurationManagerStatic);
-
-#if NET
             _container.ReplaceRegistrations(); // creates a new scope, registering the replacement instances from all .ReplaceRegistration() calls above
-#endif
 
             InstrumentationService = _container.Resolve<IInstrumentationService>();
             InstrumentationWatcher = _container.Resolve<InstrumentationWatcher>();
