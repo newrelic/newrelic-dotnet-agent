@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NewRelic.Agent.IntegrationTests.Shared;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 {
@@ -15,6 +14,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
         protected const string BadIndexName = "_ILLEGAL";
 
         protected abstract Uri Address
+        {
+            get;
+        }
+        protected abstract string Username
+        {
+            get;
+        }
+        protected abstract string Password
         {
             get;
         }

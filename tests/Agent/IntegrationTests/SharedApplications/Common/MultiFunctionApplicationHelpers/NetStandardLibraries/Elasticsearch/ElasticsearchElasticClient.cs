@@ -21,13 +21,26 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 return new Uri(ElasticSearchConfiguration.ElasticServer);
             }
         }
+        protected override string Username
+        {
+            get
+            {
+                return ElasticSearchConfiguration.ElasticUserName;
+            }
+        }
+        protected override string Password
+        {
+            get
+            {
+                return ElasticSearchConfiguration.ElasticPassword;
+            }
+        }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Connect()
         {
             var settings = new ElasticsearchClientSettings(Address)
-                    .Authentication(new BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
-                    ElasticSearchConfiguration.ElasticPassword)).
+                    .Authentication(new BasicAuthentication(Username, Password)).
                     DefaultIndex(IndexName);
 
             _client = new ElasticsearchClient(settings);
