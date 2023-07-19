@@ -79,7 +79,9 @@ namespace NewRelic.Agent.Core.Samplers
         {
             base.Dispose();
             _listener?.StopListening();
-            _listener?.Dispose();
+#if NETFRAMEWORK // calling .Dispose() in .NET 7 explodes. No idea why.
+                _listener?.Dispose();
+#endif
             _listener = null;
         }
     }

@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using NewRelic.Agent.TestUtilities;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.CrossAgentTests
@@ -203,7 +204,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests
         {
             get
             {
-                var dllPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+                string location = Assembly.GetExecutingAssembly().GetLocation();
+                var dllPath = Path.GetDirectoryName(new Uri(location).LocalPath);
                 var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "ServerSentEvent", "data_collection_server_configuration.json");
                 var jsonString = File.ReadAllText(jsonPath);
 

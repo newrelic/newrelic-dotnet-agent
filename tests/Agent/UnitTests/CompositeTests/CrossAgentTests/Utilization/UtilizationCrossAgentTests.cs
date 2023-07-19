@@ -3,6 +3,7 @@
 
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Utilization;
+using NewRelic.Agent.TestUtilities;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
@@ -208,7 +209,8 @@ namespace CompositeTests.CrossAgentTests.Utilization
         {
             var testCaseDatas = new List<TestCaseData>();
 
-            var dllPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            string location = Assembly.GetExecutingAssembly().GetLocation();
+            var dllPath = Path.GetDirectoryName(new Uri(location).LocalPath);
             var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "Utilization", "utilization_json.json");
             var jsonString = File.ReadAllText(jsonPath);
 

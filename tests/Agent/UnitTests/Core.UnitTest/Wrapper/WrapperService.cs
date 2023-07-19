@@ -160,6 +160,7 @@ namespace NewRelic.Agent.Core.Wrapper
             Mock.Assert(_wrapperMap);
         }
 
+#if NETFRAMEWORK //TODO: update this test to use something other than `System.Web.HttpApplication`
         [Test]
         public void BeforeWrappedMethod_SetsNoOpWhenThrowsExceptionTooManyTimes()
         {
@@ -191,7 +192,7 @@ namespace NewRelic.Agent.Core.Wrapper
             Assert.DoesNotThrow(() => wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0));
             Mock.Assert(_noOpWrapper);
         }
-
+#endif
         [Test]
         public void AfterWrappedMethod_DoesNotSetNullOnFirstThrownException()
         {
@@ -212,6 +213,7 @@ namespace NewRelic.Agent.Core.Wrapper
             Mock.Assert(_wrapperMap);
         }
 
+#if NETFRAMEWORK //TODO: update this test to use something other than `System.Web.HttpApplication`
         [Test]
         public void AfterWrappedMethod_SetsNoOpWhenThrowsExceptionTooManyTimes()
         {
@@ -244,6 +246,7 @@ namespace NewRelic.Agent.Core.Wrapper
             var afterWrappedMethod2 = wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0);
             Assert.DoesNotThrow(() => afterWrappedMethod2(null, null));
         }
+#endif
 
         [Test]
         public void BeforeWrappedMethod_ReturnsNoOp_IfTheCurrentSegmentIsLeaf()

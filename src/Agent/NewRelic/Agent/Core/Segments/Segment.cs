@@ -147,7 +147,7 @@ namespace NewRelic.Agent.Core.Segments
             {
                 // This order is to ensure the segment end time is correct, but also not mark the segment as IsDone so that CleanUp ignores it.
                 var endTime = _transactionSegmentState.GetRelativeTime();
-                Agent.Instance.StackExchangeRedisCache?.Harvest(this);
+                Agent.Instance?.StackExchangeRedisCache?.Harvest(this);
                 RelativeEndTime = endTime;
 
                 Finish();

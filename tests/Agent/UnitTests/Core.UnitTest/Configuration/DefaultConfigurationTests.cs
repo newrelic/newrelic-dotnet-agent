@@ -570,7 +570,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [TestCase(3000.0, null, ExpectedResult = 3000.0)]
+#if NET
+        [TestCase(3000.5, null, ExpectedResult = 3000.5)] // .NET doesn't round timespans the same way Framework did...
+#else
         [TestCase(3000.5, null, ExpectedResult = 3001.0)]
+#endif
         [TestCase(4000.0, 0.5, ExpectedResult = 500.0)]
         [TestCase(200.0, 5.0, ExpectedResult = 5000.0)]
         [TestCase(1.0, 0.2, ExpectedResult = 200.0)]
@@ -783,7 +787,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase("apdex_f", null, 5, ExpectedResult = 20000)]
         [TestCase("1", null, 5, ExpectedResult = 1)]
+#if NETFRAMEWORK
         [TestCase("1.5", null, 5, ExpectedResult = 2)]
+#else
+        [TestCase("1.5", null, 5, ExpectedResult = 1.5)]
+#endif
         [TestCase("apdex_f", 3, 5, ExpectedResult = 3000)]
         [TestCase("apdex_f", 3.5, 5, ExpectedResult = 3500)]
         [TestCase("apdex_f", "4", 5, ExpectedResult = 4000)]

@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using System.Reflection;
+using NewRelic.Agent.TestUtilities;
 
 namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
 {
@@ -107,7 +108,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
         private static List<TestCaseData> GetCollectorHostnameTestData()
         {
             var testDatas = new List<TestCaseData>();
-            var dllPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            string location = Assembly.GetExecutingAssembly().GetLocation();
+            var dllPath = Path.GetDirectoryName(new Uri(location).LocalPath);
             var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "DataTransport", "collector_hostname.json");
             var jsonString = File.ReadAllText(jsonPath);
             var objectArray = JArray.Parse(jsonString);
