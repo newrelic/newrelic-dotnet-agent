@@ -143,6 +143,7 @@ jobs:
         with:
             flags: Profiler
             directory: ${{ env.test_results_path }}
+            verbose: true
 
       - name: Archive Artifacts
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
