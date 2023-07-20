@@ -52,11 +52,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
     {
         public static IContainer GetContainer()
         {
-#if NETFRAMEWORK
-            return new WindsorContainer();
-#else
-            return new CoreContainer();
-#endif
+            return new AgentContainer();
         }
 
         /// <summary>
@@ -136,9 +132,6 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<IApiSupportabilityMetricCounters, IOutOfBandMetricSource, ApiSupportabilityMetricCounters>();
             container.Register<ICATSupportabilityMetricCounters, IOutOfBandMetricSource, CATSupportabilityMetricCounters>();
             container.Register<IAgentTimerService, AgentTimerService>();
-#if NETFRAMEWORK
-			container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);
-#endif
             container.Register<IThreadPoolStatic, ThreadPoolStatic>();
             container.Register<ITransactionTransformer, TransactionTransformer>();
             container.Register<ICustomEventTransformer, CustomEventTransformer>();
