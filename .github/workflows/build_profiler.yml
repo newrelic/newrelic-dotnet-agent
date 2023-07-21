@@ -17,7 +17,7 @@ on:
       deploy:
         description: 'Deploy'
         required: true
-        default: false # while testing
+        default: true
         type: boolean
   
   # this workflow can be invoked manually
@@ -31,7 +31,7 @@ on:
       deploy:
         description: 'Deploy'
         required: true
-        default: false # while testing
+        default: true
         type: boolean
 
 permissions:
@@ -142,7 +142,6 @@ jobs:
         uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
         with:
             flags: Profiler
-            verbose: true
             files: ${{ env.test_results_path }}\profiler.xml
 
       - name: Archive Artifacts
