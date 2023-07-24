@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -102,6 +103,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override void Harvest()
         {
+            Log.Finest("Span Event harvest starting.");
+
             ConcurrentPriorityQueue<PrioritizedNode<ISpanEventWireModel>> spanEventsPriorityQueue;
 
             _readerWriterLockSlim.EnterWriteLock();
@@ -124,6 +127,8 @@ namespace NewRelic.Agent.Core.Aggregators
             var responseStatus = DataTransportService.Send(eventHarvestData, wireModels);
 
             HandleResponse(responseStatus, wireModels);
+
+            Log.Finest("Span Event harvest finished.");
         }
 
         private void ReduceReservoirSize(int newSize)

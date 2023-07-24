@@ -35,6 +35,7 @@ namespace NewRelic.Agent.Core.DataTransport
         DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels);
         DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents);
         DataTransportResponseStatus Send(LogEventWireModelCollection loggingEvents);
+        DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules);
     }
 
     public class DataTransportService : ConfigurationBasedService, IDataTransportService
@@ -137,6 +138,16 @@ namespace NewRelic.Agent.Core.DataTransport
                 _lastMetricSendTime = endTime;
 
             return status;
+        }
+
+        public DataTransportResponseStatus Send(LoadedModuleWireModelCollection loadedModules)
+        {
+            if (loadedModules.LoadedModules.Count < 1)
+            {
+                return DataTransportResponseStatus.RequestSuccessful;
+            }
+
+            return TrySendDataRequest("update_loaded_modules", loadedModules);
         }
 
         #endregion Public API

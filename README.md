@@ -1,5 +1,10 @@
 <a href="https://opensource.newrelic.com/oss-category/#community-plus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Plus.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"><img alt="New Relic Open Source community plus project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"></picture></a>
 
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![build_status](https://github.com/newrelic/newrelic-dotnet-agent/actions/workflows/all_solutions.yml/badge.svg?event=schedule)](https://github.com/newrelic/newrelic-dotnet-agent/actions/workflows/all_solutions.yml)
+[![codecov](https://codecov.io/gh/newrelic/newrelic-dotnet-agent/branch/main/graph/badge.svg?token=VKV9XDVJ2U)](https://codecov.io/gh/newrelic/newrelic-dotnet-agent)
+[![OpenSSF
+Scorecard](https://api.securityscorecards.dev/projects/github.com/newrelic/newrelic-dotnet-agent/badge)](https://api.securityscorecards.dev/projects/github.com/newrelic/newrelic-dotnet-agent)
 # New Relic Monitoring for .NET
 
 #### .NET Agent
@@ -38,7 +43,7 @@ If the issue has been confirmed as a bug or is a Feature request, please file a 
 **Support Channels**
 
 * [New Relic Documentation](https://docs.newrelic.com/docs/agents/net-agent): Comprehensive guidance for using our agent
-* [New Relic Community](https://discuss.newrelic.com/tags/c/full-stack-observability/agents/466/dotnetagent): The best place to engage in troubleshooting questions
+* [New Relic Community](https://forum.newrelic.com/): The best place to engage in troubleshooting questions
 * [New Relic Developer](https://developer.newrelic.com/): Resources for building a custom observability applications
 * [New Relic University](https://learn.newrelic.com/): A range of online training for New Relic users of every level
 * [New Relic Technical Support](https://support.newrelic.com/) 24/7/365 ticketed support. Read more about our [Technical Support Offerings](https://docs.newrelic.com/docs/licenses/license-information/general-usage-licenses/global-technical-support-offerings/). 

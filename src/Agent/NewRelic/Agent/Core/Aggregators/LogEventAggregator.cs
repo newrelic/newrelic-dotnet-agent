@@ -11,6 +11,7 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -57,6 +58,11 @@ namespace NewRelic.Agent.Core.Aggregators
 
         public void CollectWithPriority(IList<LogEventWireModel> logEventWireModels, float priority)
         {
+            if (logEventWireModels == null)
+            {
+                return;
+            }
+
             for (int i = 0; i < logEventWireModels.Count; i++)
             {
                 _agentHealthReporter.ReportLoggingEventCollected();
@@ -67,6 +73,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override void Harvest()
         {
+            Log.Finest("Log Event harvest starting.");
+
             var originalLogEvents = GetAndResetLogEvents(GetReservoirSize());
             var aggregatedEvents = originalLogEvents.Where(node => node != null).Select(node => node.Data).ToList();
 
@@ -96,6 +104,8 @@ namespace NewRelic.Agent.Core.Aggregators
             var responseStatus = DataTransportService.Send(modelsCollection);
 
             HandleResponse(responseStatus, aggregatedEvents);
+
+            Log.Finest("Log Event harvest finished.");
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

@@ -317,6 +317,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return this;
         }
 
+        public NewRelicConfigModifier SetLogForwardingLogLevelDenyList(string logLevelDenyList)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging" }, "forwarding", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "applicationLogging", "forwarding" }, "logLevelDenyList", logLevelDenyList);
+            return this;
+        }
+
         public NewRelicConfigModifier SetCodeLevelMetricsEnabled(bool enabled = true)
         {
             CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "codeLevelMetrics", string.Empty);
@@ -378,6 +385,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public NewRelicConfigModifier ConfigureFasterSqlTracesHarvestCycle(int seconds)
         {
             CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideSqlTracesHarvestCycle", seconds.ToString(), "urn:newrelic-config");
+            return this;
+        }
+
+        public NewRelicConfigModifier ConfigureFasterUpdateLoadedModulesCycle(int seconds)
+        {
+            CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideUpdateLoadedModulesCycle", seconds.ToString(), "urn:newrelic-config");
             return this;
         }
     }

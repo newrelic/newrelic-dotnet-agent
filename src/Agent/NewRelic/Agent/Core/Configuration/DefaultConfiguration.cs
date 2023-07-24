@@ -183,17 +183,28 @@ namespace NewRelic.Agent.Core.Configuration
 
         public object AgentRunId { get { return _serverConfiguration.AgentRunId; } }
 
+        // protected to allow unit test wrapper to manipulate
+        protected static bool? _agentEnabledAppSettingParsed;
+        protected static bool _appSettingAgentEnabled;
+        private static readonly object _lockObj = new object();
+
+
         public virtual bool AgentEnabled
         {
             get
             {
-                var agentEnabledAsString = _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled");
+                // read from app setting one time only and cache the result
+                if (!_agentEnabledAppSettingParsed.HasValue)
+                {
+                    lock (_lockObj)
+                    {
+                        _agentEnabledAppSettingParsed ??= bool.TryParse(_configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled"),
+                            out _appSettingAgentEnabled);
+                    }
+                }
 
-                bool agentEnabled;
-                if (!bool.TryParse(agentEnabledAsString, out agentEnabled))
-                    return _localConfiguration.agentEnabled;
-
-                return agentEnabled;
+                // read from local config if we couldn't parse from app settings
+                return _agentEnabledAppSettingParsed.Value ? _appSettingAgentEnabled : _localConfiguration.agentEnabled;
             }
         }
 
@@ -1979,6 +1990,31 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        private HashSet<string> _logLevelDenyList;
+        public virtual HashSet<string> LogLevelDenyList
+        {
+            get
+            {
+                if (_logLevelDenyList == null)
+                {
+                    _logLevelDenyList = new HashSet<string>(
+                        EnvironmentOverrides(_localConfiguration.applicationLogging.forwarding.logLevelDenyList,
+                                "NEW_RELIC_APPLICATION_LOGGING_FORWARDING_LOG_LEVEL_DENYLIST")
+                            ?.Split(new[] { StringSeparators.CommaChar, ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.ToUpper())
+                        ?? Enumerable.Empty<string>());
+
+                    if (_logLevelDenyList.Count > 0)
+                    {
+                        var logLevels = string.Join(",", _logLevelDenyList);
+                        Log.Info($"Log Level Filtering is enabled for the following levels: {logLevels}");
+                    }
+                }
+
+                return _logLevelDenyList;
+            }
+        }
+
         #endregion
 
         public virtual bool AppDomainCachingDisabled
@@ -2166,6 +2202,54 @@ namespace NewRelic.Agent.Core.Configuration
                         Log.Info("SQL traces harvest cycle overridden to " + parsedHarvestCycle + " seconds.");
                         _sqlTracesHarvestCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
                         return _sqlTracesHarvestCycleOverride.Value;
+                    }
+                }
+
+                return DefaultHarvestCycle;
+            }
+        }
+
+        private TimeSpan? _updateLoadedModulesCycleOverride = null;
+        public TimeSpan UpdateLoadedModulesCycle
+        {
+            get
+            {
+                if (_updateLoadedModulesCycleOverride.HasValue)
+                {
+                    return _updateLoadedModulesCycleOverride.Value;
+                }
+
+                if (_newRelicAppSettings.TryGetValue("OverrideUpdateLoadedModulesCycle", out var harvestCycle))
+                {
+                    if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                    {
+                        Log.Info("Update loaded modules cycle overridden to " + parsedHarvestCycle + " seconds.");
+                        _updateLoadedModulesCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                        return _updateLoadedModulesCycleOverride.Value;
+                    }
+                }
+
+                return DefaultHarvestCycle;
+            }
+        }
+
+        private TimeSpan? _stackExchangeRedisCleanupCycleOverride = null;
+        public TimeSpan StackExchangeRedisCleanupCycle
+        {
+            get
+            {
+                if (_stackExchangeRedisCleanupCycleOverride.HasValue)
+                {
+                    return _stackExchangeRedisCleanupCycleOverride.Value;
+                }
+
+                if (_newRelicAppSettings.TryGetValue("OverrideStackExchangeRedisCleanupCycle", out var harvestCycle))
+                {
+                    if (int.TryParse(harvestCycle, out var parsedHarvestCycle) && parsedHarvestCycle > 0)
+                    {
+                        Log.Info("StackExchange.Redis cleanup cycle overridden to " + parsedHarvestCycle + " seconds.");
+                        _stackExchangeRedisCleanupCycleOverride = TimeSpan.FromSeconds(parsedHarvestCycle);
+                        return _stackExchangeRedisCleanupCycleOverride.Value;
                     }
                 }
 
@@ -2657,6 +2741,7 @@ namespace NewRelic.Agent.Core.Configuration
             TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
 
         private bool? _codeLevelMetricsEnabled;
+
         public bool CodeLevelMetricsEnabled
         {
             get

@@ -1,30 +1,31 @@
-<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net462</TargetFrameworks>
+    <TargetFrameworks>net462;net7.0</TargetFrameworks>
     <RootNamespace>CompositeTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.Core.CompositeTests</AssemblyName>
     <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>
     <RunSettingsFilePath>$(SolutionDir)test.runsettings</RunSettingsFilePath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Castle.Core" Version="3.3.0" />
-    <PackageReference Include="Castle.Windsor" Version="3.3.0" />
     <PackageReference Include="coverlet.collector" Version="3.2.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="JustMock" Version="2020.1.113.1" />
-    <PackageReference Include="Microsoft.Extensions.Primitives" Version="1.1.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
+    <PackageReference Include="Microsoft.Extensions.Primitives" Version="7.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
     <PackageReference Include="MoreLinq" Version="2.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NUnit" Version="3.12.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.16.1">
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -36,6 +37,7 @@
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\Providers\Storage\AsyncLocal\AsyncLocal.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\StackExchangeRedis2Plus\StackExchangeRedis2Plus.csproj" />
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
     <ProjectReference Include="..\NewRelic.Agent.TestUtilities\NewRelic.Agent.TestUtilities.csproj" />
   </ItemGroup>

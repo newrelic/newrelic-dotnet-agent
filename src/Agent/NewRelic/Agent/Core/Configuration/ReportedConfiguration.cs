@@ -593,6 +593,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("application_logging.forwarding.max_samples_stored")]
         public int LogEventsMaxSamplesStored => _configuration.LogEventsMaxSamplesStored;
 
+        [JsonProperty("application_logging.forwarding.log_level_denylist")]
+        public HashSet<string> LogLevelDenyList => _configuration.LogLevelDenyList;
+
         [JsonProperty("application_logging.harvest_cycle")]
         public TimeSpan LogEventsHarvestCycle => _configuration.LogEventsHarvestCycle;
 
@@ -637,6 +640,12 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("sql_traces.harvest_cycle")]
         public TimeSpan SqlTracesHarvestCycle => _configuration.SqlTracesHarvestCycle;
+
+        [JsonProperty("update_loaded_modules.cycle")]
+        public TimeSpan UpdateLoadedModulesCycle => _configuration.UpdateLoadedModulesCycle;
+
+        [JsonProperty("stackexchangeredis_cleanup.cycle")]
+        public TimeSpan StackExchangeRedisCleanupCycle => _configuration.StackExchangeRedisCleanupCycle;
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {

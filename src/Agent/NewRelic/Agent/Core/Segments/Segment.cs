@@ -17,6 +17,7 @@ using NewRelic.Agent.Core.Errors;
 using System.Diagnostics;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Utils;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Segments
 {
@@ -106,7 +107,13 @@ namespace NewRelic.Agent.Core.Segments
             SpanId = segment.SpanId;
         }
 
+        public bool IsDone
+        {
+            get { return RelativeEndTime.HasValue; }
+        }
+
         public bool IsValid => true;
+
         public bool DurationShouldBeDeductedFromParent { get; set; } = false;
 
         public bool AlwaysDeductChildDuration { private get; set; } = false;
@@ -138,13 +145,10 @@ namespace NewRelic.Agent.Core.Segments
             // this segment may have already been forced to end
             if (RelativeEndTime.HasValue == false)
             {
+                // This order is to ensure the segment end time is correct, but also not mark the segment as IsDone so that CleanUp ignores it.
                 var endTime = _transactionSegmentState.GetRelativeTime();
+                Agent.Instance?.StackExchangeRedisCache?.Harvest(this);
                 RelativeEndTime = endTime;
-
-                if (Agent.Instance.StackExchangeRedisCache != null)
-                {
-                    Agent.Instance.StackExchangeRedisCache.Harvest(this);
-                }
 
                 Finish();
 
@@ -431,6 +435,11 @@ namespace NewRelic.Agent.Core.Segments
         {
             SegmentNameOverride = name;
             return this;
+        }
+
+        public string GetCategory()
+        {
+            return EnumNameCache<SpanCategory>.GetName(Data.SpanCategory);
         }
     }
 }

@@ -17,13 +17,13 @@ namespace NewRelic.Agent.Core.DependencyInjection
             where TInterface2 : class
             where TConcrete : class, TInterface1, TInterface2;
 
-        void Register<TInterface>(TInterface instance)
+        void RegisterInstance<TInterface>(TInterface instance)
             where TInterface : class;
 
         void RegisterFactory<TInterface>(Func<TInterface> func)
             where TInterface : class;
 
-        void ReplaceRegistration<TInterface>(TInterface instance)
+        void ReplaceInstanceRegistration<TInterface>(TInterface instance)
             where TInterface : class;
 
         T Resolve<T>();
@@ -31,5 +31,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
         IEnumerable<T> ResolveAll<T>();
 
         void Build();
+
+        void ReplaceRegistrations();
     }
 }

@@ -955,6 +955,18 @@ namespace NewRelic.Agent.Core.WireModels
                 return BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
             }
 
+            public MetricWireModel TryBuildLoggingMetricsDeniedCountBySeverityMetric(string logLevel, int count)
+            {
+                var proposedName = MetricNames.GetLoggingMetricsDeniedBySeverityName(logLevel);
+                return BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
+            }
+
+            public MetricWireModel TryBuildLoggingMetricsDeniedCountMetric(int count)
+            {
+                var proposedName = MetricNames.GetLoggingMetricsDeniedName();
+                return BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
+            }
+
             public MetricWireModel TryBuildSupportabilityLoggingEventsCollectedMetric()
             {
                 const string proposedName = MetricNames.SupportabilityLoggingEventsCollected;

@@ -11,6 +11,7 @@ namespace ArtifactBuilder.Artifacts
         private const string NuGetHelperLibraryName = "NewRelic.NuGetHelper.dll";
 
         private string _version;
+        private string _nuGetPackageName;
 
         public AzureSiteExtension() : base(nameof(AzureSiteExtension))
         {
@@ -26,7 +27,7 @@ namespace ArtifactBuilder.Artifacts
             package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\{NuGetLibraryName}");
             package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\{XmlLibraryName}");
             package.SetVersion(_version);
-            package.Pack();
+            _nuGetPackageName = package.Pack();
         }
 
         private string ReadVersionFromFile()
@@ -68,8 +69,11 @@ namespace ArtifactBuilder.Artifacts
 
         private string Unpack()
         {
+            if (string.IsNullOrEmpty(_nuGetPackageName))
+                throw new PackagingException("NuGet package name not found. Did you call InternalBuild()?");
+
             var unpackDir = Path.Join(OutputDirectory, "unpacked");
-            var nugetFile = Path.Join(OutputDirectory, $"NewRelic.Azure.WebSites.Extension.{_version}.nupkg");
+            var nugetFile = Path.Join(OutputDirectory, _nuGetPackageName);
             NuGetHelpers.Unpack(nugetFile, unpackDir);
             return unpackDir;
         }

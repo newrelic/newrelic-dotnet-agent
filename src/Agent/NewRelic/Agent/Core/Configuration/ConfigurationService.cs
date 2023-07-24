@@ -63,15 +63,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static void UpdateLogLevel(configuration localConfiguration)
         {
-            var hierarchy = log4net.LogManager.GetRepository(Assembly.GetCallingAssembly()) as log4net.Repository.Hierarchy.Hierarchy;
-            var logger = hierarchy.Root;
-
-            var logLevel = logger.Hierarchy.LevelMap[localConfiguration.LogConfig.LogLevel];
-            if (logLevel != null && logLevel != logger.Level)
-            {
-                Log.InfoFormat("The log level was updated to {0}", logLevel);
-                logger.Level = logLevel;
-            }
+            Log.InfoFormat("The log level was updated to {0}", localConfiguration.LogConfig.LogLevel);
+            LoggerBootstrapper.UpdateLoggingLevel(localConfiguration.LogConfig.LogLevel);
         }
 
         private void OnServerConfigurationUpdated(ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)

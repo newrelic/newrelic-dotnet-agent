@@ -29,6 +29,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         private readonly IList<RecurringLogData> _recurringLogDatas = new ConcurrentList<RecurringLogData>();
         private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
         private readonly ConcurrentDictionary<string, InterlockedCounter> _logLinesCountByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
+        private readonly ConcurrentDictionary<string, InterlockedCounter> _logDeniedCountByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
 
         private PublishMetricDelegate _publishMetricDelegate;
         private InterlockedCounter _payloadCreateSuccessCounter;
@@ -583,12 +584,34 @@ namespace NewRelic.Agent.Core.AgentHealth
                     _loggingForwardingEnabledWithFrameworksReported[kvp.Key] = true;
                 }
             }
+
+            var totalDeniedCount = 0;
+            foreach (var logLinesDeniedCounter in _logDeniedCountByLevel)
+            {
+                if (TryGetCount(logLinesDeniedCounter.Value, out var linesCount))
+                {
+                    totalDeniedCount += linesCount;
+                    TrySend(_metricBuilder.TryBuildLoggingMetricsDeniedCountBySeverityMetric(logLinesDeniedCounter.Key, linesCount));
+                }
+            }
+
+            if (totalDeniedCount > 0)
+            {
+                TrySend(_metricBuilder.TryBuildLoggingMetricsDeniedCountMetric(totalDeniedCount));
+            }
+
         }
 
         public void IncrementLogLinesCount(string level)
         {
             _logLinesCountByLevel.TryAdd(level, new InterlockedCounter());
             _logLinesCountByLevel[level].Increment();
+        }
+
+        public void IncrementLogDeniedCount(string level)
+        {
+            _logDeniedCountByLevel.TryAdd(level, new InterlockedCounter());
+            _logDeniedCountByLevel[level].Increment();
         }
 
         public void ReportLoggingEventCollected() => TrySend(_metricBuilder.TryBuildSupportabilityLoggingEventsCollectedMetric());

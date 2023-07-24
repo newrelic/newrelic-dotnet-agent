@@ -152,7 +152,7 @@ namespace NewRelic.Agent.Core
         private void AssertAgentEnabled(configuration config)
         {
             if (!Configuration.AgentEnabled)
-                throw new Exception(string.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", config.AgentEnabledAt));
+                throw new Exception(string.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", config.AgentEnabledAt ?? config.ConfigurationFileName));
 
             if ("REPLACE_WITH_LICENSE_KEY".Equals(Configuration.AgentLicenseKey))
                 throw new Exception("Please set your license key.");
@@ -373,7 +373,7 @@ namespace NewRelic.Agent.Core
             finally
             {
                 Dispose();
-                log4net.LogManager.Shutdown();
+                Serilog.Log.CloseAndFlush();
             }
         }
 
