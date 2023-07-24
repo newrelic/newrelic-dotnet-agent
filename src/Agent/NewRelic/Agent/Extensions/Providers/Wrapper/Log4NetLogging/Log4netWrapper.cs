@@ -80,8 +80,8 @@ namespace NewRelic.Providers.Wrapper.Logging
                 }
                 catch
                 {
-                    // Oh no!
-                    return;
+                    _getLogException = (x) => null;
+                    getLogExceptionFunc = _getLogException;
                 }
 
             }
@@ -130,13 +130,11 @@ namespace NewRelic.Providers.Wrapper.Logging
                     _legacyVersion = true;
                     // Legacy property, mainly used by Sitecore
                     getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEventType, "MappedContext");
-
-
                 }
                 catch
                 {
-                    // Oh no!
-                    return null;
+                    _getProperties = (x) => null;
+                    getProperties = _getProperties;
                 }
             }
 
