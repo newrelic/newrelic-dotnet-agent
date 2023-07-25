@@ -62,6 +62,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         {
             // TODO: Not sure what the equivalent would be (or if there is one)
             //_log.InfoFormat(message, param);
+            throw new System.NotImplementedException();
         }
 
         public void Warn(string message)
