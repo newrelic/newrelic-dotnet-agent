@@ -27,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Util
         /// <param name="initializationAction"></param>
         public static void RegisterProcessWithTestFrameworkAndInitialize(string[] args, string defaultPort, out EventWaitHandle eventWaitHandle, out CancellationTokenSource cancellationTokenSource, Action<string[], CancellationTokenSource, string> initializationAction)
         {
-            var applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetEntryAssembly().CodeBase).LocalPath) + ".exe";
+            var applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetEntryAssembly().Location).LocalPath) + ".exe";
 
             Console.WriteLine($"[{applicationName}] Invoked with args: { string.Join(" ", args) }");
 
@@ -52,7 +52,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Util
         {
             var pid = Process.GetCurrentProcess().Id;
             var applicationDirectory =
-                Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath),
+                Path.Combine(Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().Location).LocalPath),
                     applicationName);
             var pidFilePath = applicationDirectory + ".pid";
             var file = File.CreateText(pidFilePath);
