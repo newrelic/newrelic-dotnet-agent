@@ -9,6 +9,7 @@ version: "3"
 # PORT            external port for the smoketest API
 # CONTAINER_NAME  The name for the container
 # PLATFORM        The platform that the service runs on -- linux/amd64 or linux/arm64/v8
+# DOTNET_VERSION  The dotnet version number to use (7.0, 8.0, etc)
 #
 # and the usual suspects:
 # NEW_RELIC_LICENSE_KEY
@@ -33,6 +34,7 @@ services:
                 NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
                 NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
                 NEW_RELIC_HOST: ${NEW_RELIC_HOST}
+                DOTNET_VERSION: ${DOTNET_VERSION}
         ports:
           - "${PORT}:80"
         volumes:

@@ -15,6 +15,8 @@ namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
 
 public class ContainerApplication : RemoteApplication
 {
+
+    private readonly string _dotnetVersion;
     private readonly string _distroTag;
     private readonly string _targetArch;
     private readonly string _agentArch;
@@ -31,11 +33,12 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public ContainerApplication(string applicationDirectoryName, string distroTag, Architecture containerArchitecture) : base(applicationType: ApplicationType.Container, isCoreApp: true)
+    public ContainerApplication(string applicationDirectoryName, string distroTag, Architecture containerArchitecture, string dotnetVersion) : base(applicationType: ApplicationType.Container, isCoreApp: true)
     {
         ApplicationDirectoryName = applicationDirectoryName;
         _dockerComposeServiceName = applicationDirectoryName;
         _distroTag = distroTag;
+        _dotnetVersion = dotnetVersion;
 
         switch (containerArchitecture)
         {
@@ -52,9 +55,9 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public override string AppName => $"ContainerApplication: {_distroTag}_{_targetArch}";
+    public override string AppName => $"ContainerApplication: {_dotnetVersion}-{_distroTag}_{_targetArch}";
 
-    private string ContainerName => $"smoketestapp_{_distroTag}_{_targetArch}".ToLower(); // must be lowercase
+    private string ContainerName => $"smoketestapp_{_dotnetVersion}-{_distroTag}_{_targetArch}".ToLower(); // must be lowercase
 
     public override void CopyToRemote()
     {
@@ -107,6 +110,7 @@ public class ContainerApplication : RemoteApplication
         var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("Default");
 
         startInfo.EnvironmentVariables.Add("NEW_RELIC_APP_NAME", AppName);
+        startInfo.EnvironmentVariables.Add("DOTNET_VERSION", _dotnetVersion);
         startInfo.EnvironmentVariables.Add("DISTRO_TAG", _distroTag);
         startInfo.EnvironmentVariables.Add("TARGET_ARCH", _targetArch);
         startInfo.EnvironmentVariables.Add("PLATFORM", _containerPlatform);

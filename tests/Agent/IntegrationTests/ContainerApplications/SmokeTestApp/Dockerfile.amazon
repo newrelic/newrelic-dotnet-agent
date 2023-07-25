@@ -1,10 +1,11 @@
+ARG DOTNET_VERSION
 ARG TARGET_ARCH
 FROM --platform=${TARGET_ARCH} amazonlinux:latest AS base
 WORKDIR /app
 EXPOSE 80
 
 # build image is always amd64 (to match the runner architecture), even though the target architecture may be arm64
-FROM --platform=amd64 mcr.microsoft.com/dotnet/sdk AS build 
+FROM --platform=amd64 mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build 
 ARG TARGET_ARCH
 WORKDIR /src
 COPY ["SmokeTestApp/SmokeTestApp.csproj", "SmokeTestApp/"]
@@ -18,10 +19,10 @@ FROM build AS publish
 RUN dotnet publish "SmokeTestApp.csproj" -c Release -o /app/publish /p:UseAppHost=false --os linux -a ${TARGET_ARCH}
 
 FROM base AS final
-
-# install asp.netcore - use the Centos 7 package feed because amazon is rhel based
+ARG DOTNET_VERSION
+# install asp.netcore - use the Centos 7 package feed because amazonlinux is rhel based
 RUN rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm
-RUN yum install aspnetcore-runtime-7.0 -y
+RUN yum install aspnetcore-runtime-${DOTNET_VERSION} -y
 
 # Enable the agent
 ARG NEW_RELIC_HOST
