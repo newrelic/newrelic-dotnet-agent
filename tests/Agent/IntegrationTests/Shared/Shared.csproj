@@ -41,7 +41,7 @@
     <Reference Include="System.ServiceModel.Web" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462' Or '$(TargetFramework)' == 'netstandard2.0'">
     <ProjectReference Include="..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
   </ItemGroup>
 
