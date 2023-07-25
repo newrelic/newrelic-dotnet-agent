@@ -106,7 +106,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             ModifyNewRelicConfig();
         }
 
-        protected virtual void PublishWithDotnetExe(string framework)
+        private void PublishWithDotnetExe(string framework)
         {
             var projectFile = Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName,
                 ApplicationDirectoryName + ".csproj");
