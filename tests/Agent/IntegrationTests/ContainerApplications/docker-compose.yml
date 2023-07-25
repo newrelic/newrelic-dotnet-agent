@@ -63,3 +63,13 @@ services:
             service: smoketestapp
         build:
             dockerfile: SmokeTestApp/Dockerfile.centos   
+    AmazonX64SmokeTestApp:
+        extends:
+            service: smoketestapp
+        build:
+            dockerfile: SmokeTestApp/Dockerfile.amazon
+    AmazonArm64SmokeTestApp:
+        extends:
+            service: smoketestapp
+        build:
+            dockerfile: SmokeTestApp/Dockerfile.centos   

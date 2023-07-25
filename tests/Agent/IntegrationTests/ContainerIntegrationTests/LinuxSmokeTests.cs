@@ -94,3 +94,17 @@ public class CentosArm64SmokeTest : LinuxSmokeTest<CentosArm64SmokeTestFixture>
     {
     }
 }
+
+public class AmazonX64SmokeTest : LinuxSmokeTest<AmazonX64SmokeTestFixture>
+{
+    public AmazonX64SmokeTest(AmazonX64SmokeTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+public class AmazonArm64SmokeTest : LinuxSmokeTest<AmazonArm64SmokeTestFixture>
+{
+    public AmazonArm64SmokeTest(AmazonArm64SmokeTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}

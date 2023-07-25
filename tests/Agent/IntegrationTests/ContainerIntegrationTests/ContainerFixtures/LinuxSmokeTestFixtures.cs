@@ -79,3 +79,20 @@ public class CentosArm64SmokeTestFixture : LinuxSmokeTestFixtureBase
 
     public CentosArm64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
 }
+
+public class AmazonX64SmokeTestFixture : LinuxSmokeTestFixtureBase
+{
+    private static readonly string ApplicationDirectoryName = "AmazonX64SmokeTestApp";
+    private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private static readonly string DistroTag = "Amazon";
+
+    public AmazonX64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
+}
+public class AmazonArm64SmokeTestFixture : LinuxSmokeTestFixtureBase
+{
+    private static readonly string ApplicationDirectoryName = "AmazonArm64SmokeTestApp";
+    private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
+    private static readonly string DistroTag = "Amazon";
+
+    public AmazonArm64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
+}
