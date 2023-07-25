@@ -3,63 +3,79 @@
 
 using Xunit;
 
-namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures
+namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
+
+public abstract class LinuxSmokeTestFixtureBase : ContainerFixture
 {
-    public abstract class LinuxSmokeTestFixtureBase : ContainerFixture
+    protected LinuxSmokeTestFixtureBase(string applicationDirectoryName, string distroTag, ContainerApplication.Architecture containerArchitecture) :
+        base(new ContainerApplication(applicationDirectoryName, distroTag, containerArchitecture))
     {
-        protected LinuxSmokeTestFixtureBase(string applicationDirectoryName, string distroTag, ContainerApplication.Architecture containerArchitecture) :
-            base(new ContainerApplication(applicationDirectoryName, distroTag, containerArchitecture))
-        {
-        }
-
-        public virtual void ExerciseApplication()
-        {
-            var address = $"http://localhost:{Port}/weatherforecast";
-            GetAndAssertStatusCode(address, System.Net.HttpStatusCode.OK);
-        }
     }
 
-    public class DebianX64SmokeTestFixture : LinuxSmokeTestFixtureBase
+    public virtual void ExerciseApplication()
     {
-        private static readonly string ApplicationDirectoryName = "DebianX64SmokeTestApp";
-        private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-        private static readonly string DistroTag = "7.0-jammy";
-
-        public DebianX64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
+        var address = $"http://localhost:{Port}/weatherforecast";
+        GetAndAssertStatusCode(address, System.Net.HttpStatusCode.OK);
     }
+}
 
-    public class UbuntuX64SmokeTestFixture : LinuxSmokeTestFixtureBase
-    {
-        private static readonly string ApplicationDirectoryName = "UbuntuX64SmokeTestApp";
-        private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-        private static readonly string DistroTag = "7.0-bullseye-slim";
+public class DebianX64SmokeTestFixture : LinuxSmokeTestFixtureBase
+{
+    private static readonly string ApplicationDirectoryName = "DebianX64SmokeTestApp";
+    private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private static readonly string DistroTag = "7.0-jammy";
 
-        public UbuntuX64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
-    }
-    public class AlpineX64SmokeTestFixture : LinuxSmokeTestFixtureBase
-    {
-        private static readonly string ApplicationDirectoryName = "AlpineX64SmokeTestApp";
-        private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
-        private static readonly string DistroTag = "7.0-alpine";
+    public DebianX64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
+}
 
-        public AlpineX64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
-    }
+public class UbuntuX64SmokeTestFixture : LinuxSmokeTestFixtureBase
+{
+    private static readonly string ApplicationDirectoryName = "UbuntuX64SmokeTestApp";
+    private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private static readonly string DistroTag = "7.0-bullseye-slim";
 
-    public class DebianArm64SmokeTestFixture : LinuxSmokeTestFixtureBase
-    {
-        private static readonly string ApplicationDirectoryName = "DebianArm64SmokeTestApp";
-        private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
-        private static readonly string DistroTag = "7.0-jammy";
+    public UbuntuX64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
+}
+public class AlpineX64SmokeTestFixture : LinuxSmokeTestFixtureBase
+{
+    private static readonly string ApplicationDirectoryName = "AlpineX64SmokeTestApp";
+    private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private static readonly string DistroTag = "7.0-alpine";
 
-        public DebianArm64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
-    }
+    public AlpineX64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
+}
 
-    public class UbuntuArm64SmokeTestFixture : LinuxSmokeTestFixtureBase
-    {
-        private static readonly string ApplicationDirectoryName = "UbuntuArm64SmokeTestApp";
-        private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
-        private static readonly string DistroTag = "7.0-bullseye-slim";
+public class DebianArm64SmokeTestFixture : LinuxSmokeTestFixtureBase
+{
+    private static readonly string ApplicationDirectoryName = "DebianArm64SmokeTestApp";
+    private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
+    private static readonly string DistroTag = "7.0-jammy";
 
-        public UbuntuArm64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
-    }
+    public DebianArm64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
+}
+
+public class UbuntuArm64SmokeTestFixture : LinuxSmokeTestFixtureBase
+{
+    private static readonly string ApplicationDirectoryName = "UbuntuArm64SmokeTestApp";
+    private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
+    private static readonly string DistroTag = "7.0-bullseye-slim";
+
+    public UbuntuArm64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
+}
+
+public class CentosX64SmokeTestFixture : LinuxSmokeTestFixtureBase
+{
+    private static readonly string ApplicationDirectoryName = "CentosX64SmokeTestApp";
+    private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.X64;
+    private static readonly string DistroTag = "Centos";
+
+    public CentosX64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
+}
+public class CentosArm64SmokeTestFixture : LinuxSmokeTestFixtureBase
+{
+    private static readonly string ApplicationDirectoryName = "CentosArm64SmokeTestApp";
+    private static readonly ContainerApplication.Architecture Architecture = ContainerApplication.Architecture.Arm64;
+    private static readonly string DistroTag = "Centos";
+
+    public CentosArm64SmokeTestFixture() : base(ApplicationDirectoryName, DistroTag, Architecture) { }
 }

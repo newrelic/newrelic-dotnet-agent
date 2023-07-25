@@ -80,3 +80,17 @@ public class UbuntuArm64SmokeTest : LinuxSmokeTest<UbuntuArm64SmokeTestFixture>
     {
     }
 }
+
+public class CentosX64SmokeTest : LinuxSmokeTest<CentosX64SmokeTestFixture>
+{
+    public CentosX64SmokeTest(CentosX64SmokeTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}
+
+public class CentosArm64SmokeTest : LinuxSmokeTest<CentosArm64SmokeTestFixture>
+{
+    public CentosArm64SmokeTest(CentosArm64SmokeTestFixture fixture, ITestOutputHelper output) : base(fixture, output)
+    {
+    }
+}

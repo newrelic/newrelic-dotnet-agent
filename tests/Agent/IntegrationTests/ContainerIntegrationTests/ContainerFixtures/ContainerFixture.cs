@@ -3,14 +3,13 @@
 
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
-namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures
-{
-    public abstract class ContainerFixture : RemoteApplicationFixture
-    {
-        protected ContainerFixture(ContainerApplication remoteApplication) : base(remoteApplication)
-        {
-        }
+namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
 
-        protected override int MaxTries => 1;
+public abstract class ContainerFixture : RemoteApplicationFixture
+{
+    protected ContainerFixture(ContainerApplication remoteApplication) : base(remoteApplication)
+    {
     }
+
+    protected override int MaxTries => 1;
 }
