@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System;
 using System.Net;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,12 +14,11 @@ namespace ContainerizedAspNetCoreApp;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-
         builder.Services.AddControllers();
 
         // listen to any ip on port 80 for http
@@ -28,16 +28,12 @@ public class Program
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
-
         app.UseAuthorization();
-
         app.MapControllers();
-
-        var task = app.RunAsync();
 
         CreatePidFile();
 
-        task.GetAwaiter().GetResult();
+        await app.RunAsync();
     }
 
     public static void CreatePidFile()
