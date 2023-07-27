@@ -3,7 +3,7 @@
   <metadata minClientVersion="3.3.0">
     <id>NewRelic.Agent.Internal.Profiler</id>
     <version>0.0.0</version>
-    <title>New Relic .NET Agent Profiler</title>
+    <title>New Relic .NET Agent Profiler (Internal Use Only)</title>
     <authors>New Relic</authors>
     <owners></owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -11,7 +11,7 @@
     <icon>images\icon.png</icon>
     <readme>docs\readme.md</readme>
     <projectUrl>https://github.com/newrelic/newrelic-dotnet-agent</projectUrl>
-    <description>This package is used to simplify dependencies in the New Relic .NET Agent repository. It is not necessary for any user to download or install.</description>
+    <description>This package is for New Relic internal use only and is used to simplify dependencies in the New Relic .NET Agent repository. It is not intended for any user to download or install.</description>
     <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/</releaseNotes>
   </metadata>
   <files>

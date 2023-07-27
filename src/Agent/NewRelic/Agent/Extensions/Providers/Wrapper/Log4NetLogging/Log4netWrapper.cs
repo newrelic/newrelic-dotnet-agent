@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
@@ -21,7 +22,13 @@ namespace NewRelic.Providers.Wrapper.Logging
         private static Func<object, IDictionary> _getGetProperties; // calls GetProperties method
         private static Func<object, IDictionary> _getProperties; // getter for Properties property
 
+        private static Func<object, object> _getLegacyProperties; // getter for legacy Properties property
+        private static Func<object, Hashtable> _getLegacyHashtable; // getter for Properties hashtable property
+
+        private static bool _legacyVersion = false;
+
         public bool IsTransactionRequired => false;
+
 
         private const string WrapperName = "log4net";
 
@@ -57,7 +64,27 @@ namespace NewRelic.Providers.Wrapper.Logging
             // Older versions of log4net only allow access to a timestamp in local time
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
 
-            var getLogExceptionFunc = _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject");
+            Func<object, Exception> getLogExceptionFunc;
+
+            try
+            {
+                getLogExceptionFunc = _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject");
+            }
+            catch
+            {
+                try
+                {
+                    // Legacy property, mainly used by Sitecore
+                    getLogExceptionFunc = _getLogException ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<Exception>(logEventType, "m_thrownException");
+                    _legacyVersion = true;
+                }
+                catch
+                {
+                    _getLogException = (x) => null;
+                    getLogExceptionFunc = _getLogException;
+                }
+
+            }
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
@@ -90,21 +117,59 @@ namespace NewRelic.Providers.Wrapper.Logging
         private Dictionary<string, object> GetContextData(object logEvent)
         {
             var logEventType = logEvent.GetType();
-            var getProperties = _getGetProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
+            Func<object, IDictionary> getProperties;
+
+            try
+            {
+                getProperties = _getGetProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
+            }
+            catch
+            {
+                try
+                {
+                    _legacyVersion = true;
+                    // Legacy property, mainly used by Sitecore
+                    getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEventType, "MappedContext");
+                }
+                catch
+                {
+                    _getProperties = (x) => null;
+                    getProperties = _getProperties;
+                }
+            }
+
+            var contextData = new Dictionary<string, object>();
+            // In older versions of log4net, there may be additional properties
+            if (_legacyVersion)
+            {
+                // Properties is a "PropertiesCollection", an internal type
+                var getLegacyProperties = _getLegacyProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(logEventType, "Properties");
+                var legacyProperties = getLegacyProperties(logEvent);
+
+                // PropertyCollection has an internal hashtable that stores the data. The only public method for
+                // retrieving the data is the indexer [] which is more of a pain to get via reflection.
+                var propertyCollectionType = legacyProperties.GetType();
+                var getHashtable = _getLegacyHashtable ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<Hashtable>(propertyCollectionType.Assembly.ToString(), propertyCollectionType.FullName, "m_ht");
+
+                var hashtable = getHashtable(legacyProperties);
+
+                foreach (var key in hashtable.Keys)
+                {
+                    contextData.Add(key.ToString(), hashtable[key]);
+                }
+            }
+
             var propertiesDictionary = getProperties(logEvent);
 
             if (propertiesDictionary != null && propertiesDictionary.Count > 0)
             {
-                var contextData = new Dictionary<string, object>();
                 foreach (var key in propertiesDictionary.Keys)
                 {
                     contextData.Add(key.ToString(), propertiesDictionary[key]);
                 }
-
-                return contextData;
             }
 
-            return null;
+            return contextData.Any() ? contextData : null;
         }
     }
 }

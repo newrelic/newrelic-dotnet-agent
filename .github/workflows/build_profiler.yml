@@ -290,7 +290,7 @@ jobs:
     runs-on: windows-2022
 
     env:
-      myget_source: https://www.myget.org/F/newrelic/api/v2/package
+      nuget_source: https://www.nuget.org
 
     outputs:
       package_version: ${{ steps.agentVersion.outputs.version }}
@@ -336,17 +336,17 @@ jobs:
           nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version ${{ steps.agentVersion.outputs.version }} -Verbosity detailed
         shell: powershell
 
-      - name: Setup MyGet API Key
+      - name: Setup NuGet API Key
         run: |
-          nuget.exe setApiKey ${{ secrets.MYGET_APIKEY }} -Source ${{ env.myget_source }}
-        shell: powershell
+          nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
+        shell: pwsh
 
-      - name: Deploy Profiler Package to MyGet
+      - name: Deploy Profiler Package to Nuget
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}/_workingDir/NugetProfiler/NewRelic.Agent.Internal.Profiler.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}//_workingDir/NugetProfiler/$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Internal.Profiler').TrimStart('.').TrimEnd('.nupkg')
-          nuget.exe push $packagePath -Source ${{ env.myget_source }}
+          nuget.exe push $packagePath -Source ${{ env.nuget_source }}
         shell: powershell
 
   update-nuget-reference:
