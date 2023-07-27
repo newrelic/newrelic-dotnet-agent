@@ -141,6 +141,7 @@ jobs:
 
   run-linux-smoke-tests:
     needs: build-fullagent-msi
+    name: Run Linux Smoke Tests
     uses: ./.github/workflows/run_linux_smoke_tests.yml
         
   build-integration-tests:
