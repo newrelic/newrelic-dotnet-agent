@@ -1,0 +1,77 @@
+version: "3"
+
+# The following must be set either in environment variables or via a .env file in the same folder as this file:
+#
+# AGENT_PATH      host path to the Agent linux home folder - will map to /usr/local/newrelic-dotnet-agent in the container
+# LOG_PATH        host path for Agent logfile output - will map to /app/logs in the container
+# DISTRO_TAG      distro tag for build, not including the architecture suffix - possible values 7.0-bullseye-slim, 7.0-alpine, 7.0-jammy
+# TARGET_ARCH     the target architecture for the build and run -- either amd64 or arm64
+# PORT            external port for the smoketest API
+# CONTAINER_NAME  The name for the container
+# PLATFORM        The platform that the service runs on -- linux/amd64 or linux/arm64/v8
+# DOTNET_VERSION  The dotnet version number to use (7.0, 8.0, etc)
+#
+# and the usual suspects:
+# NEW_RELIC_LICENSE_KEY
+# NEW_RELIC_HOST
+# NEW_RELIC_APP_NAME
+#
+#
+# To build and run, execute `docker compose -f <path to docker-compose.yml> up` 
+# Alternatively, set COMPOSE_FILE environment variable to the path and omit the -f parameter
+
+services:
+    smoketestapp:
+        container_name: ${CONTAINER_NAME}
+        image: ${CONTAINER_NAME}
+        platform: ${PLATFORM}
+        build:
+            context: .
+            dockerfile: SmokeTestApp/Dockerfile
+            args:
+                DISTRO_TAG: ${DISTRO_TAG}
+                TARGET_ARCH: ${TARGET_ARCH}
+                NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+                NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
+                NEW_RELIC_HOST: ${NEW_RELIC_HOST}
+                DOTNET_VERSION: ${DOTNET_VERSION}
+        ports:
+          - "${PORT}:80"
+        volumes:
+          - ${AGENT_PATH}:/usr/local/newrelic-dotnet-agent # AGENT_PATH from .env, points to newrelichome_linux_x64
+          - ${LOG_PATH}:/app/logs # LOG_PATH from .env, should be a folder unique to this run of the smoketest app
+    DebianX64SmokeTestApp:
+        extends:
+            service: smoketestapp
+    UbuntuX64SmokeTestApp:
+        extends:
+            service: smoketestapp
+    AlpineX64SmokeTestApp:
+        extends:
+            service: smoketestapp
+    DebianArm64SmokeTestApp:
+        extends:
+            service: smoketestapp
+    UbuntuArm64SmokeTestApp:
+        extends:
+            service: smoketestapp
+    CentosX64SmokeTestApp:
+        extends:
+            service: smoketestapp
+        build:
+            dockerfile: SmokeTestApp/Dockerfile.centos   
+    CentosArm64SmokeTestApp:
+        extends:
+            service: smoketestapp
+        build:
+            dockerfile: SmokeTestApp/Dockerfile.centos   
+    AmazonX64SmokeTestApp:
+        extends:
+            service: smoketestapp
+        build:
+            dockerfile: SmokeTestApp/Dockerfile.amazon
+    AmazonArm64SmokeTestApp:
+        extends:
+            service: smoketestapp
+        build:
+            dockerfile: SmokeTestApp/Dockerfile.centos   

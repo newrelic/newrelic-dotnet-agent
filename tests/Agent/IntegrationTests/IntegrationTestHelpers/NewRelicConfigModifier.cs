@@ -169,6 +169,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 level);
         }
 
+        public void LogToConsole()
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "console",
+                "true");
+        }
+
         public void SetLogDirectory(string directoryName)
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "directory",

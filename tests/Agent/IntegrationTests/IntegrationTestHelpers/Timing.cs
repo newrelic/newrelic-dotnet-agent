@@ -18,5 +18,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public static readonly TimeSpan ApmRetyTimeout = TimeSpan.FromMinutes(1);
         public static readonly TimeSpan TimeBetweenFileExistChecks = TimeSpan.FromSeconds(1);
         public static readonly TimeSpan RequestTimeout = TimeSpan.FromMinutes(1);
+        public static readonly TimeSpan TimeToDockerComposeUp = TimeSpan.FromMinutes(5);
     }
 }

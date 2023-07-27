@@ -157,3 +157,4 @@ tests/TestResults/*
 /src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
 /src/Agent/_profilerBuild/x64-Release/NewRelic.Profiler.dll
 /src/Agent/_profilerBuild/x86-Release/NewRelic.Profiler.dll
+/tests/Agent/IntegrationTests/ContainerApplications/.env

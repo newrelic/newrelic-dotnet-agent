@@ -26,8 +26,44 @@ jobs:
     name: Run Linux Smoke Tests
     runs-on: ubuntu-latest
 
+    env:
+      test_results_path: tests\TestResults
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+      enhanced_logging: false
+  
+  
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+        with:
+          egress-policy: audit
+
+      - name: Docker Setup QEMU
+        uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7 # v2.2.0
+    
       - name: Checkout
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
+
+      - name: Download Agent Home Folders
+        uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: all_solutions.yml
+          run_id: ${{ github.event.inputs.run_id }}
+          name: homefolders
+          path: ${{ github.workspace }}/src/Agent
+          repo: ${{ github.repository }}
+  
+
+      - name: Set up secrets
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          echo $INTEGRATION_TEST_SECRETS | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+
+      - name: Build & Run Linux Smoke Tests
+        run: dotnet test ./tests/Agent/IntegrationTests/ContainerIntegrationTests/ContainerIntegrationTests.csproj --framework net7.0
