@@ -341,7 +341,7 @@ jobs:
           nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
         shell: pwsh
 
-      - name: Deploy Agent to Nuget
+      - name: Deploy Profiler Package to Nuget
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}/_workingDir/NugetProfiler/NewRelic.Agent.Internal.Profiler.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}//_workingDir/NugetProfiler/$packageName
