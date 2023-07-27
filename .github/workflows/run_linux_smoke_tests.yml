@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download Agent Home Folders (Call)
-        if: ${{ github.event_name == 'workflow_call' }}
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: homefolders
