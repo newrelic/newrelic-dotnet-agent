@@ -25,7 +25,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     {
         #region Constant/Static
 
-        private static readonly string AssemblyBinPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().Location).LocalPath);
+        private static string GetAssemblyFolderFromAssembly(Assembly assembly)
+        {
+#if NET
+            return assembly.Location;
+#else
+            return assembly.CodeBase;
+#endif
+        }
+
+        private static readonly string AssemblyBinPath = Path.GetDirectoryName(new Uri(GetAssemblyFolderFromAssembly(Assembly.GetExecutingAssembly())).LocalPath);
 
         private static readonly string RepositoryRootPath = Path.GetFullPath(Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..","..",".."));
 
