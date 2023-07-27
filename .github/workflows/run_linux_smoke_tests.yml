@@ -2,7 +2,11 @@ name: .NET Agent Linux Smoke Tests
 
 on:
   workflow_call:
-
+    inputs:
+      external_call:
+        type: boolean
+        default: true
+        required: false
   workflow_dispatch:
     inputs:
       run_id:
@@ -46,14 +50,14 @@ jobs:
           fetch-depth: 0
 
       - name: Download Agent Home Folders (Call)
-        if: ${{ github.event_name != 'workflow_dispatch' }}
+        if: ${{ inputs.external_call }}
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: homefolders
           path: src/Agent
 
       - name: Download Agent Home Folders (Dispatch)
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ !inputs.external_call }}
         uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
