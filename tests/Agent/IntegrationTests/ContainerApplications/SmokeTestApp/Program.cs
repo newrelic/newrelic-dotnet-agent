@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace ContainerizedAspNetCoreApp;
 
@@ -31,16 +32,18 @@ public class Program
         app.UseAuthorization();
         app.MapControllers();
 
+        await app.StartAsync();
+
         CreatePidFile();
 
-        await app.RunAsync();
+        await app.WaitForShutdownAsync();
     }
 
     public static void CreatePidFile()
     {
         var pidFileNameAndPath = Path.Combine(Environment.GetEnvironmentVariable("NEWRELIC_LOG_DIRECTORY"), "containerizedapp.pid");
         var pid = Process.GetCurrentProcess().Id;
-        var file = File.CreateText(pidFileNameAndPath);
+        using var file = File.CreateText(pidFileNameAndPath);
         file.WriteLine(pid);
     }
 }
