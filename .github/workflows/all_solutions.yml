@@ -139,6 +139,12 @@ jobs:
           path: ${{ github.workspace }}\src\AwsLambda\AwsLambdaOpenTracer\bin\Release\netstandard2.0-ILRepacked
           if-no-files-found: error
 
+  run-linux-smoke-tests:
+    needs: build-fullagent-msi
+    name: Run Linux Smoke Tests
+    uses: ./.github/workflows/run_linux_smoke_tests.yml
+    secrets: inherit
+        
   build-integration-tests:
     needs: build-fullagent-msi
     name: Build IntegrationTests
