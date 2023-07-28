@@ -1,6 +1,12 @@
 name: .NET Agent Linux Smoke Tests
 
 on:
+  workflow_call:
+    inputs:
+      external_call:
+        type: boolean
+        default: true
+        required: false
   workflow_dispatch:
     inputs:
       run_id:
@@ -14,7 +20,7 @@ env:
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: linux-smoke-tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -39,7 +45,7 @@ jobs:
         uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
         with:
           egress-policy: audit
-
+          
       - name: Docker Setup QEMU
         uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7 # v2.2.0
     
@@ -48,7 +54,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download Agent Home Folders
+      - name: Download Agent Home Folders (Call)
+        if: ${{ inputs.external_call }}
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: homefolders
+          path: src/Agent
+
+      - name: Download Agent Home Folders (Dispatch)
+        if: ${{ !inputs.external_call }}
         uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
