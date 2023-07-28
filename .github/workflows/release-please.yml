@@ -14,12 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
         with:
           disable-sudo: true
           egress-policy: audit
 
-      - uses: google-github-actions/release-please-action@8016a6649226f2ec88ed05441c11bb5410a22d29 # v3.7.10
+      - uses: google-github-actions/release-please-action@ca6063f4ed81b55db15b8c42d1b6f7925866342d # v3.7.11
         with:
           release-type: go
           changelog-path: src/Agent/CHANGELOG.md
