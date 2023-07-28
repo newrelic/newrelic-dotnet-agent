@@ -86,13 +86,13 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 12 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 12 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = 12 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = 12 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", callCount = 12 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 12 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 12 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", callCount = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = commandList.Count },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = commandList.Count },
             };
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
@@ -120,12 +120,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 {
                     //This value is dictated by the query that is being run as part of this test. In this case, we're running a query that returns a single row.
                     //This results in two calls to Read followed by a call to NextResult.
-                    //Therefore the call count for the Iterate metric should be 3. The unscoped Iterate metric should have a count of 12 (3 x 4)
+                    //Therefore the call count for the Iterate metric should be 3. The unscoped Iterate metric should have a count of commandList.Count (3 x 4)
 
                     expectedMetrics.Add(new Assertions.ExpectedMetric
                     {
                         metricName = @"DotNet/DatabaseResult/Iterate",
-                        callCount = 12
+                        callCount = commandList.Count
                     });
                     expectedMetrics.Add(new Assertions.ExpectedMetric
                     {
@@ -220,12 +220,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             );
         }
 
-        private static string GetTransactionName(string command)
-        {
-            var transactionName =
-                $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlConnectorExerciser/{command}";
-            return transactionName;
-        }
+        private static string GetTransactionName(string command) => $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlConnectorExerciser/{command}";
     }
 
     [NetFrameworkTest]
