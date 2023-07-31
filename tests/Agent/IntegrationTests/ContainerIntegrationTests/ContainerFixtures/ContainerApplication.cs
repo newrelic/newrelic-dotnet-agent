@@ -147,7 +147,7 @@ public class ContainerApplication : RemoteApplication
         {
             if (captureStandardOutput)
             {
-                CapturedOutput.WriteProcessOutputToLog("[RemoteService]: Start");
+                //CapturedOutput.WriteProcessOutputToLog("[RemoteService]: Start");
             }
 
             throw new Exception("App server shutdown unexpectedly.");
@@ -218,7 +218,7 @@ public class ContainerApplication : RemoteApplication
 
         if (captureStandardOutput)
         {
-            CapturedOutput.WriteProcessOutputToLog($"[{AppName}]: WaitForAppServerToStartListening");
+            //CapturedOutput.WriteProcessOutputToLog($"[{AppName}]: WaitForAppServerToStartListening");
         }
 
         Assert.Fail($"{AppName}: process never generated a .pid file!");
