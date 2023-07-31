@@ -20,6 +20,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             HWC_STARTING_DIRECTORY,
             //HWC_ENV,
             HWC_STARTING_SERVER,
+            HWC_PID_REPORT,
             HWC_DONE,
             ALL_DONE
         }
@@ -30,6 +31,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                         "HostedWebCore: Starting directory:",
                         //"HostedWebCore: Environment Variables:",
                         "HostedWebCore: Starting server...",
+                        "PID",
                         "HostedWebCore: Done.",
                         null
         };

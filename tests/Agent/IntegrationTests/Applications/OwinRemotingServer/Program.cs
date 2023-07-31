@@ -55,6 +55,7 @@ namespace OwinRemotingServer
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(MyMarshalByRefClass), "GetObject",
                 WellKnownObjectMode.SingleCall);
 
+            Console.WriteLine("PID {0} Creating EventWaitHandle {1}", Process.GetCurrentProcess().Id, "app_server_wait_for_all_request_done_" + Port.ToString());
             using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset,
                        "app_server_wait_for_all_request_done_" + Port.ToString()))
             {

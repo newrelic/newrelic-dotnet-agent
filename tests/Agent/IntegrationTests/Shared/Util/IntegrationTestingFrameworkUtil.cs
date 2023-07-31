@@ -40,7 +40,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Util
             var eventWaitHandleName = "app_server_wait_for_all_request_done_" + port;
 
             Console.WriteLine($"[{applicationName}] Setting EventWaitHandle name to: { eventWaitHandleName }");
-
+            Console.WriteLine("PID {0} Creating EventWaitHandle {1}", Process.GetCurrentProcess().Id, eventWaitHandleName);
             eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName);
 
             initializationAction(args, cancellationTokenSource, port);

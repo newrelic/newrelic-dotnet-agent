@@ -369,7 +369,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             {
                 try
                 {
-                    //The test runner opens an event created by the app server and set it to signal the app server that the test has finished. 
+                    //The test runner opens an event created by the app server and set it to signal the app server that the test has finished.
+                    Console.WriteLine("PID {0} Opening EventWaitHandle {1}", Process.GetCurrentProcess().Id, shutdownChannelName);
                     var remoteAppEvent = EventWaitHandle.OpenExisting(shutdownChannelName);
                     remoteAppEvent.Set();
                 }

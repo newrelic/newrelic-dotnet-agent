@@ -38,6 +38,7 @@ namespace ThreadProfileStressTest
 
             Console.WriteLine($"Setting EventWaitHandle name to: {eventWaitHandleName}");
 
+            Console.WriteLine("PID {0} Creating EventWaitHandle {1}", Process.GetCurrentProcess().Id, eventWaitHandleName);
             using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName))
             {
 
@@ -63,6 +64,7 @@ namespace ThreadProfileStressTest
             Console.WriteLine("Waiting for signal to start the thread stress test.");
 
             var eventWaitHandleName = $"thread_profile_stress_begin_{port}";
+            Console.WriteLine("PID {0} Creating EventWaitHandle {1}", Process.GetCurrentProcess().Id, eventWaitHandleName);
             using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName))
             {
                 eventWaitHandle.WaitOne(TimeSpan.FromSeconds(90));

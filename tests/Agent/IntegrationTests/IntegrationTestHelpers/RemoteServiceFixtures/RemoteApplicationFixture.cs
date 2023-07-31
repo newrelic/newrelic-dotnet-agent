@@ -103,7 +103,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         }
 
         // Tests are only retried if they return a known error not related to the test
-        protected virtual int MaxTries => 3;
+        protected virtual int MaxTries => 1;
 
         public void DisableAsyncLocalCallStack()
         {

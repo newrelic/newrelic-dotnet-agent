@@ -34,6 +34,7 @@ namespace ConsoleAsyncApplication
 
             Console.WriteLine($"[{_applicationName}] Setting EventWaitHandle name to: {eventWaitHandleName}");
 
+            Console.WriteLine("PID {0} Creating EventWaitHandle {1}", Process.GetCurrentProcess().Id, eventWaitHandleName);
             using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, eventWaitHandleName))
             {
 
@@ -73,6 +74,7 @@ namespace ConsoleAsyncApplication
         public static async Task DoAsyncFireAndForgetWork()
         {
             var waitHandleName = "DoAsyncFireAndForgetWork_" + Guid.NewGuid().ToString();
+            Console.WriteLine("PID {0} Creating EventWaitHandle {1}", Process.GetCurrentProcess().Id, waitHandleName);
             using (var waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, waitHandleName))
             {
                 const int waitSignalDelaySeconds = 30;
@@ -96,6 +98,7 @@ namespace ConsoleAsyncApplication
         public static void DoSyncFireAndForgetWork()
         {
             var waitHandleName = "DoSyncFireAndForgetWork_" + Guid.NewGuid().ToString();
+            Console.WriteLine("PID {0} Creating EventWaitHandle {1}", Process.GetCurrentProcess().Id, waitHandleName);
             using (var waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, waitHandleName))
             {
 

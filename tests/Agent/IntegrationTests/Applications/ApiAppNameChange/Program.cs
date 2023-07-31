@@ -26,6 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.ApiAppNameChange
                 return;
 
             // Create handle that RemoteApplication expects
+            Console.WriteLine("PID {0} Creating EventWaitHandle {1}", Process.GetCurrentProcess().Id, "app_server_wait_for_all_request_done_" + program.Port);
             using (var eventWaitHandle =
                    new EventWaitHandle(false, EventResetMode.ManualReset,
                        "app_server_wait_for_all_request_done_" + program.Port))

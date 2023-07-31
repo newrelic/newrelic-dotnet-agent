@@ -95,6 +95,7 @@ namespace ApplicationLifecycle
             }
             else
             {
+                Console.WriteLine("PID {0} Creating EventWaitHandle {1}", Process.GetCurrentProcess().Id, ShutdownChannelPrefix + port);
                 using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownChannelPrefix + port))
                 {
                     eventWaitHandle.WaitOne(TimeSpan.FromMinutes(MinutesToWait));

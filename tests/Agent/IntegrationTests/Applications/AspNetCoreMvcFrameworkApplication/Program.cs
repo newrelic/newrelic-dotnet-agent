@@ -40,6 +40,7 @@ namespace AspNetCoreMvcFrameworkApplication
             var ct = new CancellationTokenSource();
             var task = BuildWebHost(args).RunAsync(ct.Token);
 
+            Console.WriteLine("PID {0} Creating EventWaitHandle {1}", Process.GetCurrentProcess().Id, "app_server_wait_for_all_request_done_" + _port);
             using (var eventWaitHandle =
                    new EventWaitHandle(false, EventResetMode.AutoReset,
                        "app_server_wait_for_all_request_done_" + _port))
