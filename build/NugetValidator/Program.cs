@@ -21,7 +21,7 @@ namespace NugetValidator
 
         static async Task<int> Main(string[] args)
         {
-            IPackageSearchMetadata? result = null;
+            IPackageSearchMetadata result = null;
 
             await Parser.Default.ParseArguments<Options>(args)
                 .WithParsedAsync(async options =>
@@ -30,6 +30,7 @@ namespace NugetValidator
 
                     SourceCacheContext cache = new SourceCacheContext();
                     SourceRepository repository = Repository.Factory.GetCoreV3(RepoUrl);
+
                     PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
 
                     List<IPackageSearchMetadata> packages = (await resource.GetMetadataAsync(
@@ -42,7 +43,7 @@ namespace NugetValidator
 
                     SemanticVersion semVer = SemanticVersion.Parse(options.Version);
                     
-                    result = packages.FirstOrDefault(p => p.Identity.Id.ToLower() == options.Name.ToLower() && p.Identity.Version == semVer);
+                    result = packages.FirstOrDefault(p => string.Equals(p.Identity.Id, options.Name, StringComparison.CurrentCultureIgnoreCase) && p.Identity.Version == semVer);
 
                     Console.WriteLine($"{(result != null ? "Found" : "Did NOT find")} NuGet package {options.Name} with version {options.Version}");
                 });
