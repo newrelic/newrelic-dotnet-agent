@@ -14,12 +14,22 @@ on:
         description: 'Force a build, even if no files are changed'
         required: true
         type: boolean
+      deploy:
+        description: 'Deploy'
+        required: true
+        default: true
+        type: boolean
   
   # this workflow can be invoked manually
   workflow_dispatch:
     inputs:
       force-build:
         description: 'Force a build, even if no files are changed'
+        required: true
+        default: true
+        type: boolean
+      deploy:
+        description: 'Deploy'
         required: true
         default: true
         type: boolean
@@ -47,13 +57,13 @@ jobs:
       profiler_src: ${{ steps.filter.outputs.profiler_src }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -77,10 +87,11 @@ jobs:
       profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
       profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
       output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
+      test_results_path: src\Agent\NewRelic\Profiler\TestResults
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -109,6 +120,29 @@ jobs:
           Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
           MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
+        
+      - name: Setup VSTest and add to PATH
+        uses: darenm/Setup-VSTest@d9a5dffa3f11d9c27ec42eb69515d3aaeaad9ef8 # 1.2
+        id: setup_vstest
+
+      - name: Setup OpenCppCoverage and add to PATH
+        id: setup_opencppcoverage
+        run: |
+          choco install OpenCppCoverage -y
+          echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
+
+      - name: Generate Report
+        id: generate_test_report
+        shell: cmd
+        run: |
+            cd ${{ env.profiler_path }}
+            OpenCppCoverage.exe --sources Profiler --excluded_sources rapidxml --excluded_sources Profiler\SystemCalls.h --excluded_sources test --modules NewRelic\Profiler --export_type cobertura:TestResults\profiler.xml -- "vstest.console.exe" "CommonTest\bin\x86\Release\CommonTest.dll" "ConfigurationTest\bin\x86\Release\ConfigurationTest.dll" "LoggingTest\bin\x86\Release\LoggingTest.dll" "MethodRewriterTest\bin\x86\Release\MethodRewriterTest.dll" "SignatureParserTest\bin\x86\Release\SignatureParserTest.dll" "Sicily\SicilyTest\bin\x86\Release\SicilyTest.dll"
+        
+      - name: Upload coverage reports to Codecov.io
+        uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
+        with:
+            flags: Profiler
+            files: ${{ env.test_results_path }}\profiler.xml
 
       - name: Archive Artifacts
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
@@ -136,7 +170,7 @@ jobs:
       #     egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -149,7 +183,7 @@ jobs:
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
 
-      - name: Build Linux Profler
+      - name: Build Linux Profiler
         run: |
           cd ${{ env.profiler_path }}
           docker-compose build build
@@ -183,12 +217,12 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
         with:
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -251,19 +285,19 @@ jobs:
         build-linux-x64-profiler,
         build-linux-arm64-profiler,
       ]
-    if: ${{ inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true' }}
+    if: ${{ (inputs.force-build || needs.check-for-changes.outputs.profiler_src == 'true') && inputs.deploy }}
     name: Package and Deploy Profiler NuGet
     runs-on: windows-2022
 
     env:
-      myget_source: https://www.myget.org/F/newrelic/api/v2/package
+      nuget_source: https://www.nuget.org
 
     outputs:
       package_version: ${{ steps.agentVersion.outputs.version }}
   
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -302,30 +336,31 @@ jobs:
           nuget pack ${{ github.workspace }}/build/Packaging/NugetProfiler/NewRelic.Profiler.nuspec -BasePath ${{ github.workspace }}/_workingDir -OutputDirectory ${{ github.workspace }}/_workingDir/NugetProfiler -Version ${{ steps.agentVersion.outputs.version }} -Verbosity detailed
         shell: powershell
 
-      - name: Setup MyGet API Key
+      - name: Setup NuGet API Key
         run: |
-          nuget.exe setApiKey ${{ secrets.MYGET_APIKEY }} -Source ${{ env.myget_source }}
-        shell: powershell
+          nuget.exe setApiKey ${{ secrets.NUGET_APIKEY }} -Source ${{ env.nuget_source }}
+        shell: pwsh
 
-      - name: Deploy Profiler Package to MyGet
+      - name: Deploy Profiler Package to Nuget
         run: |
           $packageName = Get-ChildItem ${{ github.workspace }}/_workingDir/NugetProfiler/NewRelic.Agent.Internal.Profiler.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}//_workingDir/NugetProfiler/$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Internal.Profiler').TrimStart('.').TrimEnd('.nupkg')
-          nuget.exe push $packagePath -Source ${{ env.myget_source }}
+          nuget.exe push $packagePath -Source ${{ env.nuget_source }}
         shell: powershell
 
   update-nuget-reference:
     name: Update Profiler Nuget Reference
     runs-on: ubuntu-22.04
     needs: package-and-deploy
+    if: ${{ inputs.deploy }}
     permissions:
       contents: write
       pull-requests: write
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
         with:
           egress-policy: audit
 
@@ -334,7 +369,7 @@ jobs:
           sudo apt-get install -y xmlstarlet
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -348,7 +383,7 @@ jobs:
           rm -f ${{ github.workspace }}/src/Agent/NewRelic/Home/_temp
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@284f54f989303d2699d373481a0cfa13ad5a6666 # v5.0.1
+        uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # v5.0.2
         with:
             commit-message: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}."
             title: "chore: Update Profiler NuGet Package Reference to v${{ needs.package-and-deploy.outputs.package_version }}"

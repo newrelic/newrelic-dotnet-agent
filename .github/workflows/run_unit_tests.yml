@@ -30,7 +30,7 @@ jobs:
       test_results_path: tests\TestResults
 
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
         with:
           fetch-depth: 0
 
@@ -49,6 +49,7 @@ jobs:
       - name: Upload coverage reports to Codecov.io
         uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
         with:
+            flags: Agent
             directory: ${{ env.test_results_path }}
 
       - name: Upload coverage report artifact

@@ -158,7 +158,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             Assert.AreEqual(0, (actualModels[0].Samples["OTHER"] as ProfileNodes).Count);
 
             // Teardown
-            Marshal.Release(fidGizmoIntPtr);
+            Marshal.FreeHGlobal(fidGizmoIntPtr);
         }
 
         [Test]

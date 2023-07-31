@@ -11,6 +11,7 @@ namespace ArtifactBuilder.Artifacts
         private readonly AgentComponents _coreAgentComponents;
         private readonly AgentComponents _coreAgentArm64Components;
         private readonly AgentComponents _coreAgentX86Components;
+        private string _nuGetPackageName;
 
         public NugetAgent(string configuration)
             : base(nameof(NugetAgent))
@@ -76,7 +77,7 @@ namespace ArtifactBuilder.Artifacts
 
             package.SetVersion(_frameworkAgentComponents.Version);
 
-            package.Pack();
+            _nuGetPackageName = package.Pack();
         }
 
         private static void TransformNewRelicConfig(string newRelicConfigPath)
@@ -120,8 +121,11 @@ namespace ArtifactBuilder.Artifacts
 
         private string Unpack()
         {
+            if (string.IsNullOrEmpty(_nuGetPackageName))
+                throw new PackagingException("NuGet package name not found. Did you call InternalBuild()?");
+
             var unpackDir = Path.Join(OutputDirectory, "unpacked");
-            var nugetFile = Path.Join(OutputDirectory, $"NewRelic.Agent.{_frameworkAgentComponents.Version}.nupkg");
+            var nugetFile = Path.Join(OutputDirectory, _nuGetPackageName);
             NuGetHelpers.Unpack(nugetFile, unpackDir);
             return unpackDir;
         }

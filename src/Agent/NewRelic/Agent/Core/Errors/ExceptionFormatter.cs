@@ -13,7 +13,10 @@ namespace NewRelic.Agent.Core.Errors
             var message = stripErrorMessage ? ErrorData.StripExceptionMessagesMessage : exception.Message;
             var formattedInnerException = FormatInnerStackTrace(exception.InnerException, stripErrorMessage);
             var formattedStackTrace = exception.StackTrace != null ? System.Environment.NewLine + exception.StackTrace : null;
-
+#if NETSTANDARD2_0
+            if (!string.IsNullOrEmpty(formattedInnerException))
+                formattedInnerException = System.Environment.NewLine + formattedInnerException;
+#endif
             var result = $"{type}: {message}{formattedInnerException}{formattedStackTrace}";
 
             return result;

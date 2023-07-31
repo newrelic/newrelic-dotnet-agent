@@ -1,0 +1,38 @@
+# This builds an Ubuntu image, clones the coreclr github repo and builds it.
+# It then sets up the environment for compiling the New Relic .NET profiler.
+
+# ubuntu:18.04 - multi-platform image
+FROM ubuntu@sha256:152dc042452c496007f07ca9127571cb9c29697f42acbfad72324b2bb2e43c98 
+
+RUN apt-get update -q -y
+RUN apt-get install -q -y \
+  wget \
+  curl \
+  git \
+  dos2unix \
+  software-properties-common \
+  make \
+  binutils \
+  libc++-dev \
+  clang-3.9 \
+  lldb-3.9 \
+  build-essential
+  
+RUN echo "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | tee /etc/apt/sources.list.d/llvm.list
+RUN wget --no-cache --no-cookies -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+
+# The CoreCLR build notes say their repos should be pulled into a `git` directory.
+# Not sure how necessary that is.
+RUN mkdir /root/git
+WORKDIR /root/git
+
+RUN git clone --branch release/3.1 https://github.com/dotnet/coreclr.git
+
+RUN curl -sSL https://virtuoso-testing.s3.us-west-2.amazonaws.com/cmake-3.9.0-rc3-aarch64.tar.gz | tar -xzC ~
+RUN chmod 777 ~/cmake-3.9.0-rc3-aarch64/bin/cmake
+
+RUN ln -s ~/cmake-3.9.0-rc3-aarch64/bin/cmake /usr/bin/cmake || true
+RUN rm /usr/bin/cc || true
+RUN ln -s /usr/bin/clang-3.9 /usr/bin/cc
+RUN rm /usr/bin/c++ || true
+RUN ln -s /usr/bin/clang++-3.9 /usr/bin/c++

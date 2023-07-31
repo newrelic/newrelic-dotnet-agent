@@ -245,7 +245,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                     do
                     {
-                        TestLogger?.WriteLine("Test Home" + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
+                        TestLogger?.WriteLine("Test Home: " + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
 
                         // reset these for each loop iteration
                         applicationHadNonZeroExitCode = false;

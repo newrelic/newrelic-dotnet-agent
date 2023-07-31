@@ -61,7 +61,9 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 
             var externalSegmentData = transactionExperimental.CreateExternalSegmentData(uri, method);
             var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
-            segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
+            segment.GetExperimentalApi()
+                .SetSegmentData(externalSegmentData)
+                .MakeLeaf();
 
             if (agent.Configuration.ForceSynchronousTimingCalculationHttpClient)
             {

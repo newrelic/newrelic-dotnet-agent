@@ -1,6 +1,6 @@
 ﻿using NewRelic.Api.Agent;
+using Octokit;
 using Serilog;
-using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -23,6 +23,7 @@ namespace nugetSlackNotifications
         private static readonly int _daysToSearch = int.TryParse(Environment.GetEnvironmentVariable("DOTTY_DAYS_TO_SEARCH"), out var days) ? days : 1; // How many days of package release history to scan for changes
         private static readonly bool _testMode = bool.TryParse(Environment.GetEnvironmentVariable("DOTTY_TEST_MODE"), out var testMode) ? testMode : false;
         private static readonly string? _webhook = Environment.GetEnvironmentVariable("DOTTY_WEBHOOK");
+        private static readonly string? _githubToken = Environment.GetEnvironmentVariable("DOTTY_TOKEN");
 
 
         static async Task Main(string[] args)
@@ -43,6 +44,7 @@ namespace nugetSlackNotifications
             }
 
             await AlertOnNewVersions();
+            await CreateGithubIssuesForNewVersions();
 
         }
 
@@ -114,6 +116,30 @@ namespace nugetSlackNotifications
             else
             {
                 Log.Information($"Channel will not be alerted: # of new versions={_newVersions.Count}, webhook available={_webhook != null}, test mode={_testMode}");
+            }
+        }
+
+        [Transaction]
+        static async Task CreateGithubIssuesForNewVersions()
+        {
+
+            if (_newVersions.Count > 0 && _githubToken != null && !_testMode) // only message channel if there's package updates to report AND we have a GH token from the environment AND we're not in test mode
+            {
+                var ghClient = new GitHubClient(new ProductHeaderValue("Dotty-Robot"));
+                var tokenAuth = new Credentials(_githubToken);
+                ghClient.Credentials = tokenAuth;
+                foreach (var versionData in _newVersions)
+                {
+                    var newIssue = new NewIssue($"Dotty: update tests for {versionData.PackageName} from {versionData.OldVersion} to {versionData.NewVersion}");
+                    newIssue.Body = versionData.Url;
+                    newIssue.Labels.Add("testing");
+                    newIssue.Labels.Add("Core Technologies");
+                    var issue = await ghClient.Issue.Create("newrelic", "newrelic-dotnet-agent", newIssue);
+                }
+            }
+            else
+            {
+                Log.Information($"Issues will not be created: # of new versions={_newVersions.Count}, token available={_webhook != null}, test mode={_testMode}");
             }
         }
 

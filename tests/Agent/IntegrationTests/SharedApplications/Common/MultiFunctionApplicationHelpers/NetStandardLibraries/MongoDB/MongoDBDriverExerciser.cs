@@ -1,6 +1,15 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+// Several methods exercised here do not exist in MongoDB.Driver version 2.3 which is the oldest we support on .NET Framework. It is bound to the net462 TFM in MultiFunctionApplicationHelpers.csproj
+#if NET462
+#define MONGODRIVER2_3
+#endif
+
+// Some methods exercised here do not exist in MongoDB.Driver version 2.8.1 which is the oldest we support on .NET Core. It is bound to the net6.0 TFM in MultiFunctionApplicationHelpers.csproj
+#if NET6_0
+#define MONGODRIVER2_8_1
+#endif
 
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +17,11 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using MongoDB.Driver.Linq;
 using System.Threading.Tasks;
-using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System.Runtime.CompilerServices;
 using NewRelic.Api.Agent;
 using System;
+using System.Web.Http.Results;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 {
@@ -43,7 +52,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         }
 
 
-        #region Drop
+#region Drop
 
         public void DropDatabase(string databaseName)
         {
@@ -51,7 +60,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         }
 
 #endregion Drop
-
 
 #region Insert
 
@@ -426,6 +434,105 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<IAsyncCursor<CustomMongoDbEntity>> AggregateAsync()
+        {
+
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            await Collection.InsertOneAsync(document);
+
+            var match = new BsonDocument
+            {
+                {
+                    "$match",
+                    new BsonDocument
+                    {
+                        { "Name", "Fred Flintstone" }
+                    }
+                }
+            };
+
+            var pipeline = new[] { match };
+            var result = Collection.AggregateAsync<CustomMongoDbEntity>(pipeline);
+            return await result;
+        }
+
+#if !MONGODRIVER2_3 && !MONGODRIVER2_8_1
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void AggregateToCollection()
+        {
+
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            Collection.InsertOne(document);
+
+            var matchStage = new BsonDocument
+            {
+                {
+                    "$match",
+                    new BsonDocument
+                    {
+                        { "Name", "Fred Flintstone" }
+                    }
+                }
+            };
+
+            var outStage = new BsonDocument
+            {
+                {
+                    "$out",
+                    new BsonDocument
+                    {
+                        { "db", _dbName },
+                        { "coll", _defaultCollectionName }
+                    }
+                }
+            };
+
+            var pipeline = new[] { matchStage, outStage };
+            Collection.AggregateToCollection<CustomMongoDbEntity>(pipeline);
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task AggregateToCollectionAsync()
+        {
+
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            await Collection.InsertOneAsync(document);
+
+            var matchStage = new BsonDocument
+            {
+                {
+                    "$match",
+                    new BsonDocument
+                    {
+                        { "Name", "Fred Flintstone" }
+                    }
+                }
+            };
+
+            var outStage = new BsonDocument
+            {
+                {
+                    "$out",
+                    new BsonDocument
+                    {
+                        { "db", _dbName },
+                        { "coll", _defaultCollectionName }
+                    }
+                }
+            };
+
+            var pipeline = new[] { matchStage, outStage };
+            await Collection.AggregateToCollectionAsync<CustomMongoDbEntity>(pipeline);
+        }
+#endif
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public long Count()
         {
             var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
@@ -444,6 +551,31 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
             return await Collection.CountAsync(filter);
         }
+
+// CountDocuments{Async} did not exist in driver version 2.3 which is bound to net462 in MultiFunctionApplicationHelpers.csproj
+#if !MONGODRIVER2_3
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public long CountDocuments()
+        {
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            Collection.InsertOne(document);
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
+            return Collection.CountDocuments(filter);
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<long> CountDocumentsAsync()
+        {
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            await Collection.InsertOneAsync(document);
+            var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
+            return await Collection.CountDocumentsAsync(filter);
+        }
+#endif
 
         [LibraryMethod]
         [Transaction]
@@ -468,6 +600,29 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 
             return await Collection.DistinctAsync<string>("Name", filter);
         }
+
+// EstimatedDocumentCount{Async} did not exist in driver version 2.3 which is bound to net462 in MultiFunctionApplicationHelpers.csproj
+#if !MONGODRIVER2_3
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public long EstimatedDocumentCount()
+        {
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            Collection.InsertOne(document);
+            return Collection.EstimatedDocumentCount();
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<long> EstimatedDocumentCountAsync()
+        {
+            var document = new CustomMongoDbEntity { Id = new ObjectId(), Name = "Fred Flintstone" };
+            await Collection.InsertOneAsync(document);
+            return await Collection.EstimatedDocumentCountAsync();
+        }
+#endif
 
         [LibraryMethod]
         [Transaction]
@@ -533,8 +688,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 #pragma warning restore CS0618
         }
 
-#if NET471_OR_GREATER || NETCOREAPP
-        //This call will throw exception because the Watch() method only work with MongoDb replica sets, but it is fine as long as the method is executed. 
+#if !MONGODRIVER2_3
+        // This call will throw an exception because the Watch() method only works with MongoDb replica sets, but it is fine as long as the method is executed. 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -554,7 +709,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             }
         }
 
-        //This call will throw exception because the Watch() method only work with MongoDb replica sets, but it is fine as long as the method is executed.
+        // This call will throw an exception because the Watch() method only works with MongoDb replica sets, but it is fine as long as the method is executed.
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -576,9 +731,127 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         }
 #endif
 
-#endregion
+        #endregion
 
 #region Database
+
+#if !MONGODRIVER2_3 && !MONGODRIVER2_8_1
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public string AggregateDB()
+        {
+            var listLocalSessions = new BsonDocument
+            {
+                {
+                    "$listLocalSessions",
+                    new BsonDocument
+                    {
+                        // empty
+                    }
+                }
+            };
+
+            var pipeline = new[] { listLocalSessions };
+            var result = Db.Aggregate<BsonDocument>(pipeline);
+            return result.FirstOrDefault().ToString();
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<string> AggregateDBAsync()
+        {
+            var listLocalSessions = new BsonDocument
+            {
+                {
+                    "$listLocalSessions",
+                    new BsonDocument
+                    {
+                        // empty
+                    }
+                }
+            };
+
+            var pipeline = new[] { listLocalSessions };
+            var result = await Db.AggregateAsync<BsonDocument>(pipeline);
+            return result.FirstOrDefault().ToString();
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public void AggregateDBToCollection()
+        {
+            var listLocalSessions = new BsonDocument
+            {
+                {
+                    "$listLocalSessions",
+                    new BsonDocument
+                    {
+                        // empty
+                    }
+                }
+            };
+
+            var outStage = new BsonDocument
+            {
+                {
+                    "$out",
+                    new BsonDocument
+                    {
+                        { "db", _dbName },
+                        { "coll", _defaultCollectionName }
+                    }
+                }
+            };
+
+            var pipeline = new[] { listLocalSessions, outStage };
+            Db.AggregateToCollection<BsonDocument>(pipeline);
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task AggregateDBToCollectionAsync()
+        {
+            var listLocalSessions = new BsonDocument
+            {
+                {
+                    "$listLocalSessions",
+                    new BsonDocument
+                    {
+                        // empty
+                    }
+                }
+            };
+
+            var outStage = new BsonDocument
+            {
+                {
+                    "$out",
+                    new BsonDocument
+                    {
+                        { "db", _dbName },
+                        { "coll", _defaultCollectionName }
+                    }
+                }
+            };
+
+            var pipeline = new[] { listLocalSessions, outStage };
+            try
+            {
+                await Db.AggregateToCollectionAsync<BsonDocument>(pipeline);
+            }
+            catch
+            {
+                // This method is throwing an exception in net471 for unknown reasons. However, we just need the method to execute
+                // so our instrumentation runs and generates the expected metric, so just swallow the exception.
+            }
+        }
+
+#endif
 
         [LibraryMethod]
         [Transaction]
@@ -647,6 +920,27 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return collections.Count;
         }
 
+#if !MONGODRIVER2_3
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public int ListCollectionNames()
+        {
+            var collections = Db.ListCollectionNames().ToList();
+            return collections.Count();
+        }
+
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<int> ListCollectionNamesAsync()
+        {
+            var cursor = await Db.ListCollectionNamesAsync();
+            var collections = cursor.ToList();
+            return collections.Count;
+        }
+#endif
+
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -699,9 +993,44 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             return result.ToString();
         }
 
-#endregion
+#if !MONGODRIVER2_3
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public string WatchDB()
+        {
+            try
+            {
+                var result = Db.Watch();
+                return "Ok";
+            }
+            catch (MongoCommandException)
+            {
+                return "Got exception but it is ok!";
+            }
+        }
 
-#region IndexManager
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task<string> WatchDBAsync()
+        {
+            try
+            {
+                var result = await Db.WatchAsync();
+                return "Ok";
+            }
+            catch (MongoCommandException)
+            {
+                return "Got exception but it is ok!";
+            }
+        }
+
+#endif
+
+        #endregion
+
+        #region IndexManager
 
         [LibraryMethod]
         [Transaction]

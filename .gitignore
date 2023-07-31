@@ -97,6 +97,8 @@ Agent/NewRelic.Agent.IL/NewRelicCoreVersion.h
 Agent/Shared/SharedAssemblyInfoVersion.cs
 Agent/NewRelic/Profiler/Profiler/VersionInfo.h
 
+Agent/NewRelic/Profiler/Profiler/test-results
+
 # Ignore source files generated during build
 Agent/Installer/Core.wxs
 Agent/NewRelic/Agent/Core/AgentInstallConfiguration_Generated.cs
@@ -155,3 +157,4 @@ tests/TestResults/*
 /src/Agent/_profilerBuild/linux-x64-release/libNewRelicProfiler.so
 /src/Agent/_profilerBuild/x64-Release/NewRelic.Profiler.dll
 /src/Agent/_profilerBuild/x86-Release/NewRelic.Profiler.dll
+/tests/Agent/IntegrationTests/ContainerApplications/.env

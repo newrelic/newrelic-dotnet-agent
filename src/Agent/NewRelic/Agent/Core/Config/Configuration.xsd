@@ -347,19 +347,6 @@
                             </xs:annotation>
                         </xs:attribute>
 
-                        <xs:attribute name="fileLockingModel">
-                            <xs:annotation>
-                                <xs:documentation>
-                                    Controls how agent-produced log files are to be locked.	Experimental.
-                                </xs:documentation>
-                            </xs:annotation>
-                            <xs:simpleType>
-                                <xs:restriction base="xs:string">
-                                    <xs:enumeration value="exclusive"/>
-                                    <xs:enumeration value="minimal"/>
-                                </xs:restriction>
-                            </xs:simpleType>
-                        </xs:attribute>
                     </xs:complexType>
                 </xs:element>
 
@@ -1668,6 +1655,15 @@
                                             </xs:documentation>
                                         </xs:annotation>
                                     </xs:attribute>
+
+                                    <xs:attribute name="logLevelDenyList" type="xs:string" use="optional">
+                                        <xs:annotation>
+                                            <xs:documentation>
+                                                A comma-separated, case-insensitive, list of log level names from the selected logging framework that should be ignored and not sent up to New Relic.
+                                            </xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+
                                 </xs:complexType>
                             </xs:element>
                             <xs:element name="localDecorating" minOccurs="0" maxOccurs="1">

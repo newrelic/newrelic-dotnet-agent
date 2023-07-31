@@ -156,10 +156,14 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private static void AuditLog(Direction direction, Source source, string uri)
+        private void AuditLog(Direction direction, Source source, string uri)
         {
-            var message = string.Format(AuditLogFormat, direction, source, Strings.ObfuscateLicenseKeyInAuditLog(uri, LicenseKeyParameterName));
-            Logging.AuditLog.Log(message);
+            if (Logging.AuditLog.IsAuditLogEnabled)
+            {
+                var message = string.Format(AuditLogFormat, direction, source,
+                    Strings.ObfuscateLicenseKeyInAuditLog(uri, LicenseKeyParameterName));
+                Logging.AuditLog.Log(message);
+            }
         }
 
         private Uri GetUri(string method, ConnectionInfo connectionInfo)

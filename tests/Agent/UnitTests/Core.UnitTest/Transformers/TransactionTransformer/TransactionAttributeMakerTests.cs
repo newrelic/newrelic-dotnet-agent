@@ -417,8 +417,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.AreEqual("pathHash", GetAttributeValue(transactionAttributes, "nr.alternatePathHashes")),
                 () => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "error.class")),
                 () => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "errorType")),
+#if NET
+                () => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "errorMessage")),
+                () => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "error.message")),
+#else
                 () => Assert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "errorMessage")),
                 () => Assert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "error.message")),
+#endif
                 () => Assert.AreEqual(true, GetAttributeValue(transactionAttributes, "error")),
                 () => Assert.True(DoAttributesContain(transactionAttributes, "host.displayName")),
                 () => Assert.AreEqual("value1", GetAttributeValue(transactionAttributes, "request.headers.key1")),

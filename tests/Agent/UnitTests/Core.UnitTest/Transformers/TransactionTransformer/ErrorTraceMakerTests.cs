@@ -86,7 +86,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.NotNull(errorTrace);
             NrAssert.Multiple(
                 () => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
+#if NET
+                () => Assert.AreEqual("404", errorTrace.Message),
+#else
                 () => Assert.AreEqual("Not Found", errorTrace.Message),
+#endif
                 () => Assert.AreEqual("404", errorTrace.ExceptionClassName),
                 () => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
                 () => Assert.AreEqual(null, errorTrace.Attributes.StackTrace)

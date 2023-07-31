@@ -24,9 +24,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 #if NETFRAMEWORK
             return false;
 #endif
-#if NETSTANDARD2_0
-                return RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-#endif
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
             }
         }
 
@@ -49,7 +47,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public static string Arch => RuntimeInformation.OSArchitecture.ToString().ToLower();
         public static string CurrentRuntime => $"{(IsLinux ? "linux" : "win")}-{(IsAlpine ? "musl-" : "")}{Arch}";
-        public static string RuntimeHomeDirName => $"newrelichome_{Arch}_coreclr{(IsLinux ? "_linux" : "")}";
+        public static string RuntimeHomeDirName => GetRuntimeHomeDirNameFor(Arch, IsLinux);
+        public static string GetRuntimeHomeDirNameFor(string arch, bool isLinux)
+        {
+            return $"newrelichome_{arch}_coreclr{(isLinux ? "_linux" : "")}";
+        }
 
         public static T ThrowIfNull<T>(T value, string valueName)
         {

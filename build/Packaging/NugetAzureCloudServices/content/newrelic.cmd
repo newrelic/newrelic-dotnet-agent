@@ -54,9 +54,9 @@ IF %NR_ERROR_LEVEL% EQU 0 (
 	:: 	if we are in a Worker Role then there is no need to restart W3SVC _or_
 	:: 	if we are emulating locally then do not restart W3SVC
 	IF "%IsWorkerRole%" EQU "false" (
-		ECHO Restarting IIS and W3SVC to pick up the new environment variables. >> "%RoleRoot%\nr-%NR_INSTALLID%.log" 2>&1
-		IISRESET
-		NET START W3SVC
+		ECHO Restarting IIS to pick up the new environment variables. >> "%RoleRoot%\nr-%NR_INSTALLID%.log" 2>&1
+		IISRESET /STOP
+		IISRESET /START
 	)
 
 	IF %ERRORLEVEL% EQU 0 (

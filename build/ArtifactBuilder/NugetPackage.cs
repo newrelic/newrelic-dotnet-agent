@@ -98,9 +98,9 @@ namespace ArtifactBuilder
             FileHelpers.CopyFile(filePaths, $@"{StagingDirectory}\{subDirectory}");
         }
 
-        public void Pack()
+        public string Pack()
         {
-            NuGetHelpers.Pack(NuspecFilePath, OutputDirectory);
+            return NuGetHelpers.Pack(NuspecFilePath, OutputDirectory);
         }
     }
 }

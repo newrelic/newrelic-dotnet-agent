@@ -19,6 +19,7 @@ namespace ArtifactBuilder.Artifacts
         public string Configuration { get; }
         public string Platform { get; }
         private readonly AgentComponents _frameworkAgentComponents;
+        private string _nuGetPackageName;
 
         private string RootDirectory => $@"{StagingDirectory}\content\newrelic";
 
@@ -38,7 +39,7 @@ namespace ArtifactBuilder.Artifacts
 
             agentInfo.WriteToDisk(RootDirectory);
             package.SetVersion(_frameworkAgentComponents.Version);
-            package.Pack();
+            _nuGetPackageName = package.Pack();
         }
 
         private void TransformNewRelicConfig()
@@ -85,13 +86,12 @@ namespace ArtifactBuilder.Artifacts
 
         private string Unpack()
         {
+            if (string.IsNullOrEmpty(_nuGetPackageName))
+                throw new PackagingException("NuGet package name not found. Did you call InternalBuild()?");
+
             var unpackDir = Path.Join(OutputDirectory, "unpacked");
 
-            // The two packages have different naming conventions
-            var fileName = Platform == "x64" ?
-                $"NewRelic.Azure.WebSites.{Platform}.{_frameworkAgentComponents.Version}.nupkg" :
-                $"NewRelic.Azure.WebSites.{_frameworkAgentComponents.Version}.nupkg";
-            var nugetFile = Path.Join(OutputDirectory, fileName);
+            var nugetFile = Path.Join(OutputDirectory, _nuGetPackageName);
 
             NuGetHelpers.Unpack(nugetFile, unpackDir);
             return unpackDir;

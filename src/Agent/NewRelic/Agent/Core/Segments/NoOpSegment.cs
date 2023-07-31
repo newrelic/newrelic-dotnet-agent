@@ -18,6 +18,7 @@ namespace NewRelic.Agent.Core.Segments
 
         private readonly IAttributeDefinitions _attribDefs = new AttributeDefinitions(new AttributeFilter(new AttributeFilter.Settings()));
 
+        public bool IsDone => true; // the segment is technically done since it is does nothing.
         public bool IsValid => false;
         public bool DurationShouldBeDeductedFromParent { get; set; } = false;
         public bool AlwaysDeductChildDuration { private get; set; } = false;
@@ -63,6 +64,11 @@ namespace NewRelic.Agent.Core.Segments
         public ISpan SetName(string name)
         {
             return this;
+        }
+
+        public string GetCategory()
+        {
+            return string.Empty;
         }
     }
 }

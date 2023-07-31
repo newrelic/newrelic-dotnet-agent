@@ -1,10 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net462</TargetFrameworks>
+    <TargetFrameworks>net462;net7.0</TargetFrameworks>
     <RootNamespace>NewRelic.Agent.Core</RootNamespace>
     <AssemblyName>NewRelic.Agent.Core.UnitTest</AssemblyName>
-    <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>
+    <DebugType>Full</DebugType>
     <RunSettingsFilePath>$(SolutionDir)test.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'=='net7.0'">
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="3.2.0">
@@ -12,17 +15,19 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="JustMock" Version="2020.1.113.1" />
-    <PackageReference Include="log4net" Version="2.0.8" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
     <PackageReference Include="MoreLinq" Version="2.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NUnit" Version="3.12.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.16.1">
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net70'">
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
@@ -37,16 +42,13 @@
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Core\Core.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
-    <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\AspNet\AspNet.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Parsing\Parsing.csproj" />
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
     <ProjectReference Include="..\NewRelic.Agent.TestUtilities\NewRelic.Agent.TestUtilities.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="$(RootProjectDirectory)\src\Agent\Shared\SharedLog4NetRepository.cs">
-      <Link>Properties\SharedLog4NetRepository.cs</Link>
-    </Compile>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+    <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\AspNet\AspNet.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="BrowserMonitoring\rum_loader_insertion_location\basic.html">

@@ -10,5 +10,11 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="CallAppenders" />
       </match>
     </tracerFactory>
+    <!-- Sitecore uses an old fork of log4net with the same namespace -->
+    <tracerFactory name="log4net">
+      <match assemblyName="Sitecore.Logging" className="log4net.Repository.Hierarchy.Logger">
+        <exactMethodMatcher methodName="CallAppenders" />
+      </match>
+    </tracerFactory>
   </instrumentation>
 </extension>

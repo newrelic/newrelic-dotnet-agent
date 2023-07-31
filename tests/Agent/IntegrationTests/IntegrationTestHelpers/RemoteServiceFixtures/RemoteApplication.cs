@@ -17,14 +17,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     {
         Bounded,
         Unbounded,
-        Shared
+        Shared,
+        Container
     }
 
     public abstract class RemoteApplication : IDisposable
     {
         #region Constant/Static
 
-        private static readonly string AssemblyBinPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+        private static string GetAssemblyFolderFromAssembly(Assembly assembly)
+        {
+#if NET
+            return assembly.Location;
+#else
+            return assembly.CodeBase;
+#endif
+        }
+
+        private static readonly string AssemblyBinPath = Path.GetDirectoryName(new Uri(GetAssemblyFolderFromAssembly(Assembly.GetExecutingAssembly())).LocalPath);
 
         private static readonly string RepositoryRootPath = Path.GetFullPath(Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..","..",".."));
 
@@ -67,23 +77,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 {
                     return _sourceNewRelicHomeCoreClrDirectoryPath;
                 }
-
-                var homeRootPath = Environment.GetEnvironmentVariable("NR_DEV_HOMEROOT");
-
-                var homeDirName = Utilities.RuntimeHomeDirName;
-                if (!string.IsNullOrWhiteSpace(homeRootPath) && Directory.Exists(homeRootPath))
-                {
-                    _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(homeRootPath, homeDirName);
-                    return _sourceNewRelicHomeCoreClrDirectoryPath;
-                }
-
-                _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", homeDirName);
-                return _sourceNewRelicHomeCoreClrDirectoryPath;
+                return GetSourceDirectoryForHomeDir(Utilities.RuntimeHomeDirName);
             }
             set
             {
                 _sourceNewRelicHomeCoreClrDirectoryPath = value;
             }
+        }
+
+        private static string GetSourceDirectoryForHomeDir(string homeDirName)
+        {
+            var homeRootPath = Environment.GetEnvironmentVariable("NR_DEV_HOMEROOT");
+
+            if (!string.IsNullOrWhiteSpace(homeRootPath) && Directory.Exists(homeRootPath))
+            {
+                _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(homeRootPath, homeDirName);
+                return _sourceNewRelicHomeCoreClrDirectoryPath;
+            }
+
+            _sourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", homeDirName);
+            return _sourceNewRelicHomeCoreClrDirectoryPath;
         }
 
         private static readonly string SourceApplicationLauncherProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "ApplicationLauncher");
@@ -169,7 +182,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected Process RemoteProcess { get; set; }
 
-        public string AppName = "IntegrationTestAppName";
+        public virtual string AppName { get; set; } = "IntegrationTestAppName";
 
         private string _uniqueFolderName;
         public string UniqueFolderName
@@ -246,6 +259,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     break;
                 case ApplicationType.Shared:
                     applicationsFolder = "SharedApplications";
+                    break;
+                case ApplicationType.Container:
+                    applicationsFolder = "ContainerApplications";
                     break;
                 default:
                     applicationsFolder = "Applications";
@@ -419,6 +435,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             Directory.CreateDirectory(DestinationNewRelicHomeDirectoryPath);
             CommonUtils.CopyDirectory(SourceNewRelicHomeCoreClrDirectoryPath, DestinationNewRelicHomeDirectoryPath);
+        }
+
+        protected void CopyNewRelicHomeCoreClrLinuxDirectoryToRemote(string arch)
+        {
+            Directory.CreateDirectory(DestinationNewRelicHomeDirectoryPath);
+            CommonUtils.CopyDirectory(GetSourceDirectoryForHomeDir(Utilities.GetRuntimeHomeDirNameFor(arch, true)), DestinationNewRelicHomeDirectoryPath);
         }
 
         protected void CopyApplicationDirectoryToRemote()

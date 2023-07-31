@@ -12,6 +12,7 @@ using NewRelic.Core.DistributedTracing;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
@@ -162,12 +163,15 @@ namespace NewRelic.Agent.Core.DistributedTracing
             var newRelicTracestate = $"{accountKey}@nr={version}-{parentType}-{parentAccountId}-{appId}-{spanId}-{transactionId}-{sampled}-{priority}-{timestampInMillis}";
             var otherVendorTracestates = string.Empty;
 
-            if (transaction.TracingState != null)
+            if (transaction.TracingState?.VendorStateEntries != null && transaction.TracingState.VendorStateEntries.Any())
             {
-                if (transaction.TracingState.VendorStateEntries != null)
-                {
-                    otherVendorTracestates = string.Join(",", transaction.TracingState.VendorStateEntries);
-                }
+                otherVendorTracestates = string.Join(",", transaction.TracingState.VendorStateEntries);
+            }
+
+            // If otherVendorTracestates is null/empty we get a trailing comma.
+            if (string.IsNullOrWhiteSpace(otherVendorTracestates))
+            {
+                return newRelicTracestate;
             }
 
             return string.Join(",", newRelicTracestate, otherVendorTracestates);

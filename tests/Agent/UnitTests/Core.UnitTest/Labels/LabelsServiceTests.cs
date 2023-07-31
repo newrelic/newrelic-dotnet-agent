@@ -264,33 +264,29 @@ namespace NewRelic.Agent.Core.Labels.Tests
             }
         }
 
-        [TestCaseSource(nameof(CrossAgentTestCases))]
+       [TestCaseSource(nameof(CrossAgentTestCases))]
         public void cross_agent_tests(TestCase testCase)
         {
-            var logAppender = new log4net.Appender.MemoryAppender();
-            var logFilter = new log4net.Filter.LevelMatchFilter();
-            logFilter.LevelToMatch = log4net.Core.Level.Warn;
-            logAppender.AddFilter(logFilter);
-            var logger = (log4net.LogManager.GetRepository() as log4net.Repository.Hierarchy.Hierarchy).Root;
-            logger.AddAppender(logAppender);
-            logger.Level = log4net.Core.Level.Warn;
-            logger.Repository.Configured = true;
+            using (var logger = new TestUtilities.Logging())
+            {
 
-            // arrange
-            var configurationService = Mock.Create<IConfigurationService>();
-            Mock.Arrange(() => configurationService.Configuration.Labels).Returns(testCase.LabelConfigurationString);
+                // arrange
+                var configurationService = Mock.Create<IConfigurationService>();
+                Mock.Arrange(() => configurationService.Configuration.Labels)
+                    .Returns(testCase.LabelConfigurationString);
 
-            // act
-            var labelsService = new LabelsService(configurationService);
-            var actualResults = JsonConvert.SerializeObject(labelsService.Labels);
-            var expectedResults = JsonConvert.SerializeObject(testCase.Expected);
+                // act
+                var labelsService = new LabelsService(configurationService);
+                var actualResults = JsonConvert.SerializeObject(labelsService.Labels);
+                var expectedResults = JsonConvert.SerializeObject(testCase.Expected);
 
-            // assert
-            Assert.AreEqual(expectedResults, actualResults);
-            if (testCase.Warning)
-                Assert.AreNotEqual(0, logAppender.GetEvents().Length);
-            else
-                Assert.AreEqual(0, logAppender.GetEvents().Length);
+                // assert
+                Assert.AreEqual(expectedResults, actualResults);
+                if (testCase.Warning)
+                    Assert.AreNotEqual(0, logger.WarnCount);
+                else
+                    Assert.AreEqual(0, logger.MessageCount);
+            }
         }
     }
 }

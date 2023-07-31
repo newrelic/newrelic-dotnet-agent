@@ -33,7 +33,7 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser { namespace 
             }
         }
 
-        void ParseAndVerifyMethodSignature(const ByteVector& signatureBytes, MethodSignaturePtr expectedSignature)
+        void ParseAndVerifyMethodSignature(const ByteVector& signatureBytes, MethodSignaturePtr expectedSignature, bool validateBytes = true)
         {
             auto iterator = signatureBytes.begin();
             auto actualSignature = SignatureParser::ParseMethodSignature(iterator, signatureBytes.end());
@@ -41,6 +41,13 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser { namespace 
             Assert::IsFalse(iterator < signatureBytes.end(), L"The signature parser did not parse the entire signature.");
             Assert::IsFalse(iterator > signatureBytes.end(), L"The signature parser parsed past the end of the signature.");
             AssertAreEqual(expectedSignature, actualSignature, tokenResolver);
+
+            // The bytes won't match for custom mods
+            if (validateBytes)
+            {
+                auto actualBytes = actualSignature->ToBytes();
+                Assert::AreEqual(signatureBytes, *actualBytes);
+            }
         }
 
     public:
@@ -179,7 +186,7 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser { namespace 
                 0x03, // char return type
             );
             MethodSignaturePtr expectedSignature(new MethodSignature(false, false, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT, std::make_shared<TypedReturnType>(std::make_shared<CharType>(), false), std::make_shared<Parameters>(), 0));
-            ParseAndVerifyMethodSignature(signatureBytes, expectedSignature);
+            ParseAndVerifyMethodSignature(signatureBytes, expectedSignature, false);
         }
 
         TEST_METHOD(custom_mods_on_ref_return_type)
@@ -194,7 +201,7 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser { namespace 
                 0x03, // char return type
             );
             MethodSignaturePtr expectedSignature(new MethodSignature(false, false, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT, std::make_shared<TypedReturnType>(std::make_shared<CharType>(), true), std::make_shared<Parameters>(), 0));
-            ParseAndVerifyMethodSignature(signatureBytes, expectedSignature);
+            ParseAndVerifyMethodSignature(signatureBytes, expectedSignature, false);
         }
 
         TEST_METHOD(parameter_custom_mod_char_byref_method_signature)
@@ -208,7 +215,7 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser { namespace 
             auto parameters = std::make_shared<Parameters>();
             parameters->push_back(std::make_shared<TypedParameter>(std::make_shared<CharType>(), true));
             MethodSignaturePtr expectedSignature(new MethodSignature(false, false, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT, std::make_shared<VoidReturnType>(), parameters, 0));
-            ParseAndVerifyMethodSignature(signatureBytes, expectedSignature);
+            ParseAndVerifyMethodSignature(signatureBytes, expectedSignature, false);
         }
 
         TEST_METHOD(parameter_custom_mods_char_byref_method_signature)
@@ -222,7 +229,7 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser { namespace 
             auto parameters = std::make_shared<Parameters>();
             parameters->push_back(std::make_shared<TypedParameter>(std::make_shared<CharType>(), true));
             MethodSignaturePtr expectedSignature(new MethodSignature(false, false, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT, std::make_shared<VoidReturnType>(), parameters, 0));
-            ParseAndVerifyMethodSignature(signatureBytes, expectedSignature);
+            ParseAndVerifyMethodSignature(signatureBytes, expectedSignature, false);
         }
 
         MethodSignaturePtr TestArrayParameter(uint8_t type, uint32_t dimensions, const std::vector<uint32_t>& sizes, const std::vector<uint32_t>& lowerBounds)
@@ -329,5 +336,37 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser { namespace 
             Assert::AreEqual(expected, actual);
         }
 
+        TEST_METHOD(simple_type_parameter)
+        {
+            TestBasicParameter(ELEMENT_TYPE_CHAR, std::make_shared<CharType>());
+            TestBasicParameter(ELEMENT_TYPE_BOOLEAN, std::make_shared<BooleanType>());
+            TestBasicParameter(ELEMENT_TYPE_I1, std::make_shared<SByteType>());
+            TestBasicParameter(ELEMENT_TYPE_U1, std::make_shared<ByteType>());
+            TestBasicParameter(ELEMENT_TYPE_I2, std::make_shared<Int16Type>());
+            TestBasicParameter(ELEMENT_TYPE_U2, std::make_shared<UInt16Type>());
+            TestBasicParameter(ELEMENT_TYPE_I4, std::make_shared<Int32Type>());
+            TestBasicParameter(ELEMENT_TYPE_U4, std::make_shared<UInt32Type>());
+            TestBasicParameter(ELEMENT_TYPE_I8, std::make_shared<Int64Type>());
+            TestBasicParameter(ELEMENT_TYPE_U8, std::make_shared<UInt64Type>());
+            TestBasicParameter(ELEMENT_TYPE_R4, std::make_shared<SingleType>());
+            TestBasicParameter(ELEMENT_TYPE_R8, std::make_shared<DoubleType>());
+        }
+
+
+        void TestBasicParameter(uint8_t typeValue, TypePtr type_ptr)
+        {
+            BYTEVECTOR(signatureBytes,
+                0x00, // default calling convention
+                0x01, // 1 parameter
+                0x01, // void return type
+                typeValue,
+                );
+
+            auto parameters = std::make_shared<Parameters>();
+            parameters->push_back(std::make_shared<TypedParameter>(type_ptr, false));
+
+            MethodSignaturePtr expectedSignature(new MethodSignature(false, false, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT, std::make_shared<VoidReturnType>(), parameters, 0));
+            ParseAndVerifyMethodSignature(signatureBytes, expectedSignature);
+        }
     };
 }}}}

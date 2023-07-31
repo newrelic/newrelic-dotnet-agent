@@ -7,7 +7,12 @@ using System.Threading;
 using NUnit.Framework;
 using NewRelic.Agent.Core.DataTransport;
 using System.Threading.Tasks;
+
+#if NETFRAMEWORK
 using GrpcChannel = Grpc.Core.Channel;
+#else
+using Grpc.Net.Client;
+#endif
 
 namespace NewRelic.Agent.Core.GrpcWrapper.Tests
 {
@@ -75,13 +80,13 @@ namespace NewRelic.Agent.Core.GrpcWrapper.Tests
                 _ex = ex;
             }
 
-            protected override AsyncDuplexStreamingCall<FakeGrpcRequest, FakeGrpcResponse> CreateStreamsImpl(Channel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
+            protected override AsyncDuplexStreamingCall<FakeGrpcRequest, FakeGrpcResponse> CreateStreamsImpl(GrpcChannel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
             {
                 if (_ex != null)
                 {
                     throw _ex;
                 }
-                
+
                 return new AsyncDuplexStreamingCall<FakeGrpcRequest, FakeGrpcResponse>(new FakeGrpcStreamWriter(), new FakeGrpcStreamReader(), null, null, null, (o) => { }, null);
             }
 
@@ -102,6 +107,7 @@ namespace NewRelic.Agent.Core.GrpcWrapper.Tests
         {
         }
 
+#if NETFRAMEWORK // CreateChannel doesn't actually create a channel under grpc-dotnet (NETSTANDARD2.0), so we can't test it
         [Test]
         public void TestCreateChannel()
         {
@@ -125,6 +131,7 @@ namespace NewRelic.Agent.Core.GrpcWrapper.Tests
             Assert.IsFalse(grpc.CreateChannel("localhost", 0, false, null, 0, new CancellationToken()));
             Assert.IsFalse(grpc.IsConnected);
         }
+#endif
 
         [Test]
         public void TestCreateStreams()

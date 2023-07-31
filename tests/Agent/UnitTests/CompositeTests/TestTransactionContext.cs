@@ -15,7 +15,8 @@ namespace CompositeTests
 
         public T GetData()
         {
-            return (T)_data.GetValueOrDefault(_key);
+            // call is ambiguous in .NET 7 if you use the extension method invocation
+            return (T)DictionaryExtensions.GetValueOrDefault(_data, _key);
         }
 
         public void SetData(T value)

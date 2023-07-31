@@ -48,7 +48,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
             using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
             using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 10000", connection))
             {
-                connection.Open();
+                await connection.OpenAsync();
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())

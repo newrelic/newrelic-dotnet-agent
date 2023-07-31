@@ -1,6 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Clients.Elasticsearch;
@@ -13,13 +14,33 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
     internal class ElasticsearchNestClient : ElasticsearchTestClient
     {
         private ElasticClient _client;
+        protected override Uri Address
+        {
+            get
+            {
+                return new Uri(ElasticSearch7Configuration.ElasticServer);
+            }
+        }
+        protected override string Username
+        {
+            get
+            {
+                return ElasticSearch7Configuration.ElasticUserName;
+            }
+        }
+        protected override string Password
+        {
+            get
+            {
+                return ElasticSearch7Configuration.ElasticPassword;
+            }
+        }
 
-        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public override void Connect()
         {
             var settings = new ConnectionSettings(Address).
-                BasicAuthentication(ElasticSearchConfiguration.ElasticUserName,
-                ElasticSearchConfiguration.ElasticPassword).
+                BasicAuthentication(Username,Password).
                 DefaultIndex(IndexName);
 
             _client = new ElasticClient(settings);

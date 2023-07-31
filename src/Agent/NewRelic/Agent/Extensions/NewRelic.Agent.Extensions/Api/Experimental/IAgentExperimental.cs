@@ -33,5 +33,7 @@ namespace NewRelic.Agent.Api.Experimental
         void RecordLogMessage(string frameworkName, object logEvent, Func<object,DateTime> getTimestamp, Func<object,object> getLogLevel, Func<object,string> getLogMessage, Func<object, Exception> getLogException, Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId);
 
         Extensions.Helpers.IStackExchangeRedisCache StackExchangeRedisCache { get; set; }
+
+        ISimpleSchedulingService SimpleSchedulingService { get; }
     }
 }

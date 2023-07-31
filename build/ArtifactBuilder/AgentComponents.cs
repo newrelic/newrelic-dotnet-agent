@@ -100,6 +100,23 @@ namespace ArtifactBuilder
             }
         }
 
+        // This will return the full four-component version string, unless the fourth component is zero, in which case it returns three components
+        public string MaybeSemanticVersion
+        {
+            get
+            {
+                var version = new Version(Version);
+                if (version.Revision == 0)
+                {
+                    return version.ToString(3);
+                }
+                else
+                {
+                    return version.ToString(4);
+                }
+            }
+        }
+
         protected abstract string SourceHomeBuilderPath { get; }
         protected abstract List<string> IgnoredHomeBuilderFiles { get; }
         protected abstract void CreateAgentComponents();

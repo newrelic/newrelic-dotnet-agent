@@ -130,7 +130,30 @@ services:
             memlock:
                 soft: -1
                 hard: -1
+        deploy:
+            resources:
+                limits:
+                    memory: 2GB
         container_name: ElasticServer
+
+    elastic7:
+        image: elasticsearch:7.17.10
+        ports:
+            - 9201:9200
+        environment:
+            - discovery.type=single-node
+            - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-ElasticPassword}
+            - xpack.security.enabled=true
+            - xpack.security.http.ssl.enabled=false
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        deploy:
+            resources:
+                limits:
+                    memory: 2GB
+        container_name: Elastic7Server
 
     # have to manually set the password for kibana_user - use curl to hit the correct endpoint
     kibana_pw_setup:

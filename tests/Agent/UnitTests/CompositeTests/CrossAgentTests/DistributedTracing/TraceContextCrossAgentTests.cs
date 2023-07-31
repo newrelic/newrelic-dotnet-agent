@@ -60,7 +60,8 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
         {
             var testCaseData = new List<TestCaseData>();
 
-            var dllPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            string location = Assembly.GetExecutingAssembly().GetLocation();
+            var dllPath = Path.GetDirectoryName(new Uri(location).LocalPath);
             var jsonPath = Path.Combine(dllPath, "CrossAgentTests", "DistributedTracing", "trace_context.json");
             var jsonString = File.ReadAllText(jsonPath);
 

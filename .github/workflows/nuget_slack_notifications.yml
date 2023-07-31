@@ -10,7 +10,7 @@ on:
         default: "1"
         type: string
       testMode:
-        description: "If checked, no notification message will be sent to the team channel."
+        description: "If checked, no notification message will be sent to the team channel, nor will any Github issues be created."
         type: boolean
         default: false
 
@@ -24,6 +24,8 @@ jobs:
   nuget-slack-notifications:
     name: Check for core technology package updates
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     continue-on-error: false
     
     env:
@@ -31,12 +33,12 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
         with:
           egress-policy: audit # Leave it audit mode
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -60,6 +62,7 @@ jobs:
 
         env:
             DOTTY_WEBHOOK: ${{ secrets.SLACK_NUGET_NOTIFICATIONS_WEBHOOK }}
+            DOTTY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             CORECLR_ENABLE_PROFILING: 1
             CORECLR_NEWRELIC_HOME: ${{ env.scan-tool-path }}/bin/Debug/net6.0/newrelic
             CORECLR_PROFILER: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
@@ -68,15 +71,20 @@ jobs:
             NEW_RELIC_HOST: staging-collector.newrelic.com
             NEW_RELIC_LICENSE_KEY: ${{ secrets.STAGING_LICENSE_KEY }}
             nugets:
-                 "system.data.sqlclient
+                 "elasticsearch.net
+                 elastic.clients.elasticsearch
+                 log4net
+                 microsoft.extensions.logging
                  microsoft.data.sqlclient
-                 mongocsharpdriver
+                 microsoft.net.http
                  mongodb.driver
                  mysql.data
                  mysqlconnector
-                 stackexchange.redis
+                 nest
+                 nlog
                  rabbitmq.client
-                 microsoft.net.http
                  restsharp
-                 serilog"
+                 serilog
+                 stackexchange.redis
+                 system.data.sqlclient"
                  

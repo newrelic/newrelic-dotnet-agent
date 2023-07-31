@@ -75,7 +75,7 @@ namespace BasicMvcApplication.Controllers
 
             using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
             {
-                connection.Open();
+                await connection.OpenAsync();
 
                 using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'", connection))
                 {
@@ -153,7 +153,7 @@ namespace BasicMvcApplication.Controllers
 
             using (var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString))
             {
-                connection.Open();
+                await connection.OpenAsync();
 
                 using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = @FN", connection))
                 {

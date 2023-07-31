@@ -20,6 +20,12 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
     {
         public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
             : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
+
+        public static void ResetStatics()
+        {
+            _agentEnabledAppSettingParsed = null;
+            _appSettingAgentEnabled = false;
+        }
     }
 
     [TestFixture, Category("Configuration")]
@@ -50,15 +56,40 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _dnsStatic = Mock.Create<IDnsStatic>();
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            TestableDefaultConfiguration.ResetStatics();
         }
 
         [Test]
         public void AgentEnabledShouldPassThroughToLocalConfig()
         {
             Assert.IsTrue(_defaultConfig.AgentEnabled);
+
+            _localConfig.agentEnabled = false;
+            Assert.IsFalse(_defaultConfig.AgentEnabled);
+
             _localConfig.agentEnabled = true;
             Assert.IsTrue(_defaultConfig.AgentEnabled);
-            _localConfig.agentEnabled = false;
+        }
+
+        [Test]
+        public void AgentEnabledShouldUseCachedAppSetting()
+        {
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled")).Returns("false");
+
+            Assert.IsFalse(_defaultConfig.AgentEnabled);
+            Assert.IsFalse(_defaultConfig.AgentEnabled);
+
+            Mock.Assert(() => _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled"), Occurs.Once());
+        }
+
+        [Test]
+        public void AgentEnabledShouldPreferAppSettingOverLocalConfig()
+        {
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled")).Returns("false");
+
+            _localConfig.agentEnabled = true;
+
             Assert.IsFalse(_defaultConfig.AgentEnabled);
         }
 
@@ -539,7 +570,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [TestCase(3000.0, null, ExpectedResult = 3000.0)]
+#if NET
+        [TestCase(3000.5, null, ExpectedResult = 3000.5)] // .NET doesn't round timespans the same way Framework did...
+#else
         [TestCase(3000.5, null, ExpectedResult = 3001.0)]
+#endif
         [TestCase(4000.0, 0.5, ExpectedResult = 500.0)]
         [TestCase(200.0, 5.0, ExpectedResult = 5000.0)]
         [TestCase(1.0, 0.2, ExpectedResult = 200.0)]
@@ -752,7 +787,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase("apdex_f", null, 5, ExpectedResult = 20000)]
         [TestCase("1", null, 5, ExpectedResult = 1)]
+#if NETFRAMEWORK
         [TestCase("1.5", null, 5, ExpectedResult = 2)]
+#else
+        [TestCase("1.5", null, 5, ExpectedResult = 1.5)]
+#endif
         [TestCase("apdex_f", 3, 5, ExpectedResult = 3000)]
         [TestCase("apdex_f", 3.5, 5, ExpectedResult = 3500)]
         [TestCase("apdex_f", "4", 5, ExpectedResult = 4000)]
@@ -2750,6 +2789,16 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
+        public void ApplicationLogging_ForwardingLogLevelDeniedList_HasCorrectValue()
+        {
+            _localConfig.applicationLogging.forwarding.logLevelDenyList = " SomeValue, SomeOtherValue  ";
+
+            Assert.AreEqual(2, _defaultConfig.LogLevelDenyList.Count);
+            Assert.True(_defaultConfig.LogLevelDenyList.Contains("SOMEVALUE"));
+            Assert.True(_defaultConfig.LogLevelDenyList.Contains("SOMEOTHERVALUE"));
+        }
+
+        [Test]
         public void LogEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
         {
             const string LogEventHarvestLimitKey = "log_event_data";
@@ -3251,6 +3300,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual(60, defaultConfig.GetAgentCommandsCycle.TotalSeconds);
             Assert.AreEqual(60, defaultConfig.SpanEventsHarvestCycle.TotalSeconds);
             Assert.AreEqual(60, defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
+            Assert.AreEqual(60, defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
         }
 
         [TestCase(null)]
@@ -3359,6 +3409,24 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
             Assert.AreEqual(60, defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
+        }
+
+        [TestCase(null)]
+        [TestCase("0")]
+        [TestCase("-1")]
+        [TestCase("")]
+        [TestCase("a")]
+        public void HarvestCycleOverride_StackExchangeRedisCleanup_NotValidValueSet(string value)
+        {
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideStackExchangeRedisCleanupCycle",
+                value = value
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.AreEqual(60, defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
         }
 
         [Test]
@@ -3503,6 +3571,30 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             });
 
             Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.SqlTracesHarvestCycle.TotalSeconds);
+        }
+
+        [Test]
+        public void HarvestCycleOverride_StackExchangeRedisCleanup_ValidValueSet()
+        {
+            var expectedSeconds = "10";
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideStackExchangeRedisCleanupCycle",
+                value = expectedSeconds
+            });
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
+
+            // Test that the backing field is used after the initial call and not changed.
+            _localConfig.appSettings.Add(new configurationAdd()
+            {
+                key = "OverrideStackExchangeRedisCleanupCycle",
+                value = "100"
+            });
+
+            Assert.AreEqual(Convert.ToInt32(expectedSeconds), defaultConfig.StackExchangeRedisCleanupCycle.TotalSeconds);
         }
 
         #endregion

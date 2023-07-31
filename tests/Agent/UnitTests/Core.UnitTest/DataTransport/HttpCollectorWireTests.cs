@@ -15,6 +15,8 @@ using NUnit.Framework;
 using System.Threading.Tasks;
 using System.Threading;
 using NewRelic.Agent.Core.Exceptions;
+using NewRelic.Agent.Core.Logging;
+using Serilog;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.DataTransport
@@ -26,6 +28,7 @@ namespace NewRelic.Agent.Core.DataTransport
         private IAgentHealthReporter _agentHealthReporter;
         private IHttpClientFactory _httpClientFactory;
         private MockHttpMessageHandler _mockHttpMessageHandler;
+        private ILogger _mockILogger;
 
         [SetUp]
         public void SetUp()
@@ -33,6 +36,9 @@ namespace NewRelic.Agent.Core.DataTransport
             _configuration = Mock.Create<IConfiguration>();
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _httpClientFactory = Mock.Create<IHttpClientFactory>();
+
+            _mockILogger = Mock.Create<ILogger>();
+            Log.Logger = _mockILogger;
         }
 
         private HttpCollectorWire CreateHttpCollectorWire(Dictionary<string, string> requestHeadersMap = null)
@@ -305,6 +311,39 @@ namespace NewRelic.Agent.Core.DataTransport
             Mock.Assert(() => _agentHealthReporter.ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit("test_method"), Occurs.Once());
             Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Never());
             Assert.AreEqual(false, _mockHttpMessageHandler.SendAsyncInvoked);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void SendData_ShouldNotCallAuditLog_UnlessAuditLogIsEnabled(bool isEnabled)
+        {
+            // Arrange
+            AuditLog.ResetLazyLogger();
+            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
+            Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024);
+
+            var connectionInfo = new ConnectionInfo(_configuration);
+            var serializedData = "{ \"key\": \"value\" }";
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{}")
+            };
+
+            CreateMockHttpClient(httpResponse, false);
+
+            var collectorWire = CreateHttpCollectorWire();
+
+            var mockForContextLogger = Mock.Create<ILogger>();
+            Mock.Arrange(() => _mockILogger.ForContext(Arg.AnyString, Arg.AnyObject, false))
+                .Returns(() => mockForContextLogger);
+
+            AuditLog.IsAuditLogEnabled = isEnabled;
+
+            // Act
+            var _ = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+
+            // Assert
+            Mock.Assert(() => mockForContextLogger.Fatal(Arg.AnyString), isEnabled ? Occurs.Exactly(3) : Occurs.Never());
         }
     }
 

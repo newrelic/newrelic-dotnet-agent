@@ -10,7 +10,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         MicrosoftLogging,
         SerilogWeb,
         NLog,
-        DummyMEL
+        DummyMEL,
+        Sitecore
     }
 
     public class LogUtils
@@ -30,6 +31,8 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     return "nlog";
                 case LoggingFramework.DummyMEL:
                     return "DummyMEL";
+                case LoggingFramework.Sitecore:
+                    return "sitecore";
                 default:
                     return "unknown";
             }
@@ -41,6 +44,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
             {
                 // log4net names are the same as our internal names
                 case LoggingFramework.Log4net:
+                case LoggingFramework.Sitecore:
                     switch (level)
                     {
                         case "NOMESSAGE":

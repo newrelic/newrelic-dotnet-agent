@@ -12,11 +12,13 @@ namespace NewRelic.Agent.Core.Utilities
         private readonly object _lock = new object();
         private bool _signaled;
 
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
         public SignalableAction(Action action, int delay)
         {
             void Action()
             {
-                while (true)
+                while (!_cancellationTokenSource.IsCancellationRequested)
                 {
                     lock (_lock)
                     {
@@ -49,7 +51,7 @@ namespace NewRelic.Agent.Core.Utilities
 
         public void Dispose()
         {
-            _worker.Abort();
+            _cancellationTokenSource.Cancel();
         }
     }
 }

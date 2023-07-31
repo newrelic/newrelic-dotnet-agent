@@ -1,6 +1,8 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if NETFRAMEWORK
+
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -41,7 +43,6 @@ namespace NewRelic.Agent.Core.Config
                 Assert.AreEqual("bar", valueWithProvenance.Value);
             }
         }
-
         [Test]
         public void GetWebConfigAppSetting_WebApp_ReturnsDefaultSettingsIfSettingNotAvailable()
         {
@@ -130,7 +131,6 @@ namespace NewRelic.Agent.Core.Config
                 Assert.AreEqual(expectedFileName, agentConfigFileName);
             }
         }
-
         [Test]
         public void TryGetAgentConfigFileFromAppConfig_ReturnsNullWhenFileDoesNotExist()
         {
@@ -176,7 +176,6 @@ namespace NewRelic.Agent.Core.Config
             {
                 ReplaceNewRelicHomeWithNullIfNecessary(staticMocks);
                 staticMocks.UseAppDomainAppVirtualPathFunc(() => "testVirtualPath");
-
                 var actualException = Assert.Catch<Exception>(() => ConfigurationLoader.GetAgentConfigFileName(), "Expected an exception to be thrown");
                 StringAssert.Contains("Could not find newrelic.config", actualException.Message);
             }
@@ -662,3 +661,4 @@ namespace NewRelic.Agent.Core.Config
         }
     }
 }
+#endif

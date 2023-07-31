@@ -7,6 +7,7 @@ namespace ArtifactBuilder.Artifacts
     public class NugetAzureCloudServices : Artifact
     {
         private readonly AgentComponents _frameworkAgentComponents;
+        private string _nuGetPackageName;
 
         public NugetAzureCloudServices(string configuration)
             : base(nameof(NugetAzureCloudServices))
@@ -29,7 +30,7 @@ namespace ArtifactBuilder.Artifacts
             package.CopyToLib(_frameworkAgentComponents.AgentApiDll);
             package.CopyToContent($@"{RepoRootDirectory}\src\_build\x64-{Configuration}\Installer\{GetMsiName()}");
             package.SetVersion(_frameworkAgentComponents.Version);
-            package.Pack();
+            _nuGetPackageName = package.Pack();
         }
 
         private void DoInstallerReplacements(string agentInstaller)
@@ -77,8 +78,11 @@ namespace ArtifactBuilder.Artifacts
 
         private string Unpack()
         {
+            if (string.IsNullOrEmpty(_nuGetPackageName))
+                throw new PackagingException("NuGet package name not found. Did you call InternalBuild()?");
+
             var unpackDir = Path.Join(OutputDirectory, "unpacked");
-            var nugetFile = Path.Join(OutputDirectory, $"NewRelicWindowsAzure.{_frameworkAgentComponents.Version}.nupkg");
+            var nugetFile = Path.Join(OutputDirectory, _nuGetPackageName);
             NuGetHelpers.Unpack(nugetFile, unpackDir);
             return unpackDir;
         }

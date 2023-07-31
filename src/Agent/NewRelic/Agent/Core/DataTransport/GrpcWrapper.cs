@@ -99,7 +99,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 var uriBuilder = new UriBuilder
                 {
-                    Scheme = "https",
+                    Scheme = ssl ? "https" : "http",
                     Host = host,
                     Port = port
                 };

@@ -8,7 +8,6 @@ namespace NewRelic.Agent.Core.Utilities
 {
     public static class EventBus<T>
     {
-        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(EventBus<T>));
         private static event Action<T> Events = T => { };
         private static readonly ReaderWriterLock Lock = new ReaderWriterLock();
         private static readonly ReaderLockGuard ReaderLockGuard = new ReaderLockGuard(Lock);
@@ -63,7 +62,7 @@ namespace NewRelic.Agent.Core.Utilities
                 }
                 catch (Exception exception)
                 {
-                    Log.Error($"Exception thrown from event handler.  Event handlers should not let exceptions bubble out of them: {exception}");
+                    Serilog.Log.Logger.Error(exception, "Exception thrown from event handler. Event handlers should not let exceptions bubble out of them.");
                 }
             }
         }

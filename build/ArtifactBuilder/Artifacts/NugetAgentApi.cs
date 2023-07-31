@@ -9,6 +9,7 @@ namespace ArtifactBuilder.Artifacts
     {
         private readonly AgentComponents _frameworkAgentComponents;
         private readonly AgentComponents _coreAgentComponents;
+        private string _nuGetPackageName;
 
         public NugetAgentApi(string configuration)
             : base(nameof(NugetAgentApi))
@@ -34,7 +35,7 @@ namespace ArtifactBuilder.Artifacts
             package.CopyToRoot(_frameworkAgentComponents.NewRelicLicenseFile);
             package.CopyToRoot(_frameworkAgentComponents.NewRelicThirdPartyNoticesFile);
             package.SetVersion(_frameworkAgentComponents.Version);
-            package.Pack();
+            _nuGetPackageName = package.Pack();
         }
 
         private void ValidateContent()
@@ -52,8 +53,11 @@ namespace ArtifactBuilder.Artifacts
 
         private string Unpack()
         {
+            if (string.IsNullOrEmpty(_nuGetPackageName))
+                throw new PackagingException("NuGet package name not found. Did you call InternalBuild()?");
+
             var unpackDir = Path.Join(OutputDirectory, "unpacked");
-            var nugetFile = Path.Join(OutputDirectory, $"NewRelic.Agent.Api.{_frameworkAgentComponents.Version}.nupkg");
+            var nugetFile = Path.Join(OutputDirectory, _nuGetPackageName);
             NuGetHelpers.Unpack(nugetFile, unpackDir);
             return unpackDir;
         }

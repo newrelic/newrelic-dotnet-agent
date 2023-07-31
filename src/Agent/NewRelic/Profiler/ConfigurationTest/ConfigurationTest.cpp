@@ -409,7 +409,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                 ");
 
             Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
-            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"bar", L"", false));
+            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"bar", L"", true));
         }
 
         TEST_METHOD(application_pool_oop_blacklist_without_default)
@@ -424,7 +424,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                 ");
 
             Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
-            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", false));
+            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", true));
         }
 
         TEST_METHOD(application_pool_oop_whitelist_without_default)
@@ -439,7 +439,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                 ");
 
             Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
-            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", false));
+            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", true));
         }
 
         TEST_METHOD(application_pool_oop_blacklist)
@@ -454,7 +454,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                 ");
 
             Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
-            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", false));
+            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", true));
         }
 
         TEST_METHOD(application_pool_oop_whitelist)
@@ -469,7 +469,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                 ");
 
             Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
-            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", false));
+            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"foo", L"", true));
         }
 
         TEST_METHOD(application_pools_oop_some_white_some_black_some_default_black)
@@ -488,12 +488,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                 ");
 
             Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
-            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteFoo", L"", false));
-            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteBar", L"", false));
-            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"blackFoo", L"", false));
-            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"blackBar", L"", false));
-            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"defaultFoo", L"", false));
-            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"defaultBar", L"", false));
+            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteFoo", L"", true));
+            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteBar", L"", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"blackFoo", L"", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"blackBar", L"", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"defaultFoo", L"", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"defaultBar", L"", true));
         }
 
         TEST_METHOD(application_pools_oop_some_white_some_black_some_default_white)
@@ -512,12 +512,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
                 ");
 
             Configuration configuration(configurationXml, _missingAgentEnabledConfigPair);
-            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteFoo", L"", false));
-            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteBar", L"", false));
-            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"blackFoo", L"", false));
-            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"blackBar", L"", false));
-            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"defaultFoo", L"", false));
-            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"defaultBar", L"", false));
+            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteFoo", L"", true));
+            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"whiteBar", L"", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"blackFoo", L"", true));
+            Assert::IsFalse(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"blackBar", L"", true));
+            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"defaultFoo", L"", true));
+            Assert::IsTrue(configuration.ShouldInstrument(L"Foo.exe", L"w3wp.exe", L"defaultBar", L"", true));
         }
 
         TEST_METHOD(agent_enabled_via_application_configuration)

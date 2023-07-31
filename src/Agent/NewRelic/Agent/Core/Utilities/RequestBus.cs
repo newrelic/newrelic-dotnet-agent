@@ -15,8 +15,6 @@ namespace NewRelic.Agent.Core.Utilities
     /// Responders are not required to answer and there may not be a responder setup for any given request so you must be prepared to handle either no callback, an empty enumeration or default(TResponse), depending on which Post overload you use.</remarks>
     public static class RequestBus<TRequest, TResponse>
     {
-        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(RequestBus<TRequest, TResponse>));
-
         public delegate void ResponsesCallback(IEnumerable<TResponse> responses);
 
         public delegate void ResponseCallback(TResponse response);
@@ -73,7 +71,7 @@ namespace NewRelic.Agent.Core.Utilities
                 }
                 catch (Exception exception)
                 {
-                    Log.Error($"Exception thrown from request handler.  Request handlers should not let exceptions bubble out of them: {exception}");
+                    Serilog.Log.Logger.Error(exception, "Exception thrown from request handler.  Request handlers should not let exceptions bubble out of them.");
                 }
             }
 

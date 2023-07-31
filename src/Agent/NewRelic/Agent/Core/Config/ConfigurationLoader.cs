@@ -111,6 +111,14 @@ namespace NewRelic.Agent.Core.Config
 				value = new ValueWithProvenance<string>(ConfigurationManager.AppSettings[key],
 					"ConfigurationManager app setting");
 			}
+#else
+            if (value?.Value == null)
+            {
+                var configMgrStatic = new ConfigurationManagerStatic();
+                var configValue = configMgrStatic.GetAppSetting(key);
+                if (configValue != null)
+                    value = new ValueWithProvenance<string>(configValue, configMgrStatic.AppSettingsFilePath);
+            }
 #endif
             return value;
         }
@@ -584,22 +592,6 @@ namespace NewRelic.Agent.Core.Config
 #endif
 
             return "newrelic_agent_" + Strings.SafeFileName(name) + ".log";
-        }
-
-        public bool FileLockingModelSpecified
-        {
-            get
-            {
-                return fileLockingModelSpecified;
-            }
-        }
-
-        public configurationLogFileLockingModel FileLockingModel
-        {
-            get
-            {
-                return fileLockingModel;
-            }
         }
 
         public bool Console

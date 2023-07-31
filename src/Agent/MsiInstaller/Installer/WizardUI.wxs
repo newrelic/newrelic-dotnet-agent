@@ -14,13 +14,13 @@ SPDX-License-Identifier: Apache-2.0
       <!-- Try to get the license key from a previous install. -->
       <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="DoAction" Value="FindPreviousLicenseKey" Order="1">1</Publish>
       <!-- If there was a previous license key found and they have accepted the agreement, then go on to the customize dialog (skip license key input). -->
-      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="CustomizeDlg" Order="2">PREVLICENSEKEYFOUND AND LicenseAccepted = "1"</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="FeaturesDlg" Order="2">PREVLICENSEKEYFOUND AND LicenseAccepted = "1"</Publish>
       <!-- If a previous license key was not found then prompt for the license key next. -->
       <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="LicenseKeyDialog" Order="3">NOT PREVLICENSEKEYFOUND AND LicenseAccepted = "1"</Publish>
       <!-- If a previous license key was not found then the back button from customize goes to the license key dialog. -->
-      <Publish Dialog="CustomizeDlg" Control="Back" Event="NewDialog" Value="LicenseKeyDialog" Order="2">NOT Installed AND NOT PREVLICENSEKEYFOUND</Publish>
+      <Publish Dialog="FeaturesDlg" Control="Back" Event="NewDialog" Value="LicenseKeyDialog" Order="2">NOT Installed AND NOT PREVLICENSEKEYFOUND</Publish>
       <!-- If a previous license key was found then the back button from customize goes to the license agreement dialog. -->
-      <Publish Dialog="CustomizeDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg" Order="2">NOT Installed AND PREVLICENSEKEYFOUND</Publish>
+      <Publish Dialog="FeaturesDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg" Order="2">NOT Installed AND PREVLICENSEKEYFOUND</Publish>
     </UI>
   </Fragment>
 </Wix>

@@ -5,11 +5,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using NewRelic.Agent.Core.WireModels;
-using Google.Protobuf.WellKnownTypes;
-using NUnit.Framework.Interfaces;
-using static Grpc.Core.Metadata;
-using System.Diagnostics;
-using System.Web.Configuration;
 
 namespace NewRelic.Agent.Core.Utilities
 {

@@ -9,6 +9,12 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      build-for-release:
+        description: 'This is a Release build. Use the "real" code signing certificate.'
+        required: true
+        type: boolean
+        default: false
 
   schedule:
     - cron: "0 9 * * *"
@@ -41,7 +47,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -62,13 +68,6 @@ jobs:
           $agentVersion = (Get-Item "${{ github.workspace }}\src\_build\AnyCPU-Release\NewRelic.Agent.Core\net462\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
           echo "version=$agentVersion" >> $env:GITHUB_OUTPUT
         shell: powershell
-
-      - name: Archive NewRelic.NuGetHelper
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-        with:
-          name: NewRelic.NuGetHelper
-          path: ${{ github.workspace }}\build\NewRelic.NuGetHelper\bin
-          if-no-files-found: error
 
       - name: Archive NewRelic.Agent.Extensions
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
@@ -91,7 +90,7 @@ jobs:
           if-no-files-found: error
 
       - name: Convert Code Signing Certificate Into File
-        if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
+        if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
         id: write_cert
         run: |
           $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
@@ -101,14 +100,14 @@ jobs:
         shell: powershell
 
       - name: Install Code Signing Certificate
-        if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
+        if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
         run: |
           Write-Host "certutil.exe -f -user -p <passphrase> -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot"
           certutil.exe -f -user -p ${{ secrets.CERT_PASSPHRASE }} -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot
         shell: powershell
 
       - name: Create Self-signed code signing cert
-        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+        if: ${{ (github.event_name == 'pull_request') || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'false') || github.event_name == 'schedule' }}
         run: |
           Write-Host "New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)"
           New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)
@@ -140,6 +139,12 @@ jobs:
           path: ${{ github.workspace }}\src\AwsLambda\AwsLambdaOpenTracer\bin\Release\netstandard2.0-ILRepacked
           if-no-files-found: error
 
+  run-linux-smoke-tests:
+    needs: build-fullagent-msi
+    name: Run Linux Smoke Tests
+    uses: ./.github/workflows/run_linux_smoke_tests.yml
+    secrets: inherit
+        
   build-integration-tests:
     needs: build-fullagent-msi
     name: Build IntegrationTests
@@ -150,7 +155,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -192,7 +197,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -280,7 +285,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -390,12 +395,12 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
         with:
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -488,7 +493,7 @@ jobs:
         shell: powershell
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -585,19 +590,19 @@ jobs:
 
   create-package-rpm:
     needs: build-fullagent-msi
-    if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
+    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
     name: Create RPM Package
     runs-on: ubuntu-22.04
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -653,19 +658,19 @@ jobs:
 
   create-package-deb:
     needs: build-fullagent-msi
-    if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
+    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
     name: Create Debian package
     runs-on: ubuntu-22.04
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@128a63446a954579617e875aaab7d2978154e969 # v2.4.0
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
         with:
           disable-sudo: true
           egress-policy: audit
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -707,13 +712,13 @@ jobs:
 
   run-artifactbuilder:
     needs: [create-package-rpm, create-package-deb]
-    if: ${{ github.event.release }} || github.event_name == 'workflow_dispatch'
+    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
     name: Run ArtifactBuilder
     runs-on: windows-2022
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
 
@@ -741,12 +746,6 @@ jobs:
           name: rpm-build-artifacts
           path: src/_build/CoreArtifacts
 
-      - name: Download NewRelic.NuGetHelper
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: NewRelic.NuGetHelper
-          path: build/NewRelic.NuGetHelper/bin
-
       - name: Download NewRelic.Agent.Extensions
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
@@ -758,6 +757,14 @@ jobs:
         with:
           name: NewRelic.OpenTracing.AmazonLambda.Tracer
           path: src/AwsLambda/AwsLambdaOpenTracer/bin/Release/netstandard2.0-ILRepacked
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
+        
+      - name: Build NewRelic.NuGetHelper
+        run: |
+          MSBuild.exe -restore -m -p:Configuration=Release ${{ github.workspace }}\build\NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj  
+        shell: powershell
 
       - name: Run ArtifactBuilder
         run: |
@@ -778,7 +785,7 @@ jobs:
       contents: write
     name: Build and Publish Multiverse Testing Suite
     needs: build-fullagent-msi
-    if: ${{ github.event.release }}
+    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/multiverse_run.yml@main
     with:
       agentVersion: ${{ needs.build-fullagent-msi.outputs.agentVersion }}

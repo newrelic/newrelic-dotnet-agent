@@ -27,8 +27,8 @@ namespace NewRelic.Agent.Core.Config
                 ConfigurationLoader.InitializeFromXml(bogusConfigXml, configSchemaSource);
 
                 var errorMessage = Type.GetType("Mono.Runtime") == null ?
-                        "An error occurred parsing newrelic.config - The 'bogus' attribute is not declared." :
-                        "An error occurred parsing newrelic.config - XmlSchema error: Attribute declaration was not found for bogus";
+                        "The 'bogus' attribute is not declared" :
+                        "XmlSchema error: Attribute declaration was not found for bogus";
                 Assert.IsTrue(logging.HasMessageThatContains(errorMessage));
             }
         }
@@ -53,9 +53,7 @@ namespace NewRelic.Agent.Core.Config
 
                 // While this error message is somewhat cryptic, in an actual agent run it would be
                 // preceeded by a warning message regarding failure to read the schema file contents from disk
-                var errorMessage = Type.GetType("Mono.Runtime") == null ?
-                        "An error occurred parsing newrelic.config - Root element is missing." :
-                        "An error occurred parsing newrelic.config - Root element is missing.";
+                var errorMessage = "Root element is missing";
                 Assert.IsTrue(logging.HasMessageThatContains(errorMessage));
             }
         }

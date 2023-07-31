@@ -15,12 +15,9 @@ namespace NewRelic.Agent.Core
     /// </summary>
     public class AgentShim
     {
-        private static log4net.ILog Log;
-
         static void Initialize()
         {
             AgentInitializer.InitializeAgent();
-            Log = log4net.LogManager.GetLogger(typeof(AgentShim));
         }
 
 #if NETSTANDARD2_0
@@ -229,7 +226,7 @@ namespace NewRelic.Agent.Core
             {
                 try
                 {
-                    Log.Debug("Exception occurred in AgentShim.GetTracer", exception);
+                    Serilog.Log.Logger.Debug(exception, "Exception occurred in AgentShim.GetTracer");
                 }
                 catch
                 {
@@ -263,7 +260,7 @@ namespace NewRelic.Agent.Core
                 ITracer tracer = tracerObject as ITracer;
                 if (tracer == null)
                 {
-                    Log.ErrorFormat("AgentShim.FinishTracer received a tracer object but it was not an ITracer. {0}", tracerObject);
+                    Serilog.Log.Logger.Error($"AgentShim.FinishTracer received a tracer object but it was not an ITracer. {tracerObject}");
                     return;
                 }
 
@@ -271,7 +268,7 @@ namespace NewRelic.Agent.Core
                 Exception exception = exceptionObject as Exception;
                 if (exception == null && exceptionObject != null)
                 {
-                    Log.ErrorFormat("AgentShim.FinishTracer received an exception object but it was not an Exception. {0}", exceptionObject);
+                    Serilog.Log.Logger.Error($"AgentShim.FinishTracer received an exception object but it was not an Exception. {exceptionObject}");
                     return;
                 }
 
@@ -291,7 +288,7 @@ namespace NewRelic.Agent.Core
             {
                 try
                 {
-                    Log.Debug("Exception occurred in AgentShim.FinishTracer", exception);
+                    Serilog.Log.Logger.Debug(exception,"Exception occurred in AgentShim.FinishTracer");
                 }
                 catch
                 {

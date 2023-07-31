@@ -214,4 +214,27 @@ namespace NewRelic.Agent.IntegrationTests.Logging.HsmAndCsp
     }
 
     #endregion
+
+    #region Sitecore
+
+    [NetFrameworkTest]
+    public class SitecoreHSMDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestHSM>
+    {
+        public SitecoreHSMDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestHSM fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.Sitecore)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class SitecoreCSPDisablesForwardingTestsFWLatestTests : HSMOrCSPDisablesForwardingTestsBase<ConsoleDynamicMethodFixtureFWLatestCSP>
+    {
+        public SitecoreCSPDisablesForwardingTestsFWLatestTests(ConsoleDynamicMethodFixtureFWLatestCSP fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.Sitecore)
+        {
+        }
+    }
+
+    #endregion
+
 }

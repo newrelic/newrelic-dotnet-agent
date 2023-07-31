@@ -25,16 +25,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             _mongoUrl = mongoUrl;
 
             _fixture.AddCommand($"MongoDbDriverExerciser SetMongoUrl {_mongoUrl}");
-            _fixture.AddCommand("MongoDBDriverExerciser CreateOne");
-            _fixture.AddCommand("MongoDBDriverExerciser CreateOneAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser CreateMany");
+            // Async methods first
             _fixture.AddCommand("MongoDBDriverExerciser CreateManyAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser DropAll");
+            _fixture.AddCommand("MongoDBDriverExerciser CreateOneAsync");
             _fixture.AddCommand("MongoDBDriverExerciser DropAllAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser DropOne");
             _fixture.AddCommand("MongoDBDriverExerciser DropOneAsync");
-            _fixture.AddCommand("MongoDBDriverExerciser List");
             _fixture.AddCommand("MongoDBDriverExerciser ListAsync");
+            // Then sync
+            _fixture.AddCommand("MongoDBDriverExerciser CreateMany");
+            _fixture.AddCommand("MongoDBDriverExerciser CreateOne");
+            _fixture.AddCommand("MongoDBDriverExerciser DropAll");
+            _fixture.AddCommand("MongoDBDriverExerciser DropOne");
+            _fixture.AddCommand("MongoDBDriverExerciser List");
 
             _fixture.AddActions
             (
@@ -62,75 +64,23 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             Assert.NotNull(m);
         }
 
-        [Fact]
-        public void CreateOne()
+        [Theory]
+        [InlineData("CreateOne")]
+        [InlineData("CreateOneAsync")]
+        [InlineData("CreateMany")]
+        [InlineData("CreateManyAsync")]
+        [InlineData("DropAll")]
+        [InlineData("DropAllAsync")]
+        [InlineData("DropOne")]
+        [InlineData("DropOneAsync")]
+        [InlineData("List")]
+        [InlineData("ListAsync")]
+        public void CheckForOperationMetrics(string operationName)
         {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/CreateOne");
+            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/{operationName}");
             Assert.NotNull(m);
         }
 
-        [Fact]
-        public void CreateOneAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/CreateOneAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void CreateMany()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/CreateMany");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void CreateManyAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/CreateManyAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void DropAll()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/DropAll");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void DropAllAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/DropAllAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void DropOne()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/DropOne");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void DropOneAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/DropOneAsync");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void List()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/List");
-            Assert.NotNull(m);
-        }
-
-        [Fact]
-        public void ListAsync()
-        {
-            var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/ListAsync");
-            Assert.NotNull(m);
-        }
     }
 
     [NetFrameworkTest]

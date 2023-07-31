@@ -1040,6 +1040,7 @@ namespace NewRelic.Agent.Core.Metric
 
         private const string LoggingMetrics = "Logging";
         private const string LoggingMetricsDotnetLines = LoggingMetrics + PathSeparator + "lines";
+        private const string LoggingMetricsDotnetDenied = LoggingMetrics + PathSeparator + "denied";
         private const string SupportabilityLoggingEventsPs = SupportabilityPs + "Logging" + PathSeparator;
         public const string SupportabilityLoggingEventsSent = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Sent";
         public const string SupportabilityLoggingEventsCollected = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Seen";
@@ -1053,6 +1054,16 @@ namespace NewRelic.Agent.Core.Metric
         public static string GetLoggingMetricsLinesName()
         {
             return LoggingMetricsDotnetLines;
+        }
+
+        public static string GetLoggingMetricsDeniedBySeverityName(string logLevel)
+        {
+            return LoggingMetricsDotnetDenied + PathSeparator + logLevel;
+        }
+
+        public static string GetLoggingMetricsDeniedName()
+        {
+            return LoggingMetricsDotnetDenied;
         }
 
         private const string Enabled = "enabled";
