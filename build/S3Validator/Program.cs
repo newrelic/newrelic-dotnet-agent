@@ -18,11 +18,8 @@ namespace S3Validator
                 .WithNotParsed(HandleParseError);
 
             var version = result.Value.Version;
-
             var configuration = LoadConfiguration(result.Value.ConfigurationPath);
-
             var isValid = Validate(version, configuration);
-
             if (!isValid)
             {
                 ExitWithError(ExitCode.Error, "Validation failed for an unknown reason.");
@@ -73,7 +70,7 @@ namespace S3Validator
                     status = "FileSize";
                 }
 
-                results.Add($"{status.PadRight(12)}{task.Result.RequestMessage?.RequestUri}");
+                results.Add($"{status,-12}{task.Result.RequestMessage?.RequestUri}");
             }
 
             if (!isValid)
@@ -83,7 +80,6 @@ namespace S3Validator
 
             return isValid;
         }
-
 
         private static void ValidateOptions(Options opts)
         {
@@ -125,6 +121,8 @@ namespace S3Validator
 
     public static class Helpers
     {
+
+        // Simplfy the TryGetValue into something more usable.
         public static T? GetValue<T>(this HttpRequestOptions options, string key)
         {
             options.TryGetValue(new HttpRequestOptionsKey<T>(key), out var value);

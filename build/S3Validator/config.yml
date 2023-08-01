@@ -1,3 +1,6 @@
+# Copyright 2020 New Relic, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # BaseUrl 
 # Should include the full path the to root of the agent folder - no trailing slash. Example: https://download.newrelic.com/dot_net_agent
 base-url: https://download.newrelic.com/dot_net_agent
@@ -11,7 +14,8 @@ directory-list:
   - previous_releases/{version}
 
 # FileList
-# Use the relative path to each file and a minimum acceptable size.  Do not use the exact size - this file should not need to be update just to change sizes under normal circumstances.
+# Use the relative path, starting at each directory in DirectoryList, to each file and a minimum acceptable size.
+# Do not use the exact size - this file should not need to be update just to change sizes under normal circumstances.
 # Use '{version}' in places where the version would be found.  This will be replaced with the version supplied to the tool on execution.
 # Example: 'NewRelicDotNetAgent_10.13.0_x64.msi' becomes 'NewRelicDotNetAgent_{version}_x64.msi'
 file-list:
