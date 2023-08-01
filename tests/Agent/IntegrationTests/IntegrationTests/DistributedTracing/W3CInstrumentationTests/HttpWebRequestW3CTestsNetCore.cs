@@ -81,6 +81,10 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
             var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/localhost/Stream/GET").FirstOrDefault();
 
             var receiverRootSpanEvent = receiverAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/SecondCall/WebRequestCallNext/{nextUrl}").FirstOrDefault();
+            if (receiverRootSpanEvent == null)
+            {
+                Console.WriteLine($"No received span! First process PID = {_fixture.FirstCallApplication.Id} Second process PID = {_fixture.SecondCallApplication.Id}");
+            }
 
             Assert.NotNull(senderRootSpanEvent);
             Assert.Equal(TestTracingVendors, senderRootSpanEvent.IntrinsicAttributes["tracingVendors"]);

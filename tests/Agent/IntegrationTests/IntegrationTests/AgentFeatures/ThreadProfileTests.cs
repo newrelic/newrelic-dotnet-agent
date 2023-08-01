@@ -75,6 +75,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         [Fact]
         public void Test()
         {
+            Console.WriteLine("Thread profile string: {0}", _threadProfileString);
             NrAssert.Multiple(
                 () => Assert.Contains(@"""OTHER"":[[[""Native"",""Function Call"",0]", _threadProfileString),
                 () => Assert.Contains(@"[""HostedWebCore.Program"",""Main"",0]", _threadProfileString),

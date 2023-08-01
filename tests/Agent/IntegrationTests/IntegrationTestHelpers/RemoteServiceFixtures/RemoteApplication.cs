@@ -182,6 +182,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected Process RemoteProcess { get; set; }
 
+        public int Id { get { return RemoteProcess.Id; } }
+
         public virtual string AppName { get; set; } = "IntegrationTestAppName";
 
         private string _uniqueFolderName;
