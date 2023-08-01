@@ -19,16 +19,11 @@ namespace S3Validator
 
             var version = result.Value.Version;
             var configuration = LoadConfiguration(result.Value.ConfigurationPath);
-            var isValid = Validate(version, configuration);
-            if (!isValid)
-            {
-                ExitWithError(ExitCode.Error, "Validation failed for an unknown reason.");
-            }
-
+            Validate(version, configuration);
             Console.WriteLine("Valid.");
         }
 
-        private static bool Validate(string version, Configuration configuration)
+        private static void Validate(string version, Configuration configuration)
         {
             var tasks = new List<Task<HttpResponseMessage>>();
             foreach (var dir in configuration.DirectoryList!)
@@ -44,7 +39,7 @@ namespace S3Validator
 
             if (!tasks.Any())
             {
-                return false;
+                ExitWithError(ExitCode.Error, "There was nothing to validate.");
             }
 
             var taskCompleted = Task.WaitAll(tasks.ToArray(), 10000);
@@ -77,8 +72,6 @@ namespace S3Validator
             {
                 ExitWithError(ExitCode.Error, "Validation failed. Results:" + Environment.NewLine + string.Join(Environment.NewLine, results));
             }
-
-            return isValid;
         }
 
         private static void ValidateOptions(Options opts)
