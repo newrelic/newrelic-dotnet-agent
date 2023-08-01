@@ -1,0 +1,88 @@
+name: Post Deploy for the .NET Agent
+
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent_version:
+        description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        required: true
+        type: string
+
+  workflow_call:
+    inputs:
+      agent_version:
+        description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+  
+env:
+  DOTNET_NOLOGO: true
+
+jobs:
+
+  validate-apt-repo:
+    name: Validate APT-based repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Validate
+        run: |
+          echo 'deb https://apt.newrelic.com/debian/ newrelic non-free' | tee /etc/apt/sources.list.d/newrelic.list
+          wget -O- https://download.newrelic.com/548C16BF.gpg | apt-key add -
+          apt-get update
+          apt-get install newrelic-dotnet-agent
+          installed_version=$(dpkg -s newrelic-dotnet-agent | grep -i version)
+          if [ "$AGENT_VERSION" = "$installed_version" ]; then
+              echo "Versions match."
+              exit 0
+          else
+              echo "ERROR: Version mismatch: Expected $AGENT_VERSION was $installed_version"
+              exit 1
+          fi
+        shell: bash
+        env: 
+          AGENT_VERSION: "Version: ${{ github.event.inputs.agent_version }}"
+
+  validate-yum-repo:
+    name: Validate YUM-based repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
+          fetch-depth: 0
+
+      - name: Validate
+        run: |
+          cd deploy/validation/validate-yum
+
+          # This will setup the New Relic yum repo and install the agent.
+          docker build -t localtesting/validateyum:latest .
+          docker run --name validateyum localtesting/validateyum:latest
+          installed_version=$(docker logs --tail 1 validateyum)
+          if [ "$AGENT_VERSION" = "$installed_version" ]; then
+              echo "Versions match."
+              exit 0
+          else
+              echo "ERROR: Version mismatch: Expected $AGENT_VERSION was $installed_version"
+              exit 1
+          fi
+        shell: bash
+        env:
+          AGENT_VERSION: "newrelic-dotnet-agent-${{ github.event.inputs.agent_version }}-1.x86_64"
