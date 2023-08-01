@@ -133,6 +133,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 new[] { "configuration", "browserMonitoring", "attributes" }, "enabled", stringValue);
         }
 
+        public void BrowserMonitoringLoader(string loaderType)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
+                new[] { "configuration", "browserMonitoring" }, "loader", loaderType);
+        }
+
         public void PutForDataSend()
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "dataTransmission" },
