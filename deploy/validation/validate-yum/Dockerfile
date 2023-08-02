@@ -1,4 +1,4 @@
-FROM rockylinux:9
+FROM rockylinux:9.2.20230513
 
 RUN yum install wget -y \
     && wget https://download.newrelic.com/548C16BF.gpg -O /etc/pki/rpm-gpg/RPM-GPG-KEY-NewRelic \
