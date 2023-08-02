@@ -2,20 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
-    [NetFrameworkTest]
-    public class BrowserAgentAutoInjection : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public abstract class BrowserAgentAutoInjectionBase : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
         private string _htmlContent;
 
-        public BrowserAgentAutoInjection(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        protected BrowserAgentAutoInjectionBase(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output, string loaderType)
             : base(fixture)
         {
             _fixture = fixture;
@@ -30,6 +30,10 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                     configModifier.AutoInstrumentBrowserMonitoring(true);
                     configModifier.BrowserMonitoringEnableAttributes(true);
 
+                    if (!string.IsNullOrEmpty(loaderType))
+                    {
+                        configModifier.BrowserMonitoringLoader(loaderType);
+                    }
                 },
                 exerciseApplication: () =>
                 {
@@ -53,6 +57,42 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             var jsAgentFromHtmlContent = JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_htmlContent);
 
             Assert.Equal(jsAgentFromConnectResponse, jsAgentFromHtmlContent);
+        }
+    }
+
+    [NetFrameworkTest]
+    public class BrowserAgentAutoInjectionDefault : BrowserAgentAutoInjectionBase
+    {
+        public BrowserAgentAutoInjectionDefault(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, null /* use default loader */)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class BrowserAgentAutoInjectionRum : BrowserAgentAutoInjectionBase
+    {
+        public BrowserAgentAutoInjectionRum(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, "rum")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class BrowserAgentAutoInjectionFull : BrowserAgentAutoInjectionBase
+    {
+        public BrowserAgentAutoInjectionFull(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, "full")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class BrowserAgentAutoInjectionSpa : BrowserAgentAutoInjectionBase
+    {
+        public BrowserAgentAutoInjectionSpa(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, "spa")
+        {
         }
     }
 }
