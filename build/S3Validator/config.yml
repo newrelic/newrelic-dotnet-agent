@@ -1,0 +1,66 @@
+# Copyright 2020 New Relic, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# BaseUrl 
+# Should include the full path the to root of the agent folder - no trailing slash. Example: https://download.newrelic.com/dot_net_agent
+base-url: https://download.newrelic.com/dot_net_agent
+
+# DirectoryList
+# A list of sub directories to check - no leading or trailing slash.  The FileList will be checked in each directory.
+# Use '{version}' in places where the version would be found.  This will be replaced with the version supplied to the tool on execution.
+# Example: 'previous_releases/10.13.0' becomes 'previous_releases/{version}'
+directory-list:
+  - latest_release
+  - previous_releases/{version}
+
+# FileList
+# Use the relative path, starting at each directory in DirectoryList, to each file and a minimum acceptable size.
+# Do not use the exact size - this file should not need to be update just to change sizes under normal circumstances.
+# Use '{version}' in places where the version would be found.  This will be replaced with the version supplied to the tool on execution.
+# Example: 'NewRelicDotNetAgent_10.13.0_x64.msi' becomes 'NewRelicDotNetAgent_{version}_x64.msi'
+file-list:
+  - name: NewRelicDotNetAgent_{version}_x64.msi
+    size: 13000000
+  - name: NewRelicDotNetAgent_{version}_x64.zip
+    size: 11500000
+  - name: NewRelicDotNetAgent_{version}_x86.msi
+    size: 12500000
+  - name: NewRelicDotNetAgent_{version}_x86.zip
+    size: 11500000
+  - name: NewRelicDotNetAgent_x64.msi
+    size: 13000000
+  - name: NewRelicDotNetAgent_x86.msi
+    size: 12500000
+  - name: Readme.txt
+    size: 1500
+  - name: newrelic-dotnet-agent-{version}-1.x86_64.rpm
+    size: 3000000
+  - name: newrelic-dotnet-agent_{version}_amd64.deb
+    size: 2500000
+  - name: newrelic-dotnet-agent_{version}_amd64.tar.gz
+    size: 3900000
+  - name: newrelic-dotnet-agent_{version}_arm64.deb
+    size: 2100000
+  - name: newrelic-dotnet-agent_{version}_arm64.tar.gz
+    size: 3700000
+  - name: SHA256/NewRelicDotNetAgent_{version}_x64.msi.sha256
+    size: 58
+  - name: SHA256/NewRelicDotNetAgent_{version}_x64.zip.sha256
+    size: 58
+  - name: SHA256/NewRelicDotNetAgent_{version}_x86.msi.sha256
+    size: 58
+  - name: SHA256/NewRelicDotNetAgent_{version}_x86.zip.sha256
+    size: 58
+  - name: SHA256/checksums.md
+    size: 800
+  - name: SHA256/newrelic-dotnet-agent-{version}-1.x86_64.rpm.sha256
+    size: 95
+  - name: SHA256/newrelic-dotnet-agent_{version}_amd64.deb.sha256
+    size: 95
+  - name: SHA256/newrelic-dotnet-agent_{version}_amd64.tar.gz.sha256
+    size: 95
+  - name: SHA256/newrelic-dotnet-agent_{version}_arm64.deb.sha256
+    size: 95
+  - name: SHA256/newrelic-dotnet-agent_{version}_arm64.tar.gz.sha256
+    size: 95
+
