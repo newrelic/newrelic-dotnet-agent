@@ -265,6 +265,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                         try
                         {
+                            // Give it a second to start
+                            Thread.Sleep(1000);
                             ExerciseApplication();
                         }
                         catch (Exception ex)

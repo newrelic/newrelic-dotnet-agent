@@ -82,8 +82,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             base.Initialize();
 
-            WriteApplicationAgentLogToTestLogger(nameof(FirstCallApplication), FirstCallApplication);
-            WriteApplicationAgentLogToTestLogger(nameof(SecondCallApplication), SecondCallApplication);
         }
 
         private void WriteApplicationAgentLogToTestLogger(string applicationName, RemoteService application)
@@ -100,14 +98,16 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 TestLogger?.WriteLine($"No log file found for {applicationName}.");
             }
 
-            TestLogger?.WriteLine("----- End of Agent log file -----");
+            TestLogger?.WriteLine($"----- End of {applicationName} log file -----");
         }
 
         public override void ShutdownRemoteApplication()
         {
+            WriteApplicationAgentLogToTestLogger($"{FirstCallApplication.AppName}:{FirstCallApplication.Id}", FirstCallApplication);
             FirstCallApplication.Shutdown();
             //FirstCallApplication.CapturedOutput?.WriteProcessOutputToLog($"{nameof(FirstCallApplication)} application:");
 
+            WriteApplicationAgentLogToTestLogger($"{SecondCallApplication.AppName}:{SecondCallApplication.Id}", SecondCallApplication);
             SecondCallApplication.Shutdown();
             //SecondCallApplication.CapturedOutput?.WriteProcessOutputToLog($"{nameof(SecondCallApplication)} application:");
 

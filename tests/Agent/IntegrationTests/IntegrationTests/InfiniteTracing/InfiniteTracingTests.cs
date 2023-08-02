@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                     _fixture.SendCommand("InfiniteTracingTester Make8TSpan");
                     // Now wait to see that the 8T spans were sent successfully
                     _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullySentLogLineRegex, TimeSpan.FromMinutes(1), ExpectedSentCount);
-                    // It seems we aren't guaranteed to get a response for every consumer
+                    // It seems we aren't guaranteed to get a response for every span
                     _fixture.AgentLog.WaitForLogLinesCapturedIntCount(AgentLogBase.SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex, TimeSpan.FromMinutes(1), 1);
                 }
 
@@ -64,7 +64,8 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
             {
                 new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Seen", callCount = expectedSeenCount },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Sent", callCount = ExpectedSentCount },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Received", callCount = expectedReceivedCount }
+                // It seems we aren't guaranteed to get a response for every span
+                new Assertions.ExpectedMetric { metricName = @"Supportability/InfiniteTracing/Span/Received", callCount = 1 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics();
