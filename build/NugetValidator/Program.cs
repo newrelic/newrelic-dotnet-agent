@@ -3,6 +3,7 @@ using NuGet.Common;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
+using System;
 
 namespace NugetValidator
 {
@@ -28,28 +29,53 @@ namespace NugetValidator
                 {
                     Console.WriteLine($"Validating that NuGet package {options.Name} with version {options.Version} exists...");
 
-                    SourceCacheContext cache = new SourceCacheContext();
-                    SourceRepository repository = Repository.Factory.GetCoreV3(RepoUrl);
+                    try
+                    {
+                        SourceCacheContext cache = new SourceCacheContext();
+                        SourceRepository repository = Repository.Factory.GetCoreV3(RepoUrl);
 
-                    PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
+                        PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
 
-                    List<IPackageSearchMetadata> packages = (await resource.GetMetadataAsync(
-                        options.Name,
-                        includePrerelease: false,
-                        includeUnlisted: false,
-                        cache,
-                        NullLogger.Instance,
-                        CancellationToken.None)).ToList();
+                        List<IPackageSearchMetadata> packages = (await resource.GetMetadataAsync(
+                            options.Name,
+                            includePrerelease: false,
+                            includeUnlisted: false,
+                            cache,
+                            new ConsoleNugetLogger(),
+                            CancellationToken.None)).ToList();
 
-                    SemanticVersion semVer = SemanticVersion.Parse(options.Version);
+                        SemanticVersion semVer = SemanticVersion.Parse(options.Version);
                     
-                    result = packages.FirstOrDefault(p => string.Equals(p.Identity.Id, options.Name, StringComparison.CurrentCultureIgnoreCase) && p.Identity.Version == semVer);
+                        result = packages.FirstOrDefault(p => string.Equals(p.Identity.Id, options.Name, StringComparison.CurrentCultureIgnoreCase) && p.Identity.Version == semVer);
 
-                    Console.WriteLine($"{(result != null ? "Found" : "Did NOT find")} NuGet package {options.Name} with version {options.Version}");
+                        Console.WriteLine($"{(result != null ? "Found" : "Did NOT find")} NuGet package {options.Name} with version {options.Version}");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Unexpected exception: {e}");
+                        throw;
+                    }
                 });
 
             // return code of 0 indicates success
-            return result == null ? -1 : 0;
+            var exitCode = result == null ? 1 : 0;
+            Console.WriteLine($"Exit code: {exitCode}");
+            return exitCode;
+        }
+    }
+
+    internal class ConsoleNugetLogger : LoggerBase
+    {
+        public override void Log(ILogMessage message)
+        {
+            Console.WriteLine($"{message}");
+        }
+
+        public override Task LogAsync(ILogMessage message)
+        {
+            Console.WriteLine($"{message}");
+
+            return Task.CompletedTask;
         }
     }
 }
