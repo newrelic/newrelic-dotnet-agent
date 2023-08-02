@@ -33,6 +33,10 @@ on:
         description: 'If "true", will run the index-download-site job. If "false", will not.'
         required: true
         default: 'true'
+      update-apm-version:
+        description: 'If "true", will run the update-apm job. If "false", will not.'
+        required: true
+        default: 'true'
 
 permissions:
   contents: read
@@ -334,3 +338,37 @@ jobs:
         run: |
           curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
         shell: bash
+
+  update-apm:
+    name: Update System Configuration Page
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.update-apm-version == true }}
+    steps:
+      - name: Update system configuration page
+        run: |
+          PAYLOAD="{
+              \"system_configuration\": {
+                \"key\":   \"dotnet_agent_version\",
+                \"value\": \"${{ github.event.inputs.agent_version }}\"
+              }
+            }"
+          CONTENT_TYPE='Content-Type: application/json'
+
+          # STAGING
+          curl -X POST 'https://staging-api.newrelic.com/v2/system_configuration.json' \
+            -H "X-Api-Key:${{ secrets.NEW_RELIC_API_KEY_STAGING }}" -i \
+            -H "$CONTENT_TYPE" \
+            -d "$PAYLOAD"
+
+          # PRODUCTION
+          curl -X POST 'https://api.newrelic.com/v2/system_configuration.json' \
+            -H "X-Api-Key:${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}" -i \
+            -H "$CONTENT_TYPE" \
+            -d "$PAYLOAD"
+
+          # EU PRODUCTION
+          curl -X POST 'https://api.eu.newrelic.com/v2/system_configuration.json' \
+            -H "X-Api-Key:${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}" -i \
+            -H "$CONTENT_TYPE" \
+            -d "$PAYLOAD"    
+            
