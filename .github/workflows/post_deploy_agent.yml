@@ -86,3 +86,29 @@ jobs:
         shell: bash
         env:
           AGENT_VERSION: "newrelic-dotnet-agent-${{ github.event.inputs.agent_version }}-1.x86_64"
+
+  validate-download-site-s3:
+    name: Validate S3-hosted Download Site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
+          fetch-depth: 0
+
+      - name: Build and Run S3Validator
+        run: |
+          dotnet build --configuration Release "$BUILD_PATH"
+          "$RUN_PATH/S3Validator" -v $AGENT_VERSION -c $CONFIG_PATH
+        shell: bash
+        env:
+          BUILD_PATH: $${{ github.workspace }}/build/S3Validator/S3Validator.csproj
+          RUN_PATH: ${{ github.workspace }}/build/S3Validator/S3Validator/bin/Release/net7.0/
+          CONFIG_PATH: ${{ github.workspace }}/build/S3Validator/S3Validator/bin/Release/net7.0/config.yml
+          AGENT_VERSION: ${{ github.event.inputs.agent_version }}
