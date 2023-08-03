@@ -32,15 +32,15 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
         with:
-          disable-sudo: true
+          disable-sudo: false
           egress-policy: audit
 
       - name: Validate
         run: |
-          echo 'deb https://apt.newrelic.com/debian/ newrelic non-free' | tee /etc/apt/sources.list.d/newrelic.list
-          wget -O- https://download.newrelic.com/548C16BF.gpg | apt-key add -
-          apt-get update
-          apt-get install newrelic-dotnet-agent
+          echo 'deb https://apt.newrelic.com/debian/ newrelic non-free' | sudo tee /etc/apt/sources.list.d/newrelic.list
+          wget -O- https://download.newrelic.com/548C16BF.gpg | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install newrelic-dotnet-agent
           installed_version=$(dpkg -s newrelic-dotnet-agent | grep -i version)
           if [ "$AGENT_VERSION" = "$installed_version" ]; then
               echo "Versions match."
@@ -108,9 +108,9 @@ jobs:
           "$RUN_PATH/S3Validator" -v $AGENT_VERSION -c $CONFIG_PATH
         shell: bash
         env:
-          BUILD_PATH: $${{ github.workspace }}/build/S3Validator/S3Validator.csproj
-          RUN_PATH: ${{ github.workspace }}/build/S3Validator/S3Validator/bin/Release/net7.0/
-          CONFIG_PATH: ${{ github.workspace }}/build/S3Validator/S3Validator/bin/Release/net7.0/config.yml
+          BUILD_PATH: ${{ github.workspace }}/build/S3Validator/S3Validator.csproj
+          RUN_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/
+          CONFIG_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/config.yml
           AGENT_VERSION: ${{ github.event.inputs.agent_version }}
 
   validate-nuget-packages:
@@ -134,7 +134,7 @@ jobs:
           "$RUN_PATH/NugetValidator" -v $AGENT_VERSION -c $CONFIG_PATH
         shell: bash
         env:
-          BUILD_PATH: $${{ github.workspace }}/build/NugetValidator/NugetValidator.csproj
-          RUN_PATH: ${{ github.workspace }}/build/NugetValidator/NugetValidator/bin/Release/net7.0/
+          BUILD_PATH: ${{ github.workspace }}/build/NugetValidator/NugetValidator.csproj
+          RUN_PATH: ${{ github.workspace }}/build/NugetValidator/bin/Release/net7.0/
           AGENT_VERSION: ${{ github.event.inputs.agent_version }}
-          CONFIG_PATH: ${{ github.workspace }}/build/NugetValidator/NugetValidator/bin/Release/net7.0/config.yml
+          CONFIG_PATH: ${{ github.workspace }}/build/NugetValidator/bin/Release/net7.0/config.yml
