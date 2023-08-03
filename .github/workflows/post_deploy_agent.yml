@@ -1,0 +1,36 @@
+name: Post Deploy for the .NET Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent_version:
+        description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        required: true
+        type: string
+
+  workflow_call:
+    inputs:
+      agent_version:
+        description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+  
+env:
+  DOTNET_NOLOGO: true
+
+jobs:
+
+  placeholder:
+    name: Placeholder
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
