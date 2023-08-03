@@ -104,10 +104,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public override void ShutdownRemoteApplication()
         {
             FirstCallApplication.Shutdown();
+            FirstCallApplication.WaitForExit();
             WriteApplicationAgentLogToTestLogger($"{FirstCallApplication.AppName}:{FirstCallApplication.Id}", FirstCallApplication);
             //FirstCallApplication.CapturedOutput?.WriteProcessOutputToLog($"{nameof(FirstCallApplication)} application:");
 
             SecondCallApplication.Shutdown();
+            SecondCallApplication.WaitForExit();
             WriteApplicationAgentLogToTestLogger($"{SecondCallApplication.AppName}:{SecondCallApplication.Id}", SecondCallApplication);
             //SecondCallApplication.CapturedOutput?.WriteProcessOutputToLog($"{nameof(SecondCallApplication)} application:");
 
