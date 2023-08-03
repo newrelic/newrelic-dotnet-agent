@@ -1,0 +1,30 @@
+name: Publish .NET Agent Releaase Notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent_version:
+        description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        required: true
+        type: string
+      run_id:
+        description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      agent_version:
+        description: 'Agent Version to deploy.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
+        required: true
+        type: string
+      run_id:
+        description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+  
+env:
+  DOTNET_NOLOGO: true
