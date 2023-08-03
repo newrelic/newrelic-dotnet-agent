@@ -1,81 +1,113 @@
-﻿using CommandLine;
-using NuGet.Common;
+﻿// Copyright 2023 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using CommandLine;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
-using System;
 
-namespace NugetValidator
+namespace NugetValidator;
+
+internal class Program
 {
-    public class Options
-    {
-        [Option('n', "name", Required = true, HelpText = "NuGet Package Name")]
-        public string Name { get; set; }
+    private const string RepoUrl = "https://api.nuget.org/v3/index.json";
 
-        [Option('v', "version", Required = true, HelpText = "Package Version")]
-        public string Version { get; set; }
+    static async Task<int> Main(string[] args)
+    {
+        var options = Parser.Default.ParseArguments<Options>(args)
+            .WithParsed(ValidateOptions)
+            .WithNotParsed(HandleParseError)
+            .Value;
+
+        var configuration = LoadConfiguration(options.ConfigurationPath);
+
+        var validationFailed = await ValidatePackagesAsync(options, configuration);
+
+        // return code of 0 indicates success
+        var exitCode = validationFailed ? 1 : 0;
+        Console.WriteLine($"Exit code: {exitCode}");
+
+        return exitCode;
     }
 
-    internal class Program
+    static async Task<bool> ValidatePackagesAsync(Options options, Configuration configuration)
     {
-        private const string RepoUrl = "https://api.nuget.org/v3/index.json";
+        var validationFailed = false;
 
-        static async Task<int> Main(string[] args)
+        try
         {
-            IPackageSearchMetadata result = null;
+            SourceCacheContext cache = new SourceCacheContext();
+            SourceRepository repository = Repository.Factory.GetCoreV3(RepoUrl);
 
-            await Parser.Default.ParseArguments<Options>(args)
-                .WithParsedAsync(async options =>
-                {
-                    Console.WriteLine($"Validating that NuGet package {options.Name} with version {options.Version} exists...");
+            PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
+            var nugetVersion = NuGetVersion.Parse(options.Version);
 
-                    try
-                    {
-                        SourceCacheContext cache = new SourceCacheContext();
-                        SourceRepository repository = Repository.Factory.GetCoreV3(RepoUrl);
+            foreach (var packageName in configuration.Packages)
+            {
+                Console.WriteLine($"Validating that NuGet package {packageName} with version {options.Version} exists...");
 
-                        PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
+                List<IPackageSearchMetadata> packages = (await resource.GetMetadataAsync(
+                    packageName,
+                    includePrerelease: false,
+                    includeUnlisted: false,
+                    cache,
+                    new ConsoleNugetLogger(),
+                    CancellationToken.None)).ToList();
 
-                        List<IPackageSearchMetadata> packages = (await resource.GetMetadataAsync(
-                            options.Name,
-                            includePrerelease: false,
-                            includeUnlisted: false,
-                            cache,
-                            new ConsoleNugetLogger(),
-                            CancellationToken.None)).ToList();
+                var result = packages.FirstOrDefault(p =>
+                    string.Equals(p.Identity.Id, packageName, StringComparison.CurrentCultureIgnoreCase) &&
+                    p.Identity.Version == nugetVersion);
 
-                        SemanticVersion semVer = SemanticVersion.Parse(options.Version);
-                    
-                        result = packages.FirstOrDefault(p => string.Equals(p.Identity.Id, options.Name, StringComparison.CurrentCultureIgnoreCase) && p.Identity.Version == semVer);
+                Console.WriteLine($"{(result != null ? "Found" : "Did NOT find")} NuGet package {packageName} with version {options.Version}");
 
-                        Console.WriteLine($"{(result != null ? "Found" : "Did NOT find")} NuGet package {options.Name} with version {options.Version}");
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine($"Unexpected exception: {e}");
-                        throw;
-                    }
-                });
+                validationFailed |= (result == null);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Unexpected exception: {e}");
+            throw;
+        }
 
-            // return code of 0 indicates success
-            var exitCode = result == null ? 1 : 0;
-            Console.WriteLine($"Exit code: {exitCode}");
-            return exitCode;
+        return validationFailed;
+    }
+
+    private static Configuration LoadConfiguration(string path)
+    {
+        var input = File.ReadAllText(path);
+        var deserializer = new YamlDotNet.Serialization.Deserializer();
+        return deserializer.Deserialize<Configuration>(input);
+    }
+
+
+    private static void ValidateOptions(Options opts)
+    {
+        if (string.IsNullOrWhiteSpace(opts.Version)
+            || string.IsNullOrWhiteSpace(opts.ConfigurationPath))
+        {
+            ExitWithError(ExitCode.BadArguments, "Arguments were empty or whitespace.");
+        }
+
+        if (!Version.TryParse(opts.Version, out _))
+        {
+            ExitWithError(ExitCode.Error, $"Version provided, '{opts.Version}', was not a valid version.");
+        }
+
+        if (!File.Exists(opts.ConfigurationPath))
+        {
+            ExitWithError(ExitCode.FileNotFound, $"Configuration file did not exist at {opts.ConfigurationPath}.");
         }
     }
 
-    internal class ConsoleNugetLogger : LoggerBase
+    private static void HandleParseError(IEnumerable<Error> errs)
     {
-        public override void Log(ILogMessage message)
-        {
-            Console.WriteLine($"{message}");
-        }
-
-        public override Task LogAsync(ILogMessage message)
-        {
-            Console.WriteLine($"{message}");
-
-            return Task.CompletedTask;
-        }
+        ExitWithError(ExitCode.BadArguments, "Error occurred while parsing command line arguments.");
     }
+
+    public static void ExitWithError(ExitCode exitCode, string message)
+    {
+        Console.WriteLine(message);
+        Environment.Exit((int)exitCode);
+    }
+
 }
