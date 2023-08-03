@@ -17,39 +17,47 @@ namespace ReleaseNotesBuilder
         /// <returns>Extracted release version.</returns>
         public static string Parse(List<string> changelog, ReleaseNotesModel maker)
         {
-            // Try to confirm that this is a changelog in our format.
-            if (changelog[0] != ChangeLogHeader)
+            try
             {
-                Program.ExitWithError(ExitCode.NotAChangelog, $"The file does not appear to be a changelog file.  Has the format change?");
-            }
+                // Try to confirm that this is a changelog in our format.
+                if (changelog[0] != ChangeLogHeader)
+                {
+                    Program.ExitWithError(ExitCode.NotAChangelog, $"The file does not appear to be a changelog file.  Has the format change?");
+                }
 
-            // starting point for other searches
-            var currentReleaseIndex = changelog.FindIndex(0, 25, (x) => x.StartsWith(ReleaseVersionPrefix));
-            if (currentReleaseIndex == -1)
+                // starting point for other searches
+                var currentReleaseIndex = changelog.FindIndex(0, 25, (x) => x.StartsWith(ReleaseVersionPrefix));
+                if (currentReleaseIndex == -1)
+                {
+                    Program.ExitWithError(ExitCode.NotAChangelog, $"The file does not appear to have a release version.  Has the format change?");
+                }
+
+                var releaseVersion = ParseReleaseVersion(changelog, currentReleaseIndex);
+                maker.SetReleaseVersion(releaseVersion);
+
+                // upper bound on the searches
+                var previousReleaseIndex = changelog.FindIndex(currentReleaseIndex + 1, 50, (x) => x.StartsWith(ReleaseVersionPrefix));
+
+                //Get change type starting points.
+                var newFeatures = ParseSection(changelog, Program.NewFeaturesSection, currentReleaseIndex, previousReleaseIndex);
+                maker.AddFeatures(newFeatures);
+
+                var fixes = ParseSection(changelog, Program.FixesSection, currentReleaseIndex, previousReleaseIndex);
+                maker.AddBugsAndFixes(fixes);
+
+                var security = ParseSection(changelog, Program.SecuritySection, currentReleaseIndex, previousReleaseIndex);
+                maker.AddSecurity(security);
+
+                var notice = ParseSection(changelog, Program.NoticeSection, currentReleaseIndex, previousReleaseIndex);
+                maker.AddNotice(notice);
+
+                return releaseVersion;
+            }
+            catch (Exception ex)
             {
-                Program.ExitWithError(ExitCode.NotAChangelog, $"The file does not appear to have a release version.  Has the format change?");
+                Program.ExitWithError(ExitCode.InvalidData, $"Problem parsing changelog: " + Environment.NewLine + ex.Message);
+                return string.Empty;
             }
-
-            var releaseVersion = ParseReleaseVersion(changelog, currentReleaseIndex);
-            maker.SetReleaseVersion(releaseVersion);
-
-            // upper bound on the searches
-            var previousReleaseIndex = changelog.FindIndex(currentReleaseIndex + 1, 50, (x) => x.StartsWith(ReleaseVersionPrefix));
-
-            //Get change type starting points.
-            var newFeatures = ParseSection(changelog, Program.NewFeaturesSection, currentReleaseIndex, previousReleaseIndex);
-            maker.AddFeatures(newFeatures);
-
-            var fixes = ParseSection(changelog, Program.FixesSection, currentReleaseIndex, previousReleaseIndex);
-            maker.AddBugsAndFixes(fixes);
-
-            var security = ParseSection(changelog, Program.SecuritySection, currentReleaseIndex, previousReleaseIndex);
-            maker.AddSecurity(security);
-
-            var notice = ParseSection(changelog, Program.NoticeSection, currentReleaseIndex, previousReleaseIndex);
-            maker.AddNotice(notice);
-
-            return releaseVersion;
         }
 
         private static string ParseReleaseVersion(List<string> changelog, int releaseIndex)

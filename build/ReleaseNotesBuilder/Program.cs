@@ -25,7 +25,7 @@ namespace ReleaseNotesBuilder
             var changelog = File.ReadAllLines(result.Value.Changelog).ToList();
             var releaseVersion = ChangelogParser.Parse(changelog, maker);
 
-            var releaseNotes = maker.Make();
+            var releaseNotes = maker.GetDocumentContents();
 
             if (result.Value.Verbose)
             {
@@ -72,15 +72,32 @@ namespace ReleaseNotesBuilder
 
         private static PersistentData LoadPersisentData(string path)
         {
-            var input = File.ReadAllText(path);
-            var deserializer = new YamlDotNet.Serialization.Deserializer();
-            return deserializer.Deserialize<PersistentData>(input);
+            try
+            {
+                var input = File.ReadAllText(path);
+                var deserializer = new YamlDotNet.Serialization.Deserializer();
+                return deserializer.Deserialize<PersistentData>(input);
+            }
+            catch (Exception ex)
+            {
+                ExitWithError(ExitCode.InvalidData, "Error loading persustent data: " + Environment.NewLine + ex.Message);
+                return new PersistentData(); ;
+            }
         }
 
         private static string LoadChecksums(string path)
         {
-            // This file contains exactly what goes into the release notes, no changes needed.
-            return File.ReadAllText(path);
+            try
+            {
+                // This file contains exactly what goes into the release notes, no changes needed.
+                return File.ReadAllText(path);
+            }
+            catch (Exception ex)
+            {
+                ExitWithError(ExitCode.InvalidData, "Error loading checksums: " + Environment.NewLine + ex.Message);
+                return string.Empty;
+            }
+            
         }
 
         private static void HandleParseError(IEnumerable<Error> errs)

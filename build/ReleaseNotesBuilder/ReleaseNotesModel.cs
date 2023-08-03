@@ -50,7 +50,7 @@ namespace ReleaseNotesBuilder
             _checksums = checksums;
         }
 
-        public string Make()
+        public string GetDocumentContents()
         {
             var problems = Validate();
             if (problems.Any())
