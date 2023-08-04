@@ -370,5 +370,24 @@ jobs:
           curl -X POST 'https://api.eu.newrelic.com/v2/system_configuration.json' \
             -H "X-Api-Key:${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}" -i \
             -H "$CONTENT_TYPE" \
-            -d "$PAYLOAD"    
-            
+            -d "$PAYLOAD"
+
+  publish-release-notes:
+    needs: [deploy-linux, index-download-site]
+    if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
+    name: Create and Publish Release Notes
+    uses: newrelic/newrelic-dotnet-agent/.github/workflows/publish_release_notes.yml@main
+    with:
+      agent_version: ${{ github.event.inputs.agent_version }}
+      run_id: ${{ github.event.inputs.run_id }}
+    secrets: inherit
+
+  post-deploy:
+    needs: [deploy-linux, index-download-site]
+    if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
+    name: Run Post Deploy Workflow
+    uses: newrelic/newrelic-dotnet-agent/.github/workflows/post_deploy_agent.yml@main
+    with:
+      agent_version: ${{ github.event.inputs.agent_version }}
+    secrets: inherit
+
