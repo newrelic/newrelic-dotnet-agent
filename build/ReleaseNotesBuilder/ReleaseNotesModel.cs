@@ -92,6 +92,18 @@ namespace ReleaseNotesBuilder
                 builder.AppendLine();
             }
 
+            if (_bodySecurity.Any())
+            {
+                builder.AppendLine(Program.SecuritySection);
+                builder.AppendLine();
+                foreach (var entry in _bodySecurity)
+                {
+                    builder.AppendLine(entry);
+                }
+
+                builder.AppendLine();
+            }
+
             if (_bodyNewFeatures.Any())
             {
                 builder.AppendLine(Program.NewFeaturesSection);
@@ -109,18 +121,6 @@ namespace ReleaseNotesBuilder
                 builder.AppendLine(Program.FixesSection);
                 builder.AppendLine();
                 foreach (var entry in _bodyFixes)
-                {
-                    builder.AppendLine(entry);
-                }
-
-                builder.AppendLine();
-            }
-
-            if (_bodySecurity.Any())
-            {
-                builder.AppendLine(Program.SecuritySection);
-                builder.AppendLine();
-                foreach (var entry in _bodySecurity)
                 {
                     builder.AppendLine(entry);
                 }
