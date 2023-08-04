@@ -103,7 +103,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         }
 
         // Tests are only retried if they return a known error not related to the test
-        protected virtual int MaxTries => 1;
+        protected virtual int MaxTries => 3;
 
         public void DisableAsyncLocalCallStack()
         {
@@ -271,7 +271,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         catch (Exception ex)
                         {
-                            retryTest = true;
                             TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.ToString());
                             retryMessage = "Exception thrown.";
                         }
