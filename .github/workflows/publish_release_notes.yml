@@ -120,5 +120,5 @@ jobs:
           GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
           REPO: https://github.com/newrelic/docs-website/
           HEAD: ${{env.branch_name}}
-          TITLE: "(TESTING-DO NOT MERGE).NET Agent Release Notes for v${{ github.event.inputs.agent_version }}"
-          BODY: "(TESTING-DO NOT MERGE)This is an automated PR generated when the .NET agent is released. Please merge as soon as possible."
+          TITLE: ".NET Agent Release Notes for v${{ github.event.inputs.agent_version }}"
+          BODY: "This is an automated PR generated when the .NET agent is released. Please merge as soon as possible."
