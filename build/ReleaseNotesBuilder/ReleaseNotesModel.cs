@@ -52,15 +52,7 @@ namespace ReleaseNotesBuilder
 
         public string GetDocumentContents()
         {
-            var problems = Validate();
-            if (problems.Any())
-            {
-                Program.ExitWithError(ExitCode.InvalidData,
-                    "The following problems occurred building the release notes:"
-                    + Environment.NewLine + "  "
-                    + string.Join(Environment.NewLine + "  ", problems)
-                    );
-            }
+            Validate();
 
             var builder = new StringBuilder();
             builder.AppendLine(FrontMatterWrapper);
@@ -80,53 +72,10 @@ namespace ReleaseNotesBuilder
                 builder.AppendLine();
             }
 
-            if (_bodyNotice.Any())
-            {
-                builder.AppendLine(Program.NoticeSection);
-                builder.AppendLine();
-                foreach (var entry in _bodyNotice)
-                {
-                    builder.AppendLine(entry);
-                }
-
-                builder.AppendLine();
-            }
-
-            if (_bodySecurity.Any())
-            {
-                builder.AppendLine(Program.SecuritySection);
-                builder.AppendLine();
-                foreach (var entry in _bodySecurity)
-                {
-                    builder.AppendLine(entry);
-                }
-
-                builder.AppendLine();
-            }
-
-            if (_bodyNewFeatures.Any())
-            {
-                builder.AppendLine(Program.NewFeaturesSection);
-                builder.AppendLine();
-                foreach (var entry in _bodyNewFeatures)
-                {
-                    builder.AppendLine(entry);
-                }
-
-                builder.AppendLine();
-            }
-
-            if (_bodyFixes.Any())
-            {
-                builder.AppendLine(Program.FixesSection);
-                builder.AppendLine();
-                foreach (var entry in _bodyFixes)
-                {
-                    builder.AppendLine(entry);
-                }
-
-                builder.AppendLine();
-            }
+            AppendSection(builder, Program.NoticeSection, _bodyNotice);
+            AppendSection(builder, Program.SecuritySection, _bodySecurity);
+            AppendSection(builder, Program.NewFeaturesSection, _bodyNewFeatures);
+            AppendSection(builder, Program.FixesSection, _bodyFixes);
 
             builder.AppendLine(_checksums);
 
@@ -139,7 +88,22 @@ namespace ReleaseNotesBuilder
             return builder.ToString();
         }
 
-        private List<string> Validate()
+        private static void AppendSection(StringBuilder builder, string header, List<string> entries)
+        {
+            if (entries.Any())
+            {
+                builder.AppendLine(header);
+                builder.AppendLine();
+                foreach (var entry in entries)
+                {
+                    builder.AppendLine(entry);
+                }
+
+                builder.AppendLine();
+            }
+        }
+
+        private void Validate()
         {
             var problems = new List<string>();
 
@@ -157,7 +121,14 @@ namespace ReleaseNotesBuilder
 
             // _bodyNotice does not need to be checked since it is singlular and optional.
 
-            return problems;
+            if (problems.Any())
+            {
+                Program.ExitWithError(ExitCode.InvalidData,
+                    "The following problems occurred building the release notes:"
+                    + Environment.NewLine + "  "
+                    + string.Join(Environment.NewLine + "  ", problems)
+                    );
+            }
 
             void CheckString(string name, string? value)
             {
