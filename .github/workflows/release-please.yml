@@ -23,5 +23,5 @@ jobs:
         with:
           release-type: go
           changelog-path: src/Agent/CHANGELOG.md
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
           changelog-types: '[{"type":"notice","section":"Notice","hidden":false},{"type":"feat","section":"New Features","hidden":false},{"type":"fix","section":"Fixes","hidden":false},{"type":"security","section":"Security","hidden":false}]'
