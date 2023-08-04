@@ -100,13 +100,7 @@ jobs:
           CHECKSUMS: ${{ github.workspace }}/artifacts/DownloadSite/SHA256/checksums.md
           OUTPUT_PATH: ${{ github.workspace }}
 
-      - name: Temp Step for env var validation
-        run: |
-          echo "${{ env.notes_file }}"
-        shell: bash
-
       - name: Create branch
-        if: ${{ env.blocker != '' }}
         uses: dmnemec/copy_file_to_another_repo_action@c93037aa10fa8893de271f19978c980d0c1a9b37 # tag v1.1.1
         env:
           API_TOKEN_GITHUB: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
@@ -121,11 +115,10 @@ jobs:
           commit_message: 'chore(.net agent): Add .NET Agent release notes for v${{ github.event.inputs.agent_version }}.'
 
       - name: Create pull request
-        if: ${{ env.blocker != '' }}
         run: gh pr create --base "develop" --repo "$REPO" --head "$HEAD" --title "$TITLE" --body "$BODY"
         env:
           GH_TOKEN: ${{ secrets.DOTNET_AGENT_GH_TOKEN }}
           REPO: https://github.com/newrelic/docs-website/
           HEAD: ${{env.branch_name}}
-          TITLE: ".NET Agent Release Notes for v${{ github.event.inputs.agent_version }}"
-          BODY: "This is an automated PR generated when the .NET agent is released. Please merge as soon as possible."
+          TITLE: "(TESTING-DO NOT MERGE).NET Agent Release Notes for v${{ github.event.inputs.agent_version }}"
+          BODY: "(TESTING-DO NOT MERGE)This is an automated PR generated when the .NET agent is released. Please merge as soon as possible."
