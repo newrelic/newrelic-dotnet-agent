@@ -89,8 +89,9 @@ jobs:
       - name: Build Release Notes
         run: |
           dotnet build --configuration Release "$BUILD_PATH"
-          notes_file=$("$RUN_PATH/ReleaseNotesBuilder" -p "$RUN_PATH/data.yml" -c "$CHANGELOG" -x "$CHECKSUMS" -o "$OUTPUT_PATH") >> $GITHUB_ENV
-          echo "${{ env.notes_file }}"
+          notes_file=$("$RUN_PATH/ReleaseNotesBuilder" -p "$RUN_PATH/data.yml" -c "$CHANGELOG" -x "$CHECKSUMS" -o "$OUTPUT_PATH")
+          echo "$notes_file"
+          echo "$notes_file" >> $GITHUB_ENV
         shell: bash
         env:
           BUILD_PATH: ${{ github.workspace }}/build/ReleaseNotesBuilder/ReleaseNotesBuilder.csproj
@@ -98,6 +99,11 @@ jobs:
           CHANGELOG: ${{ github.workspace }}/src/Agent/CHANGELOG.md
           CHECKSUMS: ${{ github.workspace }}/artifacts/DownloadSite/SHA256/checksums.md
           OUTPUT_PATH: ${{ github.workspace }}
+
+      - name: Temp Step for env var validation
+        run: |
+          echo "${{ env.notes_file }}"
+        shell: bash
 
       - name: Create branch
         if: ${{ env.blocker != '' }}
