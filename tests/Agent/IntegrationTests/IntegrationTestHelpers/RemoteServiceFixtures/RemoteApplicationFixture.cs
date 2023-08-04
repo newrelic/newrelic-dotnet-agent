@@ -262,7 +262,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         catch (Exception ex)
                         {
-                            retryTest = true;
                             TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.ToString());
                             retryMessage = "Exception thrown.";
                         }

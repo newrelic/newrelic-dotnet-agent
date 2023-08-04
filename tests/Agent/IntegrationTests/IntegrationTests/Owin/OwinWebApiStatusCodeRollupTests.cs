@@ -57,9 +57,9 @@ namespace NewRelic.Agent.IntegrationTests.Owin
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric {metricName = @"DotNet/Owin Middleware Pipeline", callCount = expectedCallCount},
-                new Assertions.ExpectedMetric {metricName = @"WebTransaction", callCount = expectedCallCount},
-                new Assertions.ExpectedMetric {metricName = @"WebTransaction/StatusCode/404", callCount = expectedCallCount},
+                new Assertions.ExpectedMetric {metricName = @"DotNet/Owin Middleware Pipeline", CallCountAllHarvests = expectedCallCount},
+                new Assertions.ExpectedMetric {metricName = @"WebTransaction", CallCountAllHarvests = expectedCallCount},
+                new Assertions.ExpectedMetric {metricName = @"WebTransaction/StatusCode/404", CallCountAllHarvests = expectedCallCount},
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>();
             foreach (var bogusPath in bogusPaths)

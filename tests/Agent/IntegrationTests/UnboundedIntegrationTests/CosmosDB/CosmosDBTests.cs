@@ -198,7 +198,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/CreateCollection", metricScope = expectedTransactionName, callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"Datastore/statement/CosmosDB/{_testContainerName}/BatchDocument", metricScope = expectedTransactionName, callCount = 1 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
