@@ -8,8 +8,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="config.yml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="config.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="NuGet.Protocol" Version="6.6.1" />
+    <PackageReference Include="Octokit" Version="7.1.0" />
+    <PackageReference Include="YamlDotNet" Version="13.1.1" />
   </ItemGroup>
 
 </Project>

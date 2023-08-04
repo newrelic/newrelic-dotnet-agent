@@ -1,17 +1,22 @@
-﻿using Newtonsoft.Json;
+﻿using System.Net.Http.Headers;
+using System.Net;
+using System.Text;
+using CommandLine;
 using Newtonsoft.Json.Linq;
 using NuGet.Common;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
+using Octokit;
+using Repository = NuGet.Protocol.Core.Types.Repository;
 
-namespace NugetVersionDeprecator
+namespace NugetVersionDeprecator;
+
+internal class Program
 {
-    internal class Program
-    {
-        private const string RepoUrl = "https://api.nuget.org/v3/index.json";
+    private const string RepoUrl = "https://api.nuget.org/v3/index.json";
 
-        private const string NerdGraphQuery = @"
+    private const string NerdGraphQuery = @"
 {
   docs {
     agentReleases(agentName: DOTNET) {
@@ -21,7 +26,7 @@ namespace NugetVersionDeprecator
   }
 }";
 
-        private const string NerdGraphSample = @"
+    private const string NerdGraphSample = @"
 {
   ""data"": {
     ""docs"": {
@@ -828,85 +833,154 @@ namespace NugetVersionDeprecator
   }
 }";
 
-        // Need: A list of package names to query
-        // NewRelic.Agent
-        // NewRelic.Agent.API
-        // NewRelicWindowsAzure (?)
-        // NewRelic.Azure.Websites
-        // NewRelic.Azure.Websites.x64
+    static async Task Main(string[] args)
 
-        static async Task Main(string[] args)
+    {
+        var options = Parser.Default.ParseArguments<Options>(args)
+            .WithParsed(ValidateOptions)
+            .WithNotParsed(HandleParseError)
+            .Value;
 
+        if (options.TestMode)
+            Console.WriteLine("**** TEST MODE *** No Github Issues will be created.");
+
+        var configuration = LoadConfiguration(options.ConfigurationPath);
+
+        var deprecatedReleases = await QueryNerdGraphAsync(DateTime.UtcNow);
+
+        if (deprecatedReleases.Any())
         {
-            DateTime releaseDate = DateTime.Today; // TODO: pass as a parameter
+            List<PackageDeprecationInfo> packagesToDeprecate = new();
 
-
-            Console.WriteLine("Hello, World!");
-
-            // query the docs API to get a current list of .NET Agent versions
-            // TODO: figure out how to query NerdGraph Api from code
-            //
-
-            // parse the NerdGraph response -- we want to deserialize data.docs.agentReleases into an array of AgentRelease
-            var parsedResponse = JObject.Parse(NerdGraphSample);
-            var allAgentReleases = parsedResponse.SelectToken("data.docs.agentReleases")?.ToObject<List<AgentRelease>>();
-            if (allAgentReleases == null)
+            foreach (var package in configuration.Packages)
             {
-                Console.WriteLine($"Unable to parse NerdGraph response: {Environment.NewLine}{NerdGraphSample}");
-                return;
+                packagesToDeprecate.AddRange(await GetPackagesToDeprecateAsync(package, deprecatedReleases, DateTime.UtcNow.Date));
             }
-            // parse off the 3rd dot and anything after it so we have a semantic version
 
-            var deprecatedReleases = allAgentReleases.Where(ar => ar.EolDate <= releaseDate).ToList();
-            if (deprecatedReleases.Any())
+            if (packagesToDeprecate.Any())
             {
-                await CheckAndDeprecateAsync("NewRelic.Agent.API", deprecatedReleases, DateTime.UtcNow.Date);
-            }
-            else
-            {
-                Console.WriteLine("No eligible deprecated releases found.");
-                return;
+                var message = ReportPackagesToDeprecate(packagesToDeprecate, deprecatedReleases);
+                Console.WriteLine(message);
+
+                if (!options.TestMode)
+                    await CreateGhIssueAsync(message, options.GithubToken);
             }
         }
-
-        static async Task CheckAndDeprecateAsync(string packageName, List<AgentRelease> versionList, DateTime releaseDate)
+        else
         {
+            Console.WriteLine("No eligible deprecated Agent released found.");
+        }
+    }
 
-            // query NuGet for a current list of non-deprecated versions of all .NET Agent packages
-            SourceCacheContext cache = new SourceCacheContext();
-            SourceRepository repository = Repository.Factory.GetCoreV3(RepoUrl);
-            PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
-            var packages = (await resource.GetMetadataAsync(
+    private static async Task<List<AgentRelease>> QueryNerdGraphAsync(DateTime releaseDate)
+    {
+        // query the docs API to get a list of all .NET Agent versions
+
+        // TODO: figure out how to query NerdGraph Api from code
+        // for now, use a static sample response
+        var nerdGraphResponse = NerdGraphSample;
+
+        // parse the NerdGraph response -- we want to deserialize data.docs.agentReleases into an array of AgentRelease
+        var parsedResponse = JObject.Parse(nerdGraphResponse);
+        var allAgentReleases = parsedResponse.SelectToken("data.docs.agentReleases", false)?.ToObject<List<AgentRelease>>();
+        if (allAgentReleases == null)
+        {
+            throw new Exception($"Unable to parse NerdGraph response: {Environment.NewLine}{nerdGraphResponse}");
+        }
+
+        var deprecatedReleases = allAgentReleases.Where(ar => ar.EolDate <= releaseDate).ToList();
+
+        // TODO: refactor when doing real async, or make method non-async
+        return await Task.FromResult(deprecatedReleases);
+    }
+
+    private static string ReportPackagesToDeprecate(List<PackageDeprecationInfo> packagesToDeprecate, List<AgentRelease> deprecatedReleases)
+    {
+        var sb = new StringBuilder();
+
+        sb.AppendLine("The following NuGet packages should be deprecated:");
+        foreach (var package in packagesToDeprecate)
+        {
+            var eolRelease = deprecatedReleases.Single(ar => ar.Version.StartsWith(package.PackageVersion));
+
+            sb.AppendLine($"  * {package.PackageName} v{package.PackageVersion} (EOL as of {eolRelease.EolDate.ToShortDateString()})");
+        }
+
+        return sb.ToString();
+    }
+
+    static async Task<IEnumerable<PackageDeprecationInfo>> GetPackagesToDeprecateAsync(string packageName, List<AgentRelease> versionList, DateTime releaseDate)
+    {
+        // query NuGet for a current list of non-deprecated versions of all .NET Agent packages
+        SourceCacheContext cache = new SourceCacheContext();
+        SourceRepository repository = Repository.Factory.GetCoreV3(RepoUrl);
+        PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>();
+        var packages = (await resource.GetMetadataAsync(
                 packageName,
                 includePrerelease: false,
                 includeUnlisted: false,
                 cache,
                 NullLogger.Instance,
                 CancellationToken.None)).Cast<PackageSearchMetadata>()
-                .Where(p =>
-                    p.DeprecationMetadata is null
-                    && string.Equals(p.Identity.Id, packageName, StringComparison.CurrentCultureIgnoreCase)).ToList();
+            .Where(p =>
+                p.DeprecationMetadata is null
+                && string.Equals(p.Identity.Id, packageName, StringComparison.CurrentCultureIgnoreCase)).ToList();
 
-          
-            // intersect the two lists and build a list of NuGet versions that should be deprecated
-            var deprecatedVersions = versionList.Select(ar => NuGetVersion.Parse(ar.Version)).ToList();
-            var packagesToDeprecate = packages.Where(p => deprecatedVersions.Contains(p.Version)).ToList();
 
-            // iterate the list of versions to deprecate and call the NuGet API to deprecate them
-            var pkgUpdateResource = await repository.GetResourceAsync<PackageUpdateResource>();
+        // intersect the two lists and build a list of NuGet versions that should be deprecated
+        var deprecatedVersions = versionList.Select(ar => NuGetVersion.Parse(ar.Version)).ToList();
+        var packagesToDeprecate = packages.Where(p => deprecatedVersions.Contains(p.Version)).ToList();
 
-            foreach (var package in packagesToDeprecate)
-            {
-             // call Nuget API to deprecate the package
-            }
+        return packagesToDeprecate.Select(p =>
+            new PackageDeprecationInfo() { PackageName = p.PackageId, PackageVersion = p.Version.ToString() });
+    }
+
+    static async Task CreateGhIssueAsync(string message, string githubToken)
+    {
+        var ghClient = new GitHubClient(new Octokit.ProductHeaderValue("NugetVersionDeprecator"));
+        var tokenAuth = new Credentials(githubToken);
+        ghClient.Credentials = tokenAuth;
+
+
+        var newIssue = new NewIssue($"chore(NugetDeprecator): NuGet packages need to be deprecated.")
+        {
+            Body = message
+        };
+
+        newIssue.Labels.Add("Deprecation");
+        newIssue.Labels.Add("NuGet");
+
+        await ghClient.Issue.Create("newrelic", "newrelic-dotnet-agent", newIssue);
+    }
+
+    static Configuration LoadConfiguration(string path)
+    {
+        var input = File.ReadAllText(path);
+        var deserializer = new YamlDotNet.Serialization.Deserializer();
+        return deserializer.Deserialize<Configuration>(input);
+    }
+
+    static void ValidateOptions(Options opts)
+    {
+        if (string.IsNullOrWhiteSpace(opts.ConfigurationPath) || string.IsNullOrWhiteSpace(opts.GithubToken))
+        {
+            ExitWithError(ExitCode.BadArguments, "One or more required arguments were not supplied.");
+        }
+
+        if (!File.Exists(opts.ConfigurationPath))
+        {
+            ExitWithError(ExitCode.FileNotFound, $"Configuration file did not exist at {opts.ConfigurationPath}.");
         }
     }
 
-    internal class AgentRelease
+    static void HandleParseError(IEnumerable<Error> errs)
     {
-        [JsonProperty("eolDate")]
-        public DateTime EolDate { get; set; }
-        [JsonProperty("version")]
-        public string Version { get; set; }
+        ExitWithError(ExitCode.BadArguments, "Error occurred while parsing command line arguments.");
+    }
+
+    static void ExitWithError(ExitCode exitCode, string message)
+    {
+        Console.WriteLine(message);
+        Environment.Exit((int)exitCode);
     }
 }
