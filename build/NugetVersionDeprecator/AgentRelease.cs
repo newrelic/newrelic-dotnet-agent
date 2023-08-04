@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿// Copyright 2023 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using Newtonsoft.Json;
 
 namespace NugetVersionDeprecator;
 

@@ -1,5 +1,6 @@
-﻿using System.Net.Http.Headers;
-using System.Net;
+﻿// Copyright 2023 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 using System.Text;
 using CommandLine;
 using Newtonsoft.Json.Linq;
@@ -26,6 +27,7 @@ internal class Program
   }
 }";
 
+    // for testing only
     private const string NerdGraphSample = @"
 {
   ""data"": {
@@ -846,7 +848,7 @@ internal class Program
 
         var configuration = LoadConfiguration(options.ConfigurationPath);
 
-        var deprecatedReleases = await QueryNerdGraphAsync(DateTime.UtcNow);
+        var deprecatedReleases = await QueryNerdGraphAsync(DateTime.UtcNow, options.ApiKey, options.NewRelicUrl);
 
         if (deprecatedReleases.Any())
         {
@@ -872,7 +874,7 @@ internal class Program
         }
     }
 
-    private static async Task<List<AgentRelease>> QueryNerdGraphAsync(DateTime releaseDate)
+    private static async Task<List<AgentRelease>> QueryNerdGraphAsync(DateTime releaseDate, string apiKey, string url)
     {
         // query the docs API to get a list of all .NET Agent versions
 
@@ -942,13 +944,13 @@ internal class Program
         ghClient.Credentials = tokenAuth;
 
 
-        var newIssue = new NewIssue($"chore(NugetDeprecator): NuGet packages need to be deprecated.")
+        var newIssue = new NewIssue($"chore(NugetDeprecator): Deprecate Nuget packages.")
         {
             Body = message
         };
 
         newIssue.Labels.Add("Deprecation");
-        newIssue.Labels.Add("NuGet");
+        newIssue.Labels.Add("Nuget");
 
         await ghClient.Issue.Create("newrelic", "newrelic-dotnet-agent", newIssue);
     }
@@ -962,11 +964,10 @@ internal class Program
 
     static void ValidateOptions(Options opts)
     {
-        if (string.IsNullOrWhiteSpace(opts.ConfigurationPath) || string.IsNullOrWhiteSpace(opts.GithubToken))
+        if (!opts.TestMode && string.IsNullOrEmpty(opts.GithubToken))
         {
-            ExitWithError(ExitCode.BadArguments, "One or more required arguments were not supplied.");
+            ExitWithError(ExitCode.BadArguments, "Github token is required when not in Test mode.");
         }
-
         if (!File.Exists(opts.ConfigurationPath))
         {
             ExitWithError(ExitCode.FileNotFound, $"Configuration file did not exist at {opts.ConfigurationPath}.");
