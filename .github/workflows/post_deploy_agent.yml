@@ -117,7 +117,7 @@ jobs:
     name: Validate NuGet Package Deployment
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      issues: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
