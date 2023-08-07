@@ -38,19 +38,19 @@ internal class Program
 
             var nerdGraphResponse = await QueryNerdGraphAsync(options.ApiKey, NewRelicUrl);
 
-            var deprecatedReleases = ParseNerdGraphResponse(DateTime.UtcNow,  nerdGraphResponse);
-            if (deprecatedReleases.Any())
+            var agentReleases = ParseNerdGraphResponse(DateTime.UtcNow,  nerdGraphResponse);
+            if (agentReleases.Any())
             {
                 List<PackageDeprecationInfo> packagesToDeprecate = new();
 
                 foreach (var package in configuration.Packages)
                 {
-                    packagesToDeprecate.AddRange(await GetPackagesToDeprecateAsync(package, deprecatedReleases, DateTime.UtcNow.Date));
+                    packagesToDeprecate.AddRange(await GetPackagesToDeprecateAsync(package, agentReleases));
                 }
 
                 if (packagesToDeprecate.Any())
                 {
-                    var message = ReportPackagesToDeprecate(packagesToDeprecate, deprecatedReleases);
+                    var message = ReportPackagesToDeprecate(packagesToDeprecate, agentReleases);
                     Console.WriteLine(message);
 
                     if (!options.TestMode)
@@ -87,7 +87,7 @@ internal class Program
         }
         catch (Exception e)
         {
-            throw new Exception($"NerdGraph query failed.", e);
+            throw new Exception("NerdGraph query failed.", e);
         }
 
         if (!response.IsSuccessStatusCode)
@@ -113,14 +113,14 @@ internal class Program
         return deprecatedReleases;
     }
 
-    private static string ReportPackagesToDeprecate(List<PackageDeprecationInfo> packagesToDeprecate, List<AgentRelease> deprecatedReleases)
+    private static string ReportPackagesToDeprecate(List<PackageDeprecationInfo> packagesToDeprecate, List<AgentRelease> agentReleases)
     {
         var sb = new StringBuilder();
 
         sb.AppendLine("The following NuGet packages should be deprecated:");
         foreach (var package in packagesToDeprecate)
         {
-            var eolRelease = deprecatedReleases.Single(ar => ar.Version.StartsWith(package.PackageVersion));
+            var eolRelease = agentReleases.Single(ar => ar.Version.StartsWith(package.PackageVersion));
 
             sb.AppendLine($"  * {package.PackageName} v{package.PackageVersion} (EOL as of {eolRelease.EolDate.ToShortDateString()})");
         }
@@ -128,7 +128,7 @@ internal class Program
         return sb.ToString();
     }
 
-    static async Task<IEnumerable<PackageDeprecationInfo>> GetPackagesToDeprecateAsync(string packageName, List<AgentRelease> versionList, DateTime releaseDate)
+    static async Task<IEnumerable<PackageDeprecationInfo>> GetPackagesToDeprecateAsync(string packageName, List<AgentRelease> agentReleases)
     {
         // query NuGet for a current list of non-deprecated versions of all .NET Agent packages
         SourceCacheContext cache = new SourceCacheContext();
@@ -141,14 +141,15 @@ internal class Program
                 cache,
                 NullLogger.Instance,
                 CancellationToken.None)).Cast<PackageSearchMetadata>()
+            // because of how NuGet query works, we'll get a whole lot of "close" match results - so we have to narrow the response down
+            // to only those packages where the name matches packageName
             .Where(p =>
-                p.DeprecationMetadata is null
+                p.DeprecationMetadata is null // not deprecated
                 && string.Equals(p.Identity.Id, packageName, StringComparison.CurrentCultureIgnoreCase)).ToList();
 
-
-        // intersect the two lists and build a list of NuGet versions that should be deprecated
-        var deprecatedVersions = versionList.Select(ar => NuGetVersion.Parse(ar.Version)).ToList();
-        var packagesToDeprecate = packages.Where(p => deprecatedVersions.Contains(p.Version)).ToList();
+        // get the nuget packages with versions matching the list of all agent releases
+        var currentVersions = agentReleases.Select(ar => NuGetVersion.Parse(ar.Version)).ToList();
+        var packagesToDeprecate = packages.Where(p => currentVersions.Contains(p.Version)).ToList();
 
         return packagesToDeprecate.Select(p =>
             new PackageDeprecationInfo() { PackageName = p.PackageId, PackageVersion = p.Version.ToString() });
