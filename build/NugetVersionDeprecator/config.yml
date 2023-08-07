@@ -1,0 +1,12 @@
+# Copyright 2023 New Relic, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# NuGetPackages
+# A list of NuGet package names to validate
+nuget-packages:
+  - NewRelic.Agent
+  - NewRelic.Agent.Api
+  - NewRelic.Azure.Websites
+  - NewRelic.Azure.Websites.x64
+  - NewRelicWindowsAzure
+
