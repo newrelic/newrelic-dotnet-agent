@@ -18,7 +18,4 @@ public class Options
 
     [Option('a', "api-key", Required = true, HelpText = "The NewRelic API Key for executing NerdGraph queries")]
     public string ApiKey { get; set; }
-
-    [Option('u', "url", Required = true, HelpText = "Base URL for executing NerdGraph queries")]
-    public string NewRelicUrl { get; set; }
 }
