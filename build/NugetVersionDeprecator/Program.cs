@@ -172,7 +172,7 @@ internal class Program
 
         var issue = await ghClient.Issue.Create("newrelic", "newrelic-dotnet-agent", newIssue);
 
-        Console.WriteLine($"Created new GitHub Issue #{issue.Id} with title {issue.Title}.");
+        Console.WriteLine($"Created new GitHub Issue #{issue.Number} with title {issue.Title}.");
     }
 
     static Configuration LoadConfiguration(string path)
