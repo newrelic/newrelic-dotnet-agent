@@ -1,4 +1,4 @@
-name: Publish .NET Agent Releaase Notes
+name: Publish .NET Agent Release Notes
 
 on:
   workflow_dispatch:

@@ -342,7 +342,7 @@ jobs:
   update-apm:
     name: Update System Configuration Page
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.update-apm-version == true }}
+    if: ${{ github.event.inputs.update-apm-version == 'true' }}
     steps:
       - name: Update system configuration page
         run: |
@@ -373,7 +373,7 @@ jobs:
             -d "$PAYLOAD"
 
   publish-release-notes:
-    needs: [deploy-linux, index-download-site]
+    needs: [deploy-linux, deploy-nuget, index-download-site]
     if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
     name: Create and Publish Release Notes
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/publish_release_notes.yml@main
@@ -387,7 +387,7 @@ jobs:
       issues: write
       contents: read
       packages: read
-    needs: [deploy-linux, index-download-site]
+    needs: [deploy-linux, deploy-nuget, index-download-site]
     if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
     name: Run Post Deploy Workflow
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/post_deploy_agent.yml@main
