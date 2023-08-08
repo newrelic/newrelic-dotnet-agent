@@ -383,6 +383,8 @@ jobs:
     secrets: inherit
 
   post-deploy:
+    permissions:
+      issues: write
     needs: [deploy-linux, index-download-site]
     if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
     name: Run Post Deploy Workflow
