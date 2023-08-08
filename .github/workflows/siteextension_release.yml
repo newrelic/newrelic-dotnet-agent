@@ -23,7 +23,7 @@ jobs:
   run-artifactbuilder:
     if: ${{ github.event.release }}
     name: Run ArtifactBuilder
-    runs-on: windows-2019
+    runs-on: windows-latest
 
     env:
       artifacts_script_path: ${{ github.workspace }}\build
