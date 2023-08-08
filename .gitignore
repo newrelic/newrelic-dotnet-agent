@@ -64,6 +64,9 @@ NDependOut/
 
 test-results
 
+#ignore launchSettings
+launchSettings.json
+
 # Ignore FullAgent build output
 src/_build/
 Agent/_build/
@@ -158,3 +161,4 @@ tests/TestResults/*
 /src/Agent/_profilerBuild/x64-Release/NewRelic.Profiler.dll
 /src/Agent/_profilerBuild/x86-Release/NewRelic.Profiler.dll
 /tests/Agent/IntegrationTests/ContainerApplications/.env
+

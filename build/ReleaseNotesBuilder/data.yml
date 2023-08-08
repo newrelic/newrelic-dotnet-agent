@@ -1,0 +1,20 @@
+# Copyright 2020 New Relic, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+subject: .NET agent
+download-link: 'https://download.newrelic.com/dot_net_agent/latest_release'
+
+# This will appear immediately after the front matter and before any notices, features, fixes, or security items.
+# Can be empty.
+preamble: 
+
+# This will appear immediately after the checksums section and will be the last portion of the file.
+# Can be empty.
+epilogue: |
+  ### Updating
+
+  * Follow standard procedures to [update the .NET agent](/docs/agents/net-agent/installation-configuration/update-net-agent).
+  * If you're using a particularly old agent, review the list of major changes and procedures for [updating legacy .NET agents](/docs/agents/net-agent/troubleshooting/upgrade-legacy-net-agents).
+
+  We recommend updating to the latest agent version as soon as it's available. If you can't upgrade to the latest version, update your agents to a version no more than 90 days old. Read more about [keeping your agent up to date](/docs/new-relic-solutions/new-relic-one/install-configure/update-new-relic-agent).
+  See the New Relic .NET agent [EOL policy doc](/docs/apm/agents/net-agent/getting-started/net-agent-eol-policy) for information about agent releases and support dates.

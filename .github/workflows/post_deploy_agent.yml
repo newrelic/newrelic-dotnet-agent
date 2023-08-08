@@ -1,5 +1,6 @@
 name: Post Deploy for the .NET Agent
 
+
 on:
   workflow_dispatch:
     inputs:
@@ -24,8 +25,36 @@ env:
 
 jobs:
 
-  placeholder:
-    name: Placeholder
+  validate-apt-repo:
+    name: Validate APT-based repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
+        with:
+          disable-sudo: false
+          egress-policy: audit
+
+      - name: Validate
+        run: |
+          echo 'deb https://apt.newrelic.com/debian/ newrelic non-free' | sudo tee /etc/apt/sources.list.d/newrelic.list
+          wget -O- https://download.newrelic.com/548C16BF.gpg | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install newrelic-dotnet-agent
+          installed_version=$(dpkg -s newrelic-dotnet-agent | grep -i version)
+          if [ "$AGENT_VERSION" = "$installed_version" ]; then
+              echo "Versions match."
+              exit 0
+          else
+              echo "ERROR: Version mismatch: Expected $AGENT_VERSION was $installed_version"
+              exit 1
+          fi
+        shell: bash
+        env: 
+          AGENT_VERSION: "Version: ${{ github.event.inputs.agent_version }}"
+
+  validate-yum-repo:
+    name: Validate YUM-based repo
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -34,3 +63,106 @@ jobs:
           disable-sudo: true
           egress-policy: audit
 
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
+          fetch-depth: 0
+
+      - name: Validate
+        run: |
+          cd deploy/validation/validate-yum
+
+          # This will setup the New Relic yum repo and install the agent.
+          docker build -t localtesting/validateyum:latest .
+          docker run --name validateyum localtesting/validateyum:latest
+          installed_version=$(docker logs --tail 1 validateyum)
+          if [ "$AGENT_VERSION" = "$installed_version" ]; then
+              echo "Versions match."
+              exit 0
+          else
+              echo "ERROR: Version mismatch: Expected $AGENT_VERSION was $installed_version"
+              exit 1
+          fi
+        shell: bash
+        env:
+          AGENT_VERSION: "newrelic-dotnet-agent-${{ github.event.inputs.agent_version }}-1.x86_64"
+
+  validate-download-site-s3:
+    name: Validate S3-hosted Download Site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
+          fetch-depth: 0
+
+      - name: Build and Run S3Validator
+        run: |
+          dotnet build --configuration Release "$BUILD_PATH"
+          "$RUN_PATH/S3Validator" -v $AGENT_VERSION -c $CONFIG_PATH
+        shell: bash
+        env:
+          BUILD_PATH: ${{ github.workspace }}/build/S3Validator/S3Validator.csproj
+          RUN_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/
+          CONFIG_PATH: ${{ github.workspace }}/build/S3Validator/bin/Release/net7.0/config.yml
+          AGENT_VERSION: ${{ github.event.inputs.agent_version }}
+
+  validate-nuget-packages:
+    name: Validate NuGet Package Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
+          fetch-depth: 0
+
+      - name: Build and Run NugetValidator
+        run: |
+          dotnet build --configuration Release "$BUILD_PATH"
+          "$RUN_PATH/NugetValidator" -v $AGENT_VERSION -c $CONFIG_PATH
+        shell: bash
+        env:
+          BUILD_PATH: ${{ github.workspace }}/build/NugetValidator/NugetValidator.csproj
+          RUN_PATH: ${{ github.workspace }}/build/NugetValidator/bin/Release/net7.0/
+          AGENT_VERSION: ${{ github.event.inputs.agent_version }}
+          CONFIG_PATH: ${{ github.workspace }}/build/NugetValidator/bin/Release/net7.0/config.yml
+
+  report-deprecated-nuget-packages:
+    name: Report Deprecated NuGet Packages
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
+        with:
+          disable-sudo: true
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
+        with:
+          fetch-depth: 0
+
+      - name: Build and Run NugetDeprecator
+        run: |
+          dotnet build --configuration Release "$BUILD_PATH"
+          "$RUN_PATH/NugetVersionDeprecator" -c $CONFIG_PATH --github-token  ${{ secrets.GITHUB_TOKEN }} --api-key ${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}
+        shell: bash
+        env:
+          BUILD_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/NugetVersionDeprecator.csproj
+          RUN_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net7.0/
+          CONFIG_PATH: ${{ github.workspace }}/build/NugetVersionDeprecator/bin/Release/net7.0/config.yml
