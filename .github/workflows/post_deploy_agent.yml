@@ -8,7 +8,10 @@ on:
         description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
         required: true
         type: string
-
+      external_call:
+        type: boolean
+        default: true
+        required: false
   workflow_call:
     inputs:
       agent_version:
@@ -34,7 +37,12 @@ jobs:
         with:
           disable-sudo: false
           egress-policy: audit
-
+      - name: Wait for APT to update
+        if: ${{ inputs.external_call }}
+        run: |
+          echo "Sleeping 2 minutes to wait for apt to update itself"
+          sleep 120
+        shell: bash      
       - name: Validate
         run: |
           echo 'deb https://apt.newrelic.com/debian/ newrelic non-free' | sudo tee /etc/apt/sources.list.d/newrelic.list
@@ -67,6 +75,13 @@ jobs:
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3        
         with:
           fetch-depth: 0
+
+      - name: Wait for YUM to update
+        if: ${{ inputs.external_call }}
+        run: |
+          echo "Sleeping 2 minutes to wait for yum to update itself"
+          sleep 120
+        shell: bash
 
       - name: Validate
         run: |
