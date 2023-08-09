@@ -779,13 +779,3 @@ jobs:
             ${{ github.workspace }}\build\BuildArtifacts
             ${{ github.workspace }}\deploy
           if-no-files-found: error
-
-  run-multiverse_testing_suite:
-    permissions:
-      contents: write
-    name: Build and Publish Multiverse Testing Suite
-    needs: build-fullagent-msi
-    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
-    uses: newrelic/newrelic-dotnet-agent/.github/workflows/multiverse_run.yml@main
-    with:
-      agentVersion: ${{ needs.build-fullagent-msi.outputs.agentVersion }}
