@@ -290,11 +290,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             return RemoteProcess.WaitForExit(milliseconds);
         }
 
-        public void Kill()
-        {
-            RemoteProcess?.Kill();
-        }
-
         public int? ExitCode => RemoteProcess.HasExited
             ? RemoteProcess.ExitCode
             : (int?)null;
@@ -361,7 +356,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     catch (Exception ex)
                     {
                         TestLogger?.WriteLine($"[RemoteApplication] FAILED sending shutdown signal to named pipe \"{shutdownChannelName}\": {ex}.");
-                        RemoteProcess.Kill();
+                        try
+                        {
+                            RemoteProcess.Kill();
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
                 }
             }
@@ -376,7 +378,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 catch (Exception ex)
                 {
                     TestLogger?.WriteLine($"[RemoteApplication] FAILED sending shutdown signal to wait handle \"{shutdownChannelName}\": {ex}.");
-                    RemoteProcess.Kill();
+                    try
+                    {
+                        RemoteProcess.Kill();
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
             }
 
