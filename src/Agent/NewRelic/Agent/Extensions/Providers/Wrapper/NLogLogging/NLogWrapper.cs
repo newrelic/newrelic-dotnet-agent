@@ -38,12 +38,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[2];
             var logEventType = logEvent.GetType();
 
-            if (!LogProviders.RegisteredLogProvider[(int)LogProvider.NLog])
-            {
-                RecordLogMessage(logEvent, logEventType, agent);
-            }
-
-            // We want this to happen instead of MEL so no provider check here.
+            RecordLogMessage(logEvent, logEventType, agent);
             DecorateLogMessage(logEvent, logEventType, agent);
 
             return Delegates.NoOp;

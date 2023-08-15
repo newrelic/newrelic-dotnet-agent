@@ -28,7 +28,11 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+            if (!LogProviders.KnownLogProvider)
+            {
+                return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+            }
+            return new CanWrapResponse(false);
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
@@ -120,12 +124,6 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
         private AfterWrappedMethodDelegate DecorateLogMessage(MEL.ILogger logger, IAgent agent)
         {
             if (!agent.Configuration.LogDecoratorEnabled)
-            {
-                return Delegates.NoOp;
-            }
-
-            // NLog can alter the message so we want to skip MEL decoration for NLog
-            if (LogProviders.RegisteredLogProvider[(int)LogProvider.NLog])
             {
                 return Delegates.NoOp;
             }
