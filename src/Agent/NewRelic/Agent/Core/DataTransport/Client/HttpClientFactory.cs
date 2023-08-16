@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Threading;
+using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
@@ -14,7 +15,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     {
         private IHttpClient _httpClient;
 
-        public IHttpClient CreateClient(IWebProxy proxy)
+        public IHttpClient CreateClient(IWebProxy proxy, IConfiguration configuration)
         {
             if (proxy != null)
             {

@@ -106,7 +106,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             ((NRWebRequestClient)_httpClient).SetHttpWebRequestFunc(uri => _httpWebRequest);
 
-            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>())).Returns(_httpClient);
+            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(_httpClient);
         }
 
         [Test]
@@ -134,7 +134,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
 
         [Test]
@@ -163,7 +163,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Mock.Assert(() => _mockWebResponse.GetResponseStream(), Occurs.Once());
         }
 
@@ -189,7 +189,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Mock.Assert(() => _mockWebResponse.GetResponseStream(), Occurs.Once());
         }
 
@@ -228,7 +228,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.AreEqual(serializedData, response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Mock.Assert(() => _mockWebResponse.GetResponseStream(), Occurs.Once());
         }
 
@@ -268,7 +268,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Mock.Assert(() => _mockWebResponse.GetResponseStream(), Occurs.Once());
         }
 
@@ -291,7 +291,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act and Assert
             Assert.Throws<WebException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
 
         [Test]
@@ -313,7 +313,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act and Assert
             Assert.Throws<HttpException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Mock.Assert(() => _mockWebResponse.GetResponseStream(), Occurs.Once());
         }
 

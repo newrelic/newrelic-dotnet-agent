@@ -57,7 +57,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _httpClient = new NRHttpClient(Mock.Create<IWebProxy>());
             ((NRHttpClient)_httpClient).SetHttpClient(httpClient);
 
-            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>())).Returns(_httpClient);
+            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(_httpClient);
         }
 
         [Test]
@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
         }
 
@@ -115,7 +115,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
         }
 
@@ -143,7 +143,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
         }
 
@@ -187,7 +187,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.AreEqual(serializedData, response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
         }
 
@@ -233,7 +233,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             // Assert
             Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
         }
 
@@ -259,7 +259,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act and Assert
             Assert.Throws<HttpRequestException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
         }
 
@@ -285,7 +285,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // Act and Assert
             Assert.Throws<HttpException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
             Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
         }
 

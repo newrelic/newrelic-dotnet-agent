@@ -13,16 +13,13 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     /// </summary>
     public class WebRequestHttpClientFactory : IHttpClientFactory
     {
-        private readonly IConfiguration _configuration;
-
-        public WebRequestHttpClientFactory(IConfiguration configuration)
+        public WebRequestHttpClientFactory()
         {
-            _configuration = configuration;
         }
 
-        public IHttpClient CreateClient(IWebProxy proxy)
+        public IHttpClient CreateClient(IWebProxy proxy, IConfiguration configuration)
         {
-            return new NRWebRequestClient(proxy, _configuration);
+            return new NRWebRequestClient(proxy, configuration);
         }
     }
 }
