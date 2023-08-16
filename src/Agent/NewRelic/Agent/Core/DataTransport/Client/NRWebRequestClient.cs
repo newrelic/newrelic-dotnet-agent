@@ -12,7 +12,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     {
         private readonly IConfiguration _configuration;
         private HttpWebRequest _httpWebRequest;
-        private IHttpRequest _request;
 
         private Func<Uri, HttpWebRequest> _getHttpWebRequestFunc = uri => (HttpWebRequest)WebRequest.Create(uri);
 
@@ -25,8 +24,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         {
             try
             {
-                _request = request;
-
                 _httpWebRequest = _getHttpWebRequestFunc(request.Uri);
 
                 // If a null assignment is made it will bypass the default (IE) proxy settings 
@@ -39,7 +36,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
                 _httpWebRequest.KeepAlive = true;
                 _httpWebRequest.Timeout = (int)request.Timeout.TotalMilliseconds;
-                _httpWebRequest.ContentType = "application/octet-stream";
+                _httpWebRequest.ContentType = request.Content.ContentType;
                 _httpWebRequest.UserAgent = $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}";
                 _httpWebRequest.Method = _configuration.PutForDataSend ? "PUT" : "POST";
 
