@@ -5,6 +5,8 @@
 using Microsoft.Win32;
 #endif
 
+using System.Collections.Generic;
+
 namespace NewRelic.Core
 {
     public enum DotnetFrameworkVersion
@@ -122,5 +124,29 @@ namespace NewRelic.Core
             return DotnetCoreVersion.Other;
         }
 #endif
+
+        public static bool IsUnsupportedDotnetCoreVersion(DotnetCoreVersion version)
+        {
+            // Newer versions of .net will be flagged as Other until we update our version checking logic.
+            // So we can either check against a supported list, or an unsupported list, but the supported list
+            // is smaller.
+            var supportedDotnetCoreVersions = new List<DotnetCoreVersion> { DotnetCoreVersion.net6, DotnetCoreVersion.net7, DotnetCoreVersion.Other };
+            return !supportedDotnetCoreVersions.Contains(version);
+        }
+
+        public static bool IsUnsupportedDotnetFrameworkVersion(DotnetFrameworkVersion version)
+        {
+            // For .net framework we can maintain a list of unsupported versions to check against
+            // so that newer versions of .net framework will not be listed as an unsupported version.
+            var unsupportedDotnetFrameworkVersions = new List<DotnetFrameworkVersion> {
+                DotnetFrameworkVersion.LessThan45,
+                DotnetFrameworkVersion.net45,
+                DotnetFrameworkVersion.net451,
+                DotnetFrameworkVersion.net452,
+                DotnetFrameworkVersion.net46,
+                DotnetFrameworkVersion.net461
+            };
+            return unsupportedDotnetFrameworkVersions.Contains(version);
+        }
     }
 }

@@ -268,7 +268,7 @@ namespace NewRelic.Agent.Core
 
                 foreach (var ev in environmentVariables)
                 {
-                    if (!String.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(ev)))
+                    if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(ev)))
                     {
                         Log.DebugFormat("Environment Variable {0} value: {1}", ev, System.Environment.GetEnvironmentVariable(ev));
                     }
@@ -276,7 +276,7 @@ namespace NewRelic.Agent.Core
 
                 foreach (var evs in environmentVariablesSensitive)
                 {
-                    if (!String.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(evs)))
+                    if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(evs)))
                     {
                         Log.DebugFormat("Environment Variable {0} is configured with a value. Not logging potentially sensitive value", evs);
                     }
@@ -285,6 +285,17 @@ namespace NewRelic.Agent.Core
                 Log.Debug($".NET Runtime Version: {RuntimeInformation.FrameworkDescription}");
             }
 
+#if NETFRAMEWORK
+            if (NewRelic.Core.DotnetVersion.IsUnsupportedDotnetFrameworkVersion(AgentInstallConfiguration.DotnetFrameworkVersion))
+            {
+                Log.WarnFormat("Unsupported installed .NET Framework version {0} dectected. Please use a version of .NET Framework >= 4.6.2.", AgentInstallConfiguration.DotnetFrameworkVersion);
+            }
+#else
+            if (NewRelic.Core.DotnetVersion.IsUnsupportedDotnetCoreVersion(AgentInstallConfiguration.DotnetCoreVersion))
+            {
+                Log.WarnFormat("Unsupported .NET version {0} detected. Please use a version of .NET >= net6.", AgentInstallConfiguration.DotnetCoreVersion);
+            }
+#endif
         }
 
         private void StartServices()
