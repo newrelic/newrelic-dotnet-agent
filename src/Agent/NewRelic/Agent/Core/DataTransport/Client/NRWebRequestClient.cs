@@ -39,6 +39,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 _httpWebRequest.ContentType = request.Content.ContentType;
                 _httpWebRequest.UserAgent = $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}";
                 _httpWebRequest.Method = _configuration.PutForDataSend ? "PUT" : "POST";
+                _httpWebRequest.ContentLength = request.Content.PayloadBytes.Length;
 
                 _httpWebRequest.Headers.Add("ACCEPT-ENCODING", "gzip");
                 _httpWebRequest.Headers.Add("CONTENT-ENCODING", request.Content.Encoding);
@@ -55,8 +56,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                         throw new NullReferenceException("outputStream");
                     }
 
-                    _httpWebRequest.ContentLength = request.Content.PayloadBytes.Length;
-                    await outputStream.WriteAsync(request.Content.PayloadBytes, 0, (int)_httpWebRequest.ContentLength);
+                    await outputStream.WriteAsync(request.Content.PayloadBytes, 0, request.Content.PayloadBytes.Length);
                 }
 
                 var resp = (HttpWebResponse)await _httpWebRequest.GetResponseAsync();
