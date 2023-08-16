@@ -4,6 +4,7 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using System.Collections.Generic;
+using NewRelic.Agent.Core.DataTransport.Client;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
