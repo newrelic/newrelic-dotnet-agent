@@ -67,8 +67,11 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 //return Task.FromResult((IHttpResponse) new WebRequestClientResponse(request.RequestGuid, resp));
                 return new WebRequestClientResponse(request.RequestGuid, resp);
             }
-            catch
+            catch (WebException ex)
             {
+                if (ex.Response is HttpWebResponse httpWebResponse)
+                    return new WebRequestClientResponse(request.RequestGuid, httpWebResponse);
+
                 if (_diagnoseConnectionError)
                 {
                     DiagnoseConnectionError(request.Uri.Host);

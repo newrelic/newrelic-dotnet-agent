@@ -66,10 +66,15 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 using var response = httpClient.SendAsync(request).GetAwaiter().GetResult();
 
+                var responseContent = response.GetContentAsync().GetAwaiter().GetResult();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);
+                }
+
                 DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Sent, DataTransportAuditLogger.AuditLogSource.InstrumentedApp, request.Uri.ToString());
                 DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Sent, DataTransportAuditLogger.AuditLogSource.InstrumentedApp, request.Content.SerializedData);
-
-                var responseContent = response.GetContentAsync().GetAwaiter().GetResult();
 
                 _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, request.Content.UncompressedByteCount, new UTF8Encoding().GetBytes(responseContent).Length);
 
@@ -78,11 +83,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
 
                 DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Received, DataTransportAuditLogger.AuditLogSource.Collector, responseContent);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    ThrowExceptionFromHttpResponseMessage(serializedData, response.StatusCode, responseContent, requestGuid);
-                }
 
                 return responseContent;
             }
