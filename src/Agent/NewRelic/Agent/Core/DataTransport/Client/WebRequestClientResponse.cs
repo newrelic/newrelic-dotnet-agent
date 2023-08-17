@@ -59,7 +59,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             }
         }
 
-        public bool IsSuccessStatusCode => _response.StatusCode == HttpStatusCode.OK;
+        public bool IsSuccessStatusCode => (200 <= (int)_response.StatusCode) && ((int)_response.StatusCode <= 299);
         public HttpStatusCode StatusCode => _response.StatusCode;
 
         public void Dispose()
