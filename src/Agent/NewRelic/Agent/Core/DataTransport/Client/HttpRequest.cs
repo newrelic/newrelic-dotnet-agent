@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             Content = new NRHttpContent(_configuration);
         }
 
-        public ConnectionInfo ConnectionInfo { get; set; }
+        public IConnectionInfo ConnectionInfo { get; set; }
         public string Endpoint { get; set; }
         public Dictionary<string, string> Headers { get; } = new Dictionary<string, string>();
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(60);
@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         public IHttpContent Content { get; }
         public Guid RequestGuid { get; set; }
 
-        private Uri GetUri(string method, ConnectionInfo connectionInfo)
+        private Uri GetUri(string method, IConnectionInfo connectionInfo)
         {
             var uri = new StringBuilder("/agent_listener/invoke_raw_method?method=")
                 .Append(method)

@@ -54,9 +54,9 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             _mockHttpMessageHandler = new MockHttpMessageHandler(response, throwHttpRequestException);
             var httpClient = new HttpClient(_mockHttpMessageHandler);
-
+            var httpClientWrapper = new HttpClientWrapper(httpClient);
             _httpClient = new NRHttpClient(Mock.Create<IWebProxy>(), _configuration);
-            ((NRHttpClient)_httpClient).SetHttpClient(httpClient);
+            ((NRHttpClient)_httpClient).SetHttpClientWrapper(httpClientWrapper);
 
             Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(_httpClient);
         }

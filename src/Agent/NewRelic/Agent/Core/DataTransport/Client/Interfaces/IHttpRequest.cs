@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
     /// </summary>
     public interface IHttpRequest
     {
-        ConnectionInfo ConnectionInfo { get; set; }
+        IConnectionInfo ConnectionInfo { get; set; }
         string Endpoint { get; set; }
         Dictionary<string, string> Headers { get; }
         /// <summary>

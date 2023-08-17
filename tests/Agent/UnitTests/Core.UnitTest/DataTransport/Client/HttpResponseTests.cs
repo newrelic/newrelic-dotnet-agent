@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         public void Setup()
         {
             _mockHttpResponseMessage = Mock.Create<IHttpResponseMessageWrapper>();
-            _httpResponse = new HttpResponse(_testGuid, _mockHttpResponseMessage);  // Remember to refactor your HttpResponse to accept IHttpResponseMessageWrapper
+            _httpResponse = new HttpResponse(_testGuid, _mockHttpResponseMessage);
         }
 
         [Test]

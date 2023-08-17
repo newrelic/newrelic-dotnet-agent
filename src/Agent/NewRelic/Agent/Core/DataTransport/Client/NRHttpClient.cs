@@ -17,12 +17,12 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     public class NRHttpClient : HttpClientBase
     {
         private readonly IConfiguration _configuration;
-        private HttpClient _httpClient;
+        private IHttpClientWrapper _httpClientWrapper;
 
         public NRHttpClient(IWebProxy proxy, IConfiguration configuration) : base(proxy)
         {
             _configuration = configuration;
-            _httpClient = new HttpClient(new HttpClientHandler { Proxy = proxy }, true);
+            _httpClientWrapper = new HttpClientWrapper(new HttpClient(new HttpClientHandler { Proxy = proxy }, true));
         }
 
         public override async Task<IHttpResponse> SendAsync(IHttpRequest request)
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 req.Headers.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
 
                 req.Headers.Add("Timeout", _configuration.CollectorTimeout.ToString());
-                _httpClient.Timeout = request.Timeout;
+                _httpClientWrapper.Timeout = request.Timeout;
 
                 req.Headers.Add("Connection", "keep-alive");
                 req.Headers.Add("Keep-Alive", "true");
@@ -62,9 +62,9 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     req.Content.Headers.Add(contentHeader.Key, contentHeader.Value);
                 }
 
-                var response = await _httpClient.SendAsync(req);
+                var response = await _httpClientWrapper.SendAsync(req);
 
-                var httpResponse = new HttpResponse(request.RequestGuid, new HttpResponseMessageWrapper(response));
+                var httpResponse = new HttpResponse(request.RequestGuid, response);
                 return httpResponse;
             }
             catch (HttpRequestException)
@@ -80,13 +80,13 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
         public override void Dispose()
         {
-            _httpClient?.Dispose();
+            _httpClientWrapper?.Dispose();
         }
 
         // for unit testing
-        public void SetHttpClient(HttpClient httpClient)
+        public void SetHttpClientWrapper(IHttpClientWrapper httpClientWrapper)
         {
-            _httpClient = httpClient;
+            _httpClientWrapper = httpClientWrapper;
         }
     }
 }

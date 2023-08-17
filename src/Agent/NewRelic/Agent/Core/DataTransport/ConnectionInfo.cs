@@ -7,18 +7,32 @@ using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
-    public class ConnectionInfo
+    public interface IConnectionInfo
     {
-        public readonly string Host;
-        public readonly int Port;
-        public readonly string HttpProtocol;
-        public readonly string ProxyHost;
-        public readonly string ProxyUriPath;
-        public readonly int ProxyPort;
-        public readonly string ProxyUsername;
-        public readonly string ProxyPassword;
-        public readonly string ProxyDomain;
-        public readonly WebProxy Proxy;
+        string Host { get; }
+        int Port { get; }
+        string HttpProtocol { get; }
+        string ProxyHost { get; }
+        string ProxyUriPath { get; }
+        int ProxyPort { get; }
+        string ProxyUsername { get; }
+        string ProxyPassword { get; }
+        string ProxyDomain { get; }
+        WebProxy Proxy { get; }
+    }
+
+    public class ConnectionInfo : IConnectionInfo
+    {
+        public string Host { get; }
+        public int Port { get; }
+        public string HttpProtocol { get; }
+        public string ProxyHost { get; }
+        public string ProxyUriPath { get; }
+        public int ProxyPort { get; }
+        public string ProxyUsername { get; }
+        public string ProxyPassword { get; }
+        public string ProxyDomain { get; }
+        public WebProxy Proxy { get; }
 
         private static readonly Regex accountRegionRegex = new Regex("^.+?x");
 
