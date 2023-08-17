@@ -56,12 +56,15 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                         throw new NullReferenceException("outputStream");
                     }
 
-                    await outputStream.WriteAsync(request.Content.PayloadBytes, 0, request.Content.PayloadBytes.Length);
+                    // .ConfigureAwait(false) is required here for some reason
+                    await outputStream.WriteAsync(request.Content.PayloadBytes, 0, (int)_httpWebRequest.ContentLength).ConfigureAwait(false);
                 }
 
-                var resp = (HttpWebResponse)await _httpWebRequest.GetResponseAsync();
+                // .ConfigureAwait(false) is required here for some reason
+                var resp = (HttpWebResponse)await _httpWebRequest.GetResponseAsync().ConfigureAwait(false);
 
                 // translate WebResponse to IHttpResponse (WebRequestClientResponse)
+                //return Task.FromResult((IHttpResponse) new WebRequestClientResponse(request.RequestGuid, resp));
                 return new WebRequestClientResponse(request.RequestGuid, resp);
             }
             catch
