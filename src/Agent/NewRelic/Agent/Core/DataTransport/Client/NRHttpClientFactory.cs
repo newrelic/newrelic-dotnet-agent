@@ -1,9 +1,10 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-
+#if !NETFRAMEWORK
 using System.Net;
 using System.Threading;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
@@ -11,7 +12,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     ///     Pseudo "factory" implementation to get an IHttpClient instance of a NRHttpClient. Registered in DI
     ///     at startup if running in a .NET build
     /// </summary>
-    public class HttpClientFactory : IHttpClientFactory
+    public class NRHttpClientFactory : IHttpClientFactory
     {
         private IHttpClient _httpClient;
 
@@ -30,3 +31,4 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
     }
 }
+#endif

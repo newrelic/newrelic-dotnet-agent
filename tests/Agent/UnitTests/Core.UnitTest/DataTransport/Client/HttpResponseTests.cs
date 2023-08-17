@@ -1,6 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if !NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -11,6 +12,7 @@ using NUnit.Framework;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
@@ -99,3 +101,4 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
     }
 }
+#endif

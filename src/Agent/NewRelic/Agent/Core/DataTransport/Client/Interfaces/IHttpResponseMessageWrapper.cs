@@ -4,8 +4,11 @@
 using System;
 using System.Net;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
 {
+    /// <summary>
+    /// HttpResponseMessage wrapper to enable mocking in unit tests
+    /// </summary>
     public interface IHttpResponseMessageWrapper : IDisposable
     {
         IHttpContentWrapper Content { get; }

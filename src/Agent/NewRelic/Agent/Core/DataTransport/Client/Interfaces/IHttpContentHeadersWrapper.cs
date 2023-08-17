@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
 {
     public interface IHttpContentHeadersWrapper
     {

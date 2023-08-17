@@ -19,6 +19,7 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DataTransport.Client;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Instrumentation;
@@ -72,7 +73,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 #if NETFRAMEWORK
             container.Register<IHttpClientFactory, WebRequestHttpClientFactory>();
 #else
-            container.Register<IHttpClientFactory, HttpClientFactory>();
+            container.Register<IHttpClientFactory, NRHttpClientFactory>();
 #endif
 
             // Other

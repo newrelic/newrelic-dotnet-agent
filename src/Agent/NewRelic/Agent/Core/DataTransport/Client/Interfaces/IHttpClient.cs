@@ -4,7 +4,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
 {
     public interface IHttpClient : IDisposable
     {

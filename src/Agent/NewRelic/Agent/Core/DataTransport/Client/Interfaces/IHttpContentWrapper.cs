@@ -4,8 +4,12 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
 {
+
+    /// <summary>
+    /// HttpContentHeaders wrapper to enable mocking in unit tests
+    /// </summary>
     public interface IHttpContentWrapper
     {
         Task<Stream> ReadAsStreamAsync();

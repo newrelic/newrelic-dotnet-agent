@@ -1,13 +1,18 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if !NETFRAMEWORK
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
+    /// <summary>
+    /// IHttpClient implementation that uses System.Net.HttpClient for sending requests.
+    /// </summary>
     public class NRHttpClient : HttpClientBase
     {
         private HttpClient _httpClient;
@@ -22,9 +27,10 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             try
             {
                 var req = new HttpRequestMessage { RequestUri = request.Uri, Method = request.Method.ToHttpMethod() };
-
                 req.Headers.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
+
                 req.Headers.Add("Timeout", ((int)request.Timeout.TotalSeconds).ToString());
+                _httpClient.Timeout = request.Timeout;
 
                 req.Headers.Add("Connection", "keep-alive");
                 req.Headers.Add("Keep-Alive", "true");
@@ -76,3 +82,4 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
     }
 }
+#endif

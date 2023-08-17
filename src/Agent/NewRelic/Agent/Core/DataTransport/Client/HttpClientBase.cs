@@ -3,11 +3,16 @@
 
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
+    /// <summary>
+    /// Abstract base shared by implementations of IHttpClient
+    /// </summary>
     public abstract class HttpClientBase : IHttpClient
     {
         protected bool _diagnoseConnectionError = true;
@@ -40,6 +45,8 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             TestConnection();
         }
 
+#if NETFRAMEWORK
+        // use WebClient for .NETFramework builds
         protected void TestConnection()
         {
             const string testAddress = "http://www.google.com";
@@ -65,5 +72,31 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 Log.Error(message);
             }
         }
+#else
+        // use HttpClient for .NET Standard builds
+        protected void TestConnection()
+        {
+            const string testAddress = "http://www.google.com";
+            try
+            {
+                using (var client = new HttpClient(new HttpClientHandler() { Proxy = _proxy }, true))
+                {
+                    client.GetAsync(testAddress).GetAwaiter().GetResult();
+                }
+
+                Log.InfoFormat("Connection test to \"{0}\" succeeded", testAddress);
+            }
+            catch (Exception)
+            {
+                var message = $"Connection test to \"{testAddress}\" failed.";
+                if (_proxy != null)
+                {
+                    message += $" Check your proxy settings ({_proxy.GetProxy(new Uri(testAddress))})";
+                }
+
+                Log.Error(message);
+            }
+        }
+#endif
     }
 }

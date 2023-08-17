@@ -1,13 +1,18 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if NETFRAMEWORK
 using System;
 using System.Net;
 using System.Threading.Tasks;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
+    /// <summary>
+    /// IHttpClient implementation that uses WebRequest to send requests
+    /// </summary>
     public class NRWebRequestClient : HttpClientBase
     {
         private readonly IConfiguration _configuration;
@@ -92,3 +97,4 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
     }
 }
+#endif

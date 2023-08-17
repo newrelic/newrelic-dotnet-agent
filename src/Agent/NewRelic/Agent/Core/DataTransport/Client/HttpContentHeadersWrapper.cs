@@ -4,9 +4,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
+    /// <summary>
+    /// HttpContentHeaders wrapper to enable mocking in unit tests
+    /// </summary>
     public class HttpContentHeadersWrapper : IHttpContentHeadersWrapper
     {
         private readonly HttpContentHeaders _headers;

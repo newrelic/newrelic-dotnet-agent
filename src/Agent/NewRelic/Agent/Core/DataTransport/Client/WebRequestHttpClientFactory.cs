@@ -1,8 +1,9 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-
+#if NETFRAMEWORK
 using System.Net;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
@@ -23,3 +24,4 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
     }
 }
+#endif

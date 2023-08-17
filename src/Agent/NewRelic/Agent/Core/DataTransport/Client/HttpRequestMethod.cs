@@ -6,6 +6,9 @@ using System.Net.Http;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
+    /// <summary>
+    /// Abstraction of System.Net.HttpMethod
+    /// </summary>
     public enum HttpRequestMethod
     {
         Get,

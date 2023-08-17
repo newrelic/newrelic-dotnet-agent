@@ -8,9 +8,9 @@ using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using NewRelic.Agent.Core.DataTransport.Client;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
 namespace NewRelic.Agent.Core.DataTransport
 {

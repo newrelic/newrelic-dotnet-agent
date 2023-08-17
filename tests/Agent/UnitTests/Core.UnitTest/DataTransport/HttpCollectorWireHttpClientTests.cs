@@ -16,6 +16,7 @@ using NUnit.Framework;
 using System.Threading.Tasks;
 using System.Threading;
 using NewRelic.Agent.Core.DataTransport.Client;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Agent.Core.Logging;
 using Serilog;

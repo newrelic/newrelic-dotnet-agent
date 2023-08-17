@@ -4,7 +4,7 @@
 using System.Net;
 using NewRelic.Agent.Configuration;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
 {
     public interface IHttpClientFactory
     {

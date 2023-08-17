@@ -1,16 +1,21 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if !NETFRAMEWORK
 using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
+    /// <summary>
+    /// A response to a request by NrHttpClient
+    /// </summary>
     public class HttpResponse : IHttpResponse
     {
         private readonly IHttpResponseMessageWrapper _httpResponseMessageWrapper;
@@ -70,3 +75,4 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
     }
 }
+#endif

@@ -4,9 +4,13 @@
 using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
+    /// <summary>
+    /// Abstraction of content sent in client requests
+    /// </summary>
     public class NRHttpContent : IHttpContent
     {
         private readonly IConfiguration _configuration;

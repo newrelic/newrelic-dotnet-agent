@@ -6,6 +6,9 @@ using NewRelic.Core;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
 {
+    /// <summary>
+    /// Simple wrapper for audit logging, shared by implementations of IHttpClient
+    /// </summary>
     public static class DataTransportAuditLogger
     {
         /// <summary>

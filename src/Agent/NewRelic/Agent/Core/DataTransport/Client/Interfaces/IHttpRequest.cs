@@ -4,8 +4,11 @@
 using System;
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.DataTransport.Client
+namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
 {
+    /// <summary>
+    /// Abstraction of a client request
+    /// </summary>
     public interface IHttpRequest
     {
         ConnectionInfo ConnectionInfo { get; set; }
