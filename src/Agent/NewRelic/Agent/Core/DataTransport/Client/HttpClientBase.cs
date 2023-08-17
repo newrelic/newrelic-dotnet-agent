@@ -45,20 +45,21 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             TestConnection();
         }
 
-#if NETFRAMEWORK
-        // use WebClient for .NETFramework builds
         protected void TestConnection()
         {
             const string testAddress = "http://www.google.com";
             try
             {
+#if NETFRAMEWORK
                 using (var wc = new WebClient())
                 {
                     wc.Proxy = _proxy;
 
                     wc.DownloadString(testAddress);
                 }
-
+#else
+                _lazyHttpClient.Value.GetAsync(testAddress).GetAwaiter().GetResult();
+#endif
                 Log.InfoFormat("Connection test to \"{0}\" succeeded", testAddress);
             }
             catch (Exception)
@@ -72,32 +73,10 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 Log.Error(message);
             }
         }
-#else
 
+#if !NETFRAMEWORK
         // use a single HttpClient for all TestConnection() invocations
         private readonly Lazy<HttpClient> _lazyHttpClient = new Lazy<HttpClient>(() => new HttpClient(new HttpClientHandler() { Proxy = _proxy }));
-
-        // use HttpClient for .NET Standard builds
-        protected void TestConnection()
-        {
-            const string testAddress = "http://www.google.com";
-            try
-            {
-                _lazyHttpClient.Value.GetAsync(testAddress).GetAwaiter().GetResult();
-
-                Log.InfoFormat("Connection test to \"{0}\" succeeded", testAddress);
-            }
-            catch (Exception)
-            {
-                var message = $"Connection test to \"{testAddress}\" failed.";
-                if (_proxy != null)
-                {
-                    message += $" Check your proxy settings ({_proxy.GetProxy(new Uri(testAddress))})";
-                }
-
-                Log.Error(message);
-            }
-        }
 #endif
     }
 }

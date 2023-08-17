@@ -89,9 +89,9 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
 
         // for unit testing only
-        public void SetHttpWebRequestFunc(Func<Uri, HttpWebRequest> fooFunc )
+        public void SetHttpWebRequestFunc(Func<Uri, HttpWebRequest> getHttpWebRequestFunc )
         {
-            _getHttpWebRequestFunc = fooFunc;
+            _getHttpWebRequestFunc = getHttpWebRequestFunc;
         }
     }
 }
