@@ -50,6 +50,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     _log = new SitecoreLoggingAdapter();
 #endif
                     break;
+                case "SERILOGEL":
+#if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
+                    _log = new SerilogExtensionsLoggingAdapter();
+#endif
+                    break;
+                case "NLOGEL":
+#if NET7_0_OR_GREATER || NET481_OR_GREATER
+                    _log = new NLogExtensionsLoggingAdapter();
+#endif
+                    break;
+
                 default:
                     throw new System.ArgumentNullException(nameof(loggingFramework));
             }

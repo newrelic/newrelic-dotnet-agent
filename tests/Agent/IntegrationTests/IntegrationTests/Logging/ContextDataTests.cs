@@ -279,4 +279,58 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
     }
 
     #endregion // Sitecore
+     
+    #region SEL
+    public class SELContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public SELContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.SerilogEL)
+        {
+        }
+    }
+
+    public class SELContextDataFW48Tests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFW48>
+    {
+        public SELContextDataFW48Tests(ConsoleDynamicMethodFixtureFW48 fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.SerilogEL)
+        {
+        }
+    }
+
+    public class SELContextDataCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public SELContextDataCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.SerilogEL)
+        {
+        }
+    }
+
+    public class SELContextDataCoreOldestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+    {
+        public SELContextDataCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.SerilogEL)
+        {
+        }
+    }
+
+    #endregion // SEL
+
+    #region NEL
+    public class NELContextDataFWLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public NELContextDataFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.NLogEL)
+        {
+        }
+    }
+
+    public class NELContextDataCoreLatestTests : ContextDataTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public NELContextDataCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, LoggingFramework.NLogEL)
+        {
+        }
+    }
+
+    #endregion // NEL
 }

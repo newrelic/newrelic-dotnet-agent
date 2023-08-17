@@ -11,7 +11,9 @@ namespace NewRelic.Agent.IntegrationTests.Logging
         SerilogWeb,
         NLog,
         DummyMEL,
-        Sitecore
+        Sitecore,
+        SerilogEL,
+        NLogEL
     }
 
     public class LogUtils
@@ -28,6 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                 case LoggingFramework.Serilog:
                     return "serilog";
                 case LoggingFramework.NLog:
+                case LoggingFramework.NLogEL:
                     return "nlog";
                 case LoggingFramework.DummyMEL:
                     return "DummyMEL";
@@ -73,6 +76,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                     }
                 case LoggingFramework.SerilogWeb:
                 case LoggingFramework.Serilog:
+                case LoggingFramework.SerilogEL:
                     switch (level)
                     {
                         case "DEBUG":
@@ -91,6 +95,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging
                             return level;
                     }
                 case LoggingFramework.NLog:
+                case LoggingFramework.NLogEL:
                     switch (level)
                     {
                         case "NOMESSAGE":
