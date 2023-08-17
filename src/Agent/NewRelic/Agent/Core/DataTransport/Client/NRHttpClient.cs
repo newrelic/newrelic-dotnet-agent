@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
@@ -15,10 +16,12 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     /// </summary>
     public class NRHttpClient : HttpClientBase
     {
+        private readonly IConfiguration _configuration;
         private HttpClient _httpClient;
 
-        public NRHttpClient(IWebProxy proxy) : base(proxy)
+        public NRHttpClient(IWebProxy proxy, IConfiguration configuration) : base(proxy)
         {
+            _configuration = configuration;
             _httpClient = new HttpClient(new HttpClientHandler { Proxy = proxy }, true);
         }
 
@@ -26,10 +29,15 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         {
             try
             {
-                var req = new HttpRequestMessage { RequestUri = request.Uri, Method = request.Method.ToHttpMethod() };
+                var req = new HttpRequestMessage
+                {
+                    RequestUri = request.Uri,
+                    Method = _configuration.PutForDataSend ? HttpMethod.Put : HttpMethod.Post
+                };
+
                 req.Headers.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
 
-                req.Headers.Add("Timeout", ((int)request.Timeout.TotalSeconds).ToString());
+                req.Headers.Add("Timeout", _configuration.CollectorTimeout.ToString());
                 _httpClient.Timeout = request.Timeout;
 
                 req.Headers.Add("Connection", "keep-alive");

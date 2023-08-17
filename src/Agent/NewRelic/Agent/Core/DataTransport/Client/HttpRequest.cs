@@ -15,6 +15,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     public class HttpRequest : IHttpRequest
     {
         private readonly IConfiguration _configuration;
+        private Uri _uri;
 
         public HttpRequest(IConfiguration configuration)
         {
@@ -25,9 +26,10 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         public ConnectionInfo ConnectionInfo { get; set; }
         public string Endpoint { get; set; }
         public Dictionary<string, string> Headers { get; } = new Dictionary<string, string>();
-        public HttpRequestMethod Method { get; set; }
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(60); 
-        public Uri Uri => GetUri(Endpoint, ConnectionInfo);
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(60);
+
+        public Uri Uri => _uri ??= GetUri(Endpoint, ConnectionInfo); // cache the Uri
+
         public IHttpContent Content { get; }
         public Guid RequestGuid { get; set; }
 

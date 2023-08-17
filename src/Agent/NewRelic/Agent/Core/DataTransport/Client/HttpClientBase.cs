@@ -16,7 +16,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     public abstract class HttpClientBase : IHttpClient
     {
         protected bool _diagnoseConnectionError = true;
-        protected IWebProxy _proxy;
+        protected static IWebProxy _proxy = null;
 
         protected HttpClientBase(IWebProxy proxy)
         {
@@ -73,16 +73,17 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             }
         }
 #else
+
+        // use a single HttpClient for all TestConnection() invocations
+        private readonly Lazy<HttpClient> _lazyHttpClient = new Lazy<HttpClient>(() => new HttpClient(new HttpClientHandler() { Proxy = _proxy }));
+
         // use HttpClient for .NET Standard builds
         protected void TestConnection()
         {
             const string testAddress = "http://www.google.com";
             try
             {
-                using (var client = new HttpClient(new HttpClientHandler() { Proxy = _proxy }, true))
-                {
-                    client.GetAsync(testAddress).GetAwaiter().GetResult();
-                }
+                _lazyHttpClient.Value.GetAsync(testAddress).GetAwaiter().GetResult();
 
                 Log.InfoFormat("Connection test to \"{0}\" succeeded", testAddress);
             }

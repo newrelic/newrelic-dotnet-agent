@@ -52,7 +52,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     Endpoint = method,
                     ConnectionInfo = connectionInfo,
-                    Method = _configuration.PutForDataSend ? HttpRequestMethod.Put : HttpRequestMethod.Post,
                     RequestGuid = requestGuid,
                     Content =
                         {

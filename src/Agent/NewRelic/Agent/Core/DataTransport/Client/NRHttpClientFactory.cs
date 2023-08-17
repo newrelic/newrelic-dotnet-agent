@@ -20,11 +20,11 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         {
             if (proxy != null)
             {
-                Interlocked.CompareExchange(ref _httpClient, new NRHttpClient(proxy), null);
+                Interlocked.CompareExchange(ref _httpClient, new NRHttpClient(proxy, configuration), null);
             }
             else
             {
-                Interlocked.CompareExchange(ref _httpClient, new NRHttpClient(null), null);
+                Interlocked.CompareExchange(ref _httpClient, new NRHttpClient(null,configuration), null);
             }
 
             return _httpClient;

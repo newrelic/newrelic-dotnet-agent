@@ -68,8 +68,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 // .ConfigureAwait(false) is required here for some reason
                 var resp = (HttpWebResponse)await _httpWebRequest.GetResponseAsync().ConfigureAwait(false);
 
-                // translate WebResponse to IHttpResponse (WebRequestClientResponse)
-                //return Task.FromResult((IHttpResponse) new WebRequestClientResponse(request.RequestGuid, resp));
                 return new WebRequestClientResponse(request.RequestGuid, resp);
             }
             catch (WebException ex)
