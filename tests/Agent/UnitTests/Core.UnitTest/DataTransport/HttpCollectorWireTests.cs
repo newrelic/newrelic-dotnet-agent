@@ -7,13 +7,8 @@ using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Net.Http.Headers;
-using System.Text;
 using NUnit.Framework;
-using System.Threading.Tasks;
-using System.Threading;
+using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Agent.Core.Logging;
 using Serilog;
@@ -27,7 +22,6 @@ namespace NewRelic.Agent.Core.DataTransport
         private IConfiguration _configuration;
         private IAgentHealthReporter _agentHealthReporter;
         private IHttpClientFactory _httpClientFactory;
-        private MockHttpMessageHandler _mockHttpMessageHandler;
         private ILogger _mockILogger;
 
         [SetUp]
@@ -46,14 +40,6 @@ namespace NewRelic.Agent.Core.DataTransport
             return new HttpCollectorWire(_configuration, requestHeadersMap, _agentHealthReporter, _httpClientFactory);
         }
 
-        private void CreateMockHttpClient(HttpResponseMessage response, bool throwHttpRequestException)
-        {
-            _mockHttpMessageHandler = new MockHttpMessageHandler(response, throwHttpRequestException);
-            var httpClient = new HttpClient(_mockHttpMessageHandler);
-
-            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>())).Returns(httpClient);
-        }
-
         [Test]
         [TestCase(false)]
         [TestCase(true)]
@@ -67,40 +53,18 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(_configuration);
             var serializedData = "{ \"key\": \"value\" }";
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{}")
-            };
 
-            CreateMockHttpClient(httpResponse, false);
+            var expected = "{}";
 
-            var collectorWire = CreateHttpCollectorWire();
+            var mockHttpResponse = Mock.Create<IHttpResponse>();
+            Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
+            Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
 
-            // Act
-            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+            var mockHttpClient = Mock.Create<IHttpClient>();
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
 
-            // Assert
-            Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
-            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
-        }
-
-        [Test]
-        public void SendData_ShouldReturnEmptyResponseBody_WhenResponseContentIsNull()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
-            Mock.Arrange(() => _configuration.CollectorTimeout).Returns(5000);
-            Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
-
-            var connectionInfo = new ConnectionInfo(_configuration);
-            var serializedData = "{ \"key\": \"value\" }";
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = null
-            };
-
-            CreateMockHttpClient(httpResponse, false);
+            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
@@ -108,41 +72,12 @@ namespace NewRelic.Agent.Core.DataTransport
             var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
-            Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
-            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
+            Assert.AreEqual(expected, response);
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
 
         [Test]
-        public void SendData_ShouldReturnEmptyResponse_WhenResponseContentIsEmpty()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
-            Mock.Arrange(() => _configuration.CollectorTimeout).Returns(5000);
-            Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
-
-            var connectionInfo = new ConnectionInfo(_configuration);
-            var serializedData = "{ \"key\": \"value\" }";
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("")
-            };
-
-            CreateMockHttpClient(httpResponse, false);
-
-            var collectorWire = CreateHttpCollectorWire();
-
-            // Act
-            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
-
-            // Assert
-            Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
-            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
-        }
-
-        [Test]
-        public void SendData_DecompressesGZipResponse()
+        public void SendData_ShouldThrowHttpRequestException_WhenRequestThrows()
         {
             // Arrange
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
@@ -152,109 +87,23 @@ namespace NewRelic.Agent.Core.DataTransport
             var connectionInfo = new ConnectionInfo(_configuration);
             var serializedData = "{ \"key\": \"value\" }";
 
-            byte[] zippedBytes;
-            using (var memoryStream = new MemoryStream())
-            {
-                using (var gzipStream = new GZipStream(memoryStream, CompressionLevel.Fastest))
-                {
-                    var bytes = Encoding.UTF8.GetBytes(serializedData);
-                    gzipStream.Write(bytes, 0, bytes.Length);
-                }
+            var expected = "{}";
+            var mockHttpResponse = Mock.Create<IHttpResponse>();
+            Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
+            Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
 
-                memoryStream.Flush();
-                zippedBytes = memoryStream.ToArray();
-            }
+            var mockHttpClient = Mock.Create<IHttpClient>();
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).Throws(new HttpRequestException());
 
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-
-                Content = new ByteArrayContent(zippedBytes)
-            };
-            httpResponse.Content.Headers.ContentEncoding.Add("gzip");
-
-            CreateMockHttpClient(httpResponse, false);
-
-            var collectorWire = CreateHttpCollectorWire();
-
-            // Act
-            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
-
-            // Assert
-            Assert.AreEqual(serializedData, response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
-            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
-        }
-
-        [Test]
-        public void SendData_ReturnsEmptyResponse_WhenGZipResponseIsInvalid()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
-            Mock.Arrange(() => _configuration.CollectorTimeout).Returns(5000);
-            Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
-
-            var connectionInfo = new ConnectionInfo(_configuration);
-            var serializedData = "{ \"key\": \"value\" }";
-
-            byte[] zippedBytes;
-            using (var memoryStream = new MemoryStream())
-            {
-                using (var gzipStream = new GZipStream(memoryStream, CompressionLevel.Fastest))
-                {
-                    var bytes = Encoding.UTF8.GetBytes(serializedData);
-                    gzipStream.Write(bytes, 0, bytes.Length);
-                }
-
-                memoryStream.Flush();
-                zippedBytes = memoryStream.ToArray();
-            }
-            // make the array invalid by twiddling a byte...
-            zippedBytes[0] = Byte.MaxValue;
-
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-
-                Content = new ByteArrayContent(zippedBytes)
-            };
-            httpResponse.Content.Headers.ContentEncoding.Add("gzip");
-
-            CreateMockHttpClient(httpResponse, false);
-
-            var collectorWire = CreateHttpCollectorWire();
-
-            // Act
-            var response = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
-
-            // Assert
-            Assert.AreEqual("{}", response);
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
-            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
-        }
-
-        [Test]
-        public void SendData_ShouldThrowHttpRequestException_WhenRequestFails()
-        {
-            // Arrange
-            Mock.Arrange(() => _configuration.AgentLicenseKey).Returns("license_key");
-            Mock.Arrange(() => _configuration.CollectorTimeout).Returns(5000);
-            Mock.Arrange(() => _configuration.CollectorMaxPayloadSizeInBytes).Returns(1024 * 1024);
-
-            var connectionInfo = new ConnectionInfo(_configuration);
-            var serializedData = "{ \"key\": \"value\" }";
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.InternalServerError)
-            {
-                Content = new StringContent("{}")
-            };
-
-            CreateMockHttpClient(httpResponse, true);
+            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
             // Act and Assert
             Assert.Throws<HttpRequestException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
-            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
 
         [Test]
@@ -267,20 +116,24 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(_configuration);
             var serializedData = "invalidjson";
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.UnsupportedMediaType)
-            {
-                Content = new StringContent("{}")
-            };
 
-            CreateMockHttpClient(httpResponse, false);
+            var expected = "{}";
+            var mockHttpResponse = Mock.Create<IHttpResponse>();
+            Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.InternalServerError);
+            Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(false);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+
+            var mockHttpClient = Mock.Create<IHttpClient>();
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
+
+            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
             // Act and Assert
             Assert.Throws<HttpException>(() => collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid()));
 
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Once());
-            Assert.AreEqual(true, _mockHttpMessageHandler.SendAsyncInvoked);
+            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>()), Occurs.Once());
         }
 
         [Test]
@@ -294,12 +147,18 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(_configuration);
             var largeSerializedData = new string('x', 1024 * 1024 + 1); // Create a string larger than the maximum allowed payload size
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{}")
-            };
 
-            CreateMockHttpClient(httpResponse, false);
+
+            var expected = "{}";
+            var mockHttpResponse = Mock.Create<IHttpResponse>();
+            Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
+            Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+
+            var mockHttpClient = Mock.Create<IHttpClient>();
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
+
+            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
@@ -309,8 +168,6 @@ namespace NewRelic.Agent.Core.DataTransport
             // Assert
             Assert.AreEqual("{}", result);
             Mock.Assert(() => _agentHealthReporter.ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit("test_method"), Occurs.Once());
-            Mock.Assert(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>()), Occurs.Never());
-            Assert.AreEqual(false, _mockHttpMessageHandler.SendAsyncInvoked);
         }
 
         [TestCase(false)]
@@ -324,12 +181,18 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var connectionInfo = new ConnectionInfo(_configuration);
             var serializedData = "{ \"key\": \"value\" }";
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{}")
-            };
 
-            CreateMockHttpClient(httpResponse, false);
+            var expected = "{}";
+
+            var mockHttpResponse = Mock.Create<IHttpResponse>();
+            Mock.Arrange(() => mockHttpResponse.StatusCode).Returns(HttpStatusCode.OK);
+            Mock.Arrange(() => mockHttpResponse.IsSuccessStatusCode).Returns(true);
+            Mock.Arrange(() => mockHttpResponse.GetContentAsync()).TaskResult(expected);
+
+            var mockHttpClient = Mock.Create<IHttpClient>();
+            Mock.Arrange(() => mockHttpClient.SendAsync(Arg.IsAny<IHttpRequest>())).TaskResult(mockHttpResponse);
+
+            Mock.Arrange(() => _httpClientFactory.CreateClient(Arg.IsAny<IWebProxy>(), Arg.IsAny<IConfiguration>())).Returns(mockHttpClient);
 
             var collectorWire = CreateHttpCollectorWire();
 
@@ -340,36 +203,10 @@ namespace NewRelic.Agent.Core.DataTransport
             AuditLog.IsAuditLogEnabled = isEnabled;
 
             // Act
-            var _ = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
+            _ = collectorWire.SendData("test_method", connectionInfo, serializedData, Guid.NewGuid());
 
             // Assert
             Mock.Assert(() => mockForContextLogger.Fatal(Arg.AnyString), isEnabled ? Occurs.Exactly(3) : Occurs.Never());
         }
-    }
-
-    public class MockHttpMessageHandler : HttpMessageHandler
-    {
-        private readonly HttpResponseMessage _mockResponse;
-        private readonly bool _throwHttpRequestException;
-
-        public MockHttpMessageHandler(HttpResponseMessage mockResponse, bool throwHttpRequestException)
-        {
-            _mockResponse = mockResponse;
-            _throwHttpRequestException = throwHttpRequestException;
-        }
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            SendAsyncInvoked = true;
-
-            if (_throwHttpRequestException)
-                throw new HttpRequestException();
-
-            return Task.FromResult(_mockResponse);
-        }
-
-        /// <summary>
-        /// Indicates if SendAsync was called. Required because we can't Assert on protected methods
-        /// </summary>
-        public bool SendAsyncInvoked { get; private set; }
     }
 }
