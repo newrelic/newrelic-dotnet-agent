@@ -4,7 +4,10 @@
 #if !NETFRAMEWORK
 using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
 
 namespace NewRelic.Agent.Core.DataTransport.Client
@@ -12,10 +15,12 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     public class HttpClientWrapper : IHttpClientWrapper
     {
         private readonly HttpClient _httpClient;
+        private readonly int _timeoutMilliseconds;
 
-        public HttpClientWrapper(HttpClient client)
+        public HttpClientWrapper(HttpClient client, int timeoutMilliseconds)
         {
             _httpClient = client;
+            _timeoutMilliseconds = timeoutMilliseconds;
         }
 
 
@@ -26,7 +31,8 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
         public async Task<IHttpResponseMessageWrapper> SendAsync(HttpRequestMessage message)
         {
-            return new HttpResponseMessageWrapper(await _httpClient.SendAsync(message));
+            var cts = new CancellationTokenSource(_timeoutMilliseconds);
+            return new HttpResponseMessageWrapper(await _httpClient.SendAsync(message, cts.Token));
         }
 
         public TimeSpan Timeout

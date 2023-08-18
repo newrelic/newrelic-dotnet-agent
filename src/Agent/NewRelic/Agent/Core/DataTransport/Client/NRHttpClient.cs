@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if !NETFRAMEWORK
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -22,7 +23,10 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         public NRHttpClient(IWebProxy proxy, IConfiguration configuration) : base(proxy)
         {
             _configuration = configuration;
-            _httpClientWrapper = new HttpClientWrapper(new HttpClient(new HttpClientHandler { Proxy = proxy }, true));
+
+            // set the default timeout to "infinite", but specify the configured collector timeout as the actual timeout for SendAsync() calls
+            var httpClient = new HttpClient(new HttpClientHandler { Proxy = proxy }, true) {Timeout = System.Threading.Timeout.InfiniteTimeSpan};
+            _httpClientWrapper = new HttpClientWrapper(httpClient, (int)configuration.CollectorTimeout);
         }
 
         public override async Task<IHttpResponse> SendAsync(IHttpRequest request)
@@ -36,9 +40,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 };
 
                 req.Headers.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
-
-                req.Headers.Add("Timeout", _configuration.CollectorTimeout.ToString());
-
                 req.Headers.Add("Connection", "keep-alive");
                 req.Headers.Add("Keep-Alive", "true");
                 req.Headers.Add("ACCEPT-ENCODING", "gzip");
