@@ -17,7 +17,7 @@ on:
         default: false
 
   schedule:
-    - cron: "0 9 * * *"
+    - cron: "0 9 * * 1-5"
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
