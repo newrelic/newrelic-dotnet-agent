@@ -80,6 +80,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         public override void Dispose()
         {
             _httpClientWrapper?.Dispose();
+            base.Dispose();
         }
 
         // for unit testing

@@ -24,7 +24,14 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
 
         public abstract Task<IHttpResponse> SendAsync(IHttpRequest request);
-        public abstract void Dispose();
+
+        public virtual void Dispose()
+        {
+#if !NETFRAMEWORK
+            if (_lazyHttpClient.IsValueCreated)
+                _lazyHttpClient.Value.Dispose();
+#endif
+        }
 
 
         protected void DiagnoseConnectionError(string host)

@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         }
 
         [Test]
-        public async Task SendAsync_ThrowsWebException_WhenWebExceptionResponseIsNull()
+        public void SendAsync_ThrowsWebException_WhenWebExceptionResponseIsNull()
         {
             // Arrange
             _client.SetHttpWebRequestFunc(uri =>

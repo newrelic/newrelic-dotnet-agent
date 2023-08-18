@@ -85,6 +85,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
         public override void Dispose()
         {
+            base.Dispose();
         }
 
         // for unit testing only
