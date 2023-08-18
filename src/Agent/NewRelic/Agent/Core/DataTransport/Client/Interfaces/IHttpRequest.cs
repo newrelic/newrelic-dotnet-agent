@@ -14,10 +14,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client.Interfaces
         IConnectionInfo ConnectionInfo { get; set; }
         string Endpoint { get; set; }
         Dictionary<string, string> Headers { get; }
-        /// <summary>
-        /// Request timeout
-        /// </summary>
-        TimeSpan Timeout { get; set; }
 
         Uri Uri { get; }
 

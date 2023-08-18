@@ -38,7 +38,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 req.Headers.Add("User-Agent", $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}");
 
                 req.Headers.Add("Timeout", _configuration.CollectorTimeout.ToString());
-                _httpClientWrapper.Timeout = request.Timeout;
 
                 req.Headers.Add("Connection", "keep-alive");
                 req.Headers.Add("Keep-Alive", "true");

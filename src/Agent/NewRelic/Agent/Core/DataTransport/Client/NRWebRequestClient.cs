@@ -40,7 +40,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                 }
 
                 _httpWebRequest.KeepAlive = true;
-                _httpWebRequest.Timeout = (int)request.Timeout.TotalMilliseconds;
                 _httpWebRequest.ContentType = request.Content.ContentType;
                 _httpWebRequest.UserAgent = $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}";
                 _httpWebRequest.Method = _configuration.PutForDataSend ? "PUT" : "POST";

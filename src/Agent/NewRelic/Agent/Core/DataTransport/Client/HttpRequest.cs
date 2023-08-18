@@ -26,8 +26,6 @@ namespace NewRelic.Agent.Core.DataTransport.Client
         public IConnectionInfo ConnectionInfo { get; set; }
         public string Endpoint { get; set; }
         public Dictionary<string, string> Headers { get; } = new Dictionary<string, string>();
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(60);
-
         public Uri Uri => _uri ??= GetUri(Endpoint, ConnectionInfo); // cache the Uri
 
         public IHttpContent Content { get; }
