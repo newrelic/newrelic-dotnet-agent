@@ -1,4 +1,7 @@
-﻿#if NETFRAMEWORK
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+#if NETFRAMEWORK
 using System;
 using System.IO;
 using System.IO.Compression;
