@@ -241,7 +241,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void ReportIfHostIsLinuxOs()
         {
-#if NETSTANDARD2_0
+#if NET
 
 			bool isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
 			var metric =_metricBuilder.TryBuildLinuxOsMetric(isLinux);

@@ -855,11 +855,6 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void SetQueueTime(TimeSpan queueTime)
         {
-            if (queueTime == null)
-            {
-                throw new ArgumentNullException(nameof(queueTime));
-            }
-
             TransactionMetadata.SetQueueTime(queueTime);
         }
 

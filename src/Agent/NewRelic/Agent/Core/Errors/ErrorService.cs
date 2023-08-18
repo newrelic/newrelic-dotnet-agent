@@ -93,7 +93,7 @@ namespace NewRelic.Agent.Core.Errors
             if (statusCode < 400) return null;
 
             var statusDescription =
-#if NETSTANDARD2_0
+#if NET
 				statusCode.ToString();
 #else
                 HttpWorkerRequest.GetStatusDescription(statusCode);

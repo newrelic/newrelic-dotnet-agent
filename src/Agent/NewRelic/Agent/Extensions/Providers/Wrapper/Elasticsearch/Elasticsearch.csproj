@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net462;net6.0</TargetFrameworks>
     <AssemblyName>NewRelic.Providers.Wrapper.Elasticsearch</AssemblyName>
     <RootNamespace>NewRelic.Providers.Wrapper.Elasticsearch</RootNamespace>
   </PropertyGroup>

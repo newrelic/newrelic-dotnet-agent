@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" InitialTargets="VersionByGitTag">
     <PropertyGroup>
-        <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
+        <TargetFrameworks>net462;net6.0</TargetFrameworks>
         <AssemblyName>NewRelic.Core</AssemblyName>
         <RootNamespace>NewRelic.Core</RootNamespace>
         <Description>New Relic Common Library</Description>
@@ -34,13 +34,13 @@
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Newtonsoft.Json'" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Newtonsoft.Json'" />
     </ItemGroup>
 	
     <PropertyGroup>
       <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net462'">1</ILRepackIncludeCount>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">1</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net6.0'">1</ILRepackIncludeCount>
     </PropertyGroup>
     
     <Error Text="ILRepack of $(AssemblyName) ($(TargetFramework)) failed. A dependency is missing. Expected $(ILRepackIncludeCount) dependencies but found @(ILRepackInclude-&gt;Count())." Condition="@(ILRepackInclude-&gt;Count()) != $(ILRepackIncludeCount)" />

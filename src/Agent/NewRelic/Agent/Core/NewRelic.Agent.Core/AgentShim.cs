@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Core
             AgentInitializer.InitializeAgent();
         }
 
-#if NETSTANDARD2_0
+#if NET
 		static AgentShim()
 		{
 			Initialize();

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net462;net6.0</TargetFrameworks>
     <RootNamespace>NewRelic.Providers.Wrapper.NLogLogging</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.NLogLogging</AssemblyName>
     <Description>NLog Logging Wrapper Provider for New Relic .NET Agent</Description>

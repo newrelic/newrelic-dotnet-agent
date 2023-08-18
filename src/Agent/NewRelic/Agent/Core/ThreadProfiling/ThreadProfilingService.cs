@@ -12,8 +12,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using DictionaryExtensions = NewRelic.SystemExtensions.Collections.Generic.DictionaryExtensions;
 
-#pragma warning disable 649 // Unassigned fields. This should be removed when we support thread profiling in the NETSTANDARD2_0 build.
+#pragma warning disable 649 // Unassigned fields. This should be removed when we support thread profiling in the NET build.
 
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
@@ -285,7 +286,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         {
             if (null != fids && fids.Length > 0)
             {
-                _managedThreadsFromProfiler[threadId] = _managedThreadsFromProfiler.GetValueOrDefault(threadId) + fids.Length;
+                _managedThreadsFromProfiler[threadId] = DictionaryExtensions.GetValueOrDefault(_managedThreadsFromProfiler, threadId) + fids.Length;
 
                 _threadProfilingBucket.UpdateTree(fids);
             }

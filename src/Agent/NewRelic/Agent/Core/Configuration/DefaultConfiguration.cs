@@ -133,7 +133,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private bool TryGetAppSettingAsBoolWithDefault(string key, bool defaultValue)
         {
-            var value = _newRelicAppSettings.GetValueOrDefault(key);
+            var value = DictionaryExtensions.GetValueOrDefault(_newRelicAppSettings, key);
 
             bool parsedBool;
             var parsedSuccessfully = bool.TryParse(value, out parsedBool);

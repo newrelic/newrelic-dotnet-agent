@@ -12,9 +12,7 @@ namespace NewRelic.Core
 {
     public static class GuidGenerator
     {
-        /// Our testing shows that RngCryptoServiceProvider library is threadsafe and is more performant
-        /// than Random library when generating random numbers during thread contention.
-        private static readonly RNGCryptoServiceProvider RngCryptoServiceProvider = new RNGCryptoServiceProvider();
+        private static readonly RandomNumberGenerator _randomNumberGenerator = RandomNumberGenerator.Create("NrRNG");
         private static Func<string> _traceGeneratorFunc = GetTraceIdFromCurrentActivity;
 
         /// <summary>
@@ -25,7 +23,7 @@ namespace NewRelic.Core
         public static string GenerateNewRelicGuid()
         {
             var rndBytes = new byte[8];
-            RngCryptoServiceProvider.GetBytes(rndBytes);
+            _randomNumberGenerator.GetBytes(rndBytes);
             return $"{BitConverter.ToUInt64(rndBytes, 0):x16}";
         }
 
@@ -55,7 +53,7 @@ namespace NewRelic.Core
         private static string GenerateTraceId()
         {
             var rndBytes = new byte[16];
-            RngCryptoServiceProvider.GetBytes(rndBytes);
+            _randomNumberGenerator.GetBytes(rndBytes);
 
 
             return $"{BitConverter.ToUInt64(rndBytes, 0):x16}{BitConverter.ToUInt64(rndBytes, 8):x16}";

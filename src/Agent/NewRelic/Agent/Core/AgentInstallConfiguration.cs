@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Core
 {
     public static partial class AgentInstallConfiguration
     {
-#if NETSTANDARD2_0
+#if NET
         private const string NewRelicHomeEnvironmentVariable = "CORECLR_NEWRELIC_HOME";
         private const string RuntimeDirectoryName = "netcore";
 #else

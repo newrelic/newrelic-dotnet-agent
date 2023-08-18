@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Web;
+using DictionaryExtensions = NewRelic.SystemExtensions.Collections.Generic.DictionaryExtensions;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -276,7 +277,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (string.IsNullOrEmpty(message.Text))
                     continue;
 
-                var logMethod = ServerLogLevelMap.GetValueOrDefault(message.Level) ?? Log.Info;
+                var logMethod = DictionaryExtensions.GetValueOrDefault(ServerLogLevelMap, message.Level) ?? Log.Info;
                 logMethod(message.Text);
             }
         }
@@ -320,7 +321,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var appNames = string.Join(":", _configuration.ApplicationNames.ToArray());
 
-#if NETSTANDARD2_0
+#if NET
 			return $"{Path.GetFileName(_processStatic.GetCurrentProcess().MainModuleFileName)}{appNames}";
 #else
 

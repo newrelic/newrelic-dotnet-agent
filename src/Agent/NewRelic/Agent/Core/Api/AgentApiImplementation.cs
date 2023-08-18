@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core.Api
                 {
                     Log.Info("Initializing the Agent API");
                     var method = publicAgent.GetType().GetMethod("SetWrappedAgent", BindingFlags.NonPublic | BindingFlags.Instance);
-                    method.Invoke(publicAgent, new[] { _agentBridgeApi });
+                    method!.Invoke(publicAgent, new[] { _agentBridgeApi });
                 }
             }
             catch (Exception ex)

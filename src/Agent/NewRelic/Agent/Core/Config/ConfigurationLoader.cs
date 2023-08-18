@@ -13,7 +13,7 @@ using System.Web;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-#if NETSTANDARD2_0
+#if NET
 using System.Reflection;
 using NewRelic.Agent.Core.Configuration;
 #endif
@@ -144,7 +144,7 @@ namespace NewRelic.Agent.Core.Config
         private static string TryGetAgentConfigFileFromAppConfig()
         {
 
-#if NETSTANDARD2_0
+#if NET
 
 			try
 			{
@@ -183,7 +183,7 @@ namespace NewRelic.Agent.Core.Config
 
         private static string TryGetAgentConfigFileFromAppRoot()
         {
-#if NETSTANDARD2_0
+#if NET
 			try
 			{
 				var filename = string.Empty;
@@ -571,7 +571,7 @@ namespace NewRelic.Agent.Core.Config
                 return Strings.SafeFileName(name);
             }
 
-#if NETSTANDARD2_0
+#if NET
 			try
 			{
 				name = AppDomain.CurrentDomain.FriendlyName;

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
     <PropertyGroup>
-        <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
+        <TargetFrameworks>net462;net6.0</TargetFrameworks>
         <AssemblyName>NewRelic.Providers.Wrapper.NServiceBus</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.NServiceBus</RootNamespace>
         <Description>NServiceBus Wrapper Provider for New Relic .NET Agent</Description>

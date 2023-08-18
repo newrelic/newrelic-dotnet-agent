@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-      <TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
+      <TargetFrameworks>net462;net6.0</TargetFrameworks>
       <AssemblyName>NewRelic.Providers.Storage.AsyncLocal</AssemblyName>
       <RootNamespace>NewRelic.Providers.Storage.AsyncLocal</RootNamespace>
       <Description>Async call stack and transaction tracking for New Relic .NET Agent</Description>

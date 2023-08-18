@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>NewRelic.Home</RootNamespace>
     <AssemblyName>NewRelic.Home</AssemblyName>
     <Description>This project is used to run build_home.ps1 to create the home folders.  It is empty on purpose.</Description>

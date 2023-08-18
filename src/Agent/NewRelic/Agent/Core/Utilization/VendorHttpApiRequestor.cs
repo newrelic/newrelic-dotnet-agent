@@ -17,7 +17,9 @@ namespace NewRelic.Agent.Core.Utilization
         {
             try
             {
+#pragma warning disable SYSLIB0014
                 var request = WebRequest.Create(uri);
+#pragma warning restore SYSLIB0014
                 request.Method = method;
                 request.Timeout = WebReqeustTimeout;
 
