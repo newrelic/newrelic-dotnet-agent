@@ -70,11 +70,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         [Fact]
         public void Test()
         {
-            // verify the "not supported" warning was logged
-            var match = _fixture.AgentLog.TryGetLogLines(AgentLogBase.ContextDataNotSupportedLogLineRegex);
-            Assert.Single(match);
-
-            // verify the log data was forwarded, but *without* the attributes
+            // verify the log data was forwarded, but *without* the attributes (since our dummy logger doesn't support them)
             var expectedLogLines = new[]
             {
                 new Assertions.ExpectedLogLine

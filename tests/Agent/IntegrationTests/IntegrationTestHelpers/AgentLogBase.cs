@@ -69,9 +69,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Received gRPC Server response messages: (\d+)";
         public const string SpanStreamingResponseGrpcError = FinestLogLinePrefixRegex + @"ResponseStreamWrapper: consumer \d+ - gRPC RpcException encountered while handling gRPC server responses: (.*)";
         
-        // ContextData related messages
-        public const string ContextDataNotSupportedLogLineRegex = WarnLogLinePrefixRegex + @".* Context data is not supported for this logging framework.";
-
         public AgentLogBase(RemoteApplication remoteApplication)
         {
             _remoteApplication = remoteApplication;
