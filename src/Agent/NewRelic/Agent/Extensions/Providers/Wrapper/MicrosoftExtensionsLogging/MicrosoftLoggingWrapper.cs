@@ -75,8 +75,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
             try
             {
-                // We are trying to access this property:
-                // logger.Loggers[0].Logger.ScopeProvider
+                // MEL keeps an array of scope handlers. We can ask one of them for the current scope data.
 
                 // Get the array of ScopeLoggers (logger.ScopeLoggers[])
                 var getLoggersArrayFunc = _getLoggersArray ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<dynamic>(logger.GetType(), "ScopeLoggers");
