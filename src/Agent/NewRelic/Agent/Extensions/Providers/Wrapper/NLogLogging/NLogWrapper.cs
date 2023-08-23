@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Logging;
@@ -20,6 +21,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
         private static Func<object, DateTime> _getTimestamp;
         private static Func<object, Exception> _getLogException;
         private static Func<object, IDictionary<object, object>> _getPropertiesDictionary;
+        private static Func<IEnumerable<KeyValuePair<string, object>>> _getScopeData;
 
         public bool IsTransactionRequired => false;
 
@@ -38,12 +40,7 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             var logEvent = instrumentedMethodCall.MethodCall.MethodArguments[2];
             var logEventType = logEvent.GetType();
 
-            if (!LogProviders.RegisteredLogProvider[(int)LogProvider.NLog])
-            {
-                RecordLogMessage(logEvent, logEventType, agent);
-            }
-
-            // We want this to happen instead of MEL so no provider check here.
+            RecordLogMessage(logEvent, logEventType, agent);
             DecorateLogMessage(logEvent, logEventType, agent);
 
             return Delegates.NoOp;
@@ -125,6 +122,23 @@ namespace NewRelic.Providers.Wrapper.NLogLogging
             foreach (var property in properties)
             {
                 contextData[property.Key.ToString()] = property.Value;
+            }
+
+            // NLog treats and stores Properties and Scope Context differently. If we need to add support for older versions of NLog, it's two calls instead of GetAllProperties():
+            //    NLog.MappedDiagnosticsLogicalContext.GetNames()
+            //       NLog.MappedDiagnosticsLogicalContext.Get(name)
+            try
+            {
+                _getScopeData = _getScopeData ??= VisibilityBypasser.Instance.GenerateParameterlessStaticMethodCaller<IEnumerable<KeyValuePair<string, object>>>("NLog", "NLog.ScopeContext", "GetAllProperties");
+            }
+            catch
+            {
+                _getScopeData = () => new List<KeyValuePair<string, object>>();
+            }
+            var scopeData = _getScopeData();
+            foreach (var pair in scopeData)
+            {
+                contextData[pair.Key] = pair.Value;
             }
 
             return contextData;

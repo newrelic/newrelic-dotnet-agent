@@ -607,6 +607,18 @@ namespace NewRelic.Reflection
             return methodInfo;
         }
 
+        public Func<TResult> GenerateParameterlessStaticMethodCaller<TResult>(string assemblyName, string typeName, string methodName)
+        {
+            var ownerType = GetType(assemblyName, typeName);
+
+            var methodInfo = ownerType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+            if (methodInfo == null)
+            {
+                throw new KeyNotFoundException(string.Format("Unable to find method {0} in type {1}", methodName, ownerType.AssemblyQualifiedName));
+            }
+            return (Func<TResult>)methodInfo.CreateDelegate(typeof(Func<TResult>));
+        }
+
         private static PropertyInfo GetPropertyInfo(Type type, string propertyName)
         {
             var propertyInfo = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);

@@ -34,12 +34,7 @@ namespace NewRelic.Providers.Wrapper.Logging
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            if (!LogProviders.RegisteredLogProvider[(int)LogProvider.Log4Net])
-            {
-                return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
-            }
-
-            return new CanWrapResponse(false);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

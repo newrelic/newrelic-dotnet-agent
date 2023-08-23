@@ -217,22 +217,26 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
-    
+    <!-- Requires Serilog 2.8.0+ -->
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
+
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <!-- Requires Serilog 2.9.0+ -->
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" Condition="'$(TargetFramework)' == 'net481'" />
 
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <!-- Requires Serilog 2.8.0+ -->
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
 
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="7.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="7.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <!-- Requires Serilog 2.9.0+ -->
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" Condition="'$(TargetFramework)' == 'net7.0'" />
   </ItemGroup>
 
   <ItemGroup> <!-- Versions below 4.5 did not support netstandard 2.0 -->
@@ -243,6 +247,12 @@
     <PackageReference Include="NLog" Version="4.1.2" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="NLog" Version="4.5.11" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="NLog" Version="5.2.3" Condition="'$(TargetFramework)' == 'net481'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Requires NLog 5.2.3+ -->
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.3" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.3" Condition="'$(TargetFramework)' == 'net7.0'" />
   </ItemGroup>
 
   <ItemGroup>

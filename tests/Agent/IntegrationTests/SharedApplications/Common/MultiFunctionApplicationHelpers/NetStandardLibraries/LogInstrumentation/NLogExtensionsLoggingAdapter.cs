@@ -2,21 +2,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-#if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
+#if NET7_0_OR_GREATER || NET481_OR_GREATER
 
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Serilog;
-using Serilog.Formatting.Json;
+using NLog.Extensions.Logging;
+using NLog.Targets;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
 {
-    class MicrosoftLoggingLoggingAdapter : ILoggingAdapter
+    class NLogExtensionsLoggingAdapter : ILoggingAdapter
     {
         private static Microsoft.Extensions.Logging.ILogger logger;
 
-        public MicrosoftLoggingLoggingAdapter()
+        public NLogExtensionsLoggingAdapter()
         {
         }
 
@@ -34,7 +35,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         {
             using (logger.BeginScope(context))
             {
-                logger.LogInformation(message);
+                logger.LogInformation(message, context);
             }
         }
 
@@ -81,50 +82,38 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void ConfigurePatternLayoutAppenderForDecoration()
         {
-            // NOTE: This is a serilog logger we are setting up
-            var serilogLogger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .Enrich.FromLogContext()
-                .WriteTo.Console(
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {NR_LINKING} {NewLine}{Exception}"
-                )
-                .CreateLogger();
 
-            CreateMelLogger(LogLevel.Debug, serilogLogger);
         }
 
         public void ConfigureJsonLayoutAppenderForDecoration()
         {
-            // NOTE: This is a serilog logger we are setting up
-            var serilogLogger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .Enrich.FromLogContext()
-                .WriteTo.Console(new JsonFormatter())
-                .CreateLogger();
 
-            CreateMelLogger(LogLevel.Debug, serilogLogger);
         }
 
-        private void CreateMelLogger(LogLevel minimumLogLevel, Serilog.ILogger serilogLoggerImpl = null)
+        private void CreateMelLogger(LogLevel minimumLogLevel)
         {
+
+            var logFactory = new NLog.LogFactory();
+            var logConfig = new NLog.Config.LoggingConfiguration();
+            var logConsole = new ConsoleTarget();
+            // Required to use MEL's scope data (context data)
+            var options = new NLogProviderOptions
+            {
+                IncludeScopes = true,
+                CaptureMessageProperties = true,
+            };
+
+            logConfig.AddTarget("console", logConsole);
+            logConfig.LoggingRules.Add(new NLog.Config.LoggingRule("*", NLog.LogLevel.Trace, logConsole));
+
+            var config = new ConfigurationBuilder();
             using var loggerFactory = LoggerFactory.Create(builder =>
             {
                 builder.SetMinimumLevel(minimumLogLevel);
-
-                // Either use serilog OR the built in console appender
-                if (serilogLoggerImpl != null)
-                {
-                    builder.AddSerilog(serilogLoggerImpl);
-                }
-                else
-                {
-                    builder.AddConsole();
-                }
+                builder.AddNLog(logConfig, options);
             });
             logger = loggerFactory.CreateLogger<LoggingTester>();
         }
-
-
     }
 }
 
