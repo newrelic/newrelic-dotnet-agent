@@ -1,3 +1,4 @@
+using System;
 using MySqlConnector;
 using NewRelic.Agent.IntegrationTests.Shared;
 
@@ -7,10 +8,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     {
         public static void WarmupMySql()
         {
-            using var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString);
-            using var mySqlCommand = new MySqlCommand("SELECT _date FROM dates LIMIT 1", connection);
-            connection.Open();
-            mySqlCommand.ExecuteScalar();
+            try
+            {
+
+                using var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString);
+                using var command = new MySqlCommand("SELECT _date FROM dates LIMIT 1", connection);
+                connection.Open();
+                command.ExecuteScalar();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
     }

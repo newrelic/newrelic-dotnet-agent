@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Data.SqlClient;
 using NewRelic.Agent.IntegrationTests.Shared;
 
@@ -7,10 +8,17 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     {
         public static void WarmupMsSql()
         {
-            using var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString);
-            using var command = new SqlCommand("SELECT TOP 1 * FROM NewRelic.dbo.TeamMembers", connection);
-            connection.Open();
-            command.ExecuteScalar();
+            try
+            {
+                using var connection = new SqlConnection(MsSqlConfiguration.MsSqlConnectionString);
+                using var command = new SqlCommand("SELECT TOP 1 * FROM NewRelic.dbo.TeamMembers", connection);
+                connection.Open();
+                command.ExecuteScalar();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
     }
