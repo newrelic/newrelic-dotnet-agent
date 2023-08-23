@@ -56,6 +56,11 @@ namespace NewRelic.Reflection.UnitTests
         public int GetWriteableIntField { get { return _writeableIntField; } }
     }
 
+    public static class PublicStatic
+    {
+        public static int GetANumber() => 3;
+    }
+
 #pragma warning restore 414
 
     public class FieldAccessTests
@@ -609,6 +614,22 @@ namespace NewRelic.Reflection.UnitTests
 
             Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateTypeFactory<string, string>(null, "foo"));
             Assert.Throws<ArgumentNullException>(() => VisibilityBypasser.Instance.GenerateTypeFactory<string, string>("foo", null));
+        }
+    }
+    public class StaticMethodTests
+    {
+        [Test]
+        public void test_static_generator()
+        {
+            var assemblyName = Assembly.GetExecutingAssembly().FullName;
+            var typeName = "NewRelic.Reflection.UnitTests.PublicStatic";
+            var methodName = "GetANumber";
+
+            var method = VisibilityBypasser.Instance.GenerateParameterlessStaticMethodCaller<int>(assemblyName, typeName, methodName);
+            var result = method();
+            Assert.AreEqual(3, result);
+
+            Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GenerateParameterlessStaticMethodCaller<int>(assemblyName, typeName, "NoSuchMethod"));
         }
     }
 }
