@@ -38,6 +38,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
         protected MySqlConnectorTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
+            MsSqlWarmupHelper.WarmupMySql();
+
             _fixture = fixture;
             _fixture.TestLogger = output;
 

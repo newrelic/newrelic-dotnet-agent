@@ -20,6 +20,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
         public EnterpriseLibraryMsSqlTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture)
         {
+            MsSqlWarmupHelper.WarmupMsSql();
+
             _fixture = fixture;
             _fixture.TestLogger = output;
 

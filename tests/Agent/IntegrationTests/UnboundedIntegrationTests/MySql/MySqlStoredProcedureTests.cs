@@ -22,6 +22,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
         protected MySqlStoredProcedureTestsBase(TFixture fixture, ITestOutputHelper output, bool paramsWithAtSigns) : base(fixture)
         {
+            MsSqlWarmupHelper.WarmupMySql();
+
             _fixture = fixture;
             _fixture.TestLogger = output;
             _paramsWithAtSigns = paramsWithAtSigns;
