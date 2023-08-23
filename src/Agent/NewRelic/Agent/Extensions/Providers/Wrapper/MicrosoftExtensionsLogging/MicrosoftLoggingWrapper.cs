@@ -28,7 +28,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            if (!LogProviders.KnownLogProvider)
+            if (!LogProviders.KnownMELProviderEnabled)
             {
                 return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
             }

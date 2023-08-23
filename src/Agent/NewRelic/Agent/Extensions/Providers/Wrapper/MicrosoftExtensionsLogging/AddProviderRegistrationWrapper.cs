@@ -22,9 +22,9 @@ namespace MicrosoftExtensionsLogging
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             var provider = instrumentedMethodCall.MethodCall.MethodArguments[0].ToString();
-            if (LogProviders.KnownLogProviders.Contains(provider))
+            if (LogProviders.KnownMELProviders.Contains(provider))
             {
-                LogProviders.KnownLogProvider = true;
+                LogProviders.KnownMELProviderEnabled = true;
                 agent.Logger.Log(Level.Info, $"Known log provider {provider} in use. Disabling Microsoft.Extensions.Logging instrumentation.");
             }
             else
