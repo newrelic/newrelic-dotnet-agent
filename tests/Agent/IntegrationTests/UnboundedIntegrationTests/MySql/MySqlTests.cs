@@ -34,9 +34,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
-                    configModifier.ConfigureFasterSqlTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(45);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(45);
+                    configModifier.ConfigureFasterSqlTracesHarvestCycle(45);
 
                     configModifier.ForceTransactionTraces()
                     .SetLogLevel("finest");
@@ -52,6 +52,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     // Confirm transaction transform has completed before moving on to host application shutdown, and final sendDataOnExit harvest
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromMinutes(2)); // must be 2 minutes since this can take a while.
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
 
