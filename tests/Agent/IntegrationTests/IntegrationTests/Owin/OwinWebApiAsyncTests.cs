@@ -34,9 +34,9 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ConfigureFasterMetricsHarvestCycle(15);
-                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(15);
-                    configModifier.ConfigureFasterErrorTracesHarvestCycle(15);
+                    configModifier.ConfigureFasterMetricsHarvestCycle(30);
+                    configModifier.ConfigureFasterTransactionTracesHarvestCycle(30);
+                    configModifier.ConfigureFasterErrorTracesHarvestCycle(30);
 
                     var instrumentationFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "CustomInstrumentation.xml");
 
@@ -82,7 +82,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             var generalMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", CallCountAllHarvests = ExpectedTransactionCount },
-                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = ExpectedTransactionCount },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", CallCountAllHarvests = ExpectedTransactionCount },
                 new Assertions.ExpectedMetric { metricName = @"Apdex"},
                 new Assertions.ExpectedMetric { metricName = @"ApdexAll"},
                 new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", CallCountAllHarvests = ExpectedTransactionCount },
