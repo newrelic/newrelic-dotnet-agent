@@ -205,15 +205,28 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MySql
             });
         }
 
-        private string ExecuteCommand(Func<MySqlCommand, string> action) =>
-             ExecuteCommandAsync(command => Task.FromResult(action(command))).GetAwaiter().GetResult();
+        private const string Query = "SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1";
+
+        private string ExecuteCommand(Func<MySqlCommand, string> action)
+        {
+            string result;
+
+            using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
+            using (var command = new MySqlCommand(Query, connection))
+            {
+                connection.Open();
+                result = action(command);
+            }
+
+            return result;
+        }
 
         private async Task<string> ExecuteCommandAsync(Func<MySqlCommand, Task<string>> action)
         {
             string result;
 
             using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
-            using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1", connection))
+            using (var command = new MySqlCommand(Query, connection))
             {
                 await connection.OpenAsync();
                 result = await action(command);
