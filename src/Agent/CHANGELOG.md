@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.15.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.14.0...v10.15.0) (2023-08-28)
+
+
+### New Features
+
+* Add support for Serilog.Extensions.Logging and NLog.Extensions.Logging. ([#1860](https://github.com/newrelic/newrelic-dotnet-agent/issues/1860)) ([#1859](https://github.com/newrelic/newrelic-dotnet-agent/issues/1859)) ([ad24201](https://github.com/newrelic/newrelic-dotnet-agent/commit/ad242019989b9105b1ccb0dd5602640a057f3333))
+* Log a warning when an unsupported .NET version is detected. ([#1852](https://github.com/newrelic/newrelic-dotnet-agent/issues/1852)) ([7da3e59](https://github.com/newrelic/newrelic-dotnet-agent/commit/7da3e59c9e9dbf865053de5eccd448560f5d78ce))
+* Use HttpWebRequest instead of HttpClient on .NET Framework ([#1853](https://github.com/newrelic/newrelic-dotnet-agent/issues/1853)) ([8d6cf0f](https://github.com/newrelic/newrelic-dotnet-agent/commit/8d6cf0faf1b08eb54cc76f8fcbb21d7afc994140))
+
 ## [10.14.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.13.0...v10.14.0) (2023-08-08)
 
 
