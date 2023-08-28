@@ -38,6 +38,9 @@ jobs:
     name: Build FullAgent and MSIInstaller
     runs-on: windows-2022
 
+    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
+    if: ${{ github.actor != 'dependabot[bot]' }}
+
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
       msi_solution_path: ${{ github.workspace }}\src\Agent\MsiInstaller\MsiInstaller.sln

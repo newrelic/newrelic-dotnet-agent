@@ -14,6 +14,10 @@ permissions:
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
+
+    # don't run this job if triggered by Dependabot
+    if: ${{ github.actor != 'dependabot[bot]' }}
+
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
