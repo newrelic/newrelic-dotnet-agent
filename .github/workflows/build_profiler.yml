@@ -235,7 +235,7 @@ jobs:
           rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release || true
         shell: bash
 
-      - uses: uraimo/run-on-arch-action@a8003307a739516fdd80ee6d3da8924db811b8da # v2.5.0
+      - uses: uraimo/run-on-arch-action@4ed76f16f09d12e83abd8a49e1ac1e5bf08784d4 # v2.5.1
         name: Run commands
         id: runcmd
         with:
