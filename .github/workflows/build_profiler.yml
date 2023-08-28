@@ -51,6 +51,10 @@ jobs:
   check-for-changes:
     name: Check for Updated Profiler Files
     runs-on: ubuntu-22.04
+
+    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
+    if: ${{ github.actor != 'dependabot[bot]' }}
+
     permissions:
       pull-requests: read
     outputs:
