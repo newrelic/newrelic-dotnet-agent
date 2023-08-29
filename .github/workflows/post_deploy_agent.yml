@@ -8,10 +8,6 @@ on:
         description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
         required: true
         type: string
-      external_call:
-        type: boolean
-        default: true
-        required: false
   workflow_call:
     inputs:
       agent_version:
@@ -38,7 +34,7 @@ jobs:
           disable-sudo: false
           egress-policy: audit
       - name: Wait for APT to update
-        if: ${{ inputs.external_call }}
+        if: ${{ github.event_name == 'workflow_call' }} # only wait if this workflow was called by another workflow
         run: |
           echo "Sleeping 2 minutes to wait for apt to update itself"
           sleep 120
@@ -77,7 +73,7 @@ jobs:
           fetch-depth: 0
 
       - name: Wait for YUM to update
-        if: ${{ inputs.external_call }}
+        if: ${{ github.event_name == 'workflow_call' }} # only wait if this workflow was called by another workflow
         run: |
           echo "Sleeping 2 minutes to wait for yum to update itself"
           sleep 120
