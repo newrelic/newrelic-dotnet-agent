@@ -1,7 +1,11 @@
 name: Check Markdown links
 
-on: push
-
+on: 
+  push:
+    paths:
+      - '**.md' # only run when there are changes to markdown files in a push to any branch
+    schedule:
+      - cron: "0 9 * * 1-5" # run once a day, M-F
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
