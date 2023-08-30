@@ -37,6 +37,9 @@ jobs:
     name: Check if source files were modified, skip remaining jobs if not
     uses: ./.github/workflows/check_modified_files.yml
     secrets: inherit
+    permissions:
+      pull-requests: read
+
 
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-fullagent-msi:
