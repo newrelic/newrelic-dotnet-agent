@@ -6,8 +6,6 @@ on:
     branches:
       - main
       - "feature/**"
-    paths-ignore:
-      - ".github/**" # skip changes to the .github branch (workflows, etc.)
   release:
     types: [published]
   workflow_dispatch:
@@ -35,13 +33,43 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
+  check-modified-files:
+    name: Check if source files were modified, skip remaining jobs if not
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
+    # don't run if triggered by a release or manual execution, as we're going to do the full build in those cases anyway
+    if: ${{ github.actor != 'dependabot[bot]' }} || !(github.event.release || github.event_name == 'workflow_dispatch')
+    outputs:
+      non-workflow-files-changed: ${{ steps.filter.outputs.non-workflow-files-changed }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+        with:
+          fetch-depth: 0
+      - name: Verified which files were modified
+        uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+        id: filter
+        with:
+          base: ${{ github.ref }}
+          filters: |
+            non-workflow-files-changed:
+              - '!.github/**'
+          list-files: 'csv'
+
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-fullagent-msi:
     name: Build FullAgent and MSIInstaller
     runs-on: windows-2022
-
-    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
-    if: ${{ github.actor != 'dependabot[bot]' }}
+    needs: check-modified-files
+    # run this job if non-workflow files were modified, or if triggered by a release or a manual execution
+    if: needs.check-modified-files.outputs.non-workflow-files-changed || github.event.release || github.event_name == 'workflow_dispatch'
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
