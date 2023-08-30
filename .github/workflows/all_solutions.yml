@@ -38,6 +38,7 @@ jobs:
     uses: ./.github/workflows/check_modified_files.yml
     secrets: inherit
     permissions:
+      contents: read
       pull-requests: read
 
 
