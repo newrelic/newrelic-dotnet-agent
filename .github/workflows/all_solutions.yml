@@ -47,8 +47,9 @@ jobs:
     name: Build FullAgent and MSIInstaller
     runs-on: windows-2022
     needs: check-modified-files
+    # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
     # run this job if non-workflow files were modified, or if triggered by a release or a manual execution
-    if: needs.check-modified-files.outputs.non-workflow-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch'
+    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.non-workflow-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch')
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
