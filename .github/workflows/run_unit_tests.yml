@@ -32,11 +32,12 @@ jobs:
 
   run-unit-tests:
     name: Run Unit Tests
+    needs: check-modified-files
     runs-on: windows-latest
 
     # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
     # run this job if non-workflow files were modified, or if triggered by a manual execution
-    if: ${{ github.actor != 'dependabot[bot]' }} && (needs.check-modified-files.outputs.non-workflow-files-changed == 'true' ||  github.event_name == 'workflow_dispatch')
+    if: github.actor != 'dependabot[bot]' && (needs.check-modified-files.outputs.non-workflow-files-changed == 'true' ||  github.event_name == 'workflow_dispatch')
 
     env:
       test_results_path: tests\TestResults

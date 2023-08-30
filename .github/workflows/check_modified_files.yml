@@ -17,7 +17,7 @@ jobs:
           pull-requests: read
         # don't run this job if triggered by Dependabot, will cause all other jobs to be skipped as well
         # don't run if triggered by a release or manual execution, as we're going to do the full build in those cases anyway
-        if: ${{ github.actor != 'dependabot[bot]' }} || !(github.event.release || github.event_name == 'workflow_dispatch')
+        if: github.actor != 'dependabot[bot]' || !(github.event.release || github.event_name == 'workflow_dispatch')
         outputs:
           non-workflow-files-changed: ${{ steps.filter.outputs.non-workflow-files-changed }}
         steps:
