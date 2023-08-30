@@ -6,7 +6,9 @@ on:
     branches-ignore:
       - main
       - "feature/**"
-
+    paths-ignore:
+      - ".github/**" # skip changes to the .github branch (workflows, etc.)
+  
   # this workflow can be called from another workflow
   workflow_call:
     inputs:

@@ -1,6 +1,8 @@
 name: Check Markdown links
 
-on: push
+on: 
+  push:
+    - '**.md' # only run when there are changes to markdown files
 
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running

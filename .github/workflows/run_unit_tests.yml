@@ -4,7 +4,11 @@ on:
   push:
     branches:
       - main # runs after a completed PR to main
+    paths-ignore:
+      - ".github/**" # skip changes to the .github branch (workflows, etc.)
   pull_request: # runs on a PR to any branch
+    paths-ignore:
+      - ".github/**" # skip changes to the .github branch (workflows, etc.)
   workflow_dispatch: # allows for manual trigger
 
 env:

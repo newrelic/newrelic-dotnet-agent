@@ -6,6 +6,8 @@ on:
     branches:
       - main
       - "feature/**"
+    paths-ignore:
+      - ".github/**" # skip changes to the .github branch (workflows, etc.)
   release:
     types: [published]
   workflow_dispatch:
