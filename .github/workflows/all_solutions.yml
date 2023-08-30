@@ -69,7 +69,7 @@ jobs:
     runs-on: windows-2022
     needs: check-modified-files
     # run this job if non-workflow files were modified, or if triggered by a release or a manual execution
-    if: needs.check-modified-files.outputs.non-workflow-files-changed || github.event.release || github.event_name == 'workflow_dispatch'
+    if: needs.check-modified-files.outputs.non-workflow-files-changed == 'true' || github.event.release || github.event_name == 'workflow_dispatch'
 
     env:
       fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
