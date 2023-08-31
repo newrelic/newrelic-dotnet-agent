@@ -1,4 +1,4 @@
-namespace ubuntu;
+namespace DockerSample;
 
 public class WeatherForecast
 {

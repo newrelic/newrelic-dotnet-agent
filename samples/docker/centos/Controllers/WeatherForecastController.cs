@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace ubuntu.Controllers;
+namespace DockerSample.Controllers;
 
 [ApiController]
 [Route("[controller]")]
