@@ -253,7 +253,7 @@ namespace NewRelic.Agent.Core
                             fileSizeLimitBytes: 50 * 1024 * 1024,
                             encoding: Encoding.UTF8,
                             rollOnFileSizeLimit: true,
-                            retainedFileCountLimit: 4,
+                            retainedFileCountLimit: null, // unlimited number of files
                             shared: true,
                             buffered: false
                             );
