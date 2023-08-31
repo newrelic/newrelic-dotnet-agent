@@ -792,3 +792,18 @@ jobs:
             ${{ github.workspace }}\build\BuildArtifacts
             ${{ github.workspace }}\deploy
           if-no-files-found: error
+
+  # This job is necessary in order for us to have a branch protection rule for tests with a matrix
+  # if any of the matrix tests fail, this job fails and the branch protection rule keeps the PR from merging
+  integration-test-status:
+    name: Check Test Matrix Status
+    runs-on: ubuntu-latest
+    needs: [run-integration-tests, run-unbounded-tests]
+    if: always()
+    steps:
+      - name: Successful test run
+        if: ${{ !(contains(needs.*.result, 'failure')) }}
+        run: exit 0
+      - name: Failing test run
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1          
