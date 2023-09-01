@@ -7,9 +7,5 @@ $env:CORECLR_NEWRELIC_HOME="$PWD\bin\release\net7.0\newrelic"
 $env:NEW_RELIC_LICENSE_KEY="<your-new-relic-license-key>" # *** Replace with your license key! *** 
 $env:NEW_RELIC_APP_NAME="ConsoleSample"
 
-# build the sample
-dotnet build -c Release
-
 # run the sample
-# (note that running the sample with "dotnet run -c Release" will *not* load the .NET Agent)
-.\bin\release\net7.0\ConsoleSample.exe
+dotnet run -c Release
