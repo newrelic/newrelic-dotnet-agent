@@ -5,7 +5,7 @@ This sample demonstrates a .NET 7 Console app, using the `NewRelic.Agent` [NuGet
 
 ## To run this sample:
 1. Edit `runSample.ps1` and replace `<your-new-relic-license-key>` with your New Relic license key.
-2. Start a Powershell terminal window and navigate to the `samples\console` folder, then run
+2. Start a Powershell terminal window and navigate to the `samples\console` folder, then run:
     ```
     .\runSample.ps1
     ```
