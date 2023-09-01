@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core.Aggregators
         }
         protected override void Harvest()
         {
-            Log.Info("Metric harvest starting.");
+            Log.Debug("Metric harvest starting.");
 
             foreach (var source in _outOfBandMetricSources)
             {
