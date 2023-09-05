@@ -9,7 +9,6 @@ to load and instrument the sample app. Refer to `Dockerfile` for details.
 
 ## To run this sample:
 1. Edit `Dockerfile` and replace `<your-new-relic-license-key>` with your New Relic license key.
-2. (optional) Update `Dockerfile` to reference the most recent .NET Agent version.
 2. Open a command prompt (or Powershell) and run:
      ```
      docker build . -t dotnet-agent-alpine

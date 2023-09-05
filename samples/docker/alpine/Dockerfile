@@ -12,13 +12,15 @@ RUN dotnet publish -c Release -o /app/publish
 
 FROM base AS final
 
-# download and install the New Relic .NET Agent using the tarball
-# find the latest version at https://download.newrelic.com/dot_net_agent/latest_release and update the filename as needed
+# download and install the New Relic .NET Agent using the tarball for the latest agent release
+# To use a specific version instead, modify the wget and tar commands to reference the full path to the 
+# dotnet agent version tarball you want to use instead of the wildcard specification
+# 
 # the agent is installed at /usr/local/new-relic-dotnet-agent
 RUN apk update && apk add --no-cache wget tar \
-    && wget https://download.newrelic.com/dot_net_agent/latest_release/newrelic-dotnet-agent_10.15.0_amd64.tar.gz \
-    && tar -xzf newrelic-dotnet-agent_10.15.0_amd64.tar.gz -C /usr/local \
-    && rm newrelic-dotnet-agent_10.15.0_amd64.tar.gz
+    && wget https://download.newrelic.com/dot_net_agent/latest_release -A '*amd64.tar.gz' -r \
+    && tar -xzf download.newrelic.com/dot_net_agent/latest_release/*.tar.gz -C /usr/local \ 
+    && rm -rf download.newrelic.com
 
 # Enable the agent
 ENV CORECLR_ENABLE_PROFILING=1 \
