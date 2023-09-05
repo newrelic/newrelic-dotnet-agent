@@ -21,6 +21,6 @@ public class Program
         // run the hosted service until the application is terminated
         logger!.LogInformation("Hello world!");
         await host.RunAsync();
-        logger!.LogInformation("Goodby world!");
+        logger!.LogInformation("Goodbye world!");
     }
 }
