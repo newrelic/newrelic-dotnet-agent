@@ -17,7 +17,7 @@ FROM base AS final
 RUN dnf install aspnetcore-runtime-7.0 -y
 
 # install wget
-RUN yum -y upgrade && yum -y install wget
+RUN yum -y update && yum -y install wget
 
 # download and install the New Relic .NET Agent using the rpm package for the latest agent release
 # To use a specific version instead, modify the wget and rpm commands to reference the full path to the 
