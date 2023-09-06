@@ -78,11 +78,8 @@ namespace NewRelic.Agent.Core.AgentHealth
                     events.Add(string.Format("{0} {1} {2}", timesOccured, agentHealthEvent, (timesOccured == 1) ? "event" : "events"));
                 }
             }
-            if (events.Count > 0)
-            {
-                var message = string.Join(", ", events);
-                Log.Info($"In the last {_timeBetweenExecutions.TotalMinutes} minutes: {message}");
-            }
+            var message = events.Count > 0 ? string.Join(", ", events) : "No events";
+            Log.Info($"In the last {_timeBetweenExecutions.TotalMinutes} minutes: {message}");
         }
 
         public void ReportSupportabilityCountMetric(string metricName, long count = 1)
