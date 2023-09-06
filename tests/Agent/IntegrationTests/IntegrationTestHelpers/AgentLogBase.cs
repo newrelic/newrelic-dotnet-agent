@@ -68,7 +68,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string SpanStreamingSuccessfullySentLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Attempting to send (\d+) item\(s\) - Success";
         public const string SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Received gRPC Server response messages: (\d+)";
         public const string SpanStreamingResponseGrpcError = FinestLogLinePrefixRegex + @"ResponseStreamWrapper: consumer \d+ - gRPC RpcException encountered while handling gRPC server responses: (.*)";
-        
+
+        // Transactions (either with an ID or "noop")
+        public const string TransactionLinePrefix = FinestLogLinePrefixRegex + @"Trx ([a-fA-F0-9]*|Noop): ";
+
         public AgentLogBase(RemoteApplication remoteApplication)
         {
             _remoteApplication = remoteApplication;
