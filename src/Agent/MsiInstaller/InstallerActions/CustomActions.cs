@@ -4,9 +4,11 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Deployment.WindowsInstaller;
+using Microsoft.Win32;
 
 namespace InstallerActions
 {
@@ -182,6 +184,115 @@ namespace InstallerActions
             }
 
             return ActionResult.Success;
+        }
+
+        [CustomAction]
+        public static ActionResult CheckBitness(Session session)
+        {
+            try
+            {
+                var uninstallPaths = new string[] {
+                    "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+                    "SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall" };
+
+                // check 64-bit first and then 32-bit if needed.
+                string displayName = null;
+                foreach (var path in uninstallPaths)
+                {
+                    if (string.IsNullOrEmpty(displayName))
+                    {
+                        displayName = GetDisplayName(path);
+                    }
+                }
+
+                // didn't find NR so not installed.
+                if (displayName == null)
+                {
+                    return ActionResult.Success;
+                }
+
+                var productName = session["ProductName"];
+                if (displayName == productName)
+                {
+                    return ActionResult.Success;
+                }
+
+                session.Message(InstallMessage.FatalExit, BuildBitnessErrorRecord(productName));
+                return ActionResult.Failure;
+            }
+            catch(Exception exception)
+            {
+                session.Log("Exception thrown checking bitness:\n{0}", exception);
+                return ActionResult.Failure;
+            }
+        }
+
+        private static string GetDisplayName(string path)
+        {
+            try
+            {
+                var regKey = Registry.LocalMachine.OpenSubKey(path);
+                foreach (var subkeyName in regKey.GetSubKeyNames())
+                {
+                    // Our key a a guid so skip anything that is not.
+                    if (!subkeyName.StartsWith("{"))
+                    {
+                        continue;
+                    }
+
+                    // Some entries are missing the DisplayName value.
+                    var subkey = regKey.OpenSubKey(subkeyName);
+                    if (!HasDisplayName(subkey.GetValueNames()))
+                    {
+                        continue;
+                    }
+
+                    var displayName = subkey.GetValue("DisplayName").ToString();
+                    if (string.IsNullOrEmpty(displayName) || !displayName.StartsWith("New Relic .NET Agent"))
+                    {
+                        continue;
+                    }
+
+                    // we have a new relic displayname here.
+                    return displayName;
+                }
+            }
+            catch
+            {}
+
+            return null;
+        } 
+
+        private static Record BuildBitnessErrorRecord(string productName)
+        {
+            var builder = new StringBuilder();
+            if (productName == "New Relic .NET Agent (64-bit)")
+            {
+                builder.AppendLine("The installed x86 (32-bit) version of the New Relic .NET Agent is not compatible with this 64-bit installer.");
+                builder.AppendLine();
+                builder.AppendLine("Either remove the existing installation or use the x86 (32-bit) installer.");
+            }
+            else
+            {
+                builder.AppendLine("The installed 64-bit version of the New Relic .NET Agent is not compatible with this x86 (32-bit) installer.");
+                builder.AppendLine();
+                builder.AppendLine("Either remove the existing installation or use the 64-bit installer.");
+            }
+
+            return new Record { FormatString = builder.ToString() };
+        }
+
+        private static bool HasDisplayName(string[] values)
+        {
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (values[i] == "DisplayName")
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static void Log(Session session, string message, params object[] arguments)
