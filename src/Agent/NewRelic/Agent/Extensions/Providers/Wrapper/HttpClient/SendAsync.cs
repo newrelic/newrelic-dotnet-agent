@@ -135,6 +135,9 @@ namespace NewRelic.Providers.Wrapper.HttpClient
         {
             var setHeaders = new Action<HttpRequestMessage, string, string>((carrier, key, value) =>
             {
+                // Content headers should not contain the expected header keys, but sometimes they do,
+                // and their presence can cause problems downstream by having 2 values for the same key.
+                carrier.Content?.Headers?.Remove(key);
                 // "Add" will throw if value exists, so we must remove it first
                 carrier.Headers?.Remove(key);
                 carrier.Headers?.Add(key, value);
