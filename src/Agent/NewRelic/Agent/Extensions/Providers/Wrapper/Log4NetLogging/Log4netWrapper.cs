@@ -59,12 +59,16 @@ namespace NewRelic.Providers.Wrapper.Logging
             // Older versions of log4net only allow access to a timestamp in local time
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
 
-            if (_getLogException == null
-                && !VisibilityBypasser.Instance.TryGeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject", out _getLogException)
-                // Legacy property, mainly used by Sitecore
-                && !VisibilityBypasser.Instance.TryGeneratePropertyAccessor<Exception>(logEventType, "m_thrownException", out _getLogException))
+            if (_getLogException == null)
             {
-                _getLogException = (x) => null;
+                if (!VisibilityBypasser.Instance.TryGeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject", out _getLogException))
+                {
+                    // Legacy property, mainly used by Sitecore
+                    if (!VisibilityBypasser.Instance.TryGeneratePropertyAccessor<Exception>(logEventType, "m_thrownException", out _getLogException))
+                    {
+                        _getLogException = (x) => null;
+                    }
+                }
             }
 
             // This will either add the log message to the transaction or directly to the aggregator
