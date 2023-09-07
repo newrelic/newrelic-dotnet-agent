@@ -59,32 +59,18 @@ namespace NewRelic.Providers.Wrapper.Logging
             // Older versions of log4net only allow access to a timestamp in local time
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
 
-            Func<object, Exception> getLogExceptionFunc;
-
-            try
+            if (_getLogException == null
+                && !VisibilityBypasser.Instance.TryGeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject", out _getLogException)
+                // Legacy property, mainly used by Sitecore
+                && !VisibilityBypasser.Instance.TryGeneratePropertyAccessor<Exception>(logEventType, "m_thrownException", out _getLogException))
             {
-                getLogExceptionFunc = _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject");
-            }
-            catch
-            {
-                try
-                {
-                    // Legacy property, mainly used by Sitecore
-                    getLogExceptionFunc = _getLogException ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<Exception>(logEventType, "m_thrownException");
-                    _legacyVersion = true;
-                }
-                catch
-                {
-                    _getLogException = (x) => null;
-                    getLogExceptionFunc = _getLogException;
-                }
-
+                _getLogException = (x) => null;
             }
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
 
-            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, GetContextData, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, _getLogException, GetContextData, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
         private void DecorateLogMessage(object logEvent, Type logEventType, IAgent agent)
@@ -112,25 +98,14 @@ namespace NewRelic.Providers.Wrapper.Logging
         private Dictionary<string, object> GetContextData(object logEvent)
         {
             var logEventType = logEvent.GetType();
-            Func<object, IDictionary> getProperties;
 
-            try
+            if (_getGetProperties == null && !VisibilityBypasser.Instance.TryGenerateParameterlessMethodCaller(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties", out _getProperties))
             {
-                getProperties = _getGetProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
-            }
-            catch
-            {
-                try
-                {
+                // Legacy property, mainly used by Sitecore
+                if (VisibilityBypasser.Instance.TryGeneratePropertyAccessor<IDictionary>(logEventType, "MappedContext", out _getProperties))
                     _legacyVersion = true;
-                    // Legacy property, mainly used by Sitecore
-                    getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEventType, "MappedContext");
-                }
-                catch
-                {
+                else
                     _getProperties = (x) => null;
-                    getProperties = _getProperties;
-                }
             }
 
             var contextData = new Dictionary<string, object>();
@@ -154,7 +129,7 @@ namespace NewRelic.Providers.Wrapper.Logging
                 }
             }
 
-            var propertiesDictionary = getProperties(logEvent);
+            var propertiesDictionary = _getProperties(logEvent);
 
             if (propertiesDictionary != null && propertiesDictionary.Count > 0)
             {
