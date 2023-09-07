@@ -44,10 +44,12 @@
   <ItemGroup>
     <PackageReference Include="Common.Logging" Version="3.3.1" />
     <PackageReference Include="Common.Logging.Core" Version="3.3.1" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.6.40">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="MySqlConnector" Version="2.2.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="CouchbaseNetClient" Version="2.3.8" />
     <PackageReference Include="Oracle.ManagedDataAccess" Version="12.1.2400" />
@@ -68,7 +70,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
     <ProjectReference Include="..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
-    <ProjectReference Include="..\SharedApplications\Common\MultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
   

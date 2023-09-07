@@ -61,7 +61,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
-    <ProjectReference Include="..\SharedApplications\Common\MultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj" />
     <ProjectReference Include="..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
     <ProjectReference Include="..\Models\Models.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />

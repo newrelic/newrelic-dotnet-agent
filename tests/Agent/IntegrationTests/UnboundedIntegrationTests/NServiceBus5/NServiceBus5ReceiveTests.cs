@@ -3,6 +3,7 @@
 
 
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,6 @@ using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 using Assert = Xunit.Assert;
-using MultiFunctionApplicationHelpers;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus5
 {

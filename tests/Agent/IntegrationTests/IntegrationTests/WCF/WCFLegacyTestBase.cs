@@ -3,7 +3,6 @@
 
 
 #if NETFRAMEWORK
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -14,6 +13,7 @@ using System.IO;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.WCF
 {

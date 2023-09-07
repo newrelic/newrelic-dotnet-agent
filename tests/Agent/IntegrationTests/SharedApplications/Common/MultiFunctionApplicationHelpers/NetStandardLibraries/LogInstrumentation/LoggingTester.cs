@@ -17,7 +17,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         private static ILoggingAdapter _log;
 
         [LibraryMethod]
-        public static void SetFramework(string loggingFramework)
+        public static void SetFramework(string loggingFramework, string loggingPort)
         {
             switch (loggingFramework.ToUpper())
             {
@@ -29,7 +29,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     break;
                 case "SERILOGWEB": // .NET 7.0 ONLY
 #if NET7_0    
-                    _log = new SerilogLoggingWebAdapter();
+                    _log = new SerilogLoggingWebAdapter(loggingPort);
 #endif
                     break;
                 case "MICROSOFTLOGGING":

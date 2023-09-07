@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using System;
 using System.IO;
