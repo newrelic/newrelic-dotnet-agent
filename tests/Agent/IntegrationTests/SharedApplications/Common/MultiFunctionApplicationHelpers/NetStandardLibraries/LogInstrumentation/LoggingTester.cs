@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
-using NewRelic.IntegrationTests.Models;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
 {
