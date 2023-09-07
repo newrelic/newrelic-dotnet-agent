@@ -10,6 +10,7 @@ version: "3"
 # CONTAINER_NAME  The name for the container
 # PLATFORM        The platform that the service runs on -- linux/amd64 or linux/arm64/v8
 # DOTNET_VERSION  The dotnet version number to use (7.0, 8.0, etc)
+# NETWORK_NAME    The name of the externally defined network to use for running these containers.
 #
 # and the usual suspects:
 # NEW_RELIC_LICENSE_KEY
@@ -74,4 +75,9 @@ services:
         extends:
             service: smoketestapp
         build:
-            dockerfile: SmokeTestApp/Dockerfile.centos   
+            dockerfile: SmokeTestApp/Dockerfile.centos
+            
+networks:
+    default:
+        name: ${NETWORK_NAME}
+        driver: bridge
