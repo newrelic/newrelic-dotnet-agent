@@ -99,13 +99,13 @@ namespace NewRelic.Providers.Wrapper.Logging
         {
             var logEventType = logEvent.GetType();
 
-            if (_getGetProperties == null && !VisibilityBypasser.Instance.TryGenerateParameterlessMethodCaller(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties", out _getProperties))
+            if (_getGetProperties == null && !VisibilityBypasser.Instance.TryGenerateParameterlessMethodCaller(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties", out _getGetProperties))
             {
                 // Legacy property, mainly used by Sitecore
-                if (VisibilityBypasser.Instance.TryGeneratePropertyAccessor<IDictionary>(logEventType, "MappedContext", out _getProperties))
+                if (VisibilityBypasser.Instance.TryGeneratePropertyAccessor(logEventType, "MappedContext", out _getGetProperties))
                     _legacyVersion = true;
                 else
-                    _getProperties = (x) => null;
+                    _getGetProperties = (x) => null;
             }
 
             var contextData = new Dictionary<string, object>();
@@ -129,7 +129,7 @@ namespace NewRelic.Providers.Wrapper.Logging
                 }
             }
 
-            var propertiesDictionary = _getProperties(logEvent);
+            var propertiesDictionary = _getGetProperties(logEvent);
 
             if (propertiesDictionary != null && propertiesDictionary.Count > 0)
             {
