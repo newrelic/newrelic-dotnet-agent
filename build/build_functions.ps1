@@ -113,7 +113,7 @@ function Copy-ExtensionsOther {
     }
 
     Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml" -Destination "$Destination\extensions" -Force 
-    Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\extension.xsd" -Destination "$Destination\extensions" -Force 
+    Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Core\Extension\extension.xsd" -Destination "$Destination\extensions" -Force 
 
     if ($Type -like "Framework"){
         Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Core\net462-ILRepacked\NewRelic.Core.dll" -Destination "$Destination\extensions" -Force 
