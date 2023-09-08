@@ -4,9 +4,9 @@
 using System;
 using System.Diagnostics;
 
-namespace NewRelic.Agent.Core.Timing
+namespace NewRelic.Agent.Core.Time
 {
-    class Timer : ITimer
+    class SimpleTimer : ISimpleTimer
     {
         private readonly Stopwatch _timer = Stopwatch.StartNew();
 

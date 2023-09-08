@@ -7,7 +7,7 @@ using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Core.DistributedTracing;
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 
             IAttributeDefinitionService _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
-            _transactionService = new TransactionService(new[] { factory1, factory2 }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>(), Mock.Create<IDatabaseStatementParser>(), Mock.Create<IErrorService>(), Mock.Create<IDistributedTracePayloadHandler>(), _attribDefSvc);
+            _transactionService = new TransactionService(new[] { factory1, factory2 }, Mock.Create<ISimpleTimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>(), Mock.Create<IDatabaseStatementParser>(), Mock.Create<IErrorService>(), Mock.Create<IDistributedTracePayloadHandler>(), _attribDefSvc);
         }
 
         [TearDown]

@@ -3,7 +3,7 @@
 
 using System;
 
-namespace NewRelic.Agent.Core.Timing
+namespace NewRelic.Agent.Core.Time
 {
     /// <summary>
     /// A timer.  Used for timing stuff.  A timer is acquired from the TimingService.
@@ -13,7 +13,7 @@ namespace NewRelic.Agent.Core.Timing
     /// but because it is much easier to use derived class objects in a using block than it 
     /// is to create an exception-handling block around it and assure the timer is stopped.
     /// </remarks>
-    public interface ITimer : IDisposable
+    public interface ISimpleTimer : IDisposable
     {
         /// <summary>
         /// Stop the timer.

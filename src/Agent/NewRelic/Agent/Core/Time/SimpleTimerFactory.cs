@@ -1,22 +1,22 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-namespace NewRelic.Agent.Core.Timing
+namespace NewRelic.Agent.Core.Time
 {
-    public interface ITimerFactory
+    public interface ISimpleTimerFactory
     {
         /// <summary>
         /// Starts and returns a new timer.
         /// </summary>
         /// <returns>A started timer.</returns>
-        ITimer StartNewTimer();
+        ISimpleTimer StartNewTimer();
     }
 
-    public class TimerFactory : ITimerFactory
+    public class SimpleTimerFactory : ISimpleTimerFactory
     {
-        public ITimer StartNewTimer()
+        public ISimpleTimer StartNewTimer()
         {
-            return new Timer();
+            return new SimpleTimer();
         }
     }
 }
