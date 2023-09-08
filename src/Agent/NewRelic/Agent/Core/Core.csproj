@@ -72,6 +72,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="NewRelic.Agent.Core.Timing\**" />
+    <EmbeddedResource Remove="NewRelic.Agent.Core.Timing\**" />
+    <None Remove="NewRelic.Agent.Core.Timing\**" />
+    <Protobuf Remove="NewRelic.Agent.Core.Timing\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\Parsing\Parsing.csproj" />
@@ -85,10 +92,6 @@
 
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="NewRelic.Agent.Core.Timing\" />
   </ItemGroup>
 
   <Target Name="ILRepack" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
