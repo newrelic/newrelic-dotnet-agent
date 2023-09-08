@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core
+namespace NewRelic.Agent.Core.Utilities
 {
 
     /// <summary>
