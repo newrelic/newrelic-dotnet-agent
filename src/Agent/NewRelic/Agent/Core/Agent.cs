@@ -10,7 +10,6 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
