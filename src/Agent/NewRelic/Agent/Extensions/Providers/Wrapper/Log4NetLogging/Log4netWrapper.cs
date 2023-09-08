@@ -59,32 +59,22 @@ namespace NewRelic.Providers.Wrapper.Logging
             // Older versions of log4net only allow access to a timestamp in local time
             var getTimestampFunc = _getTimestamp ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<DateTime>(logEventType, "TimeStamp");
 
-            Func<object, Exception> getLogExceptionFunc;
-
-            try
+            if (_getLogException == null)
             {
-                getLogExceptionFunc = _getLogException ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject");
-            }
-            catch
-            {
-                try
+                if (!VisibilityBypasser.Instance.TryGeneratePropertyAccessor<Exception>(logEventType, "ExceptionObject", out _getLogException))
                 {
                     // Legacy property, mainly used by Sitecore
-                    getLogExceptionFunc = _getLogException ??= VisibilityBypasser.Instance.GenerateFieldReadAccessor<Exception>(logEventType, "m_thrownException");
-                    _legacyVersion = true;
+                    if (!VisibilityBypasser.Instance.TryGeneratePropertyAccessor<Exception>(logEventType, "m_thrownException", out _getLogException))
+                    {
+                        _getLogException = (x) => null;
+                    }
                 }
-                catch
-                {
-                    _getLogException = (x) => null;
-                    getLogExceptionFunc = _getLogException;
-                }
-
             }
 
             // This will either add the log message to the transaction or directly to the aggregator
             var xapi = agent.GetExperimentalApi();
 
-            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, getLogExceptionFunc, GetContextData, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
+            xapi.RecordLogMessage(WrapperName, logEvent, getTimestampFunc, getLevelFunc, getRenderedMessageFunc, _getLogException, GetContextData, agent.TraceMetadata.SpanId, agent.TraceMetadata.TraceId);
         }
 
         private void DecorateLogMessage(object logEvent, Type logEventType, IAgent agent)
@@ -112,25 +102,14 @@ namespace NewRelic.Providers.Wrapper.Logging
         private Dictionary<string, object> GetContextData(object logEvent)
         {
             var logEventType = logEvent.GetType();
-            Func<object, IDictionary> getProperties;
 
-            try
+            if (_getGetProperties == null && !VisibilityBypasser.Instance.TryGenerateParameterlessMethodCaller(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties", out _getGetProperties))
             {
-                getProperties = _getGetProperties ??= VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<IDictionary>(logEventType.Assembly.ToString(), logEventType.FullName, "GetProperties");
-            }
-            catch
-            {
-                try
-                {
+                // Legacy property, mainly used by Sitecore
+                if (VisibilityBypasser.Instance.TryGeneratePropertyAccessor(logEventType, "MappedContext", out _getGetProperties))
                     _legacyVersion = true;
-                    // Legacy property, mainly used by Sitecore
-                    getProperties = _getProperties ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<IDictionary>(logEventType, "MappedContext");
-                }
-                catch
-                {
-                    _getProperties = (x) => null;
-                    getProperties = _getProperties;
-                }
+                else
+                    _getGetProperties = (x) => null;
             }
 
             var contextData = new Dictionary<string, object>();
@@ -154,7 +133,7 @@ namespace NewRelic.Providers.Wrapper.Logging
                 }
             }
 
-            var propertiesDictionary = getProperties(logEvent);
+            var propertiesDictionary = _getGetProperties(logEvent);
 
             if (propertiesDictionary != null && propertiesDictionary.Count > 0)
             {
