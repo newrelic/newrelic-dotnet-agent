@@ -152,7 +152,6 @@ namespace NewRelic.Agent.Configuration
         int TransactionTracerMaxSegments { get; }
         string TransactionTracerRecordSql { get; }
         string TransactionTracerRecordSqlSource { get; }
-        TimeSpan TransactionTracerStackThreshold { get; }
         int TransactionTracerMaxStackTraces { get; }
         IEnumerable<long> TrustedAccountIds { get; }
         bool ServerSideConfigurationEnabled { get; }

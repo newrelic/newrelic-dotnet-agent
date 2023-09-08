@@ -485,9 +485,6 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("transaction_tracer.record_sql_source")]
         public string TransactionTracerRecordSqlSource => _configuration.TransactionTracerRecordSqlSource;
 
-        [JsonProperty("transaction_tracer.stack_trace_threshold")]
-        public TimeSpan TransactionTracerStackThreshold => _configuration.TransactionTracerStackThreshold;
-
         [JsonProperty("transaction_tracer.max_stack_traces")]
         public int TransactionTracerMaxStackTraces => _configuration.TransactionTracerMaxStackTraces;
 
