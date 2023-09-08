@@ -87,10 +87,6 @@
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="NewRelic.Agent.Core.Exceptions\" />
-  </ItemGroup>
-
   <Target Name="ILRepack" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
     <ItemGroup>
       <PossibleRefsForILRepack Include="$(OutputPath)*.dll" />
