@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 
             // set the default timeout to "infinite", but specify the configured collector timeout as the actual timeout for SendAsync() calls
             var httpHandler = new HttpClientHandler { Proxy = proxy };
-            Log.InfoFormat("Current HttpClientHandler TLS Configuration (HttpClientHandler.SslProtocols): {0}", httpHandler.SslProtocols.ToString());
+            Log.Info("Current HttpClientHandler TLS Configuration (HttpClientHandler.SslProtocols): {0}", httpHandler.SslProtocols.ToString());
             var httpClient = new HttpClient(httpHandler, true) {Timeout = System.Threading.Timeout.InfiniteTimeSpan};
             _httpClientWrapper = new HttpClientWrapper(httpClient, (int)configuration.CollectorTimeout);
         }

@@ -30,10 +30,10 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         private static readonly Dictionary<string, Action<string>> ServerLogLevelMap = new Dictionary<string, Action<string>>
         {
-            {"INFO", Log.Info},
-            {"WARN", Log.Warn},
-            {"ERROR", Log.Error},
-            {"VERBOSE", Log.Finest}
+            {"INFO", (s) => Log.Info(s)},
+            {"WARN", (s) => Log.Warn(s)},
+            {"ERROR", (s) => Log.Error(s)},
+            {"VERBOSE", (s) => Log.Finest(s)}
         };
 
         private readonly ISerializer _serializer;
@@ -133,12 +133,12 @@ namespace NewRelic.Agent.Core.DataTransport
                 return;
             }
 
-            Log.DebugFormat("Setting applied: {{\"record_sql\": \"{0}\"}}. Source: {1}", _configuration.TransactionTracerRecordSql, _configuration.TransactionTracerRecordSqlSource);
-            Log.DebugFormat("Setting applied: {{\"attributes_include\": {0}}}. Source: {1}", _configuration.CanUseAttributesIncludes, _configuration.CanUseAttributesIncludesSource);
-            Log.DebugFormat("Setting applied: {{\"allow_raw_exception_messages\": {0}}}. Source: {1}", !_configuration.StripExceptionMessages, _configuration.StripExceptionMessagesSource);
-            Log.DebugFormat("Setting applied: {{\"custom_events\": {0}}}. Source: {1}", _configuration.CustomEventsEnabled, _configuration.CustomEventsEnabledSource);
-            Log.DebugFormat("Setting applied: {{\"custom_parameters\": {0}}}. Source: {1}", _configuration.CaptureCustomParameters, _configuration.CaptureCustomParametersSource);
-            Log.DebugFormat("Setting applied: {{\"custom_instrumentation_editor\": {0}}}. Source: {1}", _configuration.CustomInstrumentationEditorEnabled, _configuration.CustomInstrumentationEditorEnabledSource);
+            Log.Debug("Setting applied: {{\"record_sql\": \"{0}\"}}. Source: {1}", _configuration.TransactionTracerRecordSql, _configuration.TransactionTracerRecordSqlSource);
+            Log.Debug("Setting applied: {{\"attributes_include\": {0}}}. Source: {1}", _configuration.CanUseAttributesIncludes, _configuration.CanUseAttributesIncludesSource);
+            Log.Debug("Setting applied: {{\"allow_raw_exception_messages\": {0}}}. Source: {1}", !_configuration.StripExceptionMessages, _configuration.StripExceptionMessagesSource);
+            Log.Debug("Setting applied: {{\"custom_events\": {0}}}. Source: {1}", _configuration.CustomEventsEnabled, _configuration.CustomEventsEnabledSource);
+            Log.Debug("Setting applied: {{\"custom_parameters\": {0}}}. Source: {1}", _configuration.CaptureCustomParameters, _configuration.CaptureCustomParametersSource);
+            Log.Debug("Setting applied: {{\"custom_instrumentation_editor\": {0}}}. Source: {1}", _configuration.CustomInstrumentationEditorEnabled, _configuration.CustomInstrumentationEditorEnabledSource);
         }
 
         public void Disconnect()
@@ -237,7 +237,7 @@ namespace NewRelic.Agent.Core.DataTransport
             if (responseMap == null)
                 throw new Exception("Empty connect result payload");
 
-            Log.InfoFormat("Agent {0} connected to {1}:{2}", GetIdentifier(), _connectionInfo.Host, _connectionInfo.Port);
+            Log.Info("Agent {0} connected to {1}:{2}", GetIdentifier(), _connectionInfo.Host, _connectionInfo.Port);
 
             var serverConfiguration = ServerConfiguration.FromDeserializedReturnValue(responseMap, _configuration.IgnoreServerSideConfiguration);
             LogConfigurationMessages(serverConfiguration);
@@ -276,7 +276,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (string.IsNullOrEmpty(message.Text))
                     continue;
 
-                var logMethod = ServerLogLevelMap.GetValueOrDefault(message.Level) ?? Log.Info;
+                var logMethod = ServerLogLevelMap.GetValueOrDefault(message.Level) ?? new Action<string>((s) => Log.Info(s));
                 logMethod(message.Text);
             }
         }
@@ -288,7 +288,7 @@ namespace NewRelic.Agent.Core.DataTransport
             if (!appNames.Any())
                 appNames.Add(identifier);
 
-            Log.InfoFormat("Your New Relic Application Name(s): {0}", string.Join(":", appNames.ToArray()));
+            Log.Info("Your New Relic Application Name(s): {0}", string.Join(":", appNames.ToArray()));
 
             var metadata = _environmentVariableHelper.GetEnvironmentVariablesWithPrefix("NEW_RELIC_METADATA_");
 
@@ -340,7 +340,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                Log.Error(ex, "SendAgentSettings() failed");
             }
         }
 
@@ -371,7 +371,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             if (fasterEventHarvestEnabledTypes.Count > 0)
             {
-                Log.InfoFormat("The following events will be harvested every {1}ms: {0}", string.Join(", ", fasterEventHarvestEnabledTypes), eventHarvestConfig.ReportPeriodMs);
+                Log.Info("The following events will be harvested every {1}ms: {0}", string.Join(", ", fasterEventHarvestEnabledTypes), eventHarvestConfig.ReportPeriodMs);
             }
         }
 
@@ -428,24 +428,24 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
                 catch (Exceptions.HttpException ex)
                 {
-                    Log.DebugFormat("Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
+                    Log.Debug(ex, "Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
 
                     if (ex.StatusCode == HttpStatusCode.Gone)
                     {
-                        Log.InfoFormat("Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
+                        Log.Info(ex, "Request({0}): The server has requested that the agent disconnect. The agent is shutting down.", requestGuid);
                     }
 
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    Log.DebugFormat("Request({0}): An error occurred invoking method \"{1}\" with payload \"{2}\": {3}", requestGuid, method, serializedData, ex);
+                    Log.Debug(ex, "Request({0}): An error occurred invoking method \"{1}\" with payload \"{2}\": {3}", requestGuid, method, serializedData, ex);
                     throw;
                 }
             }
             catch (Exception ex)
             {
-                Log.DebugFormat("Request({0}): Exception occurred serializing request data: {1}", requestGuid, ex);
+                Log.Debug(ex, "Request({0}): Exception occurred serializing request data: {1}", requestGuid, ex);
                 throw;
             }
         }

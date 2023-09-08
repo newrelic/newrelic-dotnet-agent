@@ -68,11 +68,13 @@ namespace NewRelic.Agent.TestUtilities
         public bool HasMessageBeginningWith(string segment) => _inMemorySink.LogEvents.Any(item => item.RenderMessage().StartsWith(segment));
 
         /// <summary>
-        /// checks for messages that begins with a segment
+        /// checks for messages that contain a string
         /// </summary>
-        /// <param name="segment"></param>
+        /// <param name="message"></param>
         /// <returns></returns>
-        public bool HasMessageThatContains(string segment) => _inMemorySink.LogEvents.Any(item => item.RenderMessage().Contains(segment));
+        public bool HasMessageThatContains(string message) => _inMemorySink.LogEvents.Any(item => item.RenderMessage().Contains(message));
+
+        public bool HasErrorMessageThatContains(string message) => _inMemorySink.LogEvents.Any(item => item.Exception?.Message?.Contains(message) == true);
 
         /// <summary>
         /// Counts the number of messages that were logged since the construction of this object.

@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         {
             if (fids == null)
             {
-                Log.DebugFormat("fids passed to UpdateTree is null.");
+                Log.Debug("fids passed to UpdateTree is null.");
                 return;
             }
 
@@ -53,7 +53,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 }
                 catch (Exception e)
                 {
-                    Log.ErrorFormat("{0}", e);
+                    Log.Error(e, "UpdateTree() failed");
                 }
             }
         }

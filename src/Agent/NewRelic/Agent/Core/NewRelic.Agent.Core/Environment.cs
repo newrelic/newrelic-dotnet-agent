@@ -156,7 +156,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
+                Log.Warn(ex, "TryGetCurrentProcess() failed");
                 return null;
             }
         }
@@ -170,7 +170,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
+                Log.Warn(ex, "TryGetFileVersionInfo() failed");
                 return null;
             }
         }
@@ -184,7 +184,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
+                Log.Warn(ex, "TryGetAppDomainAppId() failed");
                 return null;
             }
         }
@@ -214,7 +214,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
+                Log.Warn(ex, "TryGetAppPath() failed");
                 return null;
             }
         }
@@ -245,7 +245,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
+                Log.Warn(ex, "TryGetIisVersion() failed");
                 return null;
             }
         }

@@ -100,7 +100,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
             if (transactionMetricName.ShouldIgnore)
             {
-                Log.FinestFormat("Transaction \"{0}\" is being ignored due to metric naming rules", transactionMetricName);
+                Log.Finest("Transaction \"{0}\" is being ignored due to metric naming rules", transactionMetricName);
                 return;
             }
 
@@ -109,7 +109,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 Transform(immutableTransaction, transactionMetricName);
             }
 
-            Log.FinestFormat("Transaction {0} ({1}) transform completed.", transaction.Guid, transactionMetricName);
+            Log.Finest("Transaction {0} ({1}) transform completed.", transaction.Guid, transactionMetricName);
         }
 
         private void Transform(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName)
@@ -165,7 +165,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 // if the segment ended between being added to the unfinished list and now, this call to 
                 // end will have no effect
                 segment.ForceEnd();
-                Log.FinestFormat("Force segment to finish for method {0}", segment.MethodCallData);
+                Log.Finest("Force segment to finish for method {0}", segment.MethodCallData);
             }
         }
 
@@ -432,7 +432,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             }
             catch (Exception exception)
             {
-                Log.DebugFormat("Exception occurred while generating explain plan: {0}", exception);
+                Log.Debug(exception, "Exception occurred while generating explain plan");
             }
         }
 

@@ -182,7 +182,7 @@ namespace NewRelic.Agent.Core
 
         private void LogInitialized()
         {
-            Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
+            Log.Info("The New Relic .NET Agent v{0} started (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
             //Log here for debugging configuration issues
             if (Log.IsDebugEnabled)
             {
@@ -270,7 +270,7 @@ namespace NewRelic.Agent.Core
                 {
                     if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(ev)))
                     {
-                        Log.DebugFormat("Environment Variable {0} value: {1}", ev, System.Environment.GetEnvironmentVariable(ev));
+                        Log.Debug("Environment Variable {0} value: {1}", ev, System.Environment.GetEnvironmentVariable(ev));
                     }
                 }
 
@@ -278,7 +278,7 @@ namespace NewRelic.Agent.Core
                 {
                     if (!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable(evs)))
                     {
-                        Log.DebugFormat("Environment Variable {0} is configured with a value. Not logging potentially sensitive value", evs);
+                        Log.Debug("Environment Variable {0} is configured with a value. Not logging potentially sensitive value", evs);
                     }
                 }
 
@@ -288,12 +288,12 @@ namespace NewRelic.Agent.Core
 #if NETFRAMEWORK
             if (NewRelic.Core.DotnetVersion.IsUnsupportedDotnetFrameworkVersion(AgentInstallConfiguration.DotnetFrameworkVersion))
             {
-                Log.WarnFormat("Unsupported installed .NET Framework version {0} dectected. Please use a version of .NET Framework >= 4.6.2.", AgentInstallConfiguration.DotnetFrameworkVersion);
+                Log.Warn("Unsupported installed .NET Framework version {0} dectected. Please use a version of .NET Framework >= 4.6.2.", AgentInstallConfiguration.DotnetFrameworkVersion);
             }
 #else
             if (NewRelic.Core.DotnetVersion.IsUnsupportedDotnetCoreVersion(AgentInstallConfiguration.DotnetCoreVersion))
             {
-                Log.WarnFormat("Unsupported .NET version {0} detected. Please use a version of .NET >= net6.", AgentInstallConfiguration.DotnetCoreVersion);
+                Log.Warn("Unsupported .NET version {0} detected. Please use a version of .NET >= net6.", AgentInstallConfiguration.DotnetCoreVersion);
             }
 #endif
         }
@@ -375,7 +375,7 @@ namespace NewRelic.Agent.Core
 
                 Log.Debug("Shutting down public agent services...");
                 StopServices();
-                Log.InfoFormat("The New Relic .NET Agent v{0} has shutdown (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
+                Log.Info("The New Relic .NET Agent v{0} has shutdown (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
             }
             catch (Exception e)
             {

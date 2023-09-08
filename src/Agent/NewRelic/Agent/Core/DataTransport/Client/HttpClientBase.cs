@@ -44,9 +44,9 @@ namespace NewRelic.Agent.Core.DataTransport.Client
                     Dns.GetHostEntry(host);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.ErrorFormat("Unable to resolve host name \"{0}\"", host);
+                Log.Error(ex, "Unable to resolve host name \"{0}\"", host);
             }
 
             TestConnection();
@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
 #else
                 _lazyHttpClient.Value.GetAsync(testAddress).GetAwaiter().GetResult();
 #endif
-                Log.InfoFormat("Connection test to \"{0}\" succeeded", testAddress);
+                Log.Info("Connection test to \"{0}\" succeeded", testAddress);
             }
             catch (Exception)
             {

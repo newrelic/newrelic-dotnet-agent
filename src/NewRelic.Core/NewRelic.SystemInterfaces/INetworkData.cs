@@ -34,7 +34,7 @@ namespace NewRelic.SystemInterfaces
             }
             catch (Exception exception)
             {
-                Log.WarnFormat($"Error retrieving domain name from network interface: {0}", exception);
+                Log.Warn(exception, "Error retrieving domain name from network interface");
             }
 
             return string.Empty;
@@ -57,7 +57,7 @@ namespace NewRelic.SystemInterfaces
             }
             catch (Exception exception)
             {
-                Log.WarnFormat("Unable to determine local IP address: {0}", exception.Message);
+                Log.Warn(exception, "Unable to determine local IP address");
             }
 
             return _localIPAddress = IPAddress.None; // 255.255.255.255
@@ -87,7 +87,7 @@ namespace NewRelic.SystemInterfaces
             }
             catch (Exception exception)
             {
-                Log.WarnFormat("Unable to get an active network interface: {0}", exception.Message);
+                Log.Warn(exception, "Unable to get an active network interface");
             }
             return _activeNetworkInterface = new NetworkInterfaceData(string.Empty, new List<UnicastIPAddressInformation>());
         }
@@ -118,11 +118,11 @@ namespace NewRelic.SystemInterfaces
             }
             catch (NetworkInformationException networkInformationException)
             {
-                Log.WarnFormat($"Error getting network interfaces: {0}", networkInformationException);
+                Log.Warn(networkInformationException, "Error getting network interfaces");
             }
             catch (Exception exception)
             {
-                Log.WarnFormat($"Error capturing unicast addresses from network interface: {0}", exception);
+                Log.Warn(exception, "Error capturing unicast addresses from network interface");
             }
 
             return networkIntefaces;

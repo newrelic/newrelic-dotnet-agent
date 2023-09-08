@@ -32,7 +32,7 @@ namespace NewRelic.OpenTracing.AmazonLambda
             }
             catch (Exception e)
             {
-                Log.Error(e);
+                Log.Error(e, "WriteAllText() failed");
             }
         }
     }

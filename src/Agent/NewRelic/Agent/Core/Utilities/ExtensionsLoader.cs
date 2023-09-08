@@ -168,7 +168,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             foreach (var factory in contextStorageFactories)
             {
-                Log.DebugFormat("Available storage type : {0} ({1})", factory.GetType().FullName, factory.IsValid);
+                Log.Debug("Available storage type : {0} ({1})", factory.GetType().FullName, factory.IsValid);
             }
 
             return contextStorageFactories.Where(IsValid);

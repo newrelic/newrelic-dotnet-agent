@@ -39,7 +39,7 @@ namespace NewRelic.Agent.Core.Instrumentation
                             _instrumentationService.AddOrUpdateLiveInstrumentation(instrumentationSet.Name, instrumentationSet.Config);
                         }
 
-                        Log.InfoFormat("Applying live instrumentation from Custom Instrumentation Editor.");
+                        Log.Info("Applying live instrumentation from Custom Instrumentation Editor.");
 
                         // We want to apply custom instrumentation regardless of whether or not any was received on
                         // this connect because we may have received instrumentation on a previous connect.
@@ -47,12 +47,12 @@ namespace NewRelic.Agent.Core.Instrumentation
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex);
+                        Log.Error(ex, "OnServerConfigurationUpdated() failed");
                     }
                 }
                 else
                 {
-                    Log.WarnFormat("Live instrumentation received from server Custom Instrumentation Editor not applied due to configuration.");
+                    Log.Warn("Live instrumentation received from server Custom Instrumentation Editor not applied due to configuration.");
                     var liveInstrumentationCleared = _instrumentationService.ClearLiveInstrumentation();
                     if (liveInstrumentationCleared)
                     {

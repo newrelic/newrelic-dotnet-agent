@@ -215,7 +215,7 @@ namespace NewRelic.Agent.Core
                     var vendorValidationResult = vendorValidateShouldExplain();
                     if (!vendorValidationResult.IsValid)
                     {
-                        Log.DebugFormat("Failed vendor condition for executing explain plan: {0}", vendorValidationResult.ValidationMessage);
+                        Log.Debug("Failed vendor condition for executing explain plan: {0}", vendorValidationResult.ValidationMessage);
                         return false;
                     }
                 }

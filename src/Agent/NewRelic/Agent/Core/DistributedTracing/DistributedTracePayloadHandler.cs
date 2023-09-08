@@ -93,7 +93,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
                 catch (Exception ex)
                 {
                     _agentHealthReporter.ReportSupportabilityTraceContextCreateException();
-                    Log.Error(ex);
+                    Log.Error(ex, "InsertDistributedTraceHeaders() failed");
                 }
 
                 if (createOutboundTraceContextHeadersSuccess && _configurationService.Configuration.PayloadSuccessMetricsEnabled)
@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                Log.Error(ex, "InsertDistributedTraceHeaders() failed");
             }
         }
 
@@ -285,7 +285,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                Log.Error(ex, "CreateExecuteEveryTimer() failed");
                 return null;
             }
         }

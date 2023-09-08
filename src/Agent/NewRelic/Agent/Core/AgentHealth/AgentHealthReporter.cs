@@ -236,7 +236,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
 
             Log.Error($"Wrapper {wrapperName} is being disabled for {method.MethodName} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted.");
-            _recurringLogDatas.Add(new RecurringLogData(Log.Debug, $"Wrapper {wrapperName} was disabled for {method.MethodName} at {DateTime.Now} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted."));
+            _recurringLogDatas.Add(new RecurringLogData((s) => Log.Debug(s), $"Wrapper {wrapperName} was disabled for {method.MethodName} at {DateTime.Now} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted."));
         }
 
         public void ReportIfHostIsLinuxOs()
@@ -689,7 +689,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             if (_publishMetricDelegate == null)
             {
-                Log.WarnFormat("No PublishMetricDelegate to flush metric '{0}' through.", metric.MetricName.Name);
+                Log.Warn("No PublishMetricDelegate to flush metric '{0}' through.", metric.MetricName.Name);
                 return;
             }
 
@@ -699,7 +699,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                Log.Error(ex, "TrySend() failed");
             }
         }
         private bool TryGetCount(InterlockedCounter counter, out int metricCount)

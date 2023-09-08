@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.Api
                 {
                     try
                     {
-                        Log.ErrorFormat("Failed to get CurrentTransaction: {0}", ex);
+                        Log.Error(ex, "Failed to get CurrentTransaction");
                     }
                     catch (Exception)
                     {
@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Core.Api
                 {
                     try
                     {
-                        Log.ErrorFormat("Failed to get TraceMetadata: {0}", ex);
+                        Log.Error(ex, "Failed to get TraceMetadata");
                     }
                     catch (Exception)
                     {
@@ -93,7 +93,7 @@ namespace NewRelic.Agent.Core.Api
             {
                 try
                 {
-                    Log.ErrorFormat("Error in GetLinkingMetadata: {0}", ex);
+                    Log.Error(ex, "Error in GetLinkingMetadata");
                 }
                 catch (Exception)
                 {

@@ -105,7 +105,7 @@ namespace NewRelic.Agent.Core.Wrapper
                 }
             }
 
-            Log.DebugFormat(
+            Log.Debug(
                 "No matching wrapper found for {0}.{1}({2}) in assembly [{3}] (requested wrapper name was {4}). This usually indicates misconfigured instrumentation. This method will be ignored.",
                 instrumentedMethodInfo.Method.Type.FullName,
                 instrumentedMethodInfo.Method.MethodName,

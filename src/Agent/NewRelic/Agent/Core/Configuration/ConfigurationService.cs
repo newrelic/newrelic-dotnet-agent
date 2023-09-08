@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static void UpdateLogLevel(configuration localConfiguration)
         {
-            Log.InfoFormat("The log level was updated to {0}", localConfiguration.LogConfig.LogLevel);
+            Log.Info("The log level was updated to {0}", localConfiguration.LogConfig.LogLevel);
             LoggerBootstrapper.UpdateLoggingLevel(localConfiguration.LogConfig.LogLevel);
         }
 

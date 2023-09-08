@@ -262,7 +262,7 @@ namespace NewRelic.Agent.Core.Transactions
             {
                 bool wasAsync = IsAttachedToAsyncStorage;
 
-                Log.WarnFormat("Releasing the transaction because there were too many nested transaction attempts.");
+                Log.Warn("Releasing the transaction because there were too many nested transaction attempts.");
                 RemoveOutstandingInternalTransactions(true, true);
                 var newTransaction = CreateInternalTransaction(initialTransactionName, onCreate);
 

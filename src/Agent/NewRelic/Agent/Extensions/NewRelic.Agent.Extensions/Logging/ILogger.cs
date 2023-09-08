@@ -15,6 +15,6 @@ namespace NewRelic.Agent.Extensions.Logging
     public interface ILogger
     {
         bool IsEnabledFor(Level level);
-        void Log(Level level, object message);
+        void Log(Level level, string message);
     }
 }

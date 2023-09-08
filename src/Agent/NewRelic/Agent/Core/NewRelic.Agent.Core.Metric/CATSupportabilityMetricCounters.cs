@@ -71,7 +71,7 @@ namespace NewRelic.Agent.Core.Metric
 
             if (_publishMetricDelegate == null)
             {
-                Log.WarnFormat("No PublishMetricDelegate to flush metric '{0}' through.", metric.MetricName.Name);
+                Log.Warn("No PublishMetricDelegate to flush metric '{0}' through.", metric.MetricName.Name);
                 return;
             }
 
@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.Metric
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                Log.Error(ex, "TrySend() failed");
             }
         }
 

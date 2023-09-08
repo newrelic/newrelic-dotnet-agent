@@ -52,7 +52,7 @@ namespace NewRelic.Agent.Core.Commands
                     }
                     catch (Exception e)
                     {
-                        Log.Error(e);
+                        Log.Error(e, "The instrumentation update was malformed");
                         return "The instrumentation update was malformed";
                     }
                 }

@@ -125,7 +125,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var endTime = _dateTimeStatic.UtcNow;
             if (beginTime >= endTime)
             {
-                Log.ErrorFormat("The last data send timestamp ({0}) is greater than or equal to the current timestamp ({1}). The metrics in this batch will be dropped.", _lastMetricSendTime, endTime);
+                Log.Error("The last data send timestamp ({0}) is greater than or equal to the current timestamp ({1}). The metrics in this batch will be dropped.", _lastMetricSendTime, endTime);
                 _lastMetricSendTime = _dateTimeStatic.UtcNow;
                 return DataTransportResponseStatus.Discard;
             }
@@ -204,7 +204,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private static void Shutdown(string message)
         {
-            Log.InfoFormat("Shutting down: {0}", message);
+            Log.Info("Shutting down: {0}", message);
             EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
         }
 
@@ -225,7 +225,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             var endTime = DateTime.UtcNow;
             _agentHealthReporter.ReportSupportabilityCollectorErrorException(method, endTime - startTime, httpStatusCode);
-            Log.Error(exception);
+            Log.Error(exception, "");
         }
 
         private DataTransportResponseStatus GetDataTransportResponseStatusByHttpStatusCode(HttpStatusCode httpStatusCode)

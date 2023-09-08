@@ -728,7 +728,7 @@ namespace NewRelic.Agent.Core.Api
         {
             if (_configurationService.Configuration.DistributedTracingEnabled)
             {
-                Log.FinestFormat(DistributedTracingIsEnabledIgnoringCall, nameof(GetRequestMetadata));
+                Log.Finest(DistributedTracingIsEnabledIgnoringCall, nameof(GetRequestMetadata));
                 return Enumerable.Empty<KeyValuePair<string, string>>();
             }
 
@@ -742,7 +742,7 @@ namespace NewRelic.Agent.Core.Api
         {
             if (_configurationService.Configuration.DistributedTracingEnabled)
             {
-                Log.FinestFormat(DistributedTracingIsEnabledIgnoringCall, nameof(GetResponseMetadata));
+                Log.Finest(DistributedTracingIsEnabledIgnoringCall, nameof(GetResponseMetadata));
                 return Enumerable.Empty<KeyValuePair<string, string>>();
             }
 
