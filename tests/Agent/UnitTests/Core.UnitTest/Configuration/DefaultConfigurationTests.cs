@@ -1287,22 +1287,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.AreEqual("rum", _defaultConfig.BrowserMonitoringJavaScriptAgentLoaderType);
         }
 
-        [TestCase(500, null, ExpectedResult = 500)]
-        [TestCase(1, null, ExpectedResult = 1)]
-        [TestCase(0, null, ExpectedResult = 0)]
-        [TestCase(500, 0.5, ExpectedResult = 500)]
-        [TestCase(500, 0.0, ExpectedResult = 0)]
-        [TestCase(0, 0.5, ExpectedResult = 500)]
-        [TestCase(1, 0.2, ExpectedResult = 200)]
-        [TestCase(-300, null, ExpectedResult = -300)]
-        public int TransactionTracerStackThresholdServerOverridesLocal(int local, double? server)
-        {
-            _localConfig.transactionTracer.stackTraceThreshold = local;
-            _serverConfig.RpmConfig.TransactionTracerStackThreshold = server;
-
-            return _defaultConfig.TransactionTracerStackThreshold.Milliseconds;
-        }
-
         [Test]
         public void ThreadProfilingIgnoreMethodFromXmlDecodesIntoListOfStrings()
         {

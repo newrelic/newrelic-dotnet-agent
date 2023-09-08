@@ -913,6 +913,7 @@
                         <xs:attribute name="stackTraceThreshold" type="xs:int" default="500">
                             <xs:annotation>
                                 <xs:documentation>
+                                    Deprecated: The transactionTracer.stackTraceThreshold setting has been deprecated and no longer has any effect.  This setting will be removed in a future major release.
                                     The threshold (in milliseconds) for when to collect a stack trace for a SQL call.
                                     In other words, when SQL statements exceed this threshold, then capture and send to New Relic the current stack trace. This is helpful for pinpointing where long SQL calls originate from.
                                 </xs:documentation>
