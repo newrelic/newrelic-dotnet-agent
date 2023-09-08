@@ -7,8 +7,8 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
-using MultiFunctionApplicationHelpers;
 using System;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
 {

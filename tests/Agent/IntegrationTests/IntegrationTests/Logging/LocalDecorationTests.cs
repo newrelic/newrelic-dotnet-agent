@@ -5,8 +5,8 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LocalDecoration
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"LoggingTester SetFramework {loggingFramework}");
+            _fixture.AddCommand($"LoggingTester SetFramework {loggingFramework} {RandomPortGenerator.NextPort()}");
             _fixture.AddCommand($"LoggingTester Configure{layoutType}LayoutAppenderForDecoration");
             if (logWithParam)
             {

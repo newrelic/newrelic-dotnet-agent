@@ -3,9 +3,9 @@
 
 
 #if NETFRAMEWORK
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using System;
 using System.Collections.Generic;
 using System.IO;

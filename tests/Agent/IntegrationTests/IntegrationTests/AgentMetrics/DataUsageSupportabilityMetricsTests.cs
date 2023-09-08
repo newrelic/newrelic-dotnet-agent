@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Testing.Assertions;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -53,7 +51,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
 
             // Logging commands
-            _fixture.AddCommand($"LoggingTester SetFramework log4net");
+            _fixture.AddCommand($"LoggingTester SetFramework log4net {RandomPortGenerator.NextPort()}");
             _fixture.AddCommand($"LoggingTester ConfigureWithInfoLevelEnabled");
 
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessageInTransaction ThisIsAInfoLogMessage INFO");

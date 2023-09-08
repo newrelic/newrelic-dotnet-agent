@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MultiFunctionApplicationHelpers
+namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
     public class ConsoleDynamicMethodFixtureFWLatest : ConsoleDynamicMethodFixtureFW481
     {
