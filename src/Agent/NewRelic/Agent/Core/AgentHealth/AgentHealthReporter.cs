@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 {
     public class AgentHealthReporter : ConfigurationBasedService, IAgentHealthReporter
     {
-        private static readonly TimeSpan _timeBetweenExecutions = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan _timeBetweenExecutions = TimeSpan.FromMinutes(2);
 
         private readonly IMetricBuilder _metricBuilder;
         private readonly IScheduler _scheduler;
