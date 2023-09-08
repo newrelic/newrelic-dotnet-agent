@@ -9,7 +9,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using System.Collections.Generic;
 using NUnit.Framework;
 using NewRelic.Agent.Core.DataTransport.Client.Interfaces;
-using NewRelic.Agent.Core.Exceptions;
+using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Logging;
 using Serilog;
 using Telerik.JustMock;
