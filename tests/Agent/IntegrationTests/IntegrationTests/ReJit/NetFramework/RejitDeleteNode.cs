@@ -38,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
                     configModifier.AutoInstrumentBrowserMonitoring(false);
 
                     var document = CommonUtils.AddCustomInstrumentation(deleteNodeFilePath, "RejitMvcApplication", "RejitMvcApplication.Controllers.RejitController", "CustomMethodDefaultWrapperDeleteNode", "NewRelic.Agent.Core.Wrapper.DefaultWrapper", "MyCustomDeleteMetricName", 7, false);
-                    CommonUtils.AddXmlNode(deleteNodeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory", "match" }, "exactMethodMatcher", string.Empty, "methodName", "CustomMethodDefaultWrapperDeleteNode1", true, document);
+                    XmlUtils.AddXmlNode(deleteNodeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory", "match" }, "exactMethodMatcher", string.Empty, "methodName", "CustomMethodDefaultWrapperDeleteNode1", true, document);
                 },
                 exerciseApplication: () =>
                 {
@@ -46,7 +46,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
 
                     _fixture.TestDeleteNode(0);
                     _fixture.TestDeleteNode(1);
-                    CommonUtils.DeleteXmlNode(deleteNodeFilePath, "urn:newrelic-extension",
+                    XmlUtils.DeleteXmlNode(deleteNodeFilePath, "urn:newrelic-extension",
                         new[] { "extension", "instrumentation", "tracerFactory", "match" }, "exactMethodMatcher"); // deletes first one (CustomMethodDefaultWrapperDeleteNode)
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.InstrumentationRefreshFileWatcherComplete, TimeSpan.FromMinutes(1));
                     _fixture.TestDeleteNode(0);

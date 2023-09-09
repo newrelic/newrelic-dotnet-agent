@@ -39,14 +39,14 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
                     configModifier.AutoInstrumentBrowserMonitoring(false);
 
                     CommonUtils.AddCustomInstrumentation(addAttributeFilePath, "RejitMvcApplication", "RejitMvcApplication.Controllers.RejitController", "CustomMethodDefaultWrapperAddAttribute", "NewRelic.Agent.Core.Wrapper.DefaultWrapper", "MyCustomAddBeforeMetricName", 7);
-                    CommonUtils.DeleteXmlAttribute(addAttributeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory" }, "metricName");
+                    XmlUtils.DeleteXmlAttribute(addAttributeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory" }, "metricName");
                 },
                 exerciseApplication: () =>
                 {
                     _fixture.InitializeApp();
 
                     _fixture.TestAddAttribute();
-                    CommonUtils.ModifyOrCreateXmlAttribute(addAttributeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory" }, "metricName", "MyCustomAddAfterMetricName");
+                    XmlUtils.ModifyOrCreateXmlAttribute(addAttributeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory" }, "metricName", "MyCustomAddAfterMetricName");
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.InstrumentationRefreshFileWatcherComplete, TimeSpan.FromMinutes(1));
                     _fixture.TestAddAttribute();
                 });

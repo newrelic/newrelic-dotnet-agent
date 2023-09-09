@@ -15,7 +15,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public void ForceLegacyAspPipeline()
         {
-            CommonUtils.DeleteXmlNode(_configFilePath, "", new[] { "configuration", "system.web" }, "httpRuntime");
+            XmlUtils.DeleteXmlNode(_configFilePath, "", new[] { "configuration", "system.web" }, "httpRuntime");
         }
     }
 }

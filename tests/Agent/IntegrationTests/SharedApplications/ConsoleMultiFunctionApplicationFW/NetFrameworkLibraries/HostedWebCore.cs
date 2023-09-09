@@ -88,7 +88,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries
         [LibraryMethod]
         public void Config_ASPNetCompatibility(bool isEnabled)
         {
-            CommonUtils.ModifyOrCreateXmlAttribute(WebConfigPath, "", new[] { "configuration", "system.serviceModel", "serviceHostingEnvironment" }, "aspNetCompatibilityEnabled", "false");
+            XmlUtils.ModifyOrCreateXmlAttribute(WebConfigPath, "", new[] { "configuration", "system.serviceModel", "serviceHostingEnvironment" }, "aspNetCompatibilityEnabled", "false");
         }
 
         /// <summary>
