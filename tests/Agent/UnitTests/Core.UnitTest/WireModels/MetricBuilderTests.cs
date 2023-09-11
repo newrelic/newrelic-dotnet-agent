@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Metrics;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;

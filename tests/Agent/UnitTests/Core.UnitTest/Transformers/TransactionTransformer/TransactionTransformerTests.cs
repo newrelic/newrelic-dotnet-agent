@@ -1,36 +1,35 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
+using NewRelic.Collections;
+using NewRelic.SystemInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.Utilities;
 using Telerik.JustMock;
-using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.Spans;
-using NewRelic.Agent.Core.Segments.Tests;
-using System.Threading;
-using System.IO;
-using NewRelic.Collections;
-using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Agent.Core.Time;
-using NewRelic.SystemInterfaces;
-using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
