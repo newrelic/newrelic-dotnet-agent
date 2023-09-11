@@ -151,7 +151,7 @@ jobs:
             files: ${{ env.test_results_path }}\profiler.xml
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: profiler
           path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
@@ -203,7 +203,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
@@ -277,7 +277,7 @@ jobs:
         shell: bash
 
       - name: Archive Artifacts
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
