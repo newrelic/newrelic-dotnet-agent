@@ -105,7 +105,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 }
                 catch (Exception exception)
                 {
-                    Log.Error($"Failed to inject JavaScript agent into response stream: {exception}");
+                    Log.Error(exception, "Failed to inject JavaScript agent into response stream");
                     scriptInjected = false;
                     buffer = originalBuffer;
                     offset = originalOffset;

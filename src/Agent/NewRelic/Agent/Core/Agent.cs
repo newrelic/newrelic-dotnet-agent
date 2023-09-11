@@ -283,7 +283,7 @@ namespace NewRelic.Agent.Core
                 return;
             }
 
-            Log.Error($"An exception occurred in a wrapper: {exception}");
+            Log.Error(exception, "An exception occurred in a wrapper");
         }
 
         #endregion Error handling
@@ -338,7 +338,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Error($"RUM: Failed to build Browser Monitoring agent script: {ex}");
+                Log.Error(ex, "RUM: Failed to build Browser Monitoring agent script");
                 {
                     return null;
                 }

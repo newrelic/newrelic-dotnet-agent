@@ -108,7 +108,7 @@ namespace NewRelic.Agent.Core.DataTransport
             catch (Exception e)
             {
                 Disable();
-                Log.Error($"Unable to connect to the New Relic service at {_connectionInfo} : {e}");
+                Log.Error(e, $"Unable to connect to the New Relic service at {_connectionInfo}");
                 throw;
             }
         }
@@ -391,7 +391,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                Log.Error($"Shutdown error: {ex}");
+                Log.Error(ex, "Shutdown error");
             }
         }
 

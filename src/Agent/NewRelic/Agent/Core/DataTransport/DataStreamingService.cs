@@ -64,11 +64,11 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     if (rpcEx.Status.StatusCode == StatusCode.Cancelled && rpcEx.Status.Detail == NoStatusMessage)
                     {
-                        Log.LogMessage(logLevel, $"ResponseStreamWrapper: consumer {ConsumerID} - gRPC RpcException encountered marking the response stream as cancelled. This occurs when a stream has been inactive for period of time.  A new stream will be created when needed. {rpcEx}");
+                        Log.LogMessage(logLevel, rpcEx, $"ResponseStreamWrapper: consumer {ConsumerID} - gRPC RpcException encountered marking the response stream as cancelled. This occurs when a stream has been inactive for period of time.  A new stream will be created when needed.");
                     }
                     else
                     {
-                        Log.LogMessage(logLevel, $"ResponseStreamWrapper: consumer {ConsumerID} - gRPC RpcException encountered while handling gRPC server responses: {rpcEx}");
+                        Log.LogMessage(logLevel, rpcEx, $"ResponseStreamWrapper: consumer {ConsumerID} - gRPC RpcException encountered while handling gRPC server responses.");
                     }
                 }
             }
@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 var logLevel = LogLevel.Debug;
                 if (Log.IsEnabledFor(logLevel))
                 {
-                    Log.LogMessage(logLevel, $"ResponseStreamWrapper: consumer {ConsumerID} - Unknown exception encountered while handling gRPC server responses: {ex}");
+                    Log.LogMessage(logLevel, ex, $"ResponseStreamWrapper: consumer {ConsumerID} - Unknown exception encountered while handling gRPC server responses.");
                 }
             }
 
@@ -1018,26 +1018,17 @@ namespace NewRelic.Agent.Core.DataTransport
 
         protected void LogMessage(LogLevel level, string message, Exception ex = null)
         {
-            if (Log.IsEnabledFor(level))
-            {
-                Log.LogMessage(level, $"{GetType().Name}: {message} {(ex == null ? string.Empty : $" - Exception: {ex}")}");
-            }
+            Log.LogMessage(level, ex, $"{GetType().Name}: {message}");
         }
 
         protected void LogMessage(LogLevel level, int consumerId, string message, Exception ex = null)
         {
-            if (Log.IsEnabledFor(level))
-            {
-                LogMessage(level, $"consumer {consumerId} - {message}", ex);
-            }
+            LogMessage(level, $"consumer {consumerId} - {message}", ex);
         }
 
         protected void LogMessage(LogLevel level, int consumerId, TRequest item, string message, Exception ex = null)
         {
-            if (Log.IsEnabledFor(level))
-            {
-                LogMessage(level, consumerId, $"{_modelType} {item.DisplayName} - {message}", ex);
-            }
+            LogMessage(level, consumerId, $"{_modelType} {item.DisplayName} - {message}", ex);
         }
 
         private enum TrySendStatus

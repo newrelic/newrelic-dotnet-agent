@@ -286,7 +286,7 @@ namespace NewRelic.Agent.Core.Attributes
                     }
                     catch (Exception ex)
                     {
-                        Log.Finest($"{attribVal.AttributeDefinition.Classification} Attribute '{attribVal.AttributeDefinition.Name}' was not recorded - exception occurred while resolving value (lazy) - {ex}");
+                        Log.Finest(ex, "{attribVal.AttributeDefinition.Classification} Attribute '{attribVal.AttributeDefinition.Name}' was not recorded - exception occurred while resolving value (lazy)");
                         itemsToRemove.Add(attribVal);
                     }
                 }

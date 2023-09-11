@@ -120,7 +120,7 @@ namespace NewRelic.Agent.Core.Transactions
 
         public void NoticeError(Exception exception)
         {
-            Log.Debug($"Ignoring application error because it occurred outside of a transaction: {exception}");
+            Log.Debug(exception, "Ignoring application error because it occurred outside of a transaction");
         }
 
         public void NoticeError(string message)

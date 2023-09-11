@@ -206,7 +206,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 }
                 catch (Exception e)
                 {
-                    Log.Debug(branchDescription + " EXCEPTION : " + e.ToString());
+                    Log.Debug(e, branchDescription);
                 }
             }
 

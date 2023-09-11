@@ -132,7 +132,7 @@ namespace NewRelic.Agent.Core.Transactions
             }
             catch (Exception exception)
             {
-                Log.Error($"ITransactionContext threw an exception when calling GetData with {TransactionContextKey}: {exception}");
+                Log.Error(exception, $"ITransactionContext threw an exception when calling GetData with {TransactionContextKey}");
                 return null;
             }
         }
@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core.Transactions
             }
             catch (Exception exception)
             {
-                Log.Error($"The chosen TransactionContext threw an exception when setting the data: {exception}");
+                Log.Error(exception, "The chosen TransactionContext threw an exception when setting the data");
                 return null;
             }
 

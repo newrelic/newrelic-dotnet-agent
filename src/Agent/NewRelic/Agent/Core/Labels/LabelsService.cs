@@ -51,7 +51,7 @@ namespace NewRelic.Agent.Core.Labels
             }
             catch (Exception exception)
             {
-                Log.Warning("Failed to parse labels configuration string: {0}", exception);
+                Log.Warning(exception, "Failed to parse labels configuration string");
                 return Enumerable.Empty<Label>();
             }
         }

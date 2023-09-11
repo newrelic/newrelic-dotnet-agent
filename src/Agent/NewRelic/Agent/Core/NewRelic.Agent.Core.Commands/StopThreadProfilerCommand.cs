@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.Commands
             }
             catch (InvalidProfileIdException e)
             {
-                Log.Error(e.Message);
+                Log.Error(e, "StopThreadProfilingSessions() failed");
                 return e.Message;
             }
 

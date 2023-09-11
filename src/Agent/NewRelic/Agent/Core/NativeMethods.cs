@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Error($"LinuxNativeMethods.InstrumentationRefresh() exception: {ex}");
+                Log.Error(ex, "LinuxNativeMethods.InstrumentationRefresh() exception");
                 return -1;
             }
         }
@@ -98,7 +98,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Error($"WindowsNativeMethods.InstrumentationRefresh() exception: {ex}");
+                Log.Error(ex, "WindowsNativeMethods.InstrumentationRefresh() exception");
                 return -1;
             }
         }

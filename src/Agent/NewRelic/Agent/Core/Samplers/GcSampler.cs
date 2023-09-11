@@ -222,19 +222,7 @@ namespace NewRelic.Agent.Core.Samplers
 
         private void LogMessage(LogLevel level, string message, Exception ex = null)
         {
-            if (!Log.IsEnabledFor(level))
-            {
-                return;
-            }
-
-            if (ex == null)
-            {
-                Log.LogMessage(level, $"GC Performance Counters: {message}");
-            }
-            else
-            {
-                Log.LogMessage(level, $"GC Performance Counters: {message}, {ex}");
-            }
+            Log.LogMessage(level, ex, $"GC Performance Counters: {message}");
         }
 
         /// <summary>

@@ -82,7 +82,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             }
             catch (Exception ex)
             {
-                Log.Debug($"Unable to parse content type: {ex}");
+                Log.Debug(ex, "Unable to parse content type");
                 return false;
             }
         }
@@ -134,7 +134,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             }
             catch (Exception e)
             {
-                Log.Error($"Exception attempting to validate request path for Browser Instrumentation blacklisting: {e}");
+                Log.Error(e, "Exception attempting to validate request path for Browser Instrumentation blacklisting");
                 return false;
             }
         }

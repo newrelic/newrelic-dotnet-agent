@@ -116,7 +116,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             foreach (var ex in result.Exceptions)
             {
-                Log.Warn($"An exception occurred while loading an extension: {ex}");
+                Log.Warn(ex, "An exception occurred while loading an extension");
             }
 
             return result.Instances;
@@ -135,7 +135,7 @@ namespace NewRelic.Agent.Core.Utilities
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to load wrappers: {ex}");
+                Log.Error(ex, "Failed to load wrappers");
                 throw;
             }
         }
@@ -187,7 +187,7 @@ namespace NewRelic.Agent.Core.Utilities
 
                     foreach (var ex in result.Exceptions)
                     {
-                        Log.Warn($"An exception occurred while loading an extension from assembly {assemblyPath}: {ex}");
+                        Log.Warn(ex, "An exception occurred while loading an extension from assembly {path}", assemblyPath);
                     }
 
                     wrappers = result.Instances.ToArray();

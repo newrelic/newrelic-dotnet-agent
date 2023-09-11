@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.Utilities
             {
                 try
                 {
-                    Log.Error($"An exception occurred while doing some background work: {ex}");
+                    Log.Error(ex, $"An exception occurred while doing some background work");
                 }
                 catch
                 {

@@ -55,7 +55,7 @@ namespace NewRelic.Agent.Core
                 {
                     try
                     {
-                        Log.Error($"There was an error initializing the agent: {exception}");
+                        Log.Error(exception, "There was an error initializing the agent");
                         return DisabledAgentManager;
                     }
                     catch
@@ -340,7 +340,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception e)
             {
-                Log.Error($"Tracer invocation error: {e}");
+                Log.Error(e, "Tracer invocation error");
                 return null;
             }
         }
@@ -379,7 +379,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception e)
             {
-                Log.Debug($"Shutdown error: {e}");
+                Log.Debug(e, "Shutdown error");
             }
             finally
             {

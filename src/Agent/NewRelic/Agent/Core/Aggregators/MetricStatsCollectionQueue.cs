@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
             catch (Exception e)
             {
-                Log.Warn($"Exception dequeueing/creating stats collection: {e}");
+                Log.Warn(e, "Exception dequeueing/creating stats collection");
             }
             finally
             {

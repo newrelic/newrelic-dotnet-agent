@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core.Utilities
                 }
                 catch (Exception ex)
                 {
-                    Log.Warn("GetTotalPhysicalMemoryBytes(): exception caught trying to read from /proc/meminfo: " + ex.Message);
+                    Log.Warn(ex, "GetTotalPhysicalMemoryBytes(): exception caught trying to read from /proc/meminfo");
                     return null;
                 }
             }
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.Utilities
 				}
 				catch (Exception ex)
 				{
-					Log.Warn("boot_id not found. " + ex.Message);
+					Log.Warn(ex, "boot_id not found.");
 					return new BootIdResult(null, false);
 				}
 

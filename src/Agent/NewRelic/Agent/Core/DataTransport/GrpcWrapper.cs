@@ -248,10 +248,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                if (Log.IsFinestEnabled)
-                {
-                    Log.Finest($"{this.GetType().Name}: Error encountered shutting down gRPC channel: {ex}");
-                }
+                Log.Finest(ex, "{0}: Error encountered shutting down gRPC channel", this.GetType().Name);
             }
 
             _channel = null;
@@ -265,11 +262,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                if (Log.IsFinestEnabled)
-                {
-                    Log.Finest($"{this.GetType().Name}: Error encountered closing gRPC request channel: {ex}");
-
-                }
+                Log.Finest(ex, "{0}: Error encountered closing gRPC request channel.", this.GetType().Name);
             }
         }
     }

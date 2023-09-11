@@ -39,7 +39,7 @@ namespace NewRelic.Agent.Core.Api
             {
                 try
                 {
-                    Log.Error($"Error in AddCustomAttribute: {ex}");
+                    Log.Error(ex, "Error in AddCustomAttribute");
                 }
                 catch (Exception)
                 {
@@ -62,7 +62,7 @@ namespace NewRelic.Agent.Core.Api
             {
                 try
                 {
-                    Log.Error($"Error in SetName: {ex}");
+                    Log.Error(ex, "Error in SetName");
                 }
                 catch (Exception)
                 {

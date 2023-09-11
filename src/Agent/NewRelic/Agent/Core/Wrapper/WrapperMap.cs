@@ -60,10 +60,7 @@ namespace NewRelic.Agent.Core.Wrapper
                 Log.Error("No wrappers were loaded.  The agent will not behave as expected.");
             }
 
-            if (Log.IsFinestEnabled)
-            {
-                Log.Finest($"WrapperMap has NonDefaultWrappers: {string.Join(", ", _nonDefaultWrappers)}");
-            }
+            Log.Finest("WrapperMap has NonDefaultWrappers: {0}", string.Join(", ", _nonDefaultWrappers));
         }
 
         public TrackedWrapper Get(InstrumentedMethodInfo instrumentedMethodInfo)

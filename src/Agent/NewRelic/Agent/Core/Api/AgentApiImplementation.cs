@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.Api
             {
                 try
                 {
-                    Log.Error($"Failed to initialize the Agent API: {ex}");
+                    Log.Error(ex, "Failed to initialize the Agent API");
                 }
                 catch (Exception)//Swallow the error
                 {

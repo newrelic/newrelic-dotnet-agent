@@ -232,7 +232,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to get encoded distributed trace headers for outbound request: {ex}");
+                Log.Error(ex, "Failed to get encoded distributed trace headers for outbound request.");
                 _agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadException();
                 return DistributedTraceApiModel.EmptyModel;
             }

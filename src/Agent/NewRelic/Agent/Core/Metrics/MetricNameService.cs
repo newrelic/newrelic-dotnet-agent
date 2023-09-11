@@ -59,7 +59,7 @@ namespace NewRelic.Agent.Core.Metrics
             }
             catch (IgnoreTransactionException ex)
             {
-                Log.Debug(ex.Message);
+                Log.Debug(ex, "RenameTransaction() failed");
                 shouldIgnore = true;
                 newPrefixedTransactionName = ex.IgnoredTransactionName;
             }
