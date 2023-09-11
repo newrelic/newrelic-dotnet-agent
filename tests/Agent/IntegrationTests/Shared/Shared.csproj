@@ -4,9 +4,15 @@
     <TargetFrameworks>netstandard2.0;net462;net7.0</TargetFrameworks>
     <AssemblyName>Shared</AssemblyName>
     <RootNamespace>NewRelic.Agent.IntegrationTests.Shared</RootNamespace>
-    <Description>Project containing items shared across tests.</Description>
+    <Description>Project containing items shared across test applications, test libraries, and test runners.</Description>
     <UserSecretsId>c6245434-25d3-45de-ab26-0c4a7ef89784</UserSecretsId>
   </PropertyGroup>
+
+  <!--
+  Any references added to this project can affect the libraries that are being tested within the test applications.
+  Only code and rerferences that are safe to be used in both the test runner and the instrumented test application
+  should be added to this project.
+  -->
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.2.0" />
@@ -18,31 +24,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-    <PackageReference Include="Common.Logging" Version="3.3.1" />
-    <PackageReference Include="Common.Logging.Core" Version="3.3.1" />
-    <PackageReference Include="CouchbaseNetClient" Version="2.3.8" />
-    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.3" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Management" />
-    <Reference Include="System.Messaging" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.ServiceModel.Web" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462' Or '$(TargetFramework)' == 'netstandard2.0'">
-    <ProjectReference Include="..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
   </ItemGroup>
 
 </Project>

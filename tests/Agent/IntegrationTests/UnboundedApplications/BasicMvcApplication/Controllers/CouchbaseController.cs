@@ -17,6 +17,7 @@ using Couchbase.N1QL;
 using Couchbase.Search;
 using Couchbase.Search.Queries.Simple;
 using Couchbase.Views;
+using Couchbase.Configuration.Client;
 
 namespace BasicMvcApplication.Controllers
 {
@@ -967,5 +968,44 @@ namespace BasicMvcApplication.Controllers
             return result.ToString();
         }
         #endregion
+
+        private class CouchbaseConnection : IDisposable
+        {
+            private ICluster _cluster;
+
+            public IBucket Bucket { get; private set; }
+
+            public void Connect()
+            {
+                var config = GetConnectionConfig();
+                _cluster = new Cluster(config);
+                Bucket = _cluster.OpenBucket(CouchbaseTestObject.CouchbaseTestBucket);
+            }
+
+            public void Disconnect()
+            {
+                _cluster.CloseBucket(Bucket);
+                Bucket.Dispose();
+                Bucket = null;
+                _cluster.Dispose();
+                _cluster = null;
+            }
+
+            private ClientConfiguration GetConnectionConfig()
+            {
+                var config = new ClientConfiguration();
+                config.Servers = new List<Uri>()
+            {
+                new Uri(CouchbaseTestObject.CouchbaseServerUrl)
+            };
+                config.UseSsl = false;
+                return config;
+            }
+
+            public void Dispose()
+            {
+                Disconnect();
+            }
+        }
     }
 }

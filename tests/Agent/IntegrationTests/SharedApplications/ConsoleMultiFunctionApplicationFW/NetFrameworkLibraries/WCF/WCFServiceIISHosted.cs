@@ -42,17 +42,17 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
         private void ConfigureASPNetCompatibilityMode(bool enabled)
         {
             //Clean out any bindings that are in the Web.Config
-            CommonUtils.DeleteXmlNode(_hostedWebCore.WebConfigPath, "",
+            XmlUtils.DeleteXmlNode(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel" }, "serviceHostingEnvironment");
 
-            CommonUtils.AddXmlNode(_hostedWebCore.WebConfigPath, "",
+            XmlUtils.AddXmlNode(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel" }, "serviceHostingEnvironment", string.Empty);
 
-            CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
+            XmlUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel", "serviceHostingEnvironment" },
                 "aspNetCompatibilityEnabled", enabled.ToString().ToLower());
 
-            CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
+            XmlUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel", "serviceHostingEnvironment" },
                 "multipleSiteBindingsEnabled", true.ToString().ToLower());
         }
@@ -60,43 +60,43 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
         private void ConfigureBinding(WCFBindingType bindingType, string relativePath, int port)
         {
             //Clean out any bindings that are in the Web.Config
-            CommonUtils.DeleteXmlNode(_hostedWebCore.WebConfigPath, "",
+            XmlUtils.DeleteXmlNode(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel" }, "services");
 
             //services node
-            CommonUtils.AddXmlNode(_hostedWebCore.WebConfigPath, "",
+            XmlUtils.AddXmlNode(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel" }, "services", string.Empty);
 
             //services/service/Name
-            CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
+            XmlUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel", "services", "service" },
                 "name", "NewRelic.Agent.IntegrationTests.Shared.Wcf.WcfService");
 
             //services/service/endpoint - Address
-            CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
+            XmlUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel", "services", "service", "endpoint" },
                 "address", relativePath);
 
             //services/service/endpoint - contract
-            CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
+            XmlUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel", "services", "service", "endpoint" },
                 "contract", "IWcfService");
 
             //services/service/endpoint - binding
-            CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
+            XmlUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel", "services", "service", "endpoint" },
                 "binding", _bindingTypeNames[bindingType]);
 
             if (bindingType == WCFBindingType.WSHttpUnsecure)
             {
-                CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
+                XmlUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
                     new[] { "configuration", "system.serviceModel", "services", "service", "endpoint" },
                     "bindingConfiguration", bindingType.ToString());
             }
 
             if (bindingType == WCFBindingType.WebHttp)
             {
-                CommonUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
+                XmlUtils.ModifyOrCreateXmlAttribute(_hostedWebCore.WebConfigPath, "",
                 new[] { "configuration", "system.serviceModel", "services", "service", "endpoint" },
                 "behaviorConfiguration", "webHttpBehavior");
             }

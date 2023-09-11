@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
                     _fixture.InitializeApp();
 
                     _fixture.TestChangeAttributeValue();
-                    CommonUtils.ModifyOrCreateXmlAttribute(changeAttributeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory" }, "metricName", "MyCustomRenamedMetricName");
+                    XmlUtils.ModifyOrCreateXmlAttribute(changeAttributeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory" }, "metricName", "MyCustomRenamedMetricName");
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.InstrumentationRefreshFileWatcherComplete, TimeSpan.FromMinutes(1));
                     _fixture.TestChangeAttributeValue();
                 });

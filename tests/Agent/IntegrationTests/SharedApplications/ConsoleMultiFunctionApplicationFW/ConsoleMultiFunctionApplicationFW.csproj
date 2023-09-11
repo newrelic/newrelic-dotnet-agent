@@ -37,7 +37,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\MultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj" />
     <ProjectReference Include="..\Common\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
-    <ProjectReference Include="..\..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
     <ProjectReference Include="..\..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\Common\SharedApplicationHelpers\SharedApplicationHelpers.csproj" />
   </ItemGroup>
 </Project>
