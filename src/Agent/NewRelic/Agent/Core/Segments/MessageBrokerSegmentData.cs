@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Time;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 using NewRelic.Agent.Configuration;

@@ -13,7 +13,7 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
     {
         private TransactionEventMaker _transactionEventMaker;
 
-        private static ITimerFactory _timerFactory;
+        private static ISimpleTimerFactory _timerFactory;
         private IConfiguration _configuration;
         private IConfigurationService _configurationService;
         private TransactionAttributeMaker _transactionAttributeMaker;
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [SetUp]
         public void SetUp()
         {
-            _timerFactory = Mock.Create<ITimerFactory>();
+            _timerFactory = Mock.Create<ISimpleTimerFactory>();
            
 
             _configuration = Mock.Create<IConfiguration>();

@@ -5,7 +5,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Exceptions;
+using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Utilities;

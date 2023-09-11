@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Text;
 using NewRelic.Agent.Helpers;
 
-namespace NewRelic.Agent.Core.Utils
+namespace NewRelic.Agent.Core.Utilities
 {
     public static class StackTraces
     {

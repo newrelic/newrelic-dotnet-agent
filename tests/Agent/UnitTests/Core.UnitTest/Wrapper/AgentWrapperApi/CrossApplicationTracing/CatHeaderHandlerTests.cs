@@ -7,8 +7,8 @@ using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -365,7 +365,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             referrerPathHash = referrerPathHash ?? "referrerPathHash";
             alternatePathHashes = alternatePathHashes ?? Enumerable.Empty<string>();
             referrerGuid = referrerGuid ?? Guid.NewGuid().ToString();
-            ITimer timer = Mock.Create<ITimer>();
+            ISimpleTimer timer = Mock.Create<ISimpleTimer>();
             Mock.Arrange(() => timer.Duration).Returns(duration);
 
             IAttributeDefinitionService attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));

@@ -3,7 +3,7 @@
 
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var configuration = configurationService?.Configuration ?? GetDefaultConfiguration();
             var errorService = configurationService != null ? new ErrorService(configurationService) : new ErrorService(Mock.Create<IConfigurationService>());
 
-            var internalTransaction = new Transaction(configuration, immutableTransaction.TransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(),
+            var internalTransaction = new Transaction(configuration, immutableTransaction.TransactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(),
                 _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(),
                 errorService, _attribDefSvc.AttributeDefs);
 

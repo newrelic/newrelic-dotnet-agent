@@ -13,7 +13,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 
-namespace NewRelic.Agent.Core.Metric
+namespace NewRelic.Agent.Core.Metrics
 {
     /// <summary>
     /// This holds a representation of a metric name.  It is used to defer string concatenation objects

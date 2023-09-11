@@ -1,36 +1,35 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Spans;
+using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
+using NewRelic.Collections;
+using NewRelic.SystemInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.Utilities;
 using Telerik.JustMock;
-using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.Spans;
-using NewRelic.Agent.Core.Segments.Tests;
-using System.Threading;
-using System.IO;
-using NewRelic.Collections;
-using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Agent.Core.Time;
-using NewRelic.SystemInterfaces;
-using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -159,7 +158,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void TransformerTransaction_DoesNotGenerateData_IfTransactionIsIgnored()
         {
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("foo", "bar"), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             transaction.Ignore();
 
             _transactionTransformer.Transform(transaction);
@@ -491,7 +490,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("foo", "bar"), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(1));
             AddDummySegment(transaction);
 
@@ -1050,7 +1049,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 .Returns(expectedTransactionMetricName);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             AddDummySegment(transaction);
 
             // ACT
@@ -1093,7 +1092,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 .Returns(expectedAttributes);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             AddDummySegment(transaction);
 
             // ACT
@@ -1197,7 +1196,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var transactionName = "transactionName";
             var priority = 0.5f;
-            var trxHasCapacity = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", transactionName), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var trxHasCapacity = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", transactionName), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             for (var i = 0; i < testValHasCapacity - 1; i++)
             {
                 AddDummySegment(trxHasCapacity);
@@ -1205,7 +1204,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             _transactionTransformer.Transform(trxHasCapacity);
 
-            var trxNoCapacity = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", transactionName), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var trxNoCapacity = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", transactionName), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             for (var i = 0; i < testValNoCapacity - 1; i++)
             {
                 AddDummySegment(trxNoCapacity);
@@ -1226,7 +1225,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // ARRANGE
             var transactionName = "transactionName";
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", transactionName), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", transactionName), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             AddDummySegment(transaction);
 
             // ACT
@@ -1334,7 +1333,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(false);
 
             var priority = 0.5f;
-            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             AddDummySegment(transaction);
 
             // ACT

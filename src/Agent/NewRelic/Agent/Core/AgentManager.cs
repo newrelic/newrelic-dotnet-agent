@@ -10,7 +10,7 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Instrumentation;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;

@@ -4,7 +4,7 @@
 using NewRelic.Core;
 using System.Text;
 
-namespace NewRelic.Agent.Core.Utils
+namespace NewRelic.Agent.Core.Utilities
 {
     public class TrimmedEncodedBuffer
     {

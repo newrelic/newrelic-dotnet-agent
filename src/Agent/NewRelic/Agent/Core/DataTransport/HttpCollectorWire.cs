@@ -3,7 +3,6 @@
 
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;

@@ -9,7 +9,7 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
@@ -248,7 +248,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var name = TransactionName.ForWebTransaction("foo", "bar");
             var time = applicationTime ?? TimeSpan.FromSeconds(1);
 
-            ITimer timer = Mock.Create<ITimer>();
+            ISimpleTimer timer = Mock.Create<ISimpleTimer>();
             Mock.Arrange(() => timer.Duration).Returns(time);
 
             var priority = 0.5f;

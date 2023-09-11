@@ -8,7 +8,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Labels;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.SystemInterfaces;
 using NUnit.Framework;
