@@ -7,7 +7,7 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.Core.Logging;
 using System;
 
-namespace NewRelic.Agent.Core.Metric
+namespace NewRelic.Agent.Core.Metrics
 {
     public enum ApiMethod
     {

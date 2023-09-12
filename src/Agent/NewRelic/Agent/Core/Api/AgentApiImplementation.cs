@@ -10,7 +10,7 @@ using NewRelic.Core.CodeAttributes;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Utilities;

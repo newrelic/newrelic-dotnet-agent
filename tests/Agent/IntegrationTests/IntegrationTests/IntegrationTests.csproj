@@ -61,13 +61,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
-    <ProjectReference Include="..\SharedApplications\Common\MultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj" />
     <ProjectReference Include="..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
     <ProjectReference Include="..\Models\Models.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-    <ProjectReference Include="..\SharedApplications\WcfAppIisHosted\WcfAppIisHosted.csproj" />
   </ItemGroup>
   <Import Project="Test.targets" />
   <ItemGroup>

@@ -190,12 +190,13 @@ SPDX-License-Identifier: Apache-2.0
     <CustomAction Id="CleanupPreviousInstall" BinaryKey="CustomActionsDll" DllEntry="CleanupPreviousInstall" Execute="deferred" Impersonate="no" Return="check"/>
     <CustomAction Id='RestartIis' BinaryKey="CustomActionsDll" DllEntry="RestartIis" Impersonate="yes"/>
     <CustomAction Id='CloseStatusMonitor' BinaryKey="CustomActionsDll" DllEntry="CloseStatusMonitor" Impersonate="yes"/>
+    <CustomAction Id="CheckBitness" BinaryKey="CustomActionsDll" DllEntry="CheckBitness" Execute="immediate" Return="check"/>
 
     <!-- Run the custom actions at the beginning of the install. -->
     <InstallUISequence>
-
+      <Custom Action="CheckBitness" Before="CostInitialize" />
     </InstallUISequence>
-
+    
     <!-- Run the custom actions at the end of the install. -->
     <InstallExecuteSequence>
       <Custom Action="FindPreviousLicenseKey" After="CostFinalize">NOT Installed</Custom>
@@ -809,6 +810,9 @@ SPDX-License-Identifier: Apache-2.0
           <MultiStringValue>COR_ENABLE_PROFILING=1</MultiStringValue>
           <MultiStringValue>COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}</MultiStringValue>
           <MultiStringValue>NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]</MultiStringValue>
+          <?ifdef IsWin64?>
+            <MultiStringValue>COR_PROFILER_PATH_32=[NETAGENT32FOLDER]NewRelic.Profiler.dll</MultiStringValue>
+          <?endif?>
         </RegistryValue>
       </Component>
       <Component Id="WASRegistryComponent" Guid="*">
@@ -816,6 +820,9 @@ SPDX-License-Identifier: Apache-2.0
           <MultiStringValue>COR_ENABLE_PROFILING=1</MultiStringValue>
           <MultiStringValue>COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}</MultiStringValue>
           <MultiStringValue>NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]</MultiStringValue>
+          <?ifdef IsWin64?>
+            <MultiStringValue>COR_PROFILER_PATH_32=[NETAGENT32FOLDER]NewRelic.Profiler.dll</MultiStringValue>
+          <?endif?>
         </RegistryValue>
       </Component>
     </ComponentGroup>
@@ -827,6 +834,9 @@ SPDX-License-Identifier: Apache-2.0
           <MultiStringValue>CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}</MultiStringValue>
           <MultiStringValue>CORECLR_NEWRELIC_HOME=[NETAGENTCOMMONFOLDER]</MultiStringValue>
           <MultiStringValue>NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]</MultiStringValue>
+          <?ifdef IsWin64?>
+            <MultiStringValue>CORECLR_PROFILER_PATH_32=[NETAGENT32FOLDER]NewRelic.Profiler.dll</MultiStringValue>
+          <?endif?>
         </RegistryValue>
       </Component>
       <Component Id="CoreWASRegistryComponent" Guid="{DD918B05-5DEE-49F0-B9B6-3ACAD06AD400}">
@@ -835,6 +845,9 @@ SPDX-License-Identifier: Apache-2.0
           <MultiStringValue>CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}</MultiStringValue>
           <MultiStringValue>CORECLR_NEWRELIC_HOME=[NETAGENTCOMMONFOLDER]</MultiStringValue>
           <MultiStringValue>NEWRELIC_INSTALL_PATH=[NETAGENTFOLDER]</MultiStringValue>
+          <?ifdef IsWin64?>
+            <MultiStringValue>CORECLR_PROFILER_PATH_32=[NETAGENT32FOLDER]NewRelic.Profiler.dll</MultiStringValue>
+          <?endif?>
         </RegistryValue>
       </Component>
     </ComponentGroup>

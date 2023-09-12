@@ -124,11 +124,11 @@
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.0" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.9" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.9.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.9.2" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- Elastic.Clients.Elasticsearch .NET/Core references - only actually testing oldest and newest -->
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.9.1" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.9.2" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!-- Serilog .NET framework references -->
     <PackageReference Include="Serilog" Version="1.5.14" Condition="'$(TargetFramework)' == 'net462'" />
@@ -241,18 +241,18 @@
 
   <ItemGroup> <!-- Versions below 4.5 did not support netstandard 2.0 -->
     <PackageReference Include="NLog" Version="4.5.9" Condition="'$(TargetFramework)' == 'net6.0'" />
-	  <PackageReference Include="NLog" Version="5.2.3" Condition="'$(TargetFramework)' == 'net7.0'" />
+	  <PackageReference Include="NLog" Version="5.2.4" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <PackageReference Include="NLog" Version="4.3.11" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="NLog" Version="4.1.2" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="NLog" Version="4.5.11" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="NLog" Version="5.2.3" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="NLog" Version="5.2.4" Condition="'$(TargetFramework)' == 'net481'" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Requires NLog 5.2.3+ -->
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.3" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.3" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <!-- Requires NLog 5.2.4+ -->
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.4" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.4" Condition="'$(TargetFramework)' == 'net7.0'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -283,10 +283,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
-    <ProjectReference Include="..\..\..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
-    <ProjectReference Include="..\..\..\Models\Models.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.csproj" />
     <ProjectReference Include="..\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
+    <ProjectReference Include="..\SharedApplicationHelpers\SharedApplicationHelpers.csproj" />
   </ItemGroup>
 
   <ItemGroup>

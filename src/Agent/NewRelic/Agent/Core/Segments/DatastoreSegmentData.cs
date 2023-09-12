@@ -6,7 +6,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;

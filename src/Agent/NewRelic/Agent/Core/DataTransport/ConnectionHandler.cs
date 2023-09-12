@@ -6,7 +6,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Labels;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utilization;
 using NewRelic.Core.Logging;
@@ -426,7 +426,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     var responseBody = wire.SendData(method, _connectionInfo, serializedData, requestGuid);
                     return ParseResponse<T>(responseBody);
                 }
-                catch (Exceptions.HttpException ex)
+                catch (DataTransport.HttpException ex)
                 {
                     Log.Debug(ex, "Request({0}): Received a {1} {2} response invoking method \"{3}\" with payload \"{4}\"", requestGuid, (int)ex.StatusCode, ex.StatusCode, method, serializedData);
 

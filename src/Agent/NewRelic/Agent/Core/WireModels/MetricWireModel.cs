@@ -4,7 +4,6 @@
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -16,7 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using InternalMetricName = NewRelic.Agent.Core.Metric.MetricName;
+using InternalMetricName = NewRelic.Agent.Core.Metrics.MetricName;
 
 namespace NewRelic.Agent.Core.WireModels
 {

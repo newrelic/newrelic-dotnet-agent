@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -27,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.MetricsAndForwarding
             _fixture.TestLogger = output;
 
             //_fixture.AddCommand("RootCommands LaunchDebugger");
-            _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework}");
+            _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework} {RandomPortGenerator.NextPort()}");
             _fixture.AddCommand("LoggingTester Configure");
 
             _fixture.AddCommand("LoggingTester CreateSingleLogMessage DebugMessage DEBUG");

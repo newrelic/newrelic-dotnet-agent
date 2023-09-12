@@ -3,7 +3,7 @@
 
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Helpers;
 using NewRelic.Core;
 using NewRelic.Core.Logging;
@@ -1772,7 +1772,6 @@ namespace NewRelic.Agent.Core.Configuration
             return new RecordSqlConfigurationItem(localRecordSqlString, LocalConfigSource);
         }
 
-        public virtual TimeSpan TransactionTracerStackThreshold { get { return ServerOverrides((TimeSpanExtensions.FromSeconds(_serverConfiguration.RpmConfig.TransactionTracerStackThreshold)), TimeSpan.FromMilliseconds(_localConfiguration.transactionTracer.stackTraceThreshold)); } }
         public virtual int TransactionTracerMaxStackTraces { get { return _localConfiguration.transactionTracer.maxStackTrace; } }
         public virtual IEnumerable<Regex> RequestPathExclusionList
         {

@@ -8,7 +8,6 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer

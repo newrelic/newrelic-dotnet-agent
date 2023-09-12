@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NewRelic.Agent.Core.Metric
+namespace NewRelic.Agent.Core.Metrics
 {
     public enum CATSupportabilityCondition
     {

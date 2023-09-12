@@ -5,8 +5,8 @@
 #if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using Xunit;
 using Xunit.Abstractions;

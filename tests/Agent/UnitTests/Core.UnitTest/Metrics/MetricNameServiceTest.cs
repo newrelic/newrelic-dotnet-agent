@@ -7,7 +7,7 @@ using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Fixtures;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Testing.Assertions;

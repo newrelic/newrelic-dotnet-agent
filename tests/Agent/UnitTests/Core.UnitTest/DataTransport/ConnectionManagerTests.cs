@@ -14,7 +14,7 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 using Telerik.JustMock;
-using HttpException = NewRelic.Agent.Core.Exceptions.HttpException;
+using HttpException = NewRelic.Agent.Core.DataTransport.HttpException;
 
 namespace NewRelic.Agent.Core.DataTransport
 {

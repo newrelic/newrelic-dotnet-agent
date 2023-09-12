@@ -16,8 +16,8 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Errors;
 using System.Diagnostics;
 using NewRelic.Agent.Core.Configuration;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Segments
 {

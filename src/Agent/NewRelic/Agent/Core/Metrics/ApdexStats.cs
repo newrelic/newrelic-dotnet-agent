@@ -4,7 +4,7 @@
 using System;
 using NewRelic.SystemExtensions;
 
-namespace NewRelic.Agent.Core.Metric
+namespace NewRelic.Agent.Core.Metrics
 {
     public static class ApdexStats
     {

@@ -448,8 +448,8 @@ namespace NewRelic.Agent.Core.WireModels
             );
         }
 
-        [TestCase(Metric.MetricNames.WebTransactionPrefix, "CPU/WebTransaction/transactionName")]
-        [TestCase(Metric.MetricNames.OtherTransactionPrefix, "CPU/OtherTransaction/transactionName")]
+        [TestCase(Metrics.MetricNames.WebTransactionPrefix, "CPU/WebTransaction/transactionName")]
+        [TestCase(Metrics.MetricNames.OtherTransactionPrefix, "CPU/OtherTransaction/transactionName")]
         public void BuildCpuTimeMetric(string transactionPrefix, string expectedMetricName)
         {
             var transactionMetricName = new TransactionMetricName(transactionPrefix, "transactionName");

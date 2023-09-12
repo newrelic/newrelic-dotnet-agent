@@ -4,7 +4,7 @@
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;

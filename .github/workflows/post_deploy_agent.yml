@@ -36,8 +36,8 @@ jobs:
       - name: Wait for APT to update
         if: ${{ github.event_name == 'workflow_call' }} # only wait if this workflow was called by another workflow
         run: |
-          echo "Sleeping 2 minutes to wait for apt to update itself"
-          sleep 120
+          echo "Sleeping 5 minutes to wait for apt to update itself"
+          sleep 300
         shell: bash      
       - name: Validate
         run: |
@@ -75,8 +75,8 @@ jobs:
       - name: Wait for YUM to update
         if: ${{ github.event_name == 'workflow_call' }} # only wait if this workflow was called by another workflow
         run: |
-          echo "Sleeping 2 minutes to wait for yum to update itself"
-          sleep 120
+          echo "Sleeping 5 minutes to wait for yum to update itself"
+          sleep 300
         shell: bash
 
       - name: Validate

@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.16.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.15.0...v10.16.0) (2023-09-11)
+
+
+### Notice
+
+* The transactionTracer.stackTraceThreshold setting has been deprecated and no longer has any effect. ([#1896](https://github.com/newrelic/newrelic-dotnet-agent/issues/1896)) ([20ab0e7](https://github.com/newrelic/newrelic-dotnet-agent/commit/20ab0e72c86020e712024165ee4d72f832522db2))
+
+
+### New Features
+
+* Add 32bit profiler path to IIS registry when installing 64bit agent. ([#1890](https://github.com/newrelic/newrelic-dotnet-agent/issues/1890)) ([65dd50b](https://github.com/newrelic/newrelic-dotnet-agent/commit/65dd50be55e27c3b45384f54df40a96cb1e115a4))
+* Prevent using different bitness installer when in-place upgrading. ([#1890](https://github.com/newrelic/newrelic-dotnet-agent/issues/1890)) ([65dd50b](https://github.com/newrelic/newrelic-dotnet-agent/commit/65dd50be55e27c3b45384f54df40a96cb1e115a4))
+
+
+### Fixes
+
+* Fix misleading log message on transaction name change. ([#1857](https://github.com/newrelic/newrelic-dotnet-agent/issues/1857)) ([#1886](https://github.com/newrelic/newrelic-dotnet-agent/issues/1886)) ([737b4f1](https://github.com/newrelic/newrelic-dotnet-agent/commit/737b4f1dda8831225fcf9bbeea61ff3cc0024da5))
+* Fix NRHttpClientFactory so that it creates only one client. ([#1873](https://github.com/newrelic/newrelic-dotnet-agent/issues/1873)) ([fc88ff7](https://github.com/newrelic/newrelic-dotnet-agent/commit/fc88ff7690c367043f074cb6df154a58f8eb4f63))
+* Prevent broken traces when HttpClient content headers contain tracing headers. ([#1843](https://github.com/newrelic/newrelic-dotnet-agent/issues/1843)) ([#1888](https://github.com/newrelic/newrelic-dotnet-agent/issues/1888)) ([541dd2c](https://github.com/newrelic/newrelic-dotnet-agent/commit/541dd2ccbb01533ac14b903d84394a02aaf84295))
+* Remove the retained file count limit for Agent log files. ([#1879](https://github.com/newrelic/newrelic-dotnet-agent/issues/1879)) ([e49250a](https://github.com/newrelic/newrelic-dotnet-agent/commit/e49250aac7e35e06fcea4fd67ef221b2a967a9b6))
+
 ## [10.15.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.14.0...v10.15.0) (2023-08-28)
 
 

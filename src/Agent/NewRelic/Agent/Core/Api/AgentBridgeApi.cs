@@ -3,7 +3,7 @@
 
 using System;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Configuration;
 using NewRelic.Core.Logging;
 using System.Collections.Generic;

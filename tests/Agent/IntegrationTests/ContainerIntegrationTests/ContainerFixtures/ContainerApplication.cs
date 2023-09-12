@@ -105,6 +105,7 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER");
         startInfo.EnvironmentVariables.Remove("CORECLR_PROFILER_PATH");
         startInfo.EnvironmentVariables.Remove("CORECLR_NEWRELIC_HOME");
+        startInfo.EnvironmentVariables.Remove("NETWORK_NAME");
 
         // Docker compose settings
         var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("Default");
@@ -120,6 +121,7 @@ public class ContainerApplication : RemoteApplication
         startInfo.EnvironmentVariables.Add("AGENT_PATH", newRelicHomeDirectoryPath);
         startInfo.EnvironmentVariables.Add("LOG_PATH", profilerLogDirectoryPath);
         startInfo.EnvironmentVariables.Add("CONTAINER_NAME", ContainerName);
+        startInfo.EnvironmentVariables.Add("NETWORK_NAME", Guid.NewGuid().ToString()); // generate a random network name to keep parallel test execution from failing
 
         if (AdditionalEnvironmentVariables != null)
         {

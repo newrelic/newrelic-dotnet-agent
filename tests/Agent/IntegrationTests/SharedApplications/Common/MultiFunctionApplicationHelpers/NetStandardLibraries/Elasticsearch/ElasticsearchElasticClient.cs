@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
 using NewRelic.Agent.IntegrationTests.Shared;
-using Xunit;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 {
@@ -56,7 +55,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var record = FlightRecord.GetSample();
             var response = _client.Index(record, IndexName);
 
-            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
+            if (!response.IsSuccess())
+            {
+                throw new Exception($"Response was not successful. {response.ElasticsearchServerError}");
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -66,7 +68,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = await _client.IndexAsync(record, IndexName);
 
-            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
+            AssertResponseIsSuccess(response);
 
             return response.IsSuccess();
         }
@@ -83,7 +85,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 )
             );
 
-            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
+            AssertResponseIsSuccess(response);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -98,7 +100,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 )
             );
 
-            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
+            AssertResponseIsSuccess(response);
 
             return response.Total;
         }
@@ -110,7 +112,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = _client.IndexMany(records, IndexName);
 
-            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
+            AssertResponseIsSuccess(response);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -120,7 +122,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = await _client.IndexManyAsync(records, IndexName);
 
-            Assert.True(response.IsSuccess(), $"Elasticsearch server error: {response.ElasticsearchServerError}");
+            AssertResponseIsSuccess(response);
 
             return response.IsSuccess();
         }
@@ -158,7 +160,19 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = client.Ping();
 
-            Assert.False(response.IsSuccess());
+            if (response.IsSuccess())
+            {
+                throw new Exception("Expected the call to fail, but it succeeded.");
+            }
+        }
+
+        private static void AssertResponseIsSuccess<T>(T response)
+            where T : Elastic.Transport.Products.Elasticsearch.ElasticsearchResponse
+        {
+            if (!response.IsSuccess())
+            {
+                throw new Exception($"Response was not successful. {response.ElasticsearchServerError}");
+            }
         }
     }
 }

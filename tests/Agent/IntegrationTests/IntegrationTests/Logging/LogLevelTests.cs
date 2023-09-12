@@ -3,8 +3,8 @@
 
 using System;
 using System.Linq;
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -24,7 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.LogLevelDetection
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework}");
+            _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework} {RandomPortGenerator.NextPort()}");
             _fixture.AddCommand($"LoggingTester ConfigureWithInfoLevelEnabled");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage ShouldNotBeForwardedDebugMessage DEBUG");
             _fixture.AddCommand($"LoggingTester CreateSingleLogMessage ShouldBeForwardedInfoMessage INFO");

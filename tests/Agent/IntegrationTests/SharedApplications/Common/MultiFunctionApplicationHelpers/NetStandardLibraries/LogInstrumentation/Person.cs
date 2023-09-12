@@ -4,7 +4,7 @@
 
 using Newtonsoft.Json;
 
-namespace NewRelic.IntegrationTests.Models
+namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
 {
     public class Person
     {

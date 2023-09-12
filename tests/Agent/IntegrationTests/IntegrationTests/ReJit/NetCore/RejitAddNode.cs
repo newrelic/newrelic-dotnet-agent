@@ -47,7 +47,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
 
                     _fixture.TestAddNode(1); // this will cause this method require a full rejit (differnet profiler code)
                     var document = CommonUtils.AddCustomInstrumentation(addNodeFilePath, "AspNetCoreMvcRejitApplication", "RejitMvcApplication.Controllers.RejitController", "CustomMethodDefaultWrapperAddNode", "NewRelic.Agent.Core.Wrapper.DefaultWrapper", "MyCustomAddMetricName", 7, false);
-                    CommonUtils.AddXmlNode(addNodeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory", "match" }, "exactMethodMatcher", string.Empty, "methodName", "CustomMethodDefaultWrapperAddNode1", false, document);
+                    XmlUtils.AddXmlNode(addNodeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory", "match" }, "exactMethodMatcher", string.Empty, "methodName", "CustomMethodDefaultWrapperAddNode1", false, document);
                     // Potential future addition: Adding a test for new match element.  not adding now since it would require a second app to test really well.
                     document.Save(addNodeFilePath);
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.InstrumentationRefreshFileWatcherComplete, TimeSpan.FromMinutes(1));

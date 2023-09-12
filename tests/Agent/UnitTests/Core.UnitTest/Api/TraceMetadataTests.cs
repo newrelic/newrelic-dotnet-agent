@@ -6,7 +6,7 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Attributes;
@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.Api
         [Test]
         public void TraceMetadata_ComputesSampledIfNotSet()
         {
-            var transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
+            var transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
             Assert.IsNull(transaction.Sampled);
 
             Mock.Arrange(() => _adaptiveSampler.ComputeSampled(ref priority)).Returns(true);

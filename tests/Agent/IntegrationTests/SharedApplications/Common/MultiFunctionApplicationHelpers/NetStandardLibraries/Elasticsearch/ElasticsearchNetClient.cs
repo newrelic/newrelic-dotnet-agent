@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elasticsearch.Net;
 using NewRelic.Agent.IntegrationTests.Shared;
-using Xunit;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 {
@@ -52,7 +51,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var record = FlightRecord.GetSample();
             var response = _client.Index<BytesResponse>(IndexName, record.Id.ToString(), PostData.Serializable(record));
 
-            Assert.True(response.Success, $"Elasticsearch server error: {response}");
+            AssertResponseSuccess(response);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -62,7 +61,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = await _client.IndexAsync<StringResponse>(IndexName, record.Id.ToString(), PostData.Serializable(record));
 
-            Assert.True(response.Success, $"Elasticsearch server error: {response}");
+            AssertResponseSuccess(response);
 
             return response.Success;
         }
@@ -81,7 +80,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = _client.Bulk<BytesResponse>(PostData.MultiJson(bulkIndex));
 
-            Assert.True(response.Success, $"Elasticsearch server error: {response}");
+            AssertResponseSuccess(response);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -98,7 +97,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = await _client.BulkAsync<BytesResponse>(PostData.MultiJson(bulkIndex));
 
-            Assert.True(response.Success, $"Elasticsearch server error: {response}");
+            AssertResponseSuccess(response);
 
             return response.Success;
         }
@@ -122,7 +121,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 }
             }));
 
-            Assert.True(response.Success, $"Elasticsearch server error: {response}");
+            AssertResponseSuccess(response);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -144,7 +143,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                 }
             }));
 
-            Assert.True(response.Success, $"Elasticsearch server error: {response}");
+            AssertResponseSuccess(response);
 
             return 0;
         }
@@ -175,7 +174,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             }
             var response = _client.MultiSearch<StringResponse>(IndexName, PostData.MultiJson(multiSearchData));
 
-            Assert.True(response.Success, $"Elasticsearch server error: {response}");
+            AssertResponseSuccess(response);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -205,7 +204,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = await _client.MultiSearchAsync<StringResponse>(IndexName, PostData.MultiJson(multiSearchData));
 
-            Assert.True(response.Success, $"Elasticsearch server error: {response}");
+            AssertResponseSuccess(response);
 
             return 0;
         }
@@ -222,7 +221,19 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var client = new ElasticLowLevelClient(settings);
             var response = client.Ping<StringResponse>();
 
-            Assert.False(response.Success, $"Elasticsearch server error: {response}");
+            if (response.Success)
+            {
+                throw new Exception($"Response was successful but expected a failure. Elasitcsearch response: {response}");
+            }
+        }
+
+        private static void AssertResponseSuccess<T>(T response)
+            where T : IApiCallDetails
+        {
+            if (!response.Success)
+            {
+                throw new Exception($"Response was not successful. Elasitcsearch response: {response}");
+            }
         }
     }
 }
