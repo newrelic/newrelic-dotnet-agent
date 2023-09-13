@@ -28,12 +28,12 @@ namespace NewRelic.Agent.Core.DataTransport
     /// </summary>
     public class ConnectionHandler : ConfigurationBasedService, IConnectionHandler
     {
-        private static readonly Dictionary<string, Action<string>> ServerLogLevelMap = new Dictionary<string, Action<string>>
+        private static readonly Dictionary<string, Action<string, object[]>> ServerLogLevelMap = new Dictionary<string, Action<string, object[]>>
         {
-            {"INFO", (s) => Log.Info(s)},
-            {"WARN", (s) => Log.Warn(s)},
-            {"ERROR", (s) => Log.Error(s)},
-            {"VERBOSE", (s) => Log.Finest(s)}
+            {"INFO", Log.Info},
+            {"WARN", Log.Warn},
+            {"ERROR", Log.Error},
+            {"VERBOSE", Log.Finest}
         };
 
         private readonly ISerializer _serializer;
@@ -276,8 +276,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (string.IsNullOrEmpty(message.Text))
                     continue;
 
-                var logMethod = ServerLogLevelMap.GetValueOrDefault(message.Level) ?? new Action<string>((s) => Log.Info(s));
-                logMethod(message.Text);
+                var logMethod = ServerLogLevelMap.GetValueOrDefault(message.Level) ?? Log.Info;
+                logMethod(message.Text, null);
             }
         }
 

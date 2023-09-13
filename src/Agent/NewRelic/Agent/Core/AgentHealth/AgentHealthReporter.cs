@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private readonly IMetricBuilder _metricBuilder;
         private readonly IScheduler _scheduler;
-        private readonly IList<RecurringLogData> _recurringLogDatas = new ConcurrentList<RecurringLogData>();
+        private readonly IList<string> _recurringLogDatas = new ConcurrentList<string>();
         private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
         private readonly ConcurrentDictionary<string, InterlockedCounter> _logLinesCountByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
         private readonly ConcurrentDictionary<string, InterlockedCounter> _logDeniedCountByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
@@ -63,9 +63,9 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private void LogRecurringLogs()
         {
-            foreach (var data in _recurringLogDatas)
+            foreach (var message in _recurringLogDatas)
             {
-                data?.LogAction(data.Message);
+                Log.Info(message);
             }
 
             foreach (var counter in _agentHealthEventCounters)
@@ -236,7 +236,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
 
             Log.Error($"Wrapper {wrapperName} is being disabled for {method.MethodName} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted.");
-            _recurringLogDatas.Add(new RecurringLogData((s) => Log.Debug(s), $"Wrapper {wrapperName} was disabled for {method.MethodName} at {DateTime.Now} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted."));
+            _recurringLogDatas.Add($"Wrapper {wrapperName} was disabled for {method.MethodName} at {DateTime.Now} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted.");
         }
 
         public void ReportIfHostIsLinuxOs()
