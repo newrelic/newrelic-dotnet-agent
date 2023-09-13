@@ -63,9 +63,9 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private void LogRecurringLogs()
         {
-            foreach (string message in _recurringLogData)
+            foreach (var logMessage in _recurringLogData)
             {
-                Log.Info(message);
+                Log.Info(logMessage);
             }
 
             foreach (var counter in _agentHealthEventCounters)
