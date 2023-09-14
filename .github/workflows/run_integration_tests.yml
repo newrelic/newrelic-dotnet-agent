@@ -69,7 +69,7 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.unbounded-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
-            # Oracle is disabled, see https://issues.newrelic.com/browse/NR-161046
+            # Oracle is disabled temporarily
             #namespaces="[ 'CosmosDB', 'Couchbase', 'Elasticsearch', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Oracle', 'Postgres', 'RabbitMq', 'Redis' ]"
             namespaces="[ 'CosmosDB', 'Couchbase', 'Elasticsearch', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Postgres', 'RabbitMq', 'Redis' ]"
           else
