@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Core.Api
                 {
                     try
                     {
-                        Log.ErrorFormat("Failed to get DistributedTraceApiModel.Text: {0}", ex);
+                        Log.Error(ex, "Failed to get DistributedTraceApiModel.Text");
                     }
                     catch (Exception)
                     {

@@ -94,7 +94,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             }
             catch (Exception ex)
             {
-                Log.Error($"Error during ResolveAll of {typeof(T)}: {ex}");
+                Log.Error(ex,"Error during ResolveAll of {0}", typeof(T));
                 throw;
             }
         }

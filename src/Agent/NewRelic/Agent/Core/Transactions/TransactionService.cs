@@ -132,7 +132,7 @@ namespace NewRelic.Agent.Core.Transactions
             }
             catch (Exception exception)
             {
-                Log.Error($"ITransactionContext threw an exception when calling GetData with {TransactionContextKey}: {exception}");
+                Log.Error(exception, $"ITransactionContext threw an exception when calling GetData with {TransactionContextKey}");
                 return null;
             }
         }
@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core.Transactions
             }
             catch (Exception exception)
             {
-                Log.Error($"The chosen TransactionContext threw an exception when setting the data: {exception}");
+                Log.Error(exception, "The chosen TransactionContext threw an exception when setting the data");
                 return null;
             }
 
@@ -262,7 +262,7 @@ namespace NewRelic.Agent.Core.Transactions
             {
                 bool wasAsync = IsAttachedToAsyncStorage;
 
-                Log.WarnFormat("Releasing the transaction because there were too many nested transaction attempts.");
+                Log.Warn("Releasing the transaction because there were too many nested transaction attempts.");
                 RemoveOutstandingInternalTransactions(true, true);
                 var newTransaction = CreateInternalTransaction(initialTransactionName, onCreate);
 

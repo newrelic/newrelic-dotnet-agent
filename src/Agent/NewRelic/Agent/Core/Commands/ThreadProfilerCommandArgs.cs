@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.Commands
             }
             catch (OverflowException)
             {
-                Log.DebugFormat("Received a sample_period value with start_profiler command that caused an overflow converting to milliseconds. value = {0}", parsedValue);
+                Log.Debug("Received a sample_period value with start_profiler command that caused an overflow converting to milliseconds. value = {0}", parsedValue);
                 return (uint)maxValue * 1000;
             }
         }

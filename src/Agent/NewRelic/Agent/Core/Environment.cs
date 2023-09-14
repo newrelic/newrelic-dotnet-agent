@@ -129,7 +129,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Debug($"The .NET agent is unable to collect environment information for the machine: {ex}");
+                Log.Debug(ex, "The .NET agent is unable to collect environment information for the machine");
             }
         }
 
@@ -142,7 +142,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn($"Error getting value for environment variable {name}: {ex}");
+                Log.Warn(ex, "Error getting value for environment variable {name}", name);
             }
 
             _environmentMap.Add(new[] { name, value });
@@ -156,7 +156,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
+                Log.Warn(ex, "TryGetCurrentProcess() failed");
                 return null;
             }
         }
@@ -170,7 +170,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
+                Log.Warn(ex, "TryGetFileVersionInfo() failed");
                 return null;
             }
         }
@@ -184,7 +184,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
+                Log.Warn(ex, "TryGetAppDomainAppId() failed");
                 return null;
             }
         }
@@ -214,7 +214,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
+                Log.Warn(ex, "TryGetAppPath() failed");
                 return null;
             }
         }
@@ -245,7 +245,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn(ex);
+                Log.Warn(ex, "TryGetIisVersion() failed");
                 return null;
             }
         }
@@ -276,7 +276,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Warn($"Could not retrieve processor count information: {ex}");
+                Log.Warn(ex, "Could not retrieve processor count information");
                 return Enumerable.Empty<ManagementBaseObject>();
             }
         }

@@ -213,7 +213,7 @@ namespace NewRelic.Agent.Core
                     var vendorValidationResult = vendorValidateShouldExplain();
                     if (!vendorValidationResult.IsValid)
                     {
-                        Log.DebugFormat("Failed vendor condition for executing explain plan: {0}", vendorValidationResult.ValidationMessage);
+                        Log.Debug("Failed vendor condition for executing explain plan: {0}", vendorValidationResult.ValidationMessage);
                         return false;
                     }
                 }
@@ -281,7 +281,7 @@ namespace NewRelic.Agent.Core
                 return;
             }
 
-            Log.Error($"An exception occurred in a wrapper: {exception}");
+            Log.Error(exception, "An exception occurred in a wrapper");
         }
 
         #endregion Error handling
@@ -336,7 +336,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Error($"RUM: Failed to build Browser Monitoring agent script: {ex}");
+                Log.Error(ex, "RUM: Failed to build Browser Monitoring agent script");
                 {
                     return null;
                 }

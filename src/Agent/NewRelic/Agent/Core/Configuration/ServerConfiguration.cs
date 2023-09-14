@@ -334,7 +334,7 @@ namespace NewRelic.Agent.Core.Configuration
         [OnError]
         public void OnError(StreamingContext context, ErrorContext errorContext)
         {
-            Log.ErrorFormat("Json serializer context path: {0}. Error message: {1}", errorContext.Path, errorContext.Error.Message);
+            Log.Error(errorContext.Error, "Json serializer context path: {0}", errorContext.Path);
         }
     }
 }

@@ -117,16 +117,17 @@ namespace NewRelic.Agent.Core.Logging.Tests
             string message = "Test Error";
             _logger.Error(message);
 
-            Mock.Assert(() => _serilogLogger.Error(message), Occurs.Once());
+            Mock.Assert(() => _serilogLogger.Error(message, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         [Test]
         public void Error_Exception_LogsError()
         {
             var exception = new Exception("Test Exception");
-            _logger.Error(exception);
+            string message = "Test Error";
+            _logger.Error(exception, message);
 
-            Mock.Assert(() => _serilogLogger.Error(exception, ""), Occurs.Once());
+            Mock.Assert(() => _serilogLogger.Error(exception, message, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         // Level methods
@@ -144,14 +145,14 @@ namespace NewRelic.Agent.Core.Logging.Tests
         public void Error_Message_CallsSerilogLoggerError()
         {
             _logger.Error(_testMessage);
-            Mock.Assert(() => _serilogLogger.Error(_testMessage), Occurs.Once());
+            Mock.Assert(() => _serilogLogger.Error(_testMessage, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         [Test]
         public void Error_Exception_CallsSerilogLoggerError()
         {
-            _logger.Error(_testException);
-            Mock.Assert(() => _serilogLogger.Error(_testException, Arg.AnyString), Occurs.Once());
+            _logger.Error(_testException, "");
+            Mock.Assert(() => _serilogLogger.Error(_testException, Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         [Test]
@@ -159,7 +160,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
         {
             Mock.Arrange(() => _serilogLogger.IsEnabled(Arg.IsAny<LogEventLevel>())).Returns(true);
 
-            _logger.ErrorFormat(_testFormat, _testArgs);
+            _logger.Error(_testFormat, _testArgs);
             Mock.Assert(() => _serilogLogger.Error(Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
@@ -169,14 +170,14 @@ namespace NewRelic.Agent.Core.Logging.Tests
         public void Warn_Message_CallsSerilogLoggerWarning()
         {
             _logger.Warn(_testMessage);
-            Mock.Assert(() => _serilogLogger.Warning(_testMessage), Occurs.Once());
+            Mock.Assert(() => _serilogLogger.Warning(_testMessage, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         [Test]
         public void Warn_Exception_CallsSerilogLoggerWarning()
         {
-            _logger.Warn(_testException);
-            Mock.Assert(() => _serilogLogger.Warning(_testException, Arg.AnyString), Occurs.Once());
+            _logger.Warn(_testException, "");
+            Mock.Assert(() => _serilogLogger.Warning(_testException, Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         [Test]
@@ -184,7 +185,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
         {
             Mock.Arrange(() => _serilogLogger.IsEnabled(Arg.IsAny<LogEventLevel>())).Returns(true);
 
-            _logger.WarnFormat(_testFormat, _testArgs);
+            _logger.Warn(_testFormat, _testArgs);
             Mock.Assert(() => _serilogLogger.Warning(Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
@@ -194,14 +195,14 @@ namespace NewRelic.Agent.Core.Logging.Tests
         public void Info_Message_CallsSerilogLoggerInformation()
         {
             _logger.Info(_testMessage);
-            Mock.Assert(() => _serilogLogger.Information(_testMessage), Occurs.Once());
+            Mock.Assert(() => _serilogLogger.Information(_testMessage, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         [Test]
         public void Info_Exception_CallsSerilogLoggerInformation()
         {
-            _logger.Info(_testException);
-            Mock.Assert(() => _serilogLogger.Information(_testException, Arg.AnyString), Occurs.Once());
+            _logger.Info(_testException, "");
+            Mock.Assert(() => _serilogLogger.Information(_testException, Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         [Test]
@@ -209,7 +210,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
         {
             Mock.Arrange(() => _serilogLogger.IsEnabled(Arg.IsAny<LogEventLevel>())).Returns(true);
 
-            _logger.InfoFormat(_testFormat, _testArgs);
+            _logger.Info(_testFormat, _testArgs);
             Mock.Assert(() => _serilogLogger.Information(Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
@@ -219,14 +220,14 @@ namespace NewRelic.Agent.Core.Logging.Tests
         public void Debug_Message_CallsSerilogLoggerDebug()
         {
             _logger.Debug(_testMessage);
-            Mock.Assert(() => _serilogLogger.Debug(_testMessage), Occurs.Once());
+            Mock.Assert(() => _serilogLogger.Debug(_testMessage, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         [Test]
         public void Debug_Exception_CallsSerilogLoggerDebug()
         {
-            _logger.Debug(_testException);
-            Mock.Assert(() => _serilogLogger.Debug(_testException, Arg.AnyString), Occurs.Once());
+            _logger.Debug(_testException, "");
+            Mock.Assert(() => _serilogLogger.Debug(_testException, Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
 
         [Test]
@@ -234,7 +235,7 @@ namespace NewRelic.Agent.Core.Logging.Tests
         {
             Mock.Arrange(() => _serilogLogger.IsEnabled(Arg.IsAny<LogEventLevel>())).Returns(true);
 
-            _logger.DebugFormat(_testFormat, _testArgs);
+            _logger.Debug(_testFormat, _testArgs);
             Mock.Assert(() => _serilogLogger.Debug(Arg.AnyString, Arg.IsAny<object[]>()), Occurs.Once());
         }
         [TearDown]

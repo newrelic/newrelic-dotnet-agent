@@ -56,8 +56,7 @@ namespace NewRelic.Agent.Core.DataTransport.Client
             }
             catch (Exception ex)
             {
-                Log.ErrorFormat("Request({0}): Unable to parse response body with exception: {1}", _requestGuid,
-                    ex.Message);
+                Log.Error(ex, "Request({0}): Unable to parse response body.", _requestGuid);
 
                 return Task.FromResult(Constants.EmptyResponseBody);
             }

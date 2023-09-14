@@ -400,7 +400,7 @@ namespace NewRelic.Agent.Core.Transactions
                 }
                 catch (Exception e)
                 {
-                    Log.DebugFormat("Error while normalizing query parameters: {0}", e);
+                    Log.Debug(e, "Error while normalizing query parameters");
                 }
             }
 

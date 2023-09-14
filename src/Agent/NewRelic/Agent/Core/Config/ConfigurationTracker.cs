@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Core.Config
             if (fileName == null)
                 return;
 
-            Log.InfoFormat("Reading configuration from \"{0}\"", fileName);
+            Log.Info("Reading configuration from \"{0}\"", fileName);
 
             _lastWriteTime = File.GetLastWriteTimeUtc(fileName);
 

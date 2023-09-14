@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.Transactions
             }
             catch (Exception exception)
             {
-                Log.Warn(exception);
+                Log.Warn(exception, "TryCreate() failed");
                 return null;
             }
         }
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.Transactions
             }
             catch (Exception exception)
             {
-                Log.Warn(exception);
+                Log.Warn(exception, "TryGetObfuscated() failed");
                 return null;
             }
         }

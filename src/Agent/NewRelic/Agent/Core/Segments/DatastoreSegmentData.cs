@@ -112,7 +112,7 @@ namespace NewRelic.Agent.Core.Segments
             }
             catch (Exception exception)
             {
-                Log.DebugFormat("Unable to retrieve resources for explain plan: {0}", exception);
+                Log.Debug(exception, "Unable to retrieve resources for explain plan");
             }
             return null;
         }
@@ -146,7 +146,7 @@ namespace NewRelic.Agent.Core.Segments
             }
             catch (Exception exception)
             {
-                Log.DebugFormat("Unable to execute explain plan: {0}", exception);
+                Log.Debug(exception, "Unable to execute explain plan");
             }
         }
 

@@ -2397,8 +2397,8 @@ namespace NewRelic.Agent.Core.Configuration
                     }
                     catch (Exception ex)
                     {
-                        Log.ErrorFormat("A Browser Monitoring Request Path failed regular expression parsing: {0}",
-                            p.regex, ex);
+                        Log.Error(ex, "A Browser Monitoring Request Path failed regular expression parsing: {0}",
+                            p.regex);
                     }
                 }
             }
@@ -2463,14 +2463,14 @@ namespace NewRelic.Agent.Core.Configuration
         {
             if (rule.Terms == null)
             {
-                Log.WarnFormat("Ignoring transaction_segment_term with null terms for prefix '{0}'", rule.Prefix);
+                Log.Warn("Ignoring transaction_segment_term with null terms for prefix '{0}'", rule.Prefix);
                 return null;
             }
 
             var prefix = TryGetValidPrefix(rule.Prefix);
             if (prefix == null)
             {
-                Log.WarnFormat("Ignoring transaction_segment_term with invalid prefix '{0}'", rule.Prefix);
+                Log.Warn("Ignoring transaction_segment_term with invalid prefix '{0}'", rule.Prefix);
                 return null;
             }
 
@@ -2731,7 +2731,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 replacementText = $"Use {newPropertyName} instead.";
             }
-            Log.WarnFormat("Configuration property '{0}' is disabled (unused) and will be removed from the config schema in a future release.  {1}  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", disabledPropertyName, replacementText);
+            Log.Warn("Configuration property '{0}' is disabled (unused) and will be removed from the config schema in a future release.  {1}  See https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration/ for details.", disabledPropertyName, replacementText);
         }
 
         int? _databaseStatementCacheCapacity = null;

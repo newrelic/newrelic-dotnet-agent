@@ -101,13 +101,13 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex);
+                        Log.Error(ex, "InternalPolling_WaitCallback() failed");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                Log.Error(ex, "InternalPolling_WaitCallback() failed");
             }
             finally
             {

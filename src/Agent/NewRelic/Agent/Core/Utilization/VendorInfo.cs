@@ -336,7 +336,7 @@ namespace NewRelic.Agent.Core.Utilization
 
             if (!IsValidMetadata(normalizedValue))
             {
-                Log.InfoFormat("Unable to validate {0} metadata for the {1} field.", vendorName, metadataField);
+                Log.Info("Unable to validate {0} metadata for the {1} field.", vendorName, metadataField);
 
                 switch (vendorName)
                 {

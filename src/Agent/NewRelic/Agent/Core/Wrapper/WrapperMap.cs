@@ -61,9 +61,7 @@ namespace NewRelic.Agent.Core.Wrapper
             }
 
             if (Log.IsFinestEnabled)
-            {
-                Log.Finest($"WrapperMap has NonDefaultWrappers: {string.Join(", ", _nonDefaultWrappers)}");
-            }
+                Log.Finest("WrapperMap has NonDefaultWrappers: {0}", string.Join(", ", _nonDefaultWrappers));
         }
 
         public TrackedWrapper Get(InstrumentedMethodInfo instrumentedMethodInfo)
@@ -105,7 +103,7 @@ namespace NewRelic.Agent.Core.Wrapper
                 }
             }
 
-            Log.DebugFormat(
+            Log.Debug(
                 "No matching wrapper found for {0}.{1}({2}) in assembly [{3}] (requested wrapper name was {4}). This usually indicates misconfigured instrumentation. This method will be ignored.",
                 instrumentedMethodInfo.Method.Type.FullName,
                 instrumentedMethodInfo.Method.MethodName,

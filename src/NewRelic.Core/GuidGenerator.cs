@@ -42,7 +42,7 @@ namespace NewRelic.Core
 
                 if (!(ex is FileNotFoundException))
                 {
-                    Log.Warn($"Unexpected exception type when attempting to generate a trace ID from Activity.Current: {ex}");
+                    Log.Warn(ex, "Unexpected exception type when attempting to generate a trace ID from Activity.Current");
                 }
 
                 // Fall back to using our standard method of generating traceIds.
