@@ -486,7 +486,8 @@ jobs:
             MySql,
             NServiceBus,
             NServiceBus5,
-            Oracle,
+            # Disabling Oracle, see https://issues.newrelic.com/browse/NR-161046
+            #Oracle,
             Postgres,
             RabbitMq,
             Redis,
