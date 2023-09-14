@@ -282,7 +282,7 @@ namespace NewRelic.Agent.Core
                     }
                 }
 
-                Log.Debug($".NET Runtime Version: {RuntimeInformation.FrameworkDescription}");
+                Log.Info($".NET Runtime Version: {RuntimeInformation.FrameworkDescription}");
             }
 
 #if NETFRAMEWORK
