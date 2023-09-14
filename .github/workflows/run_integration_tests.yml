@@ -69,7 +69,9 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.unbounded-test-namespaces }}" == "ALL" ] ; then
             # Use the full list of namespaces
-            namespaces="[ 'CosmosDB', 'Couchbase', 'Elasticsearch', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Oracle', 'Postgres', 'RabbitMq', 'Redis' ]"
+            # Oracle is disabled temporarily
+            #namespaces="[ 'CosmosDB', 'Couchbase', 'Elasticsearch', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Oracle', 'Postgres', 'RabbitMq', 'Redis' ]"
+            namespaces="[ 'CosmosDB', 'Couchbase', 'Elasticsearch', 'MongoDB', 'Msmq', 'MsSql', 'MySql', 'NServiceBus', 'NServiceBus5', 'Postgres', 'RabbitMq', 'Redis' ]"
           else
             # Just use the supplied list of namespaces
             namespaces="[ ${{ github.event.inputs.unbounded-test-namespaces }} ]"

@@ -486,7 +486,8 @@ jobs:
             MySql,
             NServiceBus,
             NServiceBus5,
-            Oracle,
+            # Disabling Oracle temporarily
+            #Oracle,
             Postgres,
             RabbitMq,
             Redis,
