@@ -108,7 +108,7 @@ namespace ConsoleAsyncApplication
         {
             var transactionName = UpdateTransactionName("SF");
 
-            Task.Run(() => AsyncMethod(DELAY_TIME, transactionName, waitHandle));
+            _ = Task.Run(() => AsyncMethod(DELAY_TIME, transactionName, waitHandle));
 
             Thread.Sleep(SHORT_DELAY_TIME);
 
