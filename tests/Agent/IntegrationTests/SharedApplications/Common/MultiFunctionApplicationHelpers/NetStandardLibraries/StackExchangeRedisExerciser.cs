@@ -62,7 +62,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.StackExchangeRedi
                 db.SetRemove("myset", "cool");
                 db.SetPop("myset");
 
-                db.Publish("mychannel", "cable"); // 31
+                db.Publish(new RedisChannel("mychannel", RedisChannel.PatternMode.Literal), "cable"); // 31
             }
 
             ConsoleMFLogger.Info("All done!");
@@ -114,7 +114,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.StackExchangeRedi
                 await db.SetRemoveAsync("myset", "cool");
                 await db.SetPopAsync("myset");
 
-                await db.PublishAsync("mychannel", "cable"); // 31
+                await db.PublishAsync(new RedisChannel("mychannel", RedisChannel.PatternMode.Literal), "cable"); // 31
             }
 
             ConsoleMFLogger.Info("All done!");

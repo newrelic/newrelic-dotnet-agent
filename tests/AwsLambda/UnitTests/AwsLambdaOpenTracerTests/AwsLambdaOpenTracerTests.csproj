@@ -6,6 +6,8 @@
     <AssemblyName>NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests</AssemblyName>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <SignAssembly>true</SignAssembly>
+    <!-- Suppress the warning about the TestUtilities project not being strongly named. -->
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

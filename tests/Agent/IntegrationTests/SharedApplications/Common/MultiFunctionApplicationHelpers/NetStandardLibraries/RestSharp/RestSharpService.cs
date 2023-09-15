@@ -12,7 +12,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
     [Library]
     public class RestSharpService
     {
-        private readonly HttpClient _client = new HttpClient();
         private OwinService _owinService;
 
         /// <summary>

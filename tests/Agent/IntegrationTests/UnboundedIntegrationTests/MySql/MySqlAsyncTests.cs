@@ -65,7 +65,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
         public void Test()
         {
             var transactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MySql.MySqlExerciser/SingleDateQueryAsync";
-            Assertions.ExpectedMetric openMetric;
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
