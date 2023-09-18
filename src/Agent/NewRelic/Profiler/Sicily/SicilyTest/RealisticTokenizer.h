@@ -72,6 +72,12 @@ namespace sicily
                 return GetToken(methodDef, methodDefs, 0x06);
             }
 
+            virtual uint32_t GetFieldDefinitionToken(const uint32_t& typeDefinitionToken, const std::wstring& name) override
+            {
+                FieldDefType fieldDef(typeDefinitionToken, name);
+                return GetToken(fieldDef, fieldDefs, 0x05);
+            }
+
             virtual uint32_t GetMethodSpecToken(uint32_t methodDefOrRefOrSpecToken, const ByteVector& instantiationSignature) override
             {
                 MethodSpecType methodSpec(methodDefOrRefOrSpecToken, instantiationSignature);
@@ -100,6 +106,9 @@ namespace sicily
             // vector of (<typeDef token> & <method name> & <method signature>), element position is its MethodDef token
             typedef std::tuple<uint32_t, std::wstring, ByteVector> MethodDefType;
             std::vector<MethodDefType> methodDefs;
+            //vector of (<typeDef token> & <field name>), element postion is its FieldDef token
+            typedef std::tuple<uint32_t, std::wstring> FieldDefType;
+            std::vector<FieldDefType> fieldDefs;
             // vector of (<MethodRef token> & <method instantiation signature>), element position is its MethodSpec token
             typedef std::tuple<uint32_t, ByteVector> MethodSpecType;
             std::vector<MethodSpecType> methodSpecs;
@@ -139,6 +148,11 @@ namespace sicily
             virtual MemberRefType GetMemberRef(uint32_t memberRefToken)
             {
                 return GetType(memberRefToken, memberRefs, 0x0a, L"MemberRef");
+            }
+
+            virtual FieldDefType GetFieldDef(uint32_t fieldDefToken)
+            {
+                return GetType(fieldDefToken, fieldDefs, 0x05, L"FieldDef");
             }
 
         private:

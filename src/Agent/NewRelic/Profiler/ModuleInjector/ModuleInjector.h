@@ -37,24 +37,30 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
 
             // When injecting method REFERENCES into an assembly, theses references should have
             // the external assembly identifier to mscorlib
-            constexpr std::array<ManagedMethodToInject, 6> methodReferencesToInject{
+            constexpr std::array<ManagedMethodToInject, 9> methodReferencesToInject{
                 ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"LoadAssemblyOrThrow", L"class [mscorlib]System.Reflection.Assembly", L"string"),
                 ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"GetTypeViaReflectionOrThrow", L"class [mscorlib]System.Type", L"string,string"),
                 ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"GetMethodViaReflectionOrThrow", L"class [mscorlib]System.Reflection.MethodInfo", L"string,string,string,class [mscorlib]System.Type[]"),
                 ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"GetMethodFromAppDomainStorage", L"class [mscorlib]System.Reflection.MethodInfo", L"string"),
                 ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"GetMethodFromAppDomainStorageOrReflectionOrThrow", L"class [mscorlib]System.Reflection.MethodInfo", L"string,string,string,string,class [mscorlib]System.Type[]"),
-                ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"StoreMethodInAppDomainStorageOrThrow", L"void", L"class [mscorlib]System.Reflection.MethodInfo,string")
+                ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"StoreMethodInAppDomainStorageOrThrow", L"void", L"class [mscorlib]System.Reflection.MethodInfo,string"),
+                ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"EnsureInitialized", L"void", L"string"),
+                ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"GetMethodInfoFromAgentCache", L"class [mscorlib]System.Reflection.MethodInfo", L"string,string,string,string,class [mscorlib]System.Type[]"),
+                ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"GetMethodCacheLookupMethod", L"object", L"")
             };
 
             // When injecting HELPER METHODS into the mscorlib assembly, theses references should be local.
             // They cannot reference [mscorlib] since these methods are being rewritten in mscorlib.
-            constexpr std::array<ManagedMethodToInject, 6> methodImplsToInject {
+            constexpr std::array<ManagedMethodToInject, 9> methodImplsToInject {
                 ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"LoadAssemblyOrThrow", L"class System.Reflection.Assembly", L"string"),
                 ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"GetTypeViaReflectionOrThrow", L"class System.Type", L"string,string"),
                 ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"GetMethodViaReflectionOrThrow", L"class System.Reflection.MethodInfo", L"string,string,string,class System.Type[]"),
                 ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"GetMethodFromAppDomainStorage", L"class System.Reflection.MethodInfo", L"string"),
                 ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"GetMethodFromAppDomainStorageOrReflectionOrThrow", L"class System.Reflection.MethodInfo", L"string,string,string,string,class System.Type[]"),
-                ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"StoreMethodInAppDomainStorageOrThrow", L"void", L"class System.Reflection.MethodInfo,string")
+                ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"StoreMethodInAppDomainStorageOrThrow", L"void", L"class System.Reflection.MethodInfo,string"),
+                ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"EnsureInitialized", L"void", L"string"),
+                ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"GetMethodInfoFromAgentCache", L"class System.Reflection.MethodInfo", L"string,string,string,string,class System.Type[]"),
+                ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"GetMethodCacheLookupMethod", L"object", L"")
             };
 
             const auto is_mscorlib = module.GetIsThisTheMscorlibAssembly();
@@ -69,6 +75,19 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
             {
                 LogInfo(L"Unable to inject reference to mscorlib into ", module.GetModuleName(), L".  This module will not be instrumented.");
                 return;
+            }
+
+            if (is_mscorlib)
+            {
+                LogDebug(L"Injecting New Relic helper type into ", module.GetModuleName());
+                try
+                {
+                    module.InjectNRHelperType();
+                }
+                catch (NewRelic::Profiler::Win32Exception&)
+                {
+                    LogError(L"Failed to inject New Relic helper type into ", module.GetModuleName());
+                }
             }
 
             LogDebug(L"Injecting ", ((is_mscorlib) ? L"" : L"references to "), L"helper methods into ", module.GetModuleName());

@@ -107,6 +107,13 @@ namespace NewRelic { namespace Profiler
             return methodDefinitionToken;
         }
 
+        virtual uint32_t GetFieldDefinitionToken(const uint32_t& typeDefinitionToken, const xstring_t& name) override
+        {
+            uint32_t fieldDefinitionToken;
+            ThrowOnError(metaDataImport->FindField, typeDefinitionToken, ToWindowsString(name), nullptr, 0, &fieldDefinitionToken);
+            return fieldDefinitionToken;
+        }
+
         virtual uint32_t GetMethodSpecToken(uint32_t methodDefOrRefOrSpecToken, const ByteVector& instantiationSignature) override
         {
             uint32_t methodSpecToken;
