@@ -22,13 +22,13 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         TEST_METHOD(construction)
         {
             auto function = std::make_shared<MockFunction>();
-            FunctionManipulator manipulator(function);
+            FunctionManipulator manipulator(function, false);
         }
 
         TEST_METHOD(instrument_minimal_method)
         {
             auto function = std::make_shared<MockFunction>();
-            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, L""));
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, L""), false);
 
             auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
             manipulator.InstrumentDefault(instrumentationPoint);

@@ -58,11 +58,14 @@ namespace NewRelic { namespace Profiler
         virtual bool GetHasRefMscorlib() override { return _hasRefMscorlib; }
         virtual bool GetHasRefSysRuntime() override { return _hasRefSysRuntime; }
         virtual bool GetHasRefNetStandard() override { return _hasRefNetStandard; }
+        virtual bool GetHasRefSystemPrivateCoreLib() override { return _hasRefSystemPrivateCoreLib; }
 
         virtual void SetMscorlibAssemblyRef(mdAssembly assemblyRefToken) override { _mscorlibAssemblyRefToken = assemblyRefToken; }
+        virtual void SetSystemPrivateCoreLibAssemblyRef(mdAssembly assemblyRefToken) override { _systemPrivateCoreLibAssemblyRefToken = assemblyRefToken; }
 
         virtual bool GetIsThisTheMscorlibAssembly() override { return _isMscorlib; }
         virtual bool GetIsThisTheNetStandardAssembly() override { return _isNetStandard; }
+        virtual bool GetIsThisTheSystemPrivateCoreLibAssembly() override { return _isSystemPrivateCoreLib; }
 
         virtual CComPtr<IMetaDataAssemblyEmit> GetMetaDataAssemblyEmit() override{ return _metaDataAssemblyEmit; }
 
@@ -115,6 +118,12 @@ namespace NewRelic { namespace Profiler
             GetOrCreateMemberReferenceToken(typeReferenceOrDefinitionToken, methodName, signature);
         }
 
+        virtual void InjectSystemPrivateCoreLibSecuritySafeMethodReference(const std::wstring& methodName, const std::wstring& className, const ByteVector& signature) override
+        {
+            auto typeReferenceOrDefinitionToken = GetOrCreateTypeReferenceToken(_systemPrivateCoreLibAssemblyRefToken, className);
+            GetOrCreateMemberReferenceToken(typeReferenceOrDefinitionToken, methodName, signature);
+        }
+
         virtual sicily::codegen::ITokenizerPtr GetTokenizer()
         {
             return _tokenizer;
@@ -130,12 +139,15 @@ namespace NewRelic { namespace Profiler
         ModuleID _moduleId;
         std::wstring _moduleName;
         mdAssemblyRef _mscorlibAssemblyRefToken;
+        mdAssemblyRef _systemPrivateCoreLibAssemblyRefToken;
         bool _hasRefMscorlib;
         bool _hasRefSysRuntime;
         bool _hasRefNetStandard;
+        bool _hasRefSystemPrivateCoreLib;
 
         bool _isMscorlib;
         bool _isNetStandard;
+        bool _isSystemPrivateCoreLib;
 
         mdMethodDef GetSecuritySafeCriticalConstructorToken()
         {
@@ -224,6 +236,7 @@ namespace NewRelic { namespace Profiler
             _hasRefMscorlib = false;
             _hasRefNetStandard = false;
             _hasRefSysRuntime = false;
+            _hasRefSystemPrivateCoreLib = false;
 
             HCORENUM enumerator = nullptr;
             mdAssemblyRef assemblyToken;
@@ -246,6 +259,11 @@ namespace NewRelic { namespace Profiler
                 {
                     _hasRefSysRuntime = true;
                 }
+                else if (Strings::EndsWith(foundAssemblyName, L"System.Private.CoreLib"s))
+                {
+                    _hasRefSystemPrivateCoreLib = true;
+                    _systemPrivateCoreLibAssemblyRefToken = assemblyToken;
+                }
             }
         }
 
@@ -253,6 +271,7 @@ namespace NewRelic { namespace Profiler
         {
             _isMscorlib = Strings::EndsWith(GetModuleName(), L"mscorlib.dll");
             _isNetStandard = Strings::EndsWith(GetModuleName(), L"netstandard.dll");
+            _isSystemPrivateCoreLib = Strings::EndsWith(GetModuleName(), L"System.Private.CoreLib.dll");
         }
 
         mdAssemblyRef GetAssemblyReference(const std::wstring& assemblyName)

@@ -23,7 +23,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
     class MethodRewriter {
     public:
-        MethodRewriter(Configuration::InstrumentationConfigurationPtr instrumentationConfiguration, const xstring_t& corePath)
+        MethodRewriter(Configuration::InstrumentationConfigurationPtr instrumentationConfiguration, const xstring_t& corePath, const bool isCoreClr)
             : _instrumentationConfiguration(instrumentationConfiguration)
             , _instrumentedAssemblies(new std::set<xstring_t>())
             , _instrumentedFunctionNames(new std::set<xstring_t>())
@@ -32,6 +32,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             , _apiInstrumentor(std::make_unique<ApiInstrumentor>())
             , _defaultInstrumentor(std::make_unique<DefaultInstrumentor>())
             , _corePath(corePath)
+            , _isCoreClr(isCoreClr)
         {
             Initialize();
         }
@@ -41,6 +42,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             // We have to instrument mscorlib to add our hooks.  Yes, this is a little brittle
             // and it should probably live closer to the code that mucks with these methods.
             _instrumentedAssemblies->emplace(_X("mscorlib"));
+            _instrumentedAssemblies->emplace(_X("System.Private.CoreLib"));
             _instrumentedTypes->emplace(_X("System.CannotUnloadAppDomainException"));
             _instrumentedFunctionNames->emplace(_X("GetAppDomainBoolean"));
             _instrumentedFunctionNames->emplace(_X("GetThreadLocalBoolean"));
@@ -107,7 +109,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
             InstrumentationSettingsPtr instrumentationSettings = std::make_shared<InstrumentationSettings>(_instrumentationConfiguration, _corePath);
 
-            if (_helperInstrumentor->Instrument(function, instrumentationSettings) || _apiInstrumentor->Instrument(function, instrumentationSettings) || _defaultInstrumentor->Instrument(function, instrumentationSettings)) {
+            if (_helperInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr) || _apiInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr) || _defaultInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr)) {
             }
         }
 
@@ -121,6 +123,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         std::unique_ptr<HelperInstrumentor> _helperInstrumentor;
         std::unique_ptr<ApiInstrumentor> _apiInstrumentor;
         std::unique_ptr<DefaultInstrumentor> _defaultInstrumentor;
+        bool _isCoreClr;
 
         static bool InSet(std::shared_ptr<std::set<xstring_t>> set, xstring_t value)
         {
