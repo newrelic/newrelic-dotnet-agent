@@ -13,7 +13,7 @@ namespace NewRelic { namespace Profiler
     typedef std::shared_ptr<ByteVector> ByteVectorPtr;
 
     #define BYTEVECTOR(variableName, ...)\
-        unsigned char myTempBytes##variableName[] = {##__VA_ARGS__};\
+        unsigned char myTempBytes##variableName[] = {__VA_ARGS__};\
         std::vector<uint8_t> variableName(myTempBytes##variableName, myTempBytes##variableName + sizeof(myTempBytes##variableName) / sizeof(unsigned char));
 
     #define lengthof(x) sizeof(x)/sizeof(x[0])

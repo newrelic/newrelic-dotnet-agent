@@ -5,7 +5,13 @@
 #pragma once
 #include <string>
 #include <memory>
+
+#ifdef PAL_STDCPP_COMPAT
+#include <atl.h>
+#else // PAL_STDCPP_COMPAT (not)
 #include <atlcomcli.h>
+#endif // PAL_STDCPP_COMPAT
+
 #include "../Common/Macros.h"
 #include "../Sicily/codegen/ITokenizer.h"
 
@@ -14,11 +20,11 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
     class IModule
     {
     public:
-        virtual std::wstring GetModuleName() = 0;
-        virtual void InjectPlatformInvoke(const std::wstring& methodName, const std::wstring& className, const std::wstring& moduleName, const ByteVector& signature) = 0;
-        virtual void InjectStaticSecuritySafeMethod(const std::wstring& methodName, const std::wstring& className, const ByteVector& signature) = 0;
-        virtual void InjectMscorlibSecuritySafeMethodReference(const std::wstring& methodName, const std::wstring& className, const ByteVector& signature) = 0;
-        virtual void InjectSystemPrivateCoreLibSecuritySafeMethodReference(const std::wstring& methodName, const std::wstring& className, const ByteVector& signature) = 0;
+        virtual xstring_t GetModuleName() = 0;
+        virtual void InjectPlatformInvoke(const xstring_t& methodName, const xstring_t& className, const xstring_t& moduleName, const ByteVector& signature) = 0;
+        virtual void InjectStaticSecuritySafeMethod(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) = 0;
+        virtual void InjectMscorlibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) = 0;
+        virtual void InjectSystemPrivateCoreLibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) = 0;
         virtual void InjectNRHelperType() = 0;
 
         virtual bool GetHasRefMscorlib() = 0;

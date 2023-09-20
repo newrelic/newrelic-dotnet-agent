@@ -69,10 +69,7 @@ namespace NewRelic { namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
-
-#ifndef PAL_STDCPP_COMPAT
         std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
-#endif
 
     public:
         CorProfilerCallbackImpl()
