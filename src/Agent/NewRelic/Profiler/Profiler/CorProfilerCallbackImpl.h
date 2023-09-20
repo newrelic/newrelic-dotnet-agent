@@ -11,10 +11,12 @@
 #include "../Logging/Logger.h"
 #include "../MethodRewriter/CustomInstrumentation.h"
 #include "../MethodRewriter/MethodRewriter.h"
+#include "../ModuleInjector/ModuleInjector.h"
 #include "../SignatureParser/Exceptions.h"
 #include "../ThreadProfiler/ThreadProfiler.h"
 #include "Function.h"
 #include "FunctionResolver.h"
+#include "Module.h"
 #include "Win32Helpers.h"
 #include "guids.h"
 #include <fstream>
@@ -27,8 +29,6 @@
 #ifdef PAL_STDCPP_COMPAT
 #include "UnixSystemCalls.h"
 #else
-#include "../ModuleInjector/ModuleInjector.h"
-#include "Module.h"
 #include "SystemCalls.h"
 #include <shellapi.h>
 #endif
