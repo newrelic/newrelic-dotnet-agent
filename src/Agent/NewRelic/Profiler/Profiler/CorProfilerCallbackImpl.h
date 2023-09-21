@@ -1074,9 +1074,11 @@ namespace NewRelic { namespace Profiler {
                 nrlog::StdLog.get_dest().exceptions(std::wostream::failbit | std::wostream::badbit);
                 LogInfo("Logger initialized.");
             } catch (...) {
-                printf("Unable to initialize the New Relic .NET Agent log file.  Please make sure the logs directory is writeable.\n");
+                printf("Unable to initialize the New Relic .NET Agent log file, but YOLO.\n");
                 // we can't log errors if the logger failed to initialize
-                return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                //return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+                //nrlog::StdLog. set to console?
+                return S_OK;
             }
             return S_OK;
         }
