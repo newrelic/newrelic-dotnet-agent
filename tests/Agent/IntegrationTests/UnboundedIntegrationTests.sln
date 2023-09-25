@@ -44,6 +44,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Api.Agent", "..\..
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Models", "Models\Models.csproj", "{81A13A3C-2008-4756-8A5F-1E1B4F97CCAD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedApplicationHelpers", "SharedApplications\Common\SharedApplicationHelpers\SharedApplicationHelpers.csproj", "{F35861EC-9861-4776-AF51-9C2B7F1DBA5C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -106,6 +108,10 @@ Global
 		{81A13A3C-2008-4756-8A5F-1E1B4F97CCAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81A13A3C-2008-4756-8A5F-1E1B4F97CCAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81A13A3C-2008-4756-8A5F-1E1B4F97CCAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F35861EC-9861-4776-AF51-9C2B7F1DBA5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F35861EC-9861-4776-AF51-9C2B7F1DBA5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F35861EC-9861-4776-AF51-9C2B7F1DBA5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F35861EC-9861-4776-AF51-9C2B7F1DBA5C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -119,9 +125,10 @@ Global
 		{129FF113-1F3A-4DAA-8D6F-287DF67A68FA} = {859E490D-4C1A-4D9D-8271-5FE2E0726ADE}
 		{3E8423E9-1FBF-451F-8117-88CE3DADEF7F} = {129FF113-1F3A-4DAA-8D6F-287DF67A68FA}
 		{B64766CA-8731-493F-8417-61A70F783EB7} = {129FF113-1F3A-4DAA-8D6F-287DF67A68FA}
+		{F35861EC-9861-4776-AF51-9C2B7F1DBA5C} = {129FF113-1F3A-4DAA-8D6F-287DF67A68FA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {656848E2-BFD2-4092-9328-C6CDF39B1274}
 		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Data.6.0.1304.0\lib\NET45
+		SolutionGuid = {656848E2-BFD2-4092-9328-C6CDF39B1274}
 	EndGlobalSection
 EndGlobal
