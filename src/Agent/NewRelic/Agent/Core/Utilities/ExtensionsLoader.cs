@@ -69,7 +69,12 @@ namespace NewRelic.Agent.Core.Utilities
                 //The NewRelic.Providers.Wrapper.SerilogLogging.dll depends on the Serilog.dll; therefore, it should
                 //only be loaded by the agent when Serilog is used otherwise assembly load exception will occur.
                 { "SerilogCreateLoggerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") },
-                { "SerilogDispatchWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") }
+                { "SerilogDispatchWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") },
+
+                // Both NewRelic.Providers.Wrapper.MassTransit.dll and NewRelic.Providers.Wrapper.MassTransitLegacy.dll depend on MassTransit aseemblys;
+                // therefore, only be loaded by the agent when MassTransit is used otherwise assembly load exception will occur.
+                { "TransportConfigWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransit.dll") },
+                { "TransportConfigLegacyWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransitLegacy.dll") }
             };
 
             var nonAutoReflectedAssemblies = _dynamicLoadWrapperAssemblies.Values.Distinct().ToList();

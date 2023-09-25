@@ -208,6 +208,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StackExchangeRedis2Plus", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elasticsearch", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Elasticsearch\Elasticsearch.csproj", "{D9428449-3E4B-4723-A8AA-1191315C7AAD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MassTransit", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\MassTransit\MassTransit.csproj", "{0DC126D1-E782-4A41-BA3E-393083F08627}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassTransitLegacy", "src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\MassTransitLegacy\MassTransitLegacy.csproj", "{F921A316-A8D2-4992-B894-69A3B5CA34E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -438,6 +442,14 @@ Global
 		{D9428449-3E4B-4723-A8AA-1191315C7AAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D9428449-3E4B-4723-A8AA-1191315C7AAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D9428449-3E4B-4723-A8AA-1191315C7AAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DC126D1-E782-4A41-BA3E-393083F08627}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DC126D1-E782-4A41-BA3E-393083F08627}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DC126D1-E782-4A41-BA3E-393083F08627}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DC126D1-E782-4A41-BA3E-393083F08627}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F921A316-A8D2-4992-B894-69A3B5CA34E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F921A316-A8D2-4992-B894-69A3B5CA34E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F921A316-A8D2-4992-B894-69A3B5CA34E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F921A316-A8D2-4992-B894-69A3B5CA34E3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -507,6 +519,8 @@ Global
 		{3D69B4C9-FD16-461F-95AF-6FCA6EAA914E} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{EC34F023-223D-432F-9401-9C3ED1B75DE4} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 		{D9428449-3E4B-4723-A8AA-1191315C7AAD} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
+		{0DC126D1-E782-4A41-BA3E-393083F08627} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
+		{F921A316-A8D2-4992-B894-69A3B5CA34E3} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
