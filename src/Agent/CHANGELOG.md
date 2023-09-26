@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.17.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.16.0...v10.17.0) (2023-09-26)
+
+
+### New Features
+
+* Add more detail to "heartbeat" message in log. ([#1884](https://github.com/newrelic/newrelic-dotnet-agent/issues/1884)) ([c0c1362](https://github.com/newrelic/newrelic-dotnet-agent/commit/c0c13624d8839f9b84fce3af528cd9d291c6c8a2))
+* Use structured logging for internal logs ([#1903](https://github.com/newrelic/newrelic-dotnet-agent/issues/1903)) ([0031700](https://github.com/newrelic/newrelic-dotnet-agent/commit/00317003b1997ab397f42c45b2b60fe686f48275))
+
+
+### Fixes
+
+* Reinstate max number of log files. ([#1930](https://github.com/newrelic/newrelic-dotnet-agent/issues/1930)) ([41eef7b](https://github.com/newrelic/newrelic-dotnet-agent/commit/41eef7b3d43dcb38b1d833334fc90850aa797973))
+
 ## [10.16.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.15.0...v10.16.0) (2023-09-11)
 
 
