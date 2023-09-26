@@ -11,37 +11,37 @@ on:
         required: true
       deploy:
         type: boolean
-        description: 'If "true", deploy the artifacts. If "false", do everything except deploy.'
+        description: Deploy Build Artifacts. (If not selected, do everything except deploy.)'
         required: true
         default: true
       downloadsite:
         type: boolean
-        description: 'If "true", will run the deploy-downloadsite job. If "false", will not.'
+        description: 'Deploy MSI / ZIP / Tarball to the Download Site'
         required: true
         default: true
       nuget:
         type: boolean
-        description: 'If "true", will run the deploy-nuget job. If "false", will not.'
+        description: 'Deploy Nuget Packages'
         required: true
         default: true
       linux:
         type: boolean
-        description: 'If "true", will run the deploy-linux job. If "false", will not.'
+        description: 'Build APT / YUM Packages'
         required: true
         default: true
       linux-deploy-to-production:
         type: boolean
-        description: 'If "true", will deploy Linux packages to the real apt/yum.newrelic.com. If "false", will deploy to a test repository.'
+        description: 'Deploy APT / YUM Packages to Production Repository. (If not selected, will deploy to a test respository.)'
         required: true
         default: true
       indexdownloadsite:
         type: boolean
-        description: 'If "true", will run the index-download-site job. If "false", will not.'
+        description: 'Re-Index the Download site S3 container'
         required: true
         default: true
       update-apm-version:
         type: boolean
-        description: 'If "true", will run the update-apm job. If "false", will not.'
+        description: 'Update APM Version'
         required: true
         default: true
 
