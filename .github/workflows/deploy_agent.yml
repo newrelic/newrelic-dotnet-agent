@@ -10,33 +10,40 @@ on:
         description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
       deploy:
+        type: boolean
         description: 'If "true", deploy the artifacts. If "false", do everything except deploy.'
         required: true
-        default: 'false'
+        default: true
       downloadsite:
+        type: boolean
         description: 'If "true", will run the deploy-downloadsite job. If "false", will not.'
         required: true
-        default: 'true'
+        default: true
       nuget:
+        type: boolean
         description: 'If "true", will run the deploy-nuget job. If "false", will not.'
         required: true
-        default: 'true'
+        default: true
       linux:
+        type: boolean
         description: 'If "true", will run the deploy-linux job. If "false", will not.'
         required: true
-        default: 'true'
+        default: true
       linux-deploy-to-production:
+        type: boolean
         description: 'If "true", will deploy Linux packages to the real apt/yum.newrelic.com. If "false", will deploy to a test repository.'
         required: true
-        default: 'false'
+        default: true
       indexdownloadsite:
+        type: boolean
         description: 'If "true", will run the index-download-site job. If "false", will not.'
         required: true
-        default: 'true'
+        default: true
       update-apm-version:
+        type: boolean
         description: 'If "true", will run the update-apm job. If "false", will not.'
         required: true
-        default: 'true'
+        default: true
 
 permissions:
   contents: read
@@ -83,7 +90,7 @@ jobs:
 
   deploy-downloadsite:
     needs: get-external-artifacts
-    if: ${{ github.event.inputs.downloadsite == 'true' }}
+    if: ${{ github.event.inputs.downloadsite }}
     name: Deploy MSI to Download Site
     runs-on: windows-2019
 
@@ -113,11 +120,11 @@ jobs:
           New-Item -ItemType directory -Path .\latest_release -Force
           Copy-Item .\working_dir\* .\latest_release\ -Force -Recurse
           cd .\latest_release
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if (${{ github.event.inputs.deploy }}) {
             aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
@@ -130,11 +137,11 @@ jobs:
           New-Item -ItemType directory -Path .\previous_releases\${{ github.event.inputs.agent_version }} -Force
           Copy-Item .\working_dir\* ".\previous_releases\${{ github.event.inputs.agent_version }}\" -Force -Recurse
           cd .\previous_releases\${{ github.event.inputs.agent_version }}
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if (${{ github.event.inputs.deploy }}) {
             aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include "*" --exclude ".DS_Store" --delete
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
@@ -142,7 +149,7 @@ jobs:
   index-download-site:
     needs: deploy-downloadsite
     name: Rebuild indexes on the download site
-    if: ${{ github.event.inputs.indexdownloadsite == 'true' }}
+    if: ${{ github.event.inputs.indexdownloadsite }}
     uses: ./.github/workflows/build_download_site_index_files.yml
     strategy:
       matrix:
@@ -155,7 +162,7 @@ jobs:
 
   deploy-nuget:
     needs: get-external-artifacts
-    if: ${{ github.event.inputs.nuget == 'true' }}
+    if: ${{ github.event.inputs.nuget }}
     name: Deploy Agent to NuGet
     runs-on: windows-2019
 
@@ -179,11 +186,11 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgent\NewRelic.Agent.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgent\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if (${{ github.event.inputs.deploy }}) {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
@@ -193,11 +200,11 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAgentApi\NewRelic.Agent.Api.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAgentApi\$packageName
           $version = $packageName.TrimStart('NewRelic.Agent.Api').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if (${{ github.event.inputs.deploy }}) {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
@@ -207,11 +214,11 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureCloudServices\NewRelicWindowsAzure.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureCloudServices\$packageName
           $version = $packageName.TrimStart('NewRelicWindowsAzure').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if (${{ github.event.inputs.deploy }}) {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
@@ -221,11 +228,11 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\NewRelic.Azure.WebSites.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x64\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if (${{ github.event.inputs.deploy }}) {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
@@ -235,18 +242,18 @@ jobs:
           $packageName = Get-ChildItem ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\NewRelic.Azure.WebSites.*.nupkg -Name
           $packagePath = Convert-Path ${{ github.workspace }}\working_dir\NugetAzureWebSites-x86\$packageName
           $version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('.').TrimEnd('.nupkg')
-          if ("${{ github.event.inputs.deploy }}" -eq "true") {
+          if (${{ github.event.inputs.deploy }}) {
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
 
   deploy-linux:
     needs: get-external-artifacts
-    if: ${{ github.event.inputs.linux == 'true' }}
+    if: ${{ github.event.inputs.linux }}
     name: Deploy Linux to APT and YUM
     runs-on: ubuntu-latest
     steps:
@@ -305,7 +312,7 @@ jobs:
           touch docker.env
           echo "AGENT_VERSION=$AGENT_VERSION" >> docker.env
           echo "ACTION=release" >> docker.env
-          if [ "${{ github.event.inputs.linux-deploy-to-production }}" == "true" ] ; then
+          if [ ${{ github.event.inputs.linux-deploy-to-production }} ] ; then
             # We're actually deploying to production (apt.newrelic.com and yum.newrelic.com)           
             echo "S3_BUCKET=${{ secrets.PROD_MAIN_S3 }}" >> docker.env
             echo "AWS_ACCESS_KEY_ID=${{ secrets.LINUX_AWS_ACCESS_KEY_ID }}" >> docker.env
@@ -325,16 +332,16 @@ jobs:
           find . -name "*.bash" |xargs chmod a+x
           find . -type f |xargs dos2unix
           docker-compose build
-          if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
+          if [ ${{ github.event.inputs.deploy }} ] ; then
             docker-compose run deploy_packages
           else
-            echo "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            echo "Input:deploy was not true.  The following deploy command was not run:"
             echo "docker-compose run deploy_packages"
           fi
         shell: bash
 
       - name: Clear Fastly cache
-        if: ${{ github.event.inputs.deploy == 'true' && success() }}
+        if: ${{ github.event.inputs.deploy && success() }}
         run: |
           curl -i -X POST -H 'Fastly-Key:${{ secrets.FASTLY_TOKEN }}' ${{ secrets.FASTLY_URL }}
         shell: bash
@@ -342,7 +349,7 @@ jobs:
   update-apm:
     name: Update System Configuration Page
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.update-apm-version == 'true' }}
+    if: ${{ github.event.inputs.update-apm-version }}
     steps:
       - name: Update system configuration page
         run: |
@@ -374,7 +381,7 @@ jobs:
 
   publish-release-notes:
     needs: [deploy-linux, deploy-nuget, index-download-site]
-    if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
+    if: ${{ github.event.inputs.deploy && github.event.inputs.downloadsite && github.event.inputs.nuget && github.event.inputs.linux && github.event.inputs.linux-deploy-to-production }}
     name: Create and Publish Release Notes
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/publish_release_notes.yml@main
     with:
@@ -388,7 +395,7 @@ jobs:
       contents: read
       packages: read
     needs: [deploy-linux, deploy-nuget, index-download-site]
-    if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
+    if: ${{ github.event.inputs.deploy && github.event.inputs.downloadsite && github.event.inputs.nuget && github.event.inputs.linux && github.event.inputs.linux-deploy-to-production }}
     name: Run Post Deploy Workflow
     uses: newrelic/newrelic-dotnet-agent/.github/workflows/post_deploy_agent.yml@main
     with:
