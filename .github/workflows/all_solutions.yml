@@ -558,7 +558,11 @@ jobs:
 
       - name: Start Local CosmosDB Emulator for CosmosDB Tests
         if: matrix.namespace == 'CosmosDB'
-        uses: southpolesteve/cosmos-emulator-github-action@2b1168b52481f972890f5da2ff8f9d2cc3707804 # v1
+        run: |
+          Write-Host "Launching Cosmos DB Emulator"
+          Import-Module "$env:ProgramFiles\Azure Cosmos DB Emulator\PSModules\Microsoft.Azure.CosmosDB.Emulator"
+          Start-CosmosDbEmulator
+        shell: pwsh
 
       - name: Run Unbounded Integration Tests
         run: |
