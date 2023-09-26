@@ -162,7 +162,7 @@ jobs:
 
   deploy-nuget:
     needs: get-external-artifacts
-    if: ${{ github.event.inputs.nuget }}
+    if: ${{ github.event.inputs.nuget == 'true' }}
     name: Deploy Agent to NuGet
     runs-on: windows-2019
 
@@ -332,7 +332,7 @@ jobs:
           find . -name "*.bash" |xargs chmod a+x
           find . -type f |xargs dos2unix
           docker-compose build
-          if [ ${{ github.event.inputs.deploy }} ] ; then
+          if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
             docker-compose run deploy_packages
           else
             echo "Input:deploy was not true.  The following deploy command was not run:"
