@@ -10,33 +10,40 @@ on:
         description: 'Run ID of the Release Workflow (all_solutions.yml) that was triggered by creating a Release in GitHub.  ID can be found in URL for run.'
         required: true
       deploy:
-        description: 'If "true", deploy the artifacts. If "false", do everything except deploy.'
+        type: boolean
+        description: Deploy Build Artifacts. (If not selected, do everything except deploy.)
         required: true
-        default: 'false'
+        default: true
       downloadsite:
-        description: 'If "true", will run the deploy-downloadsite job. If "false", will not.'
+        type: boolean
+        description: Deploy MSI / ZIP / Tarball to the Download Site
         required: true
-        default: 'true'
+        default: true
       nuget:
-        description: 'If "true", will run the deploy-nuget job. If "false", will not.'
+        type: boolean
+        description: Deploy Nuget Packages
         required: true
-        default: 'true'
+        default: true
       linux:
-        description: 'If "true", will run the deploy-linux job. If "false", will not.'
+        type: boolean
+        description: Deploy APT / YUM Packages
         required: true
-        default: 'true'
+        default: true
       linux-deploy-to-production:
-        description: 'If "true", will deploy Linux packages to the real apt/yum.newrelic.com. If "false", will deploy to a test repository.'
+        type: boolean
+        description: Deploy APT / YUM Packages to Production Repository. (If not selected, will deploy to a test respository.)
         required: true
-        default: 'false'
+        default: true
       indexdownloadsite:
-        description: 'If "true", will run the index-download-site job. If "false", will not.'
+        type: boolean
+        description: Re-Index the Download Site S3 container
         required: true
-        default: 'true'
+        default: true
       update-apm-version:
-        description: 'If "true", will run the update-apm job. If "false", will not.'
+        type: boolean
+        description: Update APM Version
         required: true
-        default: 'true'
+        default: true
 
 permissions:
   contents: read
@@ -117,7 +124,7 @@ jobs:
             aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include "*" --exclude ".DS_Store" --delete
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/latest_release/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
@@ -134,7 +141,7 @@ jobs:
             aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include "*" --exclude ".DS_Store" --delete
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "aws s3 sync . ${{ secrets.BUCKET_NAME }}/dot_net_agent/previous_releases/${{ github.event.inputs.agent_version }}/ --include `"*`" --exclude `".DS_Store`" --delete"
           }
         shell: pwsh
@@ -142,7 +149,7 @@ jobs:
   index-download-site:
     needs: deploy-downloadsite
     name: Rebuild indexes on the download site
-    if: ${{ github.event.inputs.indexdownloadsite == 'true' }}
+    if: ${{ github.event.inputs.indexdownloadsite == 'true'}}
     uses: ./.github/workflows/build_download_site_index_files.yml
     strategy:
       matrix:
@@ -183,7 +190,7 @@ jobs:
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
@@ -197,7 +204,7 @@ jobs:
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
@@ -211,7 +218,7 @@ jobs:
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
@@ -225,7 +232,7 @@ jobs:
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
@@ -239,7 +246,7 @@ jobs:
             nuget.exe push $packagePath -Source ${{ env.nuget_source }}
           }
           else {
-            Write-Host "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            Write-Host "Input:deploy was not true.  The following deploy command was not run:"
             Write-Host "nuget.exe push $packagePath -Source ${{ env.nuget_source }}"
           }
         shell: powershell
@@ -328,7 +335,7 @@ jobs:
           if [ "${{ github.event.inputs.deploy }}" == "true" ] ; then
             docker-compose run deploy_packages
           else
-            echo "Input:deploy was not true (${{ github.event.inputs.deploy }}).  The following deploy command was not run:"
+            echo "Input:deploy was not true.  The following deploy command was not run:"
             echo "docker-compose run deploy_packages"
           fi
         shell: bash
