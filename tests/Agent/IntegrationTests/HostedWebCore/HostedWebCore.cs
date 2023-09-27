@@ -58,9 +58,20 @@ namespace HostedWebCore
         public void Run()
         {
             StartWebServer();
-            //The HWC creates this shutdown event and waits for the test runner to set so that it can shutdown.  
-            using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset,
-                       "app_server_wait_for_all_request_done_" + _port.ToString()))
+            //The HWC creates this shutdown event and waits for the test runner to set so that it can shutdown.
+            var eventWaitHandleName = "app_server_wait_for_all_request_done_" + _port;
+            EventWaitHandle eventWaitHandle;
+            try
+            {
+                eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset, eventWaitHandleName);
+            }
+            catch (Exception ex)
+            {
+                Program.Log($"EventWaitHandle ctor failed with exception {ex}. Re-trying with OpenExisting().");
+                eventWaitHandle = EventWaitHandle.OpenExisting(eventWaitHandleName);
+            }
+
+            using (eventWaitHandle)
             {
                 CreatePidFile();
                 eventWaitHandle.WaitOne(TimeSpan.FromMinutes(ServerTimeoutShutdownMinutes));

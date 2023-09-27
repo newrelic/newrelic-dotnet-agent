@@ -13,7 +13,7 @@ namespace HostedWebCore
 {
     static class Program
     {
-        private static void Log(string format)
+        internal static void Log(string format)
         {
             string prefix = string.Format("[{0} {1}-{2}] HostedWebCore: ", DateTime.Now,
                     System.Diagnostics.Process.GetCurrentProcess().Id,
