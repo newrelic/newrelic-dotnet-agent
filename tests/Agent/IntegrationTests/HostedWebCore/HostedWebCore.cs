@@ -63,12 +63,14 @@ namespace HostedWebCore
             EventWaitHandle eventWaitHandle;
             try
             {
+                Program.Log($"Creating EventWaitHandle named {eventWaitHandleName}");
                 eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset, eventWaitHandleName);
             }
             catch (Exception ex)
             {
-                Program.Log($"EventWaitHandle ctor failed with exception {ex}. Re-trying with OpenExisting().");
+                Program.Log($"EventWaitHandle creation failed with exception: {ex}. Re-trying with EventWaitHandle.OpenExisting().");
                 eventWaitHandle = EventWaitHandle.OpenExisting(eventWaitHandleName);
+                Program.Log($"EventWaitHandle.OpenExisting() succeeded!");
             }
 
             using (eventWaitHandle)
