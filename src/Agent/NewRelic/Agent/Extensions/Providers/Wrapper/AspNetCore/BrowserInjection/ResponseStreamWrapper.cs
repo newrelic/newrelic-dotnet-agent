@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
 {
+    /// <summary>
+    /// Wrapper for the response stream, handles checking for response content type and injecting the browser script if appropriate
+    /// </summary>
     internal class ResponseStreamWrapper : Stream
     {
         private Stream _baseStream;

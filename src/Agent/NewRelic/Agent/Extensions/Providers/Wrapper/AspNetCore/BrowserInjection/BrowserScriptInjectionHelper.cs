@@ -8,6 +8,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
 {
     internal static class BrowserScriptInjectionHelper
     {
+        // could also use </body> or some other tag
         private const string HeadCloseTag = "</head>";
         private static readonly byte[] _headCloseTagBytes = Encoding.UTF8.GetBytes(HeadCloseTag);
 
@@ -25,6 +26,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
 
             if (index == -1)
             {
+                // not found, can't inject anything
                 await baseStream.WriteAsync(buffer, 0, buffer.Length);
                 return;
             }
@@ -42,6 +44,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
 
         private static string GetBrowserScript()
         {
+            // This would obviously be replaced with the RUM script or a call to appropriate core methods (like BrowserMonitoringScriptMaker?)
             return "<script>console.log('hello world')</script>";
         }
     }
