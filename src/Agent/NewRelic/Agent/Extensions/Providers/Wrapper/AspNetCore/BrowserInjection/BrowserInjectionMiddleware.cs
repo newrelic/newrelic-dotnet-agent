@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace NewRelic.Providers.Wrapper.AspNetCore
+namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
 {
     internal class BrowserInjectionMiddleware
     {
