@@ -4,6 +4,10 @@
 using NewRelic.Agent.Core.Config;
 using System;
 using System.IO;
+#if NETSTANDARD2_0
+using System.Runtime.InteropServices;
+using Serilog.Events;
+#endif
 using System.Text;
 using Serilog;
 using Serilog.Core;
@@ -11,9 +15,6 @@ using Serilog.Formatting;
 using Logger = NewRelic.Agent.Core.Logging.Logger;
 using NewRelic.Agent.Core.Logging;
 using Serilog.Templates;
-#if NETFRAMEWORK
-using Serilog.Events;
-#endif
 
 namespace NewRelic.Agent.Core
 {
@@ -107,27 +108,38 @@ namespace NewRelic.Agent.Core
         }
 
         /// <summary>
-        /// Add the Event Log sink if running on .NET Framework
+        /// Add the Event Log sink if running on Windows
         /// </summary>
         /// <param name="loggerConfiguration"></param>
         private static LoggerConfiguration ConfigureEventLogSink(this LoggerConfiguration loggerConfiguration)
         {
-#if NETFRAMEWORK
-            const string eventLogName = "Application";
-            const string eventLogSourceName = "New Relic .NET Agent";
+#if NETSTANDARD2_0
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                const string eventLogName = "Application";
+                const string eventLogSourceName = "New Relic .NET Agent";
+                try
+                {
 
-            loggerConfiguration
-                    .WriteTo.Logger(configuration =>
-                    {
-                        configuration
-                        .ExcludeAuditLog()
-                        .WriteTo.EventLog(
-                            source: eventLogSourceName,
-                            logName: eventLogName,
-                            restrictedToMinimumLevel: LogEventLevel.Warning,
-                            outputTemplate: "{Level}: {Message}{NewLine}{Exception}"
-                        );
-                    });
+                    loggerConfiguration
+                        .WriteTo.Logger(configuration =>
+                        {
+                            configuration
+                                .ExcludeAuditLog()
+                                .WriteTo.EventLog(
+                                    source: eventLogSourceName,
+                                    logName: eventLogName,
+                                    restrictedToMinimumLevel: LogEventLevel.Warning,
+                                    outputTemplate: "{Level}: {Message}{NewLine}{Exception}",
+                                    manageEventSource: true
+                                );
+                        });
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
 #endif
             return loggerConfiguration;
         }
@@ -190,11 +202,10 @@ namespace NewRelic.Agent.Core
             catch (Exception ex)
             {
                 Log.Logger.Warning(ex, "Unexpected exception when configuring file sink.");
-#if NETFRAMEWORK
+
                 // Fallback to the event log sink if we cannot setup a file logger.
                 Log.Logger.Warning("Falling back to EventLog sink.");
                 loggerConfiguration.ConfigureEventLogSink();
-#endif
             }
 
             return loggerConfiguration;
