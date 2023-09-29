@@ -5,6 +5,7 @@ using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using NewRelic.Agent.Api;
+using NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore
 {
@@ -29,6 +30,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
             return builder =>
             {
                 builder.UseMiddleware<WrapPipelineMiddleware>(_agent);
+                builder.UseMiddleware<BrowserInjectionMiddleware>();
                 next(builder);
             };
         }

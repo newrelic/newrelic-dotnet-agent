@@ -1,3 +1,6 @@
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 using System;
 using System.IO;
 using System.Text;
@@ -10,7 +13,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
     /// <summary>
     /// Wrapper for the response stream, handles checking for response content type and injecting the browser script if appropriate
     /// </summary>
-    internal class ResponseStreamWrapper : Stream
+    public class ResponseStreamWrapper : Stream
     {
         private Stream _baseStream;
         private HttpContext _context;
@@ -55,6 +58,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
             IsHtmlResponse(forceReCheck: true);
         }
 
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            _baseStream.Write(buffer);
+        }
+
         public override void WriteByte(byte value)
         {
             _baseStream.WriteByte(value);
@@ -75,7 +83,13 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
                 _baseStream?.Write(buffer, offset, count);
             }
         }
-        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public override Task WriteAsync(byte[] buffer, int offset, int count,
+            CancellationToken cancellationToken)
+        {
+            return WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+        }
+
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
             if (IsHtmlResponse())
             {
@@ -85,7 +99,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
             else
             {
                 if (_baseStream != null)
-                    await _baseStream.WriteAsync(buffer, offset, count, cancellationToken);
+                    await _baseStream.WriteAsync(buffer, cancellationToken);
             }
         }
 
@@ -152,12 +166,12 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
             if (buffer.Length == 0 || bufferToFind.Length == 0)
                 return -1;
 
-            for (var i = 0; i < buffer.Length; i++)
+            for (int i = 0; i < buffer.Length; i++)
             {
                 if (buffer[i] == bufferToFind[0])
                 {
-                    var innerMatch = true;
-                    for (var j = 1; j < bufferToFind.Length; j++)
+                    bool innerMatch = true;
+                    for (int j = 1; j < bufferToFind.Length; j++)
                     {
                         if (buffer[i + j] != bufferToFind[j])
                         {

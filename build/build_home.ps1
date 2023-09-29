@@ -69,11 +69,11 @@ foreach ($wrapperDir in $wrapperDirs) {
     }
 }
 
-# AspNetCore needs to be in netFramework as well netstandard2.0
-if ($aspNetCorePath = Resolve-Path "$wrappersRootDir\AspNetCore\bin\$Configuration\netstandard2.0") {
+# xxxxxxxxxxAspNetCore needs to be in netFramework as well netstandard2.0
+if ($aspNetCorePath = Resolve-Path "$wrappersRootDir\AspNetCore\bin\$Configuration\net6.0") {
     $dllObject = Get-ChildItem -File -Path "$aspNetCorePath" -Filter NewRelic.Providers.Wrapper.AspNetCore.dll
     $xmlObject = Get-ChildItem -File -Path "$aspNetCorePath" -Filter Instrumentation.xml
-    $netFrameworkWrapperHash.Add($dllObject, $xmlObject)
+    $netstandard20WrapperHash.Add($dllObject, $xmlObject)
 }
 
 # MicrosoftExtensionsLogging needs to be in netFramework as well netstandard2.0
