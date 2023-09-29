@@ -25,6 +25,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
         /// </summary>
         public static async Task InjectBrowserScriptAsync(byte[] buffer, HttpContext context, Stream baseStream, byte[] rumBytes)
         {
+            // TODO: Implement additional logic to determine an appropriate place to inject the script, similar to the code in BrowserMonitoringWriter.WriteScriptHeaders()
             var index = buffer.LastIndexOf(_headCloseTagBytes);
 
             if (index == -1)
@@ -42,12 +43,6 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
 
             // Write the rest of the doc, starting at the </head> tag
             await baseStream.WriteAsync(buffer, index, buffer.Length - index);
-        }
-
-        private static string GetBrowserScript()
-        {
-            // This would obviously be replaced with the RUM script or a call to appropriate core methods (like BrowserMonitoringScriptMaker?)
-            return "<script>console.log('hello world')</script>";
         }
     }
 }
