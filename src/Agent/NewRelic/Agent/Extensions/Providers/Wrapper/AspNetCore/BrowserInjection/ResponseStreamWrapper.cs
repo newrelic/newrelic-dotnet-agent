@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
 {
@@ -15,13 +16,15 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
     /// </summary>
     public class ResponseStreamWrapper : Stream
     {
+        private readonly IAgent _agent;
         private Stream _baseStream;
         private HttpContext _context;
 
         private bool _isContentLengthSet = false;
 
-        public ResponseStreamWrapper(Stream baseStream, HttpContext context)
+        public ResponseStreamWrapper(IAgent agent, Stream baseStream, HttpContext context)
         {
+            _agent = agent;
             _baseStream = baseStream;
             _context = context;
 
@@ -73,15 +76,19 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
         {
             if (IsHtmlResponse())
             {
-                // inject browser script here 
-                BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer.AsMemory(offset, count), _context, _baseStream)
-                    .GetAwaiter()
-                    .GetResult();
+                var rumBytes = _agent.TryGetRUMBytes(_context.Response.ContentType, _context.Request.Path.Value);
+                if (rumBytes != null)
+                {
+                    BrowserScriptInjectionHelper
+                        .InjectBrowserScriptAsync(buffer.AsMemory(offset, count), _context, _baseStream, rumBytes)
+                        .GetAwaiter()
+                        .GetResult();
+                    return;
+                }
             }
-            else
-            {
-                _baseStream?.Write(buffer, offset, count);
-            }
+
+            // fallback: just write the stream without modification
+            _baseStream?.Write(buffer, offset, count);
         }
         public override Task WriteAsync(byte[] buffer, int offset, int count,
             CancellationToken cancellationToken)
@@ -93,14 +100,18 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
         {
             if (IsHtmlResponse())
             {
-                // inject browser script here
-                await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, _context, _baseStream);
+                var rumBytes = _agent.TryGetRUMBytes(_context.Response.ContentType, _context.Request.Path.Value);
+                if (rumBytes != null)
+                {
+                    await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, _context, _baseStream,
+                        rumBytes);
+
+                    return;
+                }
             }
-            else
-            {
-                if (_baseStream != null)
-                    await _baseStream.WriteAsync(buffer, cancellationToken);
-            }
+            // fallback: just write the stream without modification
+            if (_baseStream != null)
+                await _baseStream.WriteAsync(buffer, cancellationToken);
         }
 
         private bool? _isHtmlResponse = null;

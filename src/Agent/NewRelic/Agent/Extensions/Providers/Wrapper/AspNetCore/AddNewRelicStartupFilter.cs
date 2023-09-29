@@ -30,7 +30,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
             return builder =>
             {
                 builder.UseMiddleware<WrapPipelineMiddleware>(_agent);
-                builder.UseMiddleware<BrowserInjectionMiddleware>();
+                builder.UseMiddleware<BrowserInjectionMiddleware>(_agent);
                 next(builder);
             };
         }

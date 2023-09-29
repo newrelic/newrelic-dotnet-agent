@@ -15,15 +15,15 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
         private const string HeadCloseTag = "</head>";
         private static readonly byte[] _headCloseTagBytes = Encoding.UTF8.GetBytes(HeadCloseTag);
 
-        public static Task InjectBrowserScriptAsync(ReadOnlyMemory<byte> buffer, HttpContext context, Stream baseStream)
+        public static Task InjectBrowserScriptAsync(ReadOnlyMemory<byte> buffer, HttpContext context, Stream baseStream, byte[] rumBytes)
         {
-            return InjectBrowserScriptAsync(buffer.ToArray(), context, baseStream);
+            return InjectBrowserScriptAsync(buffer.ToArray(), context, baseStream, rumBytes);
         }
 
         /// <summary>
         /// Injects the script just before the </head> tag
         /// </summary>
-        public static async Task InjectBrowserScriptAsync(byte[] buffer, HttpContext context, Stream baseStream)
+        public static async Task InjectBrowserScriptAsync(byte[] buffer, HttpContext context, Stream baseStream, byte[] rumBytes)
         {
             var index = buffer.LastIndexOf(_headCloseTagBytes);
 
@@ -38,8 +38,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
             await baseStream.WriteAsync(buffer, 0, index - 1);
 
             // Write the injected script
-            var scriptBytes = Encoding.UTF8.GetBytes(GetBrowserScript());
-            await baseStream.WriteAsync(scriptBytes, 0, scriptBytes.Length);
+            await baseStream.WriteAsync(rumBytes, 0, rumBytes.Length);
 
             // Write the rest of the doc, starting at the </head> tag
             await baseStream.WriteAsync(buffer, index, buffer.Length - index);

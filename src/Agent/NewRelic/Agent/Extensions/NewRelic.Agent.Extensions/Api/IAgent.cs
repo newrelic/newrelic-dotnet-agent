@@ -92,6 +92,8 @@ namespace NewRelic.Agent.Api
         /// <param name="requestPath">The path of the request</param>
         Stream TryGetStreamInjector(Stream stream, Encoding encoding, string contentType, string requestPath);
 
+        byte[] TryGetRUMBytes(string contentType, string requestPath);
+
         /// <summary>
         /// Returns the Trace Metadata of the currently executing transaction.
         /// </summary>

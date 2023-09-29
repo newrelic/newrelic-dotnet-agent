@@ -28,6 +28,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Mime;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
 
@@ -341,6 +343,51 @@ namespace NewRelic.Agent.Core
                     return null;
                 }
             }
+        }
+
+        public byte[] TryGetRUMBytes(string contentType, string requestPath)
+        {
+            if (contentType == null)
+            {
+                return null;
+            }
+
+            if (requestPath == null)
+            {
+                return null;
+            }
+            try
+            {
+                var transaction = _transactionService.GetCurrentInternalTransaction();
+                if (transaction == null)
+                {
+                    return null;
+                }
+
+                var shouldInject = _browserMonitoringPrereqChecker.ShouldAutomaticallyInject(transaction, requestPath, contentType);
+                if (!shouldInject)
+                {
+                    return null;
+                }
+
+                // Once the transaction name is used for RUM it must be frozen
+                transaction.CandidateTransactionName.Freeze(TransactionNameFreezeReason.AutoBrowserScriptInjection);
+                var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
+                if (script == null)
+                {
+                    return null;
+                }
+
+                return Encoding.UTF8.GetBytes(script);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "RUM: Failed to build Browser Monitoring agent script");
+                {
+                    return null;
+                }
+            }
+
         }
 
         #endregion Stream manipulation
