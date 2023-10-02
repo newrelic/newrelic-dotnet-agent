@@ -286,8 +286,9 @@ namespace NewRelic.Agent.Core.Utilization
 
                     return vendorModel;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Log.Finest(ex, "Failed to parse Docker container id.");
                     return null;
                 }
             }
