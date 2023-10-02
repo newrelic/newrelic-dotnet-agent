@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.IO;
 using System.Linq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
@@ -283,9 +284,11 @@ namespace NewRelic.Agent.Core.Utilization
 
 #if NET
         [Test]
-        public void GetVendors_GetDockerVendorInfoV2_Succeeds()
+        public void GetVendors_GetDockerVendorInfo_ParsesV2()
         {
-            var content = @"
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+            var mockFileReaderWrapper = Mock.Create<IFileReaderWrapper>();
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/mountinfo")).Returns(@"
 1425 1301 0:290 / / rw,relatime master:314 - overlay overlay rw,lowerdir=/var/lib/docker/overlay2/l/SEESBOIUB4X3HZXQDX5TSEQ7BN:/var/lib/docker/overlay2/l/MOPJN3KMFAIZGI5ENZ4O34OONV:/var/lib/docker/overlay2/l/HDHJSGZM5PTRBYHW5EAYHS7XRU:/var/lib/docker/overlay2/l/DPNQ4BZTYI2XJTICBFBZQ3LYGY:/var/lib/docker/overlay2/l/WHFN2B5YEUTYPT77F26T57WB5I:/var/lib/docker/overlay2/l/P7VISFMMKEWRYA7L34PW2O2J54:/var/lib/docker/overlay2/l/ZWNBERDCDMC6LTZHJ4L64AC5LD:/var/lib/docker/overlay2/l/UGWQJ4NGWITVZZNEXAK7ZHDQDD:/var/lib/docker/overlay2/l/IZ5XCLZYFBF7BC4XULL7IJWT3Q:/var/lib/docker/overlay2/l/EGK3Y3BMJAVWDQZLM4DFYAZQNJ:/var/lib/docker/overlay2/l/LNHVYS3UDT2S2TTN2TF3JVSHFH,upperdir=/var/lib/docker/overlay2/14399ff93af039f15ee6a9633110eaf5ac552802c589e7c5595e32adfb635d39/diff,workdir=/var/lib/docker/overlay2/14399ff93af039f15ee6a9633110eaf5ac552802c589e7c5595e32adfb635d39/work
 1426 1425 0:293 / /proc rw,nosuid,nodev,noexec,relatime - proc proc rw
 1427 1425 0:294 / /dev rw,nosuid - tmpfs tmpfs rw,size=65536k,mode=755
@@ -321,12 +324,82 @@ namespace NewRelic.Agent.Core.Utilization
 1340 1426 0:294 /null /proc/keys rw,nosuid - tmpfs tmpfs rw,size=65536k,mode=755
 1341 1426 0:294 /null /proc/timer_list rw,nosuid - tmpfs tmpfs rw,size=65536k,mode=755
 1342 1429 0:300 / /sys/firmware ro,relatime - tmpfs tmpfs ro
-";
+");
 
-
-            var model = (DockerVendorModel)VendorInfo.TryGetDockerCGroupV2(content);
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
             Assert.NotNull(model);
             Assert.AreEqual("adf04870aa0a9f01fb712e283765ee5d7c7b1c1c0ad8ebfdea20a8bb3ae382fb", model.Id);
+        }
+
+        [Test]
+        public void GetVendors_GetDockerVendorInfo_ParsesV1_IfV2LookupFailsToParseFile()
+        {
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+            var mockFileReaderWrapper = Mock.Create<IFileReaderWrapper>();
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/mountinfo")).Returns("foo bar baz");
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/cgroup")).Returns(@"
+15:name=systemd:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+14:misc:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+13:rdma:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+12:pids:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+11:hugetlb:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+10:net_prio:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+9:perf_event:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+8:net_cls:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+7:freezer:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+6:devices:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+5:memory:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+4:blkio:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+3:cpuacct:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+2:cpu:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+1:cpuset:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+0::/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043");
+
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            Assert.NotNull(model);
+            Assert.AreEqual("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043", model.Id);
+        }
+
+
+        [Test]
+        public void GetVendors_GetDockerVendorInfo_ParsesV1_IfMountinfoDoesNotExist()
+        {
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+            var mockFileReaderWrapper = Mock.Create<IFileReaderWrapper>();
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/mountinfo")).Throws<FileNotFoundException>();
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/cgroup")).Returns(@"
+15:name=systemd:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+14:misc:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+13:rdma:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+12:pids:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+11:hugetlb:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+10:net_prio:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+9:perf_event:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+8:net_cls:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+7:freezer:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+6:devices:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+5:memory:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+4:blkio:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+3:cpuacct:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+2:cpu:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+1:cpuset:/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043
+0::/docker/b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043");
+
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            Assert.NotNull(model);
+            Assert.AreEqual("b9d734e13dc5f508571d975edade94a05dfc637e73a83e11077a39bc11681043", model.Id);
+        }
+
+        [Test]
+        public void GetVendors_GetDockerVendorInfo_ReturnsNull_IfUnableToParseV1OrV2()
+        {
+            var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+            var mockFileReaderWrapper = Mock.Create<IFileReaderWrapper>();
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/mountinfo")).Returns("blah blah blah");
+            Mock.Arrange(() => mockFileReaderWrapper.ReadAllText("/proc/self/cgroup")).Returns("foo bar baz");
+
+            var model = (DockerVendorModel)vendorInfo.GetDockerVendorInfo(mockFileReaderWrapper);
+            Assert.Null(model);
         }
 #endif
         private void SetEnvironmentVariable(string variableName, string value, EnvironmentVariableTarget environmentVariableTarget)
