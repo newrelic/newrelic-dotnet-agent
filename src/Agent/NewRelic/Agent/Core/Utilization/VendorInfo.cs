@@ -24,7 +24,8 @@ namespace NewRelic.Agent.Core.Utilization
     {
         private const string ValidateMetadataRegex = @"^[a-zA-Z0-9-_. /]*$";
 #if NETSTANDARD2_0
-		private const string ContainerIdRegex = @"[0-9a-f]{64}";
+        private const string ContainerIdV1Regex = @"[0-9a-f]{64}";
+        private const string ContainerIdV2Regex = ".*/docker/containers/([0-9a-f]{64})/.*";
 #endif
 
         private const string AwsName = @"aws";
@@ -273,49 +274,98 @@ namespace NewRelic.Agent.Core.Utilization
         private IVendorModel GetDockerVendorInfo()
         {
 #if NETSTANDARD2_0
-			bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-			int subsystemsIndex = 1;
-			int controlGroupIndex = 2;
+            bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+            int subsystemsIndex = 1;
+            int controlGroupIndex = 2;
 
-			if (isLinux)
-			{
-				try
-				{
-					string id = null;
-					var fileLines = File.ReadAllLines("/proc/self/cgroup");
+            if (isLinux)
+            {
+                var vendorModel = TryGetDockerCGroupV1(subsystemsIndex, controlGroupIndex);
+                if (vendorModel == null)
+                {
+                    try
+                    {
+                        var fileContent = File.ReadAllText("/proc/self/mountinfo");
+                        vendorModel = TryGetDockerCGroupV2(fileContent);
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
 
-					foreach(var line in fileLines)
-					{
-						var elements = line.Split(StringSeparators.Colon);
-						var cpuSubsystem = elements[subsystemsIndex].Split(StringSeparators.Comma).FirstOrDefault(subsystem => subsystem == "cpu");
-						if (cpuSubsystem != null)
-						{
-							var controlGroup = elements[controlGroupIndex];
-							var match = Regex.Match(controlGroup, ContainerIdRegex);
-							
-							if (match.Success)
-							{
-								id = match.Value;
-							}
-						}
-					}
-
-					if(id == null)
-					{
-						return null;
-					}
-
-					return new DockerVendorModel(id);
-				}
-				catch
-				{
-					return null;
-				}
-				
-			}
+                return vendorModel;
+            }
 #endif
             return null;
         }
+
+#if NETSTANDARD2_0
+        public static IVendorModel TryGetDockerCGroupV1(int subsystemsIndex, int controlGroupIndex)
+        {
+            try
+            {
+                string id = null;
+                var fileLines = File.ReadAllLines("/proc/self/cgroup");
+
+                foreach (var line in fileLines)
+                {
+                    var elements = line.Split(StringSeparators.Colon);
+                    var cpuSubsystem = elements[subsystemsIndex].Split(StringSeparators.Comma)
+                        .FirstOrDefault(subsystem => subsystem == "cpu");
+                    if (cpuSubsystem != null)
+                    {
+                        var controlGroup = elements[controlGroupIndex];
+                        var match = Regex.Match(controlGroup, ContainerIdV1Regex);
+
+                        if (match.Success)
+                        {
+                            id = match.Value;
+                        }
+                    }
+                }
+
+                if (id == null)
+                {
+                    return null;
+                }
+
+                return new DockerVendorModel(id);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public static IVendorModel TryGetDockerCGroupV2(string fileContent)
+        {
+            try
+            {
+                string id = null;
+                var matches = Regex.Matches(fileContent, ContainerIdV2Regex);
+                if (matches.Count > 0)
+                {
+                    var firstMatch = matches[0];
+                    if (firstMatch.Success && firstMatch.Groups.Count > 1 && firstMatch.Groups[1].Success)
+                    {
+                        id = firstMatch.Groups[1].Value;
+                    }
+                }
+
+                if (id == null)
+                {
+                    return null;
+                }
+
+                return new DockerVendorModel(id);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+#endif
 
         public IVendorModel GetKubernetesInfo()
         {
