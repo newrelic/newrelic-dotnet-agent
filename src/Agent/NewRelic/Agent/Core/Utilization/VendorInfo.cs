@@ -278,19 +278,36 @@ namespace NewRelic.Agent.Core.Utilization
 
             if (isLinux)
             {
+                IVendorModel vendorModel = null;
                 try
                 {
                     var fileContent = File.ReadAllText("/proc/self/mountinfo");
-                    var vendorModel = TryGetDockerCGroupV2(fileContent)
-                                      ?? TryGetDockerCGroupV1();
+                    vendorModel = TryGetDockerCGroupV2(fileContent);
+                    if (vendorModel == null)
+                        Log.Finest( "Found /proc/self/mountinfo but failed to parse Docker container id.");
 
-                    return vendorModel;
                 }
                 catch (Exception ex)
                 {
-                    Log.Finest(ex, "Failed to parse Docker container id.");
-                    return null;
+                    Log.Finest(ex, "Failed to parse Docker container id from /proc/self/mountinfo.");
                 }
+
+                if (vendorModel == null) // fall back to the v1 check if v2 wasn't successful
+                {
+                    try
+                    {
+                        vendorModel = TryGetDockerCGroupV1();
+                        if (vendorModel == null)
+                            Log.Finest( "Found /proc/self/cgroup but failed to parse Docker container id.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Finest(ex, "Failed to parse Docker container id from /proc/self/cgroup.");
+                        return null;
+                    }
+                }
+
+                return vendorModel;
             }
 #endif
             return null;
@@ -322,12 +339,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             }
 
-            if (id == null)
-            {
-                return null;
-            }
-
-            return new DockerVendorModel(id);
+            return id == null ? null : new DockerVendorModel(id);
         }
 
         public static IVendorModel TryGetDockerCGroupV2(string fileContent)
@@ -343,12 +355,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             }
 
-            if (id == null)
-            {
-                return null;
-            }
-
-            return new DockerVendorModel(id);
+            return id == null ? null : new DockerVendorModel(id);
         }
 #endif
 
