@@ -275,8 +275,6 @@ namespace NewRelic.Agent.Core.Utilization
         {
 #if NETSTANDARD2_0
             bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-            int subsystemsIndex = 1;
-            int controlGroupIndex = 2;
 
             if (isLinux)
             {
@@ -284,7 +282,7 @@ namespace NewRelic.Agent.Core.Utilization
                 {
                     var fileContent = File.ReadAllText("/proc/self/mountinfo");
                     var vendorModel = TryGetDockerCGroupV2(fileContent)
-                                      ?? TryGetDockerCGroupV1(subsystemsIndex, controlGroupIndex);
+                                      ?? TryGetDockerCGroupV1();
 
                     return vendorModel;
                 }
@@ -298,8 +296,11 @@ namespace NewRelic.Agent.Core.Utilization
         }
 
 #if NETSTANDARD2_0
-        public static IVendorModel TryGetDockerCGroupV1(int subsystemsIndex, int controlGroupIndex)
+        public static IVendorModel TryGetDockerCGroupV1()
         {
+            int subsystemsIndex = 1;
+            int controlGroupIndex = 2;
+
             string id = null;
             var fileLines = File.ReadAllLines("/proc/self/cgroup");
 
