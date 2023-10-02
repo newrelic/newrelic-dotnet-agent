@@ -92,6 +92,18 @@ namespace NewRelic.Agent.Api
         ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName = null);
 
         /// <summary>
+        /// Creates a segment for serializing a key or value in a message brokering system..
+        /// </summary>
+        /// <param name="methodCall">The method call that is responsible for starting this segment.</param>
+        /// <param name="destinationType"></param>
+        /// <param name="operation"></param>
+        /// <param name="brokerVendorName">Must not be null.</param>
+        /// <param name="destinationName">Can be null.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <returns>an opaque object that will be needed when you want to end the segment.</returns>
+        ISegment StartMessageBrokerSerializationSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string kind);
+
+        /// <summary>
         /// Starts a transaction segment. Does nothing if there is no current transaction.
         /// </summary>
         /// <param name="methodCall">The method call that is responsible for starting this segment.</param>

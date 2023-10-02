@@ -357,6 +357,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string MessageBrokerNamed = "Named";
         public const string MessageBrokerTemp = "Temp";
         public const string Msmq = "MSMQ";
+        public const string Serialization = "Serialization";
 
         public static MetricName GetMessageBroker(MessageBrokerDestinationType type, MessageBrokerAction action,
             string vendor, string queueName)
@@ -365,6 +366,14 @@ namespace NewRelic.Agent.Core.Metrics
             return (queueName != null)
                 ? MetricName.Create(MessageBrokerPrefix, vendor, normalizedType, action, MessageBrokerNamed, queueName)
                 : MetricName.Create(MessageBrokerPrefix, vendor, normalizedType, action, MessageBrokerTemp);
+        }
+
+        public static MetricName GetMessageBrokerSerialization(MessageBrokerDestinationType type, MessageBrokerAction action,
+            string vendor, string queueName, string kind)
+        {
+            var normalizedType = NormalizeMessageBrokerDestinationTypeForMetricName(type);
+            return MetricName.Create(MessageBrokerPrefix, vendor, normalizedType, action, MessageBrokerNamed, queueName, Serialization, kind);
+
         }
 
         private static MessageBrokerDestinationType NormalizeMessageBrokerDestinationTypeForMetricName(
@@ -381,6 +390,14 @@ namespace NewRelic.Agent.Core.Metrics
             }
 
             return type;
+        }
+
+        private const string KakfaTopic = "Topic";
+        private const string KakfaReceived = "Received";
+        private const string KakfaMessages = "Messages";
+        public static MetricName GetKafkaMessagesReceivedPerConsume(string topic)
+        {
+            return MetricName.Create(Message, "Kafka", KakfaTopic, MessageBrokerNamed, topic, KakfaReceived, KakfaMessages);
         }
 
         #endregion MessageBroker
