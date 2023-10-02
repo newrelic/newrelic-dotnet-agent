@@ -6,12 +6,14 @@ SPDX-License-Identifier: Apache-2.0
 <extension xmlns="urn:newrelic-extension">
 
 	<instrumentation>
+    <!-- Consume Pull -->
 		<tracerFactory name="BasicGetWrapper">
 			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
 				<exactMethodMatcher methodName="_Private_BasicGet" />
 			</match>
 		</tracerFactory>
 
+    <!-- Produce -->
 		<tracerFactory name="BasicPublishWrapper">
 			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
 				<exactMethodMatcher methodName="_Private_BasicPublish" parameters="System.String,System.String,System.Boolean,RabbitMQ.Client.IBasicProperties,System.Byte[]"/>
@@ -19,16 +21,18 @@ SPDX-License-Identifier: Apache-2.0
 			</match>
 		</tracerFactory>
 
+    <!-- Produce -->
 		<tracerFactory name="BasicPublishWrapperLegacy">
 			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
 				<exactMethodMatcher methodName="_Private_BasicPublish" parameters="System.String,System.String,System.Boolean,System.Boolean,RabbitMQ.Client.IBasicProperties,System.Byte[]"/>
 			</match>
 		</tracerFactory>
 
+    <!-- Consume  Push / Event / Subscribe -->
 		<tracerFactory name="HandleBasicDeliverWrapper">
-			<match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Events.EventingBasicConsumer">
-				<exactMethodMatcher methodName="HandleBasicDeliver" />
-			</match>
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Impl.ModelBase">
+        <exactMethodMatcher methodName="HandleBasicDeliver" />
+      </match>
 		</tracerFactory>
 		
 		<tracerFactory name="QueuePurgeWrapper">
