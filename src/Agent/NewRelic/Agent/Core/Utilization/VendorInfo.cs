@@ -280,21 +280,18 @@ namespace NewRelic.Agent.Core.Utilization
 
             if (isLinux)
             {
-                var vendorModel = TryGetDockerCGroupV1(subsystemsIndex, controlGroupIndex);
-                if (vendorModel == null)
+                try
                 {
-                    try
-                    {
-                        var fileContent = File.ReadAllText("/proc/self/mountinfo");
-                        vendorModel = TryGetDockerCGroupV2(fileContent);
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                }
+                    var fileContent = File.ReadAllText("/proc/self/mountinfo");
+                    var vendorModel = TryGetDockerCGroupV2(fileContent)
+                                      ?? TryGetDockerCGroupV1(subsystemsIndex, controlGroupIndex);
 
-                return vendorModel;
+                    return vendorModel;
+                }
+                catch
+                {
+                    return null;
+                }
             }
 #endif
             return null;
@@ -303,67 +300,53 @@ namespace NewRelic.Agent.Core.Utilization
 #if NETSTANDARD2_0
         public static IVendorModel TryGetDockerCGroupV1(int subsystemsIndex, int controlGroupIndex)
         {
-            try
+            string id = null;
+            var fileLines = File.ReadAllLines("/proc/self/cgroup");
+
+            foreach (var line in fileLines)
             {
-                string id = null;
-                var fileLines = File.ReadAllLines("/proc/self/cgroup");
-
-                foreach (var line in fileLines)
+                var elements = line.Split(StringSeparators.Colon);
+                var cpuSubsystem = elements[subsystemsIndex].Split(StringSeparators.Comma)
+                    .FirstOrDefault(subsystem => subsystem == "cpu");
+                if (cpuSubsystem != null)
                 {
-                    var elements = line.Split(StringSeparators.Colon);
-                    var cpuSubsystem = elements[subsystemsIndex].Split(StringSeparators.Comma)
-                        .FirstOrDefault(subsystem => subsystem == "cpu");
-                    if (cpuSubsystem != null)
-                    {
-                        var controlGroup = elements[controlGroupIndex];
-                        var match = Regex.Match(controlGroup, ContainerIdV1Regex);
+                    var controlGroup = elements[controlGroupIndex];
+                    var match = Regex.Match(controlGroup, ContainerIdV1Regex);
 
-                        if (match.Success)
-                        {
-                            id = match.Value;
-                        }
+                    if (match.Success)
+                    {
+                        id = match.Value;
                     }
                 }
-
-                if (id == null)
-                {
-                    return null;
-                }
-
-                return new DockerVendorModel(id);
             }
-            catch
+
+            if (id == null)
             {
                 return null;
             }
+
+            return new DockerVendorModel(id);
         }
 
         public static IVendorModel TryGetDockerCGroupV2(string fileContent)
         {
-            try
+            string id = null;
+            var matches = Regex.Matches(fileContent, ContainerIdV2Regex);
+            if (matches.Count > 0)
             {
-                string id = null;
-                var matches = Regex.Matches(fileContent, ContainerIdV2Regex);
-                if (matches.Count > 0)
+                var firstMatch = matches[0];
+                if (firstMatch.Success && firstMatch.Groups.Count > 1 && firstMatch.Groups[1].Success)
                 {
-                    var firstMatch = matches[0];
-                    if (firstMatch.Success && firstMatch.Groups.Count > 1 && firstMatch.Groups[1].Success)
-                    {
-                        id = firstMatch.Groups[1].Value;
-                    }
+                    id = firstMatch.Groups[1].Value;
                 }
-
-                if (id == null)
-                {
-                    return null;
-                }
-
-                return new DockerVendorModel(id);
             }
-            catch
+
+            if (id == null)
             {
                 return null;
             }
+
+            return new DockerVendorModel(id);
         }
 #endif
 
