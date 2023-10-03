@@ -96,7 +96,7 @@ namespace NewRelic.Agent.Core.Utilization
             // If Docker info is set to be checked, it must be checked for all vendors.
             if (_configuration.UtilizationDetectDocker)
             {
-#if NETSTANDARD2_0
+#if NET
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
                     var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper());
@@ -404,7 +404,7 @@ namespace NewRelic.Agent.Core.Utilization
             return Regex.IsMatch(data, ValidateMetadataRegex);
         }
     }
-#if NETSTANDARD2_0
+#if NET
     // needed for unit testing only
     public interface IFileReaderWrapper
     {

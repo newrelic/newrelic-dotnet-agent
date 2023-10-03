@@ -277,7 +277,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (string.IsNullOrEmpty(message.Text))
                     continue;
 
-                var logMethod = ServerLogLevelMap.GetValueOrDefault(message.Level) ?? Log.Info;
+                var logMethod = DictionaryExtensions.GetValueOrDefault(ServerLogLevelMap, message.Level) ?? Log.Info;
                 logMethod(message.Text, null);
             }
         }
