@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to get encoded CAT headers for outbound request: {ex}");
+                Log.Error(ex, "Failed to get encoded CAT headers for outbound request");
 
                 _supportabilityMetrics.Record(CATSupportabilityCondition.Request_Create_Failure);
 
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to get encoded CAT headers for outbound response: {ex}");
+                Log.Error(ex, "Failed to get encoded CAT headers for outbound response");
                 _supportabilityMetrics.Record(CATSupportabilityCondition.Response_Create_Failure);
                 return Enumerable.Empty<KeyValuePair<string, string>>();
             }

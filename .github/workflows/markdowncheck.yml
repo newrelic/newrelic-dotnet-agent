@@ -1,7 +1,12 @@
 name: Check Markdown links
 
-on: push
-
+on: 
+  push:
+    paths:
+      - '**.md' # only run when there are changes to markdown files in a push to any branch
+  schedule:
+    - cron: "0 9 * * 1-5" # run once a day, M-F
+  workflow_dispatch:
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
@@ -14,13 +19,17 @@ permissions:
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
+
+    # don't run this job if triggered by Dependabot
+    if: ${{ github.actor != 'dependabot[bot]' }}
+
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
+        uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
         with:
           egress-policy: audit # Leave it audit mode
 
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       
       - uses: gaurav-nelson/github-action-markdown-link-check@5c5dfc0ac2e225883c0e5f03a85311ec2830d368 # v1
         with:

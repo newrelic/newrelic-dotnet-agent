@@ -5,8 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -25,6 +25,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 
         public MsSqlStoredProcedureUsingOleDbDriverTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName, bool paramsWithAtSign) : base(fixture)
         {
+            MsSqlWarmupHelper.WarmupMsSql();
+
             _fixture = fixture;
             _fixture.TestLogger = output;
             _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlParameterizedStoredProcedureUsingOleDbDriver";

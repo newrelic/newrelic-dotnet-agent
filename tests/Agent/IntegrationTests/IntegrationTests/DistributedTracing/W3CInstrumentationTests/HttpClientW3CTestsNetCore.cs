@@ -64,10 +64,15 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
             var receiverAppTxEvents = _fixture.SecondCallApplication.AgentLog.GetTransactionEvents().FirstOrDefault();
             Assert.NotNull(receiverAppTxEvents);
 
+            var lastCallAppTxEvents = _fixture.RemoteApplication.AgentLog.GetTransactionEvents().FirstOrDefault();
+            Assert.NotNull(lastCallAppTxEvents);
+
             var senderAppSpanEvents = _fixture.FirstCallApplication.AgentLog.GetSpanEvents();
             var receiverAppSpanEvents = _fixture.SecondCallApplication.AgentLog.GetSpanEvents();
+            var lastCallAppSpanEvents = _fixture.RemoteApplication.AgentLog.GetSpanEvents();
 
             Assert.Equal(senderAppTxEvent.IntrinsicAttributes["guid"], receiverAppTxEvents.IntrinsicAttributes["parentId"]);
+            Assert.Equal(receiverAppTxEvents.IntrinsicAttributes["guid"], lastCallAppTxEvents.IntrinsicAttributes["parentId"]);
 
             foreach (var span in senderAppSpanEvents)
             {
@@ -79,10 +84,18 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
                 Assert.Equal(TestTraceId, span.IntrinsicAttributes["traceId"]);
             }
 
+            foreach (var span in lastCallAppSpanEvents)
+            {
+                Assert.Equal(TestTraceId, span.IntrinsicAttributes["traceId"]);
+            }
+
             var senderRootSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/FirstCall/CallNext/{nextUrl}").FirstOrDefault();
             var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/localhost/Stream/GET").FirstOrDefault();
 
             var receiverRootSpanEvent = receiverAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/SecondCall/CallNext/{nextUrl}").FirstOrDefault();
+            var receiverExternalSpanEvent = receiverAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/localhost/Stream/GET").FirstOrDefault();
+
+            var lastRootSpanEvent = lastCallAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/LastCall/CallEnd").FirstOrDefault();
 
             Assert.NotNull(senderRootSpanEvent);
             Assert.Equal(TestTracingVendors, senderRootSpanEvent.IntrinsicAttributes["tracingVendors"]);
@@ -96,6 +109,13 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
             Assert.Equal(externalSpanEvent.IntrinsicAttributes["guid"], receiverAppTxEvents.IntrinsicAttributes["parentSpanId"]);
             Assert.Equal(externalSpanEvent.IntrinsicAttributes["guid"], receiverRootSpanEvent.IntrinsicAttributes["trustedParentId"]);
             Assert.True(AttributeComparer.IsEqualTo(senderAppTxEvent.IntrinsicAttributes["priority"], receiverRootSpanEvent.IntrinsicAttributes["priority"]));
+
+            Assert.NotNull(lastRootSpanEvent);
+            Assert.Equal(TestTracingVendors, lastRootSpanEvent.IntrinsicAttributes["tracingVendors"]);
+            Assert.Equal(receiverExternalSpanEvent.IntrinsicAttributes["guid"], lastRootSpanEvent.IntrinsicAttributes["parentId"]);
+            Assert.Equal(receiverExternalSpanEvent.IntrinsicAttributes["guid"], lastCallAppTxEvents.IntrinsicAttributes["parentSpanId"]);
+            Assert.Equal(receiverExternalSpanEvent.IntrinsicAttributes["guid"], lastRootSpanEvent.IntrinsicAttributes["trustedParentId"]);
+            Assert.True(AttributeComparer.IsEqualTo(receiverAppTxEvents.IntrinsicAttributes["priority"], lastRootSpanEvent.IntrinsicAttributes["priority"]));
 
             var senderExpectedMetrics = new List<Assertions.ExpectedMetric>
             {

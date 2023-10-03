@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.Config
                 var errorMessage = Type.GetType("Mono.Runtime") == null ?
                         "The 'bogus' attribute is not declared" :
                         "XmlSchema error: Attribute declaration was not found for bogus";
-                Assert.IsTrue(logging.HasMessageThatContains(errorMessage));
+                Assert.IsTrue(logging.HasErrorMessageThatContains(errorMessage));
             }
         }
 
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.Config
                 // While this error message is somewhat cryptic, in an actual agent run it would be
                 // preceeded by a warning message regarding failure to read the schema file contents from disk
                 var errorMessage = "Root element is missing";
-                Assert.IsTrue(logging.HasMessageThatContains(errorMessage));
+                Assert.IsTrue(logging.HasErrorMessageThatContains(errorMessage));
             }
         }
     }

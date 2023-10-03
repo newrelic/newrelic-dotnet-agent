@@ -82,5 +82,23 @@ namespace MultiFunctionApplicationHelpers.Libraries
             }
             return errorGroupName;
         }
+
+        /// <summary>
+        /// Tests setting the current transaction name via the API
+        /// </summary>
+        /// <param name="category">Category</param>
+        /// <param name="names">Comma-separated list of names to be applied, in order</param>
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void TestSetTransactionName(string category, string names)
+        {
+            var namesList = names.Split(',');
+            foreach (var name in namesList)
+            {
+                NewRelic.Api.Agent.NewRelic.SetTransactionName(category, name);
+            }
+        }
+
     }
 }

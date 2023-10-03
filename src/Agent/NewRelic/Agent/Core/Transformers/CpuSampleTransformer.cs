@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Transformers
             }
             catch (Exception ex)
             {
-                Log.Debug("No CPU metrics will be reported: " + ex);
+                Log.Debug(ex, "No CPU metrics will be reported: ");
             }
         }
 

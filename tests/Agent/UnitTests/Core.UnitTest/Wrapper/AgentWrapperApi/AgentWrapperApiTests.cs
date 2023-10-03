@@ -1,49 +1,46 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Api;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Api;
-using NewRelic.Agent.Core.BrowserMonitoring;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Core.Segments.Tests;
-using NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Core.DistributedTracing;
-using NewRelic.SystemExtensions.Collections.Generic;
-using NewRelic.SystemInterfaces;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Telerik.JustMock;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
-using NewRelic.Agent.TestUtilities;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.WireModels;
-using NewRelic.Core;
-using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.BrowserMonitoring;
+using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.TestUtilities;
 using NewRelic.Collections;
-using NewRelic.Agent.Core.Utils;
+using NewRelic.Core;
+using NewRelic.Core.DistributedTracing;
+using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.SystemInterfaces;
+using NewRelic.Testing.Assertions;
+using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
@@ -1804,7 +1801,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         private void SetupTransaction()
         {
             var transactionName = TransactionName.ForWebTransaction("foo", "bar");
-            _transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            _transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
 
             Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns(_transaction);
         }

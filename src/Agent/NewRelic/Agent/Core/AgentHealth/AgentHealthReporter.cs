@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -22,11 +22,11 @@ namespace NewRelic.Agent.Core.AgentHealth
 {
     public class AgentHealthReporter : ConfigurationBasedService, IAgentHealthReporter
     {
-        private static readonly TimeSpan _timeBetweenExecutions = TimeSpan.FromMinutes(1);
+        private static readonly TimeSpan _timeBetweenExecutions = TimeSpan.FromMinutes(2);
 
         private readonly IMetricBuilder _metricBuilder;
         private readonly IScheduler _scheduler;
-        private readonly IList<RecurringLogData> _recurringLogDatas = new ConcurrentList<RecurringLogData>();
+        private readonly IList<string> _recurringLogData = new ConcurrentList<string>();
         private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
         private readonly ConcurrentDictionary<string, InterlockedCounter> _logLinesCountByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
         private readonly ConcurrentDictionary<string, InterlockedCounter> _logDeniedCountByLevel = new ConcurrentDictionary<string, InterlockedCounter>();
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             _metricBuilder = metricBuilder;
             _scheduler = scheduler;
-            _scheduler.ExecuteEvery(LogRecurringLogs, _timeBetweenExecutions);
+            _scheduler.ExecuteEvery(LogPeriodicReport, _timeBetweenExecutions);
             var agentHealthEvents = Enum.GetValues(typeof(AgentHealthEvent)) as AgentHealthEvent[];
             foreach (var agentHealthEvent in agentHealthEvents)
             {
@@ -58,25 +58,28 @@ namespace NewRelic.Agent.Core.AgentHealth
         public override void Dispose()
         {
             base.Dispose();
-            _scheduler.StopExecuting(LogRecurringLogs);
+            _scheduler.StopExecuting(LogPeriodicReport);
         }
 
-        private void LogRecurringLogs()
+        private void LogPeriodicReport()
         {
-            foreach (var data in _recurringLogDatas)
+            foreach (var logMessage in _recurringLogData)
             {
-                data?.LogAction(data.Message);
+                Log.Debug(logMessage);
             }
-
+            
+            List<string> events = new List<string>();
             foreach (var counter in _agentHealthEventCounters)
             {
                 if (counter.Value != null && counter.Value.Value > 0)
                 {
                     var agentHealthEvent = counter.Key;
                     var timesOccured = counter.Value.Exchange(0);
-                    Log.Info($"Event {agentHealthEvent} has occurred {timesOccured} times in the last {_timeBetweenExecutions.TotalSeconds} seconds");
+                    events.Add(string.Format("{0} {1} {2}", timesOccured, agentHealthEvent, (timesOccured == 1) ? "event" : "events"));
                 }
             }
+            var message = events.Count > 0 ? string.Join(", ", events) : "No events";
+            Log.Info($"In the last {_timeBetweenExecutions.TotalMinutes} minutes: {message}");
         }
 
         public void ReportSupportabilityCountMetric(string metricName, long count = 1)
@@ -142,7 +145,11 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void ReportTransactionEventsRecollected(int count) => TrySend(_metricBuilder.TryBuildTransactionEventsRecollectedMetric(count));
 
-        public void ReportTransactionEventsSent(int count) => TrySend(_metricBuilder.TryBuildTransactionEventsSentMetric(count));
+        public void ReportTransactionEventsSent(int count)
+        {
+            TrySend(_metricBuilder.TryBuildTransactionEventsSentMetric(count));
+            _agentHealthEventCounters[AgentHealthEvent.Transaction]?.Add(count);
+        }
 
         #endregion TransactionEvents
 
@@ -165,7 +172,12 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportCustomEventsRecollected(int count) => TrySend(_metricBuilder.TryBuildCustomEventsRecollectedMetric(count));
 
         // Note: Though not required by APM like the transaction event supportability metrics, this metric should still be created to maintain consistency
-        public void ReportCustomEventsSent(int count) => TrySend(_metricBuilder.TryBuildCustomEventsSentMetric(count));
+        public void ReportCustomEventsSent(int count)
+        {
+            TrySend(_metricBuilder.TryBuildCustomEventsSentMetric(count));
+            _agentHealthEventCounters[AgentHealthEvent.Custom]?.Add(count);
+
+        }
 
         #endregion CustomEvents
 
@@ -183,7 +195,11 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void ReportErrorEventSeen() => TrySend(_metricBuilder.TryBuildErrorEventsSeenMetric());
 
-        public void ReportErrorEventsSent(int count) => TrySend(_metricBuilder.TryBuildErrorEventsSentMetric(count));
+        public void ReportErrorEventsSent(int count)
+        {
+            TrySend(_metricBuilder.TryBuildErrorEventsSentMetric(count));
+            _agentHealthEventCounters[AgentHealthEvent.Error]?.Add(count);
+        }
 
         #endregion ErrorEvents
 
@@ -236,7 +252,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
 
             Log.Error($"Wrapper {wrapperName} is being disabled for {method.MethodName} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted.");
-            _recurringLogDatas.Add(new RecurringLogData(Log.Debug, $"Wrapper {wrapperName} was disabled for {method.MethodName} at {DateTime.Now} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted."));
+            _recurringLogData.Add($"Wrapper {wrapperName} was disabled for {method.MethodName} at {DateTime.Now} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted.");
         }
 
         public void ReportIfHostIsLinuxOs()
@@ -381,7 +397,11 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void ReportSpanEventCollected(int count) => TrySend(_metricBuilder.TryBuildSpanEventsSeenMetric(count));
 
-        public void ReportSpanEventsSent(int count) => TrySend(_metricBuilder.TryBuildSpanEventsSentMetric(count));
+        public void ReportSpanEventsSent(int count)
+        {
+            TrySend(_metricBuilder.TryBuildSpanEventsSentMetric(count));
+            _agentHealthEventCounters[AgentHealthEvent.Span]?.Add(count);
+        }
 
         #endregion Span 
 
@@ -429,6 +449,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 _infiniteTracingSpanBatchSizeMin = Math.Min(_infiniteTracingSpanBatchSizeMin, countSpans);
                 _infiniteTracingSpanBatchSizeMax = Math.Max(_infiniteTracingSpanBatchSizeMax, countSpans);
             }
+            _agentHealthEventCounters[AgentHealthEvent.InfiniteTracingSpan]?.Add((int)countSpans);
 
         }
 
@@ -616,7 +637,11 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         public void ReportLoggingEventCollected() => TrySend(_metricBuilder.TryBuildSupportabilityLoggingEventsCollectedMetric());
 
-        public void ReportLoggingEventsSent(int count) => TrySend(_metricBuilder.TryBuildSupportabilityLoggingEventsSentMetric(count));
+        public void ReportLoggingEventsSent(int count)
+        {
+            TrySend(_metricBuilder.TryBuildSupportabilityLoggingEventsSentMetric(count));
+            _agentHealthEventCounters[AgentHealthEvent.Log]?.Add(count);
+        }
 
         public void ReportLoggingEventsDropped(int droppedCount)=> TrySend(_metricBuilder.TryBuildSupportabilityLoggingEventsDroppedMetric(droppedCount));
 
@@ -689,7 +714,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             if (_publishMetricDelegate == null)
             {
-                Log.WarnFormat("No PublishMetricDelegate to flush metric '{0}' through.", metric.MetricName.Name);
+                Log.Warn("No PublishMetricDelegate to flush metric '{0}' through.", metric.MetricName.Name);
                 return;
             }
 
@@ -699,7 +724,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
             catch (Exception ex)
             {
-                Log.Error(ex);
+                Log.Error(ex, "TrySend() failed");
             }
         }
         private bool TryGetCount(InterlockedCounter counter, out int metricCount)
@@ -785,18 +810,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             // Some one time metrics are reporting configured values, so we want to re-report them if the configuration changed
             _oneTimeMetricsCollected = false;
-        }
-
-        private class RecurringLogData
-        {
-            public readonly Action<string> LogAction;
-            public readonly string Message;
-
-            public RecurringLogData(Action<string> logAction, string message)
-            {
-                LogAction = logAction;
-                Message = message;
-            }
         }
     }
 }

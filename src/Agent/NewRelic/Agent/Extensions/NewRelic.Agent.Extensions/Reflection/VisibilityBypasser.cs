@@ -202,6 +202,25 @@ namespace NewRelic.Reflection
             return owner => (TResult)methodCaller(owner);
         }
 
+        public bool TryGenerateParameterlessMethodCaller<TResult>(string assemblyName, string typeName, string methodName, out Func<object, TResult> accessor)
+        {
+            accessor = null;
+            try
+            {
+                var methodCaller = GenerateParameterlessMethodCaller<TResult>(assemblyName, typeName, methodName);
+                accessor = owner => (TResult)methodCaller(owner);
+                return true;
+            }
+            catch (ArgumentNullException)
+            {
+                throw;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public Func<TOwner, TParameter, TResult> GenerateOneParameterMethodCaller<TOwner, TParameter, TResult>(string methodName)
         {
             if (methodName == null)
@@ -389,6 +408,25 @@ namespace NewRelic.Reflection
 
             var propertyGetter = GeneratePropertyAccessorInternal(ownerType, resultType, propertyName);
             return owner => (TResult)propertyGetter(owner);
+        }
+
+        public bool TryGeneratePropertyAccessor<TResult>(Type ownerType, string propertyName, out Func<object, TResult> accessor)
+        {
+            accessor = null;
+            try
+            {
+                var propertyGetter = GeneratePropertyAccessor<TResult>(ownerType, propertyName);
+                accessor = owner => (TResult)propertyGetter(owner);
+                return true;
+            }
+            catch (ArgumentNullException)
+            {
+                throw;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public Func<TOwner, TResult> GeneratePropertyAccessor<TOwner, TResult>(string propertyName)
@@ -605,6 +643,18 @@ namespace NewRelic.Reflection
             }
 
             return methodInfo;
+        }
+
+        public Func<TResult> GenerateParameterlessStaticMethodCaller<TResult>(string assemblyName, string typeName, string methodName)
+        {
+            var ownerType = GetType(assemblyName, typeName);
+
+            var methodInfo = ownerType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+            if (methodInfo == null)
+            {
+                throw new KeyNotFoundException(string.Format("Unable to find method {0} in type {1}", methodName, ownerType.AssemblyQualifiedName));
+            }
+            return (Func<TResult>)methodInfo.CreateDelegate(typeof(Func<TResult>));
         }
 
         private static PropertyInfo GetPropertyInfo(Type type, string propertyName)

@@ -178,7 +178,7 @@ namespace NewRelic.SystemInterfaces
                 catch (Exception ex)
                 {
                     //Log a message here and continue because this instance may not be relevant to the process that we are looking for.
-                    Log.Finest($"Error determining if instance '{instanceName}' is process '{processName}'({pid}). Error: {ex}");
+                    Log.Finest(ex, "Error determining if instance '{instanceName}' is process '{processName}'({pid}).", instanceName, processName, pid);
                 }
             }
 

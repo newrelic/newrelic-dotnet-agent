@@ -153,7 +153,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
             catch (Exception e)
             {
-                Log.ErrorFormat("Failed to start thread profiler: {0}", e);
+                Log.Error(e, "Failed to start thread profiler");
             }
 
             return startedNewSession;
@@ -166,7 +166,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             if (_profileSessionId != InvalidSessionId && _profileSessionId != profileId)
             {
-                Log.WarnFormat("A request to stop a thread profiling session was made. Requesting profile Id = {0}. In process profile Id = {1}", profileId, _profileSessionId);
+                Log.Warn("A request to stop a thread profiling session was made. Requesting profile Id = {0}. In process profile Id = {1}", profileId, _profileSessionId);
                 return false;
             }
 
@@ -207,7 +207,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 }
                 catch (Exception e)
                 {
-                    Log.Debug(branchDescription + " EXCEPTION : " + e.ToString());
+                    Log.Debug(e, branchDescription);
                 }
             }
 
@@ -266,15 +266,15 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         private void LogFailedProfiles()
         {
             if (_largeStackOverflows.Count > 0)
-                Log.DebugFormat("The agent was not able to retrieve the entire stack for {0} managed threads.", _largeStackOverflows.Count);
+                Log.Debug("The agent was not able to retrieve the entire stack for {0} managed threads.", _largeStackOverflows.Count);
 
             if (_failedThreads.Count > 0)
-                Log.DebugFormat("The agent was not able to retrieve a stack trace for {0} managed threads because it would be unsafe for the CLR or it was during JIT compilation or garbage collection.", _failedThreads.Count);
+                Log.Debug("The agent was not able to retrieve a stack trace for {0} managed threads because it would be unsafe for the CLR or it was during JIT compilation or garbage collection.", _failedThreads.Count);
 
             Log.Finest("The Failed thread error codes:");
             foreach (var pair in _failedThreadErrorCodes)
             {
-                Log.FinestFormat("ThreadId: {0}  ErrorCode: {1}", pair.Key, pair.Value);
+                Log.Finest("ThreadId: {0}  ErrorCode: {1}", pair.Key, pair.Value);
             }
         }
 
@@ -312,7 +312,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             {
                 _stopSessionTime = DateTime.UtcNow;
 
-                Log.FinestFormat("Starting Aggregation process at {0}:{1}:{2}:{3}",
+                Log.Finest("Starting Aggregation process at {0}:{1}:{2}:{3}",
                     _stopSessionTime.Hour, _stopSessionTime.Minute, _stopSessionTime.Second, _stopSessionTime.Millisecond);
 
                 ResolveFunctionNames();
@@ -330,13 +330,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
             catch (Exception e)
             {
-                var msg = new StringBuilder(e.Message);
-                if (e.InnerException != null)
-                {
-                    msg.Append("; ");
-                    msg.Append(e.InnerException.Message);
-                }
-                Log.ErrorFormat("Exception performing thread profiling data aggregation: {0}", msg);
+                Log.Error(e, "Exception performing thread profiling data aggregation");
             }
         }
 
@@ -403,7 +397,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                     {
                         if (!_functionNames.TryGetValue(id, out ClassMethodNames name))
                         {
-                            Log.FinestFormat("ThreadProfilingService function lookup failed for id {0}", id);
+                            Log.Finest("ThreadProfilingService function lookup failed for id {0}", id);
                         }
                     }
                 }
@@ -435,7 +429,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
             catch (Exception e)
             {
-                Log.Error(e);
+                Log.Error(e, "PopulateFunctionNameCache() failed");
             }
         }
 

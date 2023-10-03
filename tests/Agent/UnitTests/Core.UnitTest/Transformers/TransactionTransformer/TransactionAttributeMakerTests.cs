@@ -13,9 +13,9 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -110,7 +110,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_ReturnsAllAttributesCreatedByTransactionAttributeMaker()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -149,7 +149,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_ReturnsOneDatabase()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -191,7 +191,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_ReturnsMultipleDatabase()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -236,7 +236,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_ReturnsOneExternal()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -278,7 +278,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_ReturnsMultipleExternal()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -323,7 +323,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_ReturnsAllAttributesThatHaveValues()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -443,7 +443,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _localConfig.highSecurity.enabled = true;
             UpdateConfiguration();
 
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -496,7 +496,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_ReturnsCatAttsWithoutCrossAppId()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -564,7 +564,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_DoesNotIncludeOriginalUri_IfSameValueAsUei()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -594,7 +594,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_SendsAttributesToCorrectLocations()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -671,7 +671,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_AssignsCorrectClassificationToAttributes_ExternalOnly()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -748,7 +748,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_AssignsCorrectClassificationToAttributes_ExternalAndDB()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -826,7 +826,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             // ARRANGE
             var priority = 0.5f;
-            var transactionBuilder = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transactionBuilder = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             var transaction = transactionBuilder.ConvertToImmutableTransaction();
 
             var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -847,7 +847,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_ErrorAttributesNotIncluded_IfErrorCollectorDisabled()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -884,7 +884,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_FalseErrorAttributeIncluded_WithNoError()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -915,7 +915,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetAttributes_ExpecedErrorAttribute_SentToCorrectDestinations(bool isErrorExpected)
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
             var apdexT = TimeSpan.FromSeconds(2);
@@ -1053,7 +1053,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             UpdateConfiguration();
 
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
@@ -1369,7 +1369,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetUserAndAgentAttributes_ReturnsAllAttributesThatHaveValues()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -1439,7 +1439,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetUserAndAgentAttributes_ExcludesErrorCustomAttributes_IfErrorCollectorDisabled()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -1469,7 +1469,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetUserAndAgentAttributes_DoesNotIncludeOriginalUri_IfSameValueAsUei()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -1501,7 +1501,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetUserAndAgentAttributes_SendsAttributesToCorrectLocations()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -1573,7 +1573,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         public void GetUserAndAgentAttributes_AssignsCorrectClassificationToAttributes()
         {
             // ARRANGE
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
@@ -1649,7 +1649,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
 
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var expectedStartTime = DateTime.Now;
             var expectedDuration = TimeSpan.FromMilliseconds(500);
             Mock.Arrange(() => timer.Duration).Returns(expectedDuration);

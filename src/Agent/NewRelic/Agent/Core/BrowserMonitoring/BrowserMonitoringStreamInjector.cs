@@ -1,7 +1,7 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using NewRelic.Agent.Core.Utils;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core;
 using NewRelic.Core.Logging;
 using System;
@@ -105,7 +105,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 }
                 catch (Exception exception)
                 {
-                    Log.Error($"Failed to inject JavaScript agent into response stream: {exception}");
+                    Log.Error(exception, "Failed to inject JavaScript agent into response stream");
                     scriptInjected = false;
                     buffer = originalBuffer;
                     offset = originalOffset;

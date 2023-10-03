@@ -44,6 +44,8 @@ namespace NewRelic.Agent.Core.Samplers
         private int _countConsecutiveSamplingFailures = 0;
         private string _perfCounterInstanceName;
 
+        private const string LOG_PREFIX = "GC Performance Counters:";
+
         /// <summary>
         /// Translates the sample type enum to the name of the windows performance counter
         /// </summary>
@@ -194,7 +196,7 @@ namespace NewRelic.Agent.Core.Samplers
                 catch (Exception ex)
                 {
                     failedSampleTypes.Add(sampleTypeEnum);
-                    LogMessage(LogLevel.Debug, $"Error encountered during the creation of performance counter for '{sampleTypeEnum}' for Performance Counter Instance '{processInstanceName}'.  Metrics of this type will not be captured.  Error : {ex}");
+                    Log.Debug(ex, "{prefix} Error encountered during the creation of performance counter for '{sampleTypeEnum}' for Performance Counter Instance '{processInstanceName}'.  Metrics of this type will not be captured.", LOG_PREFIX, sampleTypeEnum, processInstanceName);
                 }
             }
 
@@ -202,14 +204,14 @@ namespace NewRelic.Agent.Core.Samplers
             if (failedSampleTypes.Count > 0)
             {
                 var msgToken = string.Join(", ", failedSampleTypes.Select(x => x.ToString()).ToArray());
-                LogMessage(LogLevel.Warn, $"The following Performance Counters for Performance Counter Instance '{processInstanceName}' could not be started: {msgToken}.  Debug Level logs will contain more information.");
+                Log.Warn("{prefix} The following Performance Counters for Performance Counter Instance '{processInstanceName}' could not be started: {msgToken}.  Debug Level logs will contain more information.", LOG_PREFIX, processInstanceName, msgToken);
             }
 
             var oldProxies = Interlocked.Exchange(ref _perfCounterProxies, perfCounterProxies);
 
             if (_perfCounterProxies.Count > 0)
             {
-                LogMessage(LogLevel.Debug, $"Sampler is collecting {_perfCounterProxies.Count} performance counter(s) for Performance Counter Instance '{processInstanceName}'.");
+                Log.Debug("{prefix} Sampler is collecting {count} performance counter(s) for Performance Counter Instance '{processInstanceName}'.", LOG_PREFIX, _perfCounterProxies.Count, processInstanceName);
             }
 
             if (oldProxies != null && oldProxies.Count > 0)
@@ -218,23 +220,6 @@ namespace NewRelic.Agent.Core.Samplers
             }
 
             return _perfCounterProxies.Count;
-        }
-
-        private void LogMessage(LogLevel level, string message, Exception ex = null)
-        {
-            if (!Log.IsEnabledFor(level))
-            {
-                return;
-            }
-
-            if (ex == null)
-            {
-                Log.LogMessage(level, $"GC Performance Counters: {message}");
-            }
-            else
-            {
-                Log.LogMessage(level, $"GC Performance Counters: {message}, {ex}");
-            }
         }
 
         /// <summary>
@@ -252,7 +237,7 @@ namespace NewRelic.Agent.Core.Samplers
 
             if (!string.IsNullOrWhiteSpace(_perfCounterInstanceName))
             {
-                LogMessage(LogLevel.Debug, $"Performance Counter Instance name change detected, rebuilding performance counters:  changed from '{_perfCounterInstanceName}' to '{currentProcessInstanceName}'");
+                Log.Debug("{prefix} Performance Counter Instance name change detected, rebuilding performance counters:  changed from '{_perfCounterInstanceName}' to '{currentProcessInstanceName}'", LOG_PREFIX, _perfCounterInstanceName, currentProcessInstanceName);
             }
 
             _perfCounterInstanceName = currentProcessInstanceName;
@@ -272,7 +257,7 @@ namespace NewRelic.Agent.Core.Samplers
             catch
             { }
 
-            LogMessage(LogLevel.Warn, $"The executing user, {userName}, has insufficient permissions to collect Windows Performance Counters.");
+            Log.Warn("{prefix} The executing user, {userName}, has insufficient permissions to collect Windows Performance Counters.", LOG_PREFIX, userName);
 
             Stop();
         }
@@ -283,7 +268,7 @@ namespace NewRelic.Agent.Core.Samplers
 
             if (_countConsecutiveSamplingFailures >= MaxConsecutiveFailuresBeforeDisable)
             {
-                LogMessage(LogLevel.Warn, $"After {MaxConsecutiveFailuresBeforeDisable} failed attempts, GC Metrics sampling will be disabled.");
+                Log.Warn("{prefix} After {MaxConsecutiveFailuresBeforeDisable} failed attempts, GC Metrics sampling will be disabled.", LOG_PREFIX, MaxConsecutiveFailuresBeforeDisable);
                 Stop();
             }
         }
@@ -300,12 +285,12 @@ namespace NewRelic.Agent.Core.Samplers
                     // If there was a prior value from last sampling and now there isn't a value, something is wrong so safely stop the sampler.
                     if (!string.IsNullOrWhiteSpace(_perfCounterInstanceName))
                     {
-                        LogMessage(LogLevel.Warn, $"Unable to obtain the current Performance Counter Instance Name. The prior name was '{_perfCounterInstanceName}'.  GC Samples will no longer be collected.");
+                        Log.Warn("{prefix} Unable to obtain the current Performance Counter Instance Name. The prior name was '{_perfCounterInstanceName}'.  GC Samples will no longer be collected.", LOG_PREFIX, _perfCounterInstanceName);
                         Stop();
                         return;
                     }
 
-                    LogMessage(LogLevel.Finest, $"Unable to obtain the current Perforance Counter Instance Name. GC Samples will not be collected at this time.  Will try again during next sampling cycle.");
+                    Log.Finest("{prefix} Unable to obtain the current Perforance Counter Instance Name. GC Samples will not be collected at this time.  Will try again during next sampling cycle.", LOG_PREFIX);
                     return;
                 }
             }
@@ -316,7 +301,7 @@ namespace NewRelic.Agent.Core.Samplers
             }
             catch (Exception ex)
             {
-                LogMessage(LogLevel.Finest, $"An exception occurred while attempting the to get the current Performance Counter Instance Name", ex);
+                Log.Finest(ex, "{prefix} An exception occurred while attempting the to get the current Performance Counter Instance Name", LOG_PREFIX);
                 HandleProblem();
                 return;
             }
@@ -329,7 +314,7 @@ namespace NewRelic.Agent.Core.Samplers
                         ? LogLevel.Warn
                         : LogLevel.Debug;
 
-                    LogMessage(logLevel, $"Unable to instantiate any perf counters.  (Performance Counter Instance '{_perfCounterInstanceName}', attempt #{_countConsecutiveSamplingFailures})");
+                    Log.LogMessage(logLevel, "{prefix} Unable to instantiate any perf counters.  (Performance Counter Instance '{_perfCounterInstanceName}', attempt #{_countConsecutiveSamplingFailures})", LOG_PREFIX, _perfCounterInstanceName, _countConsecutiveSamplingFailures);
 
                     HandleProblem();
 
@@ -354,7 +339,7 @@ namespace NewRelic.Agent.Core.Samplers
             }
             catch (Exception ex)
             {
-                LogMessage(LogLevel.Error, $"Unable to get GC performance counter sample for Performance Counter Instance '{_perfCounterInstanceName}'.", ex);
+                Log.Error(ex, "{prefix} Unable to get GC performance counter sample for Performance Counter Instance '{_perfCounterInstanceName}'.", LOG_PREFIX, _perfCounterInstanceName);
 
                 HandleProblem();
             }

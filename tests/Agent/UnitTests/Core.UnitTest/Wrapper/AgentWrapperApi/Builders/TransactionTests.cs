@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Attributes;
@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             _errorService = new ErrorService(configurationService);
             _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
-            _transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            _transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
             _publishedEvent = null;
             _eventSubscription = new EventSubscription<TransactionFinalizedEvent>(e => _publishedEvent = e);
             _wrapperToken = new object();
@@ -165,7 +165,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var transactionName = TransactionName.ForWebTransaction("WebTransaction", "Test");
 
 
-            var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            var transaction = new Transaction(_configuration, transactionName, Mock.Create<ISimpleTimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
 
             for (int i = 0; i < segmentCount; i++)
             {
@@ -189,7 +189,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var tx = new Transaction(
                 _configuration,
                 Arg.IsAny<TransactionName>(),
-                Arg.IsAny<ITimer>(),
+                Arg.IsAny<ISimpleTimer>(),
                 Arg.IsAny<DateTime>(),
                 Arg.IsAny<ICallStackManager>(),
                 Arg.IsAny<IDatabaseService>(),
@@ -213,7 +213,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             // Arrange
             var name = TransactionName.ForWebTransaction("foo", "bar");
             var startTime = DateTime.Now;
-            var timer = Mock.Create<ITimer>();
+            var timer = Mock.Create<ISimpleTimer>();
             var callStackManager = Mock.Create<ICallStackManager>();
             var sqlObfuscator = Mock.Create<IDatabaseService>();
             var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, sqlObfuscator, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);

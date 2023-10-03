@@ -24,7 +24,8 @@ namespace NewRelic.Agent.Core.Utilization
     {
         private const string ValidateMetadataRegex = @"^[a-zA-Z0-9-_. /]*$";
 #if NET
-		private const string ContainerIdRegex = @"[0-9a-f]{64}";
+        private const string ContainerIdV1Regex = @".*:cpu:/docker/([0-9a-f]{64}).*";
+        private const string ContainerIdV2Regex = ".*/docker/containers/([0-9a-f]{64})/.*";
 #endif
 
         private const string AwsName = @"aws";
@@ -95,11 +96,16 @@ namespace NewRelic.Agent.Core.Utilization
             // If Docker info is set to be checked, it must be checked for all vendors.
             if (_configuration.UtilizationDetectDocker)
             {
-                var dockerVendorInfo = GetDockerVendorInfo();
-                if (dockerVendorInfo != null)
+#if NETSTANDARD2_0
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
+                    var dockerVendorInfo = GetDockerVendorInfo(new FileReaderWrapper());
+                    if (dockerVendorInfo != null)
+                    {
+                        vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
+                    }
                 }
+#endif
             }
 
             if (_configuration.UtilizationDetectKubernetes)
@@ -270,52 +276,74 @@ namespace NewRelic.Agent.Core.Utilization
             }
         }
 
-        private IVendorModel GetDockerVendorInfo()
-        {
 #if NET
-			bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-			int subsystemsIndex = 1;
-			int controlGroupIndex = 2;
+        public IVendorModel GetDockerVendorInfo(IFileReaderWrapper fileReaderWrapper)
+        {
+                IVendorModel vendorModel = null;
+                try
+                {
+                    var fileContent = fileReaderWrapper.ReadAllText("/proc/self/mountinfo");
+                    vendorModel = TryGetDockerCGroupV2(fileContent);
+                    if (vendorModel == null)
+                        Log.Finest("Found /proc/self/mountinfo but failed to parse Docker container id.");
 
-			if (isLinux)
-			{
-				try
-				{
-					string id = null;
-					var fileLines = File.ReadAllLines("/proc/self/cgroup");
+                }
+                catch (Exception ex)
+                {
+                    Log.Finest(ex, "Failed to parse Docker container id from /proc/self/mountinfo.");
+                }
 
-					foreach(var line in fileLines)
-					{
-						var elements = line.Split(StringSeparators.Colon);
-						var cpuSubsystem = elements[subsystemsIndex].Split(StringSeparators.Comma).FirstOrDefault(subsystem => subsystem == "cpu");
-						if (cpuSubsystem != null)
-						{
-							var controlGroup = elements[controlGroupIndex];
-							var match = Regex.Match(controlGroup, ContainerIdRegex);
-							
-							if (match.Success)
-							{
-								id = match.Value;
-							}
-						}
-					}
+                if (vendorModel == null) // fall back to the v1 check if v2 wasn't successful
+                {
+                    try
+                    {
+                        var fileContent = fileReaderWrapper.ReadAllText("/proc/self/cgroup");
+                        vendorModel = TryGetDockerCGroupV1(fileContent);
+                        if (vendorModel == null)
+                            Log.Finest("Found /proc/self/cgroup but failed to parse Docker container id.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Finest(ex, "Failed to parse Docker container id from /proc/self/cgroup.");
+                        return null;
+                    }
+                }
 
-					if(id == null)
-					{
-						return null;
-					}
-
-					return new DockerVendorModel(id);
-				}
-				catch
-				{
-					return null;
-				}
-				
-			}
-#endif
-            return null;
+                return vendorModel;
         }
+
+        private IVendorModel TryGetDockerCGroupV1(string fileContent)
+        {
+            string id = null;
+            var matches = Regex.Matches(fileContent, ContainerIdV1Regex);
+            if (matches.Count > 0)
+            {
+                var firstMatch = matches[0];
+                if (firstMatch.Success && firstMatch.Groups.Count > 1 && firstMatch.Groups[1].Success)
+                {
+                    id = firstMatch.Groups[1].Value;
+                }
+            }
+
+            return id == null ? null : new DockerVendorModel(id);
+        }
+
+        private IVendorModel TryGetDockerCGroupV2(string fileContent)
+        {
+            string id = null;
+            var matches = Regex.Matches(fileContent, ContainerIdV2Regex);
+            if (matches.Count > 0)
+            {
+                var firstMatch = matches[0];
+                if (firstMatch.Success && firstMatch.Groups.Count > 1 && firstMatch.Groups[1].Success)
+                {
+                    id = firstMatch.Groups[1].Value;
+                }
+            }
+
+            return id == null ? null : new DockerVendorModel(id);
+        }
+#endif
 
         public IVendorModel GetKubernetesInfo()
         {
@@ -336,7 +364,7 @@ namespace NewRelic.Agent.Core.Utilization
 
             if (!IsValidMetadata(normalizedValue))
             {
-                Log.InfoFormat("Unable to validate {0} metadata for the {1} field.", vendorName, metadataField);
+                Log.Info("Unable to validate {0} metadata for the {1} field.", vendorName, metadataField);
 
                 switch (vendorName)
                 {
@@ -376,4 +404,19 @@ namespace NewRelic.Agent.Core.Utilization
             return Regex.IsMatch(data, ValidateMetadataRegex);
         }
     }
+#if NETSTANDARD2_0
+    // needed for unit testing only
+    public interface IFileReaderWrapper
+    {
+        string ReadAllText(string fileName);
+    }
+
+    public class FileReaderWrapper : IFileReaderWrapper
+    {
+        public string ReadAllText(string fileName)
+        {
+            return File.ReadAllText(fileName);
+        }
+    }
+#endif
 }

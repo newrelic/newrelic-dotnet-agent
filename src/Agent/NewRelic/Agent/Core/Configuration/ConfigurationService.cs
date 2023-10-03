@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static void UpdateLogLevel(configuration localConfiguration)
         {
-            Log.InfoFormat("The log level was updated to {0}", localConfiguration.LogConfig.LogLevel);
+            Log.Info("The log level was updated to {0}", localConfiguration.LogConfig.LogLevel);
             LoggerBootstrapper.UpdateLoggingLevel(localConfiguration.LogConfig.LogLevel);
         }
 
@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
             catch (Exception exception)
             {
-                Log.Error($"Unable to parse the Configuration data from the server so no server side configuration was applied: {exception}");
+                Log.Error(exception, "Unable to parse the Configuration data from the server so no server side configuration was applied");
             }
         }
 

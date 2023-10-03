@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Core.Samplers
             }
             catch (Exception ex)
             {
-                Log.Error($"Unable to get Memory sample.  No Memory metrics will be reported.  Error : {ex}");
+                Log.Error(ex, "Unable to get Memory sample.  No Memory metrics will be reported.");
                 Stop();
             }
         }

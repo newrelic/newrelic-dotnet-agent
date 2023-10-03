@@ -6,6 +6,12 @@ namespace NewRelic.Agent.Core.AgentHealth
     public enum AgentHealthEvent
     {
         TransactionGarbageCollected,
-        WrapperShutdown
+        WrapperShutdown,
+        Transaction,
+        Log,
+        Custom,
+        Error,
+        Span,
+        InfiniteTracingSpan
     }
 }

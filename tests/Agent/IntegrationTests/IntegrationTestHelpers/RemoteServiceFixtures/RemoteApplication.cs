@@ -9,6 +9,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
@@ -371,6 +372,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             {
                 try
                 {
+                    Debug.Assert(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
                     //The test runner opens an event created by the app server and set it to signal the app server that the test has finished. 
                     var remoteAppEvent = EventWaitHandle.OpenExisting(shutdownChannelName);
                     remoteAppEvent.Set();

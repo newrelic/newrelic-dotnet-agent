@@ -10,13 +10,11 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
@@ -215,7 +213,7 @@ namespace NewRelic.Agent.Core
                     var vendorValidationResult = vendorValidateShouldExplain();
                     if (!vendorValidationResult.IsValid)
                     {
-                        Log.DebugFormat("Failed vendor condition for executing explain plan: {0}", vendorValidationResult.ValidationMessage);
+                        Log.Debug("Failed vendor condition for executing explain plan: {0}", vendorValidationResult.ValidationMessage);
                         return false;
                     }
                 }
@@ -283,7 +281,7 @@ namespace NewRelic.Agent.Core
                 return;
             }
 
-            Log.Error($"An exception occurred in a wrapper: {exception}");
+            Log.Error(exception, "An exception occurred in a wrapper");
         }
 
         #endregion Error handling
@@ -338,7 +336,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Error($"RUM: Failed to build Browser Monitoring agent script: {ex}");
+                Log.Error(ex, "RUM: Failed to build Browser Monitoring agent script");
                 {
                     return null;
                 }

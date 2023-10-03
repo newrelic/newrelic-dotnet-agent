@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Exceptions;
+using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
@@ -174,14 +174,14 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private static void ImmediateShutdown(string message)
         {
-            Log.InfoFormat("Shutting down: {0}", message);
+            Log.Info("Shutting down: {0}", message);
             EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
         }
 
         private void ScheduleRestart()
         {
             var _retryTime = ConnectionRetryBackoffSequence[_connectionAttempt];
-            Log.InfoFormat("Will attempt to reconnect in {0} seconds", _retryTime.TotalSeconds);
+            Log.Info("Will attempt to reconnect in {0} seconds", _retryTime.TotalSeconds);
             _scheduler.ExecuteOnce(Connect, _retryTime);
 
             _connectionAttempt = Math.Min(_connectionAttempt + 1, ConnectionRetryBackoffSequence.Length - 1);

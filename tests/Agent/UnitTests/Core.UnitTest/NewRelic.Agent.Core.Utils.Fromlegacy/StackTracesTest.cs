@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using NewRelic.Agent.Core;
+using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Utils

@@ -32,7 +32,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Properties\PublishProfiles\LocalDeploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -49,7 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
+    <ProjectReference Include="..\Common\SharedApplicationHelpers\SharedApplicationHelpers.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NewRelic.Agent.IntegrationTestHelpers;
 using Serilog;
 using Serilog.Events;
 
@@ -21,26 +20,28 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
     class SerilogLoggingWebAdapter : ILoggingAdapter
     {
         private static readonly HttpClient _client = new HttpClient();
+        private readonly string _loggingPort;
         private string _uriBase;
 
-        public SerilogLoggingWebAdapter()
+        public SerilogLoggingWebAdapter(string loggingPort)
         {
+            _loggingPort = loggingPort;
         }
 
         public void Debug(string message)
         {
-            var result = _client.GetStringAsync(_uriBase + "test?logLevel=DEBUG&message=" + message).Result;
+            _ = _client.GetStringAsync(_uriBase + "test?logLevel=DEBUG&message=" + message).Result;
         }
 
         public void Info(string message)
         {
-            var result = _client.GetStringAsync(_uriBase + "test?logLevel=INFO&message=" + message).Result;
+            _ = _client.GetStringAsync(_uriBase + "test?logLevel=INFO&message=" + message).Result;
         }
         public void Info(string message, Dictionary<string, object> context)
         {
             var contextString = string.Join(", ", context.Select(c => c.Key + "=" + c.Value));
 
-            var result = _client.GetStringAsync(_uriBase + "testContext?message=" + message + "&contextData=" + contextString).Result;
+            _ = _client.GetStringAsync(_uriBase + "testContext?message=" + message + "&contextData=" + contextString).Result;
         }
 
         public void InfoWithParam(string message, object param)
@@ -50,7 +51,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
 
         public void Warn(string message)
         {
-            var result = _client.GetStringAsync(_uriBase + "test?logLevel=WARN&message=" + message).Result;
+            _ = _client.GetStringAsync(_uriBase + "test?logLevel=WARN&message=" + message).Result;
         }
 
         public void Error(Exception exception)
@@ -66,17 +67,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
             // In this case we are not passing the exact Exception to the test app, just the message.
             // The test app will create an Exception for us.
             // As long as it has the same message and class with a stacktrace of any kind, its good for test.
-            var result = _client.GetStringAsync(_uriBase + "test?logLevel=NOMESSAGE&message=" + string.Empty).Result;
+            _ = _client.GetStringAsync(_uriBase + "test?logLevel=NOMESSAGE&message=" + string.Empty).Result;
         }
 
         public void Fatal(string message)
         {
-            var result = _client.GetStringAsync(_uriBase + "test?logLevel=FATAL&message=" + message).Result;
+            _ = _client.GetStringAsync(_uriBase + "test?logLevel=FATAL&message=" + message).Result;
         }
 
         public void NoMessage()
         {
-            var result = _client.GetStringAsync(_uriBase + "test?logLevel=FATAL&message=EMPTY").Result;
+            _ = _client.GetStringAsync(_uriBase + "test?logLevel=FATAL&message=EMPTY").Result;
         }
 
         public void Configure()
@@ -106,8 +107,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         { 
             var logger = loggerConfig.CreateLogger();
 
-            var port = RandomPortGenerator.NextPort();
-            _uriBase = "http://localhost:" + port + "/";
+            _uriBase = "http://localhost:" + _loggingPort + "/";
             var hostTask = CreateHostBuilder(_uriBase).Build().RunAsync();
 
             Console.WriteLine("URI: " + _uriBase);

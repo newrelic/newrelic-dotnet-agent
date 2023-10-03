@@ -154,7 +154,7 @@ namespace NewRelic.Agent.Core.Config
 					return null;
 				}
 
-				Log.InfoFormat("Configuration file found in path pointed to by NewRelic.ConfigFile appSetting: {0}", fileName);
+				Log.Info("Configuration file found in path pointed to by NewRelic.ConfigFile appSetting: {0}", fileName);
 				return fileName;
 			}
 			catch (Exception)
@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core.Config
                     return null;
                 }
 
-                Log.InfoFormat("Configuration file found in path pointed to by NewRelic.ConfigFile appSetting of app/web config: {0}", fileName);
+                Log.Info("Configuration file found in path pointed to by NewRelic.ConfigFile appSetting of app/web config: {0}", fileName);
                 return fileName;
             }
             catch (Exception)
@@ -195,7 +195,7 @@ namespace NewRelic.Agent.Core.Config
 					filename = Path.Combine(directory, NewRelicConfigFileName);
 					if (File.Exists(filename))
 					{
-						Log.InfoFormat("Configuration file found in app/web root directory: {0}", filename);
+						Log.Info("Configuration file found in app/web root directory: {0}", filename);
 						return filename;
 					}
 				}
@@ -204,7 +204,7 @@ namespace NewRelic.Agent.Core.Config
 				filename = Path.Combine(currentDirectory, NewRelicConfigFileName);
 				if (File.Exists(filename))
 				{
-					Log.InfoFormat("Configuration file found in app/web root directory: {0}", filename);
+					Log.Info("Configuration file found in app/web root directory: {0}", filename);
 					return filename;
 				}
 
@@ -227,7 +227,7 @@ namespace NewRelic.Agent.Core.Config
                 if (!FileExists(fileName))
                     return null;
 
-                Log.InfoFormat("Configuration file found in app/web root directory: {0}", fileName);
+                Log.Info("Configuration file found in app/web root directory: {0}", fileName);
                 return fileName;
             }
             catch (Exception)
@@ -250,7 +250,7 @@ namespace NewRelic.Agent.Core.Config
                 if (!FileExists(fileName))
                     return null;
 
-                Log.InfoFormat("Configuration file found in execution path: {0}", fileName);
+                Log.Info("Configuration file found in execution path: {0}", fileName);
                 return fileName;
             }
             catch (Exception)
@@ -271,7 +271,7 @@ namespace NewRelic.Agent.Core.Config
                 if (!FileExists(fileName))
                     return null;
 
-                Log.InfoFormat("Configuration file found in New Relic home directory: {0}", fileName);
+                Log.Info("Configuration file found in New Relic home directory: {0}", fileName);
                 return fileName;
             }
             catch (Exception)
@@ -287,7 +287,7 @@ namespace NewRelic.Agent.Core.Config
                 if (!FileExists(NewRelicConfigFileName))
                     return null;
 
-                Log.InfoFormat("Configuration file found in current working directory: {0}", NewRelicConfigFileName);
+                Log.Info("Configuration file found in current working directory: {0}", NewRelicConfigFileName);
                 return NewRelicConfigFileName;
             }
             catch (Exception)
@@ -363,10 +363,10 @@ namespace NewRelic.Agent.Core.Config
             switch (e.Severity)
             {
                 case XmlSeverityType.Error:
-                    Log.ErrorFormat("An error occurred parsing {0} - {1}", NewRelicConfigFileName, e.Message);
+                    Log.Error(e.Exception, "An error occurred parsing {0}", NewRelicConfigFileName);
                     break;
                 case XmlSeverityType.Warning:
-                    Log.WarnFormat("{0} warning - {1}", NewRelicConfigFileName, e.Message);
+                    Log.Warn(e.Exception, "{0} warning", NewRelicConfigFileName);
                     break;
             }
 
@@ -405,7 +405,7 @@ namespace NewRelic.Agent.Core.Config
             }
             catch (Exception ex)
             {
-                Log.WarnFormat("An unknown error occurred when performing XML schema validation on config file {0}: {1}", NewRelicConfigFileName, ex.Message);
+                Log.Warn(ex, "An unknown error occurred when performing XML schema validation on config file {0}", NewRelicConfigFileName);
             }
 
             EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
@@ -438,7 +438,7 @@ namespace NewRelic.Agent.Core.Config
                 }
                 catch (Exception ex)
                 {
-                    Log.WarnFormat("An error occurred parsing {0} - {1}", NewRelicConfigFileName, ex.Message);
+                    Log.Warn(ex, "An error occurred parsing {0}", NewRelicConfigFileName);
                 }
             }
         }
@@ -455,7 +455,7 @@ namespace NewRelic.Agent.Core.Config
             }
             catch (Exception ex)
             {
-                Log.WarnFormat("An error occurred reading config file schema: {0}", ex.Message);
+                Log.Warn(ex, "An error occurred reading config file schema");
             }
 
             return configSchemaContents;
@@ -501,7 +501,7 @@ namespace NewRelic.Agent.Core.Config
                 var sslAttribute = node?.Attributes?["ssl"];
                 if (sslAttribute != null)
                 {
-                    Log.WarnFormat("'ssl' is no longer a configurable service attribute and cannot be disabled. Please remove from {0}.", NewRelicConfigFileName);
+                    Log.Warn("'ssl' is no longer a configurable service attribute and cannot be disabled. Please remove from {0}.", NewRelicConfigFileName);
 
                     node.Attributes.Remove(sslAttribute);
                 }

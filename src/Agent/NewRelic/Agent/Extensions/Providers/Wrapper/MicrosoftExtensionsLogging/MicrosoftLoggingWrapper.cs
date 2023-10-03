@@ -9,7 +9,8 @@ using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using NewRelic.Reflection;
-using System.Dynamic;
+using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 {
@@ -17,8 +18,7 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
     {
         // Cached accessor functions
         private static Func<object, dynamic> _getLoggersArray;
-        private static Func<object, object> _getLoggerProperty;
-        private static Func<object, MEL.IExternalScopeProvider> _getScopeProvider;
+        private static PropertyInfo _scopeProviderPropertyInfo;
 
         private static bool _contextDataNotSupported = false;
 
@@ -28,7 +28,11 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+            if (!LogProviders.KnownMELProviderEnabled)
+            {
+                return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
+            }
+            return new CanWrapResponse(false);
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
@@ -71,27 +75,24 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
 
             try
             {
-                // We are trying to access this property:
-                // logger.Loggers[0].Logger.ScopeProvider
+                // MEL keeps an array of scope handlers. We can ask one of them for the current scope data.
 
-                // Get the array of Loggers (logger.Loggers[])
-                var getLoggersArrayFunc = _getLoggersArray ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<dynamic>(logger.GetType(), "Loggers");
+                // Get the array of ScopeLoggers (logger.ScopeLoggers[])
+                var getLoggersArrayFunc = _getLoggersArray ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<dynamic>(logger.GetType(), "ScopeLoggers");
                 var loggers = getLoggersArrayFunc(logger);
 
-                // Get the first logger in the array (logger.Loggers[0])
+                // Get the first ScopeLogger in the array (logger.ScopeLoggers[0])
+                // If there is more than one scope logger, they've all received the same data, so the first
+                // one should be fine
                 object firstLogger = loggers.GetValue(0);
 
-                // Get the internal logger (logger.Loggers[0].Logger)
-                var getLoggerPropertyFunc = _getLoggerProperty ??= firstLogger.GetType().GetProperty("Logger").GetValue;
-                object internalLogger = getLoggerPropertyFunc(firstLogger);
-
-                // Get the scope provider from that logger (logger.Loggers[0].Logger.ScopeProvider)
-                var getScopeProviderFunc = _getScopeProvider ??= VisibilityBypasser.Instance.GeneratePropertyAccessor<MEL.IExternalScopeProvider>(internalLogger.GetType(), "ScopeProvider");
-                var scopeProvider = getScopeProviderFunc(internalLogger);
+                // Get the scope provider from that logger (logger.ScopeLoggers[0].ExternalScopeProvider)
+                var scopeProviderPI = _scopeProviderPropertyInfo ??= firstLogger.GetType().GetProperty("ExternalScopeProvider");
+                var scopeProvider = scopeProviderPI.GetValue(firstLogger) as IExternalScopeProvider;
 
                 // Get the context data
                 var harvestedKvps = new Dictionary<string, object>();
-                scopeProvider.ForEachScope((scopeObject, accumulatedKvps) =>
+                scopeProvider?.ForEachScope((scopeObject, accumulatedKvps) =>
                 {
                     if (scopeObject is IEnumerable<KeyValuePair<string, object>> kvps)
                     {
@@ -120,12 +121,6 @@ namespace NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging
         private AfterWrappedMethodDelegate DecorateLogMessage(MEL.ILogger logger, IAgent agent)
         {
             if (!agent.Configuration.LogDecoratorEnabled)
-            {
-                return Delegates.NoOp;
-            }
-
-            // NLog can alter the message so we want to skip MEL decoration for NLog
-            if (LogProviders.RegisteredLogProvider[(int)LogProvider.NLog])
             {
                 return Delegates.NoOp;
             }

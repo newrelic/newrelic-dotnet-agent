@@ -111,7 +111,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to determine agent version. {ex}");
+                Log.Error(ex, "Failed to determine agent version.");
                 return "?.?.?.?";
             }
         }

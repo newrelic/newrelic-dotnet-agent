@@ -3,7 +3,7 @@
 The following configuration files are generated using Xsd2Code:
 
 * `src\Agent\NewRelic\Agent\Core\Config\Configuration.cs`
-* `src\Agent\NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\Extension.cs`
+* `src\Agent\NewRelic\Agent\Core\Extension\Extension.cs`
 
 Please note the version of Xsd2Code included in the code base **requires .NET 3.5** to execute successfully.
 
@@ -20,7 +20,7 @@ Updating the configuration consists of two steps:
 Update the relevant XSD with new or modified configuration based on your needs.
 
 * `src\Agent\NewRelic\Agent\Core\Config\Configuration.xsd`
-* `src\Agent\NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\Extension.xsd`
+* `src\Agent\NewRelic\Agent\Core\Extension\Extension.xsd`
 
 ## Update the Class
 
@@ -37,7 +37,7 @@ $rootDirectory = Resolve-Path ".\"; .\build\Tools\xsd2code\xsd2code.exe "$rootDi
 ### Extension.cs
 
 ```powershell
-$rootDirectory = Resolve-Path ".\"; .\build\Tools\xsd2code\xsd2code.exe "$rootDirectory\src\Agent\NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\Extension.xsd" NewRelic.Agent.Core.Extension Extension.cs /cl /ap /sc /xa
+$rootDirectory = Resolve-Path ".\"; .\build\Tools\xsd2code\xsd2code.exe "$rootDirectory\src\Agent\NewRelic\Agent\Core\Extension\Extension.xsd" NewRelic.Agent.Core.Extension Extension.cs /cl /ap /sc /xa
 ```
 
 ## Add the Copyright

@@ -22,20 +22,14 @@ namespace MicrosoftExtensionsLogging
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             var provider = instrumentedMethodCall.MethodCall.MethodArguments[0].ToString();
-            if (LogProviders.Log4NetProviderNames.Contains(provider))
+            if (LogProviders.KnownMELProviders.Contains(provider))
             {
-                LogProviders.RegisteredLogProvider[(int)LogProvider.Log4Net] = true;
-                agent.Logger.Log(Level.Info, "Detected log4net provider in use with Microsoft.Extensions.Logging, disabling log4net instrumentation.");
+                LogProviders.KnownMELProviderEnabled = true;
+                agent.Logger.Log(Level.Info, $"Known log provider {provider} in use. Disabling Microsoft.Extensions.Logging instrumentation.");
             }
-            else if (LogProviders.SerilogProviderNames.Contains(provider))
+            else
             {
-                LogProviders.RegisteredLogProvider[(int)LogProvider.Serilog] = true;
-                agent.Logger.Log(Level.Info, "Detected Serilog provider in use with Microsoft.Extensions.Logging, disabling Serilog instrumentation.");
-            }
-            else if (LogProviders.NLogProviderNames.Contains(provider))
-            {
-                LogProviders.RegisteredLogProvider[(int)LogProvider.NLog] = true;
-                agent.Logger.Log(Level.Info, "Detected NLog provider in use with Microsoft.Extensions.Logging, disabling NLog instrumentation.");
+                agent.Logger.Log(Level.Info, $"Log provider {provider} will use Microsoft.Extensions.Logging instrumentation.");
             }
 
             return Delegates.NoOp;

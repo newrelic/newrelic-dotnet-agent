@@ -5,9 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
             );
 
             _fixture.AddCommand("HttpClientDriver Get http://www.google.com");
-            _fixture.AddCommand("HttpClientDriver CancelledGetOperation http://www.bing.com");
+            _fixture.AddCommand("HttpClientDriver CancelledGetOperation http://newrelic.com");
             _fixture.AddCommand("HttpClientDriver FactoryGet http://www.yahoo.com");
 
             _fixture.Initialize();
@@ -61,9 +61,9 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
                 new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/Get", callCount = 1 },
 
-                new Assertions.ExpectedMetric { metricName = @"External/www.bing.com/all", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"External/www.bing.com/Stream/GET", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"External/www.bing.com/Stream/GET", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/CancelledGetOperation", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"External/newrelic.com/all", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"External/newrelic.com/Stream/GET", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"External/newrelic.com/Stream/GET", metricScope = @"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.Internal.HttpClientDriver/CancelledGetOperation", callCount = 1 },
 
                 new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/Stream/GET", callCount = 1 },
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation
             void AssertSpanEventsContainHttpStatusCodeForCompletedRequests(SpanEvent spanEvent)
             {
                 var url = (string)spanEvent.AgentAttributes["http.url"];
-                if (url.Contains("bing"))
+                if (url.Contains("newrelic"))
                 {
                     Assert.DoesNotContain("http.statusCode", spanEvent.AgentAttributes.Keys);
                 }

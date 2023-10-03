@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.SystemExtensions.Collections.Generic;

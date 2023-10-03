@@ -116,7 +116,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             foreach (var ex in result.Exceptions)
             {
-                Log.Warn($"An exception occurred while loading an extension: {ex}");
+                Log.Warn(ex, "An exception occurred while loading an extension");
             }
 
             return result.Instances;
@@ -135,7 +135,7 @@ namespace NewRelic.Agent.Core.Utilities
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to load wrappers: {ex}");
+                Log.Error(ex, "Failed to load wrappers");
                 throw;
             }
         }
@@ -168,7 +168,7 @@ namespace NewRelic.Agent.Core.Utilities
 
             foreach (var factory in contextStorageFactories)
             {
-                Log.DebugFormat("Available storage type : {0} ({1})", factory.GetType().FullName, factory.IsValid);
+                Log.Debug("Available storage type : {0} ({1})", factory.GetType().FullName, factory.IsValid);
             }
 
             return contextStorageFactories.Where(IsValid);
@@ -187,7 +187,7 @@ namespace NewRelic.Agent.Core.Utilities
 
                     foreach (var ex in result.Exceptions)
                     {
-                        Log.Warn($"An exception occurred while loading an extension from assembly {assemblyPath}: {ex}");
+                        Log.Warn(ex, "An exception occurred while loading an extension from assembly {path}", assemblyPath);
                     }
 
                     wrappers = result.Instances.ToArray();

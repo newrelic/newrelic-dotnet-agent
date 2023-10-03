@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Core.Instrumentation
         {
             if (AgentInstallConfiguration.HomeExtensionsDirectory == null)
             {
-                Log.WarnFormat("Live instrumentation updates due to instrumentation file changes will not be applied because HomeExtensionsDirectory is null.");
+                Log.Warn("Live instrumentation updates due to instrumentation file changes will not be applied because HomeExtensionsDirectory is null.");
                 return;
             }
 
@@ -60,18 +60,18 @@ namespace NewRelic.Agent.Core.Instrumentation
             Log.Info("Starting instrumentation refresh from InstrumentationWatcher");
             var result = _instrumentationService.InstrumentationRefresh();
             _wrapperService.ClearCaches();
-            Log.InfoFormat("Completed instrumentation refresh from InstrumentationWatcher: {0}", result);
+            Log.Info("Completed instrumentation refresh from InstrumentationWatcher: {0}", result);
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
-            Log.InfoFormat("Instrumentation change detected: {0} - {1}", e.ChangeType, e.FullPath);
+            Log.Info("Instrumentation change detected: {0} - {1}", e.ChangeType, e.FullPath);
             _action.Signal();
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e)
         {
-            Log.InfoFormat("Instrumentation change detected: {0} - {1} -> {2}", e.ChangeType, e.OldFullPath, e.FullPath);
+            Log.Info("Instrumentation change detected: {0} - {1} -> {2}", e.ChangeType, e.OldFullPath, e.FullPath);
             _action.Signal();
         }
 

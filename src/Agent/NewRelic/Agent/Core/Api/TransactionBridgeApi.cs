@@ -3,7 +3,7 @@
 
 using System;
 using NewRelic.Agent.Api;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.Api
             {
                 try
                 {
-                    Log.ErrorFormat("Error in InsertDistributedTraceHeaders<T>(T, Action<T, string, string>): {0}", ex);
+                    Log.Error(ex, "Error in InsertDistributedTraceHeaders<T>(T, Action<T, string, string>)");
                 }
                 catch (Exception)
                 {
@@ -102,7 +102,7 @@ namespace NewRelic.Agent.Core.Api
             {
                 try
                 {
-                    Log.ErrorFormat("Error in AcceptDistributedTraceHeaders<T>(T, Func<T, string, IEnumerable<string>>, TransportType): {0}", ex);
+                    Log.Error(ex, "Error in AcceptDistributedTraceHeaders<T>(T, Func<T, string, IEnumerable<string>>, TransportType)");
                 }
                 catch (Exception)
                 {
@@ -138,7 +138,7 @@ namespace NewRelic.Agent.Core.Api
             {
                 try
                 {
-                    Log.Error($"Error in AddCustomAttribute: {ex}");
+                    Log.Error(ex, "Error in AddCustomAttribute");
                 }
                 catch (Exception)
                 {
@@ -167,7 +167,7 @@ namespace NewRelic.Agent.Core.Api
                 {
                     try
                     {
-                        Log.ErrorFormat("Failed to get CurrentSpan: {0}", ex);
+                        Log.Error(ex, "Failed to get CurrentSpan");
                     }
                     catch (Exception)
                     {
@@ -195,7 +195,7 @@ namespace NewRelic.Agent.Core.Api
             {
                 try
                 {
-                    Log.Error($"Error in SetUserId: {ex}");
+                    Log.Error(ex, "Error in SetUserId");
                 }
                 catch (Exception)
                 {

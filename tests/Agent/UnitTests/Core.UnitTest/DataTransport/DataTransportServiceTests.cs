@@ -9,7 +9,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Exceptions;
+using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;

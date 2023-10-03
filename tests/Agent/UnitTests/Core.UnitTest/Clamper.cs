@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core

@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
-using NewRelic.IntegrationTests.Models;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentation
 {
@@ -17,7 +16,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         private static ILoggingAdapter _log;
 
         [LibraryMethod]
-        public static void SetFramework(string loggingFramework)
+        public static void SetFramework(string loggingFramework, string loggingPort)
         {
             switch (loggingFramework.ToUpper())
             {
@@ -29,7 +28,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     break;
                 case "SERILOGWEB": // .NET 7.0 ONLY
 #if NET7_0    
-                    _log = new SerilogLoggingWebAdapter();
+                    _log = new SerilogLoggingWebAdapter(loggingPort);
 #endif
                     break;
                 case "MICROSOFTLOGGING":
@@ -50,6 +49,17 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                     _log = new SitecoreLoggingAdapter();
 #endif
                     break;
+                case "SERILOGEL":
+#if NETCOREAPP2_1_OR_GREATER || NET48_OR_GREATER
+                    _log = new SerilogExtensionsLoggingAdapter();
+#endif
+                    break;
+                case "NLOGEL":
+#if NET7_0_OR_GREATER || NET481_OR_GREATER
+                    _log = new NLogExtensionsLoggingAdapter();
+#endif
+                    break;
+
                 default:
                     throw new System.ArgumentNullException(nameof(loggingFramework));
             }

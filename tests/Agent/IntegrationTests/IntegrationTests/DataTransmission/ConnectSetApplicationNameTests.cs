@@ -3,8 +3,8 @@
 
 using System;
 using System.Linq;
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 using Xunit.Abstractions;
 

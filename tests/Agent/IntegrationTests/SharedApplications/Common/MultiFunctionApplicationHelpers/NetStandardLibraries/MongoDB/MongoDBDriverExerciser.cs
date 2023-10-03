@@ -21,7 +21,6 @@ using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System.Runtime.CompilerServices;
 using NewRelic.Api.Agent;
 using System;
-using System.Web.Http.Results;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
 {
@@ -530,6 +529,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
         }
 #endif
 
+        // The Count and CountAsync methods are replaced and marked Obsolete in newer versions of the driver.
+        // We are continuing to test these methods until they are removed because of how the instrumentation
+        // for MongoDB was implemented.
+#if !MONGODRIVER2_3
+#pragma warning disable CS0618 // Type or member is obsolete
+#endif
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -551,8 +556,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MongoDB
             var filter = Builders<CustomMongoDbEntity>.Filter.Eq("Name", "Fred Flintstone");
             return await Collection.CountAsync(filter);
         }
+#if !MONGODRIVER2_3
+        // Restoring Obsolete warnings so that we can more easily identify instrumentation gaps
+#pragma warning restore CS0618 // Type or member is obsolete
+#endif
 
-// CountDocuments{Async} did not exist in driver version 2.3 which is bound to net462 in MultiFunctionApplicationHelpers.csproj
+        // CountDocuments{Async} did not exist in driver version 2.3 which is bound to net462 in MultiFunctionApplicationHelpers.csproj
 #if !MONGODRIVER2_3
         [LibraryMethod]
         [Transaction]

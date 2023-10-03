@@ -3,7 +3,6 @@
 
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
@@ -78,17 +77,17 @@ namespace NewRelic.Agent.Core.DataTransport
                 _agentHealthReporter.ReportSupportabilityDataUsage("Collector", method, request.Content.UncompressedByteCount, new UTF8Encoding().GetBytes(responseContent).Length);
 
                 // Possibly combine these logs? makes parsing harder in tests...
-                Log.DebugFormat("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
-                Log.DebugFormat("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
+                Log.Debug("Request({0}): Invoked \"{1}\" with : {2}", requestGuid, method, serializedData);
+                Log.Debug("Request({0}): Invocation of \"{1}\" yielded response : {2}", requestGuid, method, responseContent);
 
                 DataTransportAuditLogger.Log(DataTransportAuditLogger.AuditLogDirection.Received, DataTransportAuditLogger.AuditLogSource.Collector, responseContent);
 
                 return responseContent;
             }
-            catch (PayloadSizeExceededException)
+            catch (PayloadSizeExceededException ex)
             {
                 // Log that the payload is being dropped
-                Log.ErrorFormat("Request({0}): Dropped large payload: size: {1}, max_payload_size_bytes={2}",
+                Log.Error(ex, "Request({0}): Dropped large payload: size: {1}, max_payload_size_bytes={2}",
                     request!.RequestGuid, request!.Content.PayloadBytes.Length, _configuration.CollectorMaxPayloadSizeInBytes);
 
                 _agentHealthReporter.ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(method);
@@ -101,11 +100,11 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             if (statusCode == HttpStatusCode.UnsupportedMediaType)
             {
-                Log.ErrorFormat("Request({0}): Had invalid json: {1}. Please report to support@newrelic.com", requestGuid, serializedData);
+                Log.Error("Request({0}): Had invalid json: {1}. Please report to support@newrelic.com", requestGuid, serializedData);
             }
 
             // P17: Not supposed to read/use the exception message in the connect response body. We are still going to log it, carefully, since it is very useful for support.
-            Log.ErrorFormat("Request({0}): Received HTTP status code {1} with message {2}. Request content was: {3}", requestGuid, statusCode.ToString(), responseText, serializedData);
+            Log.Error("Request({0}): Received HTTP status code {1} with message {2}. Request content was: {3}", requestGuid, statusCode.ToString(), responseText, serializedData);
 
             throw new HttpException(statusCode, responseText);
         }

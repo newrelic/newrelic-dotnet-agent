@@ -18,7 +18,17 @@ namespace AspNetCoreDistTracingApplication.Controllers
             {
                 using (var httpClient = new HttpClient())
                 {
-                    var result = await httpClient.GetStringAsync(nextUrl);
+                    var requestMessage = new HttpRequestMessage(HttpMethod.Get, nextUrl);
+                    // Purposely include bad traceparent headers to try to break the distributed trace
+                    requestMessage.Headers.TryAddWithoutValidation("traceparent", "bad-traceparent-requestheader");
+                    requestMessage.Content = new StringContent(string.Empty);
+                    // This is not a valid content header, but there are some cases where this has happened
+                    requestMessage.Content.Headers.TryAddWithoutValidation("traceparent", "bad-traceparent-contentheader");
+
+                    //var result = await httpClient.GetStringAsync(nextUrl);
+                    var response = await httpClient.SendAsync(requestMessage);
+                    var result = await response.Content.ReadAsStringAsync();
+
                     return result;
                 }
             }

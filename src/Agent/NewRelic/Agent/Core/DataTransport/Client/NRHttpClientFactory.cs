@@ -17,18 +17,18 @@ namespace NewRelic.Agent.Core.DataTransport.Client
     {
         private IHttpClient _httpClient;
 
+        private bool? _hasProxy;
+
         public IHttpClient CreateClient(IWebProxy proxy, IConfiguration configuration)
         {
-            if (proxy != null)
+            var proxyRequired = (proxy != null);
+            if (_httpClient != null && (_hasProxy == proxyRequired))
             {
-                Interlocked.CompareExchange(ref _httpClient, new NRHttpClient(proxy, configuration), null);
-            }
-            else
-            {
-                Interlocked.CompareExchange(ref _httpClient, new NRHttpClient(null,configuration), null);
+                return _httpClient;
             }
 
-            return _httpClient;
+            _hasProxy = proxyRequired;
+            return _httpClient = new NRHttpClient(proxy, configuration);
         }
     }
 }

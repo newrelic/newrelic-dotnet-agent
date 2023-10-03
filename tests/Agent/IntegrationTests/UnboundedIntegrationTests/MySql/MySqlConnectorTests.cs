@@ -5,9 +5,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -38,6 +39,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 
         protected MySqlConnectorTestBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
+            MsSqlWarmupHelper.WarmupMySql();
+
             _fixture = fixture;
             _fixture.TestLogger = output;
 
@@ -53,9 +56,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     var configModifier = new NewRelicConfigModifier(configPath);
 
                     configModifier
-                        .ConfigureFasterMetricsHarvestCycle(15)
-                        .ConfigureFasterTransactionTracesHarvestCycle(15)
-                        .ConfigureFasterSqlTracesHarvestCycle(15)
+                        .ConfigureFasterMetricsHarvestCycle(45)
+                        .ConfigureFasterTransactionTracesHarvestCycle(45)
+                        .ConfigureFasterSqlTracesHarvestCycle(45)
                         .ForceTransactionTraces()
                         .SetLogLevel("finest");
 
@@ -102,8 +105,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
             };
 
-            var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>();
-
             foreach (var command in commandList)
             {
                 var transactionName = GetTransactionName(command);
@@ -145,16 +146,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                     });
             }
 
-            // only a single sql trace is expected - it will be the command that was slowest, which is always the first command
-            expectedSqlTraces.Add(new
-                Assertions.ExpectedSqlTrace
-            {
-                TransactionName = GetTransactionName(commandList.First()),
-                Sql = "SELECT _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?",
-                DatastoreMetricName = "Datastore/statement/MySQL/dates/select",
-                HasExplainPlan = true
-            });
-
+            var query = "SELECT _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?";
 
             var expectedTransactionTraceSegments = new List<string> { "Datastore/statement/MySQL/dates/select" };
 
@@ -166,7 +158,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
                 {
                     segmentName = "Datastore/statement/MySQL/dates/select",
                     parameterName = "sql",
-                    parameterValue = "SELECT _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?"
+                    parameterValue = query
                 },
                 new Assertions.ExpectedSegmentParameter
                 {
@@ -193,14 +185,23 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+            // there should be only a single trace but we've found that the TransactionName isn't predictable enough
+            // (it's supposed to be the first query, but the assumption that the first query is always the slowest one doesn't
+            // hold universally). So we'll make sure there's just one trace and that the query, metricName and ExplainPlan properties are
+            // what we expect.
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
+            Assert.Single(sqlTraces);
 
-
+            var sqlTrace = sqlTraces.First();
+            Assert.Equal( query, sqlTrace.Sql );
+            Assert.Equal("Datastore/statement/MySQL/dates/select", sqlTrace.DatastoreMetricName);
+            Assert.True(sqlTrace.ParameterData.GetValueOrDefault("explain_plan") != null);
+            
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
-                () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
+                () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics)
             );
 
             // only a single transaction trace is expected - it will be the command that was slowest, which is always the first command

@@ -15,7 +15,7 @@ using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Instrumentation;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Requests;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Time;

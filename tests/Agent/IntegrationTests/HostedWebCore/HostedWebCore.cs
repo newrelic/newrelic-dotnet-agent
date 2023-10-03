@@ -69,8 +69,28 @@ namespace HostedWebCore
 
         private void StartWebServer()
         {
-            var hresult = NativeMethods.WebCoreActivate(ApplicationHostConfigFilePath, null, @".NET Agent Integration Test Web Host");
-            Marshal.ThrowExceptionForHR(hresult);
+            int maxRetries = 3;
+            int curRetry = 0;
+
+            while (true)
+            {
+                try
+                {
+                    var hResult = NativeMethods.WebCoreActivate(ApplicationHostConfigFilePath, null, @".NET Agent Integration Test Web Host");
+                    Marshal.ThrowExceptionForHR(hResult);
+
+                    return; // success
+                }
+                catch
+                {
+                    if (curRetry++ < maxRetries)
+                    {
+                        Thread.Sleep(500);
+                    }
+                    else
+                        throw; // all retries failed
+                }
+            }
         }
 
         private static void CreatePidFile()

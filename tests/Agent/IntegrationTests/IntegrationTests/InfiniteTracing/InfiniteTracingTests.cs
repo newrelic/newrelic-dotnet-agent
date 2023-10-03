@@ -3,10 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
-using Xunit;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
@@ -39,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTests.InfiniteTracing
                 exerciseApplication: () =>
                 {
                     // Wait for 8T to connect
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanStreamingServiceConnectedLogLineRegex, TimeSpan.FromSeconds(15));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.SpanStreamingServiceStreamConnectedLogLineRegex, TimeSpan.FromSeconds(15));
                     // Now send the command to make the 8T Span
                     _fixture.SendCommand("InfiniteTracingTester Make8TSpan");
                     // Now wait to see that the 8T spans were sent successfully

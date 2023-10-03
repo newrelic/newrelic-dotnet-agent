@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
                     _fixture.InitializeApp();
 
                     _fixture.TestDeleteAttribute();
-                    CommonUtils.DeleteXmlAttribute(deleteAttributeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory" }, "metricName");
+                    XmlUtils.DeleteXmlAttribute(deleteAttributeFilePath, "urn:newrelic-extension", new[] { "extension", "instrumentation", "tracerFactory" }, "metricName");
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.InstrumentationRefreshFileWatcherComplete, TimeSpan.FromMinutes(1));
                     _fixture.TestDeleteAttribute();
                 });

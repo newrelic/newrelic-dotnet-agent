@@ -10,7 +10,7 @@ using NewRelic.Core.CodeAttributes;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Utilities;
@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.Api
             {
                 try
                 {
-                    Log.Error($"Failed to initialize the Agent API: {ex}");
+                    Log.Error(ex, "Failed to initialize the Agent API");
                 }
                 catch (Exception)//Swallow the error
                 {
@@ -728,7 +728,7 @@ namespace NewRelic.Agent.Core.Api
         {
             if (_configurationService.Configuration.DistributedTracingEnabled)
             {
-                Log.FinestFormat(DistributedTracingIsEnabledIgnoringCall, nameof(GetRequestMetadata));
+                Log.Finest(DistributedTracingIsEnabledIgnoringCall, nameof(GetRequestMetadata));
                 return Enumerable.Empty<KeyValuePair<string, string>>();
             }
 
@@ -742,7 +742,7 @@ namespace NewRelic.Agent.Core.Api
         {
             if (_configurationService.Configuration.DistributedTracingEnabled)
             {
-                Log.FinestFormat(DistributedTracingIsEnabledIgnoringCall, nameof(GetResponseMetadata));
+                Log.Finest(DistributedTracingIsEnabledIgnoringCall, nameof(GetResponseMetadata));
                 return Enumerable.Empty<KeyValuePair<string, string>>();
             }
 

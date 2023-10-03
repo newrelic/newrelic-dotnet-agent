@@ -222,9 +222,9 @@ namespace ArtifactBuilder.Artifacts
                     throw new PackagingException($@"Product.wxs Framework registryvalue {component.RegistryValue.Name}\{component.RegistryValue.Name} did not have KeyPath set to yes, but was {component.RegistryValue.KeyPath}.");
                 }
 
-                if (component.RegistryValue.MultiStringValue.Count != 3)
+                if (component.RegistryValue.MultiStringValue.Count != 4)
                 {
-                    throw new PackagingException($@"Product.wxs Framework registryvalue {component.RegistryValue.Name}\{component.RegistryValue.Name} did not have correct number of string values: expected 3 was {component.RegistryValue.MultiStringValue.Count}.");
+                    throw new PackagingException($@"Product.wxs Framework registryvalue {component.RegistryValue.Name}\{component.RegistryValue.Name} did not have correct number of string values: expected 4 was {component.RegistryValue.MultiStringValue.Count}.");
                 }
 
                 foreach (var value in _frameworkIISRegistryValues)
@@ -244,9 +244,9 @@ namespace ArtifactBuilder.Artifacts
                     throw new PackagingException($@"Product.wxs Core registryvalue {component.RegistryValue.Name}\{component.RegistryValue.Name} did not have KeyPath set to yes, but was {component.RegistryValue.KeyPath}.");
                 }
 
-                if (component.RegistryValue.MultiStringValue.Count != 4)
+                if (component.RegistryValue.MultiStringValue.Count != 5)
                 {
-                    throw new PackagingException($@"Product.wxs Core registryvalue {component.RegistryValue.Name}\{component.RegistryValue.Name} did not have correct number of string values: expected 4 was {component.RegistryValue.MultiStringValue.Count}.");
+                    throw new PackagingException($@"Product.wxs Core registryvalue {component.RegistryValue.Name}\{component.RegistryValue.Name} did not have correct number of string values: expected 5 was {component.RegistryValue.MultiStringValue.Count}.");
                 }
 
                 foreach (var value in _coreIISRegistryValues)

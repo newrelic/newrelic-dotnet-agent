@@ -7,7 +7,7 @@ using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private ISegmentTreeMaker _segmentTreeMaker;
         private ITransactionAttributeMaker _transactionAttributeMaker;
         private IErrorService _errorService;
-        private static ITimerFactory _timerFactory;
+        private static ISimpleTimerFactory _timerFactory;
         private IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
         private Func<IReadOnlyDictionary<string, object>, string> _errorGroupCallback;
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _agentTimerService = Mock.Create<IAgentTimerService>();
             _errorEventMaker = new ErrorEventMaker(_attribDefSvc, _configurationService, _agentTimerService);
 
-            _timerFactory = new TimerFactory();
+            _timerFactory = new SimpleTimerFactory();
 
             _transactionAttributeMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
             _errorService = new ErrorService(_configurationService);

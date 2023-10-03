@@ -6,8 +6,11 @@ name: Repolinter Action
 # Currently there is no elegant way to specify the default
 # branch in the event filtering, so branches are instead
 # filtered in the "Test Default Branch" step.
-on: [push, workflow_dispatch]
-
+on: 
+  push: 
+    paths-ignore:
+      - ".github/**" # skip changes to the .github branch (workflows, etc.)
+  workflow_dispatch:
 
 # only allow one instance of this workflow to be running per PR or branch, cancels any that are already running
 concurrency:
@@ -22,9 +25,13 @@ jobs:
   repolint:
     name: Run Repolinter
     runs-on: ubuntu-latest
+
+    # don't run this job if triggered by Dependabot
+    if: ${{ github.actor != 'dependabot[bot]' }}
+
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@cba0d00b1fc9a034e1e642ea0f1103c282990604 # v2.5.0
+        uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
         with:
           disable-sudo: true
           egress-policy: audit
@@ -38,7 +45,7 @@ jobs:
             return data.data && data.data.default_branch === context.ref.split('/').slice(-1)[0]
       - name: Checkout Self
         if: ${{ steps.default-branch.outputs.result == 'true' }}
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3      
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       - name: Run Repolinter
         if: ${{ steps.default-branch.outputs.result == 'true' }}
         uses: newrelic/repolinter-action@3f4448f855c351e9695b24524a4111c7847b84cb # v1.7.0

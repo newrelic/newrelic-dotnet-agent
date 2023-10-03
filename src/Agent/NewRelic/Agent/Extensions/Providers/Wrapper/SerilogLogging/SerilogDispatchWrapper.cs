@@ -25,12 +25,7 @@ namespace NewRelic.Providers.Wrapper.SerilogLogging
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            if (!LogProviders.RegisteredLogProvider[(int)LogProvider.Serilog])
-            {
-                return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
-            }
-
-            return new CanWrapResponse(false);
+            return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

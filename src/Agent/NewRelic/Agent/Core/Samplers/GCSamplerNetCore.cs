@@ -88,7 +88,7 @@ namespace NewRelic.Agent.Core.Samplers
             }
             catch (Exception ex)
             {
-                Log.Error($"Unable to get Garbage Collection event listener sample.  Further .NetCore GC metrics will not be collected.  Error : {ex}");
+                Log.Error(ex, "Unable to get Garbage Collection event listener sample.  Further .NetCore GC metrics will not be collected.");
                 Dispose();
             }
         }
@@ -114,7 +114,7 @@ namespace NewRelic.Agent.Core.Samplers
             }
             catch (Exception ex)
             {
-                Log.Error($"Unable to start Garbage Collection Event Listener Sample.  Further .NetCore GC metrics will not be captured.  Error: {ex}");
+                Log.Error(ex, "Unable to start Garbage Collection Event Listener Sample.  Further .NetCore GC metrics will not be captured.");
                 Dispose();
             }
         }

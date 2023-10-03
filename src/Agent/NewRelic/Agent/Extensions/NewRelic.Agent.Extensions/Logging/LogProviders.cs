@@ -6,21 +6,20 @@ using System.Collections.Generic;
 
 namespace NewRelic.Agent.Extensions.Logging
 {
-    public enum LogProvider
-    {
-        Log4Net,
-        Serilog,
-        NLog
-    }
-
     public static class LogProviders
     {
-        public static readonly bool[] RegisteredLogProvider = new bool[Enum.GetNames(typeof(LogProvider)).Length];
+        // This will only be set once, when a Microsoft.Extensions.Logging registration method is called.
+        // It can safely be read concurrently.
+        public static bool KnownMELProviderEnabled = false;
 
-        public static readonly List<string> Log4NetProviderNames = new List<string> { "Microsoft.Extensions.Logging.Log4NetProvider", "log4net.Extensions.Logging.Log4NetProvider" };
-
-        public static readonly List<string> SerilogProviderNames = new List<string> { "Microsoft.Extensions.Logging.SerilogLoggerProvider", "Serilog.Extensions.Logging.SerilogLoggerProvider" };
-
-        public static readonly List<string> NLogProviderNames = new List<string> { "Microsoft.Extensions.Logging.NLogLoggerProvider", "NLog.Extensions.Logging.NLogLoggerProvider" };
+        public static readonly List<string> KnownMELProviders = new List<string>
+        {
+            "Microsoft.Extensions.Logging.Log4NetProvider",
+            "log4net.Extensions.Logging.Log4NetProvider",
+            "Microsoft.Extensions.Logging.SerilogLoggerProvider",
+            "Serilog.Extensions.Logging.SerilogLoggerProvider",
+            "Microsoft.Extensions.Logging.NLogLoggerProvider",
+            "NLog.Extensions.Logging.NLogLoggerProvider"
+        };
     }
 }

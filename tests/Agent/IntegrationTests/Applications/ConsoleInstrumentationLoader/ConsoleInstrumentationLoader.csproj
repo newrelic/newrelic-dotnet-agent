@@ -60,14 +60,15 @@
     <PackageReference Include="NETStandard.Library">
       <Version>2.0.3</Version>
     </PackageReference>
-    <PackageReference Include="NewRelic.Agent.Api">
-      <Version>8.41.1</Version>
-    </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\Shared.csproj">
-      <Project>{f4b857c6-8458-41c7-9254-f9ce97bb473a}</Project>
-      <Name>Shared</Name>
+    <ProjectReference Include="..\..\..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj">
+      <Project>{b187563a-795b-4c70-a525-6470b88ad341}</Project>
+      <Name>NewRelic.Api.Agent</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SharedApplications\Common\SharedApplicationHelpers\SharedApplicationHelpers.csproj">
+      <Project>{85a4b5c1-1248-4de2-ae97-b96b6fa3ae09}</Project>
+      <Name>SharedApplicationHelpers</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

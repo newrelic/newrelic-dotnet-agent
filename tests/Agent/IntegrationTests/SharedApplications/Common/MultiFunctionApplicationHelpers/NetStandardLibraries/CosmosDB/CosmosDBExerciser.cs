@@ -20,7 +20,6 @@ using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Xunit;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
 {
@@ -74,7 +73,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                     {
                         foreach (DatabaseProperties db in await iterator.ReadNextAsync())
                         {
-                            Assert.False(string.IsNullOrEmpty(db.Id));
+                            if (string.IsNullOrEmpty(db.Id))
+                            {
+                                throw new Exception("db.Id was null or empty, but it should have a non-empty value.");
+                            }
                         }
                     }
                 }
@@ -88,7 +90,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                         using (StreamReader sr = new StreamReader(response.Content))
                         {
                             var a = await sr.ReadToEndAsync();
-                            Assert.False(string.IsNullOrEmpty(a));
+                            if (string.IsNullOrEmpty(a))
+                            {
+                                throw new Exception("Stream iterator result was null or empty, but we expected a non-empty value.");
+                            }
                         }
                     }
                 }
@@ -233,7 +238,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                 var response = await container.Scripts.ExecuteStoredProcedureAsync<string>(
                     scriptId, new PartitionKey(1), null);
 
-                Assert.True(String.Equals("Hello, World", response.Resource), "Failed to execute HelloWorldStoredProc.js stored procedure.");
+                if (!string.Equals("Hello, World", response.Resource))
+                {
+                    throw new Exception("Failed to execute HelloWorldStoredProc.js stored procedure.");
+                }
 
             }
             finally
@@ -257,7 +265,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             while (resultSet.HasMoreResults)
             {
                 var response = await resultSet.ReadNextAsync();
-                Assert.True(response.Count == 4);
+
+                if (response.Count != 4)
+                {
+                    throw new Exception($"Expected a value of 4 but got {response.Count}");
+                }
+
                 Console.WriteLine($"\n Account Number: {response.First().AccountNumber}; total due: {response.First().TotalDue};");
             }
 
@@ -277,7 +290,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                     using (JsonTextReader jtr = new JsonTextReader(sr))
                     {
                         JObject result = await JObject.LoadAsync(jtr);
-                        Assert.NotNull(result);
+
+                        if (result == null)
+                        {
+                            throw new Exception("Expected a non-null result.");
+                        }
+
                         Console.WriteLine($"\n Query returned {result["Documents"].Count()} documents.");
                     }
                 }
@@ -377,7 +395,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             while (resultSet.HasMoreResults)
             {
                 var response = await resultSet.ReadNextAsync();
-                Assert.True(response.Count == 4);
+
+                if (response.Count != 4)
+                {
+                    throw new Exception($"Expected a value of 4 but got {response.Count}");
+                }
+
                 Console.WriteLine($"\n Account Number: {response.First().AccountNumber}; total sales: {response.Count};");
             }
         }
@@ -393,7 +416,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
 
             var feedResponse = await container.ReadManyItemsAsync<SalesOrder>(itemList);
 
-            Assert.True(feedResponse.Count == 2);
+
+            if (feedResponse.Count != 2)
+            {
+                throw new Exception($"Expected a value of 2 but got {feedResponse.Count}");
+            }
 
             Console.WriteLine($"\n Account Number: {feedResponse.First().AccountNumber}; total sales: {feedResponse.Count};");
 
@@ -404,7 +431,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
             {
                 dynamic streamResponse = FromStream<dynamic>(responseMessage.Content); 
                 var salesOrders = streamResponse.Documents.ToObject<List<SalesOrder>>();
-                Assert.True(salesOrders.Count == 2);
+                if (salesOrders.Count != 2)
+                {
+                    throw new Exception($"Expected a value of 2 but got {salesOrders.Count}");
+                }
             }
             else
             {
@@ -418,7 +448,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
 
             var salesOrder = GetSalesOrderSample("SalesOrder1");
             var response1 = await container.CreateItemAsync(salesOrder, new PartitionKey(salesOrder.AccountNumber));
-            Assert.True(response1.StatusCode == System.Net.HttpStatusCode.Created);
+
+            if (response1.StatusCode != System.Net.HttpStatusCode.Created)
+            {
+                throw new Exception($"Expected a value of {System.Net.HttpStatusCode.Created} but got {response1.StatusCode}");
+            }
 
 
             var salesOrder2 = GetSalesOrderSample("SalesOrder2");
@@ -446,7 +480,10 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.CosmosDB
                 partitionKey: new PartitionKey(upsertOrder.AccountNumber),
                 item: upsertOrder);
 
-            Assert.True(response.StatusCode == System.Net.HttpStatusCode.Created);
+            if (response.StatusCode != System.Net.HttpStatusCode.Created)
+            {
+                throw new Exception($"Expected a value of {System.Net.HttpStatusCode.Created} but got {response.StatusCode}");
+            }
 
             // For better performance upsert a SalesOrder object from a stream. 
             SalesOrder salesOrderV4 = GetSalesOrderSample("SalesOrder4");

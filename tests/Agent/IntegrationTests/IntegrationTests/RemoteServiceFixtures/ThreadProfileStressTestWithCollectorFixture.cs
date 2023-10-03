@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
@@ -17,6 +19,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void StartThreadStressScenario()
         {
+            Debug.Assert(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             var expectedWaitHandle = $"thread_profile_stress_begin_{Port}";
             var remoteAppEvent = EventWaitHandle.OpenExisting(expectedWaitHandle);
             remoteAppEvent.Set();

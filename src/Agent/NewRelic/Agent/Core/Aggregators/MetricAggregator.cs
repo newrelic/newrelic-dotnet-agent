@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
@@ -63,7 +62,7 @@ namespace NewRelic.Agent.Core.Aggregators
         }
         protected override void Harvest()
         {
-            Log.Info("Metric harvest starting.");
+            Log.Finest("Metric harvest starting.");
 
             foreach (var source in _outOfBandMetricSources)
             {

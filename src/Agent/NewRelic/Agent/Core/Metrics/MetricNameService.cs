@@ -6,8 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
@@ -25,7 +24,7 @@ namespace NewRelic.Agent.Core.Metrics
 
         public string NormalizeUrl(string url)
         {
-            ITimer timer = new Timer();
+            ISimpleTimer timer = new SimpleTimer();
             try
             {
                 url = StripParameters(url);
@@ -59,7 +58,7 @@ namespace NewRelic.Agent.Core.Metrics
             }
             catch (IgnoreTransactionException ex)
             {
-                Log.Debug(ex.Message);
+                Log.Debug(ex, "RenameTransaction() failed");
                 shouldIgnore = true;
                 newPrefixedTransactionName = ex.IgnoredTransactionName;
             }

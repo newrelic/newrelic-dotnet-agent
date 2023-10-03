@@ -137,7 +137,7 @@ namespace NewRelic.Agent.Core.Time
                 }
                 catch (Exception exception)
                 {
-                    Log.Error(exception);
+                    Log.Error(exception, "CreateExecuteEveryTimer() failed");
                 }
                 finally
                 {

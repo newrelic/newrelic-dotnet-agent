@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
                         _transaction.LogFinest($"Ignoring transaction name {FormatTransactionName(transactionName, priority)} because existing transaction name is frozen.");
                     else if (_currentTransactionName == null)
                         _transaction.LogFinest($"Setting transaction name to {FormatTransactionName(transactionName, priority)} from [nothing]");
-                    else if (priority > _highestPriority)
+                    else if ((priority == TransactionNamePriority.UserTransactionName) || (priority > _highestPriority))
                         _transaction.LogFinest($"Setting transaction name to {FormatTransactionName(transactionName, priority)} from {FormatTransactionName(_currentTransactionName, _highestPriority)}");
                     else
                         _transaction.LogFinest($"Ignoring transaction name {FormatTransactionName(transactionName, priority)} in favor of existing name {FormatTransactionName(_currentTransactionName, _highestPriority)}");

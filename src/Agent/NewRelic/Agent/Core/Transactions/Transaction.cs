@@ -11,9 +11,9 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -400,7 +400,7 @@ namespace NewRelic.Agent.Core.Transactions
                 }
                 catch (Exception e)
                 {
-                    Log.DebugFormat("Error while normalizing query parameters: {0}", e);
+                    Log.Debug(e, "Error while normalizing query parameters");
                 }
             }
 
@@ -916,7 +916,7 @@ namespace NewRelic.Agent.Core.Transactions
         private readonly ConcurrentList<Segment> _segments = new ConcurrentList<Segment>();
         public IList<Segment> Segments { get => _segments; }
 
-        private readonly ITimer _timer;
+        private readonly ISimpleTimer _timer;
 
         private TimeSpan? _forcedDuration;
 
@@ -960,7 +960,7 @@ namespace NewRelic.Agent.Core.Transactions
         private volatile string _traceId;
 
         public Transaction(IConfiguration configuration, ITransactionName initialTransactionName,
-            ITimer timer, DateTime startTime, ICallStackManager callStackManager, IDatabaseService databaseService,
+            ISimpleTimer timer, DateTime startTime, ICallStackManager callStackManager, IDatabaseService databaseService,
             float priority, IDatabaseStatementParser databaseStatementParser, IDistributedTracePayloadHandler distributedTracePayloadHandler,
             IErrorService errorService, IAttributeDefinitions attribDefs)
         {

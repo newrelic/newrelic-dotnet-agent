@@ -407,12 +407,12 @@ namespace NewRelic.Parsing
                 var type = dbParam.DbType;
                 if (type == DbType.Binary)
                 {
-                    Log.DebugFormat("Not executing explain plan since DbType is Binary.");
+                    Log.Debug("Not executing explain plan since DbType is Binary.");
                     return false;
                 }
                 else if (type == DbType.Object)
                 {
-                    Log.DebugFormat("Not executing explain plan since DbType is Object.");
+                    Log.Debug("Not executing explain plan since DbType is Object.");
                     return false;
                 }
                 

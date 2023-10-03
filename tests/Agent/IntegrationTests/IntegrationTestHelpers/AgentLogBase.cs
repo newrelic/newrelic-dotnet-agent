@@ -65,12 +65,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         // Infinite trace
         public const string SpanStreamingServiceConnectedLogLineRegex = InfoLogLinePrefixRegex + @"SpanStreamingService: gRPC channel to endpoint (.*) connected.(.*)";
+        public const string SpanStreamingServiceStreamConnectedLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - gRPC request stream connected (.*)";
         public const string SpanStreamingSuccessfullySentLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Attempting to send (\d+) item\(s\) - Success";
         public const string SpanStreamingSuccessfullyProcessedByServerResponseLogLineRegex = FinestLogLinePrefixRegex + @"SpanStreamingService: consumer \d+ - Received gRPC Server response messages: (\d+)";
         public const string SpanStreamingResponseGrpcError = FinestLogLinePrefixRegex + @"ResponseStreamWrapper: consumer \d+ - gRPC RpcException encountered while handling gRPC server responses: (.*)";
-        
-        // ContextData related messages
-        public const string ContextDataNotSupportedLogLineRegex = WarnLogLinePrefixRegex + @".* Context data is not supported for this logging framework.";
+
+        // Transactions (either with an ID or "noop")
+        public const string TransactionLinePrefix = FinestLogLinePrefixRegex + @"Trx ([a-fA-F0-9]*|Noop): ";
 
         public AgentLogBase(RemoteApplication remoteApplication)
         {

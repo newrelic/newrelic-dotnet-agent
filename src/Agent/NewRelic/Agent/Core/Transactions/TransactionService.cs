@@ -6,7 +6,7 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -59,7 +59,7 @@ namespace NewRelic.Agent.Core.Transactions
         private const string TransactionContextKey = "NewRelic.Transaction";
         private readonly IEnumerable<IContextStorage<IInternalTransaction>> _sortedPrimaryContexts;
         private readonly IContextStorage<IInternalTransaction> _asyncContext;
-        private readonly ITimerFactory _timerFactory;
+        private readonly ISimpleTimerFactory _timerFactory;
         private readonly ICallStackManagerFactory _callStackManagerFactory;
         private readonly IDatabaseService _databaseService;
         private readonly ITracePriorityManager _tracePriorityManager;
@@ -68,7 +68,7 @@ namespace NewRelic.Agent.Core.Transactions
         private readonly IDistributedTracePayloadHandler _distributedTracePayloadHandler;
         private readonly IAttributeDefinitionService _attribDefSvc;
 
-        public TransactionService(IEnumerable<IContextStorageFactory> factories, ITimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser,
+        public TransactionService(IEnumerable<IContextStorageFactory> factories, ISimpleTimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser,
             IErrorService errorService, IDistributedTracePayloadHandler distributedTracePayloadHandler, IAttributeDefinitionService attribDefSvc)
         {
             _sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
@@ -132,7 +132,7 @@ namespace NewRelic.Agent.Core.Transactions
             }
             catch (Exception exception)
             {
-                Log.Error($"ITransactionContext threw an exception when calling GetData with {TransactionContextKey}: {exception}");
+                Log.Error(exception, $"ITransactionContext threw an exception when calling GetData with {TransactionContextKey}");
                 return null;
             }
         }
@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core.Transactions
             }
             catch (Exception exception)
             {
-                Log.Error($"The chosen TransactionContext threw an exception when setting the data: {exception}");
+                Log.Error(exception, "The chosen TransactionContext threw an exception when setting the data");
                 return null;
             }
 
@@ -262,7 +262,7 @@ namespace NewRelic.Agent.Core.Transactions
             {
                 bool wasAsync = IsAttachedToAsyncStorage;
 
-                Log.WarnFormat("Releasing the transaction because there were too many nested transaction attempts.");
+                Log.Warn("Releasing the transaction because there were too many nested transaction attempts.");
                 RemoveOutstandingInternalTransactions(true, true);
                 var newTransaction = CreateInternalTransaction(initialTransactionName, onCreate);
 

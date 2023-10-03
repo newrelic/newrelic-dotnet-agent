@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core.Logging
             }
         }
 
-        public void Log(Level level, object message)
+        public void Log(Level level, string message)
         {
             if (!IsEnabledFor(level)) return;
             var messageString = message.ToString();
@@ -66,27 +66,14 @@ namespace NewRelic.Agent.Core.Logging
         /// <summary>
         /// Logs <paramref name="message"/> at the ERROR level. This log level should be used for information regarding problems in the agent that will adversely affect the user in some way (data loss, performance problems, reduced agent functionality, etc). Do not use if logging that information will create a performance problem (say, due to excessive logging).
         /// </summary>
-        public void Error(string message)
-        {
-            _logger.Error(message);
-        }
+        public void Error(Exception exception, string message, params object[] args) =>
+            _logger.Error(exception, message, args);
 
         /// <summary>
         /// Logs <paramref name="exception"/> at the ERROR level by calling exception.ToString(). This log level should be used for information regarding problems in the agent that will adversely affect the user in some way (data loss, performance problems, reduced agent functionality, etc). Do not use if logging that information will create a performance problem (say, due to excessive logging).
         /// </summary>
-        public void Error(Exception exception)
-        {
-            _logger.Error(exception, "");
-        }
-
-        /// <summary>
-        /// Logs a message at the ERROR level by calling String.Format(<paramref name="format"/>, <paramref name="args"/>). This log level should be used for information regarding problems in the agent that will adversely affect the user in some way (data loss, performance problems, reduced agent functionality, etc). Do not use if logging that information will create a performance problem (say, due to excessive logging).
-        /// </summary>
-        public void ErrorFormat(string format, params object[] args)
-        {
-            if (IsErrorEnabled)
-                _logger.Error(format, args);
-        }
+        public void Error(string message, params object[] args) =>
+            _logger.Error(message, args);
 
         #endregion Error
 
@@ -100,27 +87,14 @@ namespace NewRelic.Agent.Core.Logging
         /// <summary>
         /// Logs <paramref name="message"/> at the WARN level. This log level should be used for information regarding *possible* problems in the agent that *might* adversely affect the user in some way (data loss, performance problems, reduced agent functionality, etc). Do not use if logging that information will create a performance problem (say, due to excessive logging).
         /// </summary>
-        public void Warn(string message)
-        {
-            _logger.Warning(message);
-        }
+        public void Warn(Exception exception, string message, params object[] args) =>
+            _logger.Warning(exception, message, args);
 
         /// <summary>
         /// Logs <paramref name="exception"/> at the WARN level by calling exception.ToString(). This log level should be used for information regarding *possible* problems in the agent that *might* adversely affect the user in some way (data loss, performance problems, reduced agent functionality, etc). Do not use if logging that information will create a performance problem (say, due to excessive logging).
         /// </summary>
-        public void Warn(Exception exception)
-        {
-            _logger.Warning(exception, "");
-        }
-
-        /// <summary>
-        /// Logs a message at the WARN level by calling String.Format(<paramref name="format"/>, <paramref name="args"/>). This log level should be used for information regarding *possible* problems in the agent that *might* adversely affect the user in some way (data loss, performance problems, reduced agent functionality, etc). Do not use if logging that information will create a performance problem (say, due to excessive logging).
-        /// </summary>
-        public void WarnFormat(string format, params object[] args)
-        {
-            if (IsWarnEnabled)
-                _logger.Warning(format, args);
-        }
+        public void Warn(string message, params object[] args) =>
+            _logger.Warning(message, args);
 
         #endregion Warn
 
@@ -134,27 +108,14 @@ namespace NewRelic.Agent.Core.Logging
         /// <summary>
         /// Logs <paramref name="message"/> at the INFO level. This log level should be used for information for non-error information that may be of interest to the user, such as a the agent noticing a configuration change, or an infrequent "heartbeat". Do not use if logging that information will create a performance problem (say, due to excessive logging).
         /// </summary>
-        public void Info(string message)
-        {
-            _logger.Information(message);
-        }
-
-        /// <summary>
-        /// Logs <paramref name="exception"/> at the INFO level by calling exception.ToString(). This log level should be used for information for non-error information that may be of interest to the user, such as a the agent noticing a configuration change, or an infrequent "heartbeat". Do not use if logging that information will create a performance problem (say, due to excessive logging).
-        /// </summary>
-        public void Info(Exception exception)
-        {
-            _logger.Information(exception, "");
-        }
+        public void Info(Exception exception, string message, params object[] args) =>
+            _logger.Information(exception, message, args);
 
         /// <summary>
         /// Logs a message at the INFO level by calling String.Format(<paramref name="format"/>, <paramref name="args"/>). This log level should be used for information for non-error information that may be of interest to the user, such as a the agent noticing a configuration change, or an infrequent "heartbeat". Do not use if logging that information will create a performance problem (say, due to excessive logging).
         /// </summary>
-        public void InfoFormat(string format, params object[] args)
-        {
-            if (IsInfoEnabled)
-                _logger.Information(format, args);
-        }
+        public void Info(string message, params object[] args) =>
+            _logger.Information(message, args);
 
         #endregion Info
 
@@ -168,27 +129,14 @@ namespace NewRelic.Agent.Core.Logging
         /// <summary>
         /// Logs <paramref name="message"/> at the DEBUG level. This log level should be used for information that is non-critical and used mainly for troubleshooting common problems such as RUM injection or SQL explain plans. This level is not enabled by default so there is less concern about performance, but this level still should not be used for any logging that would cause significant performance, such as logging every transaction name for every transaction.
         /// </summary>
-        public void Debug(string message)
-        {
-            _logger.Debug(message);
-        }
+        public void Debug(Exception exception, string message, params object[] args) =>
+            _logger.Debug(exception, message, args);
 
         /// <summary>
         /// Logs <paramref name="exception"/> at the DEBUG level by calling exception.ToString(). This log level should be used for information that is non-critical and used mainly for troubleshooting common problems such as RUM injection or SQL explain plans. This level is not enabled by default so there is less concern about performance, but this level still should not be used for any logging that would cause significant performance, such as logging every transaction name for every transaction.
         /// </summary>
-        public void Debug(Exception exception)
-        {
-            _logger.Debug(exception, "");
-        }
-
-        /// <summary>
-        /// Logs a message at the DEBUG level by calling String.Format(<paramref name="format"/>, <paramref name="args"/>). This log level should be used for information that is non-critical and used mainly for troubleshooting common problems such as RUM injection or SQL explain plans. This level is not enabled by default so there is less concern about performance, but this level still should not be used for any logging that would cause significant performance, such as logging every transaction name for every transaction.
-        /// </summary>
-        public void DebugFormat(string format, params object[] args)
-        {
-            if (IsDebugEnabled)
-                _logger.Debug(format, args);
-        }
+        public void Debug(string message, params object[] args) =>
+            _logger.Debug(message, args);
 
         #endregion Debug
 
@@ -202,27 +150,14 @@ namespace NewRelic.Agent.Core.Logging
         /// <summary>
         /// Logs <paramref name="message"/> at the FINEST level. This log level should be used as a last resort for information that would otherwise be too expensive or too noisy to log at DEBUG level, such as logging every transaction name for every transaction. Useful for troubleshooting subtle problems like WCF's dual transactions.
         /// </summary>
-        public void Finest(string message)
-        {
-            _logger.Verbose(message);
-        }
+        public void Finest(Exception exception, string message, params object[] args) =>
+            _logger.Verbose(exception, message, args);
 
         /// <summary>
         /// Logs <paramref name="exception"/> at the FINEST level by calling exception.ToString(). This log level should be used as a last resort for information that would otherwise be too expensive or too noisy to log at DEBUG level, such as logging every transaction name for every transaction. Useful for troubleshooting subtle problems like WCF's dual transactions.
         /// </summary>
-        public void Finest(Exception exception)
-        {
-            _logger.Verbose(exception, "");
-        }
-
-        /// <summary>
-        /// Logs a message at the FINEST level by calling String.Format(<paramref name="format"/>, <paramref name="args"/>). This log level should be used as a last resort for information that would otherwise be too expensive or too noisy to log at DEBUG level, such as logging every transaction name for every transaction. Useful for troubleshooting subtle problems like WCF's dual transactions.
-        /// </summary>
-        public void FinestFormat(string format, params object[] args)
-        {
-            if (IsFinestEnabled)
-                _logger.Verbose(format, args);
-        }
+        public void Finest(string message, params object[] args) =>
+            _logger.Verbose(message, args);
 
         #endregion Finest
 

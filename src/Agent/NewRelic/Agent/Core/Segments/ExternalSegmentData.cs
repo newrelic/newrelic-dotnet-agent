@@ -7,7 +7,7 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 using NewRelic.Agent.Configuration;
 using NewRelic.Parsing;

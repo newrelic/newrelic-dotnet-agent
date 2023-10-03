@@ -4,9 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -38,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework}");
+            _fixture.AddCommand($"LoggingTester SetFramework {_loggingFramework} {RandomPortGenerator.NextPort()}");
             _fixture.AddCommand($"LoggingTester Configure");
 
             string context = string.Join(",", _expectedAttributes.Select(x => x.Key + "=" + x.Value).ToArray());
@@ -70,11 +69,7 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ContextData
         [Fact]
         public void Test()
         {
-            // verify the "not supported" warning was logged
-            var match = _fixture.AgentLog.TryGetLogLines(AgentLogBase.ContextDataNotSupportedLogLineRegex);
-            Assert.Single(match);
-
-            // verify the log data was forwarded, but *without* the attributes
+            // verify the log data was forwarded, but *without* the attributes (since our dummy logger doesn't support them)
             var expectedLogLines = new[]
             {
                 new Assertions.ExpectedLogLine

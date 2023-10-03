@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.BrowserMonitoring;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -129,7 +129,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>()))
                 .Returns(transactionMetricName);
 
-            ITimer timer = Mock.Create<ITimer>();
+            ISimpleTimer timer = Mock.Create<ISimpleTimer>();
             var responseTime = TimeSpan.FromMilliseconds(testCase.ApplicationTimeMilliseconds);
             Mock.Arrange(() => timer.Duration).Returns(responseTime);
 

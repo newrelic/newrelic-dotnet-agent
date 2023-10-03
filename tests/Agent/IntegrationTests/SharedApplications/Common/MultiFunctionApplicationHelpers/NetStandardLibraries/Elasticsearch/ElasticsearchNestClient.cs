@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Elastic.Clients.Elasticsearch;
 using Nest;
 using NewRelic.Agent.IntegrationTests.Shared;
-using Xunit;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 {
@@ -56,7 +55,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var record = FlightRecord.GetSample();
             var response = _client.IndexDocument(record);
 
-            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
+            AssertResponseIsValid(response);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -65,7 +64,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var record = FlightRecord.GetSample();
             var response = await _client.IndexDocumentAsync(record);
 
-            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
+            AssertResponseIsValid(response);
 
             return response.IsValid;
         }
@@ -76,7 +75,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var records = FlightRecord.GetSamples(3);
             var response = _client.IndexMany(records);
 
-            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
+            AssertResponseIsValid(response);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -85,7 +84,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var record = FlightRecord.GetSample();
             var response = await _client.IndexDocumentAsync(record);
 
-            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
+            AssertResponseIsValid(response);
 
             return response.IsValid;
         }
@@ -104,7 +103,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                    )
                 );
 
-            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
+            AssertResponseIsValid(response);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -121,7 +120,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
                    )
                 );
 
-            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
+            AssertResponseIsValid(response);
 
             return response.Total;
         }
@@ -147,7 +146,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = _client.MultiSearch(msd);
 
-            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
+            AssertResponseIsValid(response);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -171,7 +170,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
 
             var response = await _client.MultiSearchAsync(msd);
 
-            Assert.True(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
+            AssertResponseIsValid(response);
 
             return response.TotalResponses;
         }
@@ -188,7 +187,19 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.Elasticsearch
             var client = new ElasticClient(settings);
 
             var response = client.Ping();
-            Assert.False(response.IsValid, $"Elasticsearch server error: {response.ServerError}");
+            if (response.IsValid)
+            {
+                throw new Exception($"Response was successful but we expected an error. {response.ServerError}");
+            }
+        }
+
+        private static void AssertResponseIsValid<T>(T response)
+            where T : IResponse
+        {
+            if (!response.IsValid)
+            {
+                throw new Exception($"Response was not successful. Elasitcsearch server error: {response.ServerError}");
+            }
         }
     }
 }

@@ -66,7 +66,7 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 			catch (Exception ex)
 			{
-				Log.Error($"Failed to read '{key}' using System.Configuration.ConfigurationManager.AppSettings. Reading New Relic configuration values using System.Configuration.ConfigurationManager.AppSettings will be disabled. Exception: {ex}");
+				Log.Error(ex, $"Failed to read '{key}' using System.Configuration.ConfigurationManager.AppSettings. Reading New Relic configuration values using System.Configuration.ConfigurationManager.AppSettings will be disabled.");
 				localConfigChecksDisabled = true;
 				return null;
 			}
@@ -91,13 +91,13 @@ namespace NewRelic.Agent.Core.Configuration
             }
             catch (FileNotFoundException e)
             {
-                if (Log.IsDebugEnabled) Log.Debug($"appsettings.json will not be searched for config values because this application does not reference: {e.FileName}.");
+                Log.Debug(e, "appsettings.json will not be searched for config values because this application does not reference: {e.FileName}.");
                 localConfigChecksDisabled = true;
                 return null;
             }
             catch (Exception e)
             {
-                if (Log.IsDebugEnabled) Log.Debug($"appsettings.json will not be searched for config values because an error was encountered: {e}");
+                Log.Debug(e, "appsettings.json will not be searched for config values because an error was encountered");
                 localConfigChecksDisabled = true;
                 return null;
             }

@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
