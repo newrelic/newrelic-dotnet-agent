@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         private static bool LegacyAspSyncContextConfigured()
         {
 
-#if NET
+#if NET || NETSTANDARD2_0
 			return false;
 #else
             // first check that the application is even running under ASP.NET

@@ -114,7 +114,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ISimpleTimerFactory, SimpleTimerFactory>();
             container.Register<IDateTimeStatic, DateTimeStatic>();
             container.Register<IMetricAggregator, MetricAggregator>();
-            container.Register<IAllMetricStatsCollection, MetricWireModel>();
+            //container.Register<IAllMetricStatsCollection, MetricWireModel>();
             container.Register<IAllMetricStatsCollection, TransactionMetricStatsCollection>();
             container.RegisterInstance<Func<MetricWireModel, MetricWireModel, MetricWireModel>>(MetricWireModel.Merge);
             container.Register<ITransactionTraceAggregator, TransactionTraceAggregator>();

@@ -121,8 +121,8 @@ function Copy-ExtensionsOther {
     }
 
     if ($Type -like "Core"){
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Core\netstandard2.0-ILRepacked\NewRelic.Core.dll" -Destination "$Destination\extensions" -Force 
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Parsing\bin\$Configuration\netstandard2.0\NewRelic.Parsing.dll" -Destination "$Destination\extensions" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Core\net6.0-ILRepacked\NewRelic.Core.dll" -Destination "$Destination\extensions" -Force 
+        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Parsing\bin\$Configuration\net6.0\NewRelic.Parsing.dll" -Destination "$Destination\extensions" -Force 
     }
 }
 
@@ -148,18 +148,18 @@ function Copy-AgentRoot {
     }
 
     if ($Type -like "Core") {
-        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\$Configuration\netstandard2.0\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\netstandard2.0-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\$Configuration\net6.0\NewRelic.Agent.Extensions.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\net6.0-ILRepacked\NewRelic.Agent.Core.dll" -Destination "$Destination" -Force 
         Copy-Item -Path "$RootDirectory\src\Agent\Miscellaneous\core-agent-readme.md" -Destination "$Destination\README.md" -Force 
     }
 
     
     if ($Linux) {
         if ($Architecture -like "x64") {
-            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_x64\libNewRelicProfiler.so" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\net6.0\profiler\linux_x64\libNewRelicProfiler.so" -Destination "$Destination" -Force 
         }
         if ($Architecture -like "ARM64") {
-            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\linux_arm64\libNewRelicProfiler.so" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\net6.0\profiler\linux_arm64\libNewRelicProfiler.so" -Destination "$Destination" -Force 
         }
     }
     else {
@@ -170,10 +170,10 @@ function Copy-AgentRoot {
         }
 
         if ($Architecture -like "x64" ) {
-            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\x64\NewRelic.Profiler.dll" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\net6.0\profiler\x64\NewRelic.Profiler.dll" -Destination "$Destination" -Force 
         }
         else {
-            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\netstandard2.0\profiler\x86\NewRelic.Profiler.dll" -Destination "$Destination" -Force 
+            Copy-Item -Path "$RootDirectory\src\Agent\NewRelic\Home\bin\$Configuration\net6.0\profiler\x86\NewRelic.Profiler.dll" -Destination "$Destination" -Force 
         }
     }
 
@@ -194,7 +194,7 @@ function Copy-AgentApi {
     }
 
     if ($Type -like "Core") {
-        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll" -Destination "$Destination" -Force 
+        Copy-Item -Path "$RootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Api.Agent\net6.0\NewRelic.Api.Agent.dll" -Destination "$Destination" -Force 
     }
 }
 

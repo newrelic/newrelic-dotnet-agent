@@ -692,7 +692,7 @@ SPDX-License-Identifier: Apache-2.0
         <File Id="ApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net462\NewRelic.Api.Agent.dll" />
       </Component>
       <Component Id="CoreApiComponent" Guid="{06F38D70-0220-4E36-B02F-1AF445867F5D}" Directory="COREAGENTFOLDER">
-        <File Id="CoreApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll" />
+        <File Id="CoreApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net6.0\NewRelic.Api.Agent.dll" />
       </Component>
       <!-- Installs a copy in the root of the [NETAGENTFOLDER] to support upgrades from older installs.  Moved the GUID from API here as well.-->
       <Component Id="ApiComponentLegacy" Guid="{26BF7AE0-A921-438C-A16C-FF6F8E0F9366}" Directory="NETAGENTFOLDER">

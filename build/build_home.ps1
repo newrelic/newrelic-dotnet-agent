@@ -50,7 +50,7 @@ $HomePath = Get-HomeRootPath $HomePath
 ################################
 
 $netFrameworkWrapperHash = @{}
-$netstandard20WrapperHash = @{}
+$netWrapperHash = @{}
 
 $wrapperDirs = Get-ChildItem -LiteralPath "$wrappersRootDir" -Directory
 foreach ($wrapperDir in $wrapperDirs) {
@@ -62,29 +62,29 @@ foreach ($wrapperDir in $wrapperDirs) {
         $netFrameworkWrapperHash.Add($dllObject, $xmlObject)
     }
 
-    if ($netstandard20path = Resolve-Path "$wrapperDirPath\bin\$Configuration\netstandard2.*") {
-        $dllObject = Get-ChildItem -File -Path "$netstandard20path" -Filter NewRelic.Providers.Wrapper.$wrapperName.dll
-        $xmlObject = Get-ChildItem -File -Path "$netstandard20path" -Filter Instrumentation.xml
-        $netstandard20WrapperHash.Add($dllObject, $xmlObject)
-    }
+	if ($netpath = Resolve-Path "$wrapperDirPath\bin\$Configuration\net6*") {
+	    $dllObject = Get-ChildItem -File -Path "$netpath" -Filter NewRelic.Providers.Wrapper.$wrapperName.dll
+		$xmlObject = Get-ChildItem -File -Path "$netpath" -Filter Instrumentation.xml
+		$netWrapperHash.Add($dllObject, $xmlObject)
+	}
 }
 
-# AspNetCore needs to be in netFramework as well netstandard2.0
-if ($aspNetCorePath = Resolve-Path "$wrappersRootDir\AspNetCore\bin\$Configuration\netstandard2.0") {
-    $dllObject = Get-ChildItem -File -Path "$aspNetCorePath" -Filter NewRelic.Providers.Wrapper.AspNetCore.dll
-    $xmlObject = Get-ChildItem -File -Path "$aspNetCorePath" -Filter Instrumentation.xml
-    $netFrameworkWrapperHash.Add($dllObject, $xmlObject)
+# aspnetcore is built targeting netstandard2.0 and net6. We need the netstandard2.0 target included with the netframework build
+if ($aspnetcorepath = resolve-path "$wrappersrootdir\aspnetcore\bin\$configuration\netstandard2.0") {
+    $dllobject = get-childitem -file -path "$aspnetcorepath" -filter newrelic.providers.wrapper.aspnetcore.dll
+    $xmlobject = get-childitem -file -path "$aspnetcorepath" -filter instrumentation.xml
+    $netframeworkwrapperhash.add($dllobject, $xmlobject)
 }
 
-# MicrosoftExtensionsLogging needs to be in netFramework as well netstandard2.0
-if ($melNetCorePath = Resolve-Path "$wrappersRootDir\MicrosoftExtensionsLogging\bin\$Configuration\netstandard2.0") {
-    $dllObject = Get-ChildItem -File -Path "$melNetCorePath" -Filter NewRelic.Providers.Wrapper.MicrosoftExtensionsLogging.dll
-    $xmlObject = Get-ChildItem -File -Path "$melNetCorePath" -Filter Instrumentation.xml
-    $netFrameworkWrapperHash.Add($dllObject, $xmlObject)
+# microsoftextensionslogging is built targeting netstandard2.0 and net6. We need the netstandard2.0 target included with the netframework build
+if ($melnetcorepath = resolve-path "$wrappersrootdir\microsoftextensionslogging\bin\$configuration\netstandard2.0") {
+    $dllobject = get-childitem -file -path "$melnetcorepath" -filter newrelic.providers.wrapper.microsoftextensionslogging.dll
+    $xmlobject = get-childitem -file -path "$melnetcorepath" -filter instrumentation.xml
+    $netframeworkwrapperhash.add($dllobject, $xmlobject)
 }
 
 $netFrameworkStorageArray = @()
-$netstandard20StorageArray = @()
+$netStorageArray = @()
 
 $storageDirs = Get-ChildItem -LiteralPath "$storageRootDir" -Directory
 foreach ($storageDir in $storageDirs) {
@@ -96,9 +96,9 @@ foreach ($storageDir in $storageDirs) {
         $netFrameworkStorageArray += $dllObject
     }
 
-    if ($netstandard20path = Resolve-Path "$storageDirPath\bin\$Configuration\netstandard2.*") {
-        $dllObject = Get-ChildItem -File -Path "$netstandard20path" -Filter NewRelic.Providers.Storage.$storageName.dll
-        $netstandard20StorageArray += $dllObject
+    if ($netpath = Resolve-Path "$storageDirPath\bin\$Configuration\net6*") {
+        $dllObject = Get-ChildItem -File -Path "$netpath" -Filter NewRelic.Providers.Storage.$storageName.dll
+        $netStorageArray += $dllObject
     }
 }
 
@@ -138,8 +138,8 @@ if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "Framework") {
 if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "CoreAll" -or $Type -like "CoreWindows") {
     if ($Architecture -like "All" -or $Architecture -like "x64") {
         New-HomeStructure -Path "$HomePath" -Name "newrelichome_x64_coreclr"
-        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x64_coreclr" -Extensions $netstandard20WrapperHash
-        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x64_coreclr" -Extensions $netstandard20StorageArray
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x64_coreclr" -Extensions $netWrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x64_coreclr" -Extensions $netStorageArray
         Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr" -Configuration "$Configuration" -Type "Core"
         Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr" -Configuration "$Configuration" -Type "Core" -Architecture "x64"
         Copy-AgentApi  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr" -Configuration "$Configuration" -Type "Core"
@@ -151,8 +151,8 @@ if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "CoreAll" -or $T
 
     if ($Architecture -like "All" -or $Architecture -like "x86") {
         New-HomeStructure -Path "$HomePath" -Name "newrelichome_x86_coreclr"
-        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x86_coreclr" -Extensions $netstandard20WrapperHash
-        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x86_coreclr" -Extensions $netstandard20StorageArray
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x86_coreclr" -Extensions $netWrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x86_coreclr" -Extensions $netStorageArray
         Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86_coreclr" -Configuration "$Configuration" -Type "Core"
         Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86_coreclr" -Configuration "$Configuration" -Type "Core" -Architecture "x86"
         Copy-AgentApi  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86_coreclr" -Configuration "$Configuration" -Type "Core"
@@ -166,8 +166,8 @@ if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "CoreAll" -or $T
 if ($Type -like "All" -or $Type -like "Linux" -or $Type -like "CoreAll" -or $Type -like "CoreLinux") {
     if ($Architecture -like "All" -or $Architecture -like "x64") {
         New-HomeStructure -Path "$HomePath" -Name "newrelichome_x64_coreclr_linux"
-        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Extensions $netstandard20WrapperHash
-        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Extensions $netstandard20StorageArray
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Extensions $netWrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Extensions $netStorageArray
         Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core"
         Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core" -Architecture "x64" -Linux
         Copy-AgentApi  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core"
@@ -179,8 +179,8 @@ if ($Type -like "All" -or $Type -like "Linux" -or $Type -like "CoreAll" -or $Typ
 
     if ($Architecture -like "All" -or $Architecture -like "ARM64") {
         New-HomeStructure -Path "$HomePath" -Name "newrelichome_arm64_coreclr_linux"
-        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Extensions $netstandard20WrapperHash
-        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Extensions $netstandard20StorageArray
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Extensions $netWrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Extensions $netStorageArray
         Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Configuration "$Configuration" -Type "Core"
         Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Configuration "$Configuration" -Type "Core" -Architecture "ARM64" -Linux
         Copy-AgentApi  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_arm64_coreclr_linux" -Configuration "$Configuration" -Type "Core"

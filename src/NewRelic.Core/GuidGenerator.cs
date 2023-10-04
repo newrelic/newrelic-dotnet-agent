@@ -12,7 +12,7 @@ namespace NewRelic.Core
 {
     public static class GuidGenerator
     {
-        private static readonly RandomNumberGenerator _randomNumberGenerator = RandomNumberGenerator.Create("NrRNG");
+        private static Lazy<RandomNumberGenerator> _randomNumberGenerator = new Lazy<RandomNumberGenerator>(RandomNumberGenerator.Create);
         private static Func<string> _traceGeneratorFunc = GetTraceIdFromCurrentActivity;
 
         /// <summary>
@@ -23,7 +23,7 @@ namespace NewRelic.Core
         public static string GenerateNewRelicGuid()
         {
             var rndBytes = new byte[8];
-            _randomNumberGenerator.GetBytes(rndBytes);
+            _randomNumberGenerator.Value.GetBytes(rndBytes);
             return $"{BitConverter.ToUInt64(rndBytes, 0):x16}";
         }
 
@@ -53,7 +53,7 @@ namespace NewRelic.Core
         private static string GenerateTraceId()
         {
             var rndBytes = new byte[16];
-            _randomNumberGenerator.GetBytes(rndBytes);
+            _randomNumberGenerator.Value.GetBytes(rndBytes);
 
 
             return $"{BitConverter.ToUInt64(rndBytes, 0):x16}{BitConverter.ToUInt64(rndBytes, 8):x16}";
