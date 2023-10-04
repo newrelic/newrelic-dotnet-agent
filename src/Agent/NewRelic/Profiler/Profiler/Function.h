@@ -127,7 +127,7 @@ namespace NewRelic { namespace Profiler
             }
             else
             {
-                LogTrace(ToStdWString(assemblyName.get()), L" is an ignored assembly");
+                LogTrace(L"Not searching ", ToStdWString(assemblyName.get()), L" for transaction or trace attributes");
             }
 
 
