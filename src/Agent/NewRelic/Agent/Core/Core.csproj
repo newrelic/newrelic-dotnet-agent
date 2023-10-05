@@ -162,8 +162,12 @@
       <ILRepackSearchDirOutputPath>$([System.String]::new("$(OutputPath)").Trim('\'))</ILRepackSearchDirOutputPath>
     </PropertyGroup>
 
-    <PropertyGroup>
-      <ILRepackCommand>"$(ILRepack)" --verbose --parallel --internalize --norepackres --keepotherversionreferences --keyfile:"$(AssemblyOriginatorKeyFile)" --lib:"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\6.0.22\ref\net6.0" --lib:"$(ILRepackSearchDirOutputPath)" --out:"$(OutputPath)..\$(TargetFramework)-ILRepacked\$(AssemblyName).dll" "$(TargetPath)" "@(ILRepackInclude, '" "')"</ILRepackCommand>
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net462'">
+      <ILRepackCommand>"$(ILRepack)" --parallel --internalize --norepackres --keepotherversionreferences --keyfile:"$(AssemblyOriginatorKeyFile)" --lib:"$(ILRepackSearchDirOutputPath)" --out:"$(OutputPath)..\$(TargetFramework)-ILRepacked\$(AssemblyName).dll" "$(TargetPath)" "@(ILRepackInclude, '" "')"</ILRepackCommand>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+      <ILRepackCommand>"$(ILRepack)" --verbose --parallel --internalize --norepackres --keepotherversionreferences --keyfile:"$(AssemblyOriginatorKeyFile)" --lib:"$(NetCoreTargetingPackRoot)\Microsoft.NETCore.App.Ref\$(_RuntimePackInWorkloadVersion6)\ref\$(TargetFramework)" --lib:"$(ILRepackSearchDirOutputPath)" --out:"$(OutputPath)..\$(TargetFramework)-ILRepacked\$(AssemblyName).dll" "$(TargetPath)" "@(ILRepackInclude, '" "')"</ILRepackCommand>
     </PropertyGroup>
 
     <Message Importance="High" Text="Executing ILRepack.exe for $(TargetFramework) build: $(ILRepackCommand)" />
