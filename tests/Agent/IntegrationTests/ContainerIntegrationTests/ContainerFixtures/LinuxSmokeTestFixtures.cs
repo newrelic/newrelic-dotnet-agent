@@ -1,6 +1,8 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
@@ -18,6 +20,11 @@ public abstract class LinuxSmokeTestFixtureBase : ContainerFixture
     {
         var address = $"http://localhost:{Port}/weatherforecast";
         GetAndAssertStatusCode(address, System.Net.HttpStatusCode.OK);
+    }
+
+    public void Delay(int seconds)
+    {
+        Task.Delay(TimeSpan.FromSeconds(seconds)).GetAwaiter().GetResult();
     }
 }
 

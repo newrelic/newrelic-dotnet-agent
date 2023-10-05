@@ -1247,7 +1247,16 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual string EntityGuid { get { return _serverConfiguration.EntityGuid; } }
 
-        public virtual bool HighSecurityModeEnabled => _localConfiguration.highSecurity.enabled;
+        private bool? _highSecurityModeEnabled;
+        public virtual bool HighSecurityModeEnabled
+        {
+            get
+            {
+                _highSecurityModeEnabled ??= EnvironmentOverrides(_localConfiguration.highSecurity.enabled, "NEW_RELIC_HIGH_SECURITY");
+
+                return _highSecurityModeEnabled.Value;
+            }
+        }
 
 
         private BoolConfigurationItem _customInstrumentationEditorIsEnabled;
