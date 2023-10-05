@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - '**.md' # only run when there are changes to markdown files in a push to any branch
+    branches-ignore:
+      - "release-please**" # don't run on the release please branch
   schedule:
     - cron: "0 9 * * 1-5" # run once a day, M-F
   workflow_dispatch:
@@ -20,8 +22,8 @@ jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
 
-    # don't run this job if triggered by Dependabot
-    if: ${{ github.actor != 'dependabot[bot]' }}
+    # don't run this job if triggered by Dependabot or the team bot (i.e., Release Please)
+    if: ${{ github.actor != 'dependabot[bot]' && github.actor != 'dotnet-agent-team-bot' }}
 
     steps:
       - name: Harden Runner
