@@ -229,6 +229,7 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_ATTRIBUTES_ENABLED",
                     "NEW_RELIC_ATTRIBUTES_INCLUDE",
                     "NEW_RELIC_ATTRIBUTES_EXCLUDE",
+                    "NEW_RELIC_HIGH_SECURITY",
                     "NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT",
                     "NEW_RELIC_INFINITE_TRACING_TIMEOUT_SEND",
                     "NEW_RELIC_INFINITE_TRACING_EXIT_TIMEOUT",
