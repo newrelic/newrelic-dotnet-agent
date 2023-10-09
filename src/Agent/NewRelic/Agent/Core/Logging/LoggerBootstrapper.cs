@@ -115,19 +115,26 @@ namespace NewRelic.Agent.Core
 #if NETFRAMEWORK
             const string eventLogName = "Application";
             const string eventLogSourceName = "New Relic .NET Agent";
-
-            loggerConfiguration
-                    .WriteTo.Logger(configuration =>
-                    {
-                        configuration
-                        .ExcludeAuditLog()
-                        .WriteTo.EventLog(
-                            source: eventLogSourceName,
-                            logName: eventLogName,
-                            restrictedToMinimumLevel: LogEventLevel.Warning,
-                            outputTemplate: "{Level}: {Message}{NewLine}{Exception}"
-                        );
-                    });
+            try
+            {
+                loggerConfiguration
+                        .WriteTo.Logger(configuration =>
+                        {
+                            configuration
+                            .ExcludeAuditLog()
+                            .WriteTo.EventLog(
+                                source: eventLogSourceName,
+                                logName: eventLogName,
+                                restrictedToMinimumLevel: LogEventLevel.Warning,
+                                outputTemplate: "{Level}: {Message}{NewLine}{Exception}",
+                                manageEventSource: true // Serilog will create the event source if it doesn't exist *and* if the app is running with admin privileges
+                            );
+                        });
+            }
+            catch
+            {
+                // ignored -- there's nothing we can do at this point, as EventLog is our "fallback" logger and if it fails, we're out of luck
+            }
 #endif
             return loggerConfiguration;
         }
