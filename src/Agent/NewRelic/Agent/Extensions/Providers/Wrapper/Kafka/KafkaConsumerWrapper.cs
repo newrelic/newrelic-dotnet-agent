@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Concurrent;
 using System.Text;
 using Confluent.Kafka;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.Kafka
 {
@@ -15,10 +17,22 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
         public bool IsTransactionRequired => false;
 
+        private static ConcurrentDictionary<Type, Func<object, string>> topicAccessorDictionary =
+            new ConcurrentDictionary<Type, Func<object, string>>();
+
+        private static ConcurrentDictionary<Type, Func<object, object>> messageAccessorDictionary =
+            new ConcurrentDictionary<Type, Func<object, object>>();
+
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
             return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
+
+
+        private static Func<object, string> GetTopicAccessorFunc(Type t) =>
+            VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(t, "Topic");
+        private static Func<object, object> GetMessageAccessorFunc(Type t) =>
+            VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Message");
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
@@ -29,12 +43,29 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
             var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, "Kafka");
 
-            //return Delegates.GetDelegateFor<ConsumeResult<string, string>>(
-            return Delegates.GetDelegateFor<dynamic>(
-                onSuccess: (result) =>
+            return Delegates.GetDelegateFor<object>(onSuccess: (x) =>
+            {
+                if (x == null) // null can be returned, so we have to handle it. 
                 {
-                    if (result == null)
-                        return;
+                    // ?? Set segment name here? Possibly get topic from Consume instance? 
+                    // segment.SegmentNameOverride = "MessageBroker/Kafka/Topic/Consume/" + topic;
+                    segment.End();
+                    return;
+                }
+
+                var type = x.GetType();
+
+                var topicAccessor = topicAccessorDictionary.GetOrAdd(type, GetTopicAccessorFunc);
+                string topic = topicAccessor(x);
+
+                segment.SegmentNameOverride = "MessageBroker/Kafka/Topic/Consume/" + topic;
+
+                var messageAccessor = messageAccessorDictionary.GetOrAdd(type, GetMessageAccessorFunc);
+                var messageAsObject = messageAccessor(x);
+
+                if (messageAsObject is MessageMetadata messageMetaData)
+                {
+                    var headers = messageMetaData.Headers;
 
                     var setHeaders = new Action<Headers, string, string>((carrier, key, value) =>
                     {
@@ -42,13 +73,11 @@ namespace NewRelic.Providers.Wrapper.Kafka
                         carrier.Add(key, Encoding.ASCII.GetBytes(value));
                     });
 
-                    transaction.InsertDistributedTraceHeaders(result.Message.Headers, setHeaders);
+                    transaction.InsertDistributedTraceHeaders(headers, setHeaders);
+                }
 
-                    string topic = result.Topic;
-
-                    segment.SegmentNameOverride = "MessageBroker/Kafka/Topic/Consume/" + topic;
-                    segment.End();
-                });
+                segment.End();
+            });
         }
     }
 }
