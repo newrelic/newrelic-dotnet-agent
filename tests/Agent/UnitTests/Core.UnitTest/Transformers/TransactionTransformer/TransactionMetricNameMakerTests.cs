@@ -86,23 +86,23 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [Test]
         public void BuiltTransactionName_BuildsMessageBrokerTransactionMetricNameWithQueueName_IfNamedMessageBrokerTransactionName()
         {
-            var transactionName = TransactionName.ForBrokerTransaction(Extensions.Providers.Wrapper.MessageBrokerDestinationType.Queue, "bar", "baz");
+            var transactionName = TransactionName.ForBrokerTransaction(Extensions.Providers.Wrapper.MessageBrokerDestinationType.Topic, "bar", "baz");
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
             Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("OtherTransaction/Message/bar/Queue/Named/baz", builtName.PrefixedName);
+            Assert.AreEqual("OtherTransaction/Message/bar/Topic/Consume/Named/baz", builtName.PrefixedName);
         }
 
         [Test]
         public void BuiltTransactionName_BuildsMessageBrokerTransactionMetricNameWithoutQueueName_IfUnnamedMessageBrokerTransactionName()
         {
-            var transactionName = TransactionName.ForBrokerTransaction(Extensions.Providers.Wrapper.MessageBrokerDestinationType.Queue, "bar", null);
+            var transactionName = TransactionName.ForBrokerTransaction(Extensions.Providers.Wrapper.MessageBrokerDestinationType.Topic, "bar", null);
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
             Assert.IsFalse(builtName.ShouldIgnore);
-            Assert.AreEqual("OtherTransaction/Message/bar/Queue/Temp", builtName.PrefixedName);
+            Assert.AreEqual("OtherTransaction/Message/bar/Topic/Consume/Temp", builtName.PrefixedName);
         }
 
         [Test]

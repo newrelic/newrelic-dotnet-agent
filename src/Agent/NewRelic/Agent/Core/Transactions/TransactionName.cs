@@ -71,6 +71,8 @@ namespace NewRelic.Agent.Core.Transactions
             var trxName = new StringBuilder(vendor)
                 .Append(MetricNames.PathSeparator)
                 .Append(EnumNameCache<MessageBrokerDestinationType>.GetName(type))
+                .Append(MetricNames.PathSeparator)
+                .Append(MetricNames.MessageBrokerConsume)
                 .Append(MetricNames.PathSeparator);
 
             if (string.IsNullOrWhiteSpace(destination))

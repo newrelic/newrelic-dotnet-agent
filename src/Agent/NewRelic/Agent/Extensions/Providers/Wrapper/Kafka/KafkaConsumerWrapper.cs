@@ -1,6 +1,8 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
+using System.Text;
 using Confluent.Kafka;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -25,16 +27,28 @@ namespace NewRelic.Providers.Wrapper.Kafka
                 brokerVendorName: "Kafka",
                 destination: "");
 
-            return Delegates.GetDelegateFor<ConsumeResult<object, object>>(
+            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, "Kafka");
+
+            //return Delegates.GetDelegateFor<ConsumeResult<string, string>>(
+            return Delegates.GetDelegateFor<dynamic>(
                 onSuccess: (result) =>
                 {
-                    // Message/Kafka/Topic/Consume/Named/{topic}
-                    transaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, "Kafka", result.Topic);
-                    transaction.End();
-                });
+                    if (result == null)
+                        return;
 
-            
-            
+                    var setHeaders = new Action<Headers, string, string>((carrier, key, value) =>
+                    {
+                        carrier ??= new Headers();
+                        carrier.Add(key, Encoding.ASCII.GetBytes(value));
+                    });
+
+                    transaction.InsertDistributedTraceHeaders(result.Message.Headers, setHeaders);
+
+                    string topic = result.Topic;
+
+                    segment.SegmentNameOverride = "MessageBroker/Kafka/Topic/Consume/" + topic;
+                    segment.End();
+                });
         }
     }
 }
