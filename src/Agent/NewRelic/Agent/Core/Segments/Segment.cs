@@ -207,6 +207,15 @@ namespace NewRelic.Agent.Core.Segments
             _transactionSegmentState.CallStackPop(this);
         }
 
+        public void SetMessageBrokerDestinationName(string topic)
+        {
+            if (SegmentData is MessageBrokerSegmentData)
+            {
+                var messageBrokerSegmentData = SegmentData as MessageBrokerSegmentData;
+                messageBrokerSegmentData!.Destination = topic;
+            }
+        }
+
         private const long NoEndTime = -1;
         internal static NoOpSegment NoOpSegment = new NoOpSegment();
         protected readonly static IEnumerable<KeyValuePair<string, object>> EmptyImmutableParameters = new KeyValuePair<string, object>[0];

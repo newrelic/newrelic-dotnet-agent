@@ -36,7 +36,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
                 brokerVendorName: BrokerVendorName,
                 destination: "unknown"); // placeholder since the topic name is unknown at this point
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, "Kafka", "unknown");
+            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, BrokerVendorName, "unknown");
 
             return Delegates.GetDelegateFor<object>(onSuccess: (resultAsObject) =>
             {
@@ -58,7 +58,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
                 string topic = topicAccessor(resultAsObject);
 
                 // set the segment and transaction name
-                segment.SegmentNameOverride = $"MessageBroker/{BrokerVendorName}/Topic/Consume/Named/{topic}";
+                segment.SetMessageBrokerDestinationName(topic);
                 transaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
 
                 // get the Message.Headers property and add distributed trace headers
