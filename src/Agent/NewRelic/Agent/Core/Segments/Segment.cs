@@ -400,7 +400,7 @@ namespace NewRelic.Agent.Core.Segments
 
         public string ToStringForFinestLogging()
         {
-            return $"Id={UniqueId},ParentId={ParentUniqueId?.ToString() ?? "Root"},Name={Data.GetTransactionTraceName()},IsLeaf={IsLeaf},Combinable={Combinable},MethodCallData={MethodCallData}";
+            return $"Id={UniqueId},ParentId={ParentUniqueId?.ToString() ?? "Root"},Name={GetTransactionTraceName()},IsLeaf={IsLeaf},Combinable={Combinable},MethodCallData={MethodCallData}";
         }
 
         public ISegmentExperimental SetSegmentData(ISegmentData segmentData)
