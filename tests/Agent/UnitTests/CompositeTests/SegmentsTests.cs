@@ -652,9 +652,9 @@ namespace CompositeTests
             var expectedMetrics = new[]
             {
                 new ExpectedMetric {Name = "MessageBroker/vendor1/Queue/Consume/Named/queueA"},
-                new ExpectedMetric {Name = "OtherTransaction/Message/vendor1/Queue/Named/queueA" },
-                new ExpectedMetric {Name = "OtherTransactionTotalTime/Message/vendor1/Queue/Named/queueA" },
-                new ExpectedMetric {Name = "MessageBroker/vendor1/Queue/Consume/Named/queueA", Scope = "OtherTransaction/Message/vendor1/Queue/Named/queueA"}
+                new ExpectedMetric {Name = "OtherTransaction/Message/vendor1/Queue/Consume/Named/queueA" },
+                new ExpectedMetric {Name = "OtherTransactionTotalTime/Message/vendor1/Queue/Consume/Named/queueA" },
+                new ExpectedMetric {Name = "MessageBroker/vendor1/Queue/Consume/Named/queueA", Scope = "OtherTransaction/Message/vendor1/Queue/Consume/Named/queueA"}
 
             };
             var expectedSegments = new[]

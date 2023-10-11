@@ -170,13 +170,13 @@ namespace CompositeTests
 
             var expectedMetrics = new[]
             {
-                new ExpectedMetric {Name = "OtherTransaction/Message/vendor/Queue/Named/dest"}
+                new ExpectedMetric {Name = "OtherTransaction/Message/vendor/Queue/Consume/Named/dest"}
             };
             var actualMetrics = _compositeTestAgent.Metrics.ToList();
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();
             NrAssert.Multiple(
                 () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
-                () => Assert.AreEqual("OtherTransaction/Message/vendor/Queue/Named/dest", transactionTrace.TransactionMetricName)
+                () => Assert.AreEqual("OtherTransaction/Message/vendor/Queue/Consume/Named/dest", transactionTrace.TransactionMetricName)
                 );
         }
 

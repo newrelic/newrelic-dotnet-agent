@@ -286,7 +286,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             _agent.CurrentTransaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, "broker", "dest", priority);
 
             var addedTransactionName = _transaction.CandidateTransactionName.CurrentTransactionName;
-            Assert.AreEqual("Message/broker/Topic/Named/dest", addedTransactionName.UnprefixedName);
+            Assert.AreEqual("Message/broker/Topic/Consume/Named/dest", addedTransactionName.UnprefixedName);
             Assert.AreEqual(false, addedTransactionName.IsWeb);
         }
 
