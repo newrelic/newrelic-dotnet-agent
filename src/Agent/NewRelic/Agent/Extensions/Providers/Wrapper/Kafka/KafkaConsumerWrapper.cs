@@ -31,9 +31,6 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            // report kafka client version in a supportability metric, one time only
-           KafkaSupportabilityMetricReporter.ReportKafkaSupportabilityMetric(agent, instrumentedMethodCall.MethodCall.Method.Type);
-
             transaction = agent.CreateTransaction(
                 destinationType: MessageBrokerDestinationType.Topic,
                 brokerVendorName: BrokerVendorName,
@@ -45,9 +42,10 @@ namespace NewRelic.Providers.Wrapper.Kafka
             {
                 if (resultAsObject == null) // null is a valid return value, so we have to handle it. 
                 {
-                    // TODO: Uncommenting the following lines results in *no* transactions for kafka consume. No idea why.
-                    //segment.End();
-                    //transaction.Ignore(); // nothing to see here, move along
+                    segment.End();
+                    transaction.Ignore();
+                    transaction.End();
+
                     return;
                 }
 

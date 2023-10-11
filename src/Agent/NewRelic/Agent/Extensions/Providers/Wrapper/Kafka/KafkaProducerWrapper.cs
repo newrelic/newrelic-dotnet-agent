@@ -26,9 +26,6 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            // report kafka client version in a supportability metric, one time only
-            KafkaSupportabilityMetricReporter.ReportKafkaSupportabilityMetric(agent, instrumentedMethodCall.MethodCall.Method.Type);
-
             var topicPartition = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<TopicPartition>(0);
             var messageMetadata = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<MessageMetadata>(1);
 
