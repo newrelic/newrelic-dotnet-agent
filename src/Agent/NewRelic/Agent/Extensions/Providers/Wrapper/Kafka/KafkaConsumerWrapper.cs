@@ -31,6 +31,9 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
+            // report kafka client version in a supportability metric, one time only
+           KafkaSupportabilityMetricReporter.ReportKafkaSupportabilityMetric(agent, instrumentedMethodCall.MethodCall.Method.Type);
+
             transaction = agent.CreateTransaction(
                 destinationType: MessageBrokerDestinationType.Topic,
                 brokerVendorName: BrokerVendorName,
@@ -42,8 +45,9 @@ namespace NewRelic.Providers.Wrapper.Kafka
             {
                 if (resultAsObject == null) // null is a valid return value, so we have to handle it. 
                 {
-                    segment.End();
-                    transaction.Ignore(); // nothing to see here, move along
+                    // TODO: Uncommenting the following lines results in *no* transactions for kafka consume. No idea why.
+                    //segment.End();
+                    //transaction.Ignore(); // nothing to see here, move along
                     return;
                 }
 
@@ -55,8 +59,9 @@ namespace NewRelic.Providers.Wrapper.Kafka
                 var topicAccessor = TopicAccessorDictionary.GetOrAdd(type, GetTopicAccessorFunc);
                 string topic = topicAccessor(resultAsObject);
 
-                // set the 
+                // set the segment and transaction name
                 segment.SetName($"MessageBroker/{BrokerVendorName}/Topic/Consume/Named/{topic}");
+                transaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
 
                 // get the Message.Headers property and add distributed trace headers
                 var messageAccessor = MessageAccessorDictionary.GetOrAdd(type, GetMessageAccessorFunc);
@@ -70,9 +75,6 @@ namespace NewRelic.Providers.Wrapper.Kafka
                 }
 
                 segment.End();
-
-                // set the transaction name since we know the topic now
-                transaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
                 transaction.End();
             });
         }
