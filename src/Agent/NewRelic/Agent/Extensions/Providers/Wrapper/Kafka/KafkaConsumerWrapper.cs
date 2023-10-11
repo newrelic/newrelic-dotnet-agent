@@ -40,40 +40,43 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
             return Delegates.GetDelegateFor<object>(onSuccess: (resultAsObject) =>
             {
-                if (resultAsObject == null) // null is a valid return value, so we have to handle it. 
+                try
                 {
+                    if (resultAsObject == null) // null is a valid return value, so we have to handle it. 
+                    {
+                        transaction.Ignore();
+                        return;
+                    }
+
+                    // result is actually ConsumeResult<TKey, TValue> - but, because of the generic parameters,
+                    // we have to reference it as object so we can use VisibilityBypasser on it
+                    var type = resultAsObject.GetType();
+
+                    // get the topic
+                    var topicAccessor = TopicAccessorDictionary.GetOrAdd(type, GetTopicAccessorFunc);
+                    string topic = topicAccessor(resultAsObject);
+
+                    // set the segment and transaction name
+                    segment.SetMessageBrokerDestination(topic);
+                    transaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
+
+                    // get the Message.Headers property and add distributed trace headers
+                    var messageAccessor = MessageAccessorDictionary.GetOrAdd(type, GetMessageAccessorFunc);
+                    var messageAsObject = messageAccessor(resultAsObject);
+
+                    if (messageAsObject is MessageMetadata messageMetaData)
+                    {
+                        var headers = messageMetaData.Headers;
+
+                        transaction.InsertDistributedTraceHeaders(headers, DistributedTraceHeadersSetter);
+                    }
+                }
+                finally
+                {
+                    // need to guarantee that the segment and transaction are terminated
                     segment.End();
-                    transaction.Ignore();
                     transaction.End();
-
-                    return;
                 }
-
-                // result is actually ConsumeResult<TKey, TValue> - but, because of the generic parameters,
-                // we have to reference it as object so we can use VisibilityBypasser on it
-                var type = resultAsObject.GetType();
-
-                // get the topic
-                var topicAccessor = TopicAccessorDictionary.GetOrAdd(type, GetTopicAccessorFunc);
-                string topic = topicAccessor(resultAsObject);
-
-                // set the segment and transaction name
-                segment.SetMessageBrokerDestination(topic);
-                transaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
-
-                // get the Message.Headers property and add distributed trace headers
-                var messageAccessor = MessageAccessorDictionary.GetOrAdd(type, GetMessageAccessorFunc);
-                var messageAsObject = messageAccessor(resultAsObject);
-
-                if (messageAsObject is MessageMetadata messageMetaData)
-                {
-                    var headers = messageMetaData.Headers;
-
-                    transaction.InsertDistributedTraceHeaders(headers, DistributedTraceHeadersSetter);
-                }
-
-                segment.End();
-                transaction.End();
             });
         }
 
