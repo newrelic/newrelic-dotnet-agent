@@ -58,7 +58,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
                 string topic = topicAccessor(resultAsObject);
 
                 // set the segment and transaction name
-                segment.SetName($"MessageBroker/{BrokerVendorName}/Topic/Consume/Named/{topic}");
+                segment.SegmentNameOverride = $"MessageBroker/{BrokerVendorName}/Topic/Consume/Named/{topic}";
                 transaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
 
                 // get the Message.Headers property and add distributed trace headers
