@@ -15,6 +15,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
     public class KafkaProducerWrapper : IWrapper
     {
         private const string WrapperName = "KafkaProducerWrapper";
+        private const string BrokerVendorName = "Kafka";
 
         public bool IsTransactionRequired => true;
 
@@ -28,22 +29,18 @@ namespace NewRelic.Providers.Wrapper.Kafka
             var topicPartition = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<TopicPartition>(0);
             var messageMetadata = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<MessageMetadata>(1);
 
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Produce, "Kafka", topicPartition.Topic);
+            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Produce, BrokerVendorName, topicPartition.Topic);
 
-            var setHeaders = new Action<Headers, string, string>((carrier, key, value) =>
-            {
-                carrier ??= new Headers();
-                carrier.Add(key, Encoding.ASCII.GetBytes(value));
-            });
+            transaction.InsertDistributedTraceHeaders(messageMetadata.Headers, DistributedTraceHeadersSetter);
 
-            transaction.InsertDistributedTraceHeaders(messageMetadata.Headers, setHeaders);
-
-            if (instrumentedMethodCall.MethodCall.Method.MethodName == "Produce")
-            {
-                return Delegates.GetDelegateFor(segment);
-            }
-
-            return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
+            return instrumentedMethodCall.MethodCall.Method.MethodName == "Produce" ? Delegates.GetDelegateFor(segment) : Delegates.GetAsyncDelegateFor<Task>(agent, segment);
         }
+
+        private static void DistributedTraceHeadersSetter(Headers carrier, string key, string value)
+        {
+            carrier ??= new Headers();
+            carrier.Add(key, Encoding.ASCII.GetBytes(value));
+        }
+
     }
 }
