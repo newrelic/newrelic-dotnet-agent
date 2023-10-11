@@ -67,12 +67,12 @@ namespace NewRelic.Agent.Core.Utilities
                 { "OpenConnectionWrapperAsync",                                                                     Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
 
                 //The NewRelic.Providers.Wrapper.SerilogLogging.dll depends on the Serilog.dll; therefore, it should
-                //only be loaded by the agent when Serilog is used otherwise assembly load exception will occur.
+                //only be loaded by the agent when Serilog is used otherwise an assembly load exception will occur.
                 { "SerilogCreateLoggerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") },
                 { "SerilogDispatchWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") },
 
-                // Both NewRelic.Providers.Wrapper.MassTransit.dll and NewRelic.Providers.Wrapper.MassTransitLegacy.dll depend on MassTransit aseemblys;
-                // therefore, only be loaded by the agent when MassTransit is used otherwise assembly load exception will occur.
+                // Both NewRelic.Providers.Wrapper.MassTransit.dll and NewRelic.Providers.Wrapper.MassTransitLegacy.dll depend on MassTransit assemblies;
+                // therefore, they should only be loaded by the agent when MassTransit is used, otherwise assembly load exceptions will occur.
                 { "TransportConfigWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransit.dll") },
                 { "TransportConfigLegacyWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransitLegacy.dll") }
             };
