@@ -14,13 +14,14 @@ namespace NewRelic.Providers.Wrapper.Kafka
     public class KafkaConsumerWrapper : IWrapper
     {
         private const string WrapperName = "KafkaConsumerWrapper";
+        private const string BrokerVendorName = "Kafka";
 
         public bool IsTransactionRequired => false;
 
-        private static ConcurrentDictionary<Type, Func<object, string>> topicAccessorDictionary =
+        private static readonly ConcurrentDictionary<Type, Func<object, string>> TopicAccessorDictionary =
             new ConcurrentDictionary<Type, Func<object, string>>();
 
-        private static ConcurrentDictionary<Type, Func<object, object>> messageAccessorDictionary =
+        private static readonly ConcurrentDictionary<Type, Func<object, object>> MessageAccessorDictionary =
             new ConcurrentDictionary<Type, Func<object, object>>();
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -28,56 +29,63 @@ namespace NewRelic.Providers.Wrapper.Kafka
             return new CanWrapResponse(WrapperName.Equals(methodInfo.RequestedWrapperName));
         }
 
+        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+        {
+            transaction = agent.CreateTransaction(
+                destinationType: MessageBrokerDestinationType.Topic,
+                brokerVendorName: BrokerVendorName,
+                destination: "unknown"); // placeholder since the topic name is unknown at this point
+
+            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, "Kafka", "unknown");
+
+            return Delegates.GetDelegateFor<object>(onSuccess: (resultAsObject) =>
+            {
+                if (resultAsObject == null) // null is a valid return value, so we have to handle it. 
+                {
+                    segment.End();
+                    transaction.Ignore(); // nothing to see here, move along
+                    return;
+                }
+
+                // result is actually ConsumeResult<TKey, TValue> - but, because of the generic parameters,
+                // we have to reference it as object so we can use VisibilityBypasser on it
+                var type = resultAsObject.GetType();
+
+                // get the topic
+                var topicAccessor = TopicAccessorDictionary.GetOrAdd(type, GetTopicAccessorFunc);
+                string topic = topicAccessor(resultAsObject);
+
+                // set the 
+                segment.SetName($"MessageBroker/{BrokerVendorName}/Topic/Consume/Named/{topic}");
+
+                // get the Message.Headers property and add distributed trace headers
+                var messageAccessor = MessageAccessorDictionary.GetOrAdd(type, GetMessageAccessorFunc);
+                var messageAsObject = messageAccessor(resultAsObject);
+
+                if (messageAsObject is MessageMetadata messageMetaData)
+                {
+                    var headers = messageMetaData.Headers;
+
+                    transaction.InsertDistributedTraceHeaders(headers, DistributedTraceHeadersSetter);
+                }
+
+                segment.End();
+
+                // set the transaction name since we know the topic now
+                transaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
+                transaction.End();
+            });
+        }
 
         private static Func<object, string> GetTopicAccessorFunc(Type t) =>
             VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(t, "Topic");
         private static Func<object, object> GetMessageAccessorFunc(Type t) =>
             VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Message");
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
+        private static void DistributedTraceHeadersSetter(Headers carrier, string key, string value)
         {
-            transaction = agent.CreateTransaction(
-                destinationType: MessageBrokerDestinationType.Topic,
-                brokerVendorName: "Kafka",
-                destination: "");
-
-            var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Consume, "Kafka");
-
-            return Delegates.GetDelegateFor<object>(onSuccess: (x) =>
-            {
-                if (x == null) // null can be returned, so we have to handle it. 
-                {
-                    // ?? Set segment name here? Possibly get topic from Consume instance? 
-                    // segment.SegmentNameOverride = "MessageBroker/Kafka/Topic/Consume/" + topic;
-                    segment.End();
-                    return;
-                }
-
-                var type = x.GetType();
-
-                var topicAccessor = topicAccessorDictionary.GetOrAdd(type, GetTopicAccessorFunc);
-                string topic = topicAccessor(x);
-
-                segment.SegmentNameOverride = "MessageBroker/Kafka/Topic/Consume/" + topic;
-
-                var messageAccessor = messageAccessorDictionary.GetOrAdd(type, GetMessageAccessorFunc);
-                var messageAsObject = messageAccessor(x);
-
-                if (messageAsObject is MessageMetadata messageMetaData)
-                {
-                    var headers = messageMetaData.Headers;
-
-                    var setHeaders = new Action<Headers, string, string>((carrier, key, value) =>
-                    {
-                        carrier ??= new Headers();
-                        carrier.Add(key, Encoding.ASCII.GetBytes(value));
-                    });
-
-                    transaction.InsertDistributedTraceHeaders(headers, setHeaders);
-                }
-
-                segment.End();
-            });
+            carrier ??= new Headers();
+            carrier.Add(key, Encoding.ASCII.GetBytes(value));
         }
     }
 }
