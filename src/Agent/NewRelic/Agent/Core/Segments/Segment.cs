@@ -207,12 +207,12 @@ namespace NewRelic.Agent.Core.Segments
             _transactionSegmentState.CallStackPop(this);
         }
 
-        public void SetMessageBrokerDestinationName(string topic)
+        public void SetMessageBrokerDestination(string destination)
         {
             if (SegmentData is MessageBrokerSegmentData)
             {
                 var messageBrokerSegmentData = SegmentData as MessageBrokerSegmentData;
-                messageBrokerSegmentData!.Destination = topic;
+                messageBrokerSegmentData!.Destination = destination;
             }
         }
 

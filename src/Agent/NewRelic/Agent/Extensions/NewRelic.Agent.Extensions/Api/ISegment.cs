@@ -70,9 +70,9 @@ namespace NewRelic.Agent.Api
         void RemoveSegmentFromCallStack();
 
         /// <summary>
-        /// Sets the DestinationName on SegmentData, if the data is of type MessageBrokerSegmentData
+        /// Sets the Destination on SegmentData, if the data is of type MessageBrokerSegmentData
         /// </summary>
         /// <param name="destination"></param>
-        void SetMessageBrokerDestinationName(string destination);
+        void SetMessageBrokerDestination(string destination);
     }
 }
