@@ -1,6 +1,5 @@
 name: .NET Agent All Solutions Build
 
-# Does not run on PUSH since we have already ran all the test
 on:
   pull_request:
     branches:
@@ -608,7 +607,6 @@ jobs:
 
   create-package-rpm:
     needs: build-fullagent-msi
-    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
     name: Create RPM Package
     runs-on: ubuntu-22.04
 
@@ -676,7 +674,6 @@ jobs:
 
   create-package-deb:
     needs: build-fullagent-msi
-    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
     name: Create Debian package
     runs-on: ubuntu-22.04
 
@@ -730,7 +727,6 @@ jobs:
 
   run-artifactbuilder:
     needs: [create-package-rpm, create-package-deb]
-    if: ${{ github.event.release || (github.event_name == 'workflow_dispatch' && github.event.inputs.build-for-release == 'true') }}
     name: Run ArtifactBuilder
     runs-on: windows-2022
 
