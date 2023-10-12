@@ -207,6 +207,15 @@ namespace NewRelic.Agent.Core.Segments
             _transactionSegmentState.CallStackPop(this);
         }
 
+        public void SetMessageBrokerDestination(string destination)
+        {
+            if (SegmentData is MessageBrokerSegmentData)
+            {
+                var messageBrokerSegmentData = SegmentData as MessageBrokerSegmentData;
+                messageBrokerSegmentData!.Destination = destination;
+            }
+        }
+
         private const long NoEndTime = -1;
         internal static NoOpSegment NoOpSegment = new NoOpSegment();
         protected readonly static IEnumerable<KeyValuePair<string, object>> EmptyImmutableParameters = new KeyValuePair<string, object>[0];
@@ -400,7 +409,7 @@ namespace NewRelic.Agent.Core.Segments
 
         public string ToStringForFinestLogging()
         {
-            return $"Id={UniqueId},ParentId={ParentUniqueId?.ToString() ?? "Root"},Name={Data.GetTransactionTraceName()},IsLeaf={IsLeaf},Combinable={Combinable},MethodCallData={MethodCallData}";
+            return $"Id={UniqueId},ParentId={ParentUniqueId?.ToString() ?? "Root"},Name={GetTransactionTraceName()},IsLeaf={IsLeaf},Combinable={Combinable},MethodCallData={MethodCallData}";
         }
 
         public ISegmentExperimental SetSegmentData(ISegmentData segmentData)

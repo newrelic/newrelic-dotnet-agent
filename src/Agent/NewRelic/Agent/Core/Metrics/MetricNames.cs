@@ -160,6 +160,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string OtherTransactionPrefix = "OtherTransaction";
         public const string WebTransactionPrefix = "WebTransaction";
         public const string SupportabilityPayloadsDroppedDueToMaxPayloadLimitPrefix = Supportability + PathSeparator + "DotNet/Collector" + PathSeparator + "MaxPayloadSizeLimit";
+        public const string KafkaMessageBrokerConsume = "Consume";
 
         public static readonly char PathSeparatorChar = PathSeparator[0];
         public static readonly char[] PathSeparatorCharArray = { PathSeparatorChar };

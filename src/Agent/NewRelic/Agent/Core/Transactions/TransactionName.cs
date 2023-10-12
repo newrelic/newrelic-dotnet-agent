@@ -66,11 +66,42 @@ namespace NewRelic.Agent.Core.Transactions
             var trxName = new TransactionName(true, MetricNames.Uri, normalizedUri);
             return trxName;
         }
+
         public static TransactionName ForBrokerTransaction(MessageBrokerDestinationType type, string vendor, string destination)
         {
             var trxName = new StringBuilder(vendor)
                 .Append(MetricNames.PathSeparator)
                 .Append(EnumNameCache<MessageBrokerDestinationType>.GetName(type))
+                .Append(MetricNames.PathSeparator);
+
+            if (string.IsNullOrWhiteSpace(destination))
+            {
+                trxName.Append(MetricNames.MessageBrokerTemp);
+            }
+            else
+            {
+                trxName.Append(MetricNames.MessageBrokerNamed)
+                    .Append(MetricNames.PathSeparator)
+                    .Append(destination);
+            }
+
+            return new TransactionName(false, MetricNames.Message, trxName.ToString());
+        }
+
+        /// <summary>
+        /// Builds a transaction name that conforms to the Kafka spec
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="vendor"></param>
+        /// <param name="destination"></param>
+        /// <returns></returns>
+        public static TransactionName ForKafkaBrokerTransaction(MessageBrokerDestinationType type, string vendor, string destination)
+        {
+            var trxName = new StringBuilder(vendor)
+                .Append(MetricNames.PathSeparator)
+                .Append(EnumNameCache<MessageBrokerDestinationType>.GetName(type))
+                .Append(MetricNames.PathSeparator)
+                .Append(MetricNames.KafkaMessageBrokerConsume)
                 .Append(MetricNames.PathSeparator);
 
             if (string.IsNullOrWhiteSpace(destination))
