@@ -14,6 +14,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
     public class NewRelicFilter : IFilter<ConsumeContext>, IFilter<PublishContext>, IFilter<SendContext>
     {
         private const string SendMethodName = "Send";
+        private const string MessageBrokerVendorName = "MassTransit";
 
         private Method _consumeMethod;
         private Method _publishMethod;
@@ -42,14 +43,14 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
 
             var transaction = _agent.CreateTransaction(
                 destinationType: MassTransitHelpers.GetBrokerDestinationType(context.SourceAddress),
-                brokerVendorName: "MassTransit",
+                brokerVendorName: MessageBrokerVendorName,
                 destination: destName);
 
             transaction.AttachToAsync();
 
             transaction.AcceptDistributedTraceHeaders(context.Headers, GetHeaderValue, TransportType.AMQP);
 
-            var segment = transaction.StartMessageBrokerSegment(mc, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, "MassTransit", destName);
+            var segment = transaction.StartMessageBrokerSegment(mc, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, MessageBrokerVendorName, destName);
 
             await next.Send(context);
             segment.End();
@@ -88,7 +89,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
 
             var transaction = _agent.CurrentTransaction;
             MassTransitHelpers.InsertDistributedTraceHeaders(context.Headers, transaction);
-            var segment = transaction.StartMessageBrokerSegment(mc, destType, MessageBrokerAction.Produce, "MassTransit", destName);
+            var segment = transaction.StartMessageBrokerSegment(mc, destType, MessageBrokerAction.Produce, MessageBrokerVendorName, destName);
 
             await next.Send(context);
             segment.End();
@@ -106,7 +107,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
 
             var transaction = _agent.CurrentTransaction;
             MassTransitHelpers.InsertDistributedTraceHeaders(context.Headers, transaction);
-            var segment = transaction.StartMessageBrokerSegment(mc, destType, MessageBrokerAction.Produce, "MassTransit", destName);
+            var segment = transaction.StartMessageBrokerSegment(mc, destType, MessageBrokerAction.Produce, MessageBrokerVendorName, destName);
 
             await next.Send(context);
             segment.End();

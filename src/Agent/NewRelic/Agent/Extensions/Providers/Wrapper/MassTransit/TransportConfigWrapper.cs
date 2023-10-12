@@ -21,7 +21,7 @@ namespace NewRelic.Providers.Wrapper.MassTransit
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, Agent.Api.IAgent agent, ITransaction transaction)
         {
             // This will be run for each bus.  Each bus gets one transport.
-            // We can support more than on transport with this setup.
+            // We can support more than one transport with this setup.
             var configurator = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<IBusFactoryConfigurator>(0);
 
             var spec = new NewRelicPipeSpecification(agent);
