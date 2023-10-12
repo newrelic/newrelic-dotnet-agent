@@ -31,7 +31,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            transaction = agent.CreateTransaction(
+            transaction = agent.CreateKafkaTransaction(
                 destinationType: MessageBrokerDestinationType.Topic,
                 brokerVendorName: BrokerVendorName,
                 destination: "unknown"); // placeholder since the topic name is unknown at this point
@@ -58,7 +58,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
                     // set the segment and transaction name
                     segment.SetMessageBrokerDestination(topic);
-                    transaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
+                    transaction.SetKafkaMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, BrokerVendorName, topic);
 
                     // get the Message.Headers property and add distributed trace headers
                     var messageAccessor = MessageAccessorDictionary.GetOrAdd(type, GetMessageAccessorFunc);

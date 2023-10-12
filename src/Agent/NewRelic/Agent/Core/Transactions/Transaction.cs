@@ -817,6 +817,12 @@ namespace NewRelic.Agent.Core.Transactions
             SetTransactionName(trxName, priority);
         }
 
+        public void SetKafkaMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, TransactionNamePriority priority = TransactionNamePriority.Uri)
+        {
+            var trxName = TransactionName.ForKafkaBrokerTransaction(destinationType, brokerVendorName, destination);
+            SetTransactionName(trxName, priority);
+        }
+
         public void SetOtherTransactionName(string category, string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
         {
             var trxName = TransactionName.ForOtherTransaction(category, name);
