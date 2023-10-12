@@ -122,9 +122,12 @@ namespace NewRelic.Agent.Core
         private static LoggerConfiguration ConfigureEventLogSink(this LoggerConfiguration loggerConfiguration)
         {
 #if NETSTANDARD2_0
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) // event log is a Windows-only construct
-            {
+            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#else
+            var isWindows = true;
 #endif
+            if (isWindows)
+            {
                 const string eventLogName = "Application";
                 const string eventLogSourceName = "New Relic .NET Agent";
                 try
@@ -147,9 +150,7 @@ namespace NewRelic.Agent.Core
                 {
                     // ignored -- there's nothing we can do at this point, as EventLog is our "fallback" logger and if it fails, we're out of luck
                 }
-#if NETSTANDARD2_0
             }
-#endif
             return loggerConfiguration;
         }
 
