@@ -95,7 +95,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
                     return "db2";
                 // The others match our enum name
                 default:
-                    return vendor.ToString().ToLower();
+                    return EnumNameCache<DatastoreVendor>.GetNameToLower(vendor);
             }
         }
     }
