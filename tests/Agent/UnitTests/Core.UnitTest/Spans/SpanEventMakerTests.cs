@@ -162,7 +162,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             _childGenericSegment.SetSegmentData(new SimpleSegmentData(SegmentName));
 
             // Datastore Segments
-            _connectionInfo = new ConnectionInfo("localhost", "1234", "default", "maininstance");
+            _connectionInfo = new ConnectionInfo(DatastoreVendor.MSSQL.ToKnownName(), "localhost", 1234, "default", "maininstance");
             _parsedSqlStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, System.Data.CommandType.Text, ShortQuery);
 
             _obfuscatedSql = _databaseService.GetObfuscatedSql(ShortQuery, DatastoreVendor.MSSQL);
@@ -440,8 +440,10 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             (
                 () => Assert.AreEqual(DatastoreCategory, (string)spanEventIntrinsicAttributes["category"]),
                 () => Assert.AreEqual(DatastoreVendor.MSSQL.ToString(), (string)spanEventIntrinsicAttributes["component"]),
-                () => Assert.AreEqual(_parsedSqlStatement.Model, (string)spanEventAgentAttributes["db.collection"]),
-
+                () => Assert.AreEqual(DatastoreVendor.MSSQL.ToKnownName(), (string)spanEventAgentAttributes["db.system"]),
+                () => Assert.AreEqual(_parsedSqlStatement.Operation, (string)spanEventAgentAttributes["db.operation"]),
+                () => Assert.AreEqual(_connectionInfo.Host, (string)spanEventIntrinsicAttributes["server.address"]),
+                () => Assert.AreEqual(_connectionInfo.Port.Value, spanEventIntrinsicAttributes["server.port"]),
 
                 //This also tests the lazy instantiation on span event attrib values
                 () => Assert.AreEqual(_obfuscatedSql, (string)spanEventAgentAttributes["db.statement"]),
@@ -459,7 +461,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var testSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
             testSegment.SetSegmentData(new DatastoreSegmentData(_databaseService,
                 parsedSqlStatement: new ParsedSqlStatement(DatastoreVendor.CosmosDB, string.Empty, "ReadDatabase"),
-                connectionInfo: new ConnectionInfo("localhost", "1234", "default", "maininstance")));
+                connectionInfo: new ConnectionInfo("none", "localhost", "1234", "default", "maininstance")));
 
             // ARRANGE
             var segments = new List<Segment>()

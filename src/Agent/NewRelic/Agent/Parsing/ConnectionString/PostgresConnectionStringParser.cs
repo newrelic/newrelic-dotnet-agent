@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System.Data.Common;
 
@@ -27,10 +28,15 @@ namespace NewRelic.Parsing.ConnectionString
             if (host != null)
                 host = ConnectionStringParserHelper.NormalizeHostname(host, utilizationHostName);
 
-            var portPathOrId = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _portKeys)?.Value;
             var databaseName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _databaseNameKeys)?.Value;
 
-            return new ConnectionInfo(host, portPathOrId, databaseName);
+            var port = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _portKeys)?.Value;
+            if (port == null || !int.TryParse(port, out int portNum))
+            {
+                portNum = -1;
+            }
+
+            return new ConnectionInfo(DatastoreVendor.Postgres.ToKnownName(), host, portNum, databaseName);
         }
     }
 }

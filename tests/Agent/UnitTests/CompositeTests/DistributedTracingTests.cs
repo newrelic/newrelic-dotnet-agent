@@ -255,10 +255,13 @@ namespace CompositeTests
             TestPayloadInfoMatchesSpanInfo(Payload, rootSpan, actualSpan, "http");
 
             var agentAttributes = actualSpan.AgentAttributes();
+            var intrinsicAttributes = actualSpan.IntrinsicAttributes();
 
             //The specific test
             Assert.AreEqual(url, agentAttributes["http.url"]);
-            Assert.AreEqual(method, agentAttributes["http.method"]);
+            Assert.AreEqual(method, agentAttributes["http.request.method"]);
+            Assert.AreEqual("127.0.0.2", intrinsicAttributes["server.address"]);
+            Assert.AreEqual(123, intrinsicAttributes["server.port"]);
         }
 
         private static Dictionary<string, string> NewRelicHeaders

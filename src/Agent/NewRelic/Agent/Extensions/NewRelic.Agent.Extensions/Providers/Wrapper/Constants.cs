@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
@@ -80,6 +81,24 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         CosmosDB,
         Elasticsearch,
         Other
+    }
+
+    public static class DatastoreVendorExtensions
+    {
+        // Convert our internal enum to the matching OTel "known" name for a database provider
+        public static string ToKnownName(this DatastoreVendor vendor)
+        {
+            switch (vendor)
+            {
+                case DatastoreVendor.Other:
+                    return "other_sql";
+                case DatastoreVendor.IBMDB2:
+                    return "db2";
+                // The others match our enum name
+                default:
+                    return vendor.ToString().ToLower();
+            }
+        }
     }
 
     public static class EnumNameCache<TEnum> // c# 7.3: where TEnum : System.Enum	

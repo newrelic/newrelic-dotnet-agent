@@ -441,5 +441,26 @@ namespace NewRelic.Agent.Core.Segments
         {
             return EnumNameCache<SpanCategory>.GetName(Data.SpanCategory);
         }
+
+        public static int? CheckAllSameThread(ICollection<Segment> segments)
+        {
+            if (segments == null)
+                return null;
+
+            int? threadId = null;
+
+            foreach (Segment segment in segments)
+            {
+                if (threadId == null)
+                {
+                    threadId = segment.ThreadId;
+                }
+                else if (threadId != segment.ThreadId)
+                {
+                    return null;
+                }
+            }
+            return threadId;
+        }
     }
 }
