@@ -373,12 +373,6 @@ jobs:
             -H "$CONTENT_TYPE" \
             -d "$PAYLOAD"
 
-          # EU PRODUCTION
-          curl -X POST 'https://api.eu.newrelic.com/v2/system_configuration.json' \
-            -H "X-Api-Key:${{ secrets.NEW_RELIC_API_KEY_PRODUCTION }}" -i \
-            -H "$CONTENT_TYPE" \
-            -d "$PAYLOAD"
-
   publish-release-notes:
     needs: [deploy-linux, deploy-nuget, index-download-site]
     if: ${{ github.event.inputs.deploy == 'true' && github.event.inputs.downloadsite == 'true' && github.event.inputs.nuget == 'true' && github.event.inputs.linux == 'true' && github.event.inputs.linux-deploy-to-production == 'true' }}
