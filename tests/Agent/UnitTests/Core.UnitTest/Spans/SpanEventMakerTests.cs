@@ -442,8 +442,8 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
                 () => Assert.AreEqual(DatastoreVendor.MSSQL.ToString(), (string)spanEventIntrinsicAttributes["component"]),
                 () => Assert.AreEqual(DatastoreVendor.MSSQL.ToKnownName(), (string)spanEventAgentAttributes["db.system"]),
                 () => Assert.AreEqual(_parsedSqlStatement.Operation, (string)spanEventAgentAttributes["db.operation"]),
-                () => Assert.AreEqual(_connectionInfo.Host, (string)spanEventIntrinsicAttributes["server.address"]),
-                () => Assert.AreEqual(_connectionInfo.Port.Value, spanEventIntrinsicAttributes["server.port"]),
+                () => Assert.AreEqual(_connectionInfo.Host, (string)spanEventAgentAttributes["server.address"]),
+                () => Assert.AreEqual(_connectionInfo.Port.Value, spanEventAgentAttributes["server.port"]),
 
                 //This also tests the lazy instantiation on span event attrib values
                 () => Assert.AreEqual(_obfuscatedSql, (string)spanEventAgentAttributes["db.statement"]),
@@ -715,7 +715,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             // ASSERT
             Assert.AreEqual(HttpUri, (string)spanEventAgentAttributes["http.url"]);
-            Assert.AreEqual(HttpMethod, (string)spanEventAgentAttributes["http.method"]);
+            Assert.AreEqual(HttpMethod, (string)spanEventAgentAttributes["http.request.method"]);
             Assert.AreEqual("type", (string)spanEventIntrinsicAttributes["component"]);
             Assert.AreEqual("client", (string)spanEventIntrinsicAttributes["span.kind"]);
         }

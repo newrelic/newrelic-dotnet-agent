@@ -13,7 +13,7 @@ namespace NewRelic.Agent.Extensions.Parsing
             {
                 Port = port;
             }
-            PathOrId = string.Empty;
+            PathOrId = ValueOrUnknown(string.Empty);
             DatabaseName = ValueOrUnknown(databaseName);
             InstanceName = instanceName;
         }
