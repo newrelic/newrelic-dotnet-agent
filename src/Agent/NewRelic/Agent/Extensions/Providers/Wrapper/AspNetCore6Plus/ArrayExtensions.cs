@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection;
 
-namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
+namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 {
     public static class ArrayExtensions
     {

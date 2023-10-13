@@ -1,14 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>NewRelic.Providers.Wrapper.AspNetCore</AssemblyName>
     <RootNamespace>NewRelic.Providers.Wrapper.AspNetCore</RootNamespace>
-    <LangVersion>latest</LangVersion>
+    <Description>ASP.NET Core Wrapper Provider for New Relic .NET Agent</Description>
   </PropertyGroup>
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.1.0" />
   </ItemGroup>
-	<ItemGroup>
+  <ItemGroup>
 		<Content Include="Instrumentation.xml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>

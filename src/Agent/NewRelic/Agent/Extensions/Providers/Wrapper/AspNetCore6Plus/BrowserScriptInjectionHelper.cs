@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
+namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 {
     internal static class BrowserScriptInjectionHelper
     {

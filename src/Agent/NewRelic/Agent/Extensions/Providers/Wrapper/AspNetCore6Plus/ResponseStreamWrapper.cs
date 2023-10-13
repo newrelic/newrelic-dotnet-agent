@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NewRelic.Agent.Api;
 
-namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
+namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 {
     /// <summary>
     /// Wrapper for the response stream, handles checking for response content type and injecting the browser script if appropriate
@@ -177,12 +177,12 @@ namespace NewRelic.Providers.Wrapper.AspNetCore.BrowserInjection
             if (buffer.Length == 0 || bufferToFind.Length == 0)
                 return -1;
 
-            for (int i = 0; i < buffer.Length; i++)
+            for (var i = 0; i < buffer.Length; i++)
             {
                 if (buffer[i] == bufferToFind[0])
                 {
-                    bool innerMatch = true;
-                    for (int j = 1; j < bufferToFind.Length; j++)
+                    var innerMatch = true;
+                    for (var j = 1; j < bufferToFind.Length; j++)
                     {
                         if (buffer[i + j] != bufferToFind[j])
                         {

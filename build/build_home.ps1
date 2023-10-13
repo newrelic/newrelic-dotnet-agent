@@ -69,11 +69,11 @@ foreach ($wrapperDir in $wrapperDirs) {
     }
 }
 
-# xxxxxxxxxxAspNetCore needs to be in netFramework as well netstandard2.0
-if ($aspNetCorePath = Resolve-Path "$wrappersRootDir\AspNetCore\bin\$Configuration\net6.0") {
+# AspNetCore needs to be in netFramework as well netstandard2.0
+if ($aspNetCorePath = Resolve-Path "$wrappersRootDir\AspNetCore\bin\$Configuration\netstandard2.0") {
     $dllObject = Get-ChildItem -File -Path "$aspNetCorePath" -Filter NewRelic.Providers.Wrapper.AspNetCore.dll
     $xmlObject = Get-ChildItem -File -Path "$aspNetCorePath" -Filter Instrumentation.xml
-    $netstandard20WrapperHash.Add($dllObject, $xmlObject)
+    $netFrameworkWrapperHash.Add($dllObject, $xmlObject)
 }
 
 # MicrosoftExtensionsLogging needs to be in netFramework as well netstandard2.0
@@ -82,6 +82,15 @@ if ($melNetCorePath = Resolve-Path "$wrappersRootDir\MicrosoftExtensionsLogging\
     $xmlObject = Get-ChildItem -File -Path "$melNetCorePath" -Filter Instrumentation.xml
     $netFrameworkWrapperHash.Add($dllObject, $xmlObject)
 }
+
+# AspNetCore6Plus is built to target .net 6, but we'll copy it to the netstandard folder 
+if ($aspNetCore6PlusPath = Resolve-Path "$wrappersRootDir\AspNetCore6Plus\bin\$Configuration\net6.0") {
+    $dllObject = Get-ChildItem -File -Path "$aspNetCore6PlusPath" -Filter NewRelic.Providers.Wrapper.AspNetCore6Plus.dll
+    $xmlObject = Get-ChildItem -File -Path "$aspNetCore6PlusPath" -Filter Instrumentation.xml
+    $netstandard20WrapperHash.Add($dllObject, $xmlObject)
+}
+
+
 
 $netFrameworkStorageArray = @()
 $netstandard20StorageArray = @()
