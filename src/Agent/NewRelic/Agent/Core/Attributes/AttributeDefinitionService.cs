@@ -44,6 +44,8 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> DbCollection { get; }
         AttributeDefinition<string, string> DbInstance { get; }
         AttributeDefinition<string, string> DbOperation { get; }
+        AttributeDefinition<string, string> DbServerAddress { get; }
+        AttributeDefinition<long, long> DbServerPort { get; }
         AttributeDefinition<string, string> DbStatement { get; }
         AttributeDefinition<string, string> DbSystem { get; }
         AttributeDefinition<string, string> DistributedTraceId { get; }
@@ -582,6 +584,18 @@ namespace NewRelic.Agent.Core.Attributes
         private AttributeDefinition<long, long> _serverPort;
         public AttributeDefinition<long, long> ServerPort => _serverPort ?? (_serverPort =
             AttributeDefinitionBuilder.CreateLong("server.port", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _dbServerAddress;
+        public AttributeDefinition<string, string> DbServerAddress => _dbServerAddress ?? (_dbServerAddress =
+            AttributeDefinitionBuilder.CreateString("server.address", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<long, long> _dbServerPort;
+        public AttributeDefinition<long, long> DbServerPort => _dbServerPort ?? (_dbServerPort =
+            AttributeDefinitionBuilder.CreateLong("server.port", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
 

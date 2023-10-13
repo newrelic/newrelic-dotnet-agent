@@ -155,6 +155,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             {
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Elasticsearch/{expectedIndexName}/{expectedOperationName}", metricScope = expectedTransactionName, callCount = 1 },
             };
+            var expectedAgentAttributes = new List<string>
+            {
+                "db.system",
+                "db.operation",
+                "db.instance",
+                "peer.address",
+                "peer.hostname",
+                "server.address",
+                "server.port"
+            };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
@@ -172,7 +182,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assert.Single(operationDatastoreSpans),
-                () => Assert.Equal(_host, uri)
+                () => Assert.Equal(_host, uri),
+                () => Assertions.SpanEventHasAttributes(expectedAgentAttributes, IntegrationTestHelpers.Models.SpanEventAttributeType.Agent, operationDatastoreSpans.FirstOrDefault())
             );
         }
 

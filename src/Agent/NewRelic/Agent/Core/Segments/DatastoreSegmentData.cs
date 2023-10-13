@@ -229,10 +229,10 @@ namespace NewRelic.Agent.Core.Segments
             AttribDefs.SpanKind.TrySetDefault(attribVals);
             // peer.hostname and server.address must match
             AttribDefs.PeerHostname.TrySetValue(attribVals, Host);
-            AttribDefs.ServerAddress.TrySetValue(attribVals, Host);
+            AttribDefs.DbServerAddress.TrySetValue(attribVals, Host);
             if (Port != null)
             {
-                AttribDefs.ServerPort.TrySetValue(attribVals, Port.Value);
+                AttribDefs.DbServerPort.TrySetValue(attribVals, Port.Value);
             }
         }
 
