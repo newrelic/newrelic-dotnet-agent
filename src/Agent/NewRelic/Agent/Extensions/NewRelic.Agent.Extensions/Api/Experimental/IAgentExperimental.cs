@@ -25,6 +25,13 @@ namespace NewRelic.Agent.Api.Experimental
         /// <param name="metricName"></param>
         /// <param name="count"></param>
         void RecordCountMetric(string metricName, long count = 1);
+        /// <summary>
+        /// Records a byte count metric with the given name
+        /// </summary>
+        /// <param name="metricName"></param>
+        /// <param name="totalBytes"></param>
+        /// <param name="exclusiveBytes"></param>
+        void RecordByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null);
 
         /// <summary>
         /// Records the log message in the transaction to later be forwarded if log forwarding is enabled.

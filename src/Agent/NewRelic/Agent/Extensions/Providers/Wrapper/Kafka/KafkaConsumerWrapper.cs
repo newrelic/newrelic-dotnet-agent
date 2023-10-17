@@ -122,7 +122,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
             // Add metrics for bytes received and messages received
             var agentExp = agent.GetExperimentalApi();
             agentExp.RecordCountMetric($"Message/Kafka/Topic/Named/{topic}/Received/Messages", 1);
-            agentExp.RecordCountMetric($"Message/Kafka/Topic/Named/{topic}/Received/Bytes", totalSize);
+            agentExp.RecordByteMetric($"Message/Kafka/Topic/Named/{topic}/Received/Bytes", totalSize);
         }
 
         private static Func<object, string> GetTopicAccessorFunc(Type t) =>
