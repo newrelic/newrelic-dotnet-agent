@@ -20,7 +20,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransit
         public Task Consume(ConsumeContext<Message> context)
         {
             ConsoleMFLogger.Info($"Received message {context.Message.Text}");
-            //_logger.LogInformation("Received Message: {Text}", context.Message.Text);
             return Task.CompletedTask;
         }
     }
