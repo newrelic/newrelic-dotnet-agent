@@ -89,7 +89,8 @@ namespace CompositeTests
             return new MethodCall(
                 new Method(agent.GetType(), "methodName", "parameterTypeNames"),
                 agent,
-                new object[0]
+                new object[0],
+                false
                 );
         }
 
@@ -98,7 +99,8 @@ namespace CompositeTests
             return new MethodCall(
                 new Method(agent.GetType(), "methodName", "parameterTypeNames"),
                 agent,
-                new object[] { "customName" }
+                new object[] { "customName" },
+                false
                 );
         }
     }

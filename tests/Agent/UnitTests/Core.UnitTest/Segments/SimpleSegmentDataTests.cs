@@ -49,49 +49,6 @@ namespace NewRelic.Agent.Core.Segments.Tests
             Assert.AreEqual(666, segment.ThreadId);
         }
 
-
-        [Test]
-        public void CheckAllSameThread()
-        {
-            int? threadId;
-            threadId = Segment.CheckAllSameThread(null);
-            Assert.IsNull(threadId);
-
-            // All different
-            var segments = new List<Segment>();
-            for (int i = 0; i < 3; i++)
-            {
-                var segment = new Segment(createTransactionSegmentState(100 + i, null, i), new MethodCallData("type", "method", 1));
-                segment.SetSegmentData(new SimpleSegmentData("test" + i));
-                segments.Add(segment);
-            }
-            threadId = Segment.CheckAllSameThread(segments);
-            Assert.IsNull(threadId);
-
-            // All same
-            segments = new List<Segment>();
-            for (int i = 0; i < 3; i++)
-            {
-                var segment = new Segment(createTransactionSegmentState(10 + i, null, 10), new MethodCallData("type", "method", 1));
-                segment.SetSegmentData(new SimpleSegmentData("test" + i));
-                segments.Add(segment);
-            }
-            threadId = Segment.CheckAllSameThread(segments);
-            Assert.AreEqual(10, threadId.Value);
-
-            // Some different
-            segments = new List<Segment>();
-            for (int i = 0; i < 10; i++)
-            {
-                var segment = new Segment(createTransactionSegmentState(1 + i, null, i % 3), new MethodCallData("type", "method", 1));
-                segment.SetSegmentData(new SimpleSegmentData("test" + i));
-                segments.Add(segment);
-            }
-            threadId = Segment.CheckAllSameThread(segments);
-            Assert.IsNull(threadId);
-        }
-
-
         [Test]
         public void IsCombinableWith_ReturnsTrue_ForIdenticalSegments()
         {

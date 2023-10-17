@@ -85,12 +85,6 @@ namespace NewRelic.Agent.Core.Spans
             _attribDefs.SpanCategory.TrySetValue(spanAttributes, SpanCategory.Generic);
             _attribDefs.NrEntryPoint.TrySetValue(spanAttributes, true);
 
-            var threadId = Segment.CheckAllSameThread(immutableTransaction.Segments);
-            if (threadId != null)
-            {
-                _attribDefs.ThreadId.TrySetValue(spanAttributes, threadId.Value);
-            }
-
             spanAttributes.AddRange(transactionAttribValues.GetAttributeValues(AttributeClassification.UserAttributes));
 
             spanAttributes.MakeImmutable();
