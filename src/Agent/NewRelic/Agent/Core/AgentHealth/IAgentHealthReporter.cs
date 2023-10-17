@@ -129,6 +129,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportAgentInfo();
 
         void ReportSupportabilityCountMetric(string metricName, long count = 1);
+        void ReportCountMetric(string metricName, long count = 1);
 
         void ReportInfiniteTracingSpanResponseError();
         void ReportInfiniteTracingSpanEventsSeen(long count = 1);

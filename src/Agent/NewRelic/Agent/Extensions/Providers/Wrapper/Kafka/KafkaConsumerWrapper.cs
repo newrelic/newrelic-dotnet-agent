@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using Confluent.Kafka;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -22,6 +23,10 @@ namespace NewRelic.Providers.Wrapper.Kafka
             new ConcurrentDictionary<Type, Func<object, string>>();
 
         private static readonly ConcurrentDictionary<Type, Func<object, object>> MessageAccessorDictionary =
+            new ConcurrentDictionary<Type, Func<object, object>>();
+        private static readonly ConcurrentDictionary<Type, Func<object, object>> KeyAccessorDictionary =
+            new ConcurrentDictionary<Type, Func<object, object>>();
+        private static readonly ConcurrentDictionary<Type, Func<object, object>> ValueAccessorDictionary =
             new ConcurrentDictionary<Type, Func<object, object>>();
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -64,12 +69,15 @@ namespace NewRelic.Providers.Wrapper.Kafka
                     var messageAccessor = MessageAccessorDictionary.GetOrAdd(type, GetMessageAccessorFunc);
                     var messageAsObject = messageAccessor(resultAsObject);
 
+                    var headersSize = 0L;
                     if (messageAsObject is MessageMetadata messageMetaData)
                     {
-                        var headers = messageMetaData.Headers;
+                        headersSize = GetHeadersSize(messageMetaData.Headers);
 
-                        transaction.InsertDistributedTraceHeaders(headers, DistributedTraceHeadersSetter);
+                        transaction.InsertDistributedTraceHeaders(messageMetaData.Headers, DistributedTraceHeadersSetter);
                     }
+
+                    ReportSizeMetrics(agent, transaction, topic, headersSize, messageAsObject);
                 }
                 finally
                 {
@@ -80,15 +88,67 @@ namespace NewRelic.Providers.Wrapper.Kafka
             });
         }
 
+        private static long GetHeadersSize(Headers headers)
+        {
+            var headersSize = 0L;
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                {
+                    headersSize += Encoding.UTF8.GetByteCount(header.Key);
+                    headersSize += header.GetValueBytes().Length;
+                }
+            }
+            return headersSize;
+        }
+
+        private static void ReportSizeMetrics(IAgent agent, ITransaction transaction, string topic, long headersSize, object messageAsObject)
+        {
+            // get the message Key and Value properties so we can try to get their size
+            var messageType = messageAsObject.GetType();
+            var keyAccessor = KeyAccessorDictionary.GetOrAdd(messageType, GetKeyAccessorFunc);
+            var valueAccessor = ValueAccessorDictionary.GetOrAdd(messageType, GetValueAccessorFunc);
+
+            var keyAsObject = keyAccessor(messageAsObject);
+            var valueAsObject = valueAccessor(messageAsObject);
+
+            var totalSize = headersSize + TryGetSize(keyAsObject) + TryGetSize(valueAsObject);
+
+            if (totalSize > 0)
+            {
+                transaction.AddCustomAttribute("kafka.consume.byteCount", totalSize);
+            }
+
+            // Add metrics for bytes received and messages received
+            var agentExp = agent.GetExperimentalApi();
+            agentExp.RecordCountMetric($"Message/Kafka/Topic/Named/{topic}/Received/Messages", 1);
+            agentExp.RecordCountMetric($"Message/Kafka/Topic/Named/{topic}/Received/Bytes", totalSize);
+        }
+
         private static Func<object, string> GetTopicAccessorFunc(Type t) =>
             VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(t, "Topic");
         private static Func<object, object> GetMessageAccessorFunc(Type t) =>
             VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Message");
+        private static Func<object, object> GetKeyAccessorFunc(Type t) =>
+            VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Key");
+        private static Func<object, object> GetValueAccessorFunc(Type t) =>
+            VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Value");
 
         private static void DistributedTraceHeadersSetter(Headers carrier, string key, string value)
         {
             carrier ??= new Headers();
             carrier.Add(key, Encoding.ASCII.GetBytes(value));
+        }
+
+        private static long TryGetSize(object obj)
+        {
+            return obj switch
+            {
+                null => 0,
+                byte[] bytes => bytes.Length,
+                string str => Encoding.UTF8.GetByteCount(str),
+                _ => 0
+            };
         }
     }
 }

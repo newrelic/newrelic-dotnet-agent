@@ -1010,6 +1010,12 @@ namespace NewRelic.Agent.Core.WireModels
                 return BuildMetric(_metricNameService, proposedName, null, data);
             }
 
+            public MetricWireModel TryBuildCountMetric(string metricName, long count)
+            {
+                var data = MetricDataWireModel.BuildCountData(count);
+                return BuildMetric(_metricNameService, metricName, null, data);
+            }
+
             #endregion
         }
     }
