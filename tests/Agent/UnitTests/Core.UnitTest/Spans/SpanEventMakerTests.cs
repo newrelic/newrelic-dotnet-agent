@@ -64,6 +64,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         private string _transactionGuid;
         private DateTime _startTime;
         private Segment _baseGenericSegment;
+        private Segment _baseGenericAsyncSegment;
         private Segment _childGenericSegment;
         private Segment _baseDatastoreSegment;
         private Segment _baseHttpSegment;
@@ -157,6 +158,9 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             // Generic Segments
             _baseGenericSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
             _baseGenericSegment.SetSegmentData(new SimpleSegmentData(SegmentName));
+
+            _baseGenericAsyncSegment = new Segment(CreateTransactionSegmentState(5, null, 888), new MethodCallData(MethodCallType, MethodCallMethod, 1, true));
+            _baseGenericAsyncSegment.SetSegmentData(new SimpleSegmentData(SegmentName));
 
             _childGenericSegment = new Segment(CreateTransactionSegmentState(4, 3, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
             _childGenericSegment.SetSegmentData(new SimpleSegmentData(SegmentName));
@@ -766,6 +770,24 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         }
 
         #endregion
+
+        [Test]
+        public void GetSpanEvent_CheckThreadIdAttribute()
+        {
+            var segments = new List<Segment>()
+            {
+                _baseGenericAsyncSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
+            };
+            var immutableTransaction = BuildTestTransaction(segments, true, false);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
+            var spanEvent = spanEvents.ToList()[1];
+
+            Assert.AreEqual(888, spanEvent.IntrinsicAttributes()["thread.id"]);
+        }
 
         private ImmutableTransaction BuildTestTransaction(List<Segment> segments, bool sampled, bool hasIncomingPayload)
         {
