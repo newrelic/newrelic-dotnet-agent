@@ -262,7 +262,17 @@
     <Reference Include="System.Messaging" Condition="'$(TargetFramework)' == 'net481'" />
   </ItemGroup>
 
-  <!-- RestSharp -->
+  <!--MassTransit-->
+  <ItemGroup>
+    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net7.0'" />
+  </ItemGroup>
+
+    <!-- RestSharp -->
   <ItemGroup>
     <!-- This version is used to test against our minimum supported version called out in docs, and
     to test a version older than 106.7.0 which uses different instrumentation code. -->
