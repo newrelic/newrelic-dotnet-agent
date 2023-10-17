@@ -76,6 +76,7 @@ namespace NewRelic.Agent.Core.Segments
             Data.AttachSegmentDataState(this);
             Combinable = false;
             IsLeaf = true;
+            IsAsync = methodCallData.IsAsync;
         }
 
         /// <summary>
@@ -106,6 +107,7 @@ namespace NewRelic.Agent.Core.Segments
             }
 
             SpanId = segment.SpanId;
+            IsAsync = segment.IsAsync;
         }
 
         public bool IsDone

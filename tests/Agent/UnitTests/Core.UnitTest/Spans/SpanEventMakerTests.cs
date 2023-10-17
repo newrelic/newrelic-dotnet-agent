@@ -776,6 +776,24 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         {
             var segments = new List<Segment>()
             {
+                _baseGenericSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
+            };
+            var immutableTransaction = BuildTestTransaction(segments, true, false);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
+            var spanEvent = spanEvents.ToList()[1];
+
+            Assert.AreEqual(777, spanEvent.IntrinsicAttributes()["thread.id"]);
+        }
+
+        [Test]
+        public void GetSpanEvent_CheckMissingThreadIdAttribute()
+        {
+            var segments = new List<Segment>()
+            {
                 _baseGenericAsyncSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
             };
             var immutableTransaction = BuildTestTransaction(segments, true, false);
@@ -786,7 +804,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
             var spanEvent = spanEvents.ToList()[1];
 
-            Assert.AreEqual(888, spanEvent.IntrinsicAttributes()["thread.id"]);
+            Assert.IsFalse(spanEvent.IntrinsicAttributes().ContainsKey("thread.id"));
         }
 
         private ImmutableTransaction BuildTestTransaction(List<Segment> segments, bool sampled, bool hasIncomingPayload)
