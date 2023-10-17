@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Enable configuration of High Security Mode via environment variable (NEW_RELIC_HIGH_SECURITY). ([a86d98d](https://github.com/newrelic/newrelic-dotnet-agent/commit/a86d98d2e1b5d7062c79e4baff6a8207c8762b61)), closes [#1948](https://github.com/newrelic/newrelic-dotnet-agent/issues/1948)
 * Enable startup logging to Event Log for all applications on Windows. ([#1969](https://github.com/newrelic/newrelic-dotnet-agent/issues/1969)) ([cdac8b7](https://github.com/newrelic/newrelic-dotnet-agent/commit/cdac8b707b679f08f099ef9c111141372321aa80))
-* Enable startup logging to EventLog for .NET 6+ applications on Windows. ([4310e98](https://github.com/newrelic/newrelic-dotnet-agent/commit/4310e982a86b2294b211aa87f768d6fdcd883e5c))
+
 
 
 ### Fixes
