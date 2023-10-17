@@ -35,8 +35,9 @@ jobs:
             id: filter
             with:
               base: ${{ github.ref }}
-              filters: |
+              filters: | # ignore changes in the .github folder structure and changes to .md files
                 non-workflow-files-changed:
                   - '!.github/**'
+                  - '!**.md'
               list-files: 'csv'
     
