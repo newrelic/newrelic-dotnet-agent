@@ -38,6 +38,5 @@ jobs:
               filters: |
                 non-workflow-files-changed:
                   - '!.github/**'
-                  - '!**/*.md'
               list-files: 'csv'
     
