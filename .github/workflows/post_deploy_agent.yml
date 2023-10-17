@@ -1,6 +1,5 @@
 name: Post Deploy for the .NET Agent
 
-
 on:
   workflow_dispatch:
     inputs:
@@ -8,6 +7,10 @@ on:
         description: 'Agent Version to validate.  Needs to match the version from the Release Workflow (all_solutions.yml). Format: X.X.X'
         required: true
         type: string
+      external_call:
+        type: boolean
+        default: true
+        required: false
   workflow_call:
     inputs:
       agent_version:
@@ -29,12 +32,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+        uses: step-security/harden-runner@1b05615854632b887b69ae1be8cbefe72d3ae423 # v2.6.0
         with:
           disable-sudo: false
           egress-policy: audit
       - name: Wait for APT to update
-        if: ${{ github.event_name == 'workflow_call' }} # only wait if this workflow was called by another workflow
+        if: ${{ github.inputs.external_call }} # only wait if this workflow was called by another workflow
         run: |
           echo "Sleeping 5 minutes to wait for apt to update itself"
           sleep 300
@@ -62,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+        uses: step-security/harden-runner@1b05615854632b887b69ae1be8cbefe72d3ae423 # v2.6.0
         with:
           disable-sudo: true
           egress-policy: audit
@@ -73,7 +76,7 @@ jobs:
           fetch-depth: 0
 
       - name: Wait for YUM to update
-        if: ${{ github.event_name == 'workflow_call' }} # only wait if this workflow was called by another workflow
+        if: ${{ github.inputs.external_call }} # only wait if this workflow was called by another workflow
         run: |
           echo "Sleeping 5 minutes to wait for yum to update itself"
           sleep 300
@@ -103,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+        uses: step-security/harden-runner@1b05615854632b887b69ae1be8cbefe72d3ae423 # v2.6.0
         with:
           disable-sudo: true
           egress-policy: audit
@@ -129,7 +132,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+        uses: step-security/harden-runner@1b05615854632b887b69ae1be8cbefe72d3ae423 # v2.6.0
         with:
           disable-sudo: true
           egress-policy: audit
@@ -158,7 +161,7 @@ jobs:
       
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+        uses: step-security/harden-runner@1b05615854632b887b69ae1be8cbefe72d3ae423 # v2.6.0
         with:
           disable-sudo: true
           egress-policy: audit

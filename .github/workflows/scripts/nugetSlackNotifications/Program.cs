@@ -30,17 +30,17 @@ namespace nugetSlackNotifications
         {
             Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 
-            try
+            foreach (string packageName in args)
             {
-                foreach (string packageName in args)
+                try
                 {
                     await CheckPackage(packageName);
                 }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Caught exception while checking for package updates.");
-                await SendSlackNotification($"Dotty: caught exception while checking for package updates: {ex}");
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"Caught exception while checking {packageName} for updates.");
+                    await SendSlackNotification($"Dotty: caught exception while checking {packageName} for updates: {ex}");
+                }
             }
 
             await AlertOnNewVersions();
@@ -71,25 +71,13 @@ namespace nugetSlackNotifications
             }
 
             // need to get the most recent and previous catalog entries to display previous and new version
-            Catalogentry latestCatalogEntry;
-            Catalogentry previousCatalogEntry;
+            Catalogentry? latestCatalogEntry = GetCatalogentry(packageName, page, 1);
+            Catalogentry? previousCatalogEntry = GetCatalogentry(packageName, page, 2);
 
-            // alternative json structure (see mysql.data)
-            if (page.items[^1].catalogEntry is null)
-            {
-                latestCatalogEntry = page.items[^1].items[^1].catalogEntry; // latest release
-                previousCatalogEntry = page.items[^1].items[^2].catalogEntry; // next-latest release
-            }
-            else // standard structure
-            {
-                latestCatalogEntry = page.items[^1].catalogEntry;
-                previousCatalogEntry = page.items[^2].catalogEntry;
-            }
-
-            if (latestCatalogEntry.published > DateTime.Now.AddDays(-_daysToSearch) && !await latestCatalogEntry.isPrerelease())
+            if (latestCatalogEntry?.published > DateTime.Now.AddDays(-_daysToSearch) && !await latestCatalogEntry.isPrerelease())
             {
                 Log.Information($"Package {packageName} has been updated in the past {_daysToSearch} days.");
-                _newVersions.Add(new NugetVersionData(packageName, previousCatalogEntry.version, latestCatalogEntry.version, $"https://www.nuget.org/packages/{packageName}/"));
+                _newVersions.Add(new NugetVersionData(packageName, previousCatalogEntry?.version ?? "Unknown", latestCatalogEntry.version, $"https://www.nuget.org/packages/{packageName}/"));
             }
             else
             {
@@ -111,7 +99,6 @@ namespace nugetSlackNotifications
                 msg += $"\nThanks and have a wonderful {DateTime.Now.DayOfWeek}.";
 
                 await SendSlackNotification(msg);
-
             }
             else
             {
@@ -146,7 +133,7 @@ namespace nugetSlackNotifications
         [Trace]
         static async Task SendSlackNotification(string msg)
         {
-            if (_webhook != null)
+            if (_webhook != null && !_testMode)
             {
                 Log.Information($"Alerting channel with message: {msg}");
 
@@ -171,6 +158,29 @@ namespace nugetSlackNotifications
             else
             {
                 Log.Error($"SendSlackNotification called but _webhook is null.  msg={msg}");
+            }
+        }
+
+        [Trace]
+        static Catalogentry? GetCatalogentry(string packageName, Page page, int releaseIndex)
+        {
+            // release index = 1 for most recent release, 2 for the previous release, etc.
+            try
+            {
+                // alternative json structure (see mysql.data)
+                if (page.items[^1].catalogEntry is null)
+                {
+                    return page.items[^1].items[^releaseIndex].catalogEntry; // latest release
+                }
+                else // standard structure
+                {
+                    return page.items[^releaseIndex].catalogEntry;
+                }
+            }
+            catch (IndexOutOfRangeException)
+            {
+                Log.Warning($"GetCatalogEntry: array index issue for package {packageName} and releaseIndex {releaseIndex}");
+                return null;
             }
         }
     }

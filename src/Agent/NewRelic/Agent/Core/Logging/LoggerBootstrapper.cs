@@ -11,8 +11,9 @@ using Serilog.Formatting;
 using Logger = NewRelic.Agent.Core.Logging.Logger;
 using NewRelic.Agent.Core.Logging;
 using Serilog.Templates;
-#if NETFRAMEWORK
 using Serilog.Events;
+#if NETSTANDARD2_0
+using System.Runtime.InteropServices;
 #endif
 
 namespace NewRelic.Agent.Core
@@ -107,28 +108,49 @@ namespace NewRelic.Agent.Core
         }
 
         /// <summary>
-        /// Add the Event Log sink if running on .NET Framework
+        /// Configure an Event Log sink if running on Windows. Logs messages at Warning level and above. Intended for
+        /// use during bootstrapping and as a fallback if the file logging sink can't be created.
+        ///
+        /// The Agent will create the event log source if it doesn't exist *and* if the app is running with
+        /// administrator privileges. Otherwise, it will silently do nothing.
+        ///
+        /// It is possible to manually create the event log source in an elevated Powershell window:
+        ///    New-EventLog -LogName "Application" -Source "New Relic .NET Agent"
+        /// 
         /// </summary>
         /// <param name="loggerConfiguration"></param>
         private static LoggerConfiguration ConfigureEventLogSink(this LoggerConfiguration loggerConfiguration)
         {
-#if NETFRAMEWORK
-            const string eventLogName = "Application";
-            const string eventLogSourceName = "New Relic .NET Agent";
-
-            loggerConfiguration
-                    .WriteTo.Logger(configuration =>
-                    {
-                        configuration
-                        .ExcludeAuditLog()
-                        .WriteTo.EventLog(
-                            source: eventLogSourceName,
-                            logName: eventLogName,
-                            restrictedToMinimumLevel: LogEventLevel.Warning,
-                            outputTemplate: "{Level}: {Message}{NewLine}{Exception}"
-                        );
-                    });
+#if NETSTANDARD2_0
+            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#else
+            var isWindows = true;
 #endif
+            if (isWindows)
+            {
+                const string eventLogName = "Application";
+                const string eventLogSourceName = "New Relic .NET Agent";
+                try
+                {
+                    loggerConfiguration
+                            .WriteTo.Logger(configuration =>
+                            {
+                                configuration
+                                .ExcludeAuditLog()
+                                .WriteTo.EventLog(
+                                    source: eventLogSourceName,
+                                    logName: eventLogName,
+                                    restrictedToMinimumLevel: LogEventLevel.Warning,
+                                    outputTemplate: "{Level}: {Message}{NewLine}{Exception}",
+                                    manageEventSource: true
+                                );
+                            });
+                }
+                catch
+                {
+                    // ignored -- there's nothing we can do at this point, as EventLog is our "fallback" logger and if it fails, we're out of luck
+                }
+            }
             return loggerConfiguration;
         }
 
@@ -190,11 +212,10 @@ namespace NewRelic.Agent.Core
             catch (Exception ex)
             {
                 Log.Logger.Warning(ex, "Unexpected exception when configuring file sink.");
-#if NETFRAMEWORK
+
                 // Fallback to the event log sink if we cannot setup a file logger.
                 Log.Logger.Warning("Falling back to EventLog sink.");
                 loggerConfiguration.ConfigureEventLogSink();
-#endif
             }
 
             return loggerConfiguration;
