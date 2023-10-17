@@ -38,6 +38,6 @@ jobs:
               filters: | # ignore changes in the .github folder structure and changes to .md files
                 non-workflow-files-changed:
                   - '!.github/**'
-                  - '!**.md'
+                  - '!**/*.md'
               list-files: 'csv'
     
