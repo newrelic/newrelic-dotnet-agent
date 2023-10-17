@@ -142,13 +142,15 @@ namespace NewRelic.Providers.Wrapper.Kafka
 
         private static long TryGetSize(object obj)
         {
-            return obj switch
-            {
-                null => 0,
-                byte[] bytes => bytes.Length,
-                string str => Encoding.UTF8.GetByteCount(str),
-                _ => 0
-            };
+            if (obj == null)
+                return 0;
+
+            // get the UTF8 byte count if it's a string,
+            // the array length if it's a byte array
+            // or zero if it's something else
+            return obj is string str ? Encoding.UTF8.GetByteCount(str) :
+                   obj is byte[] bytes ? bytes.Length :
+                   0;
         }
     }
 }
