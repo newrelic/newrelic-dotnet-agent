@@ -406,9 +406,14 @@ namespace NewRelic.Agent.Core
             set { _stackExchangeRedisCache = value; }
         }
 
-        public void RecordSupportabilityMetric(string metricName, int count)
+        public void RecordSupportabilityMetric(string metricName, long count = 1)
         {
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
+        }
+
+        public void RecordCountMetric(string metricName, long count = 1)
+        {
+            _agentHealthReporter.ReportCountMetric(metricName, count);
         }
 
         public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException, Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId)
