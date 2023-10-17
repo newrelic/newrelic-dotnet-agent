@@ -1,8 +1,6 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NET7_0
-
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -70,4 +68,3 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         }
     }
 }
-#endif
