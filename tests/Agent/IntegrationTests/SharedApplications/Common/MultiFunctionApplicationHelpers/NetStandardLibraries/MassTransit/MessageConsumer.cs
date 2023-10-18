@@ -3,20 +3,11 @@
 
 using System.Threading.Tasks;
 using MassTransit;
-using Microsoft.Extensions.Logging;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransit
 {
-    public class MessageConsumer
-        :
-            IConsumer<Message>
+    public class MessageConsumer : IConsumer<Message>
     {
-        readonly ILogger<MessageConsumer> _logger;
-        public MessageConsumer(ILogger<MessageConsumer> logger)
-        {
-            _logger = logger;
-        }
-
         public Task Consume(ConsumeContext<Message> context)
         {
             ConsoleMFLogger.Info($"Received message {context.Message.Text}");

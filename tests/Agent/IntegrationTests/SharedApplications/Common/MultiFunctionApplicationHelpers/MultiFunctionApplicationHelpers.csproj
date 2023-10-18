@@ -264,20 +264,13 @@
 
   <!--MassTransit-->
   <ItemGroup>
-    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net462'" />
-    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="MassTransit" Version="7.3.1" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="MassTransit" Version="7.3.1" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="MassTransit" Version="7.3.1" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MassTransit" Version="7.3.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <!--These references are needed for the MassTransit exerciser.  They need to use a version this old because they have
-    a dependency on Microsoft.Extensions.Logging for the same version or greater, and we have references to old versions
-    of MEL for testing MEL instrumentation.-->
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net462'" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
   </ItemGroup>
 
   <!-- RestSharp -->

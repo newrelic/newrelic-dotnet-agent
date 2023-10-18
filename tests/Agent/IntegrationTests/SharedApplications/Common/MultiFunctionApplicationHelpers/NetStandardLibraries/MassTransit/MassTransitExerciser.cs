@@ -1,6 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if NET7_0_OR_GREATER || NET481_OR_GREATER
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,7 +23,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         IBus _bus;
 
         [LibraryMethod]
-        public void StartHost()
+        public void StartBus()
         {
             _host = CreateMassTransitHost();
             _bus = _host.Services.GetService<IBus>();
@@ -31,7 +32,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         }
 
         [LibraryMethod]
-        public void StopHost()
+        public void StopBus()
         {
             _cts.Cancel();
             _hostedServiceTask.Wait();
@@ -68,3 +69,4 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         }
     }
 }
+#endif
