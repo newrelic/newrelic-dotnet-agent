@@ -75,7 +75,7 @@ jobs:
         with:
           name: Providers
           path: |
-            ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\Providers\**\*.dll
+            ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\Providers\**\NewRelic.Providers.*.dll
             ${{ github.workspace }}\src\Agent\NewRelic\Agent\Extensions\Providers\**\*.xml
           if-no-files-found: error
           
@@ -114,16 +114,20 @@ jobs:
           certutil.exe -f -user -p ${{ secrets.CERT_PASSPHRASE }} -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot
         shell: powershell
 
+
+      - name: Add msbuild to PATH (required for MsiInstaller build)
+        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1        
+
       - name: Build MsiInstaller.sln x86
         run: |
-          Write-Host "dotnet build -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}"
-          dotnet build -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}
         shell: powershell
 
       - name: Build MsiInstaller.sln x64
         run: |
-          Write-Host "dotnet build -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}"
-          dotnet build -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
         shell: powershell
 
       - name: Archive msi _build Artifacts
@@ -173,8 +177,8 @@ jobs:
         run: |
           Write-Host "List NuGet Sources"
           dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "dotnet build -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
-          dotnet build -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
         shell: powershell
 
       - name: Archive Artifacts
@@ -211,8 +215,8 @@ jobs:
         run: |
           Write-Host "List NuGet Sources"
           dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
-          Write-Host "dotnet build -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
-          dotnet build -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
         shell: powershell
 
       - name: Archive Artifacts
@@ -766,7 +770,7 @@ jobs:
         
       - name: Build NewRelic.NuGetHelper
         run: |
-          dotnet build -restore -m -p:Configuration=Release ${{ github.workspace }}\build\NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj  
+          MSBuild.exe -restore -m -p:Configuration=Release ${{ github.workspace }}\build\NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj  
         shell: powershell
 
       - name: Run ArtifactBuilder
