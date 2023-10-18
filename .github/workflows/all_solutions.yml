@@ -57,15 +57,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
+      #- name: Add msbuild to PATH
+      #  uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
 
       - name: Build FullAgent.sln
         run: |
-          Write-Host "List NuGet Sources"
-          dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
+          #Write-Host "List NuGet Sources"
+          #dotnet nuget list source # For unknown reasons, this step is necessary to avoid subsequent problems with NuGet package restore
           Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
-          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
+          dotnet build -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
         shell: powershell
 
       - name: Create agentVersion
