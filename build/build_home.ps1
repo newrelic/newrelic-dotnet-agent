@@ -102,34 +102,6 @@ foreach ($storageDir in $storageDirs) {
     }
 }
 
-Write-Host ""
-Write-Host "NetFramework wrappers:"
-foreach ($item in $netFrameworkWrapperHash.GetEnumerator())
-{
-	Write-Host $item.Name 
-}
-
-Write-Host ""
-Write-Host "NetStandard wrappers:"
-foreach ($item in $netstandard20WrapperHash.GetEnumerator())
-{
-	Write-Host $item.Name 
-}
-
-Write-Host ""
-Write-Host "NetFramework storage:"
-foreach ($item in $netFrameworkStorageArray.GetEnumerator())
-{
-	Write-Host $item.Name 
-}
-
-Write-Host ""
-Write-Host "NetStandard storage:"
-foreach ($item in $netstandard20StorageArray.GetEnumerator())
-{
-	Write-Host $item.Name 
-}
-
 #######################
 # Create home folders #
 #######################
