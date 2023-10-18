@@ -59,8 +59,8 @@ jobs:
 
       - name: Build FullAgent.sln
         run: |
-          Write-Host "dotnet build -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
-          dotnet build -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
+          Write-Host "dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
+          dotnet build --force --configuration Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
         shell: powershell
 
       - name: Create agentVersion
