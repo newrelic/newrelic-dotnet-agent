@@ -1016,6 +1016,12 @@ namespace NewRelic.Agent.Core.WireModels
                 return BuildMetric(_metricNameService, metricName, null, data);
             }
 
+            public MetricWireModel TryBuildByteMetric(string metricName, long totalBytes, long? exclusiveBytes)
+            {
+                var data = MetricDataWireModel.BuildByteData(totalBytes, exclusiveBytes);
+                return BuildMetric(_metricNameService, metricName, null, data);
+            }
+
             #endregion
         }
     }
