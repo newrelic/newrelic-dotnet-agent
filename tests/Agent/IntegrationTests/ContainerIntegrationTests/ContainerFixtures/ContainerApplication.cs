@@ -15,13 +15,16 @@ namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
 
 public class ContainerApplication : RemoteApplication
 {
-
+    private readonly string _dockerfile;
     private readonly string _dotnetVersion;
     private readonly string _distroTag;
     private readonly string _targetArch;
     private readonly string _agentArch;
     private readonly string _containerPlatform;
     private readonly string _dockerComposeServiceName;
+
+    // Used for handling dependent containers started automatically for services
+    public readonly List<string> DockerDependencies;
 
     protected override string ApplicationDirectoryName { get; }
 
@@ -33,12 +36,14 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public ContainerApplication(string applicationDirectoryName, string distroTag, Architecture containerArchitecture, string dotnetVersion) : base(applicationType: ApplicationType.Container, isCoreApp: true)
+    public ContainerApplication(string applicationDirectoryName, string distroTag, Architecture containerArchitecture, string dotnetVersion, string dockerfile) : base(applicationType: ApplicationType.Container, isCoreApp: true)
     {
         ApplicationDirectoryName = applicationDirectoryName;
         _dockerComposeServiceName = applicationDirectoryName;
         _distroTag = distroTag;
         _dotnetVersion = dotnetVersion;
+        _dockerfile = dockerfile;
+        DockerDependencies = new List<string>();
 
         switch (containerArchitecture)
         {
@@ -57,7 +62,7 @@ public class ContainerApplication : RemoteApplication
 
     public override string AppName => $"ContainerApplication: {_dotnetVersion}-{_distroTag}_{_targetArch}";
 
-    private string ContainerName => $"smoketestapp_{_dotnetVersion}-{_distroTag}_{_targetArch}".ToLower(); // must be lowercase
+    private string ContainerName => $"{_dockerComposeServiceName}_{_dotnetVersion}-{_distroTag}_{_targetArch}".ToLower(); // must be lowercase
 
     public override void CopyToRemote()
     {
@@ -70,7 +75,7 @@ public class ContainerApplication : RemoteApplication
     {
         CleanupContainer();
 
-        var arguments = $"compose up --force-recreate {_dockerComposeServiceName}";
+        var arguments = $"compose up --abort-on-container-exit --force-recreate {_dockerComposeServiceName}";
 
         var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
         var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;
@@ -110,8 +115,10 @@ public class ContainerApplication : RemoteApplication
         // Docker compose settings
         var testConfiguration = IntegrationTestConfiguration.GetIntegrationTestConfiguration("Default");
 
+        startInfo.EnvironmentVariables.Add("TEST_DOCKERFILE", _dockerfile);
         startInfo.EnvironmentVariables.Add("NEW_RELIC_APP_NAME", AppName);
         startInfo.EnvironmentVariables.Add("DOTNET_VERSION", _dotnetVersion);
+        startInfo.EnvironmentVariables.Add("APP_DOTNET_VERSION", _dotnetVersion);
         startInfo.EnvironmentVariables.Add("DISTRO_TAG", _distroTag);
         startInfo.EnvironmentVariables.Add("TARGET_ARCH", _targetArch);
         startInfo.EnvironmentVariables.Add("PLATFORM", _containerPlatform);
@@ -183,6 +190,17 @@ public class ContainerApplication : RemoteApplication
         // ensure there's no stray containers or images laying around
         Process.Start("docker", $"container rm --force {ContainerName}");
         Process.Start("docker", $"image rm --force {ContainerName}");
+
+        if (DockerDependencies.Count > 0)
+        {
+            foreach (var dep in DockerDependencies)
+            {
+                Process.Start("docker", $"container rm --force {dep}");
+            }
+        }
+
+        // Cleanup the networks with no attached containers. Mainly for testings on dev laptops - they can build up and block runs.
+        Process.Start("docker", "network prune -f");
     }
 
     protected virtual void WaitForAppServerToStartListening(Process process, bool captureStandardOutput)
