@@ -112,7 +112,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             var metric = _metricBuilder.TryBuildCountMetric(metricName, count);
             TrySend(metric);
         }
-        public void ReportByteMetric(string metricName, long totalBytes, long? exclusiveBytes)
+        public void ReportByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null)
         {
             var metric = _metricBuilder.TryBuildByteMetric(metricName, totalBytes, exclusiveBytes);
             TrySend(metric);
