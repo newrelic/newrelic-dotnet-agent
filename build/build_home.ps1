@@ -102,6 +102,7 @@ foreach ($storageDir in $storageDirs) {
     }
 }
 
+
 #######################
 # Create home folders #
 #######################
