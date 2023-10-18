@@ -25,7 +25,7 @@ namespace NewRelic.Providers.Wrapper.Kafka
                 ? (SerializationContext)instrumentedMethodCall.MethodCall.MethodArguments[1]
                 : (SerializationContext)instrumentedMethodCall.MethodCall.MethodArguments[2];
 
-            // MessageBroker/Kafka/Topic/Named/{ topic_name}/Serialization/Value
+            // MessageBroker/Kafka/Topic/Named/{topic_name}/Serialization/Value
             var segment = transaction.StartMessageBrokerSerializationSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Topic, MessageBrokerAction.Produce, "Kafka", context.Topic, context.Component.ToString());
 
             return Delegates.GetDelegateFor(segment);

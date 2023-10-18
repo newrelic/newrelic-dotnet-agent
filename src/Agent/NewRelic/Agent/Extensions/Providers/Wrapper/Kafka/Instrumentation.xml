@@ -42,32 +42,7 @@ SPDX-License-Identifier: Apache-2.0
       <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Serializers+ByteArraySerializer">
         <exactMethodMatcher methodName="Serialize" />
       </match>
-
-      <!--<match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Deserializers+Utf8Deserializer">
-        <exactMethodMatcher methodName="Deserialize" />
-      </match>
-      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Deserializers+NullDeserializer">
-        <exactMethodMatcher methodName="Deserialize" />
-      </match>
-      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Deserializers+IgnoreDeserializer">
-        <exactMethodMatcher methodName="Deserialize" />
-      </match>
-      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Deserializers+Int64Deserializer">
-        <exactMethodMatcher methodName="Deserialize" />
-      </match>
-      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Deserializers+Int32Deserializer">
-        <exactMethodMatcher methodName="Deserialize" />
-      </match>
-      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Deserializers+SingleDeserializer">
-        <exactMethodMatcher methodName="Deserialize" />
-      </match>
-      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Deserializers+DoubleDeserializer">
-        <exactMethodMatcher methodName="Deserialize" />
-      </match>
-        <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Deserializers+ByteArrayDeserializer">
-          <exactMethodMatcher methodName="Deserialize" />
-      </match>-->
-      </tracerFactory>
+    </tracerFactory>
 
   </instrumentation>
 </extension>
