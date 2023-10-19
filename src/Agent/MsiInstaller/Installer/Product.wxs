@@ -465,6 +465,10 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="ElasticsearchWrapperComponent" Guid="{9C233889-69DD-4B8B-A1A6-ABAC6E27A716}">
         <File Id="ElasticsearchWrapperFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Elasticsearch.dll"/>
       </Component>
+      <Component Id="KafkaWrapperComponent" Guid="{BE97F5F5-A392-48A0-8888-B2973EA09490}">
+        <File Id="KafkaWrapperFile" Name="NewRelic.Providers.Wrapper.Kafka.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Kafka.dll"/>
+      </Component>
+
 
       <!-- Reference libraries -->
       <Component Id="NewRelicCoreReferenceComponent" Guid="{C196ED1E-0FBA-4D36-9C34-E969B0C9E8C9}">
@@ -523,6 +527,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>  
       <Component Id="CoreElasticsearchWrapperComponent" Guid="{531A713C-B46C-41C8-8B21-49CBD4C0A459}">
         <File Id="CoreElasticsearchWrapperFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Elasticsearch.dll"/>
+      </Component>
+      <Component Id="CoreKafkaWrapperComponent" Guid="{6CA6D5A4-A204-4B04-A6B5-13D8B3E736C2}">
+        <File Id="CoreKafkaWrapperFile" Name="NewRelic.Providers.Wrapper.Kafka.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Kafka.dll"/>
       </Component>
 
       <!-- Reference libraries -->
@@ -629,6 +636,9 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="ElasticsearchInstrumentationComponent" Guid="{42D85537-D0AB-44EB-8BE5-4B2EEB26DE91}">
         <File Id="ElasticsearchInstrumentationFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml"/>
       </Component>
+      <Component Id="KafkaInstrumentationComponent" Guid="{9FC86A0E-CACD-4DA8-84F8-20997C904913}">
+        <File Id="KafkaInstrumentationFile" Name="NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml"/>
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions.Instrumentation" Directory="CoreExtensionsFolder">
@@ -676,6 +686,9 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreElasticsearchInstrumentationComponent" Guid="{02EFBFF6-9DA8-4138-A03F-E9502B631A76}">
         <File Id="CoreElasticsearchInstrumentationFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreKafkaInstrumentationComponent" Guid="{B2C4F83B-A339-4DBD-B8C4-760C8F72F9FC}">
+        <File Id="CoreKafkaInstrumentationFile" Name="NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 
