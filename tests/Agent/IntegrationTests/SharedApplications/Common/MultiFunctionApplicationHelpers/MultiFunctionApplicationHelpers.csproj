@@ -268,7 +268,6 @@
     <PackageReference Include="MassTransit" Version="7.3.1" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="MassTransit" Version="7.3.1" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net481'" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="MassTransit" Version="7.3.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net7.0'" />
   </ItemGroup>

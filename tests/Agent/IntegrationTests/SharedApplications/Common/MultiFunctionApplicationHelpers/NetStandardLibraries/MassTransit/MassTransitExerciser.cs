@@ -1,10 +1,7 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-#if NET7_0_OR_GREATER || NET481_OR_GREATER
 using MassTransit;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransit;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using NewRelic.Api.Agent;
@@ -17,56 +14,41 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
     [Library]
     class MassTransitExerciser
     {
-        Task _hostedServiceTask;
         CancellationTokenSource _cts;
-        IHost _host;
-        IBus _bus;
+        IBusControl _bus;
 
         [LibraryMethod]
-        public void StartBus()
+        public async Task StartBus(string queueName)
         {
-            _host = CreateMassTransitHost();
-            _bus = _host.Services.GetService<IBus>();
             _cts = new CancellationTokenSource();
-            _hostedServiceTask = _host.RunAsync(_cts.Token);
+            _bus = Bus.Factory.CreateUsingInMemory(configure =>
+            {
+                configure.ReceiveEndpoint(queueName, cfg =>
+                {
+                    cfg.Consumer<MessageConsumer>();
+                });
+            });
+            await _bus.StartAsync(_cts.Token);
         }
 
         [LibraryMethod]
-        public void StopBus()
+        public async Task StopBus()
         {
-            _cts.Cancel();
-            _hostedServiceTask.Wait();
-            _hostedServiceTask.Dispose();
+            await _bus.StopAsync();
         }
 
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task Publish(string message)
+        public async Task Publish(string text)
         {
-            var order = new Message() { Text = message };
-            await _bus.Publish(order);
-            ConsoleMFLogger.Info($"Sent message {message}");
+            var message = new Message() { Text = text };
+            await _bus.Publish(message);
+            ConsoleMFLogger.Info($"Sent message {text}");
 
             // This sleep ensures that this transaction method is the one sampled for transaction trace data
             Thread.Sleep(1000);
         }
 
-        private static IHost CreateMassTransitHost()
-        {
-            var builder = Host.CreateDefaultBuilder().ConfigureServices((hostContext, services) =>
-                {
-                    services.AddMassTransit(x =>
-                    {
-                        x.AddConsumer<MessageConsumer>();
-                        x.UsingInMemory((context, cfg) =>
-                        {
-                            cfg.ConfigureEndpoints(context);
-                        });
-                    });
-                });
-            return builder.Build();
-        }
     }
 }
-#endif
