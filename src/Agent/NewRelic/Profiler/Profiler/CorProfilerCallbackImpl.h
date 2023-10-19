@@ -693,6 +693,7 @@ namespace NewRelic { namespace Profiler {
                 LogTrace("Fetching ", instrumentationPoint->ClassName, " methods");
 
                 mdTypeDef typeDef{};
+                HRESULT hr = pImport->FindTypeDefByName(instrumentationPoint->ClassName.c_str(), mdTypeDefNil, &typeDef);
                 if (FAILED(hr)) {
                     LogInfo("Unable to find ", instrumentationPoint->ClassName, " for rejit. HR:", hr);
                 } else {
