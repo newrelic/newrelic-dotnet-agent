@@ -693,14 +693,7 @@ namespace NewRelic { namespace Profiler {
                 LogTrace("Fetching ", instrumentationPoint->ClassName, " methods");
 
                 mdTypeDef typeDef{};
-                mdTypeDef parentTypeDef = mdTypeDefNil;
-                
-                if (instrumentationPoint->ClassName.find('+') != xstring_t::npos) {
-                    wstring thesplit = instrumentationPoint->ClassName.substr(0, instrumentationPoint->ClassName.find('+'));
-                    pImport->FindTypeDefByName(instrumentationPoint->ClassName.c_str(), mdTypeDefNil, &parentTypeDef);
-                }
-
-                HRESULT hr = pImport->FindTypeDefByName(instrumentationPoint->ClassName.c_str(), parentTypeDef, &typeDef);
+                HRESULT hr = pImport->FindTypeDefByName(instrumentationPoint->ClassName.c_str(), mdTypeDefNil, &typeDef);
                 if (FAILED(hr)) {
                     LogInfo("Unable to find ", instrumentationPoint->ClassName, " for rejit. HR:", hr);
                 } else {
