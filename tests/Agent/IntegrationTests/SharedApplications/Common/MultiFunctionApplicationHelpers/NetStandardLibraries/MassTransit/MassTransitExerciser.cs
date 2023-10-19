@@ -50,5 +50,19 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
             Thread.Sleep(1000);
         }
 
+        [LibraryMethod]
+        [Transaction]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public async Task Send(string text)
+        {
+            var message = new Message() { Text = text };
+            var sendEndpoint = await _bus.GetPublishSendEndpoint<Message>();
+            await sendEndpoint.Send(message);
+            ConsoleMFLogger.Info($"Sent message {text}");
+
+            // This sleep ensures that this transaction method is the one sampled for transaction trace data
+            Thread.Sleep(1000);
+        }
+
     }
 }
