@@ -199,6 +199,7 @@ namespace NewRelic.Agent.Core.Metrics
                 });
         }
 
+        
         public static MetricName GetCustom(string suffix)
         {
             return MetricName.Create(Custom, suffix);
@@ -1045,6 +1046,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityLoggingEventsSent = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Sent";
         public const string SupportabilityLoggingEventsCollected = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Seen";
         public const string SupportabilityLoggingEventsDropped = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Dropped";
+        public const string SupportabilityLoggingEventEmpty = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Empty";
 
         public static string GetLoggingMetricsLinesBySeverityName(string logLevel)
         {

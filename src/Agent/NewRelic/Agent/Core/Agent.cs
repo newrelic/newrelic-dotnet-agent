@@ -439,14 +439,17 @@ namespace NewRelic.Agent.Core
 
                 var logMessage = getLogMessage(logEvent);
                 var logException = getLogException(logEvent);
+                var logContextData = _configurationService.Configuration.ContextDataEnabled ? getContextData(logEvent) : null;
 
                 // exit quickly if the message and exception are missing
+                // We would also check logContextData here, but behavior differs by logging framework as to whether they
+                // internally ignore messages that have only context data, so the check isn't particularly useful.
                 if (string.IsNullOrWhiteSpace(logMessage) && logException is null)
                 {
+                    _agentHealthReporter.ReportLoggingEventsEmpty();
                     return;
                 }
 
-                var logContextData = _configurationService.Configuration.ContextDataEnabled ? getContextData(logEvent) : null;
                 var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
 
                 LogEventWireModel logEventWireModel;
