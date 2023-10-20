@@ -64,6 +64,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         private string _transactionGuid;
         private DateTime _startTime;
         private Segment _baseGenericSegment;
+        private Segment _baseGenericAsyncSegment;
         private Segment _childGenericSegment;
         private Segment _baseDatastoreSegment;
         private Segment _baseHttpSegment;
@@ -158,11 +159,14 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             _baseGenericSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
             _baseGenericSegment.SetSegmentData(new SimpleSegmentData(SegmentName));
 
+            _baseGenericAsyncSegment = new Segment(CreateTransactionSegmentState(5, null, 888), new MethodCallData(MethodCallType, MethodCallMethod, 1, true));
+            _baseGenericAsyncSegment.SetSegmentData(new SimpleSegmentData(SegmentName));
+
             _childGenericSegment = new Segment(CreateTransactionSegmentState(4, 3, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
             _childGenericSegment.SetSegmentData(new SimpleSegmentData(SegmentName));
 
             // Datastore Segments
-            _connectionInfo = new ConnectionInfo("localhost", "1234", "default", "maininstance");
+            _connectionInfo = new ConnectionInfo(DatastoreVendor.MSSQL.ToKnownName(), "localhost", 1234, "default", "maininstance");
             _parsedSqlStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, System.Data.CommandType.Text, ShortQuery);
 
             _obfuscatedSql = _databaseService.GetObfuscatedSql(ShortQuery, DatastoreVendor.MSSQL);
@@ -440,8 +444,10 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             (
                 () => Assert.AreEqual(DatastoreCategory, (string)spanEventIntrinsicAttributes["category"]),
                 () => Assert.AreEqual(DatastoreVendor.MSSQL.ToString(), (string)spanEventIntrinsicAttributes["component"]),
-                () => Assert.AreEqual(_parsedSqlStatement.Model, (string)spanEventAgentAttributes["db.collection"]),
-
+                () => Assert.AreEqual(DatastoreVendor.MSSQL.ToKnownName(), (string)spanEventAgentAttributes["db.system"]),
+                () => Assert.AreEqual(_parsedSqlStatement.Operation, (string)spanEventAgentAttributes["db.operation"]),
+                () => Assert.AreEqual(_connectionInfo.Host, (string)spanEventAgentAttributes["server.address"]),
+                () => Assert.AreEqual(_connectionInfo.Port.Value, spanEventAgentAttributes["server.port"]),
 
                 //This also tests the lazy instantiation on span event attrib values
                 () => Assert.AreEqual(_obfuscatedSql, (string)spanEventAgentAttributes["db.statement"]),
@@ -459,7 +465,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             var testSegment = new Segment(CreateTransactionSegmentState(3, null, 777), new MethodCallData(MethodCallType, MethodCallMethod, 1));
             testSegment.SetSegmentData(new DatastoreSegmentData(_databaseService,
                 parsedSqlStatement: new ParsedSqlStatement(DatastoreVendor.CosmosDB, string.Empty, "ReadDatabase"),
-                connectionInfo: new ConnectionInfo("localhost", "1234", "default", "maininstance")));
+                connectionInfo: new ConnectionInfo("none", "localhost", "1234", "default", "maininstance")));
 
             // ARRANGE
             var segments = new List<Segment>()
@@ -713,7 +719,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             // ASSERT
             Assert.AreEqual(HttpUri, (string)spanEventAgentAttributes["http.url"]);
-            Assert.AreEqual(HttpMethod, (string)spanEventAgentAttributes["http.method"]);
+            Assert.AreEqual(HttpMethod, (string)spanEventAgentAttributes["http.request.method"]);
             Assert.AreEqual("type", (string)spanEventIntrinsicAttributes["component"]);
             Assert.AreEqual("client", (string)spanEventIntrinsicAttributes["span.kind"]);
         }
@@ -764,6 +770,42 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         }
 
         #endregion
+
+        [Test]
+        public void GetSpanEvent_CheckThreadIdAttribute()
+        {
+            var segments = new List<Segment>()
+            {
+                _baseGenericSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
+            };
+            var immutableTransaction = BuildTestTransaction(segments, true, false);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
+            var spanEvent = spanEvents.ToList()[1];
+
+            Assert.AreEqual(777, spanEvent.IntrinsicAttributes()["thread.id"]);
+        }
+
+        [Test]
+        public void GetSpanEvent_CheckMissingThreadIdAttribute()
+        {
+            var segments = new List<Segment>()
+            {
+                _baseGenericAsyncSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
+            };
+            var immutableTransaction = BuildTestTransaction(segments, true, false);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
+            var spanEvent = spanEvents.ToList()[1];
+
+            Assert.IsFalse(spanEvent.IntrinsicAttributes().ContainsKey("thread.id"));
+        }
 
         private ImmutableTransaction BuildTestTransaction(List<Segment> segments, bool sampled, bool hasIncomingPayload)
         {

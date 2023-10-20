@@ -17,7 +17,7 @@ namespace NewRelic.Parsing.ConnectionString
         private const int CacheCapacity = 1000;
         private static readonly SimpleCache<string, ConnectionInfo> _connectionInfoCache = new SimpleCache<string, ConnectionInfo>(CacheCapacity);
 
-        private static readonly ConnectionInfo Empty = new ConnectionInfo(null, null, null);
+        private static readonly ConnectionInfo Empty = new ConnectionInfo(null, null, null, null);
 
         public static ConnectionInfo FromConnectionString(DatastoreVendor vendor, string connectionString, string utilizationHostName)
         {

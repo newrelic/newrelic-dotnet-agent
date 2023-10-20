@@ -150,5 +150,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportLogForwardingFramework(string logFramework);
         void ReportLogForwardingEnabledWithFramework(string logFramework);
         void ReportByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null);
+        void ReportLoggingEventsEmpty(int count = 1);
     }
 }

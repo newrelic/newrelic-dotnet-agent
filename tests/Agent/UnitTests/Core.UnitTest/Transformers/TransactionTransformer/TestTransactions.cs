@@ -118,7 +118,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 txSegmentState = TransactionSegmentStateHelpers.GetItransactionSegmentState();
 
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
-            var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, null), commandText, new ConnectionInfo(host, portPathOrId, databaseName));
+            var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, null), commandText, new ConnectionInfo("none", host, portPathOrId, databaseName));
             var segment = new Segment(txSegmentState, methodCallData);
             segment.SetSegmentData(data);
 

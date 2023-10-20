@@ -4,6 +4,7 @@
 using NewRelic.Agent.Extensions.Parsing;
 using System.Linq;
 using NewRelic.Agent.Helpers;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Parsing.ConnectionString
 {
@@ -40,10 +41,14 @@ namespace NewRelic.Parsing.ConnectionString
                 // We can only capture the first server we detect.  It could be that there are many....
                 var hostPortPair = section.Split(StringSeparators.Colon);
                 var port = hostPortPair.Length == 2 ? hostPortPair[1] : null;
-                return new ConnectionInfo(ConnectionStringParserHelper.NormalizeHostname(hostPortPair[0], utilizationHostName), port, null);
+                if(!int.TryParse(port, out int portNum))
+                {
+                    portNum = -1;
+                }
+                return new ConnectionInfo(DatastoreVendor.Redis.ToKnownName(), ConnectionStringParserHelper.NormalizeHostname(hostPortPair[0], utilizationHostName), portNum, null);
             }
 
-            return new ConnectionInfo(null, null, null);
+            return new ConnectionInfo(null, null, null, null);
         }
     }
 }

@@ -363,13 +363,13 @@ namespace NewRelic.Agent.Core.Transactions
             var typeName = methodCall.Method.Type.FullName ?? "[unknown]";
             var methodName = methodCall.Method.MethodName;
             var invocationTargetHashCode = RuntimeHelpers.GetHashCode(methodCall.InvocationTarget);
-            return new MethodCallData(typeName, methodName, invocationTargetHashCode);
+            return new MethodCallData(typeName, methodName, invocationTargetHashCode, methodCall.IsAsync);
         }
 
         // Used for StackExchange.Redis since we will not be instrumenting any methods when creating the many DataStore segments
         private static MethodCallData GetMethodCallData(string typeName, string methodName, int invocationTargetHashCode)
         {
-            return new MethodCallData(typeName, methodName, invocationTargetHashCode);
+            return new MethodCallData(typeName, methodName, invocationTargetHashCode, true); // assume async
         }
 
         private static MetricNames.MessageBrokerDestinationType AgentWrapperApiEnumToMetricNamesEnum(

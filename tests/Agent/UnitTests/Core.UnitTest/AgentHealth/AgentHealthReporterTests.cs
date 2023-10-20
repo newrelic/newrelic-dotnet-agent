@@ -351,6 +351,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportLoggingEventCollected();
             _agentHealthReporter.ReportLoggingEventsSent(2);
             _agentHealthReporter.ReportLoggingEventsDropped(3);
+            _agentHealthReporter.ReportLoggingEventsEmpty();
             _agentHealthReporter.ReportLogForwardingFramework("log4net");
 
             _agentHealthReporter.ReportLogForwardingEnabledWithFramework("Framework1");
@@ -364,6 +365,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 { "Supportability/Logging/Forwarding/Seen", 1 },
                 { "Supportability/Logging/Forwarding/Sent", 2 },
                 { "Supportability/Logging/Forwarding/Dropped", 3 },
+                { "Supportability/Logging/Forwarding/Empty", 1 },
                 { "Supportability/Logging/Metrics/DotNET/enabled", 1 },
                 { "Supportability/Logging/Forwarding/DotNET/enabled", 1 },
                 { "Supportability/Logging/LocalDecorating/DotNET/enabled", 1 },
