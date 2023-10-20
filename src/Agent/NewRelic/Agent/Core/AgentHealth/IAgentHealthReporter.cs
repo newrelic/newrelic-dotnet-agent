@@ -148,5 +148,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportLoggingEventsDropped(int droppedCount);
         void ReportLogForwardingFramework(string logFramework);
         void ReportLogForwardingEnabledWithFramework(string logFramework);
+        void ReportLoggingEventsEmpty(int count = 1);
     }
 }

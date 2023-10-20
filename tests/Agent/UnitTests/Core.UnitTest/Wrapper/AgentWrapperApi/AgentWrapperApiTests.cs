@@ -1351,7 +1351,50 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         }
 
         [Test]
-        public void RecordLogMessage_NoTransaction_NoMessage_NoException_DropsEvent()
+        public void RecordLogMessage_NoTransaction_NoMessage_NoException_WithContextData_Success()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+            Mock.Arrange(() => _configurationService.Configuration.ContextDataEnabled)
+                .Returns(true);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            string message = null;
+            var contextData = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => null;
+            Func<object, Dictionary<string, object>> getContextDataFunc = (l) => contextData;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, getContextDataFunc, spanId, traceId);
+
+            // Access the private collection of events to get the number of add attempts.
+            var privateAccessor = new PrivateAccessor(_logEventAggregator);
+            var logEvents = privateAccessor.GetField("_logEvents") as ConcurrentPriorityQueue<PrioritizedNode<LogEventWireModel>>;
+
+            var logEvent = logEvents?.FirstOrDefault()?.Data;
+            Assert.AreEqual(1, logEvents.Count);
+            Assert.IsNotNull(logEvent);
+            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
+            Assert.AreEqual(level, logEvent.Level);
+            Assert.AreEqual(message, logEvent.Message);
+            Assert.AreEqual(spanId, logEvent.SpanId);
+            Assert.AreEqual(traceId, logEvent.TraceId);
+            Assert.AreEqual(contextData, logEvent.ContextData);
+            Assert.IsNotNull(logEvent.Priority);
+        }
+
+        [Test]
+        public void RecordLogMessage_NoTransaction_NoMessage_NoException_NoContextData_DropsEvent()
         {
             Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
                 .Returns(true);
@@ -1473,7 +1516,51 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         }
 
         [Test]
-        public void RecordLogMessage_WithTransaction_NoMessage_NoException_DropsEvent()
+        public void RecordLogMessage_WithTransaction_NoMessage_NoException_WithContextData_Success()
+        {
+            Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
+                .Returns(true);
+            Mock.Arrange(() => _configurationService.Configuration.ContextDataEnabled)
+                .Returns(true);
+
+            var timestamp = DateTime.Now;
+            var timestampUnix = timestamp.ToUnixTimeMilliseconds();
+            var level = "DEBUG";
+            string message = null;
+            var contextData = new Dictionary<string, object>() { { "key1", "value1" }, { "key2", 1 } };
+
+            Func<object, string> getLevelFunc = (l) => level;
+            Func<object, DateTime> getTimestampFunc = (l) => timestamp;
+            Func<object, string> getMessageFunc = (l) => message;
+            Func<object, Exception> getLogExceptionFunc = (l) => null;
+            Func<object, Dictionary<string, object>> getContextDataFunc = (l) => contextData;
+
+            var spanId = "spanid";
+            var traceId = "traceid";
+            var loggingFramework = "testFramework";
+
+            SetupTransaction();
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            var priority = transaction.Priority;
+
+            var xapi = _agent as IAgentExperimental;
+            xapi.RecordLogMessage(loggingFramework, new object(), getTimestampFunc, getLevelFunc, getMessageFunc, getLogExceptionFunc, getContextDataFunc, spanId, traceId);
+
+            var harvestedLogEvents = transaction.HarvestLogEvents();
+            var logEvent = harvestedLogEvents.FirstOrDefault();
+            Assert.AreEqual(1, harvestedLogEvents.Count);
+            Assert.IsNotNull(logEvent);
+            Assert.AreEqual(timestampUnix, logEvent.TimeStamp);
+            Assert.AreEqual(level, logEvent.Level);
+            Assert.AreEqual(message, logEvent.Message);
+            Assert.AreEqual(spanId, logEvent.SpanId);
+            Assert.AreEqual(traceId, logEvent.TraceId);
+            Assert.AreEqual(contextData, logEvent.ContextData);
+            Assert.AreEqual(priority, logEvent.Priority);
+        }
+
+        [Test]
+        public void RecordLogMessage_WithTransaction_NoMessage_NoException_NoContextData_DropsEvent()
         {
             Mock.Arrange(() => _configurationService.Configuration.LogEventCollectorEnabled)
                 .Returns(true);

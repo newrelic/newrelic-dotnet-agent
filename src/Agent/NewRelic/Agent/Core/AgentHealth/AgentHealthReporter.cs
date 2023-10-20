@@ -571,6 +571,11 @@ namespace NewRelic.Agent.Core.AgentHealth
             _loggingForwardingEnabledWithFrameworksReported.TryAdd(logFramework, false);
         }
 
+        public void ReportLoggingEventsEmpty(int count = 1)
+        {
+            ReportSupportabilityCountMetric(MetricNames.SupportabilityLoggingEventEmpty);
+        }
+
         public void CollectLoggingMetrics()
         {
             var totalCount = 0;
