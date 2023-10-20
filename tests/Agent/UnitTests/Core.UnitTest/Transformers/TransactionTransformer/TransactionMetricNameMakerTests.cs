@@ -129,5 +129,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.IsFalse(builtName.ShouldIgnore);
             Assert.AreEqual("OtherTransaction/Message/bar/Queue/Consume/Named/baz", builtName.PrefixedName);
         }
+
+        [Test]
+        public void BuiltTransactionName_BuildsKafkaMessageBrokerTransactionMetricNameWithTemp_IfEmptyDestinationSpecified()
+        {
+            var transactionName = TransactionName.ForKafkaBrokerTransaction(Extensions.Providers.Wrapper.MessageBrokerDestinationType.Queue, "bar", "");
+
+            var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
+
+            Assert.IsFalse(builtName.ShouldIgnore);
+            Assert.AreEqual("OtherTransaction/Message/bar/Queue/Consume/Named/Temp", builtName.PrefixedName);
+        }
     }
 }

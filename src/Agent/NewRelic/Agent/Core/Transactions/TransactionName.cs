@@ -102,18 +102,11 @@ namespace NewRelic.Agent.Core.Transactions
                 .Append(EnumNameCache<MessageBrokerDestinationType>.GetName(type))
                 .Append(MetricNames.PathSeparator)
                 .Append(MetricNames.KafkaMessageBrokerConsume)
+                .Append(MetricNames.PathSeparator)
+                .Append(MetricNames.MessageBrokerNamed)
                 .Append(MetricNames.PathSeparator);
 
-            if (string.IsNullOrWhiteSpace(destination))
-            {
-                trxName.Append(MetricNames.MessageBrokerTemp);
-            }
-            else
-            {
-                trxName.Append(MetricNames.MessageBrokerNamed)
-                    .Append(MetricNames.PathSeparator)
-                    .Append(destination);
-            }
+            trxName.Append(string.IsNullOrWhiteSpace(destination) ? MetricNames.MessageBrokerTemp : destination);
 
             return new TransactionName(false, MetricNames.Message, trxName.ToString());
         }
