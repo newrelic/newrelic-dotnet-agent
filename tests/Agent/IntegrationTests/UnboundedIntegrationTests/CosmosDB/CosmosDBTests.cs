@@ -2,12 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using Azure;
+using Couchbase.Core;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Net.PeerToPeer.Collaboration;
+using System.Reflection;
+using System.Windows.Forms;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -76,6 +84,16 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/ReadDatabase", metricScope = expectedTransactionName, callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = $"Datastore/operation/CosmosDB/DeleteDatabase", metricScope = expectedTransactionName, callCount = 1 },
             };
+            var expectedAgentAttributes = new List<string>
+            {
+                "db.system",
+                "db.operation",
+                "db.instance",
+                "peer.address",
+                "peer.hostname",
+                "server.address",
+                "server.port"
+            };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             var spanEvents = _fixture.AgentLog.GetSpanEvents();
@@ -85,7 +103,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.CosmosDB
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assert.Equal(6, operationDatastoreSpans.Count())
+                () => Assert.Equal(6, operationDatastoreSpans.Count()),
+                () => Assertions.SpanEventHasAttributes(expectedAgentAttributes, IntegrationTestHelpers.Models.SpanEventAttributeType.Agent, operationDatastoreSpans.FirstOrDefault())
+
             );
         }
 

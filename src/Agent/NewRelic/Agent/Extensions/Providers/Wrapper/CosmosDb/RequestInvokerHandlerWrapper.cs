@@ -67,7 +67,7 @@ namespace NewRelic.Providers.Wrapper.CosmosDb
             var segment = transaction.StartDatastoreSegment(
                 instrumentedMethodCall.MethodCall,
                 new ParsedSqlStatement(DatastoreVendor.CosmosDB, model, operation),
-                connectionInfo: endpoint != null ? new ConnectionInfo(endpoint.Host, endpoint.Port.ToString(), databaseName) : new ConnectionInfo(string.Empty, string.Empty, databaseName),
+                connectionInfo: endpoint != null ? new ConnectionInfo(DatastoreVendor.CosmosDB.ToKnownName(), endpoint.Host, endpoint.Port, databaseName) : new ConnectionInfo(string.Empty, string.Empty, string.Empty, databaseName),
                 isLeaf: true);
 
             return Delegates.GetAsyncDelegateFor<Task>(agent, segment);

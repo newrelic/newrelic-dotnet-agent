@@ -69,7 +69,7 @@ namespace NewRelic.Agent.Core.Wrapper
             _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 
             var method = new Method(type, methodName, string.Empty);
-            var expectedMethodCall = new MethodCall(method, target, arguments);
+            var expectedMethodCall = new MethodCall(method, target, arguments, false);
             var instrumetedMethodInfo = new InstrumentedMethodInfo(0, expectedMethodCall.Method, tracerFactoryName, false, null, null, false);
 
             Mock.Assert(() => _wrapperMap.Get(instrumetedMethodInfo));
@@ -182,7 +182,7 @@ namespace NewRelic.Agent.Core.Wrapper
             var metricName = string.Empty;
 
             var method = new Method(type, methodName, argumentSignature);
-            var methodCall = new MethodCall(method, invocationTarget, arguments);
+            var methodCall = new MethodCall(method, invocationTarget, arguments, false);
             var info = new InstrumentedMethodInfo(0, methodCall.Method, tracerFactoryName, false, null, null, false);
             Mock.Arrange(() => wrapper.CanWrap(info)).Returns(new CanWrapResponse(true));
 
@@ -234,7 +234,7 @@ namespace NewRelic.Agent.Core.Wrapper
             var metricName = string.Empty;
 
             var method = new Method(type, methodName, argumentSignature);
-            var methodCall = new MethodCall(method, invocationTarget, arguments);
+            var methodCall = new MethodCall(method, invocationTarget, arguments, false);
             var info = new InstrumentedMethodInfo(0, methodCall.Method, tracerFactoryName, false, null, null, false);
             Mock.Arrange(() => wrapper.CanWrap(info)).Returns(new CanWrapResponse(true));
 

@@ -415,7 +415,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var invocationTarget = new object();
             var method = new Method(typeof(string), "methodName", "parameterTypeNames");
-            var methodCall = new MethodCall(method, invocationTarget, new object[0]);
+            var methodCall = new MethodCall(method, invocationTarget, new object[0], false);
             var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(methodCall, "foo");
             Assert.NotNull(opaqueSegment);
 
@@ -443,7 +443,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Mock.Arrange(() => _callStackManager.Push(Arg.IsAny<int>()))
                 .DoInstead<object>(pushed => pushedUniqueId = pushed);
 
-            var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new object[0]), "foo");
+            var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new object[0], false), "foo");
             Assert.NotNull(opaqueSegment);
 
             var segment = opaqueSegment as Segment;
@@ -458,7 +458,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         {
             SetupTransaction();
             var uri = new Uri("/test", UriKind.Relative);
-            NrAssert.Throws<ArgumentException>(() => _agent.CurrentTransaction.StartExternalRequestSegment(new MethodCall(new Method(typeof(string), "", ""), "", new object[0]), uri, "GET"));
+            NrAssert.Throws<ArgumentException>(() => _agent.CurrentTransaction.StartExternalRequestSegment(new MethodCall(new Method(typeof(string), "", ""), "", new object[0], false), uri, "GET"));
         }
 
         #endregion Segments
@@ -470,7 +470,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         {
             SetupTransaction();
 
-            var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new object[0]), "foo");
+            var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new object[0], false), "foo");
             var segment = opaqueSegment as Segment;
             var expectedUniqueId = segment.UniqueId;
             var expectedParentId = segment.ParentUniqueId;

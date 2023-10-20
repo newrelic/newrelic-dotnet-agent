@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using NewRelic.Agent.Helpers;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Parsing.ConnectionString
 {
@@ -26,8 +27,17 @@ namespace NewRelic.Parsing.ConnectionString
         public ConnectionInfo GetConnectionInfo(string utilizationHostName)
         {
             var host = ParseHost();
-            var portPathOrId = ParsePortPathOrId();
-            return new ConnectionInfo(host, portPathOrId, null);
+            var portStr = ParsePortString();
+            if (string.IsNullOrEmpty(portStr))
+            {
+                return new ConnectionInfo(DatastoreVendor.Oracle.ToKnownName(), host, "default", null);
+            }
+            int port;
+            if (!int.TryParse(portStr, out port))
+            {
+                port = -1;
+            }
+            return new ConnectionInfo(DatastoreVendor.Oracle.ToKnownName(), host, port, null);
         }
 
         private string ParseHost()
@@ -81,7 +91,7 @@ namespace NewRelic.Parsing.ConnectionString
             return null;
         }
 
-        private string ParsePortPathOrId()
+        private string ParsePortString()
         {
             var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (host == null) return null;
@@ -110,7 +120,7 @@ namespace NewRelic.Parsing.ConnectionString
                 startOfValue = secondaryPortSection.IndexOf(StringSeparators.ColonChar);
                 if (startOfValue > -1) return secondaryPortSection.Substring(startOfValue + 1);
 
-                return "default";
+                return null;
             }
             else
             {

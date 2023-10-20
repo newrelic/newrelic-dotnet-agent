@@ -53,6 +53,7 @@ namespace NewRelic.Agent.Core.Segments
             Data.AttachSegmentDataState(this);
             Combinable = false;
             IsLeaf = false;
+            IsAsync = methodCallData.IsAsync;
         }
 
         /// <summary>
@@ -75,6 +76,7 @@ namespace NewRelic.Agent.Core.Segments
             Data.AttachSegmentDataState(this);
             Combinable = false;
             IsLeaf = true;
+            IsAsync = methodCallData.IsAsync;
         }
 
         /// <summary>
@@ -105,6 +107,7 @@ namespace NewRelic.Agent.Core.Segments
             }
 
             SpanId = segment.SpanId;
+            IsAsync = segment.IsAsync;
         }
 
         public bool IsDone
@@ -229,6 +232,8 @@ namespace NewRelic.Agent.Core.Segments
         /// </summary>
         public int ThreadId { get; private set; }
 
+        public bool IsAsync { get; private set; }
+
         // used to set the ["unfinished"] parameter, not for real-time state of segment
         public bool Unfinished { get; private set; }
 
@@ -333,6 +338,11 @@ namespace NewRelic.Agent.Core.Segments
 
                 AttribDefs.CodeNamespace.TrySetValue(attribValues, codeNamespace);
                 AttribDefs.CodeFunction.TrySetValue(attribValues, codeFunction);
+            }
+
+            if (!IsAsync)
+            {
+                AttribDefs.ThreadId.TrySetValue(attribValues, ThreadId);
             }
 
             Data.SetSpanTypeSpecificAttributes(attribValues);
@@ -441,5 +451,6 @@ namespace NewRelic.Agent.Core.Segments
         {
             return EnumNameCache<SpanCategory>.GetName(Data.SpanCategory);
         }
+
     }
 }

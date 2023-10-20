@@ -93,6 +93,8 @@ namespace NewRelic.Agent.Core.Segments
             AttribDefs.Component.TrySetValue(attribVals, _segmentState.TypeName);
             AttribDefs.SpanKind.TrySetDefault(attribVals);
             AttribDefs.HttpStatusCode.TrySetValue(attribVals, _httpStatusCode);   //Attrib handles null
+            AttribDefs.ServerAddress.TrySetValue(attribVals, Uri.Host);
+            AttribDefs.ServerPort.TrySetValue(attribVals, Uri.Port);
         }
 
         public override string GetTransactionTraceName()

@@ -117,16 +117,16 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis2Plus
         {
             if (endpoint is DnsEndPoint dnsEndpoint)
             {
-                var port = dnsEndpoint.Port.ToString();
+                var port = dnsEndpoint.Port;
                 var host = ConnectionStringParserHelper.NormalizeHostname(dnsEndpoint.Host, _agent.Configuration.UtilizationHostName);
-                return new ConnectionInfo(host, port, null);
+                return new ConnectionInfo(DatastoreVendor.Redis.ToKnownName(), host, port, null, null);
             }
 
             if (endpoint is IPEndPoint ipEndpoint)
             {
-                var port = ipEndpoint.Port.ToString();
+                var port = ipEndpoint.Port;
                 var host = ConnectionStringParserHelper.NormalizeHostname(ipEndpoint.Address.ToString(), _agent.Configuration.UtilizationHostName);
-                return new ConnectionInfo(host, port, null);
+                return new ConnectionInfo(DatastoreVendor.Redis.ToKnownName(), host, port, null, null);
             }
 
             return null;

@@ -11,12 +11,14 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         public readonly Method Method;
         public readonly object InvocationTarget;
         public readonly object[] MethodArguments;
+        public readonly bool IsAsync;
 
-        public MethodCall(Method method, object invocationTarget, object[] methodArguments)
+        public MethodCall(Method method, object invocationTarget, object[] methodArguments, bool isAsync)
         {
             Method = method;
             InvocationTarget = invocationTarget;
             MethodArguments = methodArguments ?? new object[0];
+            IsAsync = isAsync;
         }
     }
 }

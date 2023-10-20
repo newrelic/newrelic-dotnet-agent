@@ -82,6 +82,24 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         Other
     }
 
+    public static class DatastoreVendorExtensions
+    {
+        // Convert our internal enum to the matching OTel "known" name for a database provider
+        public static string ToKnownName(this DatastoreVendor vendor)
+        {
+            switch (vendor)
+            {
+                case DatastoreVendor.Other:
+                    return "other_sql";
+                case DatastoreVendor.IBMDB2:
+                    return "db2";
+                // The others match our enum name
+                default:
+                    return EnumNameCache<DatastoreVendor>.GetNameToLower(vendor);
+            }
+        }
+    }
+
     public static class EnumNameCache<TEnum> // c# 7.3: where TEnum : System.Enum	
     {
         private static readonly ConcurrentDictionary<TEnum, string> Cache = new ConcurrentDictionary<TEnum, string>();
