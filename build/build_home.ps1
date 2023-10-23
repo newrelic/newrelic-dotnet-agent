@@ -83,6 +83,15 @@ if ($melNetCorePath = Resolve-Path "$wrappersRootDir\MicrosoftExtensionsLogging\
     $netFrameworkWrapperHash.Add($dllObject, $xmlObject)
 }
 
+# AspNetCore6Plus is built to target .net 6, but we'll copy it to the netstandard folder 
+if ($aspNetCore6PlusPath = Resolve-Path "$wrappersRootDir\AspNetCore6Plus\bin\$Configuration\net6.0") {
+    $dllObject = Get-ChildItem -File -Path "$aspNetCore6PlusPath" -Filter NewRelic.Providers.Wrapper.AspNetCore6Plus.dll
+    $xmlObject = Get-ChildItem -File -Path "$aspNetCore6PlusPath" -Filter Instrumentation.xml
+    $netstandard20WrapperHash.Add($dllObject, $xmlObject)
+}
+
+
+
 $netFrameworkStorageArray = @()
 $netstandard20StorageArray = @()
 
