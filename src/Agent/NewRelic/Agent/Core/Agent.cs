@@ -322,6 +322,7 @@ namespace NewRelic.Agent.Core
             {
                 return null;
             }
+
             try
             {
                 var transaction = _transactionService.GetCurrentInternalTransaction();
@@ -339,10 +340,6 @@ namespace NewRelic.Agent.Core
                 // Once the transaction name is used for RUM it must be frozen
                 transaction.CandidateTransactionName.Freeze(TransactionNameFreezeReason.AutoBrowserScriptInjection);
                 var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
-                if (script == null)
-                {
-                    return null;
-                }
 
                 return script;
             }

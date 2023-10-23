@@ -20,7 +20,6 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         private Stream _baseStream;
         private HttpContext _context;
 
-        private bool _isContentLengthSet = false;
 
         public ResponseStreamWrapper(IAgent agent, Stream baseStream, HttpContext context)
         {
@@ -33,19 +32,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override void Flush()
         {
-            //_baseStream.Flush();
-        }
-
-        public override Task FlushAsync(CancellationToken cancellationToken)
-        {
-            if (!_isContentLengthSet && IsHtmlResponse())
-            {
-                _context.Response.Headers.ContentLength = null;
-                _isContentLengthSet = true;
-            }
-
-            return base.FlushAsync(cancellationToken);
-
+            _baseStream.Flush();
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -58,7 +45,6 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         public override void SetLength(long value)
         {
             _baseStream.SetLength(value);
-            IsHtmlResponse(forceReCheck: true);
         }
 
         public override void Write(ReadOnlySpan<byte> buffer)
@@ -74,17 +60,9 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (IsHtmlResponse())
-            {
-                var curBuf = buffer.AsSpan(offset, count).ToArray();
-                _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf, _baseStream, _agent.CurrentTransaction)
-                        .GetAwaiter()
-                        .GetResult();
-                return;
-            }
-
-            // fallback: just write the stream without modification
-            _baseStream?.Write(buffer, offset, count);
+            var curBuf = buffer.AsMemory(offset, count).ToArray();
+            _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf, _baseStream, _agent.CurrentTransaction)
+                    .GetAwaiter().GetResult();
         }
 
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -94,60 +72,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            if (IsHtmlResponse())
-            {
-                await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream, _agent.CurrentTransaction);
-                return;
-            }
-
-            // if it's not an HTML response, write the buffer without modification
-            if (_baseStream != null)
-                await _baseStream.WriteAsync(buffer, cancellationToken);
-        }
-
-        private bool? _isHtmlResponse = null;
-
-        private bool IsHtmlResponse(bool forceReCheck = false)
-        {
-            if (!forceReCheck && _isHtmlResponse != null)
-                return _isHtmlResponse.Value;
-
-            // we need to check if the active request is still valid
-            // this can fail if we're in the middle of an error response
-            // or url rewrite in which case we can't intercept
-            if (_context?.Response == null)
-                return false;
-
-            // Requirements for script injection:
-            // * has to have result body
-            // * 200 or 500 response
-            // * text/html response
-            // * UTF-8 formatted (explicit or no charset)
-
-            _isHtmlResponse =
-                _context.Response.StatusCode is 200 or 500 &&
-                _context.Response.ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
-                (_context.Response.ContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
-                 !_context.Response.ContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
-
-            if (!_isHtmlResponse.Value)
-                return false;
-
-            // Make sure we force dynamic content type since we're
-            // rewriting the content - static content will set the header explicitly
-            // and fail when it doesn't match if (_isHtmlResponse.Value)
-            if (!_isContentLengthSet && _context.Response.ContentLength != null)
-            {
-                _context.Response.Headers.ContentLength = null;
-                _isContentLengthSet = true;
-            }
-
-            return _isHtmlResponse.Value;
+            await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream, _agent.CurrentTransaction);
         }
 
         protected override void Dispose(bool disposing)
         {
-            //_baseStream?.Dispose();
             _baseStream = null;
             _context = null;
 
