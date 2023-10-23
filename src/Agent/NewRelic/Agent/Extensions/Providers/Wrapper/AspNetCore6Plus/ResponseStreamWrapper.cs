@@ -33,7 +33,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override void Flush()
         {
-            _baseStream.Flush();
+            //_baseStream.Flush();
         }
 
         public override Task FlushAsync(CancellationToken cancellationToken)
@@ -77,7 +77,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             if (IsHtmlResponse())
             {
                 var curBuf = buffer.AsSpan(offset, count).ToArray();
-                _agent.InjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf, _baseStream)
+                _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf, _baseStream, _agent.CurrentTransaction)
                         .GetAwaiter()
                         .GetResult();
                 return;
@@ -96,11 +96,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             if (IsHtmlResponse())
             {
-                await _agent.InjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
+                await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream, _agent.CurrentTransaction);
                 return;
             }
 
-            // fallback: just write the stream without modification
+            // if it's not an HTML response, write the buffer without modification
             if (_baseStream != null)
                 await _baseStream.WriteAsync(buffer, cancellationToken);
         }

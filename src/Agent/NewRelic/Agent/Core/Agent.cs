@@ -297,15 +297,18 @@ namespace NewRelic.Agent.Core
             return script == null ? null : new BrowserMonitoringStreamInjector(() => script, stream, encoding);
         }
 
-        public async Task InjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream)
+        public async Task TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream, ITransaction transaction)
         {
             var script = TryGetRUMScriptInternal(contentType, requestPath);
             var rumBytes = script == null ? null : Encoding.UTF8.GetBytes(script);
 
             if (rumBytes == null)
+            {
+                transaction.LogFinest("Skipping RUM Injection: No script was available.");
                 await baseStream.WriteAsync(buffer, 0, buffer.Length);
+            }
             else
-                await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, baseStream, () => rumBytes);
+                await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, baseStream, () => rumBytes, transaction);
         }
 
         private string TryGetRUMScriptInternal(string contentType, string requestPath)

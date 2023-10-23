@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             {
                 var dataBytes = Encoding.UTF8.GetBytes(data);
                 await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(dataBytes, ms,
-                    () => Encoding.UTF8.GetBytes("EXPECTED_RUM_LOADER_LOCATION"));
+                    () => Encoding.UTF8.GetBytes("EXPECTED_RUM_LOADER_LOCATION"), null);
 
                 await ms.FlushAsync();
                 ms.Position = 0;
