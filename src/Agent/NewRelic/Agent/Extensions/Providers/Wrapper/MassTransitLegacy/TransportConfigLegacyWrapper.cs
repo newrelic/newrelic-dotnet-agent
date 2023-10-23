@@ -22,6 +22,8 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
         {
             // This will be run for each bus.  Each bus gets one transport.
             // We can support more than one transport with this setup.
+            // Note that there are two instrumentation points that can get us here, and the first parameter is different for both,
+            // but they both implement IBusFactoryConfigurator, which is what we need
             var configurator = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<IBusFactoryConfigurator>(0);
 
             var spec = new NewRelicPipeSpecification(agent);
