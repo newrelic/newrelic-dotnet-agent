@@ -76,22 +76,18 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             if (IsHtmlResponse())
             {
-                var rumBytes = _agent.TryGetRUMBytes(_context.Response.ContentType, _context.Request.Path.Value);
-                if (rumBytes != null)
-                {
-                    BrowserScriptInjectionHelper
-                        .InjectBrowserScriptAsync(buffer.AsMemory(offset, count), _context, _baseStream, rumBytes)
+                var curBuf = buffer.AsSpan(offset, count).ToArray();
+                _agent.InjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf, _baseStream)
                         .GetAwaiter()
                         .GetResult();
-                    return;
-                }
+                return;
             }
 
             // fallback: just write the stream without modification
             _baseStream?.Write(buffer, offset, count);
         }
-        public override Task WriteAsync(byte[] buffer, int offset, int count,
-            CancellationToken cancellationToken)
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             return WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
         }
@@ -100,22 +96,16 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             if (IsHtmlResponse())
             {
-                var rumBytes = _agent.TryGetRUMBytes(_context.Response.ContentType, _context.Request.Path.Value);
-                if (rumBytes != null)
-                {
-                    await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, _context, _baseStream,
-                        rumBytes);
-
-                    return;
-                }
+                await _agent.InjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
+                return;
             }
+
             // fallback: just write the stream without modification
             if (_baseStream != null)
                 await _baseStream.WriteAsync(buffer, cancellationToken);
         }
 
         private bool? _isHtmlResponse = null;
-
 
         private bool IsHtmlResponse(bool forceReCheck = false)
         {
@@ -136,7 +126,6 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
             _isHtmlResponse =
                 _context.Response.StatusCode is 200 or 500 &&
-                _context.Response.ContentType != null &&
                 _context.Response.ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
                 (_context.Response.ContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
                  !_context.Response.ContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
@@ -164,62 +153,6 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
             base.Dispose(disposing);
         }
-
-        #region Byte Helpers
-        /// <summary>
-        /// Tries to find a
-        /// </summary>
-        /// <param name="buffer">byte array to be searched</param>
-        /// <param name="bufferToFind">byte to find</param>
-        /// <returns></returns>
-        public static int IndexOfByteArray(byte[] buffer, byte[] bufferToFind)
-        {
-            if (buffer.Length == 0 || bufferToFind.Length == 0)
-                return -1;
-
-            for (var i = 0; i < buffer.Length; i++)
-            {
-                if (buffer[i] == bufferToFind[0])
-                {
-                    var innerMatch = true;
-                    for (var j = 1; j < bufferToFind.Length; j++)
-                    {
-                        if (buffer[i + j] != bufferToFind[j])
-                        {
-                            innerMatch = false;
-                            break;
-                        }
-                    }
-                    if (innerMatch)
-                        return i;
-                }
-            }
-
-            return -1;
-        }
-
-        /// <summary>
-        /// Returns an index into a byte array to find a string in the byte array.
-        /// Exact match using the encoding provided or UTF-8 by default.
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="stringToFind"></param>
-        /// <param name="encoding"></param>
-        /// <returns></returns>
-        public static int IndexOfByteArray(byte[] buffer, string stringToFind, Encoding encoding = null)
-        {
-            if (encoding == null)
-                encoding = Encoding.UTF8;
-
-            if (buffer.Length == 0 || string.IsNullOrEmpty(stringToFind))
-                return -1;
-
-            var bytes = encoding.GetBytes(stringToFind);
-
-            return IndexOfByteArray(buffer, bytes);
-        }
-        #endregion
-
 
         public override bool CanRead { get; }
         public override bool CanSeek { get; }

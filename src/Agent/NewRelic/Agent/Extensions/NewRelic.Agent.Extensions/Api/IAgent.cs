@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Api
 {
@@ -92,7 +93,19 @@ namespace NewRelic.Agent.Api
         /// <param name="requestPath">The path of the request</param>
         Stream TryGetStreamInjector(Stream stream, Encoding encoding, string contentType, string requestPath);
 
-        byte[] TryGetRUMBytes(string contentType, string requestPath);
+        /// <summary>
+        /// Used by AspNetCore6Plus, attempts to get the RUM script as a byte array, doing all the appropriate checking before returning it.
+        /// 
+        /// This method should be called as late as possible (i.e. just before the stream is read) to ensure that the metadata passed in (encoding, contentType, etc) is no longer volatile.
+        /// 
+        /// This method will return null under many different conditions, including due to configuration settings or internal business logic.
+        /// </summary>
+        /// <param name="contentType"></param>
+        /// <param name="requestPath"></param>
+        /// <returns>The RUM script or <c>null</c> if the script can't or shouldn't be injected.</returns>
+        //byte[] TryGetRUMBytes(string contentType, string requestPath);
+
+        Task InjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream);
 
         /// <summary>
         /// Returns the Trace Metadata of the currently executing transaction.

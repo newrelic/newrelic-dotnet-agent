@@ -37,7 +37,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             // Don't create a transaction in this case to avoid MGIs associated with CORS pre-flight requests
             if ("OPTIONS".Equals(context.Request?.Method, StringComparison.OrdinalIgnoreCase))
             {
-                _agent.Logger.Log(Agent.Extensions.Logging.Level.Finest, "Skipping instrumenting incoming OPTIONS request.");
+                _agent.Logger.Log(Agent.Extensions.Logging.Level.Finest, "Not instrumenting incoming OPTIONS request.");
 
                 await _next(context);
                 return;
