@@ -13,8 +13,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     class HelperFunctionManipulator : FunctionManipulator
     {
     public:
-        HelperFunctionManipulator(IFunctionPtr function) : 
-            FunctionManipulator(function)
+        HelperFunctionManipulator(IFunctionPtr function, const bool isCoreClr) : 
+            FunctionManipulator(function, isCoreClr)
         {
             Initialize();
         }
@@ -46,9 +46,21 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             {
                 BuildGetMethodFromAppDomainStorageOrReflectionOrThrow();
             }
+            else if (_function->GetFunctionName() == _X("EnsureInitialized"))
+            {
+                BuildEnsureInitializedMethod();
+            }
+            else if (_function->GetFunctionName() == _X("GetMethodCacheLookupMethod"))
+            {
+                BuildGetMethodCacheLookupMethodMethod();
+            }
+            else if (_function->GetFunctionName() == _X("GetMethodInfoFromAgentCache"))
+            {
+                BuildGetMethodInfoFromAgentCache();
+            }
             else
             {
-                LogError(L"Attempted to instrument an unknown helper method in mscorlib.");
+                LogError(L"Attempted to instrument an unknown helper method in ", _function->GetAssemblyName());
                 return;
             }
             InstrumentTiny();
@@ -60,7 +72,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         {
             _instructions->Append(CEE_LDARG_0);
             _instructions->Append(CEE_CALL, _X("class System.Reflection.Assembly System.Reflection.Assembly::LoadFrom(string)"));
-            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load assembly."), true);
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load assembly."), true, _isCoreClr);
             _instructions->Append(CEE_RET);
         }
 
@@ -71,7 +83,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_CALL, _X("class System.Reflection.Assembly System.CannotUnloadAppDomainException::LoadAssemblyOrThrow(string)"));
             _instructions->Append(CEE_LDARG_1);
             _instructions->Append(CEE_CALLVIRT, _X("instance class System.Type System.Reflection.Assembly::GetType(string)"));
-            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load type from assembly via reflection."), true);
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load type from assembly via reflection."), true, _isCoreClr);
             _instructions->Append(CEE_RET);
         }
 
@@ -99,7 +111,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             }
             _instructions->AppendLabel(_X("after_GetMethod"));
 
-            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load method from type via reflection."), true);
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load method from type via reflection."), true, _isCoreClr);
             _instructions->Append(CEE_RET);
         }
 
@@ -111,7 +123,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         void BuildStoreMethodInAppDomainStorageOrThrow()
         {
             _instructions->Append(CEE_CALL, _X("class System.AppDomain System.AppDomain::get_CurrentDomain()"));
-            ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true);
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true, _isCoreClr);
             _instructions->Append(CEE_LDARG_1);
             _instructions->Append(CEE_LDARG_0);
             _instructions->Append(CEE_CALLVIRT, _X("instance void System.AppDomain::SetData(string, object)"));
@@ -122,7 +134,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         void BuildGetMethodFromAppDomainStorage()
         {
             _instructions->Append(CEE_CALL, _X("class System.AppDomain System.AppDomain::get_CurrentDomain()"));
-            ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true);
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true, _isCoreClr);
             _instructions->Append(CEE_LDARG_0);
             _instructions->Append(CEE_CALLVIRT, _X("instance object System.AppDomain::GetData(string)"));
             _instructions->Append(CEE_CASTCLASS, _X("class System.Reflection.MethodInfo"));
@@ -150,6 +162,55 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
             _instructions->AppendLabel(methodEnd);
             _instructions->Append(CEE_RET);
+        }
+
+        void BuildGetMethodInfoFromAgentCache()
+        {
+            _instructions->Append(CEE_LDARG_1);
+            _instructions->Append(_X("call void System.CannotUnloadAppDomainException::EnsureInitialized(string)"));
+
+            _instructions->Append(_X("call object System.CannotUnloadAppDomainException::GetMethodCacheLookupMethod()"));
+
+            _instructions->Append(CEE_CASTCLASS, _X("class System.Func`5<string, string, string, class System.Type[], class System.Reflection.MethodInfo>"));
+            _instructions->Append(CEE_LDARG_0);
+            _instructions->Append(CEE_LDARG_2);
+            _instructions->Append(CEE_LDARG_3);
+            _instructions->Append(CEE_LDARG_S, (uint8_t)4);
+            _instructions->Append(CEE_CALLVIRT, _X("instance !4 class System.Func`5<string, string, string, class System.Type[], class System.Reflection.MethodInfo>::Invoke(!0, !1, !2, !3)"));
+
+            _instructions->Append(CEE_RET);
+        }
+
+        void BuildGetMethodCacheLookupMethodMethod()
+        {
+            _instructions->Append(CEE_VOLATILE);
+            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_methodCache"));
+            _instructions->Append(CEE_RET);
+        }
+
+        void BuildEnsureInitializedMethod()
+        {
+            _instructions->Append(CEE_VOLATILE);
+            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_methodCache"));
+            auto afterInit = _instructions->AppendJump(CEE_BRTRUE);
+
+            _instructions->Append(CEE_LDARG_0);
+            _instructions->AppendString(_X("NewRelic.Agent.Core.ProfilerAgentMethodCallCache"));
+            _instructions->AppendString(_X("GetMethodCacheFunc"));
+            _instructions->Append(CEE_LDNULL);
+            _instructions->Append(CEE_CALL, _X("class System.Reflection.MethodInfo System.CannotUnloadAppDomainException::GetMethodViaReflectionOrThrow(string,string,string,class System.Type[])"));
+
+            _instructions->Append(CEE_LDNULL);
+            _instructions->Append(CEE_LDNULL);
+            _instructions->Append(CEE_CALLVIRT, _X("instance object System.Reflection.MethodBase::Invoke(object, object[])"));
+
+            _instructions->Append(CEE_VOLATILE);
+            _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_methodCache"));
+
+            _instructions->AppendLabel(afterInit);
+
+            _instructions->Append(CEE_RET);
+
         }
     };
 }}}

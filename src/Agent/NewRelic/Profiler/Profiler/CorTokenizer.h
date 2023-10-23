@@ -107,6 +107,13 @@ namespace NewRelic { namespace Profiler
             return methodDefinitionToken;
         }
 
+        virtual uint32_t GetFieldDefinitionToken(const uint32_t& typeDefinitionToken, const xstring_t& name) override
+        {
+            uint32_t fieldDefinitionToken;
+            ThrowOnError(metaDataImport->FindField, typeDefinitionToken, ToWindowsString(name), nullptr, 0, &fieldDefinitionToken);
+            return fieldDefinitionToken;
+        }
+
         virtual uint32_t GetMethodSpecToken(uint32_t methodDefOrRefOrSpecToken, const ByteVector& instantiationSignature) override
         {
             uint32_t methodSpecToken;
@@ -262,12 +269,12 @@ namespace NewRelic { namespace Profiler
             CorTokenizer(metaDataAssemblyEmit, metaDataEmit, metaDataImport, metaDataAssemblyImport),
             _typeNameToAssembly(std::make_shared<std::map<xstring_t,xstring_t>>())
         {
-            _typeNameToAssembly->emplace(_X("System.Exception"), _X("System.Runtime"));
-            _typeNameToAssembly->emplace(_X("System.Type"), _X("System.Runtime"));
-            _typeNameToAssembly->emplace(_X("System.Reflection.Assembly"), _X("System.Reflection"));
-            _typeNameToAssembly->emplace(_X("System.Reflection.MethodInfo"), _X("System.Reflection"));
-            _typeNameToAssembly->emplace(_X("System.Reflection.MethodBase"), _X("System.Reflection"));
-            _typeNameToAssembly->emplace(_X("System.Action`2"), _X("System.Core"));
+            _typeNameToAssembly->emplace(_X("System.Exception"), _X("System.Private.CoreLib"));
+            _typeNameToAssembly->emplace(_X("System.Type"), _X("System.Private.CoreLib"));
+            _typeNameToAssembly->emplace(_X("System.Reflection.Assembly"), _X("System.Private.CoreLib"));
+            _typeNameToAssembly->emplace(_X("System.Reflection.MethodInfo"), _X("System.Private.CoreLib"));
+            _typeNameToAssembly->emplace(_X("System.Reflection.MethodBase"), _X("System.Private.CoreLib"));
+            _typeNameToAssembly->emplace(_X("System.Action`2"), _X("System.Private.CoreLib"));
             _typeNameToAssembly->emplace(_X("System.Console"), _X("System.Console"));
         }
 
@@ -278,7 +285,7 @@ namespace NewRelic { namespace Profiler
 
         virtual uint32_t GetAssemblyRefToken(const xstring_t& requestedAssemblyName) override
         {
-            xstring_t assemblyName = requestedAssemblyName == _X("mscorlib") ? _X("System.Runtime") : requestedAssemblyName;
+            xstring_t assemblyName = requestedAssemblyName == _X("mscorlib") ? _X("System.Private.CoreLib") : requestedAssemblyName;
             auto assemblyToken = CorTokenizer::GetAssemblyRefToken(assemblyName);
 
             if (assemblyToken == S_FALSE)

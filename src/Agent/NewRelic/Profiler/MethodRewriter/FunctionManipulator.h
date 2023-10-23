@@ -51,13 +51,15 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         ByteVector _newLocalVariablesSignature;
         SignatureParser::MethodSignaturePtr _methodSignature;
         std::shared_ptr<SystemCalls> _systemCalls;
+        bool _isCoreClr;
 
     public:
-        FunctionManipulator(IFunctionPtr function) :
+        FunctionManipulator(IFunctionPtr function, const bool isCoreClr) :
             _function(function),
             _newHeader(sizeof(COR_ILMETHOD_FAT)),
             _methodSignature(SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end())),
-            _systemCalls(std::make_shared<SystemCalls>())
+            _systemCalls(std::make_shared<SystemCalls>()),
+            _isCoreClr(isCoreClr)
         {
         }
 
@@ -65,7 +67,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         void Initialize() {
             ExtractHeaderBodyAndExtra();
             ExtractLocalVariablesSignature();
-            _instructions = std::make_shared<InstructionSet>(_function->GetTokenizer(), _exceptionHandlerManipulator);
+            _instructions = std::make_shared<InstructionSet>(_function->GetTokenizer(), _exceptionHandlerManipulator, _isCoreClr);
         }
 
         // rewrite this method with something else; handle FatalFunctionManipulatorException specially!
@@ -227,7 +229,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 // create a Type array big enough to hold all of the method parameters
                 uint16_t parameterCount = uint16_t(_methodSignature->_parameters->size());
                 _instructions->Append(CEE_LDC_I4, uint32_t(parameterCount));
-                _instructions->Append(CEE_NEWARR, _X("[mscorlib]System.Type"));
+                if (_isCoreClr)
+                {
+                    _instructions->Append(CEE_NEWARR, _X("[System.Private.CoreLib]System.Type"));
+                }
+                else
+                {
+                    _instructions->Append(CEE_NEWARR, _X("[mscorlib]System.Type"));
+                }
 
                 // pack the type of each method parameter into our new Type[]
                 for (uint16_t i = 0; i < parameterCount; ++i)
@@ -249,7 +258,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             // create an object array big enough to hold all of the method parameters
             uint16_t parameterCount = uint16_t(_methodSignature->_parameters->size());
             _instructions->Append(CEE_LDC_I4, uint32_t(parameterCount));
-            _instructions->Append(CEE_NEWARR, _X("[mscorlib]System.Object"));
+            if (_isCoreClr)
+            {
+                _instructions->Append(CEE_NEWARR, _X("[System.Private.CoreLib]System.Object"));
+            }
+            else
+            {
+                _instructions->Append(CEE_NEWARR, _X("[mscorlib]System.Object"));
+            }
             // pack all method parameters into our new object[]
             for (uint16_t i = 0; i < parameterCount; ++i)
             {
@@ -267,16 +283,37 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         void WriteLineToConsole(xstring_t message)
         {
             _instructions->AppendString(message);
-            _instructions->Append(CEE_CALL, _X("void [mscorlib]System.Console::WriteLine(string)"));
+            if (_isCoreClr)
+            {
+                _instructions->Append(CEE_CALL, _X("void [System.Private.CoreLib]System.Console::WriteLine(string)"));
+            }
+            else
+            {
+                _instructions->Append(CEE_CALL, _X("void [mscorlib]System.Console::WriteLine(string)"));
+            }
         }
 
         // Load the assembly using its full path and then load the given type from the assembly.
         void LoadType(xstring_t assemblyPath, xstring_t typeName)
         {
             _instructions->AppendString(assemblyPath);
-            _instructions->Append(CEE_CALL, _X("class [mscorlib]System.Reflection.Assembly [mscorlib]System.Reflection.Assembly::LoadFrom(string)"));
+            if (_isCoreClr)
+            {
+                _instructions->Append(CEE_CALL, _X("class [System.Private.CoreLib]System.Reflection.Assembly [System.Private.CoreLib]System.Reflection.Assembly::LoadFrom(string)"));
+            }
+            else
+            {
+                _instructions->Append(CEE_CALL, _X("class [mscorlib]System.Reflection.Assembly [mscorlib]System.Reflection.Assembly::LoadFrom(string)"));
+            }
             _instructions->AppendString(typeName);
-            _instructions->Append(CEE_CALLVIRT, _X("instance class [mscorlib]System.Type [mscorlib]System.Reflection.Assembly::GetType(string)"));
+            if (_isCoreClr)
+            {
+                _instructions->Append(CEE_CALLVIRT, _X("instance class [System.Private.CoreLib]System.Type [System.Private.CoreLib]System.Reflection.Assembly::GetType(string)"));
+            }
+            else
+            {
+                _instructions->Append(CEE_CALLVIRT, _X("instance class [mscorlib]System.Type [mscorlib]System.Reflection.Assembly::GetType(string)"));
+            }
 #ifdef DEBUG
             _instructions->Append(CEE_DUP);
             auto afterMissing = _instructions->AppendJump(CEE_BRTRUE);
@@ -291,12 +328,26 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->AppendString(methodName);
             if (argumentTypesLambda == NULL)
             {
-                _instructions->Append(CEE_CALLVIRT, _X("instance class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.Type::GetMethod(string)"));
+                if (_isCoreClr)
+                {
+                    _instructions->Append(CEE_CALLVIRT, _X("instance class [System.Private.CoreLib]System.Reflection.MethodInfo [System.Private.CoreLib]System.Type::GetMethod(string)"));
+                }
+                else
+                {
+                    _instructions->Append(CEE_CALLVIRT, _X("instance class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.Type::GetMethod(string)"));
+                }
             }
             else
             {
                 argumentTypesLambda();
-                _instructions->Append(CEE_CALLVIRT, _X("instance class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.Type::GetMethod(string, class [mscorlib]System.Type[])"));
+                if (_isCoreClr)
+                {
+                    _instructions->Append(CEE_CALLVIRT, _X("instance class [System.Private.CoreLib]System.Reflection.MethodInfo [System.Private.CoreLib]System.Type::GetMethod(string, class [System.Private.CoreLib]System.Type[])"));
+                }
+                else
+                {
+                    _instructions->Append(CEE_CALLVIRT, _X("instance class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.Type::GetMethod(string, class [mscorlib]System.Type[])"));
+                }
             }
 #ifdef DEBUG
             _instructions->Append(CEE_DUP);
@@ -309,7 +360,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // Call MethodBase.Invoke(object, object[])
         void InvokeMethodInfo()
         {
-            _instructions->Append(CEE_CALLVIRT, _X("instance object [mscorlib]System.Reflection.MethodBase::Invoke(object, object[])"));
+            if (_isCoreClr)
+            {
+                _instructions->Append(CEE_CALLVIRT, _X("instance object [System.Private.CoreLib]System.Reflection.MethodBase::Invoke(object, object[])"));
+            }
+            else
+            {
+                _instructions->Append(CEE_CALLVIRT, _X("instance object [mscorlib]System.Reflection.MethodBase::Invoke(object, object[])"));
+            }
         }
 
         // Load the MethodInfo instance for the given class and method onto the stack.
@@ -317,7 +375,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // The function id is used as a tie-breaker for overloaded methods when computing the key name for the app domain cache.
         void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda, bool useCache)
         {
-            if (useCache && !_systemCalls->GetIsAppDomainCachingDisabled())
+            /*if (useCache && !_systemCalls->GetIsAppDomainCachingDisabled())
             {
                 auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
                 _instructions->AppendString(keyName);
@@ -334,6 +392,31 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 }
                 
                 _instructions->Append(CEE_CALL, _X("class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [mscorlib]System.Type[])"));
+            }*/
+            if (useCache && !_systemCalls->GetIsAppDomainCachingDisabled())
+            {
+                auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
+                _instructions->AppendString(keyName);
+                _instructions->AppendString(assemblyPath);
+                _instructions->AppendString(className);
+                _instructions->AppendString(methodName);
+                if (argumentTypesLambda == NULL)
+                {
+                    _instructions->Append(CEE_LDNULL);
+                }
+                else
+                {
+                    argumentTypesLambda();
+                }
+
+                if (_isCoreClr)
+                {
+                    _instructions->Append(CEE_CALL, _X("class [System.Private.CoreLib]System.Reflection.MethodInfo [System.Private.CoreLib]System.CannotUnloadAppDomainException::GetMethodInfoFromAgentCache(string,string,string,string,class [System.Private.CoreLib]System.Type[])"));
+                }
+                else
+                {
+                    _instructions->Append(CEE_CALL, _X("class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.CannotUnloadAppDomainException::GetMethodInfoFromAgentCache(string,string,string,string,class [mscorlib]System.Type[])"));
+                }
             }
             else
             {
@@ -347,7 +430,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         void LoadArray(std::list<std::function<void()>> elementLoadLambdas)
         {
             _instructions->Append(CEE_LDC_I4, uint32_t(elementLoadLambdas.size()));
-            _instructions->Append(CEE_NEWARR, _X("[mscorlib]System.Object"));
+            if (_isCoreClr)
+            {
+                _instructions->Append(CEE_NEWARR, _X("[System.Private.CoreLib]System.Object"));
+            }
+            else
+            {
+                _instructions->Append(CEE_NEWARR, _X("[mscorlib]System.Object"));
+            }
             uint32_t index = 0;
 
             for (auto func : elementLoadLambdas)
@@ -400,20 +490,20 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             instructions->Append(_X("ret"));
         }
 
-        static void ThrowException(const InstructionSetPtr& instructions, const xstring_t& message, const bool& inMscorlib = false)
+        static void ThrowException(const InstructionSetPtr& instructions, const xstring_t& message, const bool& inCoreLib, const bool& isCoreClr)
         {
-            auto exception = inMscorlib ? _X("instance void System.Exception::.ctor(string)") : _X("instance void [[mscorlib]]System.Exception::.ctor(string)");
+            auto exception = inCoreLib ? _X("instance void System.Exception::.ctor(string)") : (isCoreClr ? _X("instance void [[System.Private.CoreLib]]System.Exception::.ctor(string)")  : _X("instance void [[mscorlib]]System.Exception::.ctor(string)"));
 
             instructions->AppendString(message);
             instructions->Append(CEE_NEWOBJ, exception);
             instructions->Append(CEE_THROW);
         }
 
-        static void ThrowExceptionIfStackItemIsNull(const InstructionSetPtr& instructions, const xstring_t& message, const bool& inMscorlib = false)
+        static void ThrowExceptionIfStackItemIsNull(const InstructionSetPtr& instructions, const xstring_t& message, const bool& inCoreLib, const bool& isCoreClr)
         {
             instructions->Append(CEE_DUP);
             auto afterThrow = instructions->AppendJump(CEE_BRTRUE);
-            ThrowException(instructions, message, inMscorlib);
+            ThrowException(instructions, message, inCoreLib, isCoreClr);
             instructions->AppendLabel(afterThrow);
         }
 

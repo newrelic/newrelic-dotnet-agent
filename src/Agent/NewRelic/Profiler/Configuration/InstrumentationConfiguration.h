@@ -234,9 +234,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             // exception helper methods and remove the `mscorlib` lookups.  Right now we try to find a reference
             // to the mscorlib library as we build class tokens, and mscorlib does not reference itself.
             // But the safest thing to do is disallow mscorlib instrumentation and make that very clear to users.
-            if (instrumentationPoint->AssemblyName == _X("mscorlib"))
+            if (instrumentationPoint->AssemblyName == _X("mscorlib") || instrumentationPoint->AssemblyName == _X("System.Private.CoreLib"))
             {
-                LogWarn(L"Skipping instrumentation targeted at the mscorlib assembly for class ", instrumentationPoint->ClassName);
+                LogWarn(L"Skipping instrumentation targeted at the ", instrumentationPoint->AssemblyName, L" assembly for class ", instrumentationPoint->ClassName);
                 return;
             }
 

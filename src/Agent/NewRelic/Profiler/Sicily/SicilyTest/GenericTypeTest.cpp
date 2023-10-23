@@ -61,7 +61,7 @@ namespace sicily
             private:
                 GenericTypePtr CreateGenericType()
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL, false));
                     ClassTypePtr classType(new ClassType(L"Faz", L"bar"));
                     TypeListPtr typeList(new TypeList());
                     typeList->Add(primitiveType);

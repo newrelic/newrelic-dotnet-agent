@@ -3,7 +3,7 @@
 
 #pragma once
 #include <corprof.h>
-#include <CorHdr.h>
+#include <corhdr.h>
 #include "../Logging/Logger.h"
 #include "../Common/OnDestruction.h"
 #include "../ModuleInjector/IModule.h"
@@ -22,9 +22,9 @@ namespace NewRelic { namespace Profiler
             // get the module's name
             ULONG moduleNameLength = 0;
             ThrowOnError(_profilerInfo->GetModuleInfo, _moduleId, nullptr, 0, &moduleNameLength, nullptr, nullptr);
-            std::unique_ptr<wchar_t[]> moduleNameChars(new wchar_t[moduleNameLength]);
+            std::unique_ptr<xchar_t[]> moduleNameChars(new xchar_t[moduleNameLength]);
             ThrowOnError(_profilerInfo->GetModuleInfo, _moduleId, nullptr, moduleNameLength, nullptr, moduleNameChars.get(), nullptr);
-            _moduleName = std::wstring(moduleNameChars.get());
+            _moduleName = xstring_t(moduleNameChars.get());
 
             // get the necessary metadata interfaces
             ThrowOnError(_profilerInfo->GetModuleMetaData, moduleId, CorOpenFlags::ofWrite, IID_IMetaDataEmit2, (IUnknown**)&_metaDataEmit);
@@ -35,16 +35,16 @@ namespace NewRelic { namespace Profiler
             if (_metaDataEmit == nullptr || _metaDataImport == nullptr || _metaDataAssemblyImport == nullptr)
             {
                 LogWarn(L"Failed to get metadata from the module, it is likely a resource module.  ModuleName: ", _moduleName);
-                throw NewRelic::Profiler::MessageException(L"Failed to get a metadata from the module.");
+                throw NewRelic::Profiler::MessageException(_X("Failed to get a metadata from the module."));
             }
 
             // in .NET 2, the name may be empty for dynamic modules so fallback to the scope properties for the name
             if (_moduleName.empty())
             {
                 ThrowOnError(_metaDataImport->GetScopeProps, nullptr, 0, &moduleNameLength, nullptr);
-                moduleNameChars = std::unique_ptr<wchar_t[]>(new wchar_t[moduleNameLength]);
+                moduleNameChars = std::unique_ptr<xchar_t[]>(new xchar_t[moduleNameLength]);
                 ThrowOnError(_metaDataImport->GetScopeProps, moduleNameChars.get(), moduleNameLength, nullptr, nullptr);
-                _moduleName = std::wstring(moduleNameChars.get());
+                _moduleName = xstring_t(moduleNameChars.get());
             }
 
             CheckIfThisIsAFrameworkAssembly();
@@ -53,20 +53,23 @@ namespace NewRelic { namespace Profiler
             _tokenizer.reset(new CorTokenizer(_metaDataAssemblyEmit, _metaDataEmit, _metaDataImport, _metaDataAssemblyImport));
         }
 
-        virtual std::wstring GetModuleName() override { return _moduleName; }
+        virtual xstring_t GetModuleName() override { return _moduleName; }
 
         virtual bool GetHasRefMscorlib() override { return _hasRefMscorlib; }
         virtual bool GetHasRefSysRuntime() override { return _hasRefSysRuntime; }
         virtual bool GetHasRefNetStandard() override { return _hasRefNetStandard; }
+        virtual bool GetHasRefSystemPrivateCoreLib() override { return _hasRefSystemPrivateCoreLib; }
 
         virtual void SetMscorlibAssemblyRef(mdAssembly assemblyRefToken) override { _mscorlibAssemblyRefToken = assemblyRefToken; }
+        virtual void SetSystemPrivateCoreLibAssemblyRef(mdAssembly assemblyRefToken) override { _systemPrivateCoreLibAssemblyRefToken = assemblyRefToken; }
 
         virtual bool GetIsThisTheMscorlibAssembly() override { return _isMscorlib; }
         virtual bool GetIsThisTheNetStandardAssembly() override { return _isNetStandard; }
+        virtual bool GetIsThisTheSystemPrivateCoreLibAssembly() override { return _isSystemPrivateCoreLib; }
 
         virtual CComPtr<IMetaDataAssemblyEmit> GetMetaDataAssemblyEmit() override{ return _metaDataAssemblyEmit; }
 
-        virtual void InjectPlatformInvoke(const std::wstring& methodName, const std::wstring& className, const std::wstring& moduleName, const ByteVector& signature) override
+        virtual void InjectPlatformInvoke(const xstring_t& methodName, const xstring_t& className, const xstring_t& moduleName, const ByteVector& signature) override
         {
             auto interfaceAttributes = CorMethodAttr::mdStatic | CorMethodAttr::mdPublic | CorMethodAttr::mdPinvokeImpl;
             auto implementationAttributes = CorMethodImpl::miPreserveSig;
@@ -79,7 +82,7 @@ namespace NewRelic { namespace Profiler
             SetMethodAsPlatformInvoke(injectedMethodToken, mappingFlags, methodName, profilerDllToken);
         }
 
-        virtual void InjectStaticSecuritySafeMethod(const std::wstring& methodName, const std::wstring& className, const ByteVector& signature) override
+        virtual void InjectStaticSecuritySafeMethod(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override
         {
             auto interfaceAttributes = CorMethodAttr::mdStatic | CorMethodAttr::mdPublic | CorMethodAttr::mdHideBySig;
             auto implementationAttributes = CorMethodImpl::miIL | CorMethodImpl::miNoInlining;
@@ -87,7 +90,7 @@ namespace NewRelic { namespace Profiler
             BYTEVECTOR(constructorSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_HASTHIS, 0, CorElementType::ELEMENT_TYPE_VOID);
 
             auto injectionTargetClassToken = GetTypeToken(className);
-            auto constructorCodeAddress = GetMethodCodeAddress(injectionTargetClassToken, L".ctor", constructorSignature);
+            auto constructorCodeAddress = GetMethodCodeAddress(injectionTargetClassToken, _X(".ctor"), constructorSignature);
             auto securitySafeCriticalConstructorToken = GetSecuritySafeCriticalConstructorToken();
             auto suppressUnmanagedCodeSecurityAttributeToken = GetSuppressUnmanagedCodeSecurityAttributeToken();
             
@@ -97,13 +100,31 @@ namespace NewRelic { namespace Profiler
             AddPermissionSetAssertToMethod(injectedMethodToken, permissionBlob);
         }
 
-        virtual void InjectMscorlibSecuritySafeMethodReference(const std::wstring& methodName, const std::wstring& className, const ByteVector& signature) override
+        virtual void InjectNRHelperType() override
+        {
+            auto objectTypeToken = GetTypeToken(_X("System.Object"));
+            mdTypeDef nrHelperType;
+            ThrowOnError(_metaDataEmit->DefineTypeDef, _X("__NRInitializer__"), CorTypeAttr::tdAbstract | CorTypeAttr::tdSealed, objectTypeToken, NULL, &nrHelperType);
+
+            auto dataFieldAttributes = CorFieldAttr::fdPublic | CorFieldAttr::fdStatic;
+            BYTEVECTOR(dataFieldSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD, CorElementType::ELEMENT_TYPE_OBJECT);
+            mdFieldDef dataFieldToken;
+            ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_methodCache"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
+        }
+
+        virtual void InjectMscorlibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override
         {
             auto typeReferenceOrDefinitionToken = GetOrCreateTypeReferenceToken(_mscorlibAssemblyRefToken, className);
             GetOrCreateMemberReferenceToken(typeReferenceOrDefinitionToken, methodName, signature);
         }
 
-        virtual sicily::codegen::ITokenizerPtr GetTokenizer()
+        virtual void InjectSystemPrivateCoreLibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override
+        {
+            auto typeReferenceOrDefinitionToken = GetOrCreateTypeReferenceToken(_systemPrivateCoreLibAssemblyRefToken, className);
+            GetOrCreateMemberReferenceToken(typeReferenceOrDefinitionToken, methodName, signature);
+        }
+
+        virtual sicily::codegen::ITokenizerPtr GetTokenizer() override
         {
             return _tokenizer;
         }
@@ -116,67 +137,70 @@ namespace NewRelic { namespace Profiler
         CComPtr<IMetaDataAssemblyEmit> _metaDataAssemblyEmit;
         sicily::codegen::ITokenizerPtr _tokenizer;
         ModuleID _moduleId;
-        std::wstring _moduleName;
+        xstring_t _moduleName;
         mdAssemblyRef _mscorlibAssemblyRefToken;
+        mdAssemblyRef _systemPrivateCoreLibAssemblyRefToken;
         bool _hasRefMscorlib;
         bool _hasRefSysRuntime;
         bool _hasRefNetStandard;
+        bool _hasRefSystemPrivateCoreLib;
 
         bool _isMscorlib;
         bool _isNetStandard;
+        bool _isSystemPrivateCoreLib;
 
         mdMethodDef GetSecuritySafeCriticalConstructorToken()
         {
-            return GetMethodTokenForDefaultConstructor(L"System.Security.SecuritySafeCriticalAttribute");
+            return GetMethodTokenForDefaultConstructor(_X("System.Security.SecuritySafeCriticalAttribute"));
         }
 
         mdMethodDef GetSuppressUnmanagedCodeSecurityAttributeToken()
         {
-            return GetMethodTokenForDefaultConstructor(L"System.Security.SuppressUnmanagedCodeSecurityAttribute");
+            return GetMethodTokenForDefaultConstructor(_X("System.Security.SuppressUnmanagedCodeSecurityAttribute"));
         }
 
-        mdMethodDef GetMethodTokenForDefaultConstructor(const std::wstring& className)
+        mdMethodDef GetMethodTokenForDefaultConstructor(const xstring_t& className)
         {
             BYTEVECTOR(constructorSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_HASTHIS, 0, CorElementType::ELEMENT_TYPE_VOID);
 
             auto typeToken = GetTypeToken(className);
-            return GetMethodToken(typeToken, L".ctor", constructorSignature);
+            return GetMethodToken(typeToken, _X(".ctor"), constructorSignature);
         }
 
-        mdTypeDef GetTypeToken(const std::wstring& typeName)
+        mdTypeDef GetTypeToken(const xstring_t& typeName)
         {
             mdTypeDef typeToken;
             ThrowOnError(_metaDataImport->FindTypeDefByName, typeName.c_str(), mdTypeDefNil, &typeToken);
             return typeToken;
         }
 
-        mdModuleRef AddModuleReference(const std::wstring& moduleName)
+        mdModuleRef AddModuleReference(const xstring_t& moduleName)
         {
             mdModuleRef moduleToken;
             ThrowOnError(_metaDataEmit->DefineModuleRef, moduleName.c_str(), &moduleToken);
             return moduleToken;
         }
 
-        mdMethodDef AddMethodDefinition(const std::wstring& methodName, const mdTypeDef& typeToken, const ByteVector& signature, const uint32_t& interfaceAttributes, const uint32_t& implementationAttributes, const uint32_t& methodCodeAddress)
+        mdMethodDef AddMethodDefinition(const xstring_t& methodName, const mdTypeDef& typeToken, const ByteVector& signature, const uint32_t& interfaceAttributes, const uint32_t& implementationAttributes, const uint32_t& methodCodeAddress)
         {
             mdMethodDef methodToken;
             ThrowOnError(_metaDataEmit->DefineMethod, typeToken, methodName.c_str(), interfaceAttributes, signature.data(), (uint32_t)signature.size(), methodCodeAddress, implementationAttributes, &methodToken);
             return methodToken;
         }
 
-        void SetMethodAsPlatformInvoke(const mdMethodDef& methodToken, const uint32_t& mappingFlags, const std::wstring& methodName, const mdModuleRef& nativeModuleToken)
+        void SetMethodAsPlatformInvoke(const mdMethodDef& methodToken, const uint32_t& mappingFlags, const xstring_t& methodName, const mdModuleRef& nativeModuleToken)
         {
             ThrowOnError(_metaDataEmit->DefinePinvokeMap, methodToken, mappingFlags, methodName.c_str(), nativeModuleToken);
         }
 
-        mdMethodDef GetMethodToken(const mdTypeDef& classToken, const std::wstring methodName, const ByteVector& signature)
+        mdMethodDef GetMethodToken(const mdTypeDef& classToken, const xstring_t& methodName, const ByteVector& signature)
         {
             mdMethodDef methodToken;
             ThrowOnError(_metaDataImport->FindMethod, classToken, methodName.c_str(), signature.data(), (uint32_t)signature.size(), &methodToken);
             return methodToken;
         }
 
-        ULONG GetMethodCodeAddress(const mdTypeDef& classToken, const std::wstring methodName, const ByteVector& signature)
+        ULONG GetMethodCodeAddress(const mdTypeDef& classToken, const xstring_t& methodName, const ByteVector& signature)
         {
             ULONG codeAddress;
             auto methodToken = GetMethodToken(classToken, methodName, signature);
@@ -198,11 +222,11 @@ namespace NewRelic { namespace Profiler
             ThrowOnError(_metaDataEmit->DefinePermissionSet, methodToken, CorDeclSecurity::dclAssert, permissionBlob.data(), (uint32_t)permissionBlob.size(), &permissionToken);
         }
 
-        std::wstring GetAssemblyName(const mdAssemblyRef& assemblyReferenceToken)
+        xstring_t GetAssemblyName(const mdAssemblyRef& assemblyReferenceToken)
         {
             ULONG assemblyNameLength = 0;
             ThrowOnError(_metaDataAssemblyImport->GetAssemblyRefProps, assemblyReferenceToken, nullptr, nullptr, nullptr, 0, &assemblyNameLength, nullptr, nullptr, nullptr, nullptr);
-            std::unique_ptr<wchar_t[]> assemblyName(new wchar_t[assemblyNameLength]);
+            std::unique_ptr<xchar_t[]> assemblyName(new xchar_t[assemblyNameLength]);
             ThrowOnError(_metaDataAssemblyImport->GetAssemblyRefProps, assemblyReferenceToken, nullptr, nullptr, assemblyName.get(), assemblyNameLength, nullptr, nullptr, nullptr, nullptr, nullptr);
             return assemblyName.get();
         }
@@ -212,6 +236,7 @@ namespace NewRelic { namespace Profiler
             _hasRefMscorlib = false;
             _hasRefNetStandard = false;
             _hasRefSysRuntime = false;
+            _hasRefSystemPrivateCoreLib = false;
 
             HCORENUM enumerator = nullptr;
             mdAssemblyRef assemblyToken;
@@ -221,29 +246,35 @@ namespace NewRelic { namespace Profiler
             {
                 auto foundAssemblyName = GetAssemblyName(assemblyToken);
 
-                if (Strings::EndsWith(foundAssemblyName, L"mscorlib"))
+                if (Strings::EndsWith(foundAssemblyName, _X("mscorlib")))
                 {
                     _hasRefMscorlib = true;
                     _mscorlibAssemblyRefToken = assemblyToken;
                 }
-                else if (Strings::EndsWith(foundAssemblyName, L"netstandard"s))
+                else if (Strings::EndsWith(foundAssemblyName, _X("netstandard")))
                 {
                     _hasRefNetStandard = true;
                 }
-                else if (Strings::EndsWith(foundAssemblyName, L"System.Runtime"s))
+                else if (Strings::EndsWith(foundAssemblyName, _X("System.Runtime")))
                 {
                     _hasRefSysRuntime = true;
+                }
+                else if (Strings::EndsWith(foundAssemblyName, _X("System.Private.CoreLib")))
+                {
+                    _hasRefSystemPrivateCoreLib = true;
+                    _systemPrivateCoreLibAssemblyRefToken = assemblyToken;
                 }
             }
         }
 
         void CheckIfThisIsAFrameworkAssembly()
         {
-            _isMscorlib = Strings::EndsWith(GetModuleName(), L"mscorlib.dll");
-            _isNetStandard = Strings::EndsWith(GetModuleName(), L"netstandard.dll");
+            _isMscorlib = Strings::EndsWith(GetModuleName(), _X("mscorlib.dll"));
+            _isNetStandard = Strings::EndsWith(GetModuleName(), _X("netstandard.dll"));
+            _isSystemPrivateCoreLib = Strings::EndsWith(GetModuleName(), _X("System.Private.CoreLib.dll"));
         }
 
-        mdAssemblyRef GetAssemblyReference(const std::wstring& assemblyName)
+        mdAssemblyRef GetAssemblyReference(const xstring_t& assemblyName)
         {
             HCORENUM enumerator = nullptr;
             mdAssemblyRef assemblyToken;
@@ -260,14 +291,14 @@ namespace NewRelic { namespace Profiler
 
             auto moduleName = GetModuleName();
             // When we run across RefEmit_InMemoryManifestModule we need to bail out but we don't want to log errors along the way.
-            if (moduleName == L"RefEmit_InMemoryManifestModule")
+            if (moduleName == _X("RefEmit_InMemoryManifestModule"))
                 throw NewRelic::Profiler::NonCriticalException();
 
             LogError(L"Unable to locate ", assemblyName, " reference in module ", moduleName, ".");
-            throw NewRelic::Profiler::MessageException(L"Unable to locate assembly reference in module.");
+            throw NewRelic::Profiler::MessageException(_X("Unable to locate assembly reference in module."));
         }
 
-        mdToken GetOrCreateTypeReferenceToken(const mdAssemblyRef& assemblyReferenceToken, const std::wstring& className)
+        mdToken GetOrCreateTypeReferenceToken(const mdAssemblyRef& assemblyReferenceToken, const xstring_t& className)
         {
             if (assemblyReferenceToken == mdAssemblyRefNil)
             {
@@ -283,7 +314,7 @@ namespace NewRelic { namespace Profiler
             }
         }
 
-        mdMemberRef GetOrCreateMemberReferenceToken(const mdToken& typeReferenceOrDefinitionToken, const std::wstring& memberName, const ByteVector& signature)
+        mdMemberRef GetOrCreateMemberReferenceToken(const mdToken& typeReferenceOrDefinitionToken, const xstring_t& memberName, const ByteVector& signature)
         {
             mdMemberRef memberReferenceToken;
             ThrowOnError(_metaDataEmit->DefineMemberRef, typeReferenceOrDefinitionToken, memberName.c_str(), signature.data(), (uint32_t)signature.size(), &memberReferenceToken);

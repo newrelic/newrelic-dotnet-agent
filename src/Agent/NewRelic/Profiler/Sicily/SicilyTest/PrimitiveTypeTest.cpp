@@ -20,103 +20,103 @@ namespace sicily
             public:
                 TEST_METHOD(TestGetKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL, false));
                     Assert::AreEqual(Type::Kind::kPRIMITIVE, primitiveType->GetKind());
                 }
 
                 TEST_METHOD(TestCharGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kCHAR));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kCHAR, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kCHAR, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(TestObjectGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kOBJECT, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(TestVoidGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kVOID));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kVOID, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kVOID, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(TestStringGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kSTRING));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kSTRING, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kSTRING, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(Test1ByteIntegerGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kI1));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kI1, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kI1, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(Test2ByteIntegerGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kI2));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kI2, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kI2, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(Test4ByteIntegerGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kI4));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kI4, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kI4, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(Test8ByteIntegerGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kI8));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kI8, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kI8, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(Test1ByteUnsignedIntegerGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kU1));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kU1, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kU1, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(Test2ByteUnsignedIntegerGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kU2));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kU2, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kU2, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(Test4ByteUnsignedIntegerGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kU4));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kU4, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kU4, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(Test8ByteUnsignedIntegerGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kU8));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kU8, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kU8, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(Test4ByteFloatGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kR4));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kR4, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kR4, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(Test8ByteFloatGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kR8));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kR8, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kR8, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(TestIntPtrGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kINTPTR));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kINTPTR, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kINTPTR, primitiveType->GetPrimitiveKind());
                 }
 
                 TEST_METHOD(TestUIntPtrGetPrimitiveKind)
                 {
-                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kUINTPTR));
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kUINTPTR, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kUINTPTR, primitiveType->GetPrimitiveKind());
                 }
             };

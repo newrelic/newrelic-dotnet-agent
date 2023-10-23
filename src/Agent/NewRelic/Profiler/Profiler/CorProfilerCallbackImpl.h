@@ -11,10 +11,12 @@
 #include "../Logging/Logger.h"
 #include "../MethodRewriter/CustomInstrumentation.h"
 #include "../MethodRewriter/MethodRewriter.h"
+#include "../ModuleInjector/ModuleInjector.h"
 #include "../SignatureParser/Exceptions.h"
 #include "../ThreadProfiler/ThreadProfiler.h"
 #include "Function.h"
 #include "FunctionResolver.h"
+#include "Module.h"
 #include "Win32Helpers.h"
 #include "guids.h"
 #include <fstream>
@@ -27,8 +29,6 @@
 #ifdef PAL_STDCPP_COMPAT
 #include "UnixSystemCalls.h"
 #else
-#include "../ModuleInjector/ModuleInjector.h"
-#include "Module.h"
 #include "SystemCalls.h"
 #include <shellapi.h>
 #endif
@@ -69,10 +69,7 @@ namespace NewRelic { namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
-
-#ifndef PAL_STDCPP_COMPAT
         std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
-#endif
 
     public:
         CorProfilerCallbackImpl()
@@ -230,7 +227,7 @@ namespace NewRelic { namespace Profiler {
                 }
 
                 auto instrumentationConfiguration = InitializeInstrumentationConfig();
-                auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath);
+                auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath, _isCoreClr);
                 this->SetMethodRewriter(methodRewriter);
 
                 LogTrace("Checking to see if we should instrument this process.");
@@ -264,70 +261,49 @@ namespace NewRelic { namespace Profiler {
 
         virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus) override
         {
-            if (_isCoreClr)
+            // if the module did not load correctly then we don't want to mess with it
+            if (FAILED(hrStatus))
             {
-                if (SUCCEEDED(hrStatus)) {
-                    try {
-                        auto assemblyName = GetAssemblyName(moduleId);
+                return hrStatus;
+            }
 
-                        if (GetMethodRewriter()->ShouldInstrumentAssembly(assemblyName)) {
-                            LogTrace("Assembly module loaded: ", assemblyName);
+            LogTrace("Module Injection Started. ", moduleId);
 
-                            auto instrumentationPoints = std::make_shared<Configuration::InstrumentationPointSet>(GetMethodRewriter()->GetAssemblyInstrumentation(assemblyName));
-                            auto methodDefs = GetMethodDefs(moduleId, instrumentationPoints);
-
-                            if (methodDefs != nullptr) {
-                                RejitModuleFunctions(moduleId, methodDefs);
-                            }
-                        }
-                    }
-                    catch (...) {
-                    }
-                }
+            ModuleInjector::IModulePtr module;
+            try
+            {
+                module = std::make_shared<Module>(_corProfilerInfo4, moduleId);
+            }
+            catch (const NewRelic::Profiler::MessageException& exception)
+            {
+                (void)exception;
                 return S_OK;
             }
-            else
+            catch (...)
             {
-#ifndef PAL_STDCPP_COMPAT
+                LogError(L"An exception was thrown while getting details about a module.");
+                return E_FAIL;
+            }
 
-                // if the module did not load correctly then we don't want to mess with it
-                if (FAILED(hrStatus))
+            try
+            {
+                if (_isCoreClr)
                 {
-                    return hrStatus;
+                    _moduleInjector->InjectIntoModuleCore(*module);
                 }
-
-                LogTrace("Module Injection Started. ", moduleId);
-
-                ModuleInjector::IModulePtr module;
-                try
-                {
-                    module = std::make_shared<Module>(_corProfilerInfo4, moduleId);
-                }
-                catch (const NewRelic::Profiler::MessageException& exception)
-                {
-                    (void)exception;
-                    return S_OK;
-                }
-                catch (...)
-                {
-                    LogError(L"An exception was thrown while getting details about a module.");
-                    return E_FAIL;
-                }
-
-                try
+                else
                 {
                     _moduleInjector->InjectIntoModule(*module);
                 }
-                catch (...)
-                {
-                    LogError(L"An exception was thrown while attempting to inject into a module.");
-                    return E_FAIL;
-                }
-
-                LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
-#endif
-                return S_OK;
             }
+            catch (...)
+            {
+                LogError(L"An exception was thrown while attempting to inject into a module.");
+                return E_FAIL;
+            }
+
+            LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
+            return S_OK;
         }
 
 
@@ -613,7 +589,7 @@ namespace NewRelic { namespace Profiler {
             auto oldMethodRewriter = GetMethodRewriter();
             auto oldInstrumentationPoints = oldMethodRewriter->GetInstrumentationConfiguration()->GetInstrumentationPoints();
 
-            SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath));
+            SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath, _isCoreClr));
 
             auto oldInstrumentationByAssembly = GroupByAssemblyName(oldInstrumentationPoints);
             auto newInstrumentationByAssembly = GroupByAssemblyName(instrumentationConfiguration->GetInstrumentationPoints());
