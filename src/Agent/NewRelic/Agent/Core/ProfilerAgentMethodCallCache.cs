@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core
             return _methodInfoCache!.GetOrAdd(key, methodInfoFactory.GetMethodInfo);
         }
 
-        // Using a struct to rely to take advantage of stack allocation to reduce overall allocations.
+        // Using a struct to try to take advantage of stack allocation to reduce overall allocations.
         private struct MethodInfoCacheItemFactory
         {
             private string _className;
