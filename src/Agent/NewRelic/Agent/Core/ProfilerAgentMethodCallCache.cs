@@ -39,7 +39,7 @@ namespace NewRelic.Agent.Core
         {
             private string _className;
             private string _methodName;
-            private  Type[] _types;
+            private Type[] _types;
 
             public MethodInfoCacheItemFactory(string className, string methodName, Type[] types)
             {
