@@ -3,7 +3,6 @@
 
 using System;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -75,7 +74,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             }
             else
             {
-                _agent.CurrentTransaction.LogFinest("ResponseStreamWrapper: Not an HTML response so no attempt to inject RUM.");
+                _agent.CurrentTransaction.LogFinest("ResponseStreamWrapper: Not an HTML response so not attempting to inject RUM.");
                 _baseStream?.Write(buffer, offset, count);
             }
 
@@ -92,7 +91,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             }
             else
             {
-                _agent.Logger.Log(Level.Finest, "ResponseStreamWrapper: Not an HTML response so no attempt to inject RUM.");
+                _agent.Logger.Log(Level.Finest, "ResponseStreamWrapper: Not an HTML response so not attempting to inject RUM.");
                 if (_baseStream != null)
                     await _baseStream.WriteAsync(buffer, cancellationToken);
             }
@@ -100,15 +99,10 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override async ValueTask DisposeAsync()
         {
-            // TODO: Debugging only
-            _agent.CurrentTransaction.LogFinest($"ResponseStreamWrapper.DisposeAsync starting ");
             _context = null;
 
             await _baseStream.DisposeAsync();
             _baseStream = null;
-
-            // TODO: Debugging only
-            _agent.CurrentTransaction.LogFinest($"ResponseStreamWrapper.DisposeAsync complete ");
         }
 
         public override bool CanRead { get; }
@@ -130,15 +124,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 return false;
 
             // Requirements for script injection:
-            // * has to have result body
-            // * 200 or 500 response
             // * text/html response
             // * UTF-8 formatted (explicit or no charset)
 
             _isHtmlResponse =
-                _context.Response?.Body != null &&
-                (_context.Response.StatusCode == 200 || _context.Response.StatusCode == 500) &&
-                _context.Response.ContentType != null &&
+                //_context.Response.StatusCode is 200 or 500 &&
                 _context.Response.ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
                 (_context.Response.ContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
                 !_context.Response.ContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
@@ -148,7 +138,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
             // Make sure we force dynamic content type since we're
             // rewriting the content - static content will set the header explicitly
-            // and fail when it doesn't matchif (_isHtmlResponse.Value)
+            // and fail when it doesn't match if (_isHtmlResponse.Value)
             if (!_isContentLengthSet && _context.Response.ContentLength != null)
             {
                 _context.Response.Headers.ContentLength = null;
