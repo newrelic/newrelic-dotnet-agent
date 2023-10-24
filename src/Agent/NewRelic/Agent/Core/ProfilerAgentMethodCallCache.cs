@@ -30,13 +30,29 @@ namespace NewRelic.Agent.Core
 
         private static MethodInfo GetAgentMethodInfoFromCache(string key, string className, string methodName, Type[] types)
         {
-            return _methodInfoCache!.GetOrAdd(key, GetMethodInfo);
+            var methodInfoFactory = new MethodInfoCacheItemFactory(className, methodName, types);
+            return _methodInfoCache!.GetOrAdd(key, methodInfoFactory.GetMethodInfo);
+        }
 
-            MethodInfo GetMethodInfo(string _)
+        // Using a struct to rely to take advantage of stack allocation to reduce overall allocations.
+        private struct MethodInfoCacheItemFactory
+        {
+            private string _className;
+            private string _methodName;
+            private  Type[] _types;
+
+            public MethodInfoCacheItemFactory(string className, string methodName, Type[] types)
             {
-                var type = Type.GetType(className);
+                _className = className;
+                _methodName = methodName;
+                _types = types;
+            }
 
-                var method = types != null ? type.GetMethod(methodName, types) : type.GetMethod(methodName);
+            public MethodInfo GetMethodInfo(string _)
+            {
+                var type = Type.GetType(_className);
+
+                var method = _types != null ? type.GetMethod(_methodName, _types) : type.GetMethod(_methodName);
 
                 return method;
             }
