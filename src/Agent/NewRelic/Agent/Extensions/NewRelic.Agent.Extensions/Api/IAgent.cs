@@ -103,9 +103,8 @@ namespace NewRelic.Agent.Api
         /// <param name="requestPath">The path of the request</param>
         /// <param name="buffer">A UTF-8 encoded buffer of the content for this request</param>
         /// <param name="baseStream">The stream into which the script (and buffer) should be injected</param>
-        /// <param name="transaction">the current transaction, used only for logging</param>
         /// <returns></returns>
-        Task TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream, ITransaction transaction);
+        Task TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream);
 
         /// <summary>
         /// Returns the Trace Metadata of the currently executing transaction.

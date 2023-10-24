@@ -61,7 +61,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         public override void Write(byte[] buffer, int offset, int count)
         {
             var curBuf = buffer.AsMemory(offset, count).ToArray();
-            _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf, _baseStream, _agent.CurrentTransaction)
+            _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf, _baseStream)
                     .GetAwaiter().GetResult();
         }
 
@@ -72,7 +72,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream, _agent.CurrentTransaction);
+            await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
         }
 
         protected override void Dispose(bool disposing)

@@ -293,12 +293,24 @@ namespace NewRelic.Agent.Core
 
         public Stream TryGetStreamInjector(Stream stream, Encoding encoding, string contentType, string requestPath)
         {
+            if (stream == null)
+            {
+                return null;
+            }
+
+            if (encoding == null)
+            {
+                return null;
+            }
+
             var script = TryGetRUMScriptInternal(contentType, requestPath);
             return script == null ? null : new BrowserMonitoringStreamInjector(() => script, stream, encoding);
         }
 
-        public async Task TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream, ITransaction transaction)
+        public async Task TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream)
         {
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+
             var script = TryGetRUMScriptInternal(contentType, requestPath);
             var rumBytes = script == null ? null : Encoding.UTF8.GetBytes(script);
 
@@ -308,7 +320,7 @@ namespace NewRelic.Agent.Core
                 await baseStream.WriteAsync(buffer, 0, buffer.Length);
             }
             else
-                await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, baseStream, () => rumBytes, transaction);
+                await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, baseStream, rumBytes, transaction);
         }
 
         private string TryGetRUMScriptInternal(string contentType, string requestPath)

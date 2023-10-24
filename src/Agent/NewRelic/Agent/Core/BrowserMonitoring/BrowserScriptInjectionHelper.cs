@@ -16,11 +16,11 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         /// </summary>
         /// <param name="buffer">UTF-8 encoded buffer representing the current page</param>
         /// <param name="baseStream"></param>
-        /// <param name="getRumBytesFunc"></param>
+        /// <param name="rumBytes"></param>
         /// <param name="transaction"></param>
         /// <returns></returns>
         public static async Task InjectBrowserScriptAsync(byte[] buffer, Stream baseStream,
-            Func<byte[]> getRumBytesFunc, ITransaction transaction)
+            byte[] rumBytes, ITransaction transaction)
         {
             var index = BrowserScriptInjectionIndexHelper.TryFindInjectionIndex(buffer);
 
@@ -34,7 +34,6 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             transaction?.LogFinest($"Injecting RUM script at byte index {index}.");
 
-            var rumBytes = getRumBytesFunc();
 
             // Write everything up to the insertion index
             await baseStream.WriteAsync(buffer, 0, index);
