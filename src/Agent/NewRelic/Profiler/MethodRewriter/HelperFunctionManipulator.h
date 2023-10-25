@@ -72,7 +72,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         {
             _instructions->Append(CEE_LDARG_0);
             _instructions->Append(CEE_CALL, _X("class System.Reflection.Assembly System.Reflection.Assembly::LoadFrom(string)"));
-            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load assembly."), true, _isCoreClr);
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load assembly."), true);
             _instructions->Append(CEE_RET);
         }
 
@@ -83,7 +83,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_CALL, _X("class System.Reflection.Assembly System.CannotUnloadAppDomainException::LoadAssemblyOrThrow(string)"));
             _instructions->Append(CEE_LDARG_1);
             _instructions->Append(CEE_CALLVIRT, _X("instance class System.Type System.Reflection.Assembly::GetType(string)"));
-            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load type from assembly via reflection."), true, _isCoreClr);
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load type from assembly via reflection."), true);
             _instructions->Append(CEE_RET);
         }
 
@@ -111,7 +111,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             }
             _instructions->AppendLabel(_X("after_GetMethod"));
 
-            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load method from type via reflection."), true, _isCoreClr);
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("Failed to load method from type via reflection."), true);
             _instructions->Append(CEE_RET);
         }
 
@@ -123,7 +123,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         void BuildStoreMethodInAppDomainStorageOrThrow()
         {
             _instructions->Append(CEE_CALL, _X("class System.AppDomain System.AppDomain::get_CurrentDomain()"));
-            ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true, _isCoreClr);
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true);
             _instructions->Append(CEE_LDARG_1);
             _instructions->Append(CEE_LDARG_0);
             _instructions->Append(CEE_CALLVIRT, _X("instance void System.AppDomain::SetData(string, object)"));
@@ -134,7 +134,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         void BuildGetMethodFromAppDomainStorage()
         {
             _instructions->Append(CEE_CALL, _X("class System.AppDomain System.AppDomain::get_CurrentDomain()"));
-            ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true, _isCoreClr);
+            ThrowExceptionIfStackItemIsNull(_instructions, _X("System.AppDomain.CurrentDomain == null."), true);
             _instructions->Append(CEE_LDARG_0);
             _instructions->Append(CEE_CALLVIRT, _X("instance object System.AppDomain::GetData(string)"));
             _instructions->Append(CEE_CASTCLASS, _X("class System.Reflection.MethodInfo"));
