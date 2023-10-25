@@ -107,6 +107,19 @@ namespace NewRelic.Agent.Core.AgentHealth
             TrySend(metric);
         }
 
+        public void ReportCountMetric(string metricName, long count)
+        {
+            var metric = _metricBuilder.TryBuildCountMetric(metricName, count);
+            TrySend(metric);
+        }
+        public void ReportByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null)
+        {
+            var metric = _metricBuilder.TryBuildByteMetric(metricName, totalBytes, exclusiveBytes);
+            TrySend(metric);
+        }
+
+
+
         public void ReportDotnetVersion()
         {
 #if NETFRAMEWORK

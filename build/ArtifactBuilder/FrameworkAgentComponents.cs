@@ -63,7 +63,8 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebOptimization.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebServices.dll",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNetCore.dll",
-                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Owin.dll"
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Owin.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.dll",
             };
 
             var wrapperXmls = new[]
@@ -99,6 +100,7 @@ namespace ArtifactBuilder
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebOptimization.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.WebServices.Instrumentation.xml",
                 $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml",
             };
 
             ExtensionXsd = $@"{SourceHomeBuilderPath}\extensions\extension.xsd";

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+
+  <instrumentation>
+    
+    <tracerFactory name="KafkaProducerWrapper">
+      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Producer`2">
+        <exactMethodMatcher methodName="Produce" parameters="Confluent.Kafka.TopicPartition,Confluent.Kafka.Message`2[!0,!1],System.Action`1[Confluent.Kafka.DeliveryReport`2[!0,!1]]"/>
+        <exactMethodMatcher methodName="ProduceAsync" parameters="Confluent.Kafka.TopicPartition,Confluent.Kafka.Message`2[!0,!1],System.Threading.CancellationToken"/>
+      </match>
+    </tracerFactory>
+    
+    <tracerFactory name="KafkaConsumerWrapper">
+      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Consumer`2">
+        <exactMethodMatcher methodName="Consume" parameters="System.Int32"/>
+      </match>
+    </tracerFactory>
+    
+    <tracerFactory name="KafkaSerializerWrapper">
+      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Serializers+Utf8Serializer">
+        <exactMethodMatcher methodName="Serialize" />
+      </match>
+      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Serializers+NullSerializer">
+        <exactMethodMatcher methodName="Serialize" />
+      </match>
+      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Serializers+Int64Serializer">
+        <exactMethodMatcher methodName="Serialize" />
+      </match>
+      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Serializers+Int32Serializer">
+        <exactMethodMatcher methodName="Serialize" />
+      </match>
+      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Serializers+SingleSerializer">
+        <exactMethodMatcher methodName="Serialize" />
+      </match>
+      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Serializers+DoubleSerializer">
+        <exactMethodMatcher methodName="Serialize" />
+      </match>
+      <match assemblyName="Confluent.Kafka" className="Confluent.Kafka.Serializers+ByteArraySerializer">
+        <exactMethodMatcher methodName="Serialize" />
+      </match>
+    </tracerFactory>
+
+  </instrumentation>
+</extension>

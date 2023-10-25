@@ -137,6 +137,45 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         [Test]
+        public void ReportCountMetric()
+        {
+            const string MetricName = "Some/Metric/Name";
+            _agentHealthReporter.ReportCountMetric(MetricName, 2);
+            Assert.AreEqual(1, _publishedMetrics.Count);
+            NrAssert.Multiple(
+                () => Assert.AreEqual(MetricName, _publishedMetrics[0].MetricName.Name),
+                () => Assert.AreEqual(2, _publishedMetrics[0].Data.Value0)
+            );
+        }
+
+        [Test]
+        public void ReportByteMetric()
+        {
+            const string MetricName = "Some/Metric/Name";
+            const long totalBytes = 1024 * 1024 * 1024;
+            _agentHealthReporter.ReportByteMetric(MetricName, totalBytes);
+            Assert.AreEqual(1, _publishedMetrics.Count);
+            NrAssert.Multiple(
+                () => Assert.AreEqual(MetricName, _publishedMetrics[0].MetricName.Name),
+                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(totalBytes), _publishedMetrics[0].Data)
+            );
+        }
+
+        [Test]
+        public void ReportByteMetric_WithExclusiveBytes()
+        {
+            const string MetricName = "Some/Metric/Name";
+            const long totalBytes = 1024 * 1024 * 1024;
+            const long exclusiveBytes = 1024 * 1024 * 64;
+            _agentHealthReporter.ReportByteMetric(MetricName, totalBytes, exclusiveBytes);
+            Assert.AreEqual(1, _publishedMetrics.Count);
+            NrAssert.Multiple(
+                () => Assert.AreEqual(MetricName, _publishedMetrics[0].MetricName.Name),
+                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(totalBytes, exclusiveBytes), _publishedMetrics[0].Data)
+            );
+        }
+
+        [Test]
         public void CollectMetrics_ReportsAgentVersion()
         {
             var agentVersion = AgentInstallConfiguration.AgentVersion;

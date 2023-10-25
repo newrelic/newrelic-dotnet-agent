@@ -13,11 +13,25 @@ namespace NewRelic.Agent.Api.Experimental
     public interface IAgentExperimental
     {
         /// <summary>
-        /// Records a supportability metrics
+        /// Records a supportability metric
         /// </summary>
         /// <param name="metricName"></param>
-        /// <param name="count">Defaults to 1.0f</param>
-        void RecordSupportabilityMetric(string metricName, int count = 1);
+        /// <param name="count">Defaults to 1.0</param>
+        void RecordSupportabilityMetric(string metricName, long count = 1);
+
+        /// <summary>
+        /// Records a count metric with the given name
+        /// </summary>
+        /// <param name="metricName"></param>
+        /// <param name="count"></param>
+        void RecordCountMetric(string metricName, long count = 1);
+        /// <summary>
+        /// Records a byte count metric with the given name
+        /// </summary>
+        /// <param name="metricName"></param>
+        /// <param name="totalBytes"></param>
+        /// <param name="exclusiveBytes"></param>
+        void RecordByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null);
 
         /// <summary>
         /// Records the log message in the transaction to later be forwarded if log forwarding is enabled.

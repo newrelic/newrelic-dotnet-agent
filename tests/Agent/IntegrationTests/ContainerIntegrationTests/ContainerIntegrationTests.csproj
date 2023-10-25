@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
     <ProjectReference Include="..\IntegrationTestHelpers\IntegrationTestHelpers.csproj" />
   </ItemGroup>
 
