@@ -20,13 +20,6 @@ namespace NewRelic { namespace Profiler
     class CorTokenizer : public sicily::codegen::ITokenizer
     {
     public:
-        CorTokenizer(CComPtr<IMetaDataAssemblyEmit> metaDataAssemblyEmit, CComPtr<IMetaDataEmit2> metaDataEmit, CComPtr<IMetaDataImport2> metaDataImport, CComPtr<IMetaDataAssemblyImport> metaDataAssemblyImport) :
-            metaDataEmit(metaDataEmit),
-            metaDataAssemblyEmit(metaDataAssemblyEmit),
-            metaDataImport(metaDataImport),
-            metaDataAssemblyImport(metaDataAssemblyImport)
-        { }
-
         virtual uint32_t GetAssemblyRefToken(const xstring_t& assemblyName) override
         {
             HCORENUM enumerator = nullptr;
@@ -132,7 +125,15 @@ namespace NewRelic { namespace Profiler
         }
 
     protected:
+        CorTokenizer(CComPtr<IMetaDataAssemblyEmit> metaDataAssemblyEmit, CComPtr<IMetaDataEmit2> metaDataEmit, CComPtr<IMetaDataImport2> metaDataImport, CComPtr<IMetaDataAssemblyImport> metaDataAssemblyImport) :
+            metaDataEmit(metaDataEmit),
+            metaDataAssemblyEmit(metaDataAssemblyEmit),
+            metaDataImport(metaDataImport),
+            metaDataAssemblyImport(metaDataAssemblyImport)
+        { }
+
         CComPtr<IMetaDataAssemblyEmit> metaDataAssemblyEmit;
+
     private:
         CComPtr<IMetaDataEmit2> metaDataEmit;
         CComPtr<IMetaDataImport2> metaDataImport;

@@ -15,9 +15,10 @@ namespace NewRelic { namespace Profiler
     class Module : public ModuleInjector::IModule
     {
     public:
-        Module(CComPtr<ICorProfilerInfo4> profilerInfo, const ModuleID& moduleId) :
+        Module(CComPtr<ICorProfilerInfo4> profilerInfo, const ModuleID& moduleId, bool isCoreClr) :
             _profilerInfo(profilerInfo),
-            _moduleId(moduleId)
+            _moduleId(moduleId),
+            _isCoreClr(isCoreClr)
         {
             // get the module's name
             ULONG moduleNameLength = 0;
@@ -50,7 +51,7 @@ namespace NewRelic { namespace Profiler
             CheckIfThisIsAFrameworkAssembly();
             IdentifyFrameworkAssemblyReferences();
 
-            _tokenizer.reset(new CorTokenizer(_metaDataAssemblyEmit, _metaDataEmit, _metaDataImport, _metaDataAssemblyImport));
+            _tokenizer = CreateCorTokenizer(_metaDataAssemblyEmit, _metaDataEmit, _metaDataImport, _metaDataAssemblyImport, _isCoreClr);
         }
 
         virtual xstring_t GetModuleName() override { return _moduleName; }
@@ -140,6 +141,7 @@ namespace NewRelic { namespace Profiler
         xstring_t _moduleName;
         mdAssemblyRef _mscorlibAssemblyRefToken;
         mdAssemblyRef _systemPrivateCoreLibAssemblyRefToken;
+        const bool _isCoreClr;
         bool _hasRefMscorlib;
         bool _hasRefSysRuntime;
         bool _hasRefNetStandard;

@@ -272,7 +272,7 @@ namespace NewRelic { namespace Profiler {
             ModuleInjector::IModulePtr module;
             try
             {
-                module = std::make_shared<Module>(_corProfilerInfo4, moduleId);
+                module = std::make_shared<Module>(_corProfilerInfo4, moduleId, _isCoreClr);
             }
             catch (const NewRelic::Profiler::MessageException& exception)
             {
