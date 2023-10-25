@@ -4,6 +4,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NUnit.Framework;
 
@@ -21,11 +23,30 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         }
 
         [Test, TestCaseSource(nameof(GetRumTestData))]
-        public void cross_agent_browser_monitor_injection_from_files(string fileName, string data, string expected)
+        public void cross_agent_browser_monitor_injection_using_BrowserMonitoringWriter(string fileName, string data, string expected)
         {
             var writer = new BrowserMonitoringWriter(() => "EXPECTED_RUM_LOADER_LOCATION");
             var result = writer.WriteScriptHeaders(data);
             Assert.AreEqual(expected, result);
+        }
+
+        [Test, TestCaseSource(nameof(GetRumTestData))]
+        public async Task cross_agent_browser_monitor_injection_using_BrowserScriptInjectionHelper(string fileName, string data, string expected)
+        {
+            using (var ms = new MemoryStream())
+            {
+                var dataBytes = Encoding.UTF8.GetBytes(data);
+                await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(dataBytes, ms, Encoding.UTF8.GetBytes("EXPECTED_RUM_LOADER_LOCATION"), null);
+
+                await ms.FlushAsync();
+                ms.Position = 0;
+
+                var resultBytes = ms.ToArray();
+                var result = Encoding.UTF8.GetString(resultBytes);
+
+                Assert.AreEqual(expected, result);
+
+            }
         }
 
         private static IEnumerable<TestCaseData> GetRumTestData()

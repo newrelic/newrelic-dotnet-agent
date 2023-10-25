@@ -37,7 +37,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             // Don't create a transaction in this case to avoid MGIs associated with CORS pre-flight requests
             if ("OPTIONS".Equals(context.Request?.Method, StringComparison.OrdinalIgnoreCase))
             {
-                _agent.Logger.Log(Agent.Extensions.Logging.Level.Finest, "Skipping instrumenting incoming OPTIONS request.");
+                _agent.Logger.Log(Agent.Extensions.Logging.Level.Finest, "Not instrumenting incoming OPTIONS request.");
 
                 await _next(context);
                 return;
@@ -148,7 +148,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             // Seems like it would be cool to not require all of this for a segment??? 
             var method = new Method(typeof(WrapPipelineMiddleware), nameof(Invoke), nameof(context));
-            var methodCall = new MethodCall(method, this, new object[] { context }, false);
+            var methodCall = new MethodCall(method, this, new object[] { context }, true);
 
             var segment = transaction.StartTransactionSegment(methodCall, "Middleware Pipeline");
             return segment;

@@ -32,6 +32,7 @@ using System.Net.Mime;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Core
 {
@@ -302,50 +303,27 @@ namespace NewRelic.Agent.Core
                 return null;
             }
 
-            if (contentType == null)
-            {
-                return null;
-            }
-
-            if (requestPath == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                var transaction = _transactionService.GetCurrentInternalTransaction();
-                if (transaction == null)
-                {
-                    return null;
-                }
-
-                var shouldInject = _browserMonitoringPrereqChecker.ShouldAutomaticallyInject(transaction, requestPath, contentType);
-                if (!shouldInject)
-                {
-                    return null;
-                }
-
-                // Once the transaction name is used for RUM it must be frozen
-                transaction.CandidateTransactionName.Freeze(TransactionNameFreezeReason.AutoBrowserScriptInjection);
-                var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
-                if (script == null)
-                {
-                    return null;
-                }
-
-                return new BrowserMonitoringStreamInjector(() => script, stream, encoding);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "RUM: Failed to build Browser Monitoring agent script");
-                {
-                    return null;
-                }
-            }
+            var script = TryGetRUMScriptInternal(contentType, requestPath);
+            return script == null ? null : new BrowserMonitoringStreamInjector(() => script, stream, encoding);
         }
 
-        public byte[] TryGetRUMBytes(string contentType, string requestPath)
+        public async Task TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream)
+        {
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+
+            var script = TryGetRUMScriptInternal(contentType, requestPath);
+            var rumBytes = script == null ? null : Encoding.UTF8.GetBytes(script);
+
+            if (rumBytes == null)
+            {
+                transaction.LogFinest("Skipping RUM Injection: No script was available.");
+                await baseStream.WriteAsync(buffer, 0, buffer.Length);
+            }
+            else
+                await BrowserScriptInjectionHelper.InjectBrowserScriptAsync(buffer, baseStream, rumBytes, transaction);
+        }
+
+        private string TryGetRUMScriptInternal(string contentType, string requestPath)
         {
             if (contentType == null)
             {
@@ -356,6 +334,7 @@ namespace NewRelic.Agent.Core
             {
                 return null;
             }
+
             try
             {
                 var transaction = _transactionService.GetCurrentInternalTransaction();
@@ -373,21 +352,14 @@ namespace NewRelic.Agent.Core
                 // Once the transaction name is used for RUM it must be frozen
                 transaction.CandidateTransactionName.Freeze(TransactionNameFreezeReason.AutoBrowserScriptInjection);
                 var script = _browserMonitoringScriptMaker.GetScript(transaction, null);
-                if (script == null)
-                {
-                    return null;
-                }
 
-                return Encoding.UTF8.GetBytes(script);
+                return script;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "RUM: Failed to build Browser Monitoring agent script");
-                {
-                    return null;
-                }
+                return null;
             }
-
         }
 
         #endregion Stream manipulation

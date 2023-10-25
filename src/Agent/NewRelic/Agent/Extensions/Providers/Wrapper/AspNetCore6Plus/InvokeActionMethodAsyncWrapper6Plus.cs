@@ -21,7 +21,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
-            return new CanWrapResponse(nameof(InvokeActionMethodAsyncWrapper6Plus).Equals(methodInfo.RequestedWrapperName));
+            return new CanWrapResponse("InvokeActionMethodAsyncWrapper6Plus".Equals(methodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
