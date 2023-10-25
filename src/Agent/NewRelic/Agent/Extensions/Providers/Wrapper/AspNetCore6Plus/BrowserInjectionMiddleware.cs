@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 {
@@ -19,6 +20,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             // Check if the next middleware is of the required type
             var fullName = next?.Target?.GetType().FullName;
             _runMiddleware = fullName == runBefore;
+            agent.Logger.Log(Level.Finest, $"BrowserInjectionMiddleware: Next middleware is: {fullName}. Middleware {(_runMiddleware ? "will" : "will not")} run.");
 
             _next = next;
             _agent = agent;
