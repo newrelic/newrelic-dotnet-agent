@@ -40,6 +40,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                     var startupFilters = services.Where(serviceDescriptor => serviceDescriptor.ServiceType == typeof(IStartupFilter)).ToList();
 
                     services.AddTransient<IStartupFilter>(provider => new AddNewRelicStartupFilter(agent));
+                    services.AddTransient<IStartupFilter>(provider => new AddBrowserInjectionStartupFilter(agent, "Microsoft.AspNetCore.Routing.EndpointMiddleware"));
 
                     foreach (var filter in startupFilters)
                     {

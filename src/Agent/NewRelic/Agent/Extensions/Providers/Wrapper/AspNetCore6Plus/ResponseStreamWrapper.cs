@@ -3,6 +3,9 @@
 
 using System;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -74,7 +77,6 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             }
             else
             {
-                _agent.CurrentTransaction.LogFinest("ResponseStreamWrapper: Not an HTML response so not attempting to inject RUM.");
                 _baseStream?.Write(buffer, offset, count);
             }
 
@@ -91,7 +93,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             }
             else
             {
-                _agent.Logger.Log(Level.Finest, "ResponseStreamWrapper: Not an HTML response so not attempting to inject RUM.");
+                
                 if (_baseStream != null)
                     await _baseStream.WriteAsync(buffer, cancellationToken);
             }

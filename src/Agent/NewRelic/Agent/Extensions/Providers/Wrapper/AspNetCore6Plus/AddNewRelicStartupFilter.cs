@@ -24,13 +24,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             _agent = agent;
         }
 
-        // TODO: browser injection middleware has to be injected before any response compression middleware, but after the AspNetCore wrapper middleware. Somehow.
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
         {
             return builder =>
             {
                 builder.UseMiddleware<WrapPipelineMiddleware>(_agent);
-                builder.UseMiddleware<BrowserInjectionMiddleware>(_agent);
                 next(builder);
             };
         }
