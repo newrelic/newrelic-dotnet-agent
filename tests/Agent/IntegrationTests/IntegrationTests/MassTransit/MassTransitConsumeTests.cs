@@ -4,12 +4,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 using System;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using System.Collections;
 
 namespace NewRelic.Agent.IntegrationTests.MassTransit
 {
@@ -17,26 +15,25 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
-        private string _queueName;
 
         public MassTransitConsumeTestsBase(TFixture fixture, ITestOutputHelper output, bool useStartBus) : base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
-            _queueName = Guid.NewGuid().ToString();
 
             if (useStartBus)
             {
-                _fixture.AddCommand($"MassTransitExerciser StartBus {_queueName}");
+                _fixture.AddCommand($"MassTransitExerciser StartBus");
             }
             else
             {
                 _fixture.AddCommand("MassTransitExerciser StartHost");
             }
-            _fixture.AddCommand("MassTransitExerciser Publish one");
-            _fixture.AddCommand("MassTransitExerciser Publish two");
-            _fixture.AddCommand("MassTransitExerciser Publish three");
+            _fixture.AddCommand("MassTransitExerciser Publish publishedMessageOne");
+            _fixture.AddCommand("MassTransitExerciser Publish publishedMessageTwo");
+            _fixture.AddCommand("MassTransitExerciser Send sentMessageOne");
+            _fixture.AddCommand("MassTransitExerciser Send sentMessageTwo");
 
             if (useStartBus)
             {
@@ -72,11 +69,12 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Consume\/Named\/(.+)", callCount = 3, IsRegexName = true},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Produce\/Named\/(.+)", callCount = 3, IsRegexName = true},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Consume\/Named\/(.+)", callCount = 4, IsRegexName = true},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Produce\/Named\/(.+)", callCount = 4, IsRegexName = true},
 
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Consume\/Named\/(.+)", callCount = 3, IsRegexName = true, metricScope = @"OtherTransaction\/Message\/MassTransit\/Queue\/Named\/(.+)", IsRegexScope = true},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Produce\/Named\/(.+)", callCount = 3, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Consume\/Named\/(.+)", callCount = 4, IsRegexName = true, metricScope = @"OtherTransaction\/Message\/MassTransit\/Queue\/Named\/(.+)", IsRegexScope = true},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Produce\/Named\/(.+)", callCount = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Produce\/Named\/(.+)", callCount = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Send"},
             };
 
             Assertions.MetricsExist(expectedMetrics, metrics);

@@ -69,12 +69,12 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         }
 
         [LibraryMethod]
-        public async Task StartBus(string queueName)
+        public async Task StartBus()
         {
             _cts = new CancellationTokenSource();
             _busControl = Bus.Factory.CreateUsingInMemory(configure =>
             {
-                configure.ReceiveEndpoint(queueName, cfg =>
+                configure.ReceiveEndpoint(System.Guid.NewGuid().ToString(), cfg =>
                 {
                     cfg.Consumer<MessageConsumer>();
                 });
