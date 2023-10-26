@@ -65,16 +65,21 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
         public void Test()
         {
 
+            var massTransitMetricNameRegexBase = @"MessageBroker\/MassTransit\/Queue\/";
+            var queueNameRegex = @"Named\/(.{26})"; // The auto-generated in-memory queue names have 26 chars
+            var massTransitProduceMetricNameRegex = massTransitMetricNameRegexBase + @"Produce\/" + queueNameRegex;
+            var massTransitConsumeMetricNameRegex = massTransitMetricNameRegexBase + @"Consume\/" + queueNameRegex;
+
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Consume\/Named\/(.+)", callCount = 4, IsRegexName = true},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Produce\/Named\/(.+)", callCount = 4, IsRegexName = true},
+                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, callCount = 4, IsRegexName = true},
+                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, callCount = 4, IsRegexName = true},
 
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Consume\/Named\/(.+)", callCount = 4, IsRegexName = true, metricScope = @"OtherTransaction\/Message\/MassTransit\/Queue\/Named\/(.+)", IsRegexScope = true},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Produce\/Named\/(.+)", callCount = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
-                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Produce\/Named\/(.+)", callCount = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Send"},
+                new Assertions.ExpectedMetric { metricName = massTransitConsumeMetricNameRegex, callCount = 4, IsRegexName = true, metricScope = @"OtherTransaction\/Message\/MassTransit\/Queue\/" + queueNameRegex, IsRegexScope = true},
+                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, callCount = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
+                new Assertions.ExpectedMetric { metricName = massTransitProduceMetricNameRegex, callCount = 2, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Send"},
             };
 
             Assertions.MetricsExist(expectedMetrics, metrics);
