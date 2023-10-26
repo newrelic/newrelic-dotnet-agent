@@ -72,11 +72,11 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = $"MessageBroker/MassTransit/Queue/Consume/Named/{_queueName}", callCount = 1},
-                new Assertions.ExpectedMetric { metricName = $"MessageBroker/MassTransit/Queue/Produce/Named/{_queueName}", callCount = 1},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Consume\/Named\/(.+)", callCount = 3, IsRegexName = true},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Produce\/Named\/(.+)", callCount = 3, IsRegexName = true},
 
-                new Assertions.ExpectedMetric { metricName = $"MessageBroker/MassTransit/Queue/Consume/Named/{_queueName}", callCount = 1, metricScope = $"OtherTransaction/Message/MassTransit/Queue/Named/{_queueName}"},
-                new Assertions.ExpectedMetric { metricName = $"MessageBroker/MassTransit/Queue/Produce/Named/{_queueName}", callCount = 1, metricScope = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Consume\/Named\/(.+)", callCount = 3, IsRegexName = true, metricScope = @"OtherTransaction\/Message\/MassTransit\/Queue\/Named\/(.+)", IsRegexScope = true},
+                new Assertions.ExpectedMetric { metricName = @"MessageBroker\/MassTransit\/Queue\/Produce\/Named\/(.+)", callCount = 3, IsRegexName = true, metricScope = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransitExerciser/Publish"},
             };
 
             Assertions.MetricsExist(expectedMetrics, metrics);

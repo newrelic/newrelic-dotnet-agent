@@ -1,6 +1,10 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#if !NET481_OR_GREATER && !NET7_0_OR_GREATER
+#define MASSTRANSIT7
+#endif
+
 using MassTransit;
 using MultiFunctionApplicationHelpers.NetStandardLibraries.MassTransit;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
@@ -49,7 +53,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
                     });
 
                 });
-#if !NET7_0_OR_GREATER && !NET481_OR_GREATER
+#if MASSTRANSIT7
                 services.AddMassTransitHostedService();
 #endif
             });
