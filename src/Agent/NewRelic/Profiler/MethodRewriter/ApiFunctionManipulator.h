@@ -50,15 +50,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                     
                     _instructions->Append(_X("ldnull"));
                     BuildObjectArrayOfParameters();
-
-                    if (_isCoreClr)
-                    {
-                        _instructions->Append(_X("call   instance object [System.Private.CoreLib]System.Reflection.MethodBase::Invoke(object, object[])"));
-                    }
-                    else
-                    {
-                        _instructions->Append(_X("call   instance object [mscorlib]System.Reflection.MethodBase::Invoke(object, object[])"));
-                    }
+                    _instructions->Append(_X("call   instance object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodBase::Invoke(object, object[])"));
 
                     if (_methodSignature->_returnType->_kind == SignatureParser::ReturnType::Kind::VOID_RETURN_TYPE)
                     {
