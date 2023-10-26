@@ -11,12 +11,12 @@ using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.MassTransit
 {
-    public abstract class MassTransitConsumeTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class MassTransitTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
 
-        public MassTransitConsumeTestsBase(TFixture fixture, ITestOutputHelper output, bool useStartBus) : base(fixture)
+        public MassTransitTestsBase(TFixture fixture, ITestOutputHelper output, bool useStartBus) : base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
@@ -84,35 +84,71 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
             Assert.NotNull( transactionEvent );
         }
     }
+
+    // Tests using StartHost (hosted service configuration method)
     [NetFrameworkTest]
-    public class MassTransitConsumeTestsFW462 : MassTransitConsumeTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class MassTransitTests_StartHost_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public MassTransitConsumeTestsFW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
-            : base(fixture, output, true)
-        {
-        }
-    }
-    [NetFrameworkTest]
-    public class MassTransitConsumeTestsFWLatest : MassTransitConsumeTestsBase<ConsoleDynamicMethodFixtureFWLatest>
-    {
-        public MassTransitConsumeTestsFWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
-            : base(fixture, output, true)
-        {
-        }
-    }
-    [NetCoreTest]
-    public class MassTransitConsumeTestsCore60 : MassTransitConsumeTestsBase<ConsoleDynamicMethodFixtureCore60>
-    {
-        public MassTransitConsumeTestsCore60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
-            : base(fixture, output, true)
-        {
-        }
-    }
-    [NetCoreTest]
-    public class MassTransitConsumeTestsCoreLatest : MassTransitConsumeTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
-    {
-        public MassTransitConsumeTestsCoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MassTransitTests_StartHost_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output, false)
+        {
+        }
+    }
+    [NetFrameworkTest]
+    public class MassTransitTests_StartHost_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MassTransitTests_StartHost_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false)
+        {
+        }
+    }
+    [NetCoreTest]
+    public class MassTransitTests_StartHost_Core60 : MassTransitTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MassTransitTests_StartHost_Core60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, false)
+        {
+        }
+    }
+    [NetCoreTest]
+    public class MassTransitTests_StartHost_CoreLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MassTransitTests_StartHost_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, false)
+        {
+        }
+    }
+
+    // Tests using StartBus (bus factory configuration method)
+    [NetFrameworkTest]
+    public class MassTransitTests_StartBus_FW462 : MassTransitTestsBase<ConsoleDynamicMethodFixtureFW462>
+    {
+        public MassTransitTests_StartBus_FW462(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+            : base(fixture, output, true)
+        {
+        }
+    }
+    [NetFrameworkTest]
+    public class MassTransitTests_StartBus_FWLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    {
+        public MassTransitTests_StartBus_FWLatest(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true)
+        {
+        }
+    }
+    [NetCoreTest]
+    public class MassTransitTests_StartBus_Core60 : MassTransitTestsBase<ConsoleDynamicMethodFixtureCore60>
+    {
+        public MassTransitTests_StartBus_Core60(ConsoleDynamicMethodFixtureCore60 fixture, ITestOutputHelper output)
+            : base(fixture, output, true)
+        {
+        }
+    }
+    [NetCoreTest]
+    public class MassTransitTests_StartBus_CoreLatest : MassTransitTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    {
+        public MassTransitTests_StartBus_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+            : base(fixture, output, true)
         {
         }
     }
