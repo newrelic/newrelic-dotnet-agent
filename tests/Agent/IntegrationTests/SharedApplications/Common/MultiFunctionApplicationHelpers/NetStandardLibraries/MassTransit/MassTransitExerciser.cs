@@ -8,10 +8,9 @@ using NewRelic.Api.Agent;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-#if NET7_0_OR_GREATER
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-#endif
+using IHost = Microsoft.Extensions.Hosting.IHost;
 
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 {
@@ -19,17 +18,14 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
     class MassTransitExerciser
     {
         CancellationTokenSource _cts;
-#if NET7_0_OR_GREATER
         Task _hostedServiceTask;
         IHost _host;
         IBus _bus;
-#else
-        IBusControl _bus;
-#endif
+        IBusControl _busControl;
 
-// Note that StartHost/Stophost and StartBus/StopBus are two different
+// Note that StartHost/StopHost and StartBus/StopBus are two different
 // setup methods
-#if NET7_0_OR_GREATER
+
         [LibraryMethod]
         public void StartHost()
         {
@@ -46,11 +42,16 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
                 services.AddMassTransit(x =>
                 {
                     x.AddConsumer<MessageConsumer>();
+
                     x.UsingInMemory((context, cfg) =>
                     {
                         cfg.ConfigureEndpoints(context);
                     });
+
                 });
+#if !NET7_0_OR_GREATER && !NET481_OR_GREATER
+                services.AddMassTransitHostedService();
+#endif
             });
             return builder.Build();
         }
@@ -62,27 +63,31 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
             _hostedServiceTask.Wait();
             _hostedServiceTask.Dispose();
         }
-#else
+
         [LibraryMethod]
         public async Task StartBus(string queueName)
         {
             _cts = new CancellationTokenSource();
-            _bus = Bus.Factory.CreateUsingInMemory(configure =>
+            _busControl = Bus.Factory.CreateUsingInMemory(configure =>
             {
                 configure.ReceiveEndpoint(queueName, cfg =>
                 {
                     cfg.Consumer<MessageConsumer>();
                 });
             });
-            await _bus.StartAsync(_cts.Token);
+
+            // IBusControl is an IBus and this lets the Publish and Send methods not care which
+            // setup method was used
+            _bus = _busControl;
+
+            await _busControl.StartAsync(_cts.Token);
         }
 
         [LibraryMethod]
         public async Task StopBus()
         {
-            await _bus.StopAsync();
+            await _busControl.StopAsync();
         }
-#endif
 
         [LibraryMethod]
         [Transaction]
@@ -91,7 +96,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         {
             var order = new Message() { Text = message };
             await _bus.Publish(order);
-            ConsoleMFLogger.Info($"Sent message {message}");
+            ConsoleMFLogger.Info($"Published message {message}");
 
             // This sleep ensures that this transaction method is the one sampled for transaction trace data
             Thread.Sleep(1000);
@@ -110,7 +115,5 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
             // This sleep ensures that this transaction method is the one sampled for transaction trace data
             Thread.Sleep(1000);
         }
-
-
     }
 }
