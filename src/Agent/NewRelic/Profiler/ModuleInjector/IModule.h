@@ -23,21 +23,12 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
         virtual xstring_t GetModuleName() = 0;
         virtual void InjectPlatformInvoke(const xstring_t& methodName, const xstring_t& className, const xstring_t& moduleName, const ByteVector& signature) = 0;
         virtual void InjectStaticSecuritySafeMethod(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) = 0;
-        virtual void InjectMscorlibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) = 0;
-        virtual void InjectSystemPrivateCoreLibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) = 0;
+        virtual void InjectCoreLibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) = 0;
         virtual void InjectNRHelperType() = 0;
+        virtual bool InjectReferenceToCoreLib() = 0;
 
-        virtual bool GetHasRefMscorlib() = 0;
-        virtual bool GetHasRefSysRuntime() = 0;
-        virtual bool GetHasRefNetStandard() = 0;
-        virtual bool GetHasRefSystemPrivateCoreLib() = 0;
-
-        virtual void SetMscorlibAssemblyRef(mdAssembly assemblyRefToken) = 0;
-        virtual void SetSystemPrivateCoreLibAssemblyRef(mdAssembly assemblyRefToken) = 0;
-
-        virtual bool GetIsThisTheMscorlibAssembly() = 0;
-        virtual bool GetIsThisTheNetStandardAssembly() = 0;
-        virtual bool GetIsThisTheSystemPrivateCoreLibAssembly() = 0;
+        virtual bool NeedsReferenceToCoreLib() = 0;
+        virtual bool GetIsThisTheCoreLibAssembly() = 0;
 
         virtual CComPtr<IMetaDataAssemblyEmit> GetMetaDataAssemblyEmit() = 0;
 

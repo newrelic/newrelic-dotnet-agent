@@ -69,7 +69,6 @@ namespace NewRelic { namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
-        std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
 
     public:
         CorProfilerCallbackImpl()
@@ -287,14 +286,7 @@ namespace NewRelic { namespace Profiler {
 
             try
             {
-                if (_isCoreClr)
-                {
-                    _moduleInjector->InjectIntoModuleCore(*module);
-                }
-                else
-                {
-                    _moduleInjector->InjectIntoModule(*module);
-                }
+                ModuleInjector::ModuleInjector::InjectIntoModule(*module, _isCoreClr);
             }
             catch (...)
             {
@@ -304,18 +296,6 @@ namespace NewRelic { namespace Profiler {
 
             LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
             return S_OK;
-        }
-
-
-        virtual DWORD OverrideEventMask(DWORD eventMask)
-        {
-#ifndef PAL_STDCPP_COMPAT
-            if (!_isCoreClr)
-            {
-                _moduleInjector.reset(new ModuleInjector::ModuleInjector());
-            }
-#endif
-            return eventMask;
         }
 
         virtual void ConfigureEventMask(IUnknown* pICorProfilerInfoUnk)
@@ -798,8 +778,7 @@ namespace NewRelic { namespace Profiler {
         MethodRewriter::CustomInstrumentationBuilder _customInstrumentationBuilder;
         MethodRewriter::CustomInstrumentation _customInstrumentation;
 
-        DWORD _eventMask = OverrideEventMask(
-            COR_PRF_MONITOR_JIT_COMPILATION | COR_PRF_MONITOR_MODULE_LOADS | COR_PRF_USE_PROFILE_IMAGES | COR_PRF_MONITOR_THREADS | COR_PRF_ENABLE_STACK_SNAPSHOT | COR_PRF_ENABLE_REJIT | (DWORD)COR_PRF_DISABLE_ALL_NGEN_IMAGES);
+        DWORD _eventMask = COR_PRF_MONITOR_JIT_COMPILATION | COR_PRF_MONITOR_MODULE_LOADS | COR_PRF_USE_PROFILE_IMAGES | COR_PRF_MONITOR_THREADS | COR_PRF_ENABLE_STACK_SNAPSHOT | COR_PRF_ENABLE_REJIT | (DWORD)COR_PRF_DISABLE_ALL_NGEN_IMAGES;
 
         xstring_t _productName = _X("");
         xstring_t _agentCoreDllPath = _X("");

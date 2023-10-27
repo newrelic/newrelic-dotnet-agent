@@ -10,6 +10,9 @@
 #include "CorTokenizer.h"
 #include "Win32Helpers.h"
 
+#define SYSTEM_PRIVATE_CORELIB_ASSEMBLYNAME _X("System.Private.CoreLib")
+#define MSCORLIB_ASSEMBLYNAME _X("mscorlib")
+
 namespace NewRelic { namespace Profiler
 {
     class Module : public ModuleInjector::IModule
@@ -56,17 +59,12 @@ namespace NewRelic { namespace Profiler
 
         virtual xstring_t GetModuleName() override { return _moduleName; }
 
-        virtual bool GetHasRefMscorlib() override { return _hasRefMscorlib; }
-        virtual bool GetHasRefSysRuntime() override { return _hasRefSysRuntime; }
-        virtual bool GetHasRefNetStandard() override { return _hasRefNetStandard; }
-        virtual bool GetHasRefSystemPrivateCoreLib() override { return _hasRefSystemPrivateCoreLib; }
+        virtual bool NeedsReferenceToCoreLib() override
+        {
+            return !(_isMscorlib || _isNetStandard || _isSystemPrivateCoreLib || _hasCoreLibReference);
+        }
 
-        virtual void SetMscorlibAssemblyRef(mdAssembly assemblyRefToken) override { _mscorlibAssemblyRefToken = assemblyRefToken; }
-        virtual void SetSystemPrivateCoreLibAssemblyRef(mdAssembly assemblyRefToken) override { _systemPrivateCoreLibAssemblyRefToken = assemblyRefToken; }
-
-        virtual bool GetIsThisTheMscorlibAssembly() override { return _isMscorlib; }
-        virtual bool GetIsThisTheNetStandardAssembly() override { return _isNetStandard; }
-        virtual bool GetIsThisTheSystemPrivateCoreLibAssembly() override { return _isSystemPrivateCoreLib; }
+        virtual bool GetIsThisTheCoreLibAssembly() override { return _isCoreLibAssembly; }
 
         virtual CComPtr<IMetaDataAssemblyEmit> GetMetaDataAssemblyEmit() override{ return _metaDataAssemblyEmit; }
 
@@ -113,16 +111,51 @@ namespace NewRelic { namespace Profiler
             ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_methodCache"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
         }
 
-        virtual void InjectMscorlibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override
+        virtual void InjectCoreLibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override
         {
-            auto typeReferenceOrDefinitionToken = GetOrCreateTypeReferenceToken(_mscorlibAssemblyRefToken, className);
+            auto typeReferenceOrDefinitionToken = GetOrCreateTypeReferenceToken(_coreLibAssemblyRefToken, className);
             GetOrCreateMemberReferenceToken(typeReferenceOrDefinitionToken, methodName, signature);
         }
 
-        virtual void InjectSystemPrivateCoreLibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override
+        virtual bool InjectReferenceToCoreLib()
         {
-            auto typeReferenceOrDefinitionToken = GetOrCreateTypeReferenceToken(_systemPrivateCoreLibAssemblyRefToken, className);
-            GetOrCreateMemberReferenceToken(typeReferenceOrDefinitionToken, methodName, signature);
+            const auto coreLibName = _isCoreClr ? SYSTEM_PRIVATE_CORELIB_ASSEMBLYNAME : MSCORLIB_ASSEMBLYNAME;
+            constexpr const BYTE pubTokenCoreClr[] = { 0x7C, 0xEC, 0x85, 0xD7, 0xBE, 0xA7, 0x79, 0x8E };
+            constexpr const BYTE pubTokenNetFramework[] = { 0xB7, 0x7A, 0x5C, 0x56, 0x19, 0x34, 0xE0, 0x89 };
+
+            try
+            {
+                LogDebug(L"Attempting to Inject reference to ", coreLibName, L" into Module  ", GetModuleName());
+
+                // if the assembly wasn't in the existing references try to define a new one
+                ASSEMBLYMETADATA amd;
+                ZeroMemory(&amd, sizeof(amd));
+                amd.usMajorVersion = _isCoreClr ? 6 : 4;
+                amd.usMinorVersion = 0;
+                amd.usBuildNumber = 0;
+                amd.usRevisionNumber = 0;
+
+                auto pubToken = _isCoreClr ? pubTokenCoreClr : pubTokenNetFramework;
+
+                auto injectResult = _metaDataAssemblyEmit->DefineAssemblyRef(pubToken, sizeof(pubToken), coreLibName, &amd, NULL, 0, 0, &_coreLibAssemblyRefToken);
+                if (injectResult == S_OK)
+                {
+                    LogDebug(L"Attempting to Inject reference to ", coreLibName, L" into Module  ", GetModuleName(), L" - Success: ", _coreLibAssemblyRefToken);
+
+                    return true;
+                }
+                else
+                {
+                    LogDebug(L"Attempting to Inject reference to ", coreLibName, L" into Module  ", GetModuleName(), L" - FAIL: ", injectResult);
+
+                    return false;
+                }
+            }
+            catch (NewRelic::Profiler::Win32Exception& ex)
+            {
+                LogError(L"Attempting to Inject reference to ", coreLibName, L" into Module  ", GetModuleName(), L" - ERROR: ", ex._message);
+                return false;
+            }
         }
 
         virtual sicily::codegen::ITokenizerPtr GetTokenizer() override
@@ -139,17 +172,14 @@ namespace NewRelic { namespace Profiler
         sicily::codegen::ITokenizerPtr _tokenizer;
         ModuleID _moduleId;
         xstring_t _moduleName;
-        mdAssemblyRef _mscorlibAssemblyRefToken;
-        mdAssemblyRef _systemPrivateCoreLibAssemblyRefToken;
+        mdAssemblyRef _coreLibAssemblyRefToken;
         const bool _isCoreClr;
-        bool _hasRefMscorlib;
-        bool _hasRefSysRuntime;
-        bool _hasRefNetStandard;
-        bool _hasRefSystemPrivateCoreLib;
+        bool _hasCoreLibReference;
 
         bool _isMscorlib;
         bool _isNetStandard;
         bool _isSystemPrivateCoreLib;
+        bool _isCoreLibAssembly;
 
         mdMethodDef GetSecuritySafeCriticalConstructorToken()
         {
@@ -235,10 +265,9 @@ namespace NewRelic { namespace Profiler
 
         void IdentifyFrameworkAssemblyReferences()
         {
-            _hasRefMscorlib = false;
-            _hasRefNetStandard = false;
-            _hasRefSysRuntime = false;
-            _hasRefSystemPrivateCoreLib = false;
+            _hasCoreLibReference = false;
+
+            const auto assemblyNameToFind = _isCoreClr ? SYSTEM_PRIVATE_CORELIB_ASSEMBLYNAME : MSCORLIB_ASSEMBLYNAME;
 
             HCORENUM enumerator = nullptr;
             mdAssemblyRef assemblyToken;
@@ -248,23 +277,10 @@ namespace NewRelic { namespace Profiler
             {
                 auto foundAssemblyName = GetAssemblyName(assemblyToken);
 
-                if (Strings::EndsWith(foundAssemblyName, _X("mscorlib")))
+                if (Strings::EndsWith(foundAssemblyName, assemblyNameToFind))
                 {
-                    _hasRefMscorlib = true;
-                    _mscorlibAssemblyRefToken = assemblyToken;
-                }
-                else if (Strings::EndsWith(foundAssemblyName, _X("netstandard")))
-                {
-                    _hasRefNetStandard = true;
-                }
-                else if (Strings::EndsWith(foundAssemblyName, _X("System.Runtime")))
-                {
-                    _hasRefSysRuntime = true;
-                }
-                else if (Strings::EndsWith(foundAssemblyName, _X("System.Private.CoreLib")))
-                {
-                    _hasRefSystemPrivateCoreLib = true;
-                    _systemPrivateCoreLibAssemblyRefToken = assemblyToken;
+                    _hasCoreLibReference = true;
+                    _coreLibAssemblyRefToken = assemblyToken;
                 }
             }
         }
@@ -274,6 +290,7 @@ namespace NewRelic { namespace Profiler
             _isMscorlib = Strings::EndsWith(GetModuleName(), _X("mscorlib.dll"));
             _isNetStandard = Strings::EndsWith(GetModuleName(), _X("netstandard.dll"));
             _isSystemPrivateCoreLib = Strings::EndsWith(GetModuleName(), _X("System.Private.CoreLib.dll"));
+            _isCoreLibAssembly = _isCoreClr ? _isSystemPrivateCoreLib : _isMscorlib;
         }
 
         mdAssemblyRef GetAssemblyReference(const xstring_t& assemblyName)
