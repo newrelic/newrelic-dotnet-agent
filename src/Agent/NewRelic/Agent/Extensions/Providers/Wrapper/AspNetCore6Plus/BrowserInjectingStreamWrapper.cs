@@ -66,16 +66,16 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (_context.Items[InjectingRUM] == null) // pass through without modification if we're already in the middle of injecting
+            if (!_context.Items.ContainsKey(InjectingRUM))  // pass through without modification if we're already in the middle of injecting
             {
                 if (IsHtmlResponse())
                 {
                     // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
-                    _context.Items[InjectingRUM] = true;
+                    _context.Items.Add(InjectingRUM, null);
                     var curBuf = buffer.AsMemory(offset, count).ToArray();
                     _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf, _baseStream)
                         .GetAwaiter().GetResult();
-                    _context.Items[InjectingRUM] = null;
+                    _context.Items.Remove(InjectingRUM);
 
                     return;
                 }
@@ -88,14 +88,14 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            if (_context.Items[InjectingRUM] == null)  // pass through without modification if we're already in the middle of injecting
+            if (!_context.Items.ContainsKey(InjectingRUM))  // pass through without modification if we're already in the middle of injecting
             {
                 if (IsHtmlResponse())
                 {
                     // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
-                    _context.Items[InjectingRUM] = true;
+                    _context.Items.Add(InjectingRUM, null);
                     await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
-                    _context.Items[InjectingRUM] = null;
+                    _context.Items.Remove(InjectingRUM);
 
                     return;
                 }
