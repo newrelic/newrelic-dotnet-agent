@@ -10,6 +10,11 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ConfigureWebHost" />
       </match>
     </tracerFactory>
+    <tracerFactory name="BuildCommonServicesWrapper6Plus">
+      <match assemblyName="Microsoft.AspNetCore.Hosting" className="Microsoft.AspNetCore.Hosting.WebHostBuilder"  minVersion="6.0.0.0">
+        <exactMethodMatcher methodName="BuildCommonServices" />
+      </match>
+    </tracerFactory>
     <tracerFactory name="InvokeActionMethodAsyncWrapper6Plus">
       <match assemblyName="Microsoft.AspNetCore.Mvc.Core" className="Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker" minVersion="6.0.0.0">
         <exactMethodMatcher methodName="InvokeActionMethodAsync" />
