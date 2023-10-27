@@ -29,6 +29,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             return builder =>
             {
                 builder.UseMiddleware<WrapPipelineMiddleware>(_agent);
+                builder.UseMiddleware<BrowserInjectionMiddleware>(_agent);
                 next(builder);
             };
         }

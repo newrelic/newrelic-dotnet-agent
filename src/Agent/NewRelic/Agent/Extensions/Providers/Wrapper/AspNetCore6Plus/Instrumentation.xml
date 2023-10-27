@@ -15,5 +15,10 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="InvokeActionMethodAsync" />
       </match>
     </tracerFactory>
+    <tracerFactory name="ResponseCompressionBodyOnWriteWrapper">
+      <match assemblyName="Microsoft.AspNetCore.ResponseCompression" className="Microsoft.AspNetCore.ResponseCompression.ResponseCompressionBody" minVersion="6.0.0.0">
+        <exactMethodMatcher methodName="OnWrite" />
+      </match>
+    </tracerFactory>
   </instrumentation>
 </extension>

@@ -11,9 +11,9 @@ using NewRelic.Agent.Api;
 namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 {
     /// <summary>
-    /// Wrapper for the response stream, handles injecting the browser script if appropriate
+    /// Stream wrapper that handles injecting the browser script as appropriate
     /// </summary>
-    public class ResponseStreamWrapper : Stream
+    public class BrowserInjectingStreamWrapper : Stream
     {
         private readonly IAgent _agent;
         private Stream _baseStream;
@@ -21,7 +21,9 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         private bool _isContentLengthSet;
 
 
-        public ResponseStreamWrapper(IAgent agent, Stream baseStream, HttpContext context)
+        private const string InjectingRUM = "InjectingRUM";
+
+        public BrowserInjectingStreamWrapper(IAgent agent, Stream baseStream, HttpContext context)
         {
             _agent = agent;
             _baseStream = baseStream;
@@ -64,35 +66,45 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (IsHtmlResponse())
+            if (_context.Items[InjectingRUM] == null) // pass through without modification if we're already in the middle of injecting
             {
-                var curBuf = buffer.AsMemory(offset, count).ToArray();
-                _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf,
-                        _baseStream)
-                    .GetAwaiter().GetResult();
-            }
-            else
-            {
-                _baseStream?.Write(buffer, offset, count);
+                if (IsHtmlResponse())
+                {
+                    // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
+                    _context.Items[InjectingRUM] = true;
+                    var curBuf = buffer.AsMemory(offset, count).ToArray();
+                    _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value,
+                            curBuf,
+                            _baseStream)
+                        .GetAwaiter().GetResult();
+                    _context.Items[InjectingRUM] = null;
+
+                    return;
+                }
             }
 
+            _baseStream?.Write(buffer, offset, count);
         }
 
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) => WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            if (IsHtmlResponse())
+            if (_context.Items[InjectingRUM] == null)  // pass through without modification if we're already in the middle of injecting
             {
-                await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value,
-                    buffer.ToArray(), _baseStream);
+                if (IsHtmlResponse())
+                {
+                    // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
+                    _context.Items[InjectingRUM] = true;
+                    await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
+                    _context.Items[InjectingRUM] = null;
+
+                    return;
+                }
             }
-            else
-            {
-                
-                if (_baseStream != null)
-                    await _baseStream.WriteAsync(buffer, cancellationToken);
-            }
+
+            if (_baseStream != null)
+                await _baseStream.WriteAsync(buffer, cancellationToken);
         }
 
         public override async ValueTask DisposeAsync()
@@ -110,6 +122,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         public override long Position { get; set; }
 
         private bool? _isHtmlResponse = null;
+
         private bool IsHtmlResponse(bool forceReCheck = false)
         {
             if (!forceReCheck && _isHtmlResponse != null)
@@ -123,7 +136,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
             // Requirements for script injection:
             // * text/html response
-            // * UTF-8 formatted (explicit or no charset)
+            // * UTF-8 formatted (either explicitly or no charset defined)
 
             _isHtmlResponse =
                 //_context.Response.StatusCode is 200 or 500 &&
