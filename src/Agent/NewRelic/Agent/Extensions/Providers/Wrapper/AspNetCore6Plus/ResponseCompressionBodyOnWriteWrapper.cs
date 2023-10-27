@@ -31,14 +31,14 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                     "_context");
 
         }
+        public bool IsTransactionRequired => false;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
         {
             return new CanWrapResponse("ResponseCompressionBodyOnWriteWrapper".Equals(instrumentedMethodInfo.RequestedWrapperName));
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent,
-            ITransaction transaction)
+        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             return Delegates.GetDelegateFor(onSuccess: () =>
             {
@@ -55,7 +55,5 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 }
             });
         }
-
-        public bool IsTransactionRequired => false;
     }
 }

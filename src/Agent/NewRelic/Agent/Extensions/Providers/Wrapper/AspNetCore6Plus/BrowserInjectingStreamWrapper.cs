@@ -73,9 +73,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                     // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
                     _context.Items[InjectingRUM] = true;
                     var curBuf = buffer.AsMemory(offset, count).ToArray();
-                    _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value,
-                            curBuf,
-                            _baseStream)
+                    _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf, _baseStream)
                         .GetAwaiter().GetResult();
                     _context.Items[InjectingRUM] = null;
 
