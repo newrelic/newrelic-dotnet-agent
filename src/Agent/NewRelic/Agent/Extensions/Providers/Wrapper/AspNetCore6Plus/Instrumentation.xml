@@ -5,14 +5,14 @@ SPDX-License-Identifier: Apache-2.0
 -->
 <extension xmlns="urn:newrelic-extension">
   <instrumentation>
-    <tracerFactory name="GenericHostWebHostBuilderExtensionsWrapper6Plus">
-      <match assemblyName="Microsoft.AspNetCore.Hosting" className="Microsoft.Extensions.Hosting.GenericHostWebHostBuilderExtensions" minVersion="6.0.0.0">
-        <exactMethodMatcher methodName="ConfigureWebHost" />
-      </match>
-    </tracerFactory>
     <tracerFactory name="BuildCommonServicesWrapper6Plus">
       <match assemblyName="Microsoft.AspNetCore.Hosting" className="Microsoft.AspNetCore.Hosting.WebHostBuilder"  minVersion="6.0.0.0">
         <exactMethodMatcher methodName="BuildCommonServices" />
+      </match>
+    </tracerFactory>
+    <tracerFactory name="GenericHostWebHostBuilderExtensionsWrapper6Plus">
+      <match assemblyName="Microsoft.AspNetCore.Hosting" className="Microsoft.Extensions.Hosting.GenericHostWebHostBuilderExtensions" minVersion="6.0.0.0">
+        <exactMethodMatcher methodName="ConfigureWebHost" />
       </match>
     </tracerFactory>
     <tracerFactory name="InvokeActionMethodAsyncWrapper6Plus">

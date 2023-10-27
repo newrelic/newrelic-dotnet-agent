@@ -37,8 +37,8 @@ namespace NewRelic.Agent.Core.Utilities
                 { "GenericHostWebHostBuilderExtensionsWrapper",                                                     Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
                 { "NewRelic.Providers.Wrapper.AspNetCore.InvokeActionMethodAsync",                                  Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
 
-                { "GenericHostWebHostBuilderExtensionsWrapper6Plus",                                                Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
                 { "BuildCommonServicesWrapper6Plus",                                                                Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
+                { "GenericHostWebHostBuilderExtensionsWrapper6Plus",                                                Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
                 { "InvokeActionMethodAsyncWrapper6Plus",                                                            Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
                 { "ResponseCompressionBodyOnWriteWrapper",                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
 
