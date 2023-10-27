@@ -20,9 +20,6 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         private HttpContext _context;
         private bool _isContentLengthSet;
 
-
-        private const string InjectingRUM = "InjectingRUM";
-
         public BrowserInjectingStreamWrapper(IAgent agent, Stream baseStream, HttpContext context)
         {
             _agent = agent;
@@ -66,16 +63,16 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (!_context.Items.ContainsKey(InjectingRUM))  // pass through without modification if we're already in the middle of injecting
+            if (!CurrentlyInjecting())  // pass through without modification if we're already in the middle of injecting
             {
                 if (IsHtmlResponse())
                 {
                     // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
-                    _context.Items.Add(InjectingRUM, null);
+                    StartInjecting();
                     var curBuf = buffer.AsMemory(offset, count).ToArray();
                     _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf, _baseStream)
                         .GetAwaiter().GetResult();
-                    _context.Items.Remove(InjectingRUM);
+                    FinishInjecting();
 
                     return;
                 }
@@ -88,14 +85,14 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            if (!_context.Items.ContainsKey(InjectingRUM))  // pass through without modification if we're already in the middle of injecting
+            if (!CurrentlyInjecting())  // pass through without modification if we're already in the middle of injecting
             {
                 if (IsHtmlResponse())
                 {
                     // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
-                    _context.Items.Add(InjectingRUM, null);
+                    StartInjecting();
                     await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
-                    _context.Items.Remove(InjectingRUM);
+                    FinishInjecting();
 
                     return;
                 }
@@ -103,6 +100,23 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
             if (_baseStream != null)
                 await _baseStream.WriteAsync(buffer, cancellationToken);
+        }
+
+        private const string InjectingRUM = "InjectingRUM";
+
+        private void FinishInjecting()
+        {
+            _context.Items.Remove(InjectingRUM);
+        }
+
+        private void StartInjecting()
+        {
+            _context.Items.Add(InjectingRUM, null);
+        }
+
+        private bool CurrentlyInjecting()
+        {
+            return _context.Items.ContainsKey(InjectingRUM);
         }
 
         public override async ValueTask DisposeAsync()
