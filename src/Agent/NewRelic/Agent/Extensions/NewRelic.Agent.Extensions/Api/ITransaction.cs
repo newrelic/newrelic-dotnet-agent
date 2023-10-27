@@ -92,6 +92,18 @@ namespace NewRelic.Agent.Api
         ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName = null);
 
         /// <summary>
+        /// Creates a segment for serializing a key or value in a message brokering system..
+        /// </summary>
+        /// <param name="methodCall">The method call that is responsible for starting this segment.</param>
+        /// <param name="destinationType"></param>
+        /// <param name="operation"></param>
+        /// <param name="brokerVendorName">Must not be null.</param>
+        /// <param name="destinationName">Can be null.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <returns>an opaque object that will be needed when you want to end the segment.</returns>
+        ISegment StartMessageBrokerSerializationSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string kind);
+
+        /// <summary>
         /// Starts a transaction segment. Does nothing if there is no current transaction.
         /// </summary>
         /// <param name="methodCall">The method call that is responsible for starting this segment.</param>
@@ -192,6 +204,17 @@ namespace NewRelic.Agent.Api
         /// <param name="priority">The priority of the name being set. Higher priority names override lower priority names.</param>
         /// <exception cref="ArgumentNullException"></exception>
         void SetMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, TransactionNamePriority priority = TransactionNamePriority.Uri);
+
+        /// <summary>
+        /// Sets the name of the current transaction to a name in the OtherTransaction namespace which is derived from some message broker details,
+        /// conforming to the naming requirements of the Kafka spec . Does nothing if there is no current transaction.
+        /// </summary>
+        /// <param name="destinationType"></param>
+        /// <param name="brokerVendorName">The name of the message broker vendor. Must not be null.</param>
+        /// <param name="destination">The destination queue of the message being handled. Can be null.</param>
+        /// <param name="priority">The priority of the name being set. Higher priority names override lower priority names.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        void SetKafkaMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, TransactionNamePriority priority = TransactionNamePriority.Uri);
 
         /// <summary>
         /// Sets the name of the current transaction to a custom name in the OtherTransaction namespace.  Does nothing if there is no current transaction.

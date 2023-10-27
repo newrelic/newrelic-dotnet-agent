@@ -49,16 +49,19 @@ namespace NewRelic.Agent.Core.Utilization
                     {
                         var statusCode = response.StatusCode.ToString() ?? string.Empty;
                         var statusDescription = response.StatusDescription ?? string.Empty;
-                        Log.Debug(ex, "CallVendorApi ({0}) failed with WebException with status: {1}; message: {2}", vendorName, statusCode, statusDescription);
+                        // intentionally not passing the exception parameter here
+                        Log.Debug("CallVendorApi ({0}) failed with WebException with status: {1}; message: {2}", vendorName, statusCode, statusDescription);
                     }
                     else
                     {
-                        Log.Debug(ex, "CallVendorApi ({0}) failed", vendorName);
+                        // intentionally not passing the exception parameter here
+                        Log.Debug($"CallVendorApi ({{0}}) failed: {ex.Message}", vendorName);
                     }
                 }
                 else
                 {
-                    Log.Debug(ex, "CallVendorApi ({0}) failed", vendorName);
+                    // intentionally not passing the exception parameter here
+                    Log.Debug($"CallVendorApi ({{0}}) failed: {ex.Message}", vendorName);
                 }
                 return null;
             }

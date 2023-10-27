@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 },
                 new Dictionary<string, object>
                 {
-                    { "http.method","GET" }
+                    { "http.request.method","GET" }
                 }
             };
 
@@ -113,7 +113,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     },
                     new Dictionary<string, object>
                     {
-                        { "http.method","GET" }
+                        { "http.request.method","GET" }
                     }
                 },
                 new[] {
@@ -130,7 +130,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     },
                     new Dictionary<string, object>
                     {
-                        { "http.method","POST" }
+                        { "http.request.method","POST" }
                     }
                 }
             };

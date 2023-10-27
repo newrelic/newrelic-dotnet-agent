@@ -118,6 +118,11 @@ namespace NewRelic.Agent.Core
             return CreateTransaction(TransactionName.ForBrokerTransaction(destinationType, brokerVendorName, destination), true, wrapperOnCreate ?? NoOpWrapperOnCreate);
         }
 
+        public ITransaction CreateKafkaTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination, Action wrapperOnCreate)
+        {
+            return CreateTransaction(TransactionName.ForKafkaBrokerTransaction(destinationType, brokerVendorName, destination), true, wrapperOnCreate ?? NoOpWrapperOnCreate);
+        }
+
         public ITransaction CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool doNotTrackAsUnitOfWork, Action wrapperOnCreate)
         {
             if (transactionDisplayName == null)
@@ -401,9 +406,19 @@ namespace NewRelic.Agent.Core
             set { _stackExchangeRedisCache = value; }
         }
 
-        public void RecordSupportabilityMetric(string metricName, int count)
+        public void RecordSupportabilityMetric(string metricName, long count = 1)
         {
             _agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
+        }
+
+        public void RecordCountMetric(string metricName, long count = 1)
+        {
+            _agentHealthReporter.ReportCountMetric(metricName, count);
+        }
+
+        public void RecordByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null)
+        {
+            _agentHealthReporter.ReportByteMetric(metricName, totalBytes, exclusiveBytes);
         }
 
         public void RecordLogMessage(string frameworkName, object logEvent, Func<object, DateTime> getTimestamp, Func<object, object> getLevel, Func<object, string> getLogMessage, Func<object, Exception> getLogException, Func<object, Dictionary<string, object>> getContextData, string spanId, string traceId)
@@ -439,14 +454,15 @@ namespace NewRelic.Agent.Core
 
                 var logMessage = getLogMessage(logEvent);
                 var logException = getLogException(logEvent);
+                var logContextData = _configurationService.Configuration.ContextDataEnabled ? getContextData(logEvent) : null;
 
-                // exit quickly if the message and exception are missing
-                if (string.IsNullOrWhiteSpace(logMessage) && logException is null)
+                // exit quickly if the message, exception and context data are missing
+                if (string.IsNullOrWhiteSpace(logMessage) && logException is null && (logContextData is null || logContextData.Count == 0))
                 {
+                    _agentHealthReporter.ReportLoggingEventsEmpty();
                     return;
                 }
 
-                var logContextData = _configurationService.Configuration.ContextDataEnabled ? getContextData(logEvent) : null;
                 var timestamp = getTimestamp(logEvent).ToUnixTimeMilliseconds();
 
                 LogEventWireModel logEventWireModel;

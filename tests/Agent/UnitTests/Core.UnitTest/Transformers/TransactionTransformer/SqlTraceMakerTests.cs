@@ -152,7 +152,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private Segment BuildSegment(DatastoreVendor vendor, string model, string commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null, string host = null, string portPathOrId = null, string databaseName = null)
         {
             var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, null), commandText,
-                new ConnectionInfo(host, portPathOrId, databaseName));
+                new ConnectionInfo("none", host, portPathOrId, databaseName));
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 
             var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);

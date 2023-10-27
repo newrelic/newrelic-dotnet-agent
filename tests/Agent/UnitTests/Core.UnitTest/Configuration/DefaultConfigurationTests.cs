@@ -694,6 +694,36 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.HighSecurityModeEnabled;
         }
 
+        [TestCase(true, null, ExpectedResult = true)]
+        [TestCase(true, "true", ExpectedResult = true)]
+        [TestCase(true, "1", ExpectedResult = true)]
+        [TestCase(true, "false", ExpectedResult = false)]
+        [TestCase(true, "0", ExpectedResult = false)]
+        [TestCase(true, "invalid", ExpectedResult = true)]
+        [TestCase(false, null, ExpectedResult = false)]
+        [TestCase(false, "true", ExpectedResult = true)]
+        [TestCase(false, "1", ExpectedResult = true)]
+        [TestCase(false, "false", ExpectedResult = false)]
+        [TestCase(false, "0", ExpectedResult = false)]
+        [TestCase(false, "invalid", ExpectedResult = false)]
+        [TestCase(null, "true", ExpectedResult = true)]
+        [TestCase(null, "1", ExpectedResult = true)]
+        [TestCase(null, "false", ExpectedResult = false)]
+        [TestCase(null, "0", ExpectedResult = false)]
+        [TestCase(null, "invalid", ExpectedResult = false)]
+        [TestCase(null, null, ExpectedResult = false)]
+        public bool HighSecuritySetFromEnvironmentOverridesLocal(bool? localConfigValue, string envConfigValue)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_HIGH_SECURITY")).Returns(envConfigValue);
+
+            if (localConfigValue.HasValue)
+            {
+                _localConfig.highSecurity.enabled = localConfigValue.Value;
+            }
+
+            return _defaultConfig.HighSecurityModeEnabled;
+        }
+
         [TestCase(true, true, ExpectedResult = false)]
         [TestCase(true, false, ExpectedResult = false)]
         [TestCase(false, false, ExpectedResult = false)]

@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core.Segments
 {
     public class DatastoreSegmentData : AbstractSegmentData, IDatastoreSegmentData
     {
-        private readonly static ConnectionInfo EmptyConnectionInfo = new ConnectionInfo(null, null, null);
+        private readonly static ConnectionInfo EmptyConnectionInfo = new ConnectionInfo(null, null, null, null);
 
         public override SpanCategory SpanCategory => SpanCategory.Datastore;
 
@@ -31,7 +31,10 @@ namespace NewRelic.Agent.Core.Segments
         public DatastoreVendor DatastoreVendorName => _parsedSqlStatement.DatastoreVendor;
         public string Model => _parsedSqlStatement.Model;
         public string CommandText { get; set; }
+        public string Vendor => _connectionInfo.Vendor;
         public string Host => _connectionInfo.Host;
+        public int? Port => _connectionInfo.Port;
+        public string PathOrId => _connectionInfo.PathOrId;
         public string PortPathOrId => _connectionInfo.PortPathOrId;
         public string DatabaseName => _connectionInfo.DatabaseName;
         public Func<object> GetExplainPlanResources { get; set; }
@@ -219,10 +222,18 @@ namespace NewRelic.Agent.Core.Segments
                 AttribDefs.DbCollection.TrySetValue(attribVals, _parsedSqlStatement.Model);
             }
 
+            AttribDefs.DbSystem.TrySetValue(attribVals, Vendor);
             AttribDefs.DbInstance.TrySetValue(attribVals, DatabaseName);
+            AttribDefs.DbOperation.TrySetValue(attribVals, Operation);
             AttribDefs.PeerAddress.TrySetValue(attribVals, $"{Host}:{PortPathOrId}");
-            AttribDefs.PeerHostname.TrySetValue(attribVals, Host);
             AttribDefs.SpanKind.TrySetDefault(attribVals);
+            // peer.hostname and server.address must match
+            AttribDefs.PeerHostname.TrySetValue(attribVals, Host);
+            AttribDefs.DbServerAddress.TrySetValue(attribVals, Host);
+            if (Port != null)
+            {
+                AttribDefs.DbServerPort.TrySetValue(attribVals, Port.Value);
+            }
         }
 
         public void SetConnectionInfo(ConnectionInfo connInfo)

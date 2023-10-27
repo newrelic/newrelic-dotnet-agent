@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace NewRelic.Parsing.ConnectionString
             var portPathOrId = ParsePortPathOrId();
             var databaseName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _databaseNameKeys)?.Value;
 
-            return new ConnectionInfo(host, portPathOrId, databaseName);
+            return new ConnectionInfo(DatastoreVendor.IBMDB2.ToKnownName(), host, portPathOrId, databaseName);
         }
 
         private string ParseHost()

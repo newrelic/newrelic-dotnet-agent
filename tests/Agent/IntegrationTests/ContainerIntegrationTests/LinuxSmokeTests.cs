@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -21,14 +21,15 @@ public abstract class LinuxSmokeTest<T> : NewRelicIntegrationTest<T> where T : L
         _fixture.Actions(setupConfiguration: () =>
             {
                 var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                configModifier.ConfigureFasterMetricsHarvestCycle(5);
+                configModifier.ConfigureFasterMetricsHarvestCycle(10);
                 configModifier.LogToConsole();
             },
             exerciseApplication: () =>
             {
                 _fixture.ExerciseApplication();
 
-                _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromSeconds(10));
+                _fixture.Delay(11); // wait long enough to ensure a metric harvest occurs after we exercise the app
+                _fixture.AgentLog.WaitForLogLine(AgentLogBase.HarvestFinishedLogLineRegex, TimeSpan.FromSeconds(11));
 
                 // shut down the container and wait for the agent log to see it
                 _fixture.ShutdownRemoteApplication();
