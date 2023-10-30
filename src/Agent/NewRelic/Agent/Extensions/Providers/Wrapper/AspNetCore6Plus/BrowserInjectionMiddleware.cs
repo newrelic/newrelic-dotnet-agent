@@ -19,12 +19,13 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             _agent = agent;
         }
 
-        public async Task InvokeAsync(HttpContext context)
+        public Task Invoke(HttpContext context)
         {
-            await using var injectedResponse = new ResponseStreamWrapper(_agent, context.Response.Body, context);
+            // wrap the response body in our stream wrapper which will
+            using var injectedResponse = new BrowserInjectingStreamWrapper(_agent, context.Response.Body, context);
             context.Features.Set<IHttpResponseBodyFeature>(new StreamResponseBodyFeature(injectedResponse));
 
-            await _next(context);
+            return _next(context);
         }
     }
 }
