@@ -6,6 +6,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
     <LangVersion>default</LangVersion>
+    <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
  
   <ItemGroup>
