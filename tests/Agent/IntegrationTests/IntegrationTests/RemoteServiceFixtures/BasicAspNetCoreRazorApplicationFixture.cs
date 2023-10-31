@@ -26,9 +26,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             SetAdditionalEnvironmentVariable("ENABLE_RESPONSE_COMPRESSION", enabled ? "1" : "0");
         }
 
-        public string Get()
+        public string Get(string endpoint)
         {
-            var address = $"http://{DestinationServerName}:{Port}/Index";
+            var address = $"http://{DestinationServerName}:{Port}/{endpoint}";
 
             if (_responseCompressionEnabled)
             {

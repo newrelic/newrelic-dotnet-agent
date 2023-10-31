@@ -9,10 +9,11 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
-    public class BrowserAgentAutoInjection6PlusBase : NewRelicIntegrationTest<RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture>
+    public class BrowserAgentAutoInjection6PlusBase : NewRelicIntegrationTest<BasicAspNetCoreRazorApplicationFixture>
     {
-        private readonly RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture _fixture;
+        private readonly BasicAspNetCoreRazorApplicationFixture _fixture;
         private string _htmlContent;
+        private string _staticContent;
 
         public BrowserAgentAutoInjection6PlusBase(BasicAspNetCoreRazorApplicationFixture fixture,
             ITestOutputHelper output, bool enableResponseCompression)
@@ -34,7 +35,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                 },
                 exerciseApplication: () =>
                 {
-                    _htmlContent = _fixture.Get();
+                    _htmlContent = _fixture.Get("Index"); // get a razor page
+                    _staticContent = _fixture.Get("static.html"); // get static content
                 }
             );
 
@@ -48,7 +50,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         public void Test()
         {
             NrAssert.Multiple(
-                () => Assert.NotNull(_htmlContent)
+                () => Assert.NotNull(_htmlContent),
+                () => Assert.NotNull(_staticContent)
             );
 
             var connectResponseData = _fixture.AgentLog.GetConnectResponseData();
@@ -56,8 +59,10 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             var jsAgentFromConnectResponse = connectResponseData.JsAgentLoader;
 
             var jsAgentFromHtmlContent = JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_htmlContent);
+            var jsAgentFromStaticContent = JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_staticContent);
 
             Assert.Equal(jsAgentFromConnectResponse, jsAgentFromHtmlContent);
+            Assert.Equal(jsAgentFromConnectResponse, jsAgentFromStaticContent);
         }
     }
 
