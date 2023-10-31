@@ -27,30 +27,23 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             var openingHeadTagIndex = FindFirstOpeningHeadTag(contentAsString);
 
-            if (openingHeadTagIndex == -1) //  didn't find <head so look for <body
+            // No <HEAD> tag. Attempt to insert before <BODY> tag (not a great fallback option).
+            if (openingHeadTagIndex == -1)
             {
-                const string bodyOpenTag = "<body";
-
-                var indexOfBodyTag = contentAsString.IndexOf(bodyOpenTag, StringComparison.InvariantCultureIgnoreCase);
-                if (indexOfBodyTag < 0)
-                    return -1;
-
-                // find the body tag start index in the UTF-8 buffer
-                var bodyFromContent = contentAsString.Substring(indexOfBodyTag, bodyOpenTag.Length);
-                var utf8BodyTagIndex = IndexOfByteArray(content, bodyFromContent, out _);
-                return utf8BodyTagIndex;
+                return FindIndexBeforeBodyTag(content, contentAsString);
             }
 
             // Since we have a head tag (top of 'page'), search for <X_UA_COMPATIBLE> and for <CHARSET> tags in Head section
             var xUaCompatibleFilterMatch = XUaCompatibleFilter.Match(contentAsString, openingHeadTagIndex);
             var charsetFilterMatch = CharsetFilter.Match(contentAsString, openingHeadTagIndex);
 
-            // We have a <HEAD> tag, but didn't find the other tags we wanted. Find </HEAD> tag.  It's okay if we don't find it!
+            // Try to find </HEAD> tag. (It's okay if we don't find it!)
             var closingHeadTagIndex = contentAsString.IndexOf("</head>", StringComparison.InvariantCultureIgnoreCase);
 
-            // Check if we found the tags and based on which comes last AND that this happens INSIDE the HEAD tag - do a replace on that.
+            // Find which of the two tags occurs latest (if at all) and ensure that at least
+            // one of the matches occurs prior to the closing head tag
             if ((xUaCompatibleFilterMatch.Success || charsetFilterMatch.Success) &&
-                (xUaCompatibleFilterMatch.Index < closingHeadTagIndex || charsetFilterMatch.Index > closingHeadTagIndex))
+                (xUaCompatibleFilterMatch.Index < closingHeadTagIndex || charsetFilterMatch.Index < closingHeadTagIndex))
             {
                 var match = charsetFilterMatch;
                 if (xUaCompatibleFilterMatch.Index > charsetFilterMatch.Index)
@@ -65,8 +58,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 return utf8HeadMatchIndex + substringBytesLength;
             }
 
-            // found opening and closing head tag but no meta tags, insert immediately after the opening head tag
-            // Found both HEAD tags, no  meta tags, get index immediately after the <HEAD>. Find first '>' which will be end of head opening tag.
+            // found opening head tag but no meta tags, insert immediately after the opening head tag
+            // Find first '>' after the opening head tag, which will be end of head opening tag.
             var indexOfEndHeadOpeningTag = contentAsString.IndexOf('>', openingHeadTagIndex);
 
             // The <HEAD> tag may be malformed or simply be another type of tag, if so do not use it
@@ -77,6 +70,20 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var headOpeningTag = contentAsString.Substring(openingHeadTagIndex, (indexOfEndHeadOpeningTag - openingHeadTagIndex) + 1);
             var utf8HeadOpeningTagIndex = IndexOfByteArray(content, headOpeningTag, out var headOpeningTagBytesLength);
             return utf8HeadOpeningTagIndex + headOpeningTagBytesLength;
+        }
+
+        private static int FindIndexBeforeBodyTag(byte[] content, string contentAsString)
+        {
+            const string bodyOpenTag = "<body";
+
+            var indexOfBodyTag = contentAsString.IndexOf(bodyOpenTag, StringComparison.InvariantCultureIgnoreCase);
+            if (indexOfBodyTag < 0)
+                return -1;
+
+            // find the body tag start index in the UTF-8 buffer
+            var bodyFromContent = contentAsString.Substring(indexOfBodyTag, bodyOpenTag.Length);
+            var utf8BodyTagIndex = IndexOfByteArray(content, bodyFromContent, out _);
+            return utf8BodyTagIndex;
         }
 
         private static int FindFirstOpeningHeadTag(string content)

@@ -12,15 +12,14 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
     public static class BrowserScriptInjectionHelper
     {
         /// <summary>
-        /// 
+        /// Determine where to inject the RUM script and write the buffer to the base stream.
         /// </summary>
         /// <param name="buffer">UTF-8 encoded buffer representing the current page</param>
         /// <param name="baseStream"></param>
         /// <param name="rumBytes"></param>
         /// <param name="transaction"></param>
         /// <returns></returns>
-        public static async Task InjectBrowserScriptAsync(byte[] buffer, Stream baseStream,
-            byte[] rumBytes, ITransaction transaction)
+        public static async Task InjectBrowserScriptAsync(byte[] buffer, Stream baseStream, byte[] rumBytes, ITransaction transaction)
         {
             var index = BrowserScriptInjectionIndexHelper.TryFindInjectionIndex(buffer);
 

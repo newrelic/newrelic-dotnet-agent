@@ -40,10 +40,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             return _baseStream.FlushAsync(cancellationToken);
         }
 
-        public override void Flush()
-        {
-            _baseStream.Flush();
-        }
+        public override void Flush() => _baseStream.Flush();
 
         public override int Read(byte[] buffer, int offset, int count) => _baseStream.Read(buffer, offset, count);
 
@@ -63,19 +60,17 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (!CurrentlyInjecting())  // pass through without modification if we're already in the middle of injecting
+            // pass through without modification if we're already in the middle of injecting
+            // don't inject if the response isn't an HTML response
+            if (!CurrentlyInjecting() && IsHtmlResponse())
             {
-                if (IsHtmlResponse())
-                {
-                    // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
-                    StartInjecting();
-                    var curBuf = buffer.AsMemory(offset, count).ToArray();
-                    _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, curBuf, _baseStream)
-                        .GetAwaiter().GetResult();
-                    FinishInjecting();
+                // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
+                StartInjecting();
+                _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer, _baseStream)
+                    .GetAwaiter().GetResult();
+                FinishInjecting();
 
-                    return;
-                }
+                return;
             }
 
             _baseStream?.Write(buffer, offset, count);
@@ -85,17 +80,16 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            if (!CurrentlyInjecting())  // pass through without modification if we're already in the middle of injecting
+            // pass through without modification if we're already in the middle of injecting
+            // don't inject if the response isn't an HTML response
+            if (!CurrentlyInjecting() && IsHtmlResponse())
             {
-                if (IsHtmlResponse())
-                {
-                    // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
-                    StartInjecting();
-                    await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
-                    FinishInjecting();
+                // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
+                StartInjecting();
+                await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
+                FinishInjecting();
 
-                    return;
-                }
+                return;
             }
 
             if (_baseStream != null)
@@ -104,20 +98,9 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         private const string InjectingRUM = "InjectingRUM";
 
-        private void FinishInjecting()
-        {
-            _context.Items.Remove(InjectingRUM);
-        }
-
-        private void StartInjecting()
-        {
-            _context.Items.Add(InjectingRUM, null);
-        }
-
-        private bool CurrentlyInjecting()
-        {
-            return _context.Items.ContainsKey(InjectingRUM);
-        }
+        private void FinishInjecting() => _context.Items.Remove(InjectingRUM);
+        private void StartInjecting() => _context.Items.Add(InjectingRUM, null);
+        private bool CurrentlyInjecting() => _context.Items.ContainsKey(InjectingRUM);
 
         public override async ValueTask DisposeAsync()
         {
@@ -151,13 +134,15 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             // * UTF-8 formatted (either explicitly or no charset defined)
 
             _isHtmlResponse =
-                //_context.Response.StatusCode is 200 or 500 &&
                 _context.Response.ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
                 (_context.Response.ContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
                 !_context.Response.ContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
 
             if (!_isHtmlResponse.Value)
+            {
+                _agent.CurrentTransaction?.LogFinest($"Skipping RUM injection: Not an HTML response. ContentType is {_context.Response.ContentType}");
                 return false;
+            }
 
             // Make sure we force dynamic content type since we're
             // rewriting the content - static content will set the header explicitly
