@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -42,16 +43,19 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
             var transactionName = CreateTransactionName(actionDescriptor);
 
-            transaction.SetWebTransactionName(WebTransactionType.Action, transactionName, TransactionNamePriority.FrameworkHigh);
+            transaction.SetWebTransactionName(WebTransactionType.Razor, transactionName, TransactionNamePriority.FrameworkHigh);
 
             var actionDescriptorPageTypeInfo = actionDescriptor.PageTypeInfo;
             var pageTypeName = actionDescriptorPageTypeInfo.Name;
+            var handlerMethodName = actionDescriptor.HandlerMethods.SingleOrDefault(m =>
+                m.HttpMethod.Equals(pageContext.HttpContext.Request.Method, StringComparison.CurrentCultureIgnoreCase))?.MethodInfo.Name;
 
-            var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, pageTypeName, "uhh_what_goes_here");
+            var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, pageTypeName, handlerMethodName ?? pageContext.HttpContext.Request.Method);
+
 
             var segmentApi = segment.GetExperimentalApi();
             segmentApi.UserCodeNamespace = actionDescriptorPageTypeInfo.FullName;
-            segmentApi.UserCodeFunction = "uhh_what_goes_here";
+            segmentApi.UserCodeFunction = handlerMethodName ?? "<unknown>";
 
             return Delegates.GetAsyncDelegateFor<Task>(agent, segment, TaskContinueWithOption.None);
         }
