@@ -76,8 +76,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         };
 
         // ACT
-        methodRewriter->Instrument(overload1);
-        methodRewriter->Instrument(overload2);
+        methodRewriter->Instrument(overload1, AgentCallStyle::Strategy::InAgentCache);
+        methodRewriter->Instrument(overload2, AgentCallStyle::Strategy::InAgentCache);
 
         // ASSERT
         Assert::AreEqual((uint8_t)1, overload1CallCount, L"Function should have been instrumented 1 time!");

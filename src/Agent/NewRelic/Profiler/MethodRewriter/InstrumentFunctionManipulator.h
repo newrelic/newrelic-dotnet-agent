@@ -14,9 +14,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     class InstrumentFunctionManipulator : FunctionManipulator
     {
     public:
-        InstrumentFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, const bool isCoreClr) : 
-            FunctionManipulator(function, isCoreClr), 
-            _instrumentationSettings(instrumentationSettings)
+        InstrumentFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) :
+            FunctionManipulator(function, isCoreClr, agentCallStrategy),
+            _instrumentationSettings(instrumentationSettings),
+            _tracerLocalIndex(0),
+            _resultLocalIndex(0),
+            _userExceptionLocalIndex(0)
         {
             if (_function->Preprocess()) {
                 Initialize();
@@ -153,7 +156,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
         void CallGetTracer(NewRelic::Profiler::Configuration::InstrumentationPointPtr instrumentationPoint)
         {
-            LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentShim"), _X("GetFinishTracerDelegate"), 0, nullptr, true);
+            LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentShim"), _X("GetFinishTracerDelegate"), 0, nullptr);
               
             // tracer = delegates[0].Invoke(null, new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
             _instructions->Append(_X("ldnull"));

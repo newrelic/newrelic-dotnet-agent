@@ -13,8 +13,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     class HelperFunctionManipulator : FunctionManipulator
     {
     public:
-        HelperFunctionManipulator(IFunctionPtr function, const bool isCoreClr) : 
-            FunctionManipulator(function, isCoreClr)
+        HelperFunctionManipulator(IFunctionPtr function, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) :
+            FunctionManipulator(function, isCoreClr, agentCallStrategy)
         {
             Initialize();
         }

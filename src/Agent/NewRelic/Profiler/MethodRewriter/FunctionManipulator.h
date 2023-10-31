@@ -11,8 +11,8 @@
 #include "../Common/Macros.h"
 #include "Exceptions.h"
 #include "../Common/CorStandIn.h"
+#include "AgentCallStyle.h"
 #include "IFunction.h"
-#include "ISystemCalls.h"
 #include "InstructionSet.h"
 #include "InstantiatedGenericType.h"
 #include "ExceptionHandlerManipulator.h"
@@ -21,12 +21,6 @@
 #include "../Sicily/codegen/ByteCodeGenerator.h"
 #include "../SignatureParser/SignatureParser.h"
 #include "IFunctionHeaderInfo.h"
-
-#ifdef PAL_STDCPP_COMPAT
-#include "../Profiler/UnixSystemCalls.h"
-#else
-#include "../Profiler/SystemCalls.h"
-#endif
 
 namespace NewRelic { namespace Profiler { namespace MethodRewriter
 {
@@ -50,16 +44,16 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         ByteVector _oldCodeBytes;
         ByteVector _newLocalVariablesSignature;
         SignatureParser::MethodSignaturePtr _methodSignature;
-        std::shared_ptr<SystemCalls> _systemCalls;
         bool _isCoreClr;
+        const AgentCallStyle::Strategy _agentCallStrategy;
 
     public:
-        FunctionManipulator(IFunctionPtr function, const bool isCoreClr) :
+        FunctionManipulator(IFunctionPtr function, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) :
             _function(function),
             _newHeader(sizeof(COR_ILMETHOD_FAT)),
             _methodSignature(SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end())),
-            _systemCalls(std::make_shared<SystemCalls>()),
-            _isCoreClr(isCoreClr)
+            _isCoreClr(isCoreClr),
+            _agentCallStrategy(agentCallStrategy)
         {
         }
 
@@ -269,11 +263,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 #ifdef DEBUG
         void WriteLineToConsole(xstring_t message)
         {
-            _instructions->AppendString(message);
             // System.Console is not available in System.Private.CoreLib it is defined in System.Console which is not already a reference
             // in all assemblies. For now we can just allow this DEBUG build only writing in .net framework apps.
             if (!_isCoreClr)
             {
+                _instructions->AppendString(message);
                 _instructions->Append(CEE_CALL, _X("void [mscorlib]System.Console::WriteLine(string)"));
             }
         }
@@ -322,29 +316,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         }
 
         // Load the MethodInfo instance for the given class and method onto the stack.
-        // The MethodInfo will be cached in the AppDomain to improve performance if useCache is true.
-        // The function id is used as a tie-breaker for overloaded methods when computing the key name for the app domain cache.
-        void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda, bool useCache)
+        // The MethodInfo will be cached or not based on the configured agentCallStrategy.
+        // The function id is used as a tie-breaker for overloaded methods when computing the key name for the cache.
+        void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda)
         {
-            /*if (useCache && !_systemCalls->GetIsAppDomainCachingDisabled())
-            {
-                auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
-                _instructions->AppendString(keyName);
-                _instructions->AppendString(assemblyPath);
-                _instructions->AppendString(className);
-                _instructions->AppendString(methodName);
-                if (argumentTypesLambda == NULL)
-                {
-                    _instructions->Append(CEE_LDNULL);
-                }
-                else
-                {
-                    argumentTypesLambda();
-                }
-                
-                _instructions->Append(CEE_CALL, _X("class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [mscorlib]System.Type[])"));
-            }*/
-            if (useCache && !_systemCalls->GetIsAppDomainCachingDisabled())
+            if (_agentCallStrategy == AgentCallStyle::Strategy::InAgentCache)
             {
                 auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
                 _instructions->AppendString(keyName);
@@ -361,6 +337,24 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 }
 
                 _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetMethodInfoFromAgentCache(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
+            }
+            else if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainCache)
+            {
+                auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
+                _instructions->AppendString(keyName);
+                _instructions->AppendString(assemblyPath);
+                _instructions->AppendString(className);
+                _instructions->AppendString(methodName);
+                if (argumentTypesLambda == NULL)
+                {
+                    _instructions->Append(CEE_LDNULL);
+                }
+                else
+                {
+                    argumentTypesLambda();
+                }
+
+                _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
             }
             else
             {
