@@ -37,6 +37,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         ASP,
         MVC,
         WCF,
+        Razor,
         WebAPI,
         WebService,
         MonoRail,

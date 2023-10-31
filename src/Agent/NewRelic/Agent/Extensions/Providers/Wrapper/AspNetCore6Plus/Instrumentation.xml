@@ -25,5 +25,10 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="OnWrite" />
       </match>
     </tracerFactory>
+    <tracerFactory name="PageActionInvokeHandlerAsyncWrapper6Plus">
+      <match assemblyName="Microsoft.AspNetCore.Mvc.RazorPages" className="Microsoft.AspNetCore.Mvc.RazorPages.Infrastructure.PageActionInvoker" minVersion="6.0.0.0">
+        <exactMethodMatcher methodName="InvokeHandlerMethodAsync" />
+      </match>
+    </tracerFactory>
   </instrumentation>
 </extension>
