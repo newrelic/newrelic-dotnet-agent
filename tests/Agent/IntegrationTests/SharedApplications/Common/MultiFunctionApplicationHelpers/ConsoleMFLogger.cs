@@ -11,7 +11,7 @@ namespace MultiFunctionApplicationHelpers
 
         private static string LogTs => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss,fff");
 
-        private static int Tid = System.Threading.Thread.CurrentThread.ManagedThreadId;
+        private static int Tid => System.Threading.Thread.CurrentThread.ManagedThreadId;
 
         public static void Info()
         {
