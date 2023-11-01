@@ -6,6 +6,8 @@
 #include <memory>
 #include <mutex>
 #include <fstream> //wofstream
+#include <iostream>
+#include <ostream>
 #include <atomic>
 #include <cassert>
 #include "../Common/xplat.h"
@@ -44,7 +46,7 @@ namespace NewRelic {
                 using _Mystreamtype = std::basic_ostream<char_type>;
                 using _Mymut = std::mutex;
                 using _Mylockgrd = std::lock_guard<_Mymut>;
-                Logger(_Ostr&& myostr, Level level) : _level(level), _destination(std::move(myostr))
+                Logger(_Ostr&& myostr, Level level) : _level(level), _destination(std::move(myostr)), _console(false), _enabled(true), _initialized(false)
                 {
                     logging_available = true;
                 }
@@ -86,6 +88,32 @@ namespace NewRelic {
                     return _level;
                 }
 
+                void SetConsoleLogging(bool enabled)
+                {
+                    _console = enabled;
+                }
+
+                bool GetConsoleLogging()
+                {
+                    return _console;
+                }
+                void SetEnabled(bool enabled)
+                {
+                    _enabled = enabled;
+                }
+                bool GetEnabled()
+                {
+                    return _enabled;
+                }
+                void SetIniitalized()
+                {
+                    _initialized = true;
+                }
+                bool GetInitialized()
+                {
+                    return _initialized;
+                }
+
                 _Mymut& mutex() const noexcept
                 {
                     return _mutex;
@@ -94,6 +122,9 @@ namespace NewRelic {
                 _Ostr _destination;
                 Level _level;
                 mutable _Mymut _mutex;
+                bool _console;
+                bool _enabled;
+                bool _initialized;
             };
 
             using FileLogger = Logger<std::wofstream>;
@@ -127,7 +158,7 @@ namespace NewRelic {
                 }
 
                 using stream_char_t = typename _Log::char_type;
-                if (level >= log.GetLevel())
+                if (log.GetInitialized() && log.GetEnabled() && (level >= log.GetLevel()))
                 {
                     //each thread will have these on the stack...
                     std::tm  tstruct;
@@ -135,7 +166,7 @@ namespace NewRelic {
                     (void)time(&now);
                     (void)gmtime_s(&tstruct, &now);
                     auto levelstr = nrlog::GetLevelString(level);
-                    auto& strm = log.ostr();
+                    std::wostream& strm = log.GetConsoleLogging() ? std::wcout : log.ostr();
 
                     try
                     {
