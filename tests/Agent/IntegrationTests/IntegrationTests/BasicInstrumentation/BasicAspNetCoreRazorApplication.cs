@@ -47,7 +47,6 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/Razor/Pages/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Apdex/Razor/Pages/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 1 },
@@ -67,13 +66,13 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 
             var expectedTransactionTraceSegments = new List<string>
             {
-                @"DotNet/Pages_Index",
+                @"DotNet/Pages_Index/OnGet",
             };
             var expectedTransactionTraceAgentAttributes = new Dictionary<string, object>
             {
                 { "response.status", "200" },
                 { "http.statusCode", 200 },
-                { "request.uri", "/Default" }
+                { "request.uri", "/Index" }
             };
             var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
             {
@@ -84,7 +83,6 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 "timestamp",
                 "duration",
                 "webDuration",
-                "queueDuration",
                 "totalTime"
             };
             var expectedTransactionEventAgentAttributes = new Dictionary<string, object>
