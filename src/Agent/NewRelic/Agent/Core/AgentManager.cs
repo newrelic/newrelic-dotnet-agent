@@ -28,7 +28,6 @@ namespace NewRelic.Agent.Core
         private readonly ConfigurationSubscriber _configurationSubscription = new ConfigurationSubscriber();
         private readonly static IAgentManager DisabledAgentManager = new DisabledAgentManager();
         private readonly static AgentSingleton Singleton = new AgentSingleton();
-        private bool _connected = false;
 
         private sealed class AgentSingleton : Singleton<IAgentManager>
         {
@@ -122,8 +121,6 @@ namespace NewRelic.Agent.Core
             AssertAgentEnabled(config);
 
             EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
-            EventBus<AgentConnectedEvent>.Subscribe(OnAgentConnected);
-            EventBus<StopHarvestEvent>.Subscribe(OnAgentReconnecting);
 
             //Initialize the extensions loader with extensions folder based on the the install path
             ExtensionsLoader.Initialize(AgentInstallConfiguration.InstallPathExtensionsDirectory);
@@ -352,8 +349,8 @@ namespace NewRelic.Agent.Core
         private void ProcessExit(object sender, EventArgs e)
         {
             Log.Debug("Received a ProcessExit CLR event for the application domain. About to shut down the .NET Agent...");
-
-            Shutdown(_connected);
+            
+            Shutdown(true);
         }
 
         private void Shutdown(bool cleanShutdown)
@@ -410,20 +407,6 @@ namespace NewRelic.Agent.Core
             //the AgentSingleton will check to see if a shutdownEvent was received, and call Shutdown
             //appropriately.
             if (_isInitialized) Shutdown(false);
-        }
-
-        // Automatically triggered once the agent is fully connected.
-        private void OnAgentConnected(AgentConnectedEvent _)
-        {
-            _connected = true;
-        }
-
-        // This event is only triggered during a reconnect.
-        // We want to mark the agent as disconnected until the reconnect (which is just a Connect) is completed.
-        // Once the reconnect(Connect) is done, it will automatically trigger AgentConnectedEvent (OnAgentConnected) above.
-        private void OnAgentReconnecting(StopHarvestEvent _)
-        {
-            _connected = false;
         }
 
         #endregion Event handlers

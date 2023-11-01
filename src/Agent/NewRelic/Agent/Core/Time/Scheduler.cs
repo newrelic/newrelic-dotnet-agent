@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Time
                 var existingTimer = _recurringTimers.GetValueOrDefault(action);
                 if (existingTimer != null)
                 {
-                    Log.Debug("Stopping existing timer for scheduled action");
+                    Log.Debug("Stopping existing timer for scheduled action for " + action.Method.DeclaringType.FullName + "." + action.Method.Name);
                     existingTimer.Dispose();
                 }
 
