@@ -15,7 +15,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
     class MockTokenResolver : public SignatureParser::ITokenResolver
     {
     public:
-        MockTokenResolver(const std::wstring& typeString = L"MyNamespace.MyClass") : _typeString(typeString) {}
+        MockTokenResolver(const std::wstring& typeString = L"MyNamespace.MyClass") : _typeString(typeString), _typeGenericArgumentCount(0) {}
 
         virtual std::wstring GetTypeStringsFromTypeDefOrRefOrSpecToken(uint32_t /*typeDefOrRefOrSPecToken*/) override
         {
@@ -924,6 +924,50 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
             function->_signature = std::make_shared<ByteVector>(signatureBytes);
             auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(function);
             Assert::IsFalse(instrumentationPoint == nullptr);
+        }
+
+        TEST_METHOD(does_not_match_when_assembly_is_mscorlib)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"mscorlib\" className=\"MyNamespace.MyClass\">\
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet);
+            auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
+            function->_assemblyName = _X("mscorlib");
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(function);
+            Assert::IsTrue(instrumentationPoint == nullptr);
+        }
+
+        TEST_METHOD(does_not_match_when_assembly_is_SystemPrivateCoreLib)
+        {
+            InstrumentationXmlSetPtr xmlSet(new InstrumentationXmlSet());
+            xmlSet->emplace(L"filename", L"\
+                <?xml version=\"1.0\" encoding=\"utf-8\"?>\
+                <extension>\
+                    <instrumentation>\
+                        <tracerFactory>\
+                            <match assemblyName=\"System.Private.CoreLib\" className=\"MyNamespace.MyClass\">\
+                                <exactMethodMatcher methodName=\"MyMethod\"/>\
+                            </match>\
+                        </tracerFactory>\
+                    </instrumentation>\
+                </extension>\
+                ");
+            InstrumentationConfiguration instrumentation(xmlSet);
+            auto function = std::make_shared<MethodRewriter::Test::MockFunction>();
+            function->_assemblyName = _X("System.Private.CoreLib");
+            auto instrumentationPoint = instrumentation.TryGetInstrumentationPoint(function);
+            Assert::IsTrue(instrumentationPoint == nullptr);
         }
 
     };
