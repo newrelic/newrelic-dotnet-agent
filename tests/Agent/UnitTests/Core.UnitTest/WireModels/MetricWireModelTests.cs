@@ -715,6 +715,52 @@ namespace NewRelic.Agent.Core.WireModels
             );
         }
 
+        [Test]
+        public void BuildCountMetric()
+        {
+            const string metricName = "Some/Metric/Name";
+            const int count = 999;
+
+            var actual = _metricBuilder.TryBuildCountMetric(metricName, count);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual(metricName, actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(count, actual.Data.Value0)
+            );
+        }
+
+        [Test]
+        public void BuildByteMetric()
+        {
+            const string metricName = "Some/Metric/Name";
+            const long byteCount = 1024 * 1024 * 1024;
+
+            var actual = _metricBuilder.TryBuildByteMetric(metricName, byteCount);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual(metricName, actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(byteCount), actual.Data)
+            );
+        }
+
+        [Test]
+        public void BuildByteMetric_WithExclusiveBytes()
+        {
+            const string metricName = "Some/Metric/Name";
+            const long totalBytes = 1024 * 1024 * 1024;
+            const long exclusiveBytes = 1024 * 1024 * 128;
+
+            var actual = _metricBuilder.TryBuildByteMetric(metricName, totalBytes, exclusiveBytes);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual(metricName, actual.MetricName.Name),
+                () => Assert.IsNull(actual.MetricName.Scope),
+                () => Assert.AreEqual(MetricDataWireModel.BuildByteData(totalBytes, exclusiveBytes), actual.Data)
+            );
+        }
+
         #endregion
 
         #region DistributedTracing

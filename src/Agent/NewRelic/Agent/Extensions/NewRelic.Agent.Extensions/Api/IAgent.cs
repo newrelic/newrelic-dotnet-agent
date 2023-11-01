@@ -39,6 +39,17 @@ namespace NewRelic.Agent.Api
         /// <returns></returns>
         ITransaction CreateTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, Action wrapperOnCreate = null);
 
+
+        /// <summary>
+        /// Create a new transaction for processing a request, conforming to the naming requirements of the Kafka spec.
+        /// </summary>
+        /// <param name="destinationType"></param>
+        /// <param name="brokerVendorName">The name of the message broker vendor. Must not be null.</param>
+        /// <param name="destination">The destination queue of the message being handled. Can be null.</param>
+        /// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
+        /// <returns></returns>
+        ITransaction CreateKafkaTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, Action wrapperOnCreate = null);
+
         /// <summary>
         /// Create a new transaction for processing a request.
         /// </summary>

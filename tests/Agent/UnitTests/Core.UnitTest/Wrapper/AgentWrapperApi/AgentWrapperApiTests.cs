@@ -291,6 +291,19 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         }
 
         [Test]
+        public void SetKafkaMessageBrokerTransactionName_SetsKafkaMessageBrokerTransactionName()
+        {
+            const TransactionNamePriority priority = TransactionNamePriority.FrameworkHigh;
+            SetupTransaction();
+
+            _agent.CurrentTransaction.SetKafkaMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, "broker", "dest", priority);
+
+            var addedTransactionName = _transaction.CandidateTransactionName.CurrentTransactionName;
+            Assert.AreEqual("Message/broker/Topic/Consume/Named/dest", addedTransactionName.UnprefixedName);
+            Assert.AreEqual(false, addedTransactionName.IsWeb);
+        }
+
+        [Test]
         public void SetOtherTransactionName_SetsOtherTransactionName()
         {
             const TransactionNamePriority priority = TransactionNamePriority.FrameworkHigh;

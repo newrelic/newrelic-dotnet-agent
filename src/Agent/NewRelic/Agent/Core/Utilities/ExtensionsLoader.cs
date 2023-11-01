@@ -75,7 +75,12 @@ namespace NewRelic.Agent.Core.Utilities
                 //The NewRelic.Providers.Wrapper.SerilogLogging.dll depends on the Serilog.dll; therefore, it should
                 //only be loaded by the agent when Serilog is used otherwise assembly load exception will occur.
                 { "SerilogCreateLoggerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") },
-                { "SerilogDispatchWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") }
+                { "SerilogDispatchWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") },
+
+                // Kafka
+                { "KafkaProducerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
+                { "KafkaSerializerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
+                { "KafkaConsumerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") }
             };
 
             var nonAutoReflectedAssemblies = _dynamicLoadWrapperAssemblies.Values.Distinct().ToList();

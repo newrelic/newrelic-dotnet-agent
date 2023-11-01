@@ -68,5 +68,11 @@ namespace NewRelic.Agent.Api
         /// Removes this segment from the top of the agent's internal call stack. Should only be used for asynchronous methods. Calling EndSegment is sufficient for synchronous methods.
         /// </summary>
         void RemoveSegmentFromCallStack();
+
+        /// <summary>
+        /// Sets the Destination on SegmentData, if the data is of type MessageBrokerSegmentData
+        /// </summary>
+        /// <param name="destination"></param>
+        void SetMessageBrokerDestination(string destination);
     }
 }
