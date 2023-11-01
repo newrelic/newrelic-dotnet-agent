@@ -71,7 +71,6 @@ namespace NewRelic.Agent.IntegrationTests.MassTransit
             var massTransitConsumeMetricNameRegex = massTransitMetricNameRegexBase + @"Consume\/" + queueNameRegex;
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            //Metric named MessageBroker\/MassTransit\/Queue\/Consume\/Named\/(.{26}) scoped to OtherTransaction\/Message\/MassTransit\/Queue\/Named\/(.{26}) was not found in the metric payload
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
