@@ -20,7 +20,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             };
         }
 
-        virtual std::unique_ptr<std::wstring> TryGetEnvironmentVariable(const std::wstring& variableName)
+        virtual std::unique_ptr<std::wstring> TryGetEnvironmentVariable(const std::wstring& variableName) override
         {
             return EnvironmentVariableResult(variableName);
         }
@@ -29,5 +29,17 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             return true;
         }
+
+        virtual uint32_t GetCurrentProcessId() override { return 0; }
+        virtual std::shared_ptr<std::wostream> OpenFile(const xstring_t&, std::ios_base::openmode) override { return nullptr; }
+        virtual void CloseFile(std::shared_ptr<std::wostream>) override { }
+        virtual bool DirectoryExists(const xstring_t&) override { return false; }
+        virtual void DirectoryCreate(const xstring_t&) override { }
+        virtual xstring_t GetCommonAppDataFolderPath() override { return _X(""); }
+
+        virtual std::unique_ptr<xstring_t> GetNewRelicHomePath() override { return nullptr; }
+        virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectory() override { return nullptr; }
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectory() override { return nullptr; }
+        virtual std::unique_ptr<xstring_t> GetNewRelicLogLevel() override { return nullptr; }
     };
 }}}}

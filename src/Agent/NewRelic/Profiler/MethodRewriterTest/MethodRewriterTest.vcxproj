@@ -189,6 +189,7 @@
     <ClInclude Include="UnreferencedFunctions.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AgentCallStyleTests.cpp" />
     <ClCompile Include="CustomInstrumentationTest.cpp" />
     <ClCompile Include="ExceptionHandlerManipulatorTest.cpp" />
     <ClCompile Include="InstantiatedGenericTypeTest.cpp" />

@@ -117,7 +117,7 @@ namespace NewRelic { namespace Profiler
             GetOrCreateMemberReferenceToken(typeReferenceOrDefinitionToken, methodName, signature);
         }
 
-        virtual bool InjectReferenceToCoreLib()
+        virtual bool InjectReferenceToCoreLib() override
         {
             const auto coreLibName = _isCoreClr ? SYSTEM_PRIVATE_CORELIB_ASSEMBLYNAME : MSCORLIB_ASSEMBLYNAME;
             constexpr const BYTE pubTokenCoreClr[] = { 0x7C, 0xEC, 0x85, 0xD7, 0xBE, 0xA7, 0x79, 0x8E };

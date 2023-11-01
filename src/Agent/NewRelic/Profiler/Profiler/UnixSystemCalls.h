@@ -64,7 +64,7 @@ namespace NewRelic { namespace Profiler
             return inputDoesNotContainSpaces ? arg : "'" + arg + "'";
         }
 
-        virtual xstring_t GetProgramCommandLine()
+        static xstring_t GetProgramCommandLine()
         {
             try
             {
@@ -94,7 +94,7 @@ namespace NewRelic { namespace Profiler
             }
         }
 
-        virtual xstring_t GetProcessPath()
+        static xstring_t GetProcessPath()
         {
             /*
             char *argv[] = {};
@@ -124,12 +124,12 @@ namespace NewRelic { namespace Profiler
             return _X(".");
         }
 
-        virtual xstring_t GetParentProcessPath()
+        static xstring_t GetParentProcessPath()
         {
             return _X(".");
         }
 
-        virtual xstring_t GetProcessDirectoryPath()
+        static xstring_t GetProcessDirectoryPath()
         {
             return _X(".");
         }

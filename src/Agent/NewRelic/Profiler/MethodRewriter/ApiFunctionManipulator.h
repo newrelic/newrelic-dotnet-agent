@@ -14,8 +14,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     class ApiFunctionManipulator : FunctionManipulator
     {
     public:
-        ApiFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, const bool isCoreClr) :
-            FunctionManipulator(function, isCoreClr),
+        ApiFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) :
+            FunctionManipulator(function, isCoreClr, agentCallStrategy),
             _instrumentationSettings(instrumentationSettings)
         {
             Initialize();
@@ -46,7 +46,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 [&]()
                 {
                     // delegate = System.CannotUnloadAppDomainException.GetMethodFromAppDomainStorageOrReflectionOrThrow("NewRelic_Delegate_API_<function name><function signature>", "C:\path\to\NewRelic.Agent.Core", "NewRelic.Core.AgentApi", "<function name>", new object[] { <method parameter types> })
-                    LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentApi"), _function->GetFunctionName(), _function->GetFunctionId(), GetArrayOfTypeParametersLamdba(), true);
+                    LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentApi"), _function->GetFunctionName(), _function->GetFunctionId(), GetArrayOfTypeParametersLamdba());
                     
                     _instructions->Append(_X("ldnull"));
                     BuildObjectArrayOfParameters();

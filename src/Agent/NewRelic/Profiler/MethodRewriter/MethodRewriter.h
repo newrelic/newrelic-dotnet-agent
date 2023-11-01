@@ -103,13 +103,13 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         }
 
         // instrument the provided method (if necessary)
-        void Instrument(IFunctionPtr function)
+        void Instrument(IFunctionPtr function, const AgentCallStyle::Strategy agentCallStrategy)
         {
             LogTrace("Possibly instrumenting: ", function->ToString());
 
             InstrumentationSettingsPtr instrumentationSettings = std::make_shared<InstrumentationSettings>(_instrumentationConfiguration, _corePath);
 
-            if (_helperInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr) || _apiInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr) || _defaultInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr)) {
+            if (_helperInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr, agentCallStrategy) || _apiInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr, agentCallStrategy) || _defaultInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr, agentCallStrategy)) {
             }
         }
 

@@ -7,6 +7,7 @@
 #include <string>
 #include <set>
 #include "../Common/xplat.h"
+#include "../Common/Strings.h"
 #include "../Logging/DefaultFileLogLocation.h"
 
 namespace NewRelic { namespace Profiler { namespace MethodRewriter {
@@ -47,21 +48,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             return TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
         }
 
+        virtual bool GetIsLegacyCachingEnabled()
+        {
+            return TryGetBooleanEnvironmentVariable(_X("NEW_RELIC_ENABLE_LEGACY_CACHING"));
+        }
+
         virtual bool GetIsAppDomainCachingDisabled()
         {
-            auto value = TryGetEnvironmentVariable(_X("NEW_RELIC_DISABLE_APPDOMAIN_CACHING"));
-
-            if (value == nullptr)
-            {
-                return false;
-            }
-
-            if(Strings::AreEqualCaseInsensitive(*value, _X("true")) || Strings::AreEqualCaseInsensitive(*value, _X("1")))
-            {
-                return true;
-            }
-
-            return false;
+            return TryGetBooleanEnvironmentVariable(_X("NEW_RELIC_DISABLE_APPDOMAIN_CACHING"));
         }
 
         virtual std::unique_ptr<xstring_t> GetProfilerDelay()
@@ -91,6 +85,23 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
     private:
         bool _isCoreClr = false;
+
+        bool TryGetBooleanEnvironmentVariable(const xstring_t& variableName)
+        {
+            auto value = TryGetEnvironmentVariable(variableName);
+
+            if (value == nullptr)
+            {
+                return false;
+            }
+
+            if (Strings::AreEqualCaseInsensitive(*value, _X("true")) || Strings::AreEqualCaseInsensitive(*value, _X("1")))
+            {
+                return true;
+            }
+
+            return false;
+        }
     };
     typedef std::shared_ptr<ISystemCalls> ISystemCallsPtr;
     typedef std::set<xstring_t> FilePaths;
