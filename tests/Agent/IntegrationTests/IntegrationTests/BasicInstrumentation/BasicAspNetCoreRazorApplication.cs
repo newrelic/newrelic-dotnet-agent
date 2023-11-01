@@ -30,6 +30,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.SetCodeLevelMetricsEnabled();
                 },
                 exerciseApplication: () =>
                 {
@@ -92,6 +93,12 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 { "request.uri", "/Index" }
             };
 
+            var expectedGetIndexAttributes = new Dictionary<string, string>()
+            {
+                { "code.namespace", "BasicAspNetCoreRazorApplication.Pages.Pages_Index" },
+                { "code.function", "OnGet" }
+            };
+
             var connect = _fixture.AgentLog.GetConnectData().Environment.GetPluginList();
             Assert.DoesNotContain(connect, x => x.Contains("NewRelic.Providers.Wrapper.AspNetCore6Plus"));
 
@@ -103,6 +110,9 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 .FirstOrDefault(sample => sample.Path == @"WebTransaction/Razor/Pages/Index");
             var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
                 .FirstOrDefault();
+
+            var spanEvents = _fixture.AgentLog.GetSpanEvents().ToList();
+            var getIndexSpan = spanEvents.FirstOrDefault(se => se.IntrinsicAttributes["name"].ToString() == "DotNet/Pages_Index/OnGet");
 
             NrAssert.Multiple(
                 () => Assert.NotNull(transactionSample),
@@ -119,6 +129,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes1, TransactionEventAttributeType.Intrinsic, transactionEvent),
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes2, TransactionEventAttributeType.Intrinsic, transactionEvent),
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent),
+                () => Assertions.SpanEventHasAttributes(expectedGetIndexAttributes, SpanEventAttributeType.Agent, getIndexSpan),
                 () => JavaScriptAgent.GetJavaScriptAgentConfigFromSource(_responseBody),
                 () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
                 () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
