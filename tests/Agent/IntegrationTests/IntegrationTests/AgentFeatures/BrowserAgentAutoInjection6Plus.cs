@@ -15,8 +15,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         private string _htmlContent;
         private string _staticContent;
 
-        public BrowserAgentAutoInjection6PlusBase(BasicAspNetCoreRazorApplicationFixture fixture,
-            ITestOutputHelper output, bool enableResponseCompression)
+        protected BrowserAgentAutoInjection6PlusBase(BasicAspNetCoreRazorApplicationFixture fixture,
+            ITestOutputHelper output, bool enableResponseCompression, string loaderType = "rum")
             : base(fixture)
         {
             _fixture = fixture;
@@ -31,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                     configModifier.AutoInstrumentBrowserMonitoring(true);
                     configModifier.BrowserMonitoringEnableAttributes(true);
 
-                    configModifier.BrowserMonitoringLoader("rum");
+                    configModifier.BrowserMonitoringLoader(loaderType);
                 },
                 exerciseApplication: () =>
                 {
@@ -67,21 +67,39 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
     }
 
     [NetCoreTest]
-    public class BrowserAgentAutoInjection6PlusUnCompressed : BrowserAgentAutoInjection6PlusBase
+    public class BrowserAgentAutoInjection6PlusRumUnCompressed : BrowserAgentAutoInjection6PlusBase
     {
-        public BrowserAgentAutoInjection6PlusUnCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+        public BrowserAgentAutoInjection6PlusRumUnCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
             : base(fixture, output, false)
         {
         }
     }
 
     [NetCoreTest]
-    public class BrowserAgentAutoInjection6PlusCompressed : BrowserAgentAutoInjection6PlusBase
+    public class BrowserAgentAutoInjection6PlusRumCompressed : BrowserAgentAutoInjection6PlusBase
     {
-        public BrowserAgentAutoInjection6PlusCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+        public BrowserAgentAutoInjection6PlusRumCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
             : base(fixture, output, true)
         {
         }
     }
 
+
+    [NetCoreTest]
+    public class BrowserAgentAutoInjection6PlusSpa : BrowserAgentAutoInjection6PlusBase
+    {
+        public BrowserAgentAutoInjection6PlusSpa(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, true, "spa")
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class BrowserAgentAutoInjection6PlusFull : BrowserAgentAutoInjection6PlusBase
+    {
+        public BrowserAgentAutoInjection6PlusFull(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, true, "full")
+        {
+        }
+    }
 }
