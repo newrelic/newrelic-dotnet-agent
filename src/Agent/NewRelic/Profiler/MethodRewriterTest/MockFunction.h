@@ -47,7 +47,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             _signatureToken(0x456),
             _string(L"[MyAssembly]MyNamespace.MyClass.MyMethod"),
             _isGenericType(false),
-            _typeToken(0x045612345)
+            _typeToken(0x045612345),
+            _isCoreClr(false)
         {
             if (version.empty())
             {
@@ -186,9 +187,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return true;
         }
 
+        bool _isCoreClr;
         virtual bool IsCoreClr() override
         {
-            return false;
+            return _isCoreClr;
         }
 
         uint32_t _typeToken;

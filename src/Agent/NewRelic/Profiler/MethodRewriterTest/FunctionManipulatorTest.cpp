@@ -11,6 +11,8 @@
 #include "MockSystemCalls.h"
 #include "../MethodRewriter/FunctionManipulator.h"
 #include "../MethodRewriter/InstrumentFunctionManipulator.h"
+#include "../MethodRewriter/ApiFunctionManipulator.h"
+#include "../MethodRewriter/HelperFunctionManipulator.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -25,13 +27,199 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             FunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::InAgentCache);
         }
 
-        TEST_METHOD(instrument_minimal_method)
+        TEST_METHOD(instrument_api_method_netframework_inagentcache)
         {
             auto function = std::make_shared<MockFunction>();
-            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, L""), false, AgentCallStyle::Strategy::InAgentCache);
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentApi();
+        }
+
+        TEST_METHOD(instrument_api_method_netframework_appdomaincache)
+        {
+            auto function = std::make_shared<MockFunction>();
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::AppDomainCache);
+
+            manipulator.InstrumentApi();
+        }
+
+        TEST_METHOD(instrument_api_method_netframework_reflection)
+        {
+            auto function = std::make_shared<MockFunction>();
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::Reflection);
+
+            manipulator.InstrumentApi();
+        }
+
+        TEST_METHOD(instrument_api_method_coreclr_inagentcache)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_isCoreClr = true;
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentApi();
+        }
+
+        TEST_METHOD(instrument_api_method_coreclr_appdomaincache)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_isCoreClr = true;
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::AppDomainCache);
+
+            manipulator.InstrumentApi();
+        }
+
+        TEST_METHOD(instrument_api_method_coreclr_reflection)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_isCoreClr = true;
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::Reflection);
+
+            manipulator.InstrumentApi();
+        }
+
+        TEST_METHOD(instrument_minimal_method_netframework_inagentcache)
+        {
+            auto function = std::make_shared<MockFunction>();
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::InAgentCache);
 
             auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
             manipulator.InstrumentDefault(instrumentationPoint);
+        }
+
+        TEST_METHOD(instrument_minimal_method_netframework_appdomaincache)
+        {
+            auto function = std::make_shared<MockFunction>();
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::AppDomainCache);
+
+            auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
+            manipulator.InstrumentDefault(instrumentationPoint);
+        }
+
+        TEST_METHOD(instrument_minimal_method_netframework_reflection)
+        {
+            auto function = std::make_shared<MockFunction>();
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::Reflection);
+
+            auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
+            manipulator.InstrumentDefault(instrumentationPoint);
+        }
+
+        TEST_METHOD(instrument_minimal_method_coreclr_inagentcache)
+        {
+            auto function = std::make_shared<MockFunction>();
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::InAgentCache);
+
+            auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
+            manipulator.InstrumentDefault(instrumentationPoint);
+        }
+
+        TEST_METHOD(instrument_minimal_method_coreclr_appdomaincache)
+        {
+            auto function = std::make_shared<MockFunction>();
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::AppDomainCache);
+
+            auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
+            manipulator.InstrumentDefault(instrumentationPoint);
+        }
+
+        TEST_METHOD(instrument_minimal_method_coreclr_reflection)
+        {
+            auto function = std::make_shared<MockFunction>();
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::Reflection);
+
+            auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
+            manipulator.InstrumentDefault(instrumentationPoint);
+        }
+
+        TEST_METHOD(helper_method_unsupported_method)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("ThisMethodShouldNotExist");
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentHelper();
+        }
+
+        TEST_METHOD(helper_method_LoadAssemblyOrThrow)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("LoadAssemblyOrThrow");
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentHelper();
+        }
+
+        TEST_METHOD(helper_method_GetTypeViaReflectionOrThrow)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("GetTypeViaReflectionOrThrow");
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentHelper();
+        }
+
+        TEST_METHOD(helper_method_GetMethodViaReflectionOrThrow)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("GetMethodViaReflectionOrThrow");
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentHelper();
+        }
+
+        TEST_METHOD(helper_method_StoreMethodInAppDomainStorageOrThrow)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("StoreMethodInAppDomainStorageOrThrow");
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentHelper();
+        }
+
+        TEST_METHOD(helper_method_GetMethodFromAppDomainStorage)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("GetMethodFromAppDomainStorage");
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentHelper();
+        }
+
+        TEST_METHOD(helper_method_GetMethodFromAppDomainStorageOrReflectionOrThrow)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("GetMethodFromAppDomainStorageOrReflectionOrThrow");
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentHelper();
+        }
+
+        TEST_METHOD(helper_method_EnsureInitialized)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("EnsureInitialized");
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentHelper();
+        }
+
+        TEST_METHOD(helper_method_GetMethodCacheLookupMethod)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("GetMethodCacheLookupMethod");
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentHelper();
+        }
+
+        TEST_METHOD(helper_method_GetMethodInfoFromAgentCache)
+        {
+            auto function = std::make_shared<MockFunction>();
+            function->_functionName = _X("GetMethodInfoFromAgentCache");
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+
+            manipulator.InstrumentHelper();
         }
 
         //TEST_METHOD(test_method_with_no_code)
