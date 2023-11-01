@@ -120,6 +120,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             : _agentEnabled(agentEnabled)
             , _agentEnabledInLocalConfig(false)
             , _logLevel(logLevel)
+            , _consoleLogging(false)
+            , _loggingEnabled(true)
             , _processes(processes)
             , _applicationPoolsWhiteList(whiteList)
             , _applicationPoolsBlackList(blackList)
