@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using CommandLine;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.ApiAppNameChange
@@ -37,9 +36,6 @@ namespace NewRelic.Agent.IntegrationTests.Applications.ApiAppNameChange
                 Api.Agent.NewRelic.SetApplicationName("AgentApi");
                 Api.Agent.NewRelic.StartAgent();
                 Api.Agent.NewRelic.SetApplicationName("AgentApi2");
-
-                // We need to wait for the reconnect to occur before the new name is picked up.
-                Task.Delay(30 * 1000).Wait();
 
                 // Wait for the test harness to tell us to shut down
                 eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
