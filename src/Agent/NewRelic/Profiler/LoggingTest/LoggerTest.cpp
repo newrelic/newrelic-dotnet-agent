@@ -47,7 +47,7 @@ namespace NewRelic {
                         StdLog.SetLevel(Level::LEVEL_INFO);
                         StdLog.SetConsoleLogging(false);
                         StdLog.SetEnabled(true);
-                        StdLog.SetIniitalized();
+                        StdLog.SetInitalized();
                     }
 
                     TEST_METHOD(logger_verify_string_representation_of_levels)

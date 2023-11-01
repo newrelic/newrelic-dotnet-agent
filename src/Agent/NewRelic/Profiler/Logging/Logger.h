@@ -105,7 +105,7 @@ namespace NewRelic {
                 {
                     return _enabled;
                 }
-                void SetIniitalized()
+                void SetInitalized()
                 {
                     _initialized = true;
                 }

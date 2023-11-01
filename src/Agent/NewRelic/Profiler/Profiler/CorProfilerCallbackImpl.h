@@ -1112,7 +1112,7 @@ namespace NewRelic { namespace Profiler {
             nrlog::StdLog.SetLevel(configuration->GetLoggingLevel());
             nrlog::StdLog.SetConsoleLogging(_systemCalls->GetConsoleLoggingEnabled(configuration->GetConsoleLogging()));
             nrlog::StdLog.SetEnabled(_systemCalls->GetLoggingEnabled(configuration->GetLoggingEnabled()));
-            nrlog::StdLog.SetIniitalized();
+            nrlog::StdLog.SetInitalized();
 
             if (nrlog::StdLog.GetEnabled())
             {
