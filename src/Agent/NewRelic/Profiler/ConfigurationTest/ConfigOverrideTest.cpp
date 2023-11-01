@@ -17,7 +17,7 @@ namespace NewRelic {
             namespace Test
             {
 
-                TEST_CLASS(ConfigurationTest)
+                TEST_CLASS(ConfigurationOverrideTest)
                 {
                 public:
                     TEST_METHOD(test_logging_enabled)
