@@ -334,6 +334,31 @@ namespace NewRelic {
                         AssertMessageCount(0);
                     }
 
+                    TEST_METHOD(logger_test_console_restrictions)
+                    {
+                        ResetStdLog();
+                        StdLog.SetLevel(Level::LEVEL_TRACE);
+                        StdLog.SetConsoleLogging(true);
+                        Assert::AreEqual(StdLog.GetLevel(), Level::LEVEL_INFO);
+
+                        ResetStdLog();
+                        StdLog.SetConsoleLogging(false);
+                        StdLog.SetLevel(Level::LEVEL_TRACE);
+                        Assert::AreEqual(StdLog.GetLevel(), Level::LEVEL_TRACE);
+
+                        ResetStdLog();
+                        StdLog.SetLevel(Level::LEVEL_WARN);
+                        StdLog.SetConsoleLogging(true);
+                        Assert::AreEqual(StdLog.GetLevel(), Level::LEVEL_WARN);
+
+                        // Disabling console logging should revert to the original log level
+                        StdLog.SetConsoleLogging(true);
+                        StdLog.SetLevel(Level::LEVEL_DEBUG);
+                        Assert::AreEqual(StdLog.GetLevel(), Level::LEVEL_INFO);
+                        StdLog.SetConsoleLogging(false);
+                        Assert::AreEqual(StdLog.GetLevel(), Level::LEVEL_DEBUG);
+                    }
+
                     TEST_METHOD(logger_test_disabled)
                     {
                         StdLog.SetLevel(Level::LEVEL_TRACE);
