@@ -6,20 +6,20 @@ SPDX-License-Identifier: Apache-2.0
 <extension xmlns="urn:newrelic-extension">
 	<instrumentation>
 		<tracerFactory name="BuildCommonServicesWrapper">
-			<match assemblyName="Microsoft.AspNetCore.Hosting" className="Microsoft.AspNetCore.Hosting.WebHostBuilder">
+			<match assemblyName="Microsoft.AspNetCore.Hosting" className="Microsoft.AspNetCore.Hosting.WebHostBuilder" minVersion="1.0.0.0" maxVersion="6.0.0.0">
 				<exactMethodMatcher methodName="BuildCommonServices" />
 			</match>
 		</tracerFactory>
 		<tracerFactory name="GenericHostWebHostBuilderExtensionsWrapper">
-			<match assemblyName="Microsoft.AspNetCore.Hosting" className="Microsoft.Extensions.Hosting.GenericHostWebHostBuilderExtensions">
+			<match assemblyName="Microsoft.AspNetCore.Hosting" className="Microsoft.Extensions.Hosting.GenericHostWebHostBuilderExtensions" minVersion="1.0.0.0" maxVersion="6.0.0.0">
 				<exactMethodMatcher methodName="ConfigureWebHost" />
 			</match>
 		</tracerFactory>
 		<tracerFactory name="NewRelic.Providers.Wrapper.AspNetCore.InvokeActionMethodAsync">
-			<match assemblyName="Microsoft.AspNetCore.Mvc.Core" className="Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker">
+			<match assemblyName="Microsoft.AspNetCore.Mvc.Core" className="Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker" minVersion="1.0.0.0" maxVersion="6.0.0.0">
 				<exactMethodMatcher methodName="InvokeActionMethodAsync" />
 			</match>
-			<match assemblyName="Microsoft.AspNetCore.Mvc.Core" className="Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker">
+			<match assemblyName="Microsoft.AspNetCore.Mvc.Core" className="Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker" minVersion="1.0.0.0" maxVersion="6.0.0.0">
 				<exactMethodMatcher methodName="InvokeActionMethodAsync" />
 			</match>
 		</tracerFactory>

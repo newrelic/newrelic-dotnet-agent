@@ -37,6 +37,12 @@ namespace NewRelic.Agent.Core.Utilities
                 { "GenericHostWebHostBuilderExtensionsWrapper",                                                     Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
                 { "NewRelic.Providers.Wrapper.AspNetCore.InvokeActionMethodAsync",                                  Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
 
+                { "BuildCommonServicesWrapper6Plus",                                                                Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
+                { "GenericHostWebHostBuilderExtensionsWrapper6Plus",                                                Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
+                { "InvokeActionMethodAsyncWrapper6Plus",                                                            Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
+                { "ResponseCompressionBodyOnWriteWrapper",                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
+                { "PageActionInvokeHandlerAsyncWrapper6Plus",                                                       Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
+
                 { "ResolveAppWrapper",                                                                              Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Owin.dll") },
 
                 { "AspNet.CreateEventExecutionStepsTracer",                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNet.dll") },

@@ -38,7 +38,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
                 {
                     var typedHostBuilder = (Microsoft.Extensions.Hosting.IHostBuilder)hostBuilder;
                     typedHostBuilder.ConfigureServices(AddStartupFilter);
-
+                    
                     void AddStartupFilter(Microsoft.Extensions.Hosting.HostBuilderContext hostBuilderContext, IServiceCollection services)
                     {
                         //Forced evaluation is important. Do not remove ToList()
