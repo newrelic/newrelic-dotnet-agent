@@ -85,7 +85,244 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::AreEqual((uint8_t)1, overload2CallCount, L"Function should have been instrumented 1 time!");
         }
 
+        TEST_METHOD(GetConfigurationReturnsPointerToOriginalConfiguration)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto instrumentation = GetInstrumentationConfigurationForFunction(function);
+
+            auto methodRewriter = std::make_shared<MethodRewriter>(instrumentation, _X(""), false);
+
+            Assert::IsTrue(instrumentation == methodRewriter->GetInstrumentationConfiguration());
+        }
+
+        TEST_METHOD(GetAssemblyInstrumentation_IsEmptyWhenAssemblyIsNotInstrumented)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            auto instrumentationForAssembly = methodRewriter->GetAssemblyInstrumentation(_X("ADifferentAssembly"));
+
+            Assert::AreEqual(static_cast<size_t>(0), instrumentationForAssembly.size());
+        }
+
+        TEST_METHOD(GetAssemblyInstrumentation_IsNotEmptyWhenAssemblyIsInstrumented)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            auto instrumentationForAssembly = methodRewriter->GetAssemblyInstrumentation(function->GetAssemblyName());
+
+            Assert::AreEqual(static_cast<size_t>(1), instrumentationForAssembly.size());
+        }
+
+        TEST_METHOD(ShouldInstrumentAssembly_FalseWhenAssemblyIsNotInstrumented)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsFalse(methodRewriter->ShouldInstrumentAssembly(_X("ADifferentAssembly")));
+        }
+
+        TEST_METHOD(ShouldInstrumentAssembly_TrueWhenAssemblyIsInstrumented)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentAssembly(function->GetAssemblyName()));
+        }
+
+        TEST_METHOD(ShouldInstrumentType_FalseWhenTypeIsNotInstrumented)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsFalse(methodRewriter->ShouldInstrumentType(_X("ADifferentType")));
+        }
+
+        TEST_METHOD(ShouldInstrumentType_TrueWhenTypeIsInstrumented)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentType(function->GetTypeName()));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_FalseWhenFunctionIsNotInstrumented)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsFalse(methodRewriter->ShouldInstrumentFunction(_X("ADifferentMethod")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_TrueWhenFunctionIsInstrumented)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(function->GetFunctionName()));
+        }
+
+        // The following tests ensure that the helper methods are included in the collection of instrumented methods
+
+        TEST_METHOD(ShouldInstrumentAssembly_Mscorlib)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentAssembly(_X("mscorlib")));
+        }
+
+        TEST_METHOD(ShouldInstrumentAssembly_SystemPrivateCoreLib)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentAssembly(_X("System.Private.CoreLib")));
+        }
+
+        TEST_METHOD(ShouldInstrumentType_SystemCannotUnloadAppDomainException)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentType(_X("System.CannotUnloadAppDomainException")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_GetAppDomainBoolean)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetAppDomainBoolean")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_GetThreadLocalBoolean)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetThreadLocalBoolean")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_SetThreadLocalBoolean)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("SetThreadLocalBoolean")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_GetMethodFromAppDomainStorageOrReflectionOrThrow)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetMethodFromAppDomainStorageOrReflectionOrThrow")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_GetMethodFromAppDomainStorage)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetMethodFromAppDomainStorage")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_GetMethodViaReflectionOrThrow)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetMethodViaReflectionOrThrow")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_GetTypeViaReflectionOrThrow)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetTypeViaReflectionOrThrow")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_LoadAssemblyOrThrow)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("LoadAssemblyOrThrow")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_StoreMethodInAppDomainStorageOrThrow)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("StoreMethodInAppDomainStorageOrThrow")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_GetMethodCacheLookupMethod)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetMethodCacheLookupMethod")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_EnsureInitialized)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("EnsureInitialized")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_GetMethodInfoFromAgentCache)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetMethodInfoFromAgentCache")));
+        }
+
     private:
+        Configuration::InstrumentationConfigurationPtr GetInstrumentationConfigurationForFunction(std::shared_ptr<MockFunction> function)
+        {
+            auto instrumentationSet = std::make_shared<Configuration::InstrumentationPointSet>();
+            instrumentationSet->insert(function->GetInstrumentationPoint());
+
+            return std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet);
+        }
+
+        std::shared_ptr<MethodRewriter> GetMethodRewriterWithConfigurationForFunction(std::shared_ptr<MockFunction> function)
+        {
+            return std::make_shared<MethodRewriter>(GetInstrumentationConfigurationForFunction(function), _X(""), false);
+        }
+
     /*
         static void ValidateDefaultMockFunctionCallback()
         {
