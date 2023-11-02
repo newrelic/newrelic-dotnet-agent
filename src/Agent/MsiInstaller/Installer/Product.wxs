@@ -538,6 +538,7 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreMassTransitLegacyWrapperComponent" Guid="{8E94ECF6-B1A8-4D83-BDE8-71055FA33C34}">
         <File Id="CoreMassTransitLegacyWrapperFile" Name="NewRelic.Providers.Wrapper.MassTransitLegacy.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.dll"/>
+      </Component>
       <Component Id="CoreKafkaWrapperComponent" Guid="{6CA6D5A4-A204-4B04-A6B5-13D8B3E736C2}">
         <File Id="CoreKafkaWrapperFile" Name="NewRelic.Providers.Wrapper.Kafka.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Kafka.dll"/>
       </Component>
@@ -654,6 +655,7 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="MassTransitLegacyInstrumentationComponent" Guid="{FAD302C1-07BE-4770-85E4-F6EE25E287F3}">
         <File Id="MassTransitLegacyInstrumentationFile" Name="NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml"/>
+      </Component>
       <Component Id="KafkaInstrumentationComponent" Guid="{9FC86A0E-CACD-4DA8-84F8-20997C904913}">
         <File Id="KafkaInstrumentationFile" Name="NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml"/>
       </Component>
@@ -710,6 +712,7 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreMassTransitLegacyInstrumentationComponent" Guid="{A55ED281-B7FA-4BBC-B760-47495EB19BC1}">
         <File Id="CoreMassTransitLegacyInstrumentationFile" Name="NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml"/>
+      </Component>
       <Component Id="CoreKafkaInstrumentationComponent" Guid="{B2C4F83B-A339-4DBD-B8C4-760C8F72F9FC}">
         <File Id="CoreKafkaInstrumentationFile" Name="NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml"/>
       </Component>
