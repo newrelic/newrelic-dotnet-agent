@@ -46,6 +46,7 @@ namespace NewRelic.Providers.Wrapper.MassTransit
                 destination: destName);
 
             transaction.AttachToAsync();
+            transaction.DetachFromPrimary();
 
             transaction.AcceptDistributedTraceHeaders(context.Headers, GetHeaderValue, TransportType.AMQP);
 

@@ -96,11 +96,11 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task Publish(string message)
+        public async Task Publish(string text)
         {
-            var order = new Message() { Text = message };
-            await _bus.Publish(order);
-            ConsoleMFLogger.Info($"Published message {message}");
+            var message = new Message() { Text = text };
+            await _bus.Publish(message);
+            ConsoleMFLogger.Info($"Published message {text}");
 
             // This sleep ensures that this transaction method is the one sampled for transaction trace data
             Thread.Sleep(1000);
