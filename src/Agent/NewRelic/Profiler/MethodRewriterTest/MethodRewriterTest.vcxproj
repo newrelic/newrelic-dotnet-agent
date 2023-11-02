@@ -194,6 +194,7 @@
     <ClCompile Include="ExceptionHandlerManipulatorTest.cpp" />
     <ClCompile Include="InstantiatedGenericTypeTest.cpp" />
     <ClCompile Include="InstructionSetTest.cpp" />
+    <ClCompile Include="InstrumentorsTest.cpp" />
     <ClCompile Include="MethodRewriterTest.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

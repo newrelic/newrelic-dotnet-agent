@@ -48,7 +48,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             _string(L"[MyAssembly]MyNamespace.MyClass.MyMethod"),
             _isGenericType(false),
             _typeToken(0x045612345),
-            _isCoreClr(false)
+            _isCoreClr(false),
+            _shouldInjectMethodInstrumentation(false),
+            _shouldTrace(false),
+            _classAttributes(0),
+            _methodAttributes(0),
+            _isValid(true)
         {
             if (version.empty())
             {
@@ -139,14 +144,16 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return std::make_shared<MockFunctionHeaderInfo>((uint16_t)1);
         }
 
+        unsigned long _classAttributes;
         virtual unsigned long GetClassAttributes() override
         {
-            return 0;
+            return _classAttributes;
         }
 
+        unsigned long _methodAttributes;
         virtual unsigned long GetMethodAttributes() override
         {
-            return 0;
+            return _methodAttributes;
         }
 
         virtual bool Preprocess() override
@@ -154,9 +161,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return true;
         }
 
+        bool _shouldTrace;
         virtual bool ShouldTrace() override
         {
-            return false;
+            return _shouldTrace;
         }
 
         std::wstring _version;
@@ -172,9 +180,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             };
         }
 
+        bool _shouldInjectMethodInstrumentation;
         virtual bool ShouldInjectMethodInstrumentation() override
         {
-            return false;
+            return _shouldInjectMethodInstrumentation;
         }
 
         virtual uint32_t GetTracerFlags() override
@@ -182,9 +191,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return 0;
         }
 
+        bool _isValid;
         virtual bool IsValid() override
         {
-            return true;
+            return _isValid;
         }
 
         bool _isCoreClr;
