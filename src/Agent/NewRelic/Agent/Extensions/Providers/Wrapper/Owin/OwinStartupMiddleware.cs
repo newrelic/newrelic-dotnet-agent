@@ -120,7 +120,7 @@ namespace NewRelic.Providers.Wrapper.Owin
         private ISegment SetupSegment(ITransaction transaction, IOwinContext owinContext)
         {
             var method = new Method(typeof(OwinStartupMiddleware), nameof(Invoke), nameof(owinContext));
-            var methodCall = new MethodCall(method, this, new object[] { owinContext });
+            var methodCall = new MethodCall(method, this, new object[] { owinContext }, true);
 
             var segment = transaction.StartTransactionSegment(methodCall, "Owin Middleware Pipeline");
             return segment;

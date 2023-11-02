@@ -257,6 +257,26 @@ namespace NewRelic.Agent.Core.Transactions
             return segment;
         }
 
+        public ISegment StartMessageBrokerSerializationSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string kind)
+        {
+            if (Ignored)
+                return Segment.NoOpSegment;
+            if (brokerVendorName == null)
+                throw new ArgumentNullException("brokerVendorName");
+            if (string.IsNullOrEmpty(kind))
+                throw new ArgumentNullException("kind");
+
+
+            var segment = StartSegmentImpl(methodCall);
+            var messageBrokerSegmentData = CreateMessageBrokerSerializationSegmentData(destinationType, operation, brokerVendorName, destinationName, kind);
+
+            segment.SetSegmentData(messageBrokerSegmentData);
+
+            if (Log.IsFinestEnabled) LogFinest($"Segment start {{{segment.ToStringForFinestLogging()}}}");
+
+            return segment;
+        }
+
         public AbstractSegmentData CreateMessageBrokerSegmentData(MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName)
         {
             if (brokerVendorName == null)
@@ -266,6 +286,17 @@ namespace NewRelic.Agent.Core.Transactions
             var destType = AgentWrapperApiEnumToMetricNamesEnum(destinationType);
 
             return new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action);
+        }
+
+        public AbstractSegmentData CreateMessageBrokerSerializationSegmentData(MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, string kind)
+        {
+            if (brokerVendorName == null)
+                throw new ArgumentNullException("brokerVendorName");
+
+            var action = AgentWrapperApiEnumToMetricNamesEnum(operation);
+            var destType = AgentWrapperApiEnumToMetricNamesEnum(destinationType);
+
+            return new MessageBrokerSerializationSegmentData(brokerVendorName, destinationName, destType, action, kind);
         }
 
         /// <summary>
@@ -332,13 +363,13 @@ namespace NewRelic.Agent.Core.Transactions
             var typeName = methodCall.Method.Type.FullName ?? "[unknown]";
             var methodName = methodCall.Method.MethodName;
             var invocationTargetHashCode = RuntimeHelpers.GetHashCode(methodCall.InvocationTarget);
-            return new MethodCallData(typeName, methodName, invocationTargetHashCode);
+            return new MethodCallData(typeName, methodName, invocationTargetHashCode, methodCall.IsAsync);
         }
 
         // Used for StackExchange.Redis since we will not be instrumenting any methods when creating the many DataStore segments
         private static MethodCallData GetMethodCallData(string typeName, string methodName, int invocationTargetHashCode)
         {
-            return new MethodCallData(typeName, methodName, invocationTargetHashCode);
+            return new MethodCallData(typeName, methodName, invocationTargetHashCode, true); // assume async
         }
 
         private static MetricNames.MessageBrokerDestinationType AgentWrapperApiEnumToMetricNamesEnum(
@@ -783,6 +814,12 @@ namespace NewRelic.Agent.Core.Transactions
         public void SetMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, TransactionNamePriority priority = TransactionNamePriority.Uri)
         {
             var trxName = TransactionName.ForBrokerTransaction(destinationType, brokerVendorName, destination);
+            SetTransactionName(trxName, priority);
+        }
+
+        public void SetKafkaMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, TransactionNamePriority priority = TransactionNamePriority.Uri)
+        {
+            var trxName = TransactionName.ForKafkaBrokerTransaction(destinationType, brokerVendorName, destination);
             SetTransactionName(trxName, priority);
         }
 

@@ -22,15 +22,15 @@ jobs:
           non-workflow-files-changed: ${{ steps.filter.outputs.non-workflow-files-changed }}
         steps:
           - name: Harden Runner
-            uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+            uses: step-security/harden-runner@1b05615854632b887b69ae1be8cbefe72d3ae423 # v2.6.0
             with:
               disable-sudo: true
               egress-policy: audit
           - name: Checkout
-            uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+            uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
             with:
               fetch-depth: 0
-          - name: Verified which files were modified
+          - name: Verify which files were modified
             uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
             id: filter
             with:

@@ -129,6 +129,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportAgentInfo();
 
         void ReportSupportabilityCountMetric(string metricName, long count = 1);
+        void ReportCountMetric(string metricName, long count = 1);
 
         void ReportInfiniteTracingSpanResponseError();
         void ReportInfiniteTracingSpanEventsSeen(long count = 1);
@@ -148,5 +149,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportLoggingEventsDropped(int droppedCount);
         void ReportLogForwardingFramework(string logFramework);
         void ReportLogForwardingEnabledWithFramework(string logFramework);
+        void ReportByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null);
+        void ReportLoggingEventsEmpty(int count = 1);
     }
 }

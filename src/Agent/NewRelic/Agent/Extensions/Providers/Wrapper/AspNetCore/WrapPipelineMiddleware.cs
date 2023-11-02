@@ -148,7 +148,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
         {
             // Seems like it would be cool to not require all of this for a segment??? 
             var method = new Method(typeof(WrapPipelineMiddleware), nameof(Invoke), nameof(context));
-            var methodCall = new MethodCall(method, this, new object[] { context });
+            var methodCall = new MethodCall(method, this, new object[] { context }, true);
 
             var segment = transaction.StartTransactionSegment(methodCall, "Middleware Pipeline");
             return segment;

@@ -50,6 +50,7 @@ namespace NewRelic.Agent.Core.Segments
         }
 
         public void RemoveSegmentFromCallStack() { }
+        public void SetMessageBrokerDestination(string destination) { }
 
         public ISegmentExperimental SetSegmentData(ISegmentData segmentData)
         {

@@ -56,7 +56,7 @@ namespace CompositeTests
         public static ISegment StartDatastoreRequestSegmentOrThrow(this IAgent agent, string operation, DatastoreVendor vendor, string model, string commandText = null, MethodCall methodCall = null, string host = null, string portPathOrId = null, string databaseName = null, IDictionary<string, IConvertible> queryParameters = null)
         {
             methodCall = methodCall ?? GetDefaultMethodCall(agent);
-            var segment = agent.CurrentTransaction.StartDatastoreSegment(methodCall, new ParsedSqlStatement(vendor, model, operation), new ConnectionInfo(host, portPathOrId, databaseName), commandText, queryParameters);
+            var segment = agent.CurrentTransaction.StartDatastoreSegment(methodCall, new ParsedSqlStatement(vendor, model, operation), new ConnectionInfo(vendor.ToKnownName(), host, portPathOrId, databaseName), commandText, queryParameters);
             if (segment == null)
                 throw new NullReferenceException("segment");
 
@@ -67,7 +67,7 @@ namespace CompositeTests
         {
             methodCall = methodCall ?? GetDefaultMethodCall(agent);
             var xTransaction = (ITransactionExperimental)agent.CurrentTransaction;
-            var segment = xTransaction.StartStackExchangeRedisSegment(RuntimeHelpers.GetHashCode(methodCall), ParsedSqlStatement.FromOperation(vendor, operation), new ConnectionInfo(host, portPathOrId, databaseName), relativeStartTime, relativeEndTime);
+            var segment = xTransaction.StartStackExchangeRedisSegment(RuntimeHelpers.GetHashCode(methodCall), ParsedSqlStatement.FromOperation(vendor, operation), new ConnectionInfo(vendor.ToKnownName(), host, portPathOrId, databaseName), relativeStartTime, relativeEndTime);
             if (segment == null)
                 throw new NullReferenceException("segment");
 
@@ -89,7 +89,8 @@ namespace CompositeTests
             return new MethodCall(
                 new Method(agent.GetType(), "methodName", "parameterTypeNames"),
                 agent,
-                new object[0]
+                new object[0],
+                false
                 );
         }
 
@@ -98,7 +99,8 @@ namespace CompositeTests
             return new MethodCall(
                 new Method(agent.GetType(), "methodName", "parameterTypeNames"),
                 agent,
-                new object[] { "customName" }
+                new object[] { "customName" },
+                false
                 );
         }
     }

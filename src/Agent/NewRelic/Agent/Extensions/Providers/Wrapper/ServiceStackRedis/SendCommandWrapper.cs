@@ -76,9 +76,13 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
 
             var host = TryGetPropertyName(PropertyHost, contextObject) ?? "unknown";
             host = ConnectionStringParserHelper.NormalizeHostname(host, agent.Configuration.UtilizationHostName);
-            var portPathOrId = TryGetPropertyName(PropertyPortPathOrId, contextObject);
+            var port = TryGetPropertyName(PropertyPortPathOrId, contextObject);
+            if (!int.TryParse(port, out int portNum))
+            {
+                portNum = -1;
+            }
             var databaseName = TryGetPropertyName(PropertyDatabaseName, contextObject);
-            var connectionInfo = new ConnectionInfo(host, portPathOrId, databaseName);
+            var connectionInfo = new ConnectionInfo(DatastoreVendor.Redis.ToKnownName(), host, portNum, databaseName);
 
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
 

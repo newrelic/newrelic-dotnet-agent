@@ -370,6 +370,7 @@ namespace NewRelic.Agent.Core
 
                 if (cleanShutdown)
                 {
+                    Log.Debug("Agent is connected, executing a clean shutdown.");
                     EventBus<PreCleanShutdownEvent>.Publish(new PreCleanShutdownEvent());
                     EventBus<CleanShutdownEvent>.Publish(new CleanShutdownEvent());
                 }

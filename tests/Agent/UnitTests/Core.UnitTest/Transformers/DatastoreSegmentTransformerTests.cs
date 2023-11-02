@@ -283,7 +283,7 @@ namespace NewRelic.Agent.Core.Transformers
         private Segment GetSegment(DatastoreVendor vendor, string operation, string model, double duration, CrossApplicationResponseData catResponseData = null, string host = null, string portPathOrId = null)
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
-            var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, operation), null, new ConnectionInfo(host, portPathOrId, null));
+            var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, operation), null, new ConnectionInfo("none", host, portPathOrId, null));
             var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);
             segment.SetSegmentData(data);
 

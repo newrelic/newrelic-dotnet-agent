@@ -20,6 +20,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docker", "_docker", "{FB10
 		ContainerApplications\docker-compose.yml = ContainerApplications\docker-compose.yml
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KafkaTestApp", "ContainerApplications\KafkaTestApp\KafkaTestApp.csproj", "{1F7402D8-E345-480C-BBA6-6313A1DEEB23}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Testing.Assertions", "..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{C0ADF41E-F8B8-4ECA-828F-F578E09B17A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +50,14 @@ Global
 		{F7EFC853-3F97-4D91-9A6F-37ADAAC739C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F7EFC853-3F97-4D91-9A6F-37ADAAC739C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F7EFC853-3F97-4D91-9A6F-37ADAAC739C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F7402D8-E345-480C-BBA6-6313A1DEEB23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F7402D8-E345-480C-BBA6-6313A1DEEB23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F7402D8-E345-480C-BBA6-6313A1DEEB23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F7402D8-E345-480C-BBA6-6313A1DEEB23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0ADF41E-F8B8-4ECA-828F-F578E09B17A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0ADF41E-F8B8-4ECA-828F-F578E09B17A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0ADF41E-F8B8-4ECA-828F-F578E09B17A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0ADF41E-F8B8-4ECA-828F-F578E09B17A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +65,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{FBA07795-8066-4641-88E5-05DD272D333A} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
 		{FB10922F-3CC6-4497-AF53-DF6808380258} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
+		{1F7402D8-E345-480C-BBA6-6313A1DEEB23} = {84D70574-4AC7-4EA7-AE52-832C3531E082}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BB230433-D05D-4A1F-951B-CC14F47BBF42}

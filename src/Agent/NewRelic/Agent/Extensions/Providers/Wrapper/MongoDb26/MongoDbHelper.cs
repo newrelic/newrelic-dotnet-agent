@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Net;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Reflection;
 
@@ -104,7 +105,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
         public static ConnectionInfo GetConnectionInfoFromCursor(object asyncCursor, object collectionNamespace, string utilizationHostName)
         {
             string host = null;
-            string port = null;
+            int port = -1;
 
             var channelSource = GetChannelSourceFieldFromGeneric(asyncCursor);
             var server = GetServerFromFromInterface(channelSource);
@@ -115,19 +116,19 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 
             if (dnsEndpoint != null)
             {
-                port = dnsEndpoint.Port.ToString();
+                port = dnsEndpoint.Port;
                 host = ConnectionStringParserHelper.NormalizeHostname(dnsEndpoint.Host, utilizationHostName);
             }
 
             if (ipEndpoint != null)
             {
-                port = ipEndpoint.Port.ToString();
+                port = ipEndpoint.Port;
                 host = ConnectionStringParserHelper.NormalizeHostname(ipEndpoint.Address.ToString(), utilizationHostName);
             }
 
             var databaseName = GetDatabaseNameFromCollectionNamespace(collectionNamespace);
 
-            return new ConnectionInfo(host, port, databaseName);
+            return new ConnectionInfo(DatastoreVendor.MongoDB.ToKnownName(), host, port, databaseName);
         }
 
         public static ConnectionInfo GetConnectionInfoFromDatabase(object database, string utilizationHostName)
@@ -135,17 +136,17 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
             var databaseName = GetDatabaseNameFromDatabase(database);
             var servers = GetServersFromDatabase(database);
 
-            string port = null;
+            int port = -1;
             string host = null;
 
             if (servers.Count == 1)
             {
                 GetHostAndPortFromServer(servers[0], out var rawHost, out var rawPort);
-                port = rawPort.ToString();
+                port = rawPort;
                 host = ConnectionStringParserHelper.NormalizeHostname(rawHost, utilizationHostName);
             }
 
-            return new ConnectionInfo(host, port, databaseName);
+            return new ConnectionInfo(DatastoreVendor.MongoDB.ToKnownName(), host, port, databaseName);
         }
 
         private static IList GetServersFromDatabase(object database)

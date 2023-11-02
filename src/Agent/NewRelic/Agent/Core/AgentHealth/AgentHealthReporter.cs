@@ -107,6 +107,19 @@ namespace NewRelic.Agent.Core.AgentHealth
             TrySend(metric);
         }
 
+        public void ReportCountMetric(string metricName, long count)
+        {
+            var metric = _metricBuilder.TryBuildCountMetric(metricName, count);
+            TrySend(metric);
+        }
+        public void ReportByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null)
+        {
+            var metric = _metricBuilder.TryBuildByteMetric(metricName, totalBytes, exclusiveBytes);
+            TrySend(metric);
+        }
+
+
+
         public void ReportDotnetVersion()
         {
 #if NETFRAMEWORK
@@ -569,6 +582,11 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportLogForwardingEnabledWithFramework(string logFramework)
         {
             _loggingForwardingEnabledWithFrameworksReported.TryAdd(logFramework, false);
+        }
+
+        public void ReportLoggingEventsEmpty(int count = 1)
+        {
+            ReportSupportabilityCountMetric(MetricNames.SupportabilityLoggingEventEmpty);
         }
 
         public void CollectLoggingMetrics()

@@ -142,7 +142,7 @@ namespace NewRelic.Agent.Core.Wrapper
                 }
             }
 
-            var methodCall = new MethodCall(instrumentedMethodInfo.Method, invocationTarget, methodArguments);
+            var methodCall = new MethodCall(instrumentedMethodInfo.Method, invocationTarget, methodArguments, instrumentedMethodInfo.IsAsync);
             var instrumentedMethodCall = new InstrumentedMethodCall(methodCall, instrumentedMethodInfo);
 
             // if the wrapper throws an exception when executing the pre-method code, make sure the wrapper isn't called again in the future

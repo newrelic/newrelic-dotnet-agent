@@ -9,7 +9,7 @@ namespace ReleaseNotesBuilder
     {
         internal const string SectionPrefix = "### ";
         internal const string SecuritySection = SectionPrefix + "Security";
-        internal const string NewFeaturesSection = SectionPrefix + "New Features";
+        internal const string NewFeaturesSection = SectionPrefix + "New features";
         internal const string FixesSection = SectionPrefix + "Fixes";
         internal const string NoticeSection = SectionPrefix + "Notice";
 
