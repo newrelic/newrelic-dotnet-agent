@@ -5,24 +5,33 @@
 #include <functional>
 #include <string>
 #include <memory>
+#include <unordered_map>
 #include "../MethodRewriter/ISystemCalls.h"
 
 namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace Test {
     struct MockSystemCalls : ISystemCalls
     {
-        std::function<std::unique_ptr<std::wstring>(const std::wstring&)> EnvironmentVariableResult;
+        MockSystemCalls() { }
 
-        MockSystemCalls()
+        virtual std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName) override
         {
-            EnvironmentVariableResult = [](const std::wstring&)
+            auto search = _environmentVariables.find(variableName);
+            if (search != _environmentVariables.end())
             {
-                return std::unique_ptr<std::wstring>(new std::wstring(L"C:\\foo\\bar"));
-            };
+                return std::make_unique<xstring_t>(search->second);
+            }
+
+            return nullptr;
         }
 
-        virtual std::unique_ptr<std::wstring> TryGetEnvironmentVariable(const std::wstring& variableName) override
+        void SetEnvironmentVariable(const xstring_t& name, const xstring_t& value)
         {
-            return EnvironmentVariableResult(variableName);
+            _environmentVariables[name] = value;
+        }
+
+        void ResetEnvironmentVariables()
+        {
+            _environmentVariables.clear();
         }
 
         virtual bool FileExists(const xstring_t&) override
@@ -41,5 +50,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         virtual std::unique_ptr<xstring_t> GetNewRelicProfilerLogDirectory() override { return nullptr; }
         virtual std::unique_ptr<xstring_t> GetNewRelicLogDirectory() override { return nullptr; }
         virtual std::unique_ptr<xstring_t> GetNewRelicLogLevel() override { return nullptr; }
+
+    private:
+        std::unordered_map<xstring_t, xstring_t> _environmentVariables;
     };
 }}}}

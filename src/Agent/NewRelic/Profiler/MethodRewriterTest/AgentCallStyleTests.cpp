@@ -37,6 +37,26 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter{ namespace Te
             RunTest(_X("true"), _X("true"), AgentCallStyle::Strategy::Reflection);
         }
 
+        TEST_METHOD(AgentCallStrategy_EnvironmentVariable_0)
+        {
+            RunTest(_X("0"), _X("false"), AgentCallStyle::Strategy::InAgentCache);
+        }
+
+        TEST_METHOD(AgentCallStrategy_EnvironmentVariable_1)
+        {
+            RunTest(_X("1"), _X("false"), AgentCallStyle::Strategy::AppDomainCache);
+        }
+
+        TEST_METHOD(AgentCallStrategy_EnvironmentVariable_Empty)
+        {
+            RunTest(_X(""), _X("false"), AgentCallStyle::Strategy::InAgentCache);
+        }
+
+        TEST_METHOD(AgentCallStrategy_EnvironmentVariable_NotSet)
+        {
+            RunTestNoEnvironmentVariablesSet(AgentCallStyle::Strategy::InAgentCache);
+        }
+
         TEST_METHOD(AgentCallStrategy_ToString_InAgentCache)
         {
             const xstring_t expectedValue = _X("In Agent Cache");
@@ -59,22 +79,19 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter{ namespace Te
         void RunTest(const xstring_t& legacyCachingEnabled, const xstring_t& disableAppDomainCache, const AgentCallStyle::Strategy expectedStrategy)
         {
             auto systemCalls = std::make_shared<MockSystemCalls>();
-            systemCalls->EnvironmentVariableResult = [&legacyCachingEnabled, &disableAppDomainCache](const xstring_t& variableName)
-            {
-                if (variableName == _X("NEW_RELIC_ENABLE_LEGACY_CACHING"))
-                {
-                    return std::make_unique<xstring_t>(legacyCachingEnabled);
-                }
-                else if (variableName == _X("NEW_RELIC_DISABLE_APPDOMAIN_CACHING"))
-                {
-                    return std::make_unique<xstring_t>(disableAppDomainCache);
-                }
-                else
-                {
-                    return std::make_unique<xstring_t>(_X(""));
-                }
-            };
+            systemCalls->SetEnvironmentVariable(_X("NEW_RELIC_ENABLE_LEGACY_CACHING"), legacyCachingEnabled);
+            systemCalls->SetEnvironmentVariable(_X("NEW_RELIC_DISABLE_APPDOMAIN_CACHING"), disableAppDomainCache);
 
+            AgentCallStyle agentCallStyle(systemCalls);
+
+            const auto callStrategy = agentCallStyle.GetConfiguredCallingStrategy();
+
+            Assert::AreEqual(static_cast<int>(expectedStrategy), static_cast<int>(callStrategy));
+        }
+
+        void RunTestNoEnvironmentVariablesSet(const AgentCallStyle::Strategy expectedStrategy)
+        {
+            auto systemCalls = std::make_shared<MockSystemCalls>();
             AgentCallStyle agentCallStyle(systemCalls);
 
             const auto callStrategy = agentCallStyle.GetConfiguredCallingStrategy();
