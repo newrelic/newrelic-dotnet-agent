@@ -91,7 +91,7 @@ namespace NewRelic {
                     }
                     // Console logging at debug or trace level incurs a very large
                     // performance hit. Clamp the log level to INFO in that case.
-                    return max(Level::LEVEL_INFO, _level);
+                    return (_level < Level::LEVEL_INFO) ? Level::LEVEL_INFO : _level;
                 }
 
                 void SetConsoleLogging(bool enabled)
