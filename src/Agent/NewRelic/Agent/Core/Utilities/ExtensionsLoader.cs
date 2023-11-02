@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.Utilities
                 // Both NewRelic.Providers.Wrapper.MassTransit.dll and NewRelic.Providers.Wrapper.MassTransitLegacy.dll depend on MassTransit assemblies;
                 // therefore, they should only be loaded by the agent when MassTransit is used, otherwise assembly load exceptions will occur.
                 { "TransportConfigWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransit.dll") },
-                { "TransportConfigLegacyWrapper",                                                                    Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransitLegacy.dll") }
+                { "TransportConfigLegacyWrapper",                                                                    Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransitLegacy.dll") },
 
               // Kafka
                 { "KafkaProducerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },

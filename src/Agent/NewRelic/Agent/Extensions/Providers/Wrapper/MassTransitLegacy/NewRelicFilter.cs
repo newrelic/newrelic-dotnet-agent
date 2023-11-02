@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -37,7 +37,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
             _ = _consumeMethod ??= new Method(context.GetType(), SendMethodName,
                 context.GetType().FullName + "," + next.GetType().FullName);
 
-            var mc = new MethodCall(_consumeMethod, context, default(string[]));
+            var mc = new MethodCall(_consumeMethod, context, default(string[]), true);
 
             var destName = MassTransitHelpers.GetQueue(context.SourceAddress);
 
@@ -83,7 +83,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
             _ = _publishMethod ??= new Method(context.GetType(), SendMethodName,
                 context.GetType().FullName + "," + next.GetType().FullName);
 
-            var mc = new MethodCall(_publishMethod, context, default(string[]));
+            var mc = new MethodCall(_publishMethod, context, default(string[]), true);
 
             var destName = MassTransitHelpers.GetQueue(context.SourceAddress);
             var destType = MassTransitHelpers.GetBrokerDestinationType(context.SourceAddress);
@@ -101,7 +101,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
             _ = _sendMethod ??= new Method(context.GetType(), SendMethodName,
                 context.GetType().FullName + "," + next.GetType().FullName);
 
-            var mc = new MethodCall(_sendMethod, context, default(string[]));
+            var mc = new MethodCall(_sendMethod, context, default(string[]), true);
 
             var destName = MassTransitHelpers.GetQueue(context.SourceAddress);
             var destType = MassTransitHelpers.GetBrokerDestinationType(context.SourceAddress);
