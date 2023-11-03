@@ -9,6 +9,10 @@ namespace MultiFunctionApplicationHelpers
     public static class ConsoleMFLogger
     {
 
+        private static string LogTs => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss,fff");
+
+        private static int Tid => System.Threading.Thread.CurrentThread.ManagedThreadId;
+
         public static void Info()
         {
             Info("");
@@ -18,7 +22,7 @@ namespace MultiFunctionApplicationHelpers
         {
             foreach (var msg in message)
             {
-                Console.WriteLine($"{DateTime.Now.ToLongTimeString()} :{msg}");
+                Console.WriteLine($"{LogTs} tid:{Tid} {msg}");
             }
         }
 
@@ -31,7 +35,7 @@ namespace MultiFunctionApplicationHelpers
         {
             foreach (var msg in message)
             {
-                Console.Error.WriteLine($"{DateTime.Now.ToLongTimeString()} :{msg}");
+                Console.Error.WriteLine($"{LogTs} tid:{Tid} {msg}");
             }
         }
 
@@ -39,5 +43,6 @@ namespace MultiFunctionApplicationHelpers
         {
             Error(ex.ToString());
         }
+
     }
 }

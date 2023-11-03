@@ -573,7 +573,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     continue;
                 if (!expectedMetric.IsRegexName && expectedMetric.metricName != actualMetric.MetricSpec.Name)
                     continue;
-                if (expectedMetric.metricScope != actualMetric.MetricSpec.Scope)
+                if (expectedMetric.IsRegexScope && !Regex.IsMatch(actualMetric.MetricSpec.Scope ?? string.Empty, expectedMetric.metricScope))
+                    continue;
+                if (!expectedMetric.IsRegexScope && expectedMetric.metricScope != actualMetric.MetricSpec.Scope)
                     continue;
 
                 return actualMetric;
@@ -587,7 +589,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var foundMetrics = actualMetrics
                 .Where(actualMetric => (expectedMetric.IsRegexName && Regex.IsMatch(actualMetric.MetricSpec.Name, expectedMetric.metricName)) ||
                                        (!expectedMetric.IsRegexName && expectedMetric.metricName == actualMetric.MetricSpec.Name))
-                .Where(actualMetric => expectedMetric.metricScope == actualMetric.MetricSpec.Scope)
+                .Where(actualMetric => (expectedMetric.IsRegexScope && Regex.IsMatch(actualMetric.MetricSpec.Scope, expectedMetric.metricScope)) ||
+                                       (!expectedMetric.IsRegexScope && expectedMetric.metricScope == actualMetric.MetricSpec.Scope))
                 .ToList();
 
             return foundMetrics;
@@ -1113,10 +1116,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             public decimal? callCount = null;
             public decimal? CallCountAllHarvests = null;
             public bool IsRegexName = false;
+            public bool IsRegexScope = false;
 
             public override string ToString()
             {
-                return $"{{ metricName: {metricName} metricScope: {metricScope}, IsRegexName: {IsRegexName}, callCount: {callCount}, CallCountAllHarvests: {CallCountAllHarvests} }}";
+                return $"{{ metricName: {metricName} metricScope: {metricScope}, IsRegexName: {IsRegexName}, IsRegexScope: {IsRegexScope}, callCount: {callCount}, CallCountAllHarvests: {CallCountAllHarvests} }}";
             }
         }
 
