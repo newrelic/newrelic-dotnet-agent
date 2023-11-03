@@ -253,7 +253,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 CapturedOutput.WriteProcessOutputToLog("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening");
             }
 
-            Assert.True(false, "Remote process never generated a .pid file!");
+            Assert.Fail("Remote process never generated a .pid file!");
         }
     }
 }

@@ -36,7 +36,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         private static void Fail(string msg)
         {
-            Assert.True(false, "Hosted Web Core log failed validation: " + msg);
+            Assert.Fail("Hosted Web Core log failed validation: " + msg);
         }
 
         public static void ValidateHostedWebCoreConsoleOutput(string log, ITestOutputHelper testLogger)

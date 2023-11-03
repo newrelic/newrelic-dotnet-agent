@@ -51,7 +51,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="xunit">
-      <Version>2.4.0</Version>
+      <Version>2.6.1</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
