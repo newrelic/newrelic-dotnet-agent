@@ -66,8 +66,6 @@ namespace NewRelic { namespace Profiler
 
         virtual bool GetIsThisTheCoreLibAssembly() override { return _isCoreLibAssembly; }
 
-        virtual CComPtr<IMetaDataAssemblyEmit> GetMetaDataAssemblyEmit() override{ return _metaDataAssemblyEmit; }
-
         virtual void InjectPlatformInvoke(const xstring_t& methodName, const xstring_t& className, const xstring_t& moduleName, const ByteVector& signature) override
         {
             auto interfaceAttributes = CorMethodAttr::mdStatic | CorMethodAttr::mdPublic | CorMethodAttr::mdPinvokeImpl;
