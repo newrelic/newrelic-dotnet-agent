@@ -29,7 +29,7 @@
     <PackageReference Include="log4net.Ext.Json" Version="2.0.9.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.6.40">
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.7.30">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
