@@ -41,6 +41,8 @@ namespace NewRelic.Testing.Assertions.UnitTests
 
             Assert.NotNull(expectedException);
             Assert.IsTrue(expectedException.Message.IndexOf("assertion", StringComparison.InvariantCultureIgnoreCase) > -1);
+
+            Assert.Pass(); // needed to override NUnit's failing status at this point
         }
 
         [Test]
@@ -68,6 +70,8 @@ namespace NewRelic.Testing.Assertions.UnitTests
 
             Assert.IsTrue(failure1Index > -1);
             Assert.IsTrue(failure2Index > -1);
+
+            Assert.Pass(); // needed to override NUnit's failing status at this point
         }
 
         [Test]
@@ -89,6 +93,8 @@ namespace NewRelic.Testing.Assertions.UnitTests
 
             Assert.NotNull(expectedException);
             Assert.IsTrue(expectedException.Message.IndexOf("IndexOutOfRangeException", StringComparison.InvariantCultureIgnoreCase) > -1);
+
+            Assert.Pass(); // needed to override NUnit's failing status at this point
         }
 
         [Test]
@@ -116,6 +122,8 @@ namespace NewRelic.Testing.Assertions.UnitTests
 
             Assert.IsTrue(exception1Index > -1);
             Assert.IsTrue(exception2Index > -1);
+
+            Assert.Pass(); // needed to override NUnit's failing status at this point
         }
 
         [Test]
@@ -143,6 +151,8 @@ namespace NewRelic.Testing.Assertions.UnitTests
 
             Assert.IsTrue(exceptionIndex > -1);
             Assert.IsTrue(failureIndex > -1);
+
+            Assert.Pass(); // needed to override NUnit's failing status at this point
         }
 
         #endregion Multiple
