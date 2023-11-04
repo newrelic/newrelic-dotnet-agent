@@ -158,10 +158,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             Assert::AreEqual(expectedMethods.size(), injectedMethodNamesWithType.size());
 
-            for (int i = 0; i < expectedMethods.size(); i++)
+            for (const auto& expected : expectedMethods)
             {
-                auto search = injectedMethodNamesWithType.find(expectedMethods[i]);
-                Assert::IsTrue(search != injectedMethodNamesWithType.end(), (expectedMethods[i] + _X(" was not found")).c_str());
+                auto search = injectedMethodNamesWithType.find(expected);
+                Assert::IsTrue(search != injectedMethodNamesWithType.end(), (expected + _X(" was not found")).c_str());
             }
         }
 
