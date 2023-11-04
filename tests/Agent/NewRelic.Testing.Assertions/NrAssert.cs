@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using NUnit.Framework;
 
 namespace NewRelic.Testing.Assertions
 {
@@ -30,30 +31,19 @@ namespace NewRelic.Testing.Assertions
             throw new TestFailureException($"Expected exception of type '{typeof(T)}' was not thrown.");
         }
 
+        /// <summary>
+        /// OBSOLETE
+        /// Please use NUnit.Framework.Assert.Multiple() instead.
+        /// This method just passes through to Assert.Multiple().
+        /// </summary>
+        /// <param name="actions"></param>
         public static void Multiple(params Action[] actions)
         {
-            var exceptions = new List<Tuple<int,Exception>>();
-            for(var i = 0; i < actions.Length; i++)
+            Assert.Multiple(() =>
             {
-                try
-                {
-                    actions[i]();
-                }
-                catch (TestFailureException testEx)
-                {
-                    exceptions.Add(new Tuple<int, Exception>(i, testEx));
-                }
-                catch (Exception ex)
-                {
-                    exceptions.Add(new Tuple<int, Exception>(i, ex));
-                }
-            }
-
-            if (!exceptions.Any())
-                return;
-
-            var details = FormatExceptions(exceptions);
-            throw new TestFailureException(details);
+                foreach (var action in actions)
+                    action();
+            });
         }
 
         private static string FormatException(Exception exception)

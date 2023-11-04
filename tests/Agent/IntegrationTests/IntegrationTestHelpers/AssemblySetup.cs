@@ -16,7 +16,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Contract.ContractFailed += new EventHandler<ContractFailedEventArgs>((sender, eventArgs) =>
             {
                 eventArgs.SetHandled();
-                Assert.True(false, string.Format("{0}: {1} {2}", eventArgs.FailureKind, eventArgs.Message, eventArgs.Condition));
+                Assert.Fail(string.Format("{0}: {1} {2}", eventArgs.FailureKind, eventArgs.Message, eventArgs.Condition));
             });
         }
 
