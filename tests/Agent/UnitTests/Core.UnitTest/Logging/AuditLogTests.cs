@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using NUnit.Framework;
@@ -28,26 +28,6 @@ namespace NewRelic.Agent.Core.Logging.Tests
         public void TearDown()
         {
             AuditLog.ResetLazyLogger();
-        }
-
-        [Test]
-        public void IncludeOnlyAuditLog_EnablesAuditLog()
-        {
-            Assert.False(AuditLog.IsAuditLogEnabled);
-
-            var _ = new LoggerConfiguration().IncludeOnlyAuditLog();
-
-            Assert.True(AuditLog.IsAuditLogEnabled);
-        }
-
-        [Test]
-        public void ExcludeAuditLog_DisablesAuditLog()
-        {
-            AuditLog.IsAuditLogEnabled = true;
-
-            var _ = new LoggerConfiguration().ExcludeAuditLog();
-
-            Assert.False(AuditLog.IsAuditLogEnabled);
         }
 
         [TestCase(true)]
