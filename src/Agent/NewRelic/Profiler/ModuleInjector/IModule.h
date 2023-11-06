@@ -30,8 +30,6 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
         virtual bool NeedsReferenceToCoreLib() = 0;
         virtual bool GetIsThisTheCoreLibAssembly() = 0;
 
-        virtual CComPtr<IMetaDataAssemblyEmit> GetMetaDataAssemblyEmit() = 0;
-
         virtual sicily::codegen::ITokenizerPtr GetTokenizer() = 0;
     };
 

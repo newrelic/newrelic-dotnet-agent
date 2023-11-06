@@ -125,8 +125,6 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
                 }
                 catch (NewRelic::Profiler::Win32Exception&)
                 {
-                    //exception in an error if we are injecting methods, otherwise, just neat to know.
-                    //if is System.Private.CoreLib, allow the loop to proceed.  if not, break out of the loop
                     if (is_coreLib)
                     {
                         LogError(L"Failed to tokenize method signature: ", signatum, L". Proceeding to next method.");

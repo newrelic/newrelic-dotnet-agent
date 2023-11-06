@@ -119,6 +119,36 @@ namespace sicily
                     PrimitiveTypePtr primitiveType(new PrimitiveType(PrimitiveType::PrimitiveKind::kUINTPTR, false));
                     Assert::AreEqual(PrimitiveType::PrimitiveKind::kUINTPTR, primitiveType->GetPrimitiveKind());
                 }
+
+                TEST_METHOD(TestToString)
+                {
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kBOOL, _X("bool"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kCHAR, _X("char"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kI1, _X("int8"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kI2, _X("int16"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kI4, _X("int32"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kI8, _X("int64"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kINTPTR, _X("unknown"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT, _X("object"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kR4, _X("float32"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kR8, _X("float64"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kSTRING, _X("string"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kU1, _X("unsigned int8"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kU2, _X("unsigned int16"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kU4, _X("unsigned int32"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kU8, _X("unsigned int64"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kUINTPTR, _X("unknown"));
+                    TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind::kVOID, _X("void"));
+                }
+
+            private:
+                void TestToStringForPrimitiveType(PrimitiveType::PrimitiveKind primitiveKind, const xstring_t& expectedString)
+                {
+                    PrimitiveTypePtr primitiveType(new PrimitiveType(primitiveKind, false));
+                    PrimitiveTypePtr primitiveTypeReference(new PrimitiveType(primitiveKind, true));
+                    Assert::AreEqual(expectedString, primitiveType->ToString());
+                    Assert::AreEqual(expectedString + _X("&"), primitiveTypeReference->ToString());
+                }
             };
         }
     }
