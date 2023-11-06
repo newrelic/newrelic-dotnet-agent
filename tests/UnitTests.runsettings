@@ -20,7 +20,7 @@
                     <!-- See https://github.com/coverlet-coverage/coverlet/blob/master/Documentation/VSTestIntegration.md#advanced-options-supported-via-runsettings
                      and https://github.com/coverlet-coverage/coverlet/blob/master/Documentation/MSBuildIntegration.md#excluding-from-coverage -->
                     <Exclude>[NewRelic.OpenTracing.AmazonLambda*]*</Exclude>
-                    <ExcludeByFile>**/tests/**/*, **/NativeMethods.cs, **/NewRelic.Api.Agent/NewRelic.cs, **/AgentManager.cs, **/Agent/Extensions/Providers/**/*</ExcludeByFile>
+                    <ExcludeByFile>**/tests/**/*, **/NativeMethods.cs, **/NewRelic.Api.Agent/*, **/AgentManager.cs, **/Agent/Extensions/Providers/**/*</ExcludeByFile>
                     <ExcludeByAttribute>NrExcludeFromCodeCoverage,Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
                 </Configuration>
             </DataCollector>
