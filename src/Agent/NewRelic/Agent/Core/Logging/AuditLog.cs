@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Logging
         // a lazy ILogger instance that injects an "Audit" property
         private static Lazy<ILogger> _lazyAuditLogger = LazyAuditLogger();
 
-        public static bool IsAuditLogEnabled { get; set; } //setter is public only for unit tests, not expected to be use anywhere else
+        public static bool IsAuditLogEnabled { get; set; } 
 
         // for unit tests only
         public static void ResetLazyLogger()
@@ -38,8 +38,6 @@ namespace NewRelic.Agent.Core.Logging
 
         public static LoggerConfiguration IncludeOnlyAuditLog(this LoggerConfiguration loggerConfiguration)
         {
-            IsAuditLogEnabled = true; // set a flag so Log() can short-circuit when audit log is not enabled
-
             return loggerConfiguration.Filter.ByIncludingOnly($"{LogLevelExtensions.AuditLevel} is not null");
         }
 

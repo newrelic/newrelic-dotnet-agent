@@ -57,6 +57,8 @@ namespace NewRelic.Agent.Core
         {
             SetupLogLevel(config);
 
+            AuditLog.IsAuditLogEnabled = config.IsAuditLogEnabled;
+
             var loggerConfig = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(_loggingLevelSwitch)
                 .ConfigureAuditLogSink(config)
