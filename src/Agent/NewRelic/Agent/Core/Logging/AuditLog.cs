@@ -45,8 +45,6 @@ namespace NewRelic.Agent.Core.Logging
 
         public static LoggerConfiguration ExcludeAuditLog(this LoggerConfiguration loggerConfiguration)
         {
-            IsAuditLogEnabled = false; // set a flag so Log() can short-circuit when audit log is not enabled
-
             return loggerConfiguration.Filter.ByIncludingOnly($"{LogLevelExtensions.AuditLevel} is null");
         }
     }
