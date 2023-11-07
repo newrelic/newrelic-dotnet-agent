@@ -133,6 +133,9 @@ namespace sicily {
             case TOK_INT32:
                 result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kI4, byRef);
                 break;
+            case TOK_UINT64:
+                result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kU8, byRef);
+                break;
             case TOK_STRING:
                 result = std::make_shared<ast::PrimitiveType>(ast::PrimitiveType::PrimitiveKind::kSTRING, byRef);
                 break;

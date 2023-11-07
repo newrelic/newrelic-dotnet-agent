@@ -267,6 +267,13 @@ namespace sicily
             {
                 Assert::ExpectException<UnhandledCharacterException>([this]() { TestParser(_X("^")); });
             }
+
+            TEST_METHOD(ParsingTracerFuncType)
+            {
+                // The expected signature transforms uint32 and uint64 to unsigned int32 and unsigned int64
+                TestParser(_X("class [System.Private.CoreLib]System.Func`12<string, uint32, string, string, class [System.Private.CoreLib]System.Type, string, string, string, object, object[], uint64, class [System.Private.CoreLib]System.Action`2<object, class [System.Private.CoreLib]System.Exception>>"),
+                    _X("class [System.Private.CoreLib]System.Func`12<string, unsigned int32, string, string, class [System.Private.CoreLib]System.Type, string, string, string, object, object[], unsigned int64, class [System.Private.CoreLib]System.Action`2<object, class [System.Private.CoreLib]System.Exception>>"));
+            }
         };
     }
 }

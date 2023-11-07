@@ -35,44 +35,53 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
         {
             // When injecting method REFERENCES into an assembly, theses references should have
             // the external assembly identifier to System.Private.CoreLib
-            constexpr std::array<ManagedMethodToInject, 9> methodReferencesToInjectCoreClr{
+            constexpr std::array<ManagedMethodToInject, 12> methodReferencesToInjectCoreClr{
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("LoadAssemblyOrThrow"), _X("class [System.Private.CoreLib]System.Reflection.Assembly"), _X("string")),
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetTypeViaReflectionOrThrow"), _X("class [System.Private.CoreLib]System.Type"), _X("string,string")),
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetMethodViaReflectionOrThrow"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo"), _X("string,string,string,class [System.Private.CoreLib]System.Type[]")),
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorage"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo"), _X("string")),
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo"), _X("string,string,string,string,class [System.Private.CoreLib]System.Type[]")),
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo,string")),
-                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("EnsureInitialized"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("StoreMethodCacheLookupMethod"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("StoreAgentShimFinishTracerDelegateMethod"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"),_X("EnsureInitialized"), _X("void"), _X("string")),
                 ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetMethodInfoFromAgentCache"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo"), _X("string,string,string,string,class [System.Private.CoreLib]System.Type[]")),
-                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetMethodCacheLookupMethod"), _X("object"), _X(""))
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetMethodCacheLookupMethod"), _X("object"), _X("")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetAgentShimFinishTracerDelegateMethod"), _X("object"), _X(""))
             };
 
             // When injecting method REFERENCES into an assembly, theses references should have
             // the external assembly identifier to mscorlib
-            constexpr std::array<ManagedMethodToInject, 9> methodReferencesToInjectNetFramework{
+            constexpr std::array<ManagedMethodToInject, 12> methodReferencesToInjectNetFramework{
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("LoadAssemblyOrThrow"), _X("class [mscorlib]System.Reflection.Assembly"), _X("string")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetTypeViaReflectionOrThrow"), _X("class [mscorlib]System.Type"), _X("string,string")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetMethodViaReflectionOrThrow"), _X("class [mscorlib]System.Reflection.MethodInfo"), _X("string,string,string,class [mscorlib]System.Type[]")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorage"), _X("class [mscorlib]System.Reflection.MethodInfo"), _X("string")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class [mscorlib]System.Reflection.MethodInfo"), _X("string,string,string,string,class [mscorlib]System.Type[]")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("class [mscorlib]System.Reflection.MethodInfo,string")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("StoreMethodCacheLookupMethod"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("StoreAgentShimFinishTracerDelegateMethod"), _X("void"), _X("string")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("EnsureInitialized"), _X("void"), _X("string")),
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetMethodInfoFromAgentCache"), _X("class [mscorlib]System.Reflection.MethodInfo"), _X("string,string,string,string,class [mscorlib]System.Type[]")),
-                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetMethodCacheLookupMethod"), _X("object"), _X(""))
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetMethodCacheLookupMethod"), _X("object"), _X("")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetAgentShimFinishTracerDelegateMethod"), _X("object"), _X(""))
             };
 
             // When injecting HELPER METHODS into the System.Private.CoreLib assembly, theses references should be local.
             // They cannot reference [System.Private.CoreLib] since these methods are being rewritten in System.Private.CoreLib.
-            constexpr std::array<ManagedMethodToInject, 9> methodImplsToInject{
+            constexpr std::array<ManagedMethodToInject, 12> methodImplsToInject{
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("LoadAssemblyOrThrow"), _X("class System.Reflection.Assembly"), _X("string")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetTypeViaReflectionOrThrow"), _X("class System.Type"), _X("string,string")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetMethodViaReflectionOrThrow"), _X("class System.Reflection.MethodInfo"), _X("string,string,string,class System.Type[]")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorage"), _X("class System.Reflection.MethodInfo"), _X("string")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class System.Reflection.MethodInfo"), _X("string,string,string,string,class System.Type[]")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("class System.Reflection.MethodInfo,string")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("StoreMethodCacheLookupMethod"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("StoreAgentShimFinishTracerDelegateMethod"), _X("void"), _X("string")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("EnsureInitialized"), _X("void"), _X("string")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetMethodInfoFromAgentCache"), _X("class System.Reflection.MethodInfo"), _X("string,string,string,string,class System.Type[]")),
-                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetMethodCacheLookupMethod"), _X("object"), _X(""))
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetMethodCacheLookupMethod"), _X("object"), _X("")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetAgentShimFinishTracerDelegateMethod"), _X("object"), _X(""))
             };
 
             const auto is_coreLib = module.GetIsThisTheCoreLibAssembly();

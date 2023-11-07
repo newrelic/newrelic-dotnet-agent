@@ -54,6 +54,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _instrumentedFunctionNames->emplace(_X("LoadAssemblyOrThrow"));
             _instrumentedFunctionNames->emplace(_X("StoreMethodInAppDomainStorageOrThrow"));
             _instrumentedFunctionNames->emplace(_X("GetMethodCacheLookupMethod"));
+            _instrumentedFunctionNames->emplace(_X("GetAgentShimFinishTracerDelegateMethod"));
+            _instrumentedFunctionNames->emplace(_X("StoreAgentShimFinishTracerDelegateMethod"));
+            _instrumentedFunctionNames->emplace(_X("StoreMethodCacheLookupMethod"));
             _instrumentedFunctionNames->emplace(_X("EnsureInitialized"));
             _instrumentedFunctionNames->emplace(_X("GetMethodInfoFromAgentCache"));
 

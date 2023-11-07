@@ -96,6 +96,19 @@ namespace NewRelic.Agent.Core
 #endif
 
         /// <summary>
+        /// This method is invoked once using reflection by the byte-code injected by the profiler. This method is used to get a
+        /// reference to the GetFinishTracerDelegate method that is invoked within instrumented methods.
+        /// </summary>
+        /// <returns>
+        /// A reference to the GetFinishTracerDelegate method. The result is treated as an object
+        /// to simplify the type definition injected by the profiler to store this reference.
+        /// </returns>
+        public static object GetFinishTracerDelegateFunc()
+        {
+            return (Func<string, uint, string, string, Type, string, string, string, object, object[], ulong, Action<object, Exception>>)GetFinishTracerDelegate;
+        }
+
+        /// <summary>
         /// Creates a tracer (if appropriate) and returns a delegate for the tracer's finish method.
         /// This method is reflectively invoked from the injected bytecode if the CLR is greater than 2.0.
         /// </summary>

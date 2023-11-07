@@ -54,9 +54,21 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             {
                 BuildGetMethodCacheLookupMethodMethod();
             }
+            else if (_function->GetFunctionName() == _X("GetAgentShimFinishTracerDelegateMethod"))
+            {
+                BuildGetAgentShimFinishTracerDelegateMethod();
+            }
             else if (_function->GetFunctionName() == _X("GetMethodInfoFromAgentCache"))
             {
                 BuildGetMethodInfoFromAgentCache();
+            }
+            else if (_function->GetFunctionName() == _X("StoreMethodCacheLookupMethod"))
+            {
+                BuildStoreMethodCacheLookupMethod();
+            }
+            else if (_function->GetFunctionName() == _X("StoreAgentShimFinishTracerDelegateMethod"))
+            {
+                BuildStoreAgentShimFinishTracerDelegateMethod();
             }
             else
             {
@@ -188,12 +200,15 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_RET);
         }
 
-        void BuildEnsureInitializedMethod()
+        void BuildGetAgentShimFinishTracerDelegateMethod()
         {
             _instructions->Append(CEE_VOLATILE);
-            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_methodCache"));
-            auto afterInit = _instructions->AppendJump(CEE_BRTRUE);
+            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_tracerFunc"));
+            _instructions->Append(CEE_RET);
+        }
 
+        void BuildStoreMethodCacheLookupMethod()
+        {
             _instructions->Append(CEE_LDARG_0);
             _instructions->AppendString(_X("NewRelic.Agent.Core.ProfilerAgentMethodCallCache"));
             _instructions->AppendString(_X("GetMethodCacheFunc"));
@@ -206,6 +221,37 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
             _instructions->Append(CEE_VOLATILE);
             _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_methodCache"));
+            _instructions->Append(CEE_RET);
+        }
+
+        void BuildStoreAgentShimFinishTracerDelegateMethod()
+        {
+            _instructions->Append(CEE_LDARG_0);
+            _instructions->AppendString(_X("NewRelic.Agent.Core.AgentShim"));
+            _instructions->AppendString(_X("GetFinishTracerDelegateFunc"));
+            _instructions->Append(CEE_LDNULL);
+            _instructions->Append(CEE_CALL, _X("class System.Reflection.MethodInfo System.CannotUnloadAppDomainException::GetMethodViaReflectionOrThrow(string,string,string,class System.Type[])"));
+
+            _instructions->Append(CEE_LDNULL);
+            _instructions->Append(CEE_LDNULL);
+            _instructions->Append(CEE_CALLVIRT, _X("instance object System.Reflection.MethodBase::Invoke(object, object[])"));
+
+            _instructions->Append(CEE_VOLATILE);
+            _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_tracerFunc"));
+            _instructions->Append(CEE_RET);
+        }
+
+        void BuildEnsureInitializedMethod()
+        {
+            _instructions->Append(CEE_VOLATILE);
+            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_methodCache"));
+            auto afterInit = _instructions->AppendJump(CEE_BRTRUE);
+
+            _instructions->Append(CEE_LDARG_0);
+            _instructions->Append(_X("call void System.CannotUnloadAppDomainException::StoreAgentShimFinishTracerDelegateMethod(string)"));
+
+            _instructions->Append(CEE_LDARG_0);
+            _instructions->Append(_X("call void System.CannotUnloadAppDomainException::StoreMethodCacheLookupMethod(string)"));
 
             _instructions->AppendLabel(afterInit);
 

@@ -240,6 +240,9 @@ namespace sicily {
         else if (sem.id_ == _X("int32")) {
             return TOK_INT32;
         }
+        else if (sem.id_ == _X("uint64")) {
+            return TOK_UINT64;
+        }
         else {
             return TOK_ID;
         }
