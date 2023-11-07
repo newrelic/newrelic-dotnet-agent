@@ -14,7 +14,7 @@ Writing data from a “true async” method creates a new copy of the `Execution
 
 This is tricky for us trying not to crash in the wild even though we don’t “support” these cases. Currently, we are wrapping data in a serializable container that won’t actually serialize the underlying data. We hope to avoid crashes but don’t intend to support cross-app domain calls or remoting.
 
-For more on the origins of this storage, see: [Implicit Async Context ("AsyncLocal")](http://blog.stephencleary.com/2013/04/implicit-async-context-asynclocal.html)
+For more on the origins of this storage, see: [Implicit Async Context ("AsyncLocal")](https://blog.stephencleary.com/2013/04/implicit-async-context-asynclocal.html)
 
 ## Segment Parenting / "Call Stack"
 
