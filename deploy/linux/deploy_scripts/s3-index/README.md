@@ -27,7 +27,7 @@ GOPATH=$(pwd) go run src/indexer/main.go
 
 The AWS configuration in `~/.aws` will be used, or environment variables can be
 set. More details are at the
-[AWS Go documentation](http://docs.aws.amazon.com/sdk-for-go/api/).
+[AWS Go documentation](https://docs.aws.amazon.com/sdk-for-go/api/).
 
 If you go the environment variable route, you'll need to set `AWS_REGION`
 (probably to `us-east-1`), `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
