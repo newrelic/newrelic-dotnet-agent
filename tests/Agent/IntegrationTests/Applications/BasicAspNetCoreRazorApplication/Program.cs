@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using ApplicationLifecycle;
 
 namespace BasicAspNetCoreRazorApplication
@@ -43,6 +45,22 @@ namespace BasicAspNetCoreRazorApplication
             app.UseAuthorization();
 
             app.MapRazorPages();
+
+            app.MapGet("/foo", async context =>
+            {
+                var subscriptions = new
+                {
+                    Foo = 1, Bar = "Something"
+                };
+
+                await context.Response.WriteAsync(JsonSerializer.Serialize(subscriptions,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                    }));
+            });
+
 
             app.Urls.Add($"http://*:{_port}");
 

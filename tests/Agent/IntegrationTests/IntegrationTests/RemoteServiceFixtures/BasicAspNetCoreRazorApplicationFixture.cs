@@ -41,15 +41,21 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                         var resultBytes = response.Content.ReadAsByteArrayAsync().Result;
                         Assert.NotNull(resultBytes);
 
-                        using (var ms = new MemoryStream(resultBytes))
-                        using (var gzip = new GZipStream(ms, CompressionMode.Decompress))
+                        if (response.Content.Headers.ContentEncoding != null &&
+                            response.Content.Headers.ContentEncoding.ToString() == "gzip")
                         {
-                            var reader = new StreamReader(gzip, Encoding.UTF8);
+                            using (var ms = new MemoryStream(resultBytes))
+                            using (var gzip = new GZipStream(ms, CompressionMode.Decompress))
+                            {
+                                var reader = new StreamReader(gzip, Encoding.UTF8);
 
-                            var result = reader.ReadToEndAsync().Result;
-                            Assert.NotNull(result);
-                            return result;
+                                var result = reader.ReadToEndAsync().Result;
+                                Assert.NotNull(result);
+                                return result;
+                            }
                         }
+                        else // not compressed
+                            return response.Content.ReadAsStringAsync().Result;
                     }
                 }
             }

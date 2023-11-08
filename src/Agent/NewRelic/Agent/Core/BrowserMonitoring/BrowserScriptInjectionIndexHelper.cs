@@ -4,6 +4,7 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {
@@ -23,53 +24,61 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         /// </remarks>
         public static int TryFindInjectionIndex(byte[] content)
         {
-            var contentAsString = Encoding.UTF8.GetString(content);
-
-            var openingHeadTagIndex = FindFirstOpeningHeadTag(contentAsString);
-
-            // No <HEAD> tag. Attempt to insert before <BODY> tag (not a great fallback option).
-            if (openingHeadTagIndex == -1)
+            try
             {
-                return FindIndexBeforeBodyTag(content, contentAsString);
-            }
+                var contentAsString = Encoding.UTF8.GetString(content);
 
-            // Since we have a head tag (top of 'page'), search for <X_UA_COMPATIBLE> and for <CHARSET> tags in Head section
-            var xUaCompatibleFilterMatch = XUaCompatibleFilter.Match(contentAsString, openingHeadTagIndex);
-            var charsetFilterMatch = CharsetFilter.Match(contentAsString, openingHeadTagIndex);
+                var openingHeadTagIndex = FindFirstOpeningHeadTag(contentAsString);
 
-            // Try to find </HEAD> tag. (It's okay if we don't find it!)
-            var closingHeadTagIndex = contentAsString.IndexOf("</head>", StringComparison.InvariantCultureIgnoreCase);
-
-            // Find which of the two tags occurs latest (if at all) and ensure that at least
-            // one of the matches occurs prior to the closing head tag
-            if ((xUaCompatibleFilterMatch.Success || charsetFilterMatch.Success) &&
-                (xUaCompatibleFilterMatch.Index < closingHeadTagIndex || charsetFilterMatch.Index < closingHeadTagIndex))
-            {
-                var match = charsetFilterMatch;
-                if (xUaCompatibleFilterMatch.Index > charsetFilterMatch.Index)
+                // No <HEAD> tag. Attempt to insert before <BODY> tag (not a great fallback option).
+                if (openingHeadTagIndex == -1)
                 {
-                    match = xUaCompatibleFilterMatch;
+                    return FindIndexBeforeBodyTag(content, contentAsString);
                 }
 
-                // find the index just after the end of the regex match in the UTF-8 buffer
-                var contentSubString = contentAsString.Substring(match.Index, match.Length);
-                var utf8HeadMatchIndex = IndexOfByteArray(content, contentSubString, out var substringBytesLength);
+                // Since we have a head tag (top of 'page'), search for <X_UA_COMPATIBLE> and for <CHARSET> tags in Head section
+                var xUaCompatibleFilterMatch = XUaCompatibleFilter.Match(contentAsString, openingHeadTagIndex);
+                var charsetFilterMatch = CharsetFilter.Match(contentAsString, openingHeadTagIndex);
 
-                return utf8HeadMatchIndex + substringBytesLength;
+                // Try to find </HEAD> tag. (It's okay if we don't find it!)
+                var closingHeadTagIndex = contentAsString.IndexOf("</head>", StringComparison.InvariantCultureIgnoreCase);
+
+                // Find which of the two tags occurs latest (if at all) and ensure that at least
+                // one of the matches occurs prior to the closing head tag
+                if ((xUaCompatibleFilterMatch.Success || charsetFilterMatch.Success) &&
+                    (xUaCompatibleFilterMatch.Index < closingHeadTagIndex || charsetFilterMatch.Index < closingHeadTagIndex))
+                {
+                    var match = charsetFilterMatch;
+                    if (xUaCompatibleFilterMatch.Index > charsetFilterMatch.Index)
+                    {
+                        match = xUaCompatibleFilterMatch;
+                    }
+
+                    // find the index just after the end of the regex match in the UTF-8 buffer
+                    var contentSubString = contentAsString.Substring(match.Index, match.Length);
+                    var utf8HeadMatchIndex = IndexOfByteArray(content, contentSubString, out var substringBytesLength);
+
+                    return utf8HeadMatchIndex + substringBytesLength;
+                }
+
+                // found opening head tag but no meta tags, insert immediately after the opening head tag
+                // Find first '>' after the opening head tag, which will be end of head opening tag.
+                var indexOfEndHeadOpeningTag = contentAsString.IndexOf('>', openingHeadTagIndex);
+
+                // The <HEAD> tag may be malformed or simply be another type of tag, if so do not use it
+                if (!(indexOfEndHeadOpeningTag > openingHeadTagIndex))
+                    return -1;
+
+                // Get the whole open HEAD tag string
+                var headOpeningTag = contentAsString.Substring(openingHeadTagIndex, (indexOfEndHeadOpeningTag - openingHeadTagIndex) + 1);
+                var utf8HeadOpeningTagIndex = IndexOfByteArray(content, headOpeningTag, out var headOpeningTagBytesLength);
+                return utf8HeadOpeningTagIndex + headOpeningTagBytesLength;
             }
-
-            // found opening head tag but no meta tags, insert immediately after the opening head tag
-            // Find first '>' after the opening head tag, which will be end of head opening tag.
-            var indexOfEndHeadOpeningTag = contentAsString.IndexOf('>', openingHeadTagIndex);
-
-            // The <HEAD> tag may be malformed or simply be another type of tag, if so do not use it
-            if (!(indexOfEndHeadOpeningTag > openingHeadTagIndex))
+            catch (Exception e)
+            {
+                Log.LogMessage(LogLevel.Error, e, "Unexpected exception in TryFindInjectionIndex().");
                 return -1;
-
-            // Get the whole open HEAD tag string
-            var headOpeningTag = contentAsString.Substring(openingHeadTagIndex, (indexOfEndHeadOpeningTag - openingHeadTagIndex) + 1);
-            var utf8HeadOpeningTagIndex = IndexOfByteArray(content, headOpeningTag, out var headOpeningTagBytesLength);
-            return utf8HeadOpeningTagIndex + headOpeningTagBytesLength;
+            }
         }
 
         private static int FindIndexBeforeBodyTag(byte[] content, string contentAsString)

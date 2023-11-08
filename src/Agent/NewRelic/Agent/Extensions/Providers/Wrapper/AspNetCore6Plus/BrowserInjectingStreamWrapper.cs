@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Logging;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 {
@@ -29,11 +30,16 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             CanWrite = true;
         }
 
+        /// <summary>
+        /// Flag gets set to true if we've captured an exception and need to disable browser injection
+        /// </summary>
+        public static bool Disabled { get; set; }
+
         public override Task FlushAsync(CancellationToken cancellationToken)
         {
-            if (!_isContentLengthSet && IsHtmlResponse())
+            if (!Disabled && !_isContentLengthSet && IsHtmlResponse())
             {
-                _context.Response.Headers.ContentLength = null;
+                _context.Response.ContentLength = null;
                 _isContentLengthSet = true;
             }
 
@@ -50,7 +56,8 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             _baseStream.SetLength(value);
 
-            IsHtmlResponse(forceReCheck: true);
+            if (!Disabled)
+                IsHtmlResponse(forceReCheck: true);
         }
 
         public override void Write(ReadOnlySpan<byte> buffer) => _baseStream.Write(buffer);
@@ -62,13 +69,19 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             // pass through without modification if we're already in the middle of injecting
             // don't inject if the response isn't an HTML response
-            if (!CurrentlyInjecting() && IsHtmlResponse())
+            if (!Disabled && !CurrentlyInjecting() && IsHtmlResponse())
             {
-                // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
-                StartInjecting();
-                _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer, _baseStream)
-                    .GetAwaiter().GetResult();
-                FinishInjecting();
+                try
+                {
+                    // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
+                    StartInjecting();
+                    _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer, _baseStream)
+                        .GetAwaiter().GetResult();
+                }
+                finally
+                {
+                    FinishInjecting();
+                }
 
                 return;
             }
@@ -82,12 +95,18 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             // pass through without modification if we're already in the middle of injecting
             // don't inject if the response isn't an HTML response
-            if (!CurrentlyInjecting() && IsHtmlResponse())
+            if (!Disabled && !CurrentlyInjecting() && IsHtmlResponse())
             {
-                // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
-                StartInjecting();
-                await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
-                FinishInjecting();
+                try
+                {
+                    // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
+                    StartInjecting();
+                    await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
+                }
+                finally
+                {
+                    FinishInjecting();
+                }
 
                 return;
             }
@@ -98,9 +117,9 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         private const string InjectingRUM = "InjectingRUM";
 
-        private void FinishInjecting() => _context.Items.Remove(InjectingRUM);
-        private void StartInjecting() => _context.Items.Add(InjectingRUM, null);
-        private bool CurrentlyInjecting() => _context.Items.ContainsKey(InjectingRUM);
+        private void FinishInjecting() => _context?.Items.Remove(InjectingRUM);
+        private void StartInjecting() => _context?.Items.Add(InjectingRUM, null);
+        private bool CurrentlyInjecting() => _context?.Items.ContainsKey(InjectingRUM) ?? false;
 
         public override async ValueTask DisposeAsync()
         {
@@ -120,41 +139,55 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         private bool IsHtmlResponse(bool forceReCheck = false)
         {
-            if (!forceReCheck && _isHtmlResponse != null)
-                return _isHtmlResponse.Value;
-
-            // we need to check if the active request is still valid
-            // this can fail if we're in the middle of an error response
-            // or url rewrite in which case we can't intercept
-            if (_context?.Response == null)
-                return false;
-
-            // Requirements for script injection:
-            // * text/html response
-            // * UTF-8 formatted (either explicitly or no charset defined)
-
-            _isHtmlResponse =
-                _context.Response.ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
-                (_context.Response.ContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
-                !_context.Response.ContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
-
-            if (!_isHtmlResponse.Value)
+            try
             {
-                _agent.CurrentTransaction?.LogFinest($"Skipping RUM injection: Not an HTML response. ContentType is {_context.Response.ContentType}");
-                return false;
+                if (!forceReCheck && _isHtmlResponse != null)
+                    return _isHtmlResponse.Value;
+
+                // we need to check if the active request is still valid
+                // this can fail if we're in the middle of an error response
+                // or url rewrite in which case we can't intercept
+                if (_context?.Response == null)
+                    return false;
+
+                // Requirements for script injection:
+                // * text/html response
+                // * UTF-8 formatted (either explicitly or no charset defined)
+                _isHtmlResponse =
+                    _context.Response.ContentType != null && 
+                    _context.Response.ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
+                    (_context.Response.ContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
+                     !_context.Response.ContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
+
+                if (!_isHtmlResponse.Value)
+                {
+                    _agent.CurrentTransaction?.LogFinest($"Skipping RUM injection: Not an HTML response. ContentType is {_context.Response.ContentType}");
+                    return false;
+                }
+
+                // Make sure we force dynamic content type since we're
+                // rewriting the content - static content will set the header explicitly
+                // and fail when it doesn't match if (_isHtmlResponse.Value)
+                if (!_isContentLengthSet && _context.Response.ContentLength != null)
+                {
+                    _context.Response.ContentLength = null;
+                    _isContentLengthSet = true;
+                }
+            }
+            catch (Exception e)
+            {
+                LogExceptionAndDisable(e);
             }
 
-            // Make sure we force dynamic content type since we're
-            // rewriting the content - static content will set the header explicitly
-            // and fail when it doesn't match if (_isHtmlResponse.Value)
-            if (!_isContentLengthSet && _context.Response.ContentLength != null)
-            {
-                _context.Response.Headers.ContentLength = null;
-                _isContentLengthSet = true;
-            }
-
-            return _isHtmlResponse.Value;
+            return _isHtmlResponse ?? false;
         }
 
+        private void LogExceptionAndDisable(Exception e)
+        {
+            _agent.Logger.Log(Level.Error,
+                $"Unexpected exception. Browser injection will be disabled. Exception: {e.Message}: {e.StackTrace}");
+
+            Disabled = true;
+        }
     }
 }

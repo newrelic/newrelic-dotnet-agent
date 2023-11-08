@@ -1,11 +1,9 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System;
 using System.IO;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
-using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {
@@ -33,15 +31,19 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             transaction?.LogFinest($"Injecting RUM script at byte index {index}.");
 
+            if (index < buffer.Length) // validate index is less than buffer length
+            {
+                // Write everything up to the insertion index
+                await baseStream.WriteAsync(buffer, 0, index);
 
-            // Write everything up to the insertion index
-            await baseStream.WriteAsync(buffer, 0, index);
+                // Write the RUM script
+                await baseStream.WriteAsync(rumBytes, 0, rumBytes.Length);
 
-            // Write the RUM script
-            await baseStream.WriteAsync(rumBytes, 0, rumBytes.Length);
-
-            // Write the rest of the doc, starting after the insertion index
-            await baseStream.WriteAsync(buffer, index, buffer.Length - index);
+                // Write the rest of the doc, starting after the insertion index
+                await baseStream.WriteAsync(buffer, index, buffer.Length - index);
+            }
+            else
+                transaction?.LogFinest($"Skipping RUM Injection: Insertion index was invalid.");
         }
     }
 }

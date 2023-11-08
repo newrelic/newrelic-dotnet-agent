@@ -21,9 +21,12 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public Task Invoke(HttpContext context)
         {
-            // wrap the response body in our stream wrapper which will inject the RUM script if appropriate
-            using var injectedResponse = new BrowserInjectingStreamWrapper(_agent, context.Response.Body, context);
-            context.Features.Set<IHttpResponseBodyFeature>(new StreamResponseBodyFeature(injectedResponse));
+            if (!BrowserInjectingStreamWrapper.Disabled)
+            {
+                // wrap the response body in our stream wrapper which will inject the RUM script if appropriate
+                using var injectedResponse = new BrowserInjectingStreamWrapper(_agent, context.Response.Body, context);
+                context.Features.Set<IHttpResponseBodyFeature>(new StreamResponseBodyFeature(injectedResponse));
+            }
 
             return _next(context);
         }
