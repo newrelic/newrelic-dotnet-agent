@@ -2765,6 +2765,8 @@ namespace NewRelic.Agent.Core.Configuration
 
         #endregion
 
+        public bool LoggingEnabled => _localConfiguration.log.Enabled;
+
         private const bool CaptureTransactionTraceAttributesDefault = true;
         private const bool CaptureErrorCollectorAttributesDefault = true;
         private const bool CaptureBrowserMonitoringAttributesDefault = false;

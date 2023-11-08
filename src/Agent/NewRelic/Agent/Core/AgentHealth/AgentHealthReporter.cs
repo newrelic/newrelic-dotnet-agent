@@ -695,6 +695,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             ReportLogForwardingConfiguredValues();
             ReportIfAppDomainCachingDisabled();
             ReportInfiniteTracingOneTimeMetrics();
+            ReportIfLoggingDisabled();
         }
 
         public void CollectMetrics()
@@ -828,6 +829,18 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             // Some one time metrics are reporting configured values, so we want to re-report them if the configuration changed
             _oneTimeMetricsCollected = false;
+        }
+
+        private void ReportIfLoggingDisabled()
+        {
+            if (!_configuration.LoggingEnabled)
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityLoggingDisabled);
+            }
+            if (Log.HasFatalErrorOccurred())
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityLoggingFatalError);
+            }
         }
     }
 }

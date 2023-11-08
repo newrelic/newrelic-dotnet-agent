@@ -833,6 +833,9 @@ namespace NewRelic.Agent.Core.Metrics
         // AppDomain caching disabled
         public const string SupportabilityAppDomainCachingDisabled = "Supportability/DotNET/AppDomainCaching/Disabled";
 
+        public const string SupportabilityLoggingDisabled = "Supportability/DotNET/AgentLogging/Disabled";
+        public const string SupportabilityLoggingFatalError = "Supportability/DotNET/AgentLogging/DisabledDueToError";
+
         #endregion Supportability
 
         #region Distributed Trace Metrics

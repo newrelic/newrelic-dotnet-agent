@@ -1284,6 +1284,7 @@ namespace NewRelic.Agent.Core.Config
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
     public partial class configurationLog
     {
+        private bool enabledField;
         
         private string levelField;
         
@@ -1300,6 +1301,7 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         public configurationLog()
         {
+            this.enabledField = true;
             this.levelField = "info";
             this.consoleField = false;
             this.auditLogField = false;
@@ -1356,6 +1358,20 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.consoleField = value;
+            }
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
             }
         }
         

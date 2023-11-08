@@ -313,6 +313,14 @@
                             </xs:annotation>
                         </xs:attribute>
 
+                        <xs:attribute name="enabled" type="xs:boolean" default="true">
+                            <xs:annotation>
+                                <xs:documentation>
+                                    If this is false, no attempts will be made to write to a log file. This is primarily used for installations on read-only file systems.
+                                </xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
+                        
                         <xs:attribute name="directory" type="xs:string" use="optional">
                             <xs:annotation>
                                 <xs:documentation>
