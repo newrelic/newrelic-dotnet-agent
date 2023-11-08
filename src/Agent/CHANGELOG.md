@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.19.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.19.0...v10.19.1) (2023-11-08)
+
+
+### Fixes
+
+* Add defensive coding and exception handling during ASP.NET Core 6+ browser injection. ([#2035](https://github.com/newrelic/newrelic-dotnet-agent/issues/2035)) ([#2038](https://github.com/newrelic/newrelic-dotnet-agent/issues/2038)) ([5ddd0ea](https://github.com/newrelic/newrelic-dotnet-agent/commit/5ddd0ea6cd196da5a9aa4b00a8c097c111211251))
+
 ## [10.19.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.18.0...v10.19.0) (2023-11-07)
 
 
