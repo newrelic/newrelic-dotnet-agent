@@ -14,6 +14,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         private readonly BasicAspNetCoreRazorApplicationFixture _fixture;
         private string _htmlContent;
         private string _staticContent;
+        private string _fooContent;
 
         protected BrowserAgentAutoInjection6PlusBase(BasicAspNetCoreRazorApplicationFixture fixture,
             ITestOutputHelper output, bool enableResponseCompression, string loaderType = "rum")
@@ -37,6 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                 {
                     _htmlContent = _fixture.Get("Index"); // get a razor page
                     _staticContent = _fixture.Get("static.html"); // get static content
+                    _fooContent = _fixture.Get("foo"); // get a manually-written response body with no content type
                 }
             );
 
@@ -51,7 +53,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         {
             NrAssert.Multiple(
                 () => Assert.NotNull(_htmlContent),
-                () => Assert.NotNull(_staticContent)
+                () => Assert.NotNull(_staticContent),
+                () => Assert.NotNull(_fooContent)
             );
 
             var connectResponseData = _fixture.AgentLog.GetConnectResponseData();
@@ -60,9 +63,15 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 
             var jsAgentFromHtmlContent = JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_htmlContent);
             var jsAgentFromStaticContent = JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_staticContent);
+            var jsAgentFromFooContent = JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_fooContent);
 
             Assert.Equal(jsAgentFromConnectResponse, jsAgentFromHtmlContent);
             Assert.Equal(jsAgentFromConnectResponse, jsAgentFromStaticContent);
+            Assert.Null(jsAgentFromFooContent);
+
+            // verify that the browser injecting stream wrapper didn't catch an exception and disable itself
+            var agentDisabledLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.ErrorLogLinePrefixRegex + "Unexpected exception. Browser injection will be disabled. *?");
+            Assert.Null(agentDisabledLogLine);
         }
     }
 
