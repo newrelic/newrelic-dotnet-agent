@@ -62,15 +62,20 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             // pass through without modification if we're already in the middle of injecting
             // don't inject if the response isn't an HTML response
-            if (!CurrentlyInjecting() && IsHtmlResponse())
+            if (!CurrentlyInjecting())
             {
-                // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
-                StartInjecting();
-                _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer, _baseStream)
-                    .GetAwaiter().GetResult();
-                FinishInjecting();
+                var responseContentType = _context.Response.ContentType;
+                var requestPath = _context.Request.Path.Value;
+                if (ShouldInject(responseContentType, requestPath) && IsHtmlResponse())
+                {
+                    // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
+                    StartInjecting();
+                    _agent.TryInjectBrowserScriptAsync(responseContentType, requestPath, buffer, _baseStream)
+                        .GetAwaiter().GetResult();
+                    FinishInjecting();
 
-                return;
+                    return;
+                }
             }
 
             _baseStream?.Write(buffer, offset, count);
@@ -82,19 +87,33 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             // pass through without modification if we're already in the middle of injecting
             // don't inject if the response isn't an HTML response
-            if (!CurrentlyInjecting() && IsHtmlResponse())
+            if (!CurrentlyInjecting())
             {
-                // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
-                StartInjecting();
-                await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value, buffer.ToArray(), _baseStream);
-                FinishInjecting();
+                var responseContentType = _context.Response.ContentType;
+                var requestPath = _context.Request.Path.Value;
+                if (ShouldInject(responseContentType, requestPath) && IsHtmlResponse())
+                {
+                    // Set a flag on the context to indicate we're in the middle of injecting - prevents multiple recursions when response compression is in use
+                    StartInjecting();
+                    await _agent.TryInjectBrowserScriptAsync(_context.Response.ContentType, _context.Request.Path.Value,
+                        buffer.ToArray(), _baseStream);
+                    FinishInjecting();
 
-                return;
+                    return;
+                }
             }
 
             if (_baseStream != null)
                 await _baseStream.WriteAsync(buffer, cancellationToken);
         }
+
+        /// <summary>
+        /// Checks (via IBrowserPreReqChecker) whether we should inject the RUM script for this request.
+        /// </summary>
+        /// <param name="contentType"></param>
+        /// <param name="requestPath"></param>
+        /// <returns></returns>
+        private bool ShouldInject(string contentType, string requestPath) => _agent.ShouldInjectBrowserScript(contentType, requestPath);
 
         private const string InjectingRUM = "InjectingRUM";
 
@@ -120,7 +139,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         private bool IsHtmlResponse(bool forceReCheck = false)
         {
-            if (!forceReCheck && _isHtmlResponse != null)
+            if (!forceReCheck && _isHtmlResponse.HasValue)
                 return _isHtmlResponse.Value;
 
             // we need to check if the active request is still valid
@@ -132,11 +151,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             // Requirements for script injection:
             // * text/html response
             // * UTF-8 formatted (either explicitly or no charset defined)
-
             _isHtmlResponse =
+                _context.Response.ContentType != null &&
                 _context.Response.ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
                 (_context.Response.ContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
-                !_context.Response.ContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
+                  !_context.Response.ContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
 
             if (!_isHtmlResponse.Value)
             {
@@ -149,7 +168,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             // and fail when it doesn't match if (_isHtmlResponse.Value)
             if (!_isContentLengthSet && _context.Response.ContentLength != null)
             {
-                _context.Response.Headers.ContentLength = null;
+                _context.Response.ContentLength = null;
                 _isContentLengthSet = true;
             }
 

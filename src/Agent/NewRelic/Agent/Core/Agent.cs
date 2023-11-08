@@ -312,6 +312,12 @@ namespace NewRelic.Agent.Core
             return script == null ? null : new BrowserMonitoringStreamInjector(() => script, stream, encoding);
         }
 
+        public bool ShouldInjectBrowserScript(string contentType, string requestPath)
+        {
+            var transaction = _transactionService.GetCurrentInternalTransaction();
+            return transaction != null && _browserMonitoringPrereqChecker.ShouldAutomaticallyInject(transaction, requestPath, contentType);
+        }
+
         public async Task TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream)
         {
             var transaction = _transactionService.GetCurrentInternalTransaction();

@@ -105,6 +105,14 @@ namespace NewRelic.Agent.Api
         Stream TryGetStreamInjector(Stream stream, Encoding encoding, string contentType, string requestPath);
 
         /// <summary>
+        /// Returns true if we should inject the browser agent script for the given request and content type (also considers the current transaction)
+        /// </summary>
+        /// <param name="contentType"></param>
+        /// <param name="requestPath"></param>
+        /// <returns></returns>
+        bool ShouldInjectBrowserScript(string contentType, string requestPath);
+
+        /// <summary>
         /// Used by AspNetCore6Plus, injects the RUM script if various conditions are met. Assumes (perhaps boldly) that the
         /// page content is UTF-8 encoded.
         /// 
