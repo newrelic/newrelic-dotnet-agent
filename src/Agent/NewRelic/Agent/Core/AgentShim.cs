@@ -105,7 +105,29 @@ namespace NewRelic.Agent.Core
         /// </returns>
         public static object GetFinishTracerDelegateFunc()
         {
-            return (Func<string, uint, string, string, Type, string, string, string, object, object[], ulong, Action<object, Exception>>)GetFinishTracerDelegate;
+            return (Func<object[], Action<object, Exception>>)GetFinishTracerDelegateParameterWrapper;
+        }
+
+        /// <summary>
+        /// This method is used to work around .net framework ad .net < 6.0 not supporting generic delegates
+        /// with 11 parameters.
+        /// </summary>
+        /// <param name="parameters">An array of boxed parameters for the GetFinishTracerDelegate method.</param>
+        /// <returns><The delegate to invoke when a method completes or results in an exception./returns>
+        public static Action<object, Exception> GetFinishTracerDelegateParameterWrapper(object[] parameters)
+        {
+            return GetFinishTracerDelegate(
+                (string)parameters[0],
+                (uint)parameters[1],
+                (string)parameters[2],
+                (string)parameters[3],
+                (Type)parameters[4],
+                (string)parameters[5],
+                (string)parameters[6],
+                (string)parameters[7],
+                parameters[8],
+                (object[])parameters[9],
+                (ulong)parameters[10]);
         }
 
         /// <summary>

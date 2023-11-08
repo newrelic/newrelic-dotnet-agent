@@ -43,7 +43,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         {
             // set the stack size required to handle these instructions (remember that we push all of this functions arguments onto the stack to recursively call)
             auto originalStackSize = GetHeader()->GetMaxStack();
-            unsigned maxStackSize = std::max<unsigned>(std::max<unsigned>(originalStackSize, 20), unsigned(_methodSignature->_parameters->size() + 1));
+            unsigned maxStackSize = std::max<unsigned>(std::max<unsigned>(originalStackSize, 10), unsigned(_methodSignature->_parameters->size() + 1));
             GetHeader()->SetMaxStack(maxStackSize);
 
             AppendDefaultLocals();
@@ -156,110 +156,89 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
         void CallGetTracer(NewRelic::Profiler::Configuration::InstrumentationPointPtr instrumentationPoint)
         {
+            // if we are using MethodInfo.Invoke the invocation will look like
+            // tracer = delegates.Invoke(null, new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
+            // oterwise we are using Func.Invoke and it will look like
+            // tracer = delegates.Invoke(new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
+
             if (_agentCallStrategy == AgentCallStyle::Strategy::InAgentCache)
             {
                 // Ensure that the managed agent is loaded
                 _instructions->AppendString(_instrumentationSettings->GetCorePath());
                 _instructions->Append(_X("call void [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::EnsureInitialized(string)"));
 
-                // Call the agent shim delegate
-
-                // Get the Func holding a reference to NewRelic.Agent.Core.AgentShim.GetFinishTracerDelegate
+                // Get the Func holding a reference to NewRelic.Agent.Core.AgentShim.GetFinishTracerDelegateParameterWrapper
                 _instructions->Append(_X("call object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetAgentShimFinishTracerDelegateMethod()"));
-                _instructions->Append(CEE_CASTCLASS, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Func`12<string, uint32, string, string, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type, string, string, string, object, object[], uint64, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Action`2<object, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception>>"));
-
-                _instructions->Append(_X("ldstr      ") + instrumentationPoint->TracerFactoryName);
-
-                _instructions->Append(CEE_LDC_I4, instrumentationPoint->TracerFactoryArgs);
-
-                _instructions->Append(_X("ldstr      ") + instrumentationPoint->MetricName);
-
-                _instructions->Append(_X("ldstr      ") + _function->GetAssemblyName());
-
-                _instructions->Append(CEE_LDTOKEN, _function->GetTypeToken());
-                _instructions->Append(_X("call class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type::GetTypeFromHandle(valuetype [") + _instructions->GetCoreLibAssemblyName() + _X("]System.RuntimeTypeHandle)"));
-
-                _instructions->Append(_X("ldstr      ") + _function->GetTypeName());
-
-                _instructions->Append(_X("ldstr      ") + _function->GetFunctionName());
-
-                // pass the stringified method signature to GetTracer
-                auto signatureString = _methodSignature->ToString(_function->GetTokenResolver());
-                _instructions->Append(_X("ldstr      ") + signatureString);
-
-                if (_methodSignature->_hasThis) _instructions->AppendLoadArgument(0);
-                else _instructions->Append(_X("ldnull"));
-
-                // turn the parameters passed into this method into an object array
-                BuildObjectArrayOfParameters();
-
-                // It's important to upcast the function id here.  It's an int on WIN32
-                _instructions->Append(CEE_LDC_I8, (uint64_t)_function->GetFunctionId());
-
-                // make the call to GetFinishTracerDelegate
-                _instructions->Append(CEE_CALLVIRT, _X("instance !11 class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Func`12<string, uint32, string, string, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type, string, string, string, object, object[], uint64, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Action`2<object, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception>>::Invoke(!0, !1, !2, !3, !4, !5, !6, !7, !8, !9, !10)"));
+                _instructions->Append(CEE_CASTCLASS, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Func`2<object[], class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Action`2<object, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception>>"));
             }
             else
             {
                 LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentShim"), _X("GetFinishTracerDelegate"), 0, nullptr);
-
-                // tracer = delegates[0].Invoke(null, new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
                 _instructions->Append(_X("ldnull"));
-                _instructions->Append(_X("ldc.i4.s   11"));
-                _instructions->Append(_X("newarr     [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Object"));
-                _instructions->Append(_X("dup"));
-                _instructions->Append(_X("ldc.i4.0"));
-                _instructions->Append(_X("ldstr      ") + instrumentationPoint->TracerFactoryName);
-                _instructions->Append(_X("stelem.ref"));
-                _instructions->Append(_X("dup"));
-                _instructions->Append(_X("ldc.i4.1"));
-                _instructions->Append(CEE_LDC_I4, instrumentationPoint->TracerFactoryArgs);
-                _instructions->Append(_X("box [") + _instructions->GetCoreLibAssemblyName() + _X("]System.UInt32"));
-                _instructions->Append(_X("stelem.ref"));
-                _instructions->Append(_X("dup"));
-                _instructions->Append(_X("ldc.i4.2"));
-                _instructions->Append(_X("ldstr      ") + instrumentationPoint->MetricName);
-                _instructions->Append(_X("stelem.ref"));
-                _instructions->Append(_X("dup"));
-                _instructions->Append(_X("ldc.i4.3"));
-                _instructions->Append(_X("ldstr      ") + _function->GetAssemblyName());
-                _instructions->Append(_X("stelem.ref"));
-                _instructions->Append(_X("dup"));
-                _instructions->Append(_X("ldc.i4.4"));
-                _instructions->Append(CEE_LDTOKEN, _function->GetTypeToken());
-                _instructions->Append(_X("call class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type::GetTypeFromHandle(valuetype [") + _instructions->GetCoreLibAssemblyName() + _X("]System.RuntimeTypeHandle)"));
-                _instructions->Append(_X("stelem.ref"));
-                _instructions->Append(_X("dup"));
-                _instructions->Append(_X("ldc.i4.5"));
-                _instructions->Append(_X("ldstr      ") + _function->GetTypeName());
-                _instructions->Append(_X("stelem.ref"));
-                _instructions->Append(_X("dup"));
-                _instructions->Append(_X("ldc.i4.6"));
-                _instructions->Append(_X("ldstr      ") + _function->GetFunctionName());
-                _instructions->Append(_X("stelem.ref"));
-                _instructions->Append(_X("dup"));
-                _instructions->Append(_X("ldc.i4.7"));
-                // pass the stringified method signature to GetTracer
-                auto signatureString = _methodSignature->ToString(_function->GetTokenResolver());
-                _instructions->Append(_X("ldstr      ") + signatureString);
-                _instructions->Append(_X("stelem.ref"));
-                _instructions->Append(_X("dup"));
-                _instructions->Append(_X("ldc.i4.8"));
-                if (_methodSignature->_hasThis) _instructions->AppendLoadArgument(0);
-                else _instructions->Append(_X("ldnull"));
-                _instructions->Append(_X("stelem.ref"));
-                _instructions->Append(_X("dup"));
-                _instructions->Append(_X("ldc.i4.s 9"));
-                // turn the parameters passed into this method into an object array
-                BuildObjectArrayOfParameters();
-                _instructions->Append(_X("stelem.ref"));
-                _instructions->Append(_X("dup"));
-                _instructions->Append(_X("ldc.i4.s 10"));
-                // It's important to upcast the function id here.  It's an int on WIN32
-                _instructions->Append(CEE_LDC_I8, (uint64_t)_function->GetFunctionId());
-                _instructions->Append(_X("box [") + _instructions->GetCoreLibAssemblyName() + _X("]System.UInt64"));
-                _instructions->Append(_X("stelem.ref"));
-                // make the call to GetTracer
+            }
+
+            _instructions->Append(_X("ldc.i4.s   11"));
+            _instructions->Append(_X("newarr     [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Object"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.0"));
+            _instructions->Append(_X("ldstr      ") + instrumentationPoint->TracerFactoryName);
+            _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.1"));
+            _instructions->Append(CEE_LDC_I4, instrumentationPoint->TracerFactoryArgs);
+            _instructions->Append(_X("box [") + _instructions->GetCoreLibAssemblyName() + _X("]System.UInt32"));
+            _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.2"));
+            _instructions->Append(_X("ldstr      ") + instrumentationPoint->MetricName);
+            _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.3"));
+            _instructions->Append(_X("ldstr      ") + _function->GetAssemblyName());
+            _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.4"));
+            _instructions->Append(CEE_LDTOKEN, _function->GetTypeToken());
+            _instructions->Append(_X("call class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type::GetTypeFromHandle(valuetype [") + _instructions->GetCoreLibAssemblyName() + _X("]System.RuntimeTypeHandle)"));
+            _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.5"));
+            _instructions->Append(_X("ldstr      ") + _function->GetTypeName());
+            _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.6"));
+            _instructions->Append(_X("ldstr      ") + _function->GetFunctionName());
+            _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.7"));
+            // pass the stringified method signature to GetTracer
+            auto signatureString = _methodSignature->ToString(_function->GetTokenResolver());
+            _instructions->Append(_X("ldstr      ") + signatureString);
+            _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.8"));
+            if (_methodSignature->_hasThis) _instructions->AppendLoadArgument(0);
+            else _instructions->Append(_X("ldnull"));
+            _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.s 9"));
+            // turn the parameters passed into this method into an object array
+            BuildObjectArrayOfParameters();
+            _instructions->Append(_X("stelem.ref"));
+            _instructions->Append(_X("dup"));
+            _instructions->Append(_X("ldc.i4.s 10"));
+            // It's important to upcast the function id here.  It's an int on WIN32
+            _instructions->Append(CEE_LDC_I8, (uint64_t)_function->GetFunctionId());
+            _instructions->Append(_X("box [") + _instructions->GetCoreLibAssemblyName() + _X("]System.UInt64"));
+            _instructions->Append(_X("stelem.ref"));
+
+            // make the call to GetTracer
+            if (_agentCallStrategy == AgentCallStyle::Strategy::InAgentCache)
+            {
+                _instructions->Append(CEE_CALLVIRT, _X("instance !1 class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Func`2<object[], class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Action`2<object, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception>>::Invoke(!0)"));
+            }
+            else
+            {
                 InvokeMethodInfo();
             }
 
