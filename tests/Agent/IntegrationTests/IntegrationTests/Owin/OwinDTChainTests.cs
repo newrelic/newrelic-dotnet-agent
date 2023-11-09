@@ -41,8 +41,8 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 {
                     _fixture.ExecuteTraceRequestChainHttpClient();
 
-                    _fixture.ReceiverApplication.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
-                    _fixture.ReceiverApplication.AgentLog.WaitForLogLine(AgentLogFile.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.ReceiverAppAgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.ReceiverAppAgentLog.WaitForLogLine(AgentLogFile.SpanEventDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
 
@@ -55,11 +55,11 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             var senderAppTxEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
             Assert.NotNull(senderAppTxEvent);
 
-            var receiverAppTxEvent = _fixture.ReceiverApplication.AgentLog.GetTransactionEvents().FirstOrDefault();
+            var receiverAppTxEvent = _fixture.ReceiverAppAgentLog.GetTransactionEvents().FirstOrDefault();
             Assert.NotNull(receiverAppTxEvent);
 
             var senderAppSpanEvents = _fixture.AgentLog.GetSpanEvents();
-            var receiverAppSpanEvents = _fixture.ReceiverApplication.AgentLog.GetSpanEvents();
+            var receiverAppSpanEvents = _fixture.ReceiverAppAgentLog.GetSpanEvents();
 
             var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/localhost/Stream/GET")
                 .FirstOrDefault();
@@ -113,14 +113,14 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             };
 
             var senderActualMetrics = _fixture.AgentLog.GetMetrics();
-            var receiverActualMetrics = _fixture.ReceiverApplication.AgentLog.GetMetrics();
+            var receiverActualMetrics = _fixture.ReceiverAppAgentLog.GetMetrics();
 
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(senderExpectedMetrics, senderActualMetrics),
                 () => Assertions.MetricsExist(receiverExpectedMetrics, receiverActualMetrics)
             );
 
-            var transportDurationMetric = _fixture.ReceiverApplication.AgentLog.GetMetricByName($"TransportDuration/App/{acctId}/{appId}/HTTP/all");
+            var transportDurationMetric = _fixture.ReceiverAppAgentLog.GetMetricByName($"TransportDuration/App/{acctId}/{appId}/HTTP/all");
             Assert.True(transportDurationMetric.Values.Total > 0);
         }
     }
