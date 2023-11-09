@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -47,8 +46,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         public readonly RemoteApplication RemoteApplication;
 
         public string UniqueFolderName { get { return RemoteApplication.UniqueFolderName; } }
+        private string AgentLogFileName { get { return CommonUtils.GetAgentLogFileNameFromNewRelicConfig(DestinationNewRelicConfigFilePath); } }
 
-        public AgentLogFile AgentLog { get { return RemoteApplication.AgentLog; } }
+
+        private AgentLogFile _agentLogFile;
+
+        public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, AgentLogFileName, Timing.TimeToWaitForLog));
 
         public ProfilerLogFile ProfilerLog { get { return RemoteApplication.ProfilerLog; } }
 
