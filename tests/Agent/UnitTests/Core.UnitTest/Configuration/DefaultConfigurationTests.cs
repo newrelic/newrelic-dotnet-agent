@@ -3241,8 +3241,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return defaultConfig.ForceSynchronousTimingCalculationHttpClient;
         }
 
-        [TestCase(null, ExpectedResult = true)]
-        [TestCase("not a bool", ExpectedResult = true)]
+        [TestCase(null, ExpectedResult = false)]
+        [TestCase("not a bool", ExpectedResult = false)]
         [TestCase("false", ExpectedResult = false)]
         [TestCase("true", ExpectedResult = true)]
         public bool AspNetCore6PlusBrowserInjectionTests(string localConfigValue)
