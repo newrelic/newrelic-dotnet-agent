@@ -35,7 +35,8 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
         {
-            return new CanWrapResponse("ResponseCompressionBodyOnWriteWrapper".Equals(instrumentedMethodInfo.RequestedWrapperName));
+            return new CanWrapResponse(false);
+            //return new CanWrapResponse("ResponseCompressionBodyOnWriteWrapper".Equals(instrumentedMethodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
