@@ -17,17 +17,13 @@ namespace NewRelic.Core.Logging
     public static class Log
     {
         private static ILogger Logger = new NoOpLogger();
-        private static bool _encounteredFatalLoggingError = false;
 
         public static void Initialize(ILogger logger)
         {
             Logger = logger;
         }
 
-        public static void RecordFatalLoggingError() => _encounteredFatalLoggingError = true;
-
-        public static bool HasFatalErrorOccurred() => _encounteredFatalLoggingError;
-
+        public static bool FileLoggingHasFailed { get; set; }
 
         #region Error
 

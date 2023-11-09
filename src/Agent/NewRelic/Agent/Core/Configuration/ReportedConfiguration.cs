@@ -644,7 +644,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("stackexchangeredis_cleanup.cycle")]
         public TimeSpan StackExchangeRedisCleanupCycle => _configuration.StackExchangeRedisCleanupCycle;
 
+        [JsonProperty("agent.logging_enabled")]
         public bool LoggingEnabled => _configuration.LoggingEnabled;
+
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {
             return _configuration.GetAppSettings();

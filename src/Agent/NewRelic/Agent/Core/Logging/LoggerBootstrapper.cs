@@ -211,7 +211,7 @@ namespace NewRelic.Agent.Core
                 Log.Logger.Warning(ex, "Unexpected exception when configuring file sink.");
 
                 // Fallback to the event log sink if we cannot setup a file logger.
-                NewRelic.Core.Logging.Log.RecordFatalLoggingError();
+                NewRelic.Core.Logging.Log.FileLoggingHasFailed = true;
                 Log.Logger.Warning("Falling back to EventLog sink.");
                 loggerConfiguration.ConfigureEventLogSink();
             }

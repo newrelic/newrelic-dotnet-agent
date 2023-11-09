@@ -837,7 +837,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             {
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityLoggingDisabled);
             }
-            if (Log.HasFatalErrorOccurred())
+            if (Log.FileLoggingHasFailed)
             {
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityLoggingFatalError);
             }

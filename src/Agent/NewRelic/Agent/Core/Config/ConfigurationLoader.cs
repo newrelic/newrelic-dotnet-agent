@@ -59,6 +59,7 @@ namespace NewRelic.Agent.Core.Config
 
         public static Func<string, bool> FileExists = File.Exists;
         public static Func<string, string> PathGetDirectoryName = Path.GetDirectoryName;
+        public static Func<string, string> GetEnvironmentVar = System.Environment.GetEnvironmentVariable;
 
         private static string InternalGetNewRelicHome()
         {
@@ -563,7 +564,7 @@ namespace NewRelic.Agent.Core.Config
 
         private string GetLogFileName()
         {
-            string name = System.Environment.GetEnvironmentVariable("NEW_RELIC_LOG");
+            string name = ConfigurationLoader.GetEnvironmentVar("NEW_RELIC_LOG");
             if (name != null)
             {
                 return Strings.SafeFileName(name);
@@ -600,7 +601,7 @@ namespace NewRelic.Agent.Core.Config
 
         private bool GetOverride(string name, bool fallback)
         {
-            var val = System.Environment.GetEnvironmentVariable(name);
+            var val = ConfigurationLoader.GetEnvironmentVar(name);
 
             if (val != null)
             {
