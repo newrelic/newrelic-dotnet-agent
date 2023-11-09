@@ -27,11 +27,12 @@ namespace NewRelic.Agent.Core.AgentHealth
         private AgentHealthReporter _agentHealthReporter;
         private List<MetricWireModel> _publishedMetrics;
         private ConfigurationAutoResponder _configurationAutoResponder;
-        private bool _enableLogging = true;
+        private bool _enableLogging;
 
         [SetUp]
         public void SetUp()
         {
+            _enableLogging = true;
             var configuration = GetDefaultConfiguration();
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
@@ -44,7 +45,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [TearDown]
         public void TearDown()
         {
-            _enableLogging = true;
             _configurationAutoResponder.Dispose();
         }
 
