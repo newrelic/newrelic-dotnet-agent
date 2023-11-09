@@ -113,6 +113,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : L
     }
 }
 
+[Collection("Sequential")]
 public class UbuntuX64Kafka1Test : LinuxKafkaTest<UbuntuX64Kafka1TestFixture>
 {
     public UbuntuX64Kafka1Test(UbuntuX64Kafka1TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
@@ -120,6 +121,7 @@ public class UbuntuX64Kafka1Test : LinuxKafkaTest<UbuntuX64Kafka1TestFixture>
     }
 }
 
+[Collection("Sequential")]
 public class UbuntuX64Kafka2Test : LinuxKafkaTest<UbuntuX64Kafka2TestFixture>
 {
     public UbuntuX64Kafka2Test(UbuntuX64Kafka2TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
