@@ -2103,7 +2103,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 return _enableAspNetCore6PlusBrowserInjection.HasValue
                     ? _enableAspNetCore6PlusBrowserInjection.Value
-                    : (_enableAspNetCore6PlusBrowserInjection = TryGetAppSettingAsBoolWithDefault("EnableAspNetCore6PlusBrowserInjection", true)).Value;
+                    : (_enableAspNetCore6PlusBrowserInjection = TryGetAppSettingAsBoolWithDefault("EnableAspNetCore6PlusBrowserInjection", false)).Value;
             }
         }
 
