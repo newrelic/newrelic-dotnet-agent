@@ -15,11 +15,14 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         private string _htmlContent;
         private string _staticContent;
         private string _fooContent;
+        private bool _browserInjectionEnabled;
 
         protected BrowserAgentAutoInjection6PlusBase(BasicAspNetCoreRazorApplicationFixture fixture,
-            ITestOutputHelper output, bool enableResponseCompression, string loaderType = "rum")
+            ITestOutputHelper output, bool enableBrowserInjection, bool enableResponseCompression, string loaderType = "rum")
             : base(fixture)
         {
+            _browserInjectionEnabled = enableBrowserInjection;
+
             _fixture = fixture;
             _fixture.TestLogger = output;
             _fixture.Actions
@@ -31,6 +34,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.AutoInstrumentBrowserMonitoring(true);
                     configModifier.BrowserMonitoringEnableAttributes(true);
+                    configModifier.EnableAspNetCore6PlusBrowserInjection(enableBrowserInjection);
 
                     configModifier.BrowserMonitoringLoader(loaderType);
                 },
@@ -65,9 +69,18 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             var jsAgentFromStaticContent = JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_staticContent);
             var jsAgentFromFooContent = JavaScriptAgent.GetJavaScriptAgentScriptFromSource(_fooContent);
 
-            Assert.Equal(jsAgentFromConnectResponse, jsAgentFromHtmlContent);
-            Assert.Equal(jsAgentFromConnectResponse, jsAgentFromStaticContent);
-            Assert.Null(jsAgentFromFooContent);
+            if (_browserInjectionEnabled)
+            {
+                Assert.Equal(jsAgentFromConnectResponse, jsAgentFromHtmlContent);
+                Assert.Equal(jsAgentFromConnectResponse, jsAgentFromStaticContent);
+                Assert.Null(jsAgentFromFooContent);
+            }
+            else
+            {
+                Assert.Null(jsAgentFromHtmlContent);
+                Assert.Null(jsAgentFromStaticContent);
+                Assert.Null(jsAgentFromFooContent);
+            }
 
             // verify that the browser injecting stream wrapper didn't catch an exception and disable itself
             var agentDisabledLogLine = _fixture.AgentLog.TryGetLogLine(AgentLogBase.ErrorLogLinePrefixRegex + "Unexpected exception. Browser injection will be disabled. *?");
@@ -79,7 +92,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
     public class BrowserAgentAutoInjection6PlusRumUnCompressed : BrowserAgentAutoInjection6PlusBase
     {
         public BrowserAgentAutoInjection6PlusRumUnCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, false)
+            : base(fixture, output, true, false)
         {
         }
     }
@@ -88,17 +101,34 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
     public class BrowserAgentAutoInjection6PlusRumCompressed : BrowserAgentAutoInjection6PlusBase
     {
         public BrowserAgentAutoInjection6PlusRumCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, true)
+            : base(fixture, output, true, true)
         {
         }
     }
 
+    [NetCoreTest]
+    public class BrowserAgentAutoInjection6PlusInjectionDisabledRumUnCompressed : BrowserAgentAutoInjection6PlusBase
+    {
+        public BrowserAgentAutoInjection6PlusInjectionDisabledRumUnCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, true, false)
+        {
+        }
+    }
+
+    [NetCoreTest]
+    public class BrowserAgentAutoInjection6PlusInjectionDisabledRumCompressed : BrowserAgentAutoInjection6PlusBase
+    {
+        public BrowserAgentAutoInjection6PlusInjectionDisabledRumCompressed(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, false, true)
+        {
+        }
+    }
 
     [NetCoreTest]
     public class BrowserAgentAutoInjection6PlusSpa : BrowserAgentAutoInjection6PlusBase
     {
         public BrowserAgentAutoInjection6PlusSpa(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, true, "spa")
+            : base(fixture, output, true, true, "spa")
         {
         }
     }
@@ -107,7 +137,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
     public class BrowserAgentAutoInjection6PlusFull : BrowserAgentAutoInjection6PlusBase
     {
         public BrowserAgentAutoInjection6PlusFull(BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, true, "full")
+            : base(fixture, output, true, true, "full")
         {
         }
     }
