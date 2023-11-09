@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.19.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.19.1...v10.19.2) (2023-11-09)
+
+
+### Fixes
+
+* ASP.NET Core 6+ browser agent injection is disabled by default. ([e571ac1](https://github.com/newrelic/newrelic-dotnet-agent/commit/e571ac1094a86b6717a0d356432e067727f25130))
+
 ## [10.19.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.19.0...v10.19.1) (2023-11-08)
 
 
