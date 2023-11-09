@@ -224,7 +224,7 @@ namespace NewRelic.Agent.Core
         /// </summary>
         private static LoggerConfiguration ConfigureAuditLogSink(this LoggerConfiguration loggerConfiguration, ILogConfig config)
         {
-            if (!config.IsAuditLogEnabled) return loggerConfiguration;
+            if (!config.IsAuditLogEnabled || !config.Enabled) return loggerConfiguration;
 
             string logFileName = config.GetFullLogFileName().Replace(".log", "_audit.log");
 
