@@ -27,10 +27,12 @@ namespace NewRelic.Agent.Core.AgentHealth
         private AgentHealthReporter _agentHealthReporter;
         private List<MetricWireModel> _publishedMetrics;
         private ConfigurationAutoResponder _configurationAutoResponder;
+        private bool _enableLogging = true;
 
-        public void SetUp(bool enableLogging = true)
+        [SetUp]
+        public void SetUp()
         {
-            var configuration = GetDefaultConfiguration(enableLogging);
+            var configuration = GetDefaultConfiguration();
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
             var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
@@ -42,24 +44,24 @@ namespace NewRelic.Agent.Core.AgentHealth
         [TearDown]
         public void TearDown()
         {
+            _enableLogging = true;
             _configurationAutoResponder.Dispose();
         }
 
-        private static IConfiguration GetDefaultConfiguration(bool enableLogging)
+        private IConfiguration GetDefaultConfiguration()
         {
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.LogEventCollectorEnabled).Returns(true);
             Mock.Arrange(() => configuration.LogDecoratorEnabled).Returns(true);
             Mock.Arrange(() => configuration.LogMetricsCollectorEnabled).Returns(true);
             Mock.Arrange(() => configuration.InfiniteTracingCompression).Returns(true);
-            Mock.Arrange(() => configuration.LoggingEnabled).Returns(enableLogging);
+            Mock.Arrange(() => configuration.LoggingEnabled).Returns(() => _enableLogging);
             return configuration;
         }
 
         [Test]
         public void ReportPreHarvest_SendsExpectedMetrics()
         {
-            SetUp();
             _agentHealthReporter.ReportAgentVersion("1.0");
             Assert.AreEqual(1, _publishedMetrics.Count);
             var metric1 = _publishedMetrics.ElementAt(0);
@@ -78,7 +80,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportWrapperShutdown_SendsExpectedMetrics()
         {
-            SetUp();
             _agentHealthReporter.ReportWrapperShutdown(Mock.Create<IWrapper>(), new Method(typeof(string), "FooMethod", "FooParam"));
             Assert.AreEqual(3, _publishedMetrics.Count);
             var metric0 = _publishedMetrics.ElementAt(0);
@@ -92,7 +93,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void GenerateExpectedCollectorErrorSupportabilityMetrics()
         {
-            SetUp();
             _agentHealthReporter.ReportSupportabilityCollectorErrorException("test_method_endpoint", TimeSpan.FromMilliseconds(1500), HttpStatusCode.InternalServerError);
             Assert.AreEqual(2, _publishedMetrics.Count);
             NrAssert.Multiple(
@@ -107,7 +107,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ShouldNotGenerateHttpErrorCollectorErrorSupportabilityMetric()
         {
-            SetUp();
             _agentHealthReporter.ReportSupportabilityCollectorErrorException("test_method_endpoint", TimeSpan.FromMilliseconds(1500), statusCode: null);
             Assert.AreEqual(1, _publishedMetrics.Count);
             NrAssert.Multiple(
@@ -120,7 +119,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportSupportabilityCountMetric_DefaultCount()
         {
-            SetUp();
             const string MetricName = "WCFClient/BindingType/BasicHttpBinding";
             _agentHealthReporter.ReportSupportabilityCountMetric(MetricName);
             Assert.AreEqual(1, _publishedMetrics.Count);
@@ -133,7 +131,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportSupportabilityCountMetric_SuppliedCount()
         {
-            SetUp();
             const string MetricName = "WCFClient/BindingType/BasicHttpBinding";
             _agentHealthReporter.ReportSupportabilityCountMetric(MetricName, 2);
             Assert.AreEqual(1, _publishedMetrics.Count);
@@ -146,7 +143,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportCountMetric()
         {
-            SetUp();
             const string MetricName = "Some/Metric/Name";
             _agentHealthReporter.ReportCountMetric(MetricName, 2);
             Assert.AreEqual(1, _publishedMetrics.Count);
@@ -159,7 +155,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportByteMetric()
         {
-            SetUp();
             const string MetricName = "Some/Metric/Name";
             const long totalBytes = 1024 * 1024 * 1024;
             _agentHealthReporter.ReportByteMetric(MetricName, totalBytes);
@@ -173,7 +168,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportByteMetric_WithExclusiveBytes()
         {
-            SetUp();
             const string MetricName = "Some/Metric/Name";
             const long totalBytes = 1024 * 1024 * 1024;
             const long exclusiveBytes = 1024 * 1024 * 64;
@@ -188,7 +182,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void CollectMetrics_ReportsAgentVersion()
         {
-            SetUp();
             var agentVersion = AgentInstallConfiguration.AgentVersion;
             _agentHealthReporter.CollectMetrics();
             NrAssert.Multiple(
@@ -200,7 +193,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportsInfiniteTracingSupportabilityMetrics()
         {
-            SetUp();
             _agentHealthReporter.ReportInfiniteTracingSpanResponseError();
             _agentHealthReporter.ReportInfiniteTracingSpanGrpcError(EnumNameCache<StatusCode>.GetNameToUpperSnakeCase(StatusCode.Unimplemented));
             _agentHealthReporter.ReportInfiniteTracingSpanGrpcError(EnumNameCache<StatusCode>.GetNameToUpperSnakeCase(StatusCode.OutOfRange));
@@ -231,7 +223,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportsInfiniteTracingOneTimeMetricsOnlyOnce()
         {
-            SetUp();
             var expectedOneTimeMetrics = new Dictionary<string, long>
             {
                 { "Supportability/InfiniteTracing/Compression/enabled", 1 }
@@ -249,7 +240,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void Verify_DataUsageSupportabilityMetrics()
         {
-            SetUp();
             _agentHealthReporter.ReportSupportabilityDataUsage("Collector", "connect", 100, 200);
             _agentHealthReporter.ReportSupportabilityDataUsage("Collector", "doSomething1", 200, 300);
             _agentHealthReporter.ReportSupportabilityDataUsage("Collector", "doSomething1", 300, 400);
@@ -311,7 +301,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void IncrementLogLinesCount_CheckLevelsAndCounts()
         {
-            SetUp();
             _agentHealthReporter.IncrementLogLinesCount("INFO");
             _agentHealthReporter.IncrementLogLinesCount("DEBUG");
             _agentHealthReporter.IncrementLogLinesCount("FINEST");
@@ -363,7 +352,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportLoggingSupportabilityMetrics()
         {
-            SetUp();
             _agentHealthReporter.ReportLoggingEventCollected();
             _agentHealthReporter.ReportLoggingEventsSent(2);
             _agentHealthReporter.ReportLoggingEventsDropped(3);
@@ -397,7 +385,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void LoggingFrameworkOnlyReportedOnce()
         {
-            SetUp();
             _agentHealthReporter.ReportLogForwardingFramework("log4net");
             _agentHealthReporter.ReportLogForwardingEnabledWithFramework("log4net");
             _agentHealthReporter.CollectMetrics();
@@ -422,7 +409,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void LoggingConfigurationSupportabilityMetricsOnlyReportedOnce()
         {
-            SetUp();
             _agentHealthReporter.CollectMetrics();
 
             var expectedMetricNamesAndValues = new Dictionary<string, long>
@@ -447,7 +433,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void LoggingDisabledSupportabilityMetricsPresent()
         {
-            SetUp(false);
+            _enableLogging = false;
             Log.FileLoggingHasFailed = true;
             _agentHealthReporter.CollectMetrics();
 
@@ -466,7 +452,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void LoggingDisabledSupportabilityMetricsMissing()
         {
-            SetUp();
             Log.FileLoggingHasFailed = false;
             _agentHealthReporter.CollectMetrics();
 
