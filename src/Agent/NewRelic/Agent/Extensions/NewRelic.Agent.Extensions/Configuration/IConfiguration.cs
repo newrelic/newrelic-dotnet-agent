@@ -182,6 +182,7 @@ namespace NewRelic.Agent.Configuration
         string ProcessHostDisplayName { get; }
         int DatabaseStatementCacheCapacity { get; }
         bool ForceSynchronousTimingCalculationHttpClient { get; }
+        bool EnableAspNetCore6PlusBrowserInjection { get; }
         bool ExcludeNewrelicHeader { get; }
         bool ApplicationLoggingEnabled { get; }
         bool LogMetricsCollectorEnabled { get; }

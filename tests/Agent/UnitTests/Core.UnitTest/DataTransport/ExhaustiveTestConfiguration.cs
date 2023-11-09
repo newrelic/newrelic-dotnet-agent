@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -400,6 +400,8 @@ namespace NewRelic.Agent.Core.DataTransport
         public int DatabaseStatementCacheCapacity => 1234;
 
         public bool ForceSynchronousTimingCalculationHttpClient => true;
+
+        public bool EnableAspNetCore6PlusBrowserInjection => true;
 
         public bool ExcludeNewrelicHeader => true;
 

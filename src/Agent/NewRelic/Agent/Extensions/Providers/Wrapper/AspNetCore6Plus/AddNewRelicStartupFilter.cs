@@ -29,7 +29,12 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
             return builder =>
             {
                 builder.UseMiddleware<WrapPipelineMiddleware>(_agent);
-                //builder.UseMiddleware<BrowserInjectionMiddleware>(_agent);
+
+                // only inject the middleware if browser injection is enabled and the request is not a gRPC request.
+                builder.UseWhen(
+                    context => _agent.Configuration.EnableAspNetCore6PlusBrowserInjection && context.Request.ContentType != "application/grpc",
+                    b => b.UseMiddleware<BrowserInjectionMiddleware>(_agent));
+
                 next(builder);
             };
         }

@@ -35,24 +35,30 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
         {
-            return new CanWrapResponse(false);
-            //return new CanWrapResponse("ResponseCompressionBodyOnWriteWrapper".Equals(instrumentedMethodInfo.RequestedWrapperName));
+            return new CanWrapResponse("ResponseCompressionBodyOnWriteWrapper".Equals(instrumentedMethodInfo.RequestedWrapperName));
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             return Delegates.GetDelegateFor(onSuccess: () =>
             {
-                // Wrap _compressionStream and replace the current value with our wrapped version
-                // check whether we've already wrapped the stream so we don't do it twice
-                var currentCompressionStream = _compressionStreamFieldGetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
-                if (currentCompressionStream != null && currentCompressionStream.GetType() != typeof(BrowserInjectingStreamWrapper))
+                var context = _contextFieldGetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
+
+                // only wrap the compression stream if browser injection is enabled and the request is not a gRPC request.
+                if (agent.Configuration.EnableAspNetCore6PlusBrowserInjection && context.Request.ContentType != "application/grpc")
                 {
-                    var context = _contextFieldGetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
+                    // Wrap _compressionStream and replace the current value with our wrapped version
+                    // check whether we've already wrapped the stream so we don't do it twice
+                    var currentCompressionStream = _compressionStreamFieldGetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
 
-                    var responseWrapper = new BrowserInjectingStreamWrapper(agent, currentCompressionStream, context);
+                    if (currentCompressionStream != null && currentCompressionStream.GetType() != typeof(BrowserInjectingStreamWrapper))
+                    {
 
-                    _compressionStreamFieldSetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget, responseWrapper);
+                        var responseWrapper = new BrowserInjectingStreamWrapper(agent, currentCompressionStream, context);
+
+                        _compressionStreamFieldSetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget,
+                            responseWrapper);
+                    }
                 }
             });
         }
