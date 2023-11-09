@@ -38,8 +38,8 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
                     _fixture.ExecuteTraceRequestChain("CallNext", "CallNext", "CallEnd", null);
                     _fixture.ExecuteTraceRequestChain("CallNext", "CallNext", "CallError", null);
 
-                    _fixture.FirstCallApplicationAgentLogFile.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
-                    _fixture.FirstCallApplicationAgentLogFile.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
+                    _fixture.FirstCallAppAgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
+                    _fixture.FirstCallAppAgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
                     _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
                 }
             );
@@ -50,7 +50,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
         [Fact]
         public void VerifyFirstApplication()
         {
-            var metrics = _fixture.FirstCallApplicationAgentLogFile.GetMetrics().ToList();
+            var metrics = _fixture.FirstCallAppAgentLog.GetMetrics().ToList();
 
             Assert.NotNull(metrics);
 
@@ -63,7 +63,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
 
             Assertions.MetricsExist(FirstAppExpectedData.CallNextMetrics, metrics);
 
-            var transactionEvents = _fixture.FirstCallApplicationAgentLogFile.GetTransactionEvents().ToList();
+            var transactionEvents = _fixture.FirstCallAppAgentLog.GetTransactionEvents().ToList();
 
             Assert.Equal(ExpectedTransactionCount, transactionEvents.Count);
 
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
                 );
             }
 
-            var allSpanEvents = _fixture.FirstCallApplicationAgentLogFile.GetSpanEvents()
+            var allSpanEvents = _fixture.FirstCallAppAgentLog.GetSpanEvents()
                 .OrderBy(s => s.IntrinsicAttributes["timestamp"]).ToList();
 
             ValidateSpanEventAttributesForTransactionEvent(0);
@@ -100,7 +100,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
         [Fact]
         public void VerifySecondApplication()
         {
-            var metrics = _fixture.SecondCallApplicationAgentLogFile.GetMetrics().ToList();
+            var metrics = _fixture.SecondCallAppAgentLog.GetMetrics().ToList();
             var accountId = _fixture.AgentLog.GetAccountId();
             var secondAppExpectedData = new SecondAppExpectedData(accountId);
 
@@ -115,7 +115,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
 
             Assertions.MetricsExist(SecondAppExpectedData.CallNextMetrics, metrics);
 
-            var transactionEvents = _fixture.SecondCallApplicationAgentLogFile.GetTransactionEvents()
+            var transactionEvents = _fixture.SecondCallAppAgentLog.GetTransactionEvents()
                 .OrderBy(evt => evt.IntrinsicAttributes["timestamp"])
                 .ToList();
 
@@ -124,14 +124,14 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
             AssertSecondAppTransactionEvent(0);
             AssertSecondAppTransactionEvent(1);
 
-            var parentTransactionEvent = _fixture.FirstCallApplicationAgentLogFile.GetTransactionEvents()
+            var parentTransactionEvent = _fixture.FirstCallAppAgentLog.GetTransactionEvents()
                 .OrderBy(evt => evt.IntrinsicAttributes["timestamp"]).ToList().First();
 
             Assert.True(TraceIdsAreEqual(parentTransactionEvent, transactionEvents.First()));
 
             void AssertSecondAppTransactionEvent(int eventIndex)
             {
-                var expectedPersistedParentEventAttributes = GetExpectedTransactionAttributesFromPreviousApp(_fixture.FirstCallApplicationAgentLogFile, eventIndex);
+                var expectedPersistedParentEventAttributes = GetExpectedTransactionAttributesFromPreviousApp(_fixture.FirstCallAppAgentLog, eventIndex);
                 var transactionEvent = transactionEvents[eventIndex];
 
                 NrAssert.Multiple(
@@ -143,7 +143,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
                 );
             }
 
-            var allSpanEvents = _fixture.SecondCallApplicationAgentLogFile.GetSpanEvents()
+            var allSpanEvents = _fixture.SecondCallAppAgentLog.GetSpanEvents()
                 .OrderBy(s => s.IntrinsicAttributes["timestamp"]).ToList();
 
             ValidateSpanEventAttributesForTransactionEvent(0);
@@ -153,7 +153,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
             {
                 var transactionId = transactionEvents[eventIndex].IntrinsicAttributes["guid"].ToString();
                 var expectedTraceId =
-                    _fixture.FirstCallApplicationAgentLogFile.GetTransactionEvents()
+                    _fixture.FirstCallAppAgentLog.GetTransactionEvents()
                         .OrderBy(e => e.IntrinsicAttributes["timestamp"]).ToList()[eventIndex]
                         .IntrinsicAttributes["traceId"].ToString();
 
@@ -194,7 +194,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
             AssertFinalAppTransactionEvent(0);
             AssertFinalAppTransactionEvent(1);
 
-            var parentTransactionEvent = _fixture.SecondCallApplicationAgentLogFile.GetTransactionEvents()
+            var parentTransactionEvent = _fixture.SecondCallAppAgentLog.GetTransactionEvents()
                 .OrderBy(evt => evt.IntrinsicAttributes["timestamp"])
                 .ToList()
                 .First();
@@ -203,8 +203,8 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
 
             void AssertFinalAppTransactionEvent(int eventIndex)
             {
-                var expectedPersistedParentEventAttributes = GetExpectedTransactionAttributesFromPreviousApp(_fixture.SecondCallApplicationAgentLogFile, eventIndex);
-                var expectedAttributeValuesPayloadReceived = GetExpectedAttributeValuesPayloadReceived(_fixture.SecondCallApplicationAgentLogFile.GetAccountId());
+                var expectedPersistedParentEventAttributes = GetExpectedTransactionAttributesFromPreviousApp(_fixture.SecondCallAppAgentLog, eventIndex);
+                var expectedAttributeValuesPayloadReceived = GetExpectedAttributeValuesPayloadReceived(_fixture.SecondCallAppAgentLog.GetAccountId());
                 var transactionEvent = transactionEvents[eventIndex];
 
                 try
@@ -233,7 +233,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
             {
                 var transactionId = transactionEvents[eventIndex].IntrinsicAttributes["guid"].ToString();
                 var expectedTraceId =
-                    _fixture.FirstCallApplicationAgentLogFile.GetTransactionEvents()
+                    _fixture.FirstCallAppAgentLog.GetTransactionEvents()
                         .OrderBy(e => e.IntrinsicAttributes["timestamp"]).ToList()[eventIndex]
                         .IntrinsicAttributes["traceId"].ToString();
 

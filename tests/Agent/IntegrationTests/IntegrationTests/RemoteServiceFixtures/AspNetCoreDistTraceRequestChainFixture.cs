@@ -18,11 +18,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public RemoteService FirstCallApplication { get; set; }
         public RemoteService SecondCallApplication { get; set; }
 
-        private AgentLogFile _firstCallAppAgentLogFile;
-        private AgentLogFile _secondCallAppAgentLogFile;
+        private AgentLogFile _firstCallAppAgentLog;
+        private AgentLogFile _secondCallAppAgentLog;
 
-        public AgentLogFile FirstCallApplicationAgentLogFile => _firstCallAppAgentLogFile ?? (_firstCallAppAgentLogFile = new AgentLogFile(FirstCallApplication.DefaultLogFileDirectoryPath, TestLogger, string.Empty, Timing.TimeToWaitForLog));
-        public AgentLogFile SecondCallApplicationAgentLogFile => _secondCallAppAgentLogFile ?? (_secondCallAppAgentLogFile = new AgentLogFile(SecondCallApplication.DefaultLogFileDirectoryPath, TestLogger, string.Empty, Timing.TimeToWaitForLog));
+        public AgentLogFile FirstCallAppAgentLog => _firstCallAppAgentLog ?? (_firstCallAppAgentLog = new AgentLogFile(FirstCallApplication.DefaultLogFileDirectoryPath, TestLogger, string.Empty, Timing.TimeToWaitForLog));
+        public AgentLogFile SecondCallAppAgentLog => _secondCallAppAgentLog ?? (_secondCallAppAgentLog = new AgentLogFile(SecondCallApplication.DefaultLogFileDirectoryPath, TestLogger, string.Empty, Timing.TimeToWaitForLog));
 
         public AspNetCoreDistTraceRequestChainFixture()
             : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true))
@@ -88,8 +88,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             base.Initialize();
 
-            WriteApplicationAgentLogToTestLogger(nameof(FirstCallApplication), FirstCallApplicationAgentLogFile);
-            WriteApplicationAgentLogToTestLogger(nameof(SecondCallApplication), SecondCallApplicationAgentLogFile);
+            WriteApplicationAgentLogToTestLogger(nameof(FirstCallApplication), FirstCallAppAgentLog);
+            WriteApplicationAgentLogToTestLogger(nameof(SecondCallApplication), SecondCallAppAgentLog);
         }
 
         private void WriteApplicationAgentLogToTestLogger(string applicationName, AgentLogFile agentLog)
