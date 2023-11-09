@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -19,7 +20,6 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : L
 
     internal string _topicName;
     private readonly T _fixture;
-    private readonly static Random _rnd = new();
 
     protected LinuxKafkaTest(T fixture, ITestOutputHelper output) : base(fixture)
     {
@@ -105,7 +105,7 @@ public abstract class LinuxKafkaTest<T> : NewRelicIntegrationTest<T> where T : L
         var builder = new StringBuilder();
         for (int i = 0; i < TopicNameLength; i++)
         {
-            var shifter = Convert.ToInt32(Math.Floor(25 * _rnd.NextDouble()));
+            var shifter= RandomNumberGenerator.GetInt32(0, 26);
             builder.Append(Convert.ToChar(shifter + 65));
         }
 
