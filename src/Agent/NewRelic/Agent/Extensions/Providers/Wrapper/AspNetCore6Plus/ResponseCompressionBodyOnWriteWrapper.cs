@@ -45,7 +45,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 var context = _contextFieldGetter.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
 
                 // only wrap the compression stream if browser injection is enabled and the request is not a gRPC request.
-                if (agent.Configuration.EnableAspNetCore6PlusBrowserInjection && context.Request.ContentType?.ToLower() != "application/grpc")
+                if (agent.Configuration.BrowserMonitoringAutoInstrument && agent.Configuration.EnableAspNetCore6PlusBrowserInjection && context.Request.ContentType?.ToLower() != "application/grpc")
                 {
                     // Wrap _compressionStream and replace the current value with our wrapped version
                     // check whether we've already wrapped the stream so we don't do it twice
