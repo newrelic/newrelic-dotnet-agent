@@ -39,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
 
             var mc = new MethodCall(_consumeMethod, context, default(string[]), true);
 
-            var destName = MassTransitHelpers.GetQueue(context.SourceAddress);
+            var destName = MassTransitHelpers.GetQueueName(context.SourceAddress);
 
             var transaction = _agent.CreateTransaction(
                 destinationType: MassTransitHelpers.GetBrokerDestinationType(context.SourceAddress),
@@ -85,7 +85,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
 
             var mc = new MethodCall(_publishMethod, context, default(string[]), true);
 
-            var destName = MassTransitHelpers.GetQueue(context.SourceAddress);
+            var destName = MassTransitHelpers.GetQueueName(context.SourceAddress);
             var destType = MassTransitHelpers.GetBrokerDestinationType(context.SourceAddress);
 
             var transaction = _agent.CurrentTransaction;
@@ -103,7 +103,7 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
 
             var mc = new MethodCall(_sendMethod, context, default(string[]), true);
 
-            var destName = MassTransitHelpers.GetQueue(context.SourceAddress);
+            var destName = MassTransitHelpers.GetQueueName(context.SourceAddress);
             var destType = MassTransitHelpers.GetBrokerDestinationType(context.SourceAddress);
 
             var transaction = _agent.CurrentTransaction;

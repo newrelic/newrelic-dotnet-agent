@@ -17,18 +17,25 @@ namespace NewRelic.Providers.Wrapper.MassTransit
             return items[items.Length - 1].Split('?');
         }
 
-        public static string GetQueue(Uri sourceAddress)
+        public static string GetQueueName(Uri sourceAddress)
         {
+            if (sourceAddress == null)
+            {
+                return "Unknown";
+            }
             var queueData = GetQueueData(sourceAddress);
             return queueData[0];
         }
 
         public static MessageBrokerDestinationType GetBrokerDestinationType(Uri sourceAddress)
         {
-            var queueData = GetQueueData(sourceAddress);
-            if (queueData.Length == 2 && queueData[1] == "temporary=true")
+            if (sourceAddress != null)
             {
-                return MessageBrokerDestinationType.TempQueue;
+                var queueData = GetQueueData(sourceAddress);
+                if (queueData.Length == 2 && queueData[1] == "temporary=true")
+                {
+                    return MessageBrokerDestinationType.TempQueue;
+                }
             }
 
             return MessageBrokerDestinationType.Queue;
