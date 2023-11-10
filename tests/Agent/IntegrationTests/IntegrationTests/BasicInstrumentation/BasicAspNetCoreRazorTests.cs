@@ -13,12 +13,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetCoreTest]
-    public class BasicAspNetCoreRazorApplication : NewRelicIntegrationTest<RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture>
+    public class BasicAspNetCoreRazorTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture>
     {
         private readonly RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture _fixture;
         private string _responseBody;
 
-        public BasicAspNetCoreRazorApplication(RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
+        public BasicAspNetCoreRazorTests(RemoteServiceFixtures.BasicAspNetCoreRazorApplicationFixture fixture, ITestOutputHelper output)
             : base(fixture)
         {
             _fixture = fixture;
@@ -31,6 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
                     configModifier.SetCodeLevelMetricsEnabled();
+                    configModifier.EnableAspNetCore6PlusBrowserInjection(true);
                 },
                 exerciseApplication: () =>
                 {
@@ -60,8 +61,8 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Normalized/*" },
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
 
-				// The .NET agent does not have the information needed to generate this metric
-				new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
+                // The .NET agent does not have the information needed to generate this metric
+                new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/Razor/Pages/Index", callCount = 1 },
             };
 
