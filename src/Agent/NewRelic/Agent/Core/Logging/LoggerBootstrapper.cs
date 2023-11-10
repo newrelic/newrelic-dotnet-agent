@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core
 
             Log.Logger = configuredLogger;
 
-            NewRelic.Core.Logging.Log.Initialize(new NewRelic.Core.Logging.FileLogger(config.GetFullLogFileName()));
+            //NewRelic.Core.Logging.Log.Initialize(new NewRelic.Core.Logging.FileLogger(config.GetFullLogFileName()));
         }
 
         private static void EchoInMemoryLogsToConfiguredLogger(ILogger configuredLogger)

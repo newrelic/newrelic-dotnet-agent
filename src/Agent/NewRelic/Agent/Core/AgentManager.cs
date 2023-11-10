@@ -91,6 +91,10 @@ namespace NewRelic.Agent.Core
         /// </remarks>
         private AgentManager()
         {
+            Log.Initialize(new NewRelic.Core.Logging.FileLogger(new configurationLog().GetFullLogFileName()));
+
+            Log.Info("AgentManager() constructor");
+
             _container = AgentServices.GetContainer();
             AgentServices.RegisterServices(_container);
 
@@ -99,6 +103,7 @@ namespace NewRelic.Agent.Core
 
             configuration config = null;
 
+            Log.Info("Initializing ConfigurationLoader");
             try
             {
                 config = ConfigurationLoader.Initialize();
@@ -118,13 +123,17 @@ namespace NewRelic.Agent.Core
 
             LoggerBootstrapper.ConfigureLogger(config.LogConfig);
 
+            Log.Info("Checking AgentEnabled...");
             AssertAgentEnabled(config);
 
+            Log.Info("Subscribing to Shutdown signal");
             EventBus<KillAgentEvent>.Subscribe(OnShutdownAgent);
 
+            Log.Info("Initializing extensions");
             //Initialize the extensions loader with extensions folder based on the the install path
             ExtensionsLoader.Initialize(AgentInstallConfiguration.InstallPathExtensionsDirectory);
 
+            Log.Info("Resolving API and wrapper services");
             // Resolve all services once we've ensured that the agent is enabled
             // The AgentApiImplementation needs to be resolved before the WrapperService, because
             // resolving the WrapperService triggers an agent connect but it doesn't instantiate
@@ -136,15 +145,19 @@ namespace NewRelic.Agent.Core
             var agentApi = _container.Resolve<IAgentApi>();
             _wrapperService = _container.Resolve<IWrapperService>();
 
+            Log.Info("Resolving AutoStart");
             //We need to attempt to auto start the agent once all services have resolved
             _container.Resolve<IConnectionManager>().AttemptAutoStart();
 
+            Log.Info("Starting services");
             AgentServices.StartServices(_container);
 
+            Log.Info("API setup");
             // Setup the internal API first so that AgentApi can use it.
             InternalApi.SetAgentApiImplementation(agentApi);
             AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
+            Log.Info("Initialize()");
             Initialize();
             _isInitialized = true;
         }
@@ -165,6 +178,7 @@ namespace NewRelic.Agent.Core
             var nativeMethods = _container.Resolve<INativeMethods>();
             var instrumentationService = _container.Resolve<IInstrumentationService>();
 
+            Log.Info("Staring thread profiler");
             _threadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
 
             var commandService = _container.Resolve<CommandService>();
@@ -176,6 +190,7 @@ namespace NewRelic.Agent.Core
                 new InstrumentationUpdateCommand(instrumentationService)
             );
 
+            Log.Info("Starting services");
             StartServices();
             LogInitialized();
         }
