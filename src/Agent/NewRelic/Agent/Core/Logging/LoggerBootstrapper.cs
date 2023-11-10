@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core
 
             Log.Logger = configuredLogger;
 
-            NewRelic.Core.Logging.Log.Initialize(new Logger());
+            NewRelic.Core.Logging.Log.Initialize(new NewRelic.Core.Logging.FileLogger(config.GetFullLogFileName()));
         }
 
         private static void EchoInMemoryLogsToConfiguredLogger(ILogger configuredLogger)
@@ -148,8 +148,9 @@ namespace NewRelic.Agent.Core
                                 );
                             });
                 }
-                catch
+                catch (Exception ex )
                 {
+                    NewRelic.Core.Logging.Log.Warn(ex, "Failed to initialize event log");
                     // ignored -- there's nothing we can do at this point, as EventLog is our "fallback" logger and if it fails, we're out of luck
                 }
             }
@@ -213,7 +214,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception ex)
             {
-                Log.Logger.Warning(ex, "Unexpected exception when configuring file sink.");
+                NewRelic.Core.Logging.Log.Warn(ex, "Unexpected exception when configuring file sink.");
 
                 // Fallback to the event log sink if we cannot setup a file logger.
                 Log.Logger.Warning("Falling back to EventLog sink.");
@@ -263,7 +264,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception exception)
             {
-                Log.Logger.Warning(exception, $"Unable to write logfile at \"{fileName}\"");
+                NewRelic.Core.Logging.Log.Warn(exception, $"Unable to write logfile at \"{fileName}\"");
                 throw;
             }
 
@@ -283,7 +284,7 @@ namespace NewRelic.Agent.Core
             }
             catch (Exception exception)
             {
-                Log.Logger.Warning(exception, $"Unexpected exception while configuring file logging for \"{fileName}\"");
+                NewRelic.Core.Logging.Log.Warn(exception, $"Unexpected exception while configuring file logging for \"{fileName}\"");
                 throw;
             }
         }
