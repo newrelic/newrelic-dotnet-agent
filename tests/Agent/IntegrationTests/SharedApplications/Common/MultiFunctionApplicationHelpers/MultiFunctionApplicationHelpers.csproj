@@ -16,18 +16,18 @@
     <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="1.0.205" />
     
     <!-- log4net .NET framework references -->
-    <PackageReference Include="log4net" Version="1.2.10" Condition="'$(TargetFramework)' == 'net462'" />
-    <PackageReference Include="log4net" Version="2.0.5" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="log4net" Version="2.0.10" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="log4net" Version="2.0.10" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="log4net.Ext.Json" Version="1.2.15.14586" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="log4net" Version="2.0.10" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="log4net" Version="2.0.15" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="log4net" Version="2.0.10" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- log4net .NET core references -->
     <PackageReference Include="log4net" Version="2.0.10" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.9.1" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="log4net" Version="2.0.10" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.7.30">
       <PrivateAssets>all</PrivateAssets>
