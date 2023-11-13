@@ -45,8 +45,8 @@
     <PackageReference Include="npgsql" Version="7.0.1" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!--System.Data.SqlClient (.NET Core/5+ only) -->
-    <PackageReference Include="System.Data.SqlClient" Version="4.4.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.4" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!--Microsoft.Data.SqlClient-->
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19239.1" Condition="'$(TargetFramework)' == 'net462'" />
