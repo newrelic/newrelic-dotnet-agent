@@ -39,7 +39,8 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
         {
             if (!Disabled && !_isContentLengthSet && IsHtmlResponse())
             {
-                _context.Response.ContentLength = null;
+                if (!_context.Response.HasStarted)  // can't set headers if response has already started
+                    _context.Response.ContentLength = null;
                 _isContentLengthSet = true;
             }
 
@@ -154,7 +155,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 // * text/html response
                 // * UTF-8 formatted (either explicitly or no charset defined)
                 _isHtmlResponse =
-                    _context.Response.ContentType != null && 
+                    _context.Response.ContentType != null &&
                     _context.Response.ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase) &&
                     (_context.Response.ContentType.Contains("utf-8", StringComparison.OrdinalIgnoreCase) ||
                      !_context.Response.ContentType.Contains("charset=", StringComparison.OrdinalIgnoreCase));
@@ -170,7 +171,8 @@ namespace NewRelic.Providers.Wrapper.AspNetCore6Plus
                 // and fail when it doesn't match if (_isHtmlResponse.Value)
                 if (!_isContentLengthSet && _context.Response.ContentLength != null)
                 {
-                    _context.Response.ContentLength = null;
+                    if (!_context.Response.HasStarted) // can't set headers if response has already started
+                        _context.Response.ContentLength = null;
                     _isContentLengthSet = true;
                 }
             }
