@@ -38,19 +38,19 @@ namespace NewRelic.Providers.Wrapper.MassTransit
 
             var mc = new MethodCall(_consumeMethod, context, default(string[]), true);
 
-            var destName = MassTransitHelpers.GetQueueName(context.SourceAddress);
+            var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress);
 
             var transaction = _agent.CreateTransaction(
-                destinationType: MassTransitHelpers.GetBrokerDestinationType(context.SourceAddress),
+                destinationType: queueData.DestinationType,
                 brokerVendorName: MessageBrokerVendorName,
-                destination: destName);
+                destination: queueData.QueueName);
 
             transaction.AttachToAsync();
             transaction.DetachFromPrimary();
 
             transaction.AcceptDistributedTraceHeaders(context.Headers, GetHeaderValue, TransportType.AMQP);
 
-            var segment = transaction.StartMessageBrokerSegment(mc, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, MessageBrokerVendorName, destName);
+            var segment = transaction.StartMessageBrokerSegment(mc, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, MessageBrokerVendorName, queueData.QueueName);
 
             await next.Send(context);
             segment.End();
@@ -84,12 +84,11 @@ namespace NewRelic.Providers.Wrapper.MassTransit
 
             var mc = new MethodCall(_publishMethod, context, default(string[]), true);
 
-            var destName = MassTransitHelpers.GetQueueName(context.SourceAddress);
-            var destType = MassTransitHelpers.GetBrokerDestinationType(context.SourceAddress);
+            var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress);
 
             var transaction = _agent.CurrentTransaction;
             MassTransitHelpers.InsertDistributedTraceHeaders(context.Headers, transaction);
-            var segment = transaction.StartMessageBrokerSegment(mc, destType, MessageBrokerAction.Produce, MessageBrokerVendorName, destName);
+            var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Produce, MessageBrokerVendorName, queueData.QueueName);
 
             await next.Send(context);
             segment.End();
@@ -102,12 +101,11 @@ namespace NewRelic.Providers.Wrapper.MassTransit
 
             var mc = new MethodCall(_sendMethod, context, default(string[]), true);
 
-            var destName = MassTransitHelpers.GetQueueName(context.SourceAddress);
-            var destType = MassTransitHelpers.GetBrokerDestinationType(context.SourceAddress);
+            var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress);
 
             var transaction = _agent.CurrentTransaction;
             MassTransitHelpers.InsertDistributedTraceHeaders(context.Headers, transaction);
-            var segment = transaction.StartMessageBrokerSegment(mc, destType, MessageBrokerAction.Produce, MessageBrokerVendorName, destName);
+            var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Produce, MessageBrokerVendorName, queueData.QueueName);
 
             await next.Send(context);
             segment.End();

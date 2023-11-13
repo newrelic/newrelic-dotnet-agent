@@ -8,37 +8,33 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.MassTransit
 {
+    public class MassTransitQueueData
+    {
+        public string QueueName { get; set; } = "Unknown";
+        public MessageBrokerDestinationType DestinationType { get; set; } = MessageBrokerDestinationType.Queue;
+    }
+
     public class MassTransitHelpers
     {
-        private static string[] GetQueueData(Uri sourceAddress)
+        public static MassTransitQueueData GetQueueData(Uri sourceAddress)
         {
-            // rabbitmq://localhost/NRHXPSQL3_MassTransitTest_bus_iyeoyyge44oc7yijbdp5i1opfd?temporary=true
-            var items = sourceAddress.AbsoluteUri.Split('_');
-            return items[items.Length - 1].Split('?');
-        }
+            var data = new MassTransitQueueData();
 
-        public static string GetQueueName(Uri sourceAddress)
-        {
-            if (sourceAddress == null)
-            {
-                return "Unknown";
-            }
-            var queueData = GetQueueData(sourceAddress);
-            return queueData[0];
-        }
-
-        public static MessageBrokerDestinationType GetBrokerDestinationType(Uri sourceAddress)
-        {
             if (sourceAddress != null)
             {
-                var queueData = GetQueueData(sourceAddress);
-                if (queueData.Length == 2 && queueData[1] == "temporary=true")
+                // rabbitmq://localhost/SomeHostname_MassTransitTest_bus_iyeoyyge44oc7yijbdp5i1opfd?temporary=true
+                var items = sourceAddress.AbsoluteUri.Split('_');
+                if (items.Length > 1)
                 {
-                    return MessageBrokerDestinationType.TempQueue;
+                    var queueData = items[items.Length - 1].Split('?');
+                    data.QueueName = queueData[0];
+                    if (queueData.Length == 2 && queueData[1] == "temporary=true")
+                    {
+                        data.DestinationType = MessageBrokerDestinationType.TempQueue;
+                    }
                 }
             }
-
-            return MessageBrokerDestinationType.Queue;
+            return data;
         }
 
         public static void InsertDistributedTraceHeaders(SendHeaders headers, ITransaction transaction)
