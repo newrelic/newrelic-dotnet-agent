@@ -16,13 +16,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void MakeExternalCallUsingHttpClient(string baseAddress, string path)
         {
-            var address = $"http://localhost:{Port}/api/default/MakeExternalCallUsingHttpClient?baseAddress={baseAddress}&path={path}";
+            var address = $"http://{DestinationServerName}:{Port}/api/default/MakeExternalCallUsingHttpClient?baseAddress={baseAddress}&path={path}";
             GetStringAndAssertContains(address, "Worked");
         }
 
         public string GetTraceId()
         {
-            var address = $"http://localhost:{Port}/api/default/GetTraceId";
+            var address = $"http://{DestinationServerName}:{Port}/api/default/GetTraceId";
             return GetStringAndAssertIsNotNull(address);
         }
     }

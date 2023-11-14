@@ -19,7 +19,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.W3C
         /// <param name="port"></param>
         /// <param name="relativePath"></param>
         [LibraryMethod]
-        public void StartService(int port)
+        public void StartService(string server, int port)
         {
             try
             {
@@ -31,7 +31,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.W3C
                     .Build();
 
                 // Start OWIN host 
-                _owinService.StartService(port);
+                _owinService.StartService(server, port);
             }
             catch (Exception ex)
             {

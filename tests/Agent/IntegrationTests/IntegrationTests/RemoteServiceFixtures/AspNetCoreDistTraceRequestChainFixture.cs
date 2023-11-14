@@ -41,9 +41,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void ExecuteTraceRequestChain(string firstAppAction, string secondAppAction, string thirdAppAction, IEnumerable<KeyValuePair<string, string>> headers = null)
         {
-            var firstCallBaseUrl = $"http://localhost:{FirstCallApplication.Port}/FirstCall";
-            var secondCallBaseUrl = $"http://localhost:{SecondCallApplication.Port}/SecondCall";
-            var lastCallBaseUrl = $"http://localhost:{RemoteApplication.Port}/LastCall";
+            var firstCallBaseUrl = $"http://{DestinationServerName}:{FirstCallApplication.Port}/FirstCall";
+            var secondCallBaseUrl = $"http://{DestinationServerName}:{SecondCallApplication.Port}/SecondCall";
+            var lastCallBaseUrl = $"http://{DestinationServerName}:{RemoteApplication.Port}/LastCall";
 
             var lastCallUrl = $"{lastCallBaseUrl}/{thirdAppAction}";
             var secondCallUrl = $"{secondCallBaseUrl}/{secondAppAction}?nextUrl={lastCallUrl}";

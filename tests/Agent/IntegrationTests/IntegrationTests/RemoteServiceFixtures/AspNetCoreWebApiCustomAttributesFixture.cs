@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Get()
         {
-            var address = string.Format("http://localhost:{0}/api/CustomAttributes", Port);
+            var address = $"http://{DestinationServerName}:{Port}/api/CustomAttributes";
             GetStringAndAssertEqual(address, "success");
         }
     }

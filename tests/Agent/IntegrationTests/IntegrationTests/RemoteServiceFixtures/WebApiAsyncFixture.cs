@@ -30,73 +30,73 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void GetCpuBoundTasksAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwait/CpuBoundTasksAsync";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/CpuBoundTasksAsync";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualTaskRunBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/TaskRunBlocked";
+            var address = $"http://{DestinationServerName}:{Port}/ManualAsync/TaskRunBlocked";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualTaskFactoryStartNewBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/TaskFactoryStartNewBlocked";
+            var address = $"http://{DestinationServerName}:{Port}/ManualAsync/TaskFactoryStartNewBlocked";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualNewThreadStartBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/NewThreadStartBlocked";
+            var address = $"http://{DestinationServerName}:{Port}/ManualAsync/NewThreadStartBlocked";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetAsync_AwaitedAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Async_AwaitedAsync";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncFireAndForget/Async_AwaitedAsync";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetAsync_FireAndForget()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Async_FireAndForget";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncFireAndForget/Async_FireAndForget";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetAsync_Sync()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Async_Sync";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncFireAndForget/Async_Sync";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetSync_AwaitedAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Sync_AwaitedAsync";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncFireAndForget/Sync_AwaitedAsync";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetSync_FireAndForget()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Sync_FireAndForget";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncFireAndForget/Sync_FireAndForget";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetSync_Sync()
         {
-            var address = $"http://localhost:{Port}/AsyncFireAndForget/Sync_Sync";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncFireAndForget/Sync_Sync";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void ExecuteResponseTimeTestOperation(int delayDurationSeconds)
         {
-            var address = $"http://localhost:{Port}/ResponseTime/CallsOtherMethod/{delayDurationSeconds}";
+            var address = $"http://{DestinationServerName}:{Port}/ResponseTime/CallsOtherMethod/{delayDurationSeconds}";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public string Request(HttpMethod method)
         {
-            using (var requestMessage = new HttpRequestMessage(method, $"http://localhost:{Port}/AsyncFireAndForget/Sync_Sync"))
+            using (var requestMessage = new HttpRequestMessage(method, $"http://{DestinationServerName}:{Port}/AsyncFireAndForget/Sync_Sync"))
             {
                 var result = _httpClient.SendAsync(requestMessage).Result;
                 return result.Content.ReadAsStringAsync().Result;
@@ -105,7 +105,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Get404(string Path = "DoesNotExist")
         {
-            GetAndAssertStatusCode($"http://localhost:{Port}/{Path}", HttpStatusCode.NotFound);
+            GetAndAssertStatusCode($"http://{DestinationServerName}:{Port}/{Path}", HttpStatusCode.NotFound);
         }
     }
 }

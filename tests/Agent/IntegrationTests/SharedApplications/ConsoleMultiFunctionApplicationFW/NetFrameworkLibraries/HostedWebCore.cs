@@ -118,7 +118,7 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries
             virtualDirectoryNode.Attributes["physicalPath"].Value = HostedApplicationFolder;
 
             var bindingNode = l.SelectSingleNode("configuration/system.applicationHost/sites/site/bindings/binding");
-            bindingNode.Attributes["bindingInformation"].Value = $"*:{port}:";
+            bindingNode.Attributes["bindingInformation"].Value = $"127.0.0.1:{port}:";
 
             var appPoolName = $"HWCTest{port}-{Guid.NewGuid()}";
 

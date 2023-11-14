@@ -37,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
         public override void RootSpanAttributes()
         {
             var senderRootSpanEvent = SenderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/DistributedTracingController/MakeExternalCallUsingRestClient").FirstOrDefault();
-            var externalSpanEvent = SenderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == $"External/localhost/Stream/GET").FirstOrDefault();
+            var externalSpanEvent = SenderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == $"External/127.0.0.1/Stream/GET").FirstOrDefault();
 
             var receiverRootSpanEvent = ReceiverAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/WebAPI/RestAPI/Get").FirstOrDefault();
 

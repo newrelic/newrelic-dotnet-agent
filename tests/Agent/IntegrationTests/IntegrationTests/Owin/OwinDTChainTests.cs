@@ -61,7 +61,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             var senderAppSpanEvents = _fixture.AgentLog.GetSpanEvents();
             var receiverAppSpanEvents = _fixture.ReceiverApplication.AgentLog.GetSpanEvents();
 
-            var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/localhost/Stream/GET")
+            var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/127.0.0.1/Stream/GET")
                 .FirstOrDefault();
             Assert.Equal(externalSpanEvent.IntrinsicAttributes["guid"], receiverAppTxEvent.IntrinsicAttributes["parentSpanId"]);
 

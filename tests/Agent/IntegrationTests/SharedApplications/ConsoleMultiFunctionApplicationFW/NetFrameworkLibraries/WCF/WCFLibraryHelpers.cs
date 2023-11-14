@@ -23,9 +23,9 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
                 case WCFBindingType.WebHttp:
                 case WCFBindingType.Custom:
                 case WCFBindingType.CustomClass:
-                    return new Uri($@"http://localhost:{port}/{relativeUrl}");
+                    return new Uri($@"http://127.0.0.1:{port}/{relativeUrl}");
                 case WCFBindingType.NetTcp:
-                    return new Uri($@"net.tcp://localhost:{port}/{relativeUrl}");
+                    return new Uri($@"net.tcp://127.0.0.1:{port}/{relativeUrl}");
                 default:
                     throw new NotSupportedException($"Binding Type {bindingTypeEnum}");
             }

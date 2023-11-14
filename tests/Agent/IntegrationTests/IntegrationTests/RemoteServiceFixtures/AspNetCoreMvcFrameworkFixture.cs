@@ -21,13 +21,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Get()
         {
-            var address = $"http://localhost:{Port}/";
+            var address = $"http://{DestinationServerName}:{Port}/";
             GetStringAndAssertContains(address, "<html>");
         }
 
         public void GetCORSPreflight()
         {
-            var address = $"http://localhost:{Port}/Home/About";
+            var address = $"http://{DestinationServerName}:{Port}/Home/About";
 
             using (var request = new HttpRequestMessage(HttpMethod.Options, address))
             {
@@ -44,19 +44,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void ThrowException()
         {
-            var address = $"http://localhost:{Port}/Home/ThrowException";
+            var address = $"http://{DestinationServerName}:{Port}/Home/ThrowException";
             GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
         }
 
         public void GetWithData(string requestParameter)
         {
-            var address = $"http://localhost:{Port}/Home/Query?data={requestParameter}";
+            var address = $"http://{DestinationServerName}:{Port}/Home/Query?data={requestParameter}";
             GetStringAndAssertContains(address, "<html>");
         }
 
         public void GetCallAsyncExternal()
         {
-            var address = $"http://localhost:{Port}/DetachWrapper/CallAsyncExternal";
+            var address = $"http://{DestinationServerName}:{Port}/DetachWrapper/CallAsyncExternal";
             GetStringAndAssertEqual(address, "Worked");
         }
     }

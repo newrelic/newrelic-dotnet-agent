@@ -90,10 +90,10 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
             }
 
             var senderRootSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/FirstCall/CallNext/{nextUrl}").FirstOrDefault();
-            var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/localhost/Stream/GET").FirstOrDefault();
+            var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/127.0.0.1/Stream/GET").FirstOrDefault();
 
             var receiverRootSpanEvent = receiverAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/SecondCall/CallNext/{nextUrl}").FirstOrDefault();
-            var receiverExternalSpanEvent = receiverAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/localhost/Stream/GET").FirstOrDefault();
+            var receiverExternalSpanEvent = receiverAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/127.0.0.1/Stream/GET").FirstOrDefault();
 
             var lastRootSpanEvent = lastCallAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/LastCall/CallEnd").FirstOrDefault();
 

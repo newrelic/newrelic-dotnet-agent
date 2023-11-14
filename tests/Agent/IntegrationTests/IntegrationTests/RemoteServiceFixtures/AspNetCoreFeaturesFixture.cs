@@ -17,37 +17,37 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Get()
         {
-            var address = $"http://localhost:{Port}/";
+            var address = $"http://{DestinationServerName}:{Port}/";
             GetStringAndAssertContains(address, "<html>");
         }
 
         public void ThrowException()
         {
-            var address = $"http://localhost:{Port}/Home/ThrowException";
+            var address = $"http://{DestinationServerName}:{Port}/Home/ThrowException";
             GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
         }
 
         public void AccessCollectible()
         {
-            var address = $"http://localhost:{Port}/Collectible/AccessCollectible";
+            var address = $"http://{DestinationServerName}:{Port}/Collectible/AccessCollectible";
             _httpClient.GetStringAsync(address).Wait();
         }
 
         public void AsyncStream()
         {
-            var address = $"http://localhost:{Port}/api/AsyncStream";
+            var address = $"http://{DestinationServerName}:{Port}/api/AsyncStream";
             GetStringAndAssertContains(address, "45");
         }
 
         public void InterfaceDefaultsGetWithAttributes()
         {
-            var address = $"http://localhost:{Port}/InterfaceDefaults/GetWithAttributes";
+            var address = $"http://{DestinationServerName}:{Port}/InterfaceDefaults/GetWithAttributes";
             GetStringAndAssertContains(address, "Done");
         }
 
         public void InterfaceDefaultsGetWithoutAttributes()
         {
-            var address = $"http://localhost:{Port}/InterfaceDefaults/GetWithoutAttributes";
+            var address = $"http://{DestinationServerName}:{Port}/InterfaceDefaults/GetWithoutAttributes";
             GetStringAndAssertContains(address, "Done");
         }
     }
