@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MassTransit;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Helpers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using MethodCall = NewRelic.Agent.Extensions.Providers.Wrapper.MethodCall;
 
@@ -87,7 +89,7 @@ namespace NewRelic.Providers.Wrapper.MassTransit
             var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress);
 
             var transaction = _agent.CurrentTransaction;
-            MassTransitHelpers.InsertDistributedTraceHeaders(context.Headers, transaction);
+            InsertDistributedTraceHeaders(context.Headers, transaction);
             var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Produce, MessageBrokerVendorName, queueData.QueueName);
 
             await next.Send(context);
@@ -104,11 +106,22 @@ namespace NewRelic.Providers.Wrapper.MassTransit
             var queueData = MassTransitHelpers.GetQueueData(context.SourceAddress);
 
             var transaction = _agent.CurrentTransaction;
-            MassTransitHelpers.InsertDistributedTraceHeaders(context.Headers, transaction);
+            InsertDistributedTraceHeaders(context.Headers, transaction);
             var segment = transaction.StartMessageBrokerSegment(mc, queueData.DestinationType, MessageBrokerAction.Produce, MessageBrokerVendorName, queueData.QueueName);
 
             await next.Send(context);
             segment.End();
         }
+
+        public static void InsertDistributedTraceHeaders(SendHeaders headers, ITransaction transaction)
+        {
+            var setHeaders = new Action<SendHeaders, string, string>((carrier, key, value) =>
+            {
+                carrier.Set(key, value);
+            });
+
+            transaction.InsertDistributedTraceHeaders(headers, setHeaders);
+        }
+
     }
 }

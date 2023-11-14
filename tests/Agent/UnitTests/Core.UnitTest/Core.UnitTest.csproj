@@ -44,8 +44,6 @@
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Parsing\Parsing.csproj" />
-    <ProjectReference Include="..\..\..\..\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\MassTransitLegacy\MassTransitLegacy.csproj" />
-    <ProjectReference Include="..\..\..\..\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\MassTransit\MassTransit.csproj" />
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
     <ProjectReference Include="..\NewRelic.Agent.TestUtilities\NewRelic.Agent.TestUtilities.csproj" />
   </ItemGroup>

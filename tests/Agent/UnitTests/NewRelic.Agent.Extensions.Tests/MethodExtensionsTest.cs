@@ -4,7 +4,7 @@
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 
-namespace Agent.Extensions.Test
+namespace Agent.Extensions.Tests
 {
     public class MethodExtensionsTest
     {
@@ -13,7 +13,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
@@ -26,7 +26,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "NotSoSimpleMethod";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
@@ -39,7 +39,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "simpleMethod";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
@@ -52,7 +52,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             const string expectedParamSignature = "System.String";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
@@ -66,7 +66,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
@@ -79,7 +79,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             const string expectedParamSignature = "System.Int32";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
@@ -93,7 +93,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             const string expectedParamSignature = "system.string";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
@@ -107,7 +107,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             const string expectedParamSignature = "System.String,System.Int32";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Int32");
@@ -121,7 +121,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Int32");
 
@@ -134,7 +134,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             const string expectedParamSignature = "System.String,System.Double";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Int32");
@@ -148,7 +148,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             const string expectedParamSignature = "System.String,System.Int32,System.Threading.Timer";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Int32");
@@ -162,7 +162,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             const string expectedParamSignature1 = "System.Object";
             const string expectedParamSignature2 = "System.String,System.Int32";
@@ -177,7 +177,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             const string expectedParamSignature1 = "System.Object";
             var expectedParamSignature2 = string.Empty;
@@ -192,7 +192,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "ComplexMethod";
             const string expectedParamSignature1 = "System.Object";
             const string expectedParamSignature2 = "System.String,System.Int32";
@@ -207,7 +207,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "ComplexMethod";
             const string expectedParamSignature1 = "System.Object";
             const string expectedParamSignature2 = "System.String,System.Int32";
@@ -222,7 +222,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "ComplexMethod";
             const string expectedParamSignature1 = "System.Object";
             const string expectedParamSignature2 = "System.String,System.Int32";
@@ -238,7 +238,7 @@ namespace Agent.Extensions.Test
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
             const string expectedTypeName1 = "Circus.Bozo.Clowning";
-            const string expectedTypeName2 = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName2 = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
@@ -266,7 +266,7 @@ namespace Agent.Extensions.Test
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
             const string expectedTypeName1 = "Circus.Bozo.Clowning";
-            const string expectedTypeName2 = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName2 = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "ComplexMethod";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
@@ -280,7 +280,7 @@ namespace Agent.Extensions.Test
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
             const string expectedTypeName1 = "Circus.Bozo.Clowning";
-            const string expectedTypeName2 = "Agent.extensions.test.SimpleClass";
+            const string expectedTypeName2 = "Agent.extensions.tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
 
@@ -295,7 +295,7 @@ namespace Agent.Extensions.Test
             const string expectedAssemblyName1 = "NewRelic.Agent.Extensions.Tests";
             const string expectedAssemblyName2 = "Universe.Galaxy.SolarSystem";
             const string expectedTypeName1 = "Constants";
-            const string expectedTypeName2 = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName2 = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName1 = "SimpleMethod";
             const string expectedMethodName2 = "ComplexMethod";
             const string expectedParamSignature = "System.String";
@@ -312,7 +312,7 @@ namespace Agent.Extensions.Test
             const string expectedAssemblyName1 = "Science.Physics.Electromagnetism";
             const string expectedAssemblyName2 = "Universe.Galaxy.SolarSystem";
             const string expectedTypeName1 = "Constants";
-            const string expectedTypeName2 = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName2 = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName1 = "SimpleMethod";
             const string expectedMethodName2 = "ComplexMethod";
             const string expectedParamSignature = "System.String";
@@ -329,7 +329,7 @@ namespace Agent.Extensions.Test
             const string expectedAssemblyName1 = "NewRelic.Agent.Extensions.Tests";
             const string expectedAssemblyName2 = "Universe.Galaxy.SolarSystem";
             const string expectedTypeName1 = "Constants";
-            const string expectedTypeName2 = "Agent.Extensions.Test.WonkyClass";
+            const string expectedTypeName2 = "Agent.Extensions.Tests.WonkyClass";
             const string expectedMethodName1 = "SimpleMethod";
             const string expectedMethodName2 = "ComplexMethod";
             const string expectedParamSignature = "System.String";
@@ -346,7 +346,7 @@ namespace Agent.Extensions.Test
             const string expectedAssemblyName1 = "NewRelic.Agent.Extensions.Tests";
             const string expectedAssemblyName2 = "Universe.Galaxy.SolarSystem";
             const string expectedTypeName1 = "Constants";
-            const string expectedTypeName2 = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName2 = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName1 = "SimpleMethod";
             const string expectedMethodName2 = "ComplexMethod";
             const string expectedParamSignature = "System.String";
@@ -363,7 +363,7 @@ namespace Agent.Extensions.Test
             const string expectedAssemblyName1 = "NewRelic.Agent.Extensions.Tests";
             const string expectedAssemblyName2 = "Universe.Galaxy.SolarSystem";
             const string expectedTypeName1 = "Constants";
-            const string expectedTypeName2 = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName2 = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName1 = "SimpleMethod";
             const string expectedMethodName2 = "ComplexMethod";
             const string expectedParamSignature = "System.String";
@@ -380,7 +380,7 @@ namespace Agent.Extensions.Test
             const string expectedAssemblyName1 = "NewRelic.Agent.Extensions.test";
             const string expectedAssemblyName2 = "Universe.Galaxy.SolarSystem";
             const string expectedTypeName1 = "Constants";
-            const string expectedTypeName2 = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName2 = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName1 = "SimpleMethod";
             const string expectedMethodName2 = "ComplexMethod";
             const string expectedParamSignature = "System.String";
@@ -397,7 +397,7 @@ namespace Agent.Extensions.Test
             const string expectedAssemblyName1 = "NewRelic.Agent.Extensions.Tests";
             const string expectedAssemblyName2 = "Universe.Galaxy.SolarSystem";
             const string expectedTypeName1 = "Constants";
-            const string expectedTypeName2 = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName2 = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             const string expectedParamSignature = "System.String";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
@@ -413,7 +413,7 @@ namespace Agent.Extensions.Test
             const string expectedAssemblyName1 = "NewRelic.Agent.Extensions.Tests";
             const string expectedAssemblyName2 = "Universe.Galaxy.SolarSystem";
             const string expectedTypeName1 = "Constants";
-            const string expectedTypeName2 = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName2 = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "ComplexMethod";
             const string expectedParamSignature = "System.String";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
@@ -428,7 +428,7 @@ namespace Agent.Extensions.Test
             // ARRANGE
             const string expectedAssemblyName1 = "NewRelic.Agent.Extensions.Tests";
             const string expectedAssemblyName2 = "Universe.Galaxy.SolarSystem";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             const string expectedMethodName = "SimpleMethod";
             const string expectedParamSignature = "System.String";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
@@ -443,7 +443,7 @@ namespace Agent.Extensions.Test
             // ARRANGE
             const string expectedAssemblyName1 = "NewRelic.Agent.Extensions.Tests";
             const string expectedAssemblyName2 = "Universe.Galaxy.SolarSystem";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClassYo";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClassYo";
             const string expectedMethodName = "SimpleMethod";
             const string expectedParamSignature = "System.String";
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String");
@@ -457,7 +457,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             var methodSignature = new MethodSignature("SimpleMethod", string.Empty);
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
@@ -470,7 +470,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             var methodSignature = new MethodSignature("NotSoSimpleMethod", string.Empty);
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
@@ -483,7 +483,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             var methodSignature = new MethodSignature("NotSoSimpleMethod", "System.String");
             var method = new Method(typeof(SimpleClass), "SimpleMethod", string.Empty);
 
@@ -496,7 +496,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             var methodSignature = new MethodSignature("SimpleMethod", "System.String,System.Thread.Timer,System.Double,System.Boolean");
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Thread.Timer,System.Double,System.Boolean");
 
@@ -509,7 +509,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             var methodSignature = new MethodSignature("SimpleMethod");
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Thread.Timer,System.Double,System.Boolean");
 
@@ -522,7 +522,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
 
             // Note: 
             var methodSignature1 = new MethodSignature("SimpleMethod", string.Empty);
@@ -538,7 +538,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
 
             // Note: 
             var methodSignature1 = new MethodSignature("SimpleMethod");
@@ -554,7 +554,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
 
             // Note: 
             var methodSignature1 = new MethodSignature("SimpleMethod", "System.Int32");
@@ -570,7 +570,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             var methodSignature1 = new MethodSignature("SimpleMethod", "System.String,System.Thread.Timer,System.Double");
             var methodSignature2 = new MethodSignature("SimpleMethod", "System.String,System.Thread.Timer,System.Double,System.Boolean");
             var method = new Method(typeof(SimpleClass), "SimpleMethod", "System.String,System.Thread.Timer,System.Double,System.Boolean");
@@ -584,7 +584,7 @@ namespace Agent.Extensions.Test
         {
             // ARRANGE
             const string expectedAssemblyName = "NewRelic.Agent.Extensions.Tests";
-            const string expectedTypeName = "Agent.Extensions.Test.SimpleClass";
+            const string expectedTypeName = "Agent.Extensions.Tests.SimpleClass";
             var methodSignature1 = new MethodSignature("SimpleMethod", "System.String,System.Thread.Timer,System.Double");
             var methodSignature2 = new MethodSignature("SimpleMethod", "System.String,System.Thread.Timer,System.Double,System.Boolean");
             var methodSignature3 = new MethodSignature("NotSoSimpleMethod", "System.Object,System.String");

@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using MassTransit;
-using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
-namespace NewRelic.Providers.Wrapper.MassTransitLegacy
+
+namespace NewRelic.Agent.Extensions.Helpers
 {
     public class MassTransitQueueData
     {
@@ -35,16 +34,6 @@ namespace NewRelic.Providers.Wrapper.MassTransitLegacy
                 }
             }
             return data;
-        }
-
-        public static void InsertDistributedTraceHeaders(SendHeaders headers, ITransaction transaction)
-        {
-            var setHeaders = new Action<SendHeaders, string, string>((carrier, key, value) =>
-            {
-                carrier.Set(key, value);
-            });
-
-            transaction.InsertDistributedTraceHeaders(headers, setHeaders);
         }
     }
 }
