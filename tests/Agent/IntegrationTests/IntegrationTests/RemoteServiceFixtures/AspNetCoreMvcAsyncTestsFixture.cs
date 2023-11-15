@@ -11,7 +11,15 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         private const string ApplicationDirectoryName = @"AspNetCoreMvcAsyncApplication";
         private const string ExecutableName = @"AspNetCoreMvcAsyncApplication.exe";
 
-        public AspNetCoreMvcAsyncTestsFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true))
+        public AspNetCoreMvcAsyncTestsFixture() :
+            base(new RemoteService(
+                ApplicationDirectoryName,
+                ExecutableName,
+                "net8.0",
+                ApplicationType.Bounded,
+                true,
+                true,
+                true))
         {
         }
 

@@ -19,7 +19,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public RemoteService SecondCallApplication { get; set; }
 
         public AspNetCoreDistTraceRequestChainFixture()
-            : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true))
+            : base(new RemoteService(
+                ApplicationDirectoryName,
+                ExecutableName,
+                "net8.0",
+                ApplicationType.Bounded,
+                true,
+                true,
+                true))
         {
             Actions(setupConfiguration: () =>
             {
@@ -63,7 +70,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         protected RemoteService SetupDistributedTracingApplication()
         {
-            var service = new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true);
+            var service = new RemoteService(
+                ApplicationDirectoryName,
+                ExecutableName,
+                "net8.0",
+                ApplicationType.Bounded,
+                true,
+                true,
+                true);
             service.TestLogger = new XUnitTestLogger(TestLogger);
             service.DeleteWorkingSpace();
             service.CopyToRemote();

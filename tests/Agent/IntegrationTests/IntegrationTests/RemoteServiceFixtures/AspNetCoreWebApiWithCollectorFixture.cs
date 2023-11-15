@@ -8,7 +8,15 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class AspNetCoreWebApiWithCollectorFixture : MockNewRelicFixture
     {
-        public AspNetCoreWebApiWithCollectorFixture() : base(new RemoteService("AspNetCoreBasicWebApiApplication", "AspNetCoreBasicWebApiApplication.exe", "net7.0", ApplicationType.Bounded, true, true, true))
+        public AspNetCoreWebApiWithCollectorFixture() :
+            base(new RemoteService(
+                "AspNetCoreBasicWebApiApplication",
+                "AspNetCoreBasicWebApiApplication.exe",
+                "net8.0",
+                ApplicationType.Bounded,
+                true,
+                true,
+                true))
         {
         }
 

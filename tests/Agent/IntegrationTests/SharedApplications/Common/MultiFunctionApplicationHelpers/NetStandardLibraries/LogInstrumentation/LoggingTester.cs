@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -26,8 +26,8 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
                 case "SERILOG":
                     _log = new SerilogLoggingAdapter();
                     break;
-                case "SERILOGWEB": // .NET 7.0 ONLY
-#if NET7_0    
+                case "SERILOGWEB": // .NET 7.0+ ONLY
+#if NET7_0_OR_GREATER    
                     _log = new SerilogLoggingWebAdapter(loggingPort);
 #endif
                     break;
