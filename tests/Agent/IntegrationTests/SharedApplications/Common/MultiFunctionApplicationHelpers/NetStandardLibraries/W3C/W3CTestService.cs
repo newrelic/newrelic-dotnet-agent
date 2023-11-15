@@ -16,8 +16,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.W3C
         /// <summary>
         /// Starts the W3C Test Service with a specific port and path
         /// </summary>
-        /// <param name="port"></param>
-        /// <param name="relativePath"></param>
         [LibraryMethod]
         public void StartService(string server, int port)
         {

@@ -71,7 +71,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
                     _fixture.AddCommand("ProcessRunner AddArgument -m unittest");
                     _fixture.AddCommand("ProcessRunner AddSwitch -v");
                     _fixture.AddCommand($@"ProcessRunner WorkingDirectory {Path.Combine(_fixture.RemoteApplication.DestinationApplicationDirectoryPath, "trace-context", "test")}"); // python W3C tests are in test dir
-                    _fixture.AddCommand($"ProcessRunner AddEnvironmentVariable SERVICE_ENDPOINT {_fixture.DestinationServerName}:{_fixture.RemoteApplication.Port}/test");
+                    _fixture.AddCommand($"ProcessRunner AddEnvironmentVariable SERVICE_ENDPOINT http://{_fixture.DestinationServerName}:{_fixture.RemoteApplication.Port}/test");
                     _fixture.AddCommand($"ProcessRunner AddEnvironmentVariable STRICT_LEVEL 1");
                     _fixture.AddCommand("ProcessRunner Start");
                     _fixture.AddCommand("ProcessRunner WaitforExit 30000");
