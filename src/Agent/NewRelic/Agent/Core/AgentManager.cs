@@ -220,6 +220,8 @@ namespace NewRelic.Agent.Core
                     "NEW_RELIC_LOG",
                     "NEWRELIC_PROFILER_LOG_DIRECTORY",
                     "NEWRELIC_LOG_LEVEL",
+                    "NEW_RELIC_LOG_ENABLED",
+                    "NEW_RELIC_LOG_CONSOLE",
                     "NEW_RELIC_LABELS",
                     "NEW_RELIC_PROXY_HOST",
                     "NEW_RELIC_PROXY_URI_PATH",

@@ -204,5 +204,6 @@ namespace NewRelic.Agent.Configuration
         TimeSpan SqlTracesHarvestCycle { get; }
         TimeSpan UpdateLoadedModulesCycle { get; }
         TimeSpan StackExchangeRedisCleanupCycle { get; }
+        bool LoggingEnabled { get; }
     }
 }
