@@ -51,7 +51,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private AgentLogFile _agentLogFile;
 
-        public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, AgentLogFileName, Timing.TimeToWaitForLog));
+        private bool _agentLogFileExpected = true;
+
+        public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, AgentLogFileName, Timing.TimeToWaitForLog, _agentLogFileExpected));
+
+        public bool AgentLogExpected { get; set; }
 
         public ProfilerLogFile ProfilerLog { get { return RemoteApplication.ProfilerLog; } }
 
