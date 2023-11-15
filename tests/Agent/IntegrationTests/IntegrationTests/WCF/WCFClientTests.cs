@@ -38,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
         [Fact]
         public override void Metrics()
         {
-            var serverName = "localhost"; //_fixture.DestinationServerName;
+            var serverName = _bindingToTest == WCFBindingType.NetTcp ? "127.0.0.1" :  "localhost";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -140,7 +140,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
             var countExpectedCreate = _countClientInvocationMethodsToTest * COUNT_SVC_METHODS      //1 for each WCF Client call
                                     + _countClientInvocationMethodsToTest;                         //1 for GetData's HTTP call on the service
 
-            var serverName = "localhost"; //_fixture.DestinationServerName;
+            var serverName = _bindingToTest == WCFBindingType.NetTcp ? "127.0.0.1" :  "localhost";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {

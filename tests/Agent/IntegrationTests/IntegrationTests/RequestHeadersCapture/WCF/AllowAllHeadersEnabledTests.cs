@@ -28,7 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.RequestHeadersCapture.WCF
             { "request.headers.referer", "http://example.com/" },
             { "request.headers.accept", "text/html" },
             { "request.headers.content-length", GetExpectedContentLength() },
-            { "request.headers.host", $"{RemoteApplication.DestinationServerName}:{_fixture.RemoteApplication.Port}" },
+            { "request.headers.host", $"localhost:{_fixture.RemoteApplication.Port}" },
             { "request.headers.user-agent", "FakeUserAgent" },
             { "request.headers.foo", "bar" },
             { "request.headers.dashes-are-valid", "true" },
