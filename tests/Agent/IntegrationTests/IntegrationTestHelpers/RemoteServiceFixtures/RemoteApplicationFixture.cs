@@ -50,12 +50,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
 
         private AgentLogFile _agentLogFile;
+        public bool AgentLogExpected { get; set; } = true;
 
-        private bool _agentLogFileExpected = true;
+        public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, AgentLogFileName, Timing.TimeToWaitForLog, AgentLogExpected));
 
-        public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, AgentLogFileName, Timing.TimeToWaitForLog, _agentLogFileExpected));
-
-        public bool AgentLogExpected { get; set; }
 
         public ProfilerLogFile ProfilerLog { get { return RemoteApplication.ProfilerLog; } }
 
@@ -332,17 +330,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 finally
                 {
-                    TestLogger?.WriteLine("===== Begin Agent log file =====");
-                    try
+                    if (AgentLogExpected)
                     {
-                        TestLogger?.WriteLine(AgentLog.GetFullLogAsString());
+                        TestLogger?.WriteLine("===== Begin Agent log file =====");
+                        try
+                        {
+                            TestLogger?.WriteLine(AgentLog.GetFullLogAsString());
+                        }
+                        catch (Exception)
+                        {
+                            TestLogger?.WriteLine("No log file found.");
+                        }
+                        TestLogger?.WriteLine("----- End of Agent log file -----");
                     }
-                    catch (Exception)
-                    {
-                        TestLogger?.WriteLine("No log file found.");
-                    }
-                    TestLogger?.WriteLine("----- End of Agent log file -----");
-
                 }
             }
         }
