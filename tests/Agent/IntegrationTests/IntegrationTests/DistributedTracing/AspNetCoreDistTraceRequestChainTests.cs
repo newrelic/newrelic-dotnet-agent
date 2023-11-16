@@ -363,10 +363,10 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
                 new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/FirstCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
 
                 new Assertions.ExpectedMetric { metricName = @"DotNet/FirstCallController/CallNext", CallCountAllHarvests = ExpectedTransactionCount },
-                new Assertions.ExpectedMetric { metricName = @"External/localhost/Stream/GET", CallCountAllHarvests = ExpectedTransactionCount },
+                new Assertions.ExpectedMetric { metricName = $@"External/{RemoteApplication.DestinationServerName}/Stream/GET", CallCountAllHarvests = ExpectedTransactionCount },
 
                 new Assertions.ExpectedMetric { metricName = @"DotNet/FirstCallController/CallNext", metricScope = @"WebTransaction/MVC/FirstCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
-                new Assertions.ExpectedMetric { metricName = @"External/localhost/Stream/GET", metricScope = @"WebTransaction/MVC/FirstCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
+                new Assertions.ExpectedMetric { metricName = $@"External/{RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/FirstCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/FirstCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
             };
 
@@ -408,10 +408,10 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
                 new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/SecondCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
 
                 new Assertions.ExpectedMetric { metricName = @"DotNet/SecondCallController/CallNext", CallCountAllHarvests = ExpectedTransactionCount },
-                new Assertions.ExpectedMetric { metricName = @"External/localhost/Stream/GET", CallCountAllHarvests = ExpectedTransactionCount },
+                new Assertions.ExpectedMetric { metricName = $@"External/{RemoteApplication.DestinationServerName}/Stream/GET", CallCountAllHarvests = ExpectedTransactionCount },
 
                 new Assertions.ExpectedMetric { metricName = @"DotNet/SecondCallController/CallNext", metricScope = @"WebTransaction/MVC/SecondCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
-                new Assertions.ExpectedMetric { metricName = @"External/localhost/Stream/GET", metricScope = @"WebTransaction/MVC/SecondCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
+                new Assertions.ExpectedMetric { metricName = $@"External/{RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/SecondCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/SecondCall/CallNext/{nextUrl}", CallCountAllHarvests = ExpectedTransactionCount },
             };
 

@@ -26,12 +26,12 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"RestSharpService StartService {_fixture.RemoteApplication.Port}");
-            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} GET false");
-            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} PUT false");
-            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} POST false");
-            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.RemoteApplication.Port} DELETE false");
-            _fixture.AddCommand($"RestSharpExerciser RestSharpClientTaskCancelled {_fixture.RemoteApplication.Port}");
+            _fixture.AddCommand($"RestSharpService StartService {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port}");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port} GET false");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port} PUT false");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port} POST false");
+            _fixture.AddCommand($"RestSharpExerciser SyncClient {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port} DELETE false");
+            _fixture.AddCommand($"RestSharpExerciser RestSharpClientTaskCancelled {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port}");
             _fixture.AddCommand("RestSharpService StopService");
 
             _fixture.AddActions
@@ -55,18 +55,20 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
             var callerTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp.RestSharpExerciser/SyncClient";
             var cancelledTrasnsactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp.RestSharpExerciser/RestSharpClientTaskCancelled";
 
+            var serverName = _fixture.DestinationServerName;
+
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = "External/all", callCount = 5 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/GET", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/PUT", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/POST", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/DELETE", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/GET", metricScope = cancelledTrasnsactionName, callCount = 1},
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/GET", metricScope = callerTransactionName, callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/PUT", metricScope = callerTransactionName, callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/POST", metricScope = callerTransactionName, callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/DELETE", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/PUT", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/POST", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/DELETE", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", metricScope = cancelledTrasnsactionName, callCount = 1},
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/PUT", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/POST", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/DELETE", metricScope = callerTransactionName, callCount = 1 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();

@@ -61,8 +61,7 @@ namespace BasicAspNetCoreRazorApplication
                     }));
             });
 
-
-            app.Urls.Add($"http://*:{_port}");
+            app.Urls.Add($"http://127.0.0.1:{_port}");
 
             var task = app.RunAsync(ct.Token);
 

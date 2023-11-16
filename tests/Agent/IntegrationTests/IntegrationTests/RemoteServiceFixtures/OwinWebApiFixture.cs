@@ -136,43 +136,43 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         }
         public void GetCpuBoundTasksAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwait/CpuBoundTasksAsync";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/CpuBoundTasksAsync";
             GetJsonAndAssertEqual(address, "Worked");
         }
         public void GetCustomMiddlewareIoBoundNoSpecialAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/CustomMiddlewareIoBoundNoSpecialAsync";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void ErrorResponse()
         {
-            var address = $"http://localhost:{Port}/AsyncAwait/ErrorResponse";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncAwait/ErrorResponse";
 
             GetAndAssertSuccessStatus(address, false, GetHeaders());
         }
 
         public void GetManualTaskRunBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/TaskRunBlocked";
+            var address = $"http://{DestinationServerName}:{Port}/ManualAsync/TaskRunBlocked";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualTaskFactoryStartNewBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/TaskFactoryStartNewBlocked";
+            var address = $"http://{DestinationServerName}:{Port}/ManualAsync/TaskFactoryStartNewBlocked";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetManualNewThreadStartBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/NewThreadStartBlocked";
+            var address = $"http://{DestinationServerName}:{Port}/ManualAsync/NewThreadStartBlocked";
             GetJsonAndAssertEqual(address, "Worked");
         }
 
         public void GetBogusPath(string bogusPath)
         {
-            var address = string.Format(@"http://{0}:{1}/{2}", DestinationServerName, Port, bogusPath);
+            var address = $@"http://{DestinationServerName}:{Port}/{bogusPath}";
             GetAndAssertStatusCode(address, HttpStatusCode.NotFound, GetHeaders());
         }
 

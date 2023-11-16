@@ -64,14 +64,14 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
                     _fixture.RemoteApplication.NewRelicConfig.SetRequestTimeout(TimeSpan.FromSeconds(10));
                     _fixture.RemoteApplication.NewRelicConfig.ForceTransactionTraces();
 
-                    _fixture.AddCommand($"W3CTestService StartService {_fixture.RemoteApplication.Port}");
+                    _fixture.AddCommand($"W3CTestService StartService {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port}");
                     _fixture.AddCommand($@"GitCommand Clone https://github.com/w3c/trace-context.git {Path.Combine(_fixture.RemoteApplication.DestinationApplicationDirectoryPath, "trace-context")}");
                     _fixture.AddCommand($@"GitCommand Checkout { Path.Combine(_fixture.RemoteApplication.DestinationApplicationDirectoryPath, "trace-context")} 98f210efd89c63593dce90e2bae0a1bdcb986f51");
                     _fixture.AddCommand("ProcessRunner ProcessName python.exe");
                     _fixture.AddCommand("ProcessRunner AddArgument -m unittest");
                     _fixture.AddCommand("ProcessRunner AddSwitch -v");
                     _fixture.AddCommand($@"ProcessRunner WorkingDirectory {Path.Combine(_fixture.RemoteApplication.DestinationApplicationDirectoryPath, "trace-context", "test")}"); // python W3C tests are in test dir
-                    _fixture.AddCommand($"ProcessRunner AddEnvironmentVariable SERVICE_ENDPOINT http://localhost:{_fixture.RemoteApplication.Port}/test");
+                    _fixture.AddCommand($"ProcessRunner AddEnvironmentVariable SERVICE_ENDPOINT http://{_fixture.DestinationServerName}:{_fixture.RemoteApplication.Port}/test");
                     _fixture.AddCommand($"ProcessRunner AddEnvironmentVariable STRICT_LEVEL 1");
                     _fixture.AddCommand("ProcessRunner Start");
                     _fixture.AddCommand("ProcessRunner WaitforExit 30000");

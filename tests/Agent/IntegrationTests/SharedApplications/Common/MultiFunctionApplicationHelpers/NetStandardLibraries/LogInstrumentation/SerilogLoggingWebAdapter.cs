@@ -107,7 +107,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.LogInstrumentatio
         { 
             var logger = loggerConfig.CreateLogger();
 
-            _uriBase = "http://localhost:" + _loggingPort + "/";
+            _uriBase = "http://127.0.0.1:" + _loggingPort + "/";
             var hostTask = CreateHostBuilder(_uriBase).Build().RunAsync();
 
             Console.WriteLine("URI: " + _uriBase);

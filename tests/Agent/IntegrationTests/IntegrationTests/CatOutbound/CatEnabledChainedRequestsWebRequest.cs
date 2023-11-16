@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -69,17 +70,17 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
             {
                 new Assertions.ExpectedMetric { metricName = @"External/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"External/allWeb", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/all", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"ExternalApp/{_fixture.RemoteApplication.DestinationServerName}/{crossProcessId}/all", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{_fixture.RemoteApplication.DestinationServerName}/{crossProcessId}/WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{_fixture.RemoteApplication.DestinationServerName}/{crossProcessId}/WebTransaction/MVC/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/ChainedWebRequest", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"External/{RemoteApplication.DestinationServerName}/all", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"ExternalApp/{RemoteApplication.DestinationServerName}/{crossProcessId}/all", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{RemoteApplication.DestinationServerName}/{crossProcessId}/WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{RemoteApplication.DestinationServerName}/{crossProcessId}/WebTransaction/MVC/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/ChainedWebRequest", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"External/{RemoteApplication.DestinationServerName}/Stream/GET", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"ClientApplication/[^/]+/all", IsRegexName = true }
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
 				// This scoped metric should be superceded by the ExternalTransaction metric above
-				new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/DefaultController/ChainedWebRequest" }
+				new Assertions.ExpectedMetric { metricName = $@"External/{RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/DefaultController/ChainedWebRequest" }
             };
             // Note: we are checking the attributes attached to the *Callee's* transaction, not the caller's transaction. The attributes attached to the caller's transaction are already fully vetted in the CatInbound tests.
             var expectedTransactionEventIntrinsicAttributes1 = new List<string>

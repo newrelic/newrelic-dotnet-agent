@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -78,7 +79,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
             }
 
             var senderRootSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/FirstCall/WebRequestCallNext/{nextUrl}").FirstOrDefault();
-            var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/localhost/Stream/GET").FirstOrDefault();
+            var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == $"External/{RemoteApplication.DestinationServerName}/Stream/GET").FirstOrDefault();
 
             var receiverRootSpanEvent = receiverAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/SecondCall/WebRequestCallNext/{nextUrl}").FirstOrDefault();
 

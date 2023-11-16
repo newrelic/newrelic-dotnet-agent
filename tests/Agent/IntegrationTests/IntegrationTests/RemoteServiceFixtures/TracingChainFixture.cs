@@ -109,7 +109,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public HttpResponseHeaders ExecuteTraceRequestChainHttpWebRequest(IEnumerable<KeyValuePair<string, string>> headers)
         {
             const string action = "Index";
-            var queryString = $"?chainedServerName={ReceiverApplication.DestinationServerName}&chainedPortNumber={ReceiverApplication.Port}&chainedAction={action}";
+            var queryString = $"?chainedServerName={DestinationServerName}&chainedPortNumber={ReceiverApplication.Port}&chainedAction={action}";
 
             var address = $"http://{DestinationServerName}:{Port}/Default/ChainedWebRequest{queryString}";
 
@@ -130,8 +130,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void ExecuteTraceRequestChainHttpClient(IEnumerable<KeyValuePair<string, string>> headers = null)
         {
             // the test calls the senderUrl, passing in the receiverUrl as a parameter
-            var senderBaseUrl = $"http://localhost:{RemoteApplication.Port}";
-            var receiverBaseUrl = $"http://localhost:{ReceiverApplication.Port}";
+            var senderBaseUrl = $"http://{DestinationServerName}:{RemoteApplication.Port}";
+            var receiverBaseUrl = $"http://{DestinationServerName}:{ReceiverApplication.Port}";
 
             var receiverUrl = $"{receiverBaseUrl}/api/CallEnd";
             var senderUrl = $"{senderBaseUrl}/api/CallNext?nextUrl={receiverUrl}";
@@ -143,8 +143,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void ExecuteTraceRequestChainRestSharp(IEnumerable<KeyValuePair<string, string>> headers)
         {
-            var secondCallUrl = $"http://localhost:{ReceiverApplication.Port}/api/RestAPI";
-            var firstCallUrl = $"http://localhost:{SenderApplication.Port}/DistributedTracing/MakeExternalCallUsingRestClient?externalCallUrl={secondCallUrl}";
+            var secondCallUrl = $"http://{DestinationServerName}:{ReceiverApplication.Port}/api/RestAPI";
+            var firstCallUrl = $"http://{DestinationServerName}:{SenderApplication.Port}/DistributedTracing/MakeExternalCallUsingRestClient?externalCallUrl={secondCallUrl}";
 
             GetStringAndAssertEqual(firstCallUrl, "Worked", headers);
         }

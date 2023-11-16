@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -28,9 +28,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public string SyncClient(int port, string method, bool generic)
+        public string SyncClient(string host, int port, string method, bool generic)
         {
-            var myHost = "localhost"; // Request.RequestUri.Host;
+            var myHost = host;
             var myPort = port;
             var client = new RestClient($"http://{myHost}:{myPort}");
 
@@ -67,9 +67,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<string> AsyncAwaitClient(int port, string method, bool generic, bool cancelable)
+        public async Task<string> AsyncAwaitClient(string host, int port, string method, bool generic, bool cancelable)
         {
-            var myHost = "localhost"; // Request.RequestUri.Host;
+            var myHost = host;
             var myPort = port;
             var client = new RestClient($"http://{myHost}:{myPort}");
 
@@ -115,9 +115,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public string TaskResultClient(int port, string method, bool generic, bool cancelable)
+        public string TaskResultClient(string host, int port, string method, bool generic, bool cancelable)
         {
-            var myHost = "localhost"; // Request.RequestUri.Host;
+            var myHost = host;
             var myPort = port;
             var client = new RestClient($"http://{myHost}:{myPort}");
 
@@ -166,9 +166,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<string> RestSharpClientTaskCancelled(int port)
+        public async Task<string> RestSharpClientTaskCancelled(string host, int port)
         {
-            var myHost = "localhost"; // Request.RequestUri.Host;
+            var myHost = host;
             var myPort = port;
 
             var endpoint = "api/RestAPI/";

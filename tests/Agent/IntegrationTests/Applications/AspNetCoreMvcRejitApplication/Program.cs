@@ -32,7 +32,7 @@ namespace AspNetCoreMvcRejitApplication
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .UseUrls($@"http://localhost:{_port}/")
+                .UseUrls($@"http://127.0.0.1:{_port}/")
                 .Build();
 
     }

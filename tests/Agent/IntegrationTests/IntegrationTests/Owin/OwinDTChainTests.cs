@@ -8,6 +8,7 @@ using Xunit;
 using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using System.Collections.Generic;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 
 namespace NewRelic.Agent.IntegrationTests.Owin
@@ -61,7 +62,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             var senderAppSpanEvents = _fixture.AgentLog.GetSpanEvents();
             var receiverAppSpanEvents = _fixture.ReceiverApplication.AgentLog.GetSpanEvents();
 
-            var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/localhost/Stream/GET")
+            var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == $"External/{RemoteApplication.DestinationServerName}/Stream/GET")
                 .FirstOrDefault();
             Assert.Equal(externalSpanEvent.IntrinsicAttributes["guid"], receiverAppTxEvent.IntrinsicAttributes["parentSpanId"]);
 
