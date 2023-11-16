@@ -245,7 +245,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public override void ShutdownRemoteApplication()
         {
-            RemoteApplication.WriteToStandardInput("exit");
+            try
+            {
+                RemoteApplication.WriteToStandardInput("exit");
+            }
+            catch (System.IO.IOException)
+            {
+                // Starting in .NET 8, writes to a closed pipe throw an IO exception. So we'll just eat it and continue.
+            }
 
             base.ShutdownRemoteApplication();
         }

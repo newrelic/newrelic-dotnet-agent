@@ -18,7 +18,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"MockNewRelic";
         private const string ExecutableName = @"MockNewRelic.exe";
-        private const string TargetFramework = "net6";
+        private const string TargetFramework = "net8.0";
 
         public RemoteService MockNewRelicApplication { get; set; }
 
