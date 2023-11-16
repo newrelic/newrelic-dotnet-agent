@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
-using System.IO;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
@@ -10,17 +9,16 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.AgentLogs
 {
-    public abstract class LoggingDisabledTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+    public abstract class ConsoleLoggingTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
         where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly TFixture _fixture;
 
-        public LoggingDisabledTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        public ConsoleLoggingTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.SetTimeout(TimeSpan.FromMinutes(1));
             _fixture.TestLogger = output;
-            _fixture.AgentLogExpected = false;
 
             _fixture.AddCommand($"RootCommands InstrumentedMethodToStartAgent");
             _fixture.AddCommand($"RootCommands DelaySeconds 10");
@@ -33,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
                     configModifier
                     .SetLogLevel("debug");
 
-                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_LOG_ENABLED", "false");
+                    _fixture.RemoteApplication.SetAdditionalEnvironmentVariable("NEW_RELIC_LOG_CONSOLE", "true");
 
                 },
                 exerciseApplication: () =>
@@ -45,43 +43,46 @@ namespace NewRelic.Agent.IntegrationTests.AgentLogs
         }
 
         [Fact]
-        public void LogsDirShouldNotExist()
+        public void ConsoleLogsExist()
         {
-            Assert.False(Directory.Exists(_fixture.RemoteApplication.DefaultLogFileDirectoryPath), "Logs are disabled so logs dir should not exist.");
+            var stdOut = _fixture.RemoteApplication.CapturedOutput.StandardOutput;
+
+            Assert.Contains("Console logging enabled", stdOut); // A profiler log message
+            Assert.Contains("Log level set to DEBUG", stdOut);  // An agent log message
         }
     }
 
     [NetFrameworkTest]
-    public class LoggingDisabledFWLatestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFWLatest>
+    public class ConsoleLoggingFWLatestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureFWLatest>
     {
-        public LoggingDisabledFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
+        public ConsoleLoggingFWLatestTests(ConsoleDynamicMethodFixtureFWLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class LoggingDisabledFW462Tests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureFW462>
+    public class ConsoleLoggingFW462Tests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureFW462>
     {
-        public LoggingDisabledFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
+        public ConsoleLoggingFW462Tests(ConsoleDynamicMethodFixtureFW462 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class LoggingDisabledCoreLatestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class ConsoleLoggingCoreLatestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
     {
-        public LoggingDisabledCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public ConsoleLoggingCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
 
     [NetCoreTest]
-    public class LoggingDisabledCoreOldestTests : LoggingDisabledTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
+    public class ConsoleLoggingCoreOldestTests : ConsoleLoggingTestsBase<ConsoleDynamicMethodFixtureCoreOldest>
     {
-        public LoggingDisabledCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
+        public ConsoleLoggingCoreOldestTests(ConsoleDynamicMethodFixtureCoreOldest fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
