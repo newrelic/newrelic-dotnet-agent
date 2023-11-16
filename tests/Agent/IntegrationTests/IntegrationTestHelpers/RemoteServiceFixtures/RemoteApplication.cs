@@ -214,7 +214,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public int Port => _port ?? (_port = RandomPortGenerator.NextPort()).Value;
 
-        public readonly string DestinationServerName = Dns.GetHostName().ToLower();
+        public static readonly string DestinationServerName = "127.0.0.1";
 
         private NewRelicConfigModifier _newRelicConfigModifier;
         public NewRelicConfigModifier NewRelicConfig => _newRelicConfigModifier ?? (_newRelicConfigModifier = new NewRelicConfigModifier(DestinationNewRelicConfigFilePath));

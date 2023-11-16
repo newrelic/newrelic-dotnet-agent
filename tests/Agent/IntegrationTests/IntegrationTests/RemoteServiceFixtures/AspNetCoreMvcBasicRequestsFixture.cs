@@ -23,12 +23,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Get()
         {
-            var address = $"http://localhost:{Port}/";
+            var address = $"http://{DestinationServerName}:{Port}/";
             GetStringAndAssertContains(address, "<html>");
         }
         public void GetCORSPreflight()
         {
-            var address = $"http://localhost:{Port}/Home/About";
+            var address = $"http://{DestinationServerName}:{Port}/Home/About";
 
             using (var request = new HttpRequestMessage(HttpMethod.Options, address))
             {
@@ -45,7 +45,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void MakePostRequestWithCustomRequestHeader(Dictionary<string, string> customHeadersToAdd)
         {
-            var address = $"http://localhost:{Port}/";
+            var address = $"http://{DestinationServerName}:{Port}/";
 
             using (var request = new HttpRequestMessage(HttpMethod.Options, address))
             {
@@ -79,61 +79,61 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void ThrowException()
         {
-            var address = $"http://localhost:{Port}/Home/ThrowException";
+            var address = $"http://{DestinationServerName}:{Port}/Home/ThrowException";
             GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
         }
 
         public void ThrowExceptionWithMessage(string exceptionMessage)
         {
-            var address = $"http://localhost:{Port}/ExpectedErrorTest/ThrowExceptionWithMessage?exceptionMessage={exceptionMessage}";
+            var address = $"http://{DestinationServerName}:{Port}/ExpectedErrorTest/ThrowExceptionWithMessage?exceptionMessage={exceptionMessage}";
             GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
         }
 
         public void ReturnADesiredStatusCode(int statusCode)
         {
-            var address = $"http://localhost:{Port}/ExpectedErrorTest/ReturnADesiredStatusCode?statusCode={statusCode}";
+            var address = $"http://{DestinationServerName}:{Port}/ExpectedErrorTest/ReturnADesiredStatusCode?statusCode={statusCode}";
             GetAndAssertStatusCode(address, (HttpStatusCode)statusCode);
         }
 
         public void ThrowCustomException()
         {
-            var address = $"http://localhost:{Port}/ExpectedErrorTest/ThrowCustomException";
+            var address = $"http://{DestinationServerName}:{Port}/ExpectedErrorTest/ThrowCustomException";
             GetAndAssertStatusCode(address, HttpStatusCode.InternalServerError);
         }
 
         public void GetWithData(string requestParameter)
         {
-            var address = $"http://localhost:{Port}/Home/Query?data={requestParameter}";
+            var address = $"http://{DestinationServerName}:{Port}/Home/Query?data={requestParameter}";
             GetStringAndAssertContains(address, "<html>");
         }
 
         public void GetHttpClient()
         {
-            var address = $"http://localhost:{Port}/Home/HttpClient";
+            var address = $"http://{DestinationServerName}:{Port}/Home/HttpClient";
             GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetHttpClientTaskCancelled()
         {
-            var address = $"http://localhost:{Port}/Home/HttpClientTaskCancelled";
+            var address = $"http://{DestinationServerName}:{Port}/Home/HttpClientTaskCancelled";
             GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetHttpClientFactory()
         {
-            var address = $"http://localhost:{Port}/Home/HttpClientFactory";
+            var address = $"http://{DestinationServerName}:{Port}/Home/HttpClientFactory";
             GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetTypedHttpClient()
         {
-            var address = $"http://localhost:{Port}/Home/TypedHttpClient";
+            var address = $"http://{DestinationServerName}:{Port}/Home/TypedHttpClient";
             GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetCallAsyncExternal()
         {
-            var address = $"http://localhost:{Port}/DetachWrapper/CallAsyncExternal";
+            var address = $"http://{DestinationServerName}:{Port}/DetachWrapper/CallAsyncExternal";
             GetStringAndAssertEqual(address, "Worked");
         }
     }

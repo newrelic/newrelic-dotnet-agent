@@ -6,6 +6,7 @@ using MultiFunctionApplicationHelpers;
 using NewRelic.Agent.IntegrationTests.Shared.Wcf;
 using NewRelic.Agent.IntegrationTests.Shared.ReflectionHelpers;
 using System;
+using System.Diagnostics;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 
@@ -24,6 +25,8 @@ namespace ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF
         [LibraryMethod]
         public void StartService(string bindingType, int port, string relativePath)
         {
+            //Debugger.Launch();
+
             relativePath = relativePath.TrimStart('/');
 
             if (_wcfService_SelfHosted != null)

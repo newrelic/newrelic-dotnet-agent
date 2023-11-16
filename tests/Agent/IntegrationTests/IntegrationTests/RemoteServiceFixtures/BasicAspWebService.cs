@@ -37,6 +37,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             _driver.Navigate().GoToUrl(address);
         }
 
+        public override string DestinationServerName { get; } = "localhost";
+
         public override void Dispose()
         {
             if (_driver != null)

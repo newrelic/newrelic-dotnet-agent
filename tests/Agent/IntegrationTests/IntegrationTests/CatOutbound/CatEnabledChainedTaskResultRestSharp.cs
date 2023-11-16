@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -78,7 +79,7 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
 				// This scoped metric should be superceded by the ExternalTransaction metric above
-				new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/RestSharpController/TaskResultClient" }
+				new Assertions.ExpectedMetric { metricName = $@"External/{RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/RestSharpController/TaskResultClient" }
             };
 
             // Note: we are checking the attributes attached to the *Callee's* transaction, not the caller's transaction. The attributes attached to the caller's transaction are already fully vetted in the CatInbound tests.
