@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core
     internal class ThreadIdEnricher : ILogEventEnricher
     {
 
-        private static ThreadLocal<LogEventProperty> _tidProperty = new ThreadLocal<LogEventProperty>();
+        private static readonly ThreadLocal<LogEventProperty> _tidProperty = new ThreadLocal<LogEventProperty>();
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
