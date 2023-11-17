@@ -272,7 +272,6 @@ namespace NewRelic.Agent.Core
                     .WriteTo
                     .File(path: fileName,
                             outputTemplate:outputFormat,
-                            //formatter: textFormatter,
                             fileSizeLimitBytes: 50 * 1024 * 1024,
                             encoding: Encoding.UTF8,
                             rollOnFileSizeLimit: true,
