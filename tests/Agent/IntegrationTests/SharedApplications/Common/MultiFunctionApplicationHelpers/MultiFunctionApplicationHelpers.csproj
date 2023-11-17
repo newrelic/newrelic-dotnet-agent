@@ -31,7 +31,7 @@
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net8.0'" />
 
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.7.30">
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.8.14">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -203,6 +203,7 @@
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
     <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0-3.final" />
   </ItemGroup>
 
   <!-- The following section is used to specify particular versions of the RabbitMQ client to be tested with different
