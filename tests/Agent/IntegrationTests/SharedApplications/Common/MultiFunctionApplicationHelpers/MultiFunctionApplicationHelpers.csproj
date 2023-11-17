@@ -94,11 +94,11 @@
     <PackageReference Include="StackExchange.Redis.StrongName" Version="1.1.608" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.601" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="StackExchange.Redis" Version="2.2.88" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.6.116" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.4" Condition="'$(TargetFramework)' == 'net481'" />
     
     <!-- StackExchange.Redis .NET/Core references -->
     <PackageReference Include="StackExchange.Redis.StrongName" Version="1.2.6" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.6.116" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.4" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!-- Elasticsearch NEST framework references -->
     <PackageReference Include="NEST" Version="7.0.0" Condition="'$(TargetFramework)' == 'net462'" />
