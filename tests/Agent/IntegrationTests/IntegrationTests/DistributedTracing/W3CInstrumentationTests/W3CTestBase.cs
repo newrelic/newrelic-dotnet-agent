@@ -50,19 +50,19 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
         protected TransactionEvent SenderAppTxEvent => _senderAppTxEvent ?? (_senderAppTxEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault());
 
         private TransactionEvent _receiverAppTxEvent;
-        protected TransactionEvent ReceiverAppTxEvent => _receiverAppTxEvent ?? (_receiverAppTxEvent = _fixture.ReceiverApplication.AgentLog.GetTransactionEvents().FirstOrDefault());
+        protected TransactionEvent ReceiverAppTxEvent => _receiverAppTxEvent ?? (_receiverAppTxEvent = _fixture.ReceiverAppAgentLog.GetTransactionEvents().FirstOrDefault());
 
         private List<SpanEvent> _senderAppSpanEvents;
         protected List<SpanEvent> SenderAppSpanEvents => _senderAppSpanEvents ?? (_senderAppSpanEvents = _fixture.AgentLog.GetSpanEvents().ToList());
 
         private SpanEvent[] _receiverAppSpanEvents;
-        protected SpanEvent[] ReceiverAppSpanEvents => _receiverAppSpanEvents ?? (_receiverAppSpanEvents = _fixture.ReceiverApplication.AgentLog.GetSpanEvents().ToArray());
+        protected SpanEvent[] ReceiverAppSpanEvents => _receiverAppSpanEvents ?? (_receiverAppSpanEvents = _fixture.ReceiverAppAgentLog.GetSpanEvents().ToArray());
 
         private Metric[] _senderActualMetrics;
         protected Metric[] SenderActualMetrics => _senderActualMetrics ?? (_senderActualMetrics = _fixture.AgentLog.GetMetrics().ToArray());
 
         private Metric[] _receiverActualMetrics;
-        protected Metric[] ReceiverActualMetrics => _receiverActualMetrics ?? (_receiverActualMetrics = _fixture.ReceiverApplication.AgentLog.GetMetrics().ToArray());
+        protected Metric[] ReceiverActualMetrics => _receiverActualMetrics ?? (_receiverActualMetrics = _fixture.ReceiverAppAgentLog.GetMetrics().ToArray());
 
         [Fact]
         public void TransactionsAttributes()

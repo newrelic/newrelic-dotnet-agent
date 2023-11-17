@@ -6,15 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -73,12 +71,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         // Transactions (either with an ID or "noop")
         public const string TransactionLinePrefix = FinestLogLinePrefixRegex + @"Trx ([a-fA-F0-9]*|Noop): ";
 
-        public AgentLogBase(RemoteApplication remoteApplication)
+        public AgentLogBase(ITestOutputHelper testLogger)
         {
-            _remoteApplication = remoteApplication;
+            _testLogger = testLogger;
         }
 
-        private RemoteApplication _remoteApplication;
+        private ITestOutputHelper _testLogger;
 
         public abstract IEnumerable<string> GetFileLines();
 
@@ -158,7 +156,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             var timeout = timeoutOrZero ?? TimeSpan.Zero;
 
-            _remoteApplication.TestLogger?.WriteLine($"{Timestamp} WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds} seconds. Minimum count: {minimumCount}");
+            _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Waiting for expression: {regularExpression}. Duration: {timeout.TotalSeconds} seconds. Minimum count: {minimumCount}");
 
             var timeTaken = Stopwatch.StartNew();
             do
@@ -166,7 +164,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 var matches = TryGetLogLines(regularExpression).ToList();
                 if (matches.Count >= minimumCount)
                 {
-                    _remoteApplication.TestLogger?.WriteLine($"{Timestamp} WaitForLogLines  Matched expression: {regularExpression}.");
+                    _testLogger?.WriteLine($"{Timestamp} WaitForLogLines  Matched expression: {regularExpression}.");
                     return matches;
                 }
 
@@ -174,7 +172,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             } while (timeTaken.Elapsed < timeout);
 
             var message = $"{Timestamp} Log line did not appear a minimum of {minimumCount} times within {timeout.TotalSeconds} seconds.  Expected line expression: {regularExpression}";
-            _remoteApplication.TestLogger?.WriteLine(message);
+            _testLogger?.WriteLine(message);
             throw new Exception(message);
         }
 

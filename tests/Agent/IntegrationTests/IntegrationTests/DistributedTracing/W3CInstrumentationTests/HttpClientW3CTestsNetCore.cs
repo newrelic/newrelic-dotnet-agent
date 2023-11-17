@@ -46,8 +46,8 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
 
                     _fixture.ExecuteTraceRequestChain("CallNext", "CallNext", "CallEnd", headers);
 
-                    _fixture.FirstCallApplication.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
-                    _fixture.SecondCallApplication.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
+                    _fixture.FirstCallAppAgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
+                    _fixture.SecondCallAppAgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
                     _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
                 }
             );
@@ -58,18 +58,18 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
         [Fact]
         public void Test()
         {
-            var senderAppTxEvent = _fixture.FirstCallApplication.AgentLog.GetTransactionEvents().FirstOrDefault();
+            var senderAppTxEvent = _fixture.FirstCallAppAgentLog.GetTransactionEvents().FirstOrDefault();
             Assert.NotNull(senderAppTxEvent);
 
-            var receiverAppTxEvents = _fixture.SecondCallApplication.AgentLog.GetTransactionEvents().FirstOrDefault();
+            var receiverAppTxEvents = _fixture.SecondCallAppAgentLog.GetTransactionEvents().FirstOrDefault();
             Assert.NotNull(receiverAppTxEvents);
 
-            var lastCallAppTxEvents = _fixture.RemoteApplication.AgentLog.GetTransactionEvents().FirstOrDefault();
+            var lastCallAppTxEvents = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
             Assert.NotNull(lastCallAppTxEvents);
 
-            var senderAppSpanEvents = _fixture.FirstCallApplication.AgentLog.GetSpanEvents();
-            var receiverAppSpanEvents = _fixture.SecondCallApplication.AgentLog.GetSpanEvents();
-            var lastCallAppSpanEvents = _fixture.RemoteApplication.AgentLog.GetSpanEvents();
+            var senderAppSpanEvents = _fixture.FirstCallAppAgentLog.GetSpanEvents();
+            var receiverAppSpanEvents = _fixture.SecondCallAppAgentLog.GetSpanEvents();
+            var lastCallAppSpanEvents = _fixture.AgentLog.GetSpanEvents();
 
             Assert.Equal(senderAppTxEvent.IntrinsicAttributes["guid"], receiverAppTxEvents.IntrinsicAttributes["parentId"]);
             Assert.Equal(receiverAppTxEvents.IntrinsicAttributes["guid"], lastCallAppTxEvents.IntrinsicAttributes["parentId"]);
@@ -126,8 +126,8 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
                 new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", callCount = 1 }
             };
 
-            var accountId = _fixture.SecondCallApplication.AgentLog.GetAccountId();
-            var appId = _fixture.SecondCallApplication.AgentLog.GetApplicationId();
+            var accountId = _fixture.SecondCallAppAgentLog.GetAccountId();
+            var appId = _fixture.SecondCallAppAgentLog.GetApplicationId();
 
             var receiverExpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -146,8 +146,8 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
             };
 
 
-            var senderActualMetrics = _fixture.FirstCallApplication.AgentLog.GetMetrics();
-            var receiverActualMetrics = _fixture.SecondCallApplication.AgentLog.GetMetrics();
+            var senderActualMetrics = _fixture.FirstCallAppAgentLog.GetMetrics();
+            var receiverActualMetrics = _fixture.SecondCallAppAgentLog.GetMetrics();
 
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(senderExpectedMetrics, senderActualMetrics),
