@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Linq;
@@ -81,10 +81,12 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
+    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
+    // Keep as net7.0.
     [NetCoreTest]
-    public class Log4netZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class Log4netZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public Log4netZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public Log4netZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.Log4net)
         {
         }
@@ -103,10 +105,12 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
 
     #region MicrosoftLogging
 
+    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
+    // Keep as net7.0.
     [NetCoreTest]
-    public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MicrosoftLoggingZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.MicrosoftLogging)
         {
         }
@@ -210,10 +214,12 @@ namespace NewRelic.Agent.IntegrationTests.Logging.ZeroMaxSamplesStored
         }
     }
 
+    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
+    // Keep as net7.0.
     [NetCoreTest]
-    public class NLogZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class NLogZeroMaxSamplesStoredTestsNetCoreLatestTests : ZeroMaxSamplesStoredTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public NLogZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public NLogZeroMaxSamplesStoredTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(fixture, output, LoggingFramework.NLog)
         {
         }

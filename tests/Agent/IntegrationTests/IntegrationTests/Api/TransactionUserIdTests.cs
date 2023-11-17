@@ -70,10 +70,12 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
+    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
+    // Keep as net7.0.
     [NetCoreTest]
-    public class TransactionUserIdTestsCore : TransactionUserIdTests<ConsoleDynamicMethodFixtureCoreLatest>
+    public class TransactionUserIdTestsCore : TransactionUserIdTests<ConsoleDynamicMethodFixtureCore70>
     {
-        public TransactionUserIdTestsCore(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public TransactionUserIdTestsCore(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

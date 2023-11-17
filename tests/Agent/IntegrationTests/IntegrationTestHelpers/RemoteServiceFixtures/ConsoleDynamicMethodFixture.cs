@@ -157,6 +157,30 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     /// <summary>
     /// Use this fixture for High Security Mode tests
     /// </summary>
+    public class ConsoleDynamicMethodFixtureCore70HSM : ConsoleDynamicMethodFixtureCore70
+    {
+        public override string TestSettingCategory { get { return "HSM"; } }
+        public ConsoleDynamicMethodFixtureCore70HSM()
+        {
+        }
+
+    }
+
+    /// <summary>
+    /// Use this fixture for Configurable Security Policy tests
+    /// </summary>
+    public class ConsoleDynamicMethodFixtureCore70CSP : ConsoleDynamicMethodFixtureCore70
+    {
+        public override string TestSettingCategory { get { return "CSP"; } }
+        public ConsoleDynamicMethodFixtureCore70CSP()
+        {
+        }
+
+    }
+
+    /// <summary>
+    /// Use this fixture for High Security Mode tests
+    /// </summary>
     public class ConsoleDynamicMethodFixtureCoreLatestHSM : ConsoleDynamicMethodFixtureCore80
     {
         public override string TestSettingCategory { get { return "HSM"; } }

@@ -50,6 +50,7 @@
     <PackageReference Include="System.Data.SqlClient" Version="4.4.0" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.4" Condition="'$(TargetFramework)' == 'net7.0'" />
     <!--<PackageReference Include="System.Data.SqlClient" Version="4.8.4" Condition="'$(TargetFramework)' == 'net8.0'" />-->
+    <!-- Package does not support net8.0 -->
 
     <!--Microsoft.Data.SqlClient-->
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19239.1" Condition="'$(TargetFramework)' == 'net462'" />
@@ -59,6 +60,7 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="3.1.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" Condition="'$(TargetFramework)' == 'net7.0'" />
     <!--<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.2" Condition="'$(TargetFramework)' == 'net8.0'" />-->
+    <!-- Package does not support net8.0 -->
 
     <!-- MySql.Data framework references -->
     <PackageReference Include="MySql.Data" Version="6.10.7" Condition="'$(TargetFramework)' == 'net462'" />

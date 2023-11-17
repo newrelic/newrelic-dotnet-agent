@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -87,10 +87,12 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
         }
     }
 
+    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
+    // Keep as net7.0.
     [NetCoreTest]
-    public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class AppDomainCachingEnabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public AppDomainCachingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public AppDomainCachingEnabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(fixture, output, false)
         {
         }
@@ -107,10 +109,12 @@ namespace NewRelic.Agent.IntegrationTests.AppDomainCaching
         }
     }
 
+    // Test fails in net8.0 with "Fatal error. Internal CLR error. (0x80131506)" and "Remote application exited with a failure exit code of C0000005".
+    // Keep as net7.0.
     [NetCoreTest]
-    public class AppDomainCachingDisabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class AppDomainCachingDisabledTestsNetCoreLatestTests : AppDomainCachingTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public AppDomainCachingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public AppDomainCachingDisabledTestsNetCoreLatestTests(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(fixture, output, true)
         {
         }
