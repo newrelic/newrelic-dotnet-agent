@@ -31,7 +31,7 @@ namespace OwinRemotingClient
 
         private void RealMain()
         {
-            var baseAddress = string.Format(@"http://*:{0}/", Port);
+            var baseAddress = string.Format(@"http://127.0.0.1:{0}/", Port);
             using (WebApp.Start<Startup>(baseAddress))
             {
                 using (var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset,

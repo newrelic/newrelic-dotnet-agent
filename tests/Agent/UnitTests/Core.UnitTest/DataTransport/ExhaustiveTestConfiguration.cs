@@ -401,6 +401,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool ForceSynchronousTimingCalculationHttpClient => true;
 
+        public bool EnableAspNetCore6PlusBrowserInjection => true;
+
         public bool ExcludeNewrelicHeader => true;
 
         public bool ApplicationLoggingEnabled => true;

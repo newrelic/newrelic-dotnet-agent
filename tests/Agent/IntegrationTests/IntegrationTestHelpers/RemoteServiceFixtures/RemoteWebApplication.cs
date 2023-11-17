@@ -184,7 +184,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             };
             var attributes = new[]
             {
-                new KeyValuePair<string, string>("bindingInformation", string.Format(@"*:{0}:", Port)),
+                new KeyValuePair<string, string>("bindingInformation", string.Format(@"127.0.0.1:{0}:", Port)),
             };
             XmlUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, string.Empty, nodes, attributes);
         }
@@ -253,7 +253,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 CapturedOutput.WriteProcessOutputToLog("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening");
             }
 
-            Assert.True(false, "Remote process never generated a .pid file!");
+            Assert.Fail("Remote process never generated a .pid file!");
         }
     }
 }

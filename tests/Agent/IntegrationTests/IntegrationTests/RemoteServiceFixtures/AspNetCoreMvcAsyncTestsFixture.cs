@@ -17,43 +17,43 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void GetIoBoundNoSpecialAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwaitTest/IoBoundNoSpecialAsync";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncAwaitTest/IoBoundNoSpecialAsync";
             GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetCustomMiddlewareIoBoundNoSpecialAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwaitTest/CustomMiddlewareIoBoundNoSpecialAsync";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncAwaitTest/CustomMiddlewareIoBoundNoSpecialAsync";
             GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetIoBoundConfigureAwaitFalseAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwaitTest/IoBoundConfigureAwaitFalseAsync";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncAwaitTest/IoBoundConfigureAwaitFalseAsync";
             GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetCpuBoundTasksAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwaitTest/CpuBoundTasksAsync";
+            var address = $"http://{DestinationServerName}:{Port}/AsyncAwaitTest/CpuBoundTasksAsync";
             GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetManualTaskRunBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/TaskRunBlocked";
+            var address = $"http://{DestinationServerName}:{Port}/ManualAsync/TaskRunBlocked";
             GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetManualTaskFactoryStartNewBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/TaskFactoryStartNewBlocked";
+            var address = $"http://{DestinationServerName}:{Port}/ManualAsync/TaskFactoryStartNewBlocked";
             GetStringAndAssertEqual(address, "Worked");
         }
 
         public void GetManualNewThreadStartBlocked()
         {
-            var address = $"http://localhost:{Port}/ManualAsync/NewThreadStartBlocked";
+            var address = $"http://{DestinationServerName}:{Port}/ManualAsync/NewThreadStartBlocked";
             GetStringAndAssertEqual(address, "Worked");
         }
     }

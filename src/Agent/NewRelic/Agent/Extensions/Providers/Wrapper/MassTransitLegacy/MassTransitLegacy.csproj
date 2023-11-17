@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
+    <AssemblyName>NewRelic.Providers.Wrapper.MassTransitLegacy</AssemblyName>
+    <RootNamespace>NewRelic.Providers.Wrapper.MassTransitLegacy</RootNamespace>
+    <Description>MassTransit v7 Wrapper Provider for New Relic .NET Agent</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit" Version="7.0.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Instrumentation.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
+    <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+  </ItemGroup>
+</Project>

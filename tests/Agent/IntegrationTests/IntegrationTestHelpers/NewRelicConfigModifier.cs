@@ -405,5 +405,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             CommonUtils.SetConfigAppSetting(_configFilePath, "OverrideUpdateLoadedModulesCycle", seconds.ToString(), "urn:newrelic-config");
             return this;
         }
+
+        public NewRelicConfigModifier EnableAspNetCore6PlusBrowserInjection(bool enableBrowserInjection)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "appSettings", string.Empty);
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings" }, "add", string.Empty);
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "key", "EnableAspNetCore6PlusBrowserInjection");
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "appSettings", "add"}, "value", $"{enableBrowserInjection}");
+            return this;
+        }
     }
 }

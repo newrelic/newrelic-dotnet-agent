@@ -8,6 +8,7 @@ using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests
 {
@@ -39,7 +40,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
         public override void RootSpanAttributes()
         {
             var senderRootSpanEvent = SenderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/WebAPI/DistributedTracingSender/CallNext").FirstOrDefault();
-            var externalSpanEvent = SenderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/localhost/Stream/GET").FirstOrDefault();
+            var externalSpanEvent = SenderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == $"External/{RemoteApplication.DestinationServerName}/Stream/GET").FirstOrDefault();
 
             var receiverRootSpanEvent = ReceiverAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/WebAPI/DistributedTracingReceiver/CallEnd").FirstOrDefault();
 

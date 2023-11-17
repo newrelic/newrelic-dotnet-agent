@@ -29,7 +29,7 @@
     <PackageReference Include="log4net.Ext.Json" Version="2.0.9.1" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="log4net" Version="2.0.14" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.6.40">
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.7.30">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -61,44 +61,44 @@
     <PackageReference Include="MySql.Data" Version="8.0.15" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="MySql.Data" Version="8.0.30" Condition="'$(TargetFramework)' == 'net48'" />
     <!-- MySql.Data v8.0.33 is a breaking change for the agent and requires agent version 10.11.1 or greater -->
-    <PackageReference Include="MySql.Data" Version="8.1.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MySql.Data" Version="8.2.0" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- MySql.Data .NET/Core references -->
     <PackageReference Include="MySql.Data" Version="6.10.7" Condition="'$(TargetFramework)' == 'net6.0'" />
     <!-- MySql.Data v8.0.33 is a breaking change for the agent and requires agent version 10.11.1 or greater -->
-    <PackageReference Include="MySql.Data" Version="8.1.0" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="MySql.Data" Version="8.2.0" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!-- MongoDB.Driver .NET Framework references -->
     <!-- 2.3.0 is the oldest version we support, 2.17.1 is the newest version as of October 2022 -->
     <PackageReference Include="MongoDB.Driver" Version="2.3.0" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="MongoDB.Driver" Version="2.14.1" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="MongoDB.Driver" Version="2.17.1" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="MongoDB.Driver" Version="2.21.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MongoDB.Driver" Version="2.22.0" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- MongoDB.Driver .NET/Core references -->
     <!-- Minimum version we can use with .NET core 3.0 or greater is 2.8.1, due to this bug: https://github.com/mongodb/mongo-csharp-driver/pull/372 -->
     <PackageReference Include="MongoDB.Driver" Version="2.8.1" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="MongoDB.Driver" Version="2.21.0" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="MongoDB.Driver" Version="2.22.0" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!-- MySqlConnector framework references -->
     <PackageReference Include="MySqlConnector" Version="1.0.1" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="MySqlConnector" Version="1.3.13" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="MySqlConnector" Version="2.1.2" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="MySqlConnector" Version="2.2.4" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MySqlConnector" Version="2.3.1" Condition="'$(TargetFramework)' == 'net481'" />
 
     <!-- MySqlConnector .NET/Core references -->
     <PackageReference Include="MySqlConnector" Version="1.0.1" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="MySqlConnector" Version="2.2.4" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="MySqlConnector" Version="2.3.1" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!-- StackExchange.Redis framework references -->
     <PackageReference Include="StackExchange.Redis.StrongName" Version="1.1.608" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.601" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="StackExchange.Redis" Version="2.2.88" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.6.116" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.4" Condition="'$(TargetFramework)' == 'net481'" />
     
     <!-- StackExchange.Redis .NET/Core references -->
     <PackageReference Include="StackExchange.Redis.StrongName" Version="1.2.6" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="StackExchange.Redis" Version="2.6.116" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.4" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <!-- Elasticsearch NEST framework references -->
     <PackageReference Include="NEST" Version="7.0.0" Condition="'$(TargetFramework)' == 'net462'" />
@@ -141,7 +141,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" Condition="'$(TargetFramework)' == 'net48'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" Condition="'$(TargetFramework)' == 'net48'" />
 
-    <PackageReference Include="Serilog" Version="3.0.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Serilog" Version="3.1.1" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" Condition="'$(TargetFramework)' == 'net481'" />
 
@@ -157,7 +157,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" Condition="'$(TargetFramework)' == 'net6.0'" />
 
-    <PackageReference Include="Serilog" Version="3.0.1" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="Serilog" Version="3.1.1" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" Condition="'$(TargetFramework)' == 'net7.0'" />
 
@@ -195,9 +195,9 @@
     <PackageReference Include="RabbitMQ.Client" Version="3.6.9" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="RabbitMQ.Client" Version="4.1.3" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="RabbitMQ.Client" Version="6.0.0" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="RabbitMQ.Client" Version="6.5.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.6.0" Condition="'$(TargetFramework)' == 'net481'" />
     <PackageReference Include="RabbitMQ.Client" Version="5.2.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-    <PackageReference Include="RabbitMQ.Client" Version="6.5.0" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.6.0" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <PackageReference Include="NServiceBus" Version="5.0.0" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="NServiceBus" Version="6.5.10" Condition="'$(TargetFramework)' == 'net471'" />
@@ -241,12 +241,12 @@
 
   <ItemGroup> <!-- Versions below 4.5 did not support netstandard 2.0 -->
     <PackageReference Include="NLog" Version="4.5.9" Condition="'$(TargetFramework)' == 'net6.0'" />
-	  <PackageReference Include="NLog" Version="5.2.4" Condition="'$(TargetFramework)' == 'net7.0'" />
+	  <PackageReference Include="NLog" Version="5.2.5" Condition="'$(TargetFramework)' == 'net7.0'" />
 
     <PackageReference Include="NLog" Version="4.3.11" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="NLog" Version="4.1.2" Condition="'$(TargetFramework)' == 'net471'" />
     <PackageReference Include="NLog" Version="4.5.11" Condition="'$(TargetFramework)' == 'net48'" />
-    <PackageReference Include="NLog" Version="5.2.4" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="NLog" Version="5.2.5" Condition="'$(TargetFramework)' == 'net481'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -260,6 +260,36 @@
     <Reference Include="System.Messaging" Condition="'$(TargetFramework)' == 'net471'" />
     <Reference Include="System.Messaging" Condition="'$(TargetFramework)' == 'net48'" />
     <Reference Include="System.Messaging" Condition="'$(TargetFramework)' == 'net481'" />
+  </ItemGroup>
+
+  <!--MassTransit-->
+  <ItemGroup>
+
+    <PackageReference Include="MassTransit" Version="7.1.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="MassTransit" Version="7.1.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="MassTransit" Version="7.3.1" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="MassTransit" Version="7.3.1" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="MassTransit" Version="8.1.1" Condition="'$(TargetFramework)' == 'net7.0'" />
+
+    <PackageReference Include="MassTransit.AspNetCore" Version="7.1.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="MassTransit.AspNetCore" Version="7.1.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="MassTransit.AspNetCore" Version="7.3.1" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="MassTransit.AspNetCore" Version="7.3.1" Condition="'$(TargetFramework)' == 'net6.0'" />
+
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.1.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.1.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.3.1" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.3.1" Condition="'$(TargetFramework)' == 'net6.0'" />
+
+    <!--These references are needed for the MassTransit exerciser.  They need to use a version this old because they have
+    a dependency on Microsoft.Extensions.Logging for the same version or greater, and we have references to old versions
+    of MEL for testing MEL instrumentation.-->
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
   </ItemGroup>
 
   <!-- RestSharp -->

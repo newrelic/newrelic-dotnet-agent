@@ -3241,6 +3241,18 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return defaultConfig.ForceSynchronousTimingCalculationHttpClient;
         }
 
+        [TestCase(null, ExpectedResult = false)]
+        [TestCase("not a bool", ExpectedResult = false)]
+        [TestCase("false", ExpectedResult = false)]
+        [TestCase("true", ExpectedResult = true)]
+        public bool AspNetCore6PlusBrowserInjectionTests(string localConfigValue)
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "EnableAspNetCore6PlusBrowserInjection", value = localConfigValue });
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            return defaultConfig.EnableAspNetCore6PlusBrowserInjection;
+        }
+
         [TestCase("true", true, ExpectedResult = true)]
         [TestCase("true", false, ExpectedResult = true)]
         [TestCase("true", null, ExpectedResult = true)]

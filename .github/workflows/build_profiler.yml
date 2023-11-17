@@ -2,6 +2,11 @@ name: Build and Package Profiler
 
 on:
   # run this workflow on a push to any branch other than main or a feature branch
+  #
+  # NOTE: On a push, only the build jobs will execute; the NuGet jobs will not run. 
+  #       Manually run this workflow on your branch when you want it to update the
+  #       NuGet package and create a PR to update the package version reference in 
+  #       Home.csproj.
   push:
     branches-ignore:
       - main

@@ -34,20 +34,16 @@ namespace OwinRemotingServer
 
         private void RealMain()
         {
-            var serverProviderTcp = new BinaryServerFormatterSinkProvider();
-            serverProviderTcp.TypeFilterLevel = System.Runtime.Serialization.Formatters.TypeFilterLevel.Full;
+            var serverProviderTcp = new BinaryServerFormatterSinkProvider { TypeFilterLevel = System.Runtime.Serialization.Formatters.TypeFilterLevel.Full };
             var clientProviderTcp = new BinaryClientFormatterSinkProvider();
-            var propertiesTcp = new System.Collections.Hashtable();
-            propertiesTcp["port"] = 7878;
+            var propertiesTcp = new System.Collections.Hashtable { ["port"] = 7878, ["bindTo"] = "127.0.0.1" };
 
             var tcpChannel = new TcpChannel(propertiesTcp, clientProviderTcp, serverProviderTcp);
             ChannelServices.RegisterChannel(tcpChannel, false);
 
-            var serverProviderHttp = new SoapServerFormatterSinkProvider();
-            serverProviderHttp.TypeFilterLevel = System.Runtime.Serialization.Formatters.TypeFilterLevel.Full;
+            var serverProviderHttp = new SoapServerFormatterSinkProvider { TypeFilterLevel = System.Runtime.Serialization.Formatters.TypeFilterLevel.Full };
             var clientProviderHttp = new SoapClientFormatterSinkProvider();
-            var propertiesHttp = new System.Collections.Hashtable();
-            propertiesHttp["port"] = 7879;
+            var propertiesHttp = new System.Collections.Hashtable { ["port"] = 7879, ["bindTo"] = "127.0.0.1" };
 
             var httpChannel = new HttpChannel(propertiesHttp, clientProviderHttp, serverProviderHttp);
             ChannelServices.RegisterChannel(httpChannel, false);

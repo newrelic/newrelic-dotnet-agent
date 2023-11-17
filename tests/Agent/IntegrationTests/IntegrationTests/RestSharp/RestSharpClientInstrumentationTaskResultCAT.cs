@@ -24,11 +24,11 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
             _fixture.TestLogger = output;
 
-            _fixture.AddCommand($"RestSharpService StartService {_fixture.RemoteApplication.Port}");
-            _fixture.AddCommand($"RestSharpExerciser TaskResultClient {_fixture.RemoteApplication.Port} GET true true");
-            _fixture.AddCommand($"RestSharpExerciser TaskResultClient {_fixture.RemoteApplication.Port} PUT false false");
-            _fixture.AddCommand($"RestSharpExerciser TaskResultClient {_fixture.RemoteApplication.Port} POST false false");
-            _fixture.AddCommand($"RestSharpExerciser TaskResultClient {_fixture.RemoteApplication.Port} DELETE true true");
+            _fixture.AddCommand($"RestSharpService StartService {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port}");
+            _fixture.AddCommand($"RestSharpExerciser TaskResultClient {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port} GET true true");
+            _fixture.AddCommand($"RestSharpExerciser TaskResultClient {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port} PUT false false");
+            _fixture.AddCommand($"RestSharpExerciser TaskResultClient {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port} POST false false");
+            _fixture.AddCommand($"RestSharpExerciser TaskResultClient {_fixture.DestinationServerName} {_fixture.RemoteApplication.Port} DELETE true true");
             _fixture.AddCommand("RestSharpService StopService");
 
             _fixture.AddActions
@@ -52,17 +52,19 @@ namespace NewRelic.Agent.IntegrationTests.RestSharp
             var crossProcessId = _fixture.AgentLog.GetCrossProcessId();
             var callerTransactionName = "OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.RestSharp.RestSharpExerciser/TaskResultClient";
 
+            var serverName = _fixture.DestinationServerName;
+            ;
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = "External/all", callCount = 4 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/GET", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/PUT", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/POST", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"External/localhost/Stream/DELETE", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/localhost/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Get", metricScope = callerTransactionName, callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/localhost/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Put", metricScope = callerTransactionName, callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/localhost/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Post", metricScope = callerTransactionName, callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/localhost/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Delete", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/GET", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/PUT", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/POST", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{serverName}/Stream/DELETE", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Get", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Put", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Post", metricScope = callerTransactionName, callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{serverName}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Delete", metricScope = callerTransactionName, callCount = 1 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();

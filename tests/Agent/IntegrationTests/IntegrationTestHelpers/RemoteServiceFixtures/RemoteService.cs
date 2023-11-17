@@ -333,7 +333,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 CapturedOutput.WriteProcessOutputToLog("[RemoteService]: WaitForAppServerToStartListening");
             }
 
-            Assert.True(false, "Remote process never generated a .pid file!");
+            Assert.Fail("Remote process never generated a .pid file!");
         }
 
         // set the application name in app.config (agent will trump names set in newrelic.config with the process name, which is undesirable)

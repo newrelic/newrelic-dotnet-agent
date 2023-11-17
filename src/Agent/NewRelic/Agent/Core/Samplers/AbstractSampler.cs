@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.Samplers
         {
             get
             {
-                return !_configuration.DisableSamplers;
+                return !_configuration.DisableSamplers && !Agent.IsAgentShuttingDown;
             }
         }
 
