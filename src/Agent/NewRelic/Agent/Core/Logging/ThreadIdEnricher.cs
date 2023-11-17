@@ -14,18 +14,15 @@ namespace NewRelic.Agent.Core
     [NrExcludeFromCodeCoverage]
     internal class ThreadIdEnricher : ILogEventEnricher
     {
-        private LogEventProperty _tidProperty;
+
+        private static ThreadLocal<LogEventProperty> _tidProperty = new ThreadLocal<LogEventProperty>();
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            var threadId = Thread.CurrentThread.ManagedThreadId;
+            if (!_tidProperty.IsValueCreated)
+                _tidProperty.Value = propertyFactory.CreateProperty("tid", Thread.CurrentThread.ManagedThreadId);
 
-            var prop = _tidProperty;
-
-            if (prop == null || (int?)((ScalarValue)prop.Value).Value != threadId)
-                _tidProperty = prop = propertyFactory.CreateProperty("tid", threadId);
-
-            logEvent.AddPropertyIfAbsent(prop);
+            logEvent.AddPropertyIfAbsent(_tidProperty.Value);
         }
     }
 }
