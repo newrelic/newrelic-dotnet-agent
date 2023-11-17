@@ -47,19 +47,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 {
                     if (_agentCallStrategy == AgentCallStyle::Strategy::InAgentCache)
                     {
-                        // Ensure that the managed agent is loaded
-                        _instructions->AppendString(_instrumentationSettings->GetCorePath());
-                        _instructions->Append(_X("call void [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::EnsureInitialized(string)"));
-
-                        // Get the Func holding a reference to the ProfilerAgentMethodCallCache.GetAndInvokeMethodFromCache method
-                        _instructions->Append(_X("call object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetMethodCacheLookupMethod()"));
-                        _instructions->Append(CEE_CASTCLASS, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Func`7<string, string, string, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[], class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type, object[], object>"));
+                        // result =  System.CannotUnloadAppDomainException.InvokeAgentMethodInvokerFunc("C:\path\to\NewRelic.Agent.Core", "NewRelic_Delegate_API_<function name><function signature>", "NewRelic.Core.AgentApi", "<function name>", new System.Type[] { <parameter types> }, <return type>, new object[] { <method parameters> })
 
                         xstring_t className = _X("NewRelic.Agent.Core.AgentApi");
                         xstring_t methodName = _function->GetFunctionName();
                         xstring_t keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)_function->GetFunctionId());
                         auto argumentTypesLambda = GetArrayOfTypeParametersLamdba();
 
+                        _instructions->AppendString(_instrumentationSettings->GetCorePath());
                         _instructions->AppendString(keyName);
                         _instructions->AppendString(className);
                         _instructions->AppendString(methodName);
@@ -77,7 +72,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
                         BuildObjectArrayOfParameters();
 
-                        _instructions->Append(CEE_CALLVIRT, _X("instance !6 class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Func`7<string, string, string, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[], class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type, object[], object>::Invoke(!0, !1, !2, !3, !4, !5)"));
+                        _instructions->Append(_X("call object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::InvokeAgentMethodInvokerFunc(string, string, string, string, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[], class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type, object[])"));
 
                         if (_methodSignature->_returnType->_kind == SignatureParser::ReturnType::Kind::VOID_RETURN_TYPE)
                         {

@@ -9,9 +9,9 @@ using System.Linq.Expressions;
 namespace NewRelic.Agent.Core
 {
     /// <summary>
-    /// Cache of the Agent methods that can be invoked by the byte-code injected by the profiler.
+    /// The class used by the byte-code injected by the profiler to invoke arbitrary methods defined in the managed agent.
     /// </summary>
-    public class ProfilerAgentMethodCallCache
+    public class ProfilerAgentMethodInvoker
     {
         private static readonly ConcurrentDictionary<string, Func<object[], object>> _invokerCache = new ConcurrentDictionary<string, Func<object[], object>>();
 
@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core
         /// A reference to the method that is used to invoked the requrested agent method. The result is treated as an object
         /// to simplify the type definition injected by the profiler to store this reference.
         /// </returns>
-        public static object GetInvokerFromCache()
+        public static object GetInvoker()
         {
             return (Func<string, string, string, Type[], Type, object[], object>)GetAndInvokeMethodFromCache;
         }

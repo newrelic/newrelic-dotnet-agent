@@ -53,12 +53,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _instrumentedFunctionNames->emplace(_X("GetTypeViaReflectionOrThrow"));
             _instrumentedFunctionNames->emplace(_X("LoadAssemblyOrThrow"));
             _instrumentedFunctionNames->emplace(_X("StoreMethodInAppDomainStorageOrThrow"));
-            _instrumentedFunctionNames->emplace(_X("GetMethodCacheLookupMethod"));
-            _instrumentedFunctionNames->emplace(_X("GetAgentShimFinishTracerDelegateMethod"));
-            _instrumentedFunctionNames->emplace(_X("StoreAgentShimFinishTracerDelegateMethod"));
-            _instrumentedFunctionNames->emplace(_X("StoreMethodCacheLookupMethod"));
+            _instrumentedFunctionNames->emplace(_X("GetAgentMethodInvokerObject"));
+            _instrumentedFunctionNames->emplace(_X("GetAgentShimFinishTracerDelegateFunc"));
+            _instrumentedFunctionNames->emplace(_X("StoreAgentShimFinishTracerDelegateFunc"));
+            _instrumentedFunctionNames->emplace(_X("StoreAgentMethodInvokerObject"));
             _instrumentedFunctionNames->emplace(_X("EnsureInitialized"));
-            _instrumentedFunctionNames->emplace(_X("GetMethodInfoFromAgentCache"));
+            _instrumentedFunctionNames->emplace(_X("InvokeAgentMethodInvokerFunc"));
 
             auto instrumentationPoints = _instrumentationConfiguration->GetInstrumentationPoints();
 

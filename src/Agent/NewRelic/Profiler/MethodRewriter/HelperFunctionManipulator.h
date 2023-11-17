@@ -50,25 +50,25 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             {
                 BuildEnsureInitializedMethod();
             }
-            else if (_function->GetFunctionName() == _X("GetMethodCacheLookupMethod"))
+            else if (_function->GetFunctionName() == _X("GetAgentMethodInvokerObject"))
             {
-                BuildGetMethodCacheLookupMethodMethod();
+                BuildGetAgentMethodInvokerObject();
             }
-            else if (_function->GetFunctionName() == _X("GetAgentShimFinishTracerDelegateMethod"))
+            else if (_function->GetFunctionName() == _X("GetAgentShimFinishTracerDelegateFunc"))
             {
-                BuildGetAgentShimFinishTracerDelegateMethod();
+                BuildGetAgentShimFinishTracerDelegateFunc();
             }
-            else if (_function->GetFunctionName() == _X("GetMethodInfoFromAgentCache"))
+            else if (_function->GetFunctionName() == _X("InvokeAgentMethodInvokerFunc"))
             {
-                BuildGetMethodInfoFromAgentCache();
+                BuildInvokeAgentMethodInvokerFunc();
             }
-            else if (_function->GetFunctionName() == _X("StoreMethodCacheLookupMethod"))
+            else if (_function->GetFunctionName() == _X("StoreAgentMethodInvokerFunc"))
             {
-                BuildStoreMethodCacheLookupMethod();
+                BuildStoreAgentMethodInvokerFunc();
             }
-            else if (_function->GetFunctionName() == _X("StoreAgentShimFinishTracerDelegateMethod"))
+            else if (_function->GetFunctionName() == _X("StoreAgentShimFinishTracerDelegateFunc"))
             {
-                BuildStoreAgentShimFinishTracerDelegateMethod();
+                BuildStoreAgentShimFinishTracerDelegateFunc();
             }
             else
             {
@@ -176,42 +176,45 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_RET);
         }
 
-        void BuildGetMethodInfoFromAgentCache()
+        // resultObject InvokeAgentMethodInvokerFunc(string assemblyPath, string storageKey, string typeName, string methodName, Type[] parameterTypes, Type returnType, object[] methodParameters)
+        void BuildInvokeAgentMethodInvokerFunc()
         {
-            _instructions->Append(CEE_LDARG_1);
+            _instructions->Append(CEE_LDARG_0);
             _instructions->Append(_X("call void System.CannotUnloadAppDomainException::EnsureInitialized(string)"));
 
-            _instructions->Append(_X("call object System.CannotUnloadAppDomainException::GetMethodCacheLookupMethod()"));
+            _instructions->Append(_X("call object System.CannotUnloadAppDomainException::GetAgentMethodInvokerObject()"));
 
-            _instructions->Append(CEE_CASTCLASS, _X("class System.Func`5<string, string, string, class System.Type[], class System.Reflection.MethodInfo>"));
-            _instructions->Append(CEE_LDARG_0);
+            _instructions->Append(CEE_CASTCLASS, _X("class System.Func`7<string, string, string, class System.Type[], class System.Type, object[], object>"));
+            _instructions->Append(CEE_LDARG_1);
             _instructions->Append(CEE_LDARG_2);
             _instructions->Append(CEE_LDARG_3);
             _instructions->Append(CEE_LDARG_S, (uint8_t)4);
-            _instructions->Append(CEE_CALLVIRT, _X("instance !4 class System.Func`5<string, string, string, class System.Type[], class System.Reflection.MethodInfo>::Invoke(!0, !1, !2, !3)"));
+            _instructions->Append(CEE_LDARG_S, (uint8_t)5);
+            _instructions->Append(CEE_LDARG_S, (uint8_t)6);
+            _instructions->Append(CEE_CALLVIRT, _X("instance !6 class System.Func`7<string, string, string, class System.Type[], class System.Type, object[], object>::Invoke(!0, !1, !2, !3, !4, !5)"));
 
             _instructions->Append(CEE_RET);
         }
 
-        void BuildGetMethodCacheLookupMethodMethod()
+        void BuildGetAgentMethodInvokerObject()
         {
             _instructions->Append(CEE_VOLATILE);
             _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_methodCache"));
             _instructions->Append(CEE_RET);
         }
 
-        void BuildGetAgentShimFinishTracerDelegateMethod()
+        void BuildGetAgentShimFinishTracerDelegateFunc()
         {
             _instructions->Append(CEE_VOLATILE);
             _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_tracerFunc"));
             _instructions->Append(CEE_RET);
         }
 
-        void BuildStoreMethodCacheLookupMethod()
+        void BuildStoreAgentMethodInvokerFunc()
         {
             _instructions->Append(CEE_LDARG_0);
-            _instructions->AppendString(_X("NewRelic.Agent.Core.ProfilerAgentMethodCallCache"));
-            _instructions->AppendString(_X("GetInvokerFromCache"));
+            _instructions->AppendString(_X("NewRelic.Agent.Core.ProfilerAgentMethodInvoker"));
+            _instructions->AppendString(_X("GetInvoker"));
             _instructions->Append(CEE_LDNULL);
             _instructions->Append(CEE_CALL, _X("class System.Reflection.MethodInfo System.CannotUnloadAppDomainException::GetMethodViaReflectionOrThrow(string,string,string,class System.Type[])"));
 
@@ -224,7 +227,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_RET);
         }
 
-        void BuildStoreAgentShimFinishTracerDelegateMethod()
+        void BuildStoreAgentShimFinishTracerDelegateFunc()
         {
             _instructions->Append(CEE_LDARG_0);
             _instructions->AppendString(_X("NewRelic.Agent.Core.AgentShim"));
@@ -248,10 +251,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             auto afterInit = _instructions->AppendJump(CEE_BRTRUE);
 
             _instructions->Append(CEE_LDARG_0);
-            _instructions->Append(_X("call void System.CannotUnloadAppDomainException::StoreAgentShimFinishTracerDelegateMethod(string)"));
+            _instructions->Append(_X("call void System.CannotUnloadAppDomainException::StoreAgentShimFinishTracerDelegateFunc(string)"));
 
             _instructions->Append(CEE_LDARG_0);
-            _instructions->Append(_X("call void System.CannotUnloadAppDomainException::StoreMethodCacheLookupMethod(string)"));
+            _instructions->Append(_X("call void System.CannotUnloadAppDomainException::StoreAgentMethodInvokerFunc(string)"));
 
             _instructions->AppendLabel(afterInit);
 

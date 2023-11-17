@@ -282,13 +282,13 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("StoreMethodInAppDomainStorageOrThrow")));
         }
 
-        TEST_METHOD(ShouldInstrumentFunction_GetMethodCacheLookupMethod)
+        TEST_METHOD(ShouldInstrumentFunction_InvokeAgentMethodInvokerFunc)
         {
             auto function = std::make_shared<MockFunction>();
 
             auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
 
-            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetMethodCacheLookupMethod")));
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("InvokeAgentMethodInvokerFunc")));
         }
 
         TEST_METHOD(ShouldInstrumentFunction_EnsureInitialized)
@@ -300,13 +300,13 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("EnsureInitialized")));
         }
 
-        TEST_METHOD(ShouldInstrumentFunction_GetMethodInfoFromAgentCache)
+        TEST_METHOD(ShouldInstrumentFunction_GetAgentMethodInvokerObject)
         {
             auto function = std::make_shared<MockFunction>();
 
             auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
 
-            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetMethodInfoFromAgentCache")));
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetAgentMethodInvokerObject")));
         }
 
     private:

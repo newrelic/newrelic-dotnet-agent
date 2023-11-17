@@ -316,14 +316,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             AssertHelperMethodIsInstrumented(true, _X("StoreMethodInAppDomainStorageOrThrow"));
         }
 
-        TEST_METHOD(HelperInstrumentor_CoreClr_ShouldInstrument_GetMethodCacheLookupMethod)
+        TEST_METHOD(HelperInstrumentor_CoreClr_ShouldInstrument_InvokeAgentMethodInvokerFunc)
         {
-            AssertHelperMethodIsInstrumented(true, _X("GetMethodCacheLookupMethod"));
+            AssertHelperMethodIsInstrumented(true, _X("InvokeAgentMethodInvokerFunc"));
         }
 
-        TEST_METHOD(HelperInstrumentor_CoreClr_ShouldInstrument_GetMethodInfoFromAgentCache)
+        TEST_METHOD(HelperInstrumentor_CoreClr_ShouldInstrument_GetAgentMethodInvokerObject)
         {
-            AssertHelperMethodIsInstrumented(true, _X("GetMethodInfoFromAgentCache"));
+            AssertHelperMethodIsInstrumented(true, _X("GetAgentMethodInvokerObject"));
         }
 
         TEST_METHOD(HelperInstrumentor_CoreClr_ShouldInstrument_EnsureInitialized)
@@ -381,14 +381,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             AssertHelperMethodIsInstrumented(false, _X("StoreMethodInAppDomainStorageOrThrow"));
         }
 
-        TEST_METHOD(HelperInstrumentor_NetFramework_ShouldInstrument_GetMethodCacheLookupMethod)
+        TEST_METHOD(HelperInstrumentor_NetFramework_ShouldInstrument_InvokeAgentMethodInvokerFunc)
         {
-            AssertHelperMethodIsInstrumented(false, _X("GetMethodCacheLookupMethod"));
+            AssertHelperMethodIsInstrumented(false, _X("InvokeAgentMethodInvokerFunc"));
         }
 
-        TEST_METHOD(HelperInstrumentor_NetFramework_ShouldInstrument_GetMethodInfoFromAgentCache)
+        TEST_METHOD(HelperInstrumentor_NetFramework_ShouldInstrument_GetAgentMethodInvokerObject)
         {
-            AssertHelperMethodIsInstrumented(false, _X("GetMethodInfoFromAgentCache"));
+            AssertHelperMethodIsInstrumented(false, _X("GetAgentMethodInvokerObject"));
         }
 
         TEST_METHOD(HelperInstrumentor_NetFramework_ShouldInstrument_EnsureInitialized)

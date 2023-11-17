@@ -204,19 +204,19 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             manipulator.InstrumentHelper();
         }
 
-        TEST_METHOD(helper_method_GetMethodCacheLookupMethod)
+        TEST_METHOD(helper_method_InvokeAgentMethodInvokerFunc)
         {
             auto function = std::make_shared<MockFunction>();
-            function->_functionName = _X("GetMethodCacheLookupMethod");
+            function->_functionName = _X("InvokeAgentMethodInvokerFunc");
             HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
 
             manipulator.InstrumentHelper();
         }
 
-        TEST_METHOD(helper_method_GetMethodInfoFromAgentCache)
+        TEST_METHOD(helper_method_GetAgentMethodInvokerObject)
         {
             auto function = std::make_shared<MockFunction>();
-            function->_functionName = _X("GetMethodInfoFromAgentCache");
+            function->_functionName = _X("GetAgentMethodInvokerObject");
             HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
 
             manipulator.InstrumentHelper();

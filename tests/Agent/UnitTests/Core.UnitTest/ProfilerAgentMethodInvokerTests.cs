@@ -8,19 +8,19 @@ using NewRelic.Testing.Assertions;
 namespace NewRelic.Agent.Core
 {
     [TestFixture]
-    public class ProfilerAgentMethodCallCacheTests
+    public class ProfilerAgentMethodInvokerTests
     {
         [Test]
         public void GetMethodCacheFuncShouldReturnAFuncAsAnObject()
         {
-            var methodReference = ProfilerAgentMethodCallCache.GetInvokerFromCache();
+            var methodReference = ProfilerAgentMethodInvoker.GetInvoker();
             Assert.IsAssignableFrom(typeof(Func<string, string, string, Type[], Type, object[], object>), methodReference);
         }
 
         [Test]
         public void ShouldInvokeMethodWithNoParameters()
         {
-            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodCallCache.GetInvokerFromCache();
+            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodInvoker.GetInvoker();
 
             var typeName = typeof(TestingClass).AssemblyQualifiedName;
             var methodName = nameof(TestingClass.MethodWithNoParams);
@@ -39,7 +39,7 @@ namespace NewRelic.Agent.Core
         [Test]
         public void ShouldInvokeMethodWithParameters()
         {
-            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodCallCache.GetInvokerFromCache();
+            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodInvoker.GetInvoker();
 
             var typeName = typeof(TestingClass).AssemblyQualifiedName;
             var methodName = nameof(TestingClass.MethodWithParams);
@@ -59,7 +59,7 @@ namespace NewRelic.Agent.Core
         [Test]
         public void ShouldInvokeWrongMethodIfCacheKeyNotUniqueEnough()
         {
-            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodCallCache.GetInvokerFromCache();
+            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodInvoker.GetInvoker();
 
             var typeName = typeof(TestingClass).AssemblyQualifiedName;
             var methodName = nameof(TestingClass.MethodWithOverload);
@@ -77,7 +77,7 @@ namespace NewRelic.Agent.Core
         [Test]
         public void ShouldHandleMethodsWithVoidReturnType()
         {
-            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodCallCache.GetInvokerFromCache();
+            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodInvoker.GetInvoker();
 
             var typeName = typeof(TestingClass).AssemblyQualifiedName;
 

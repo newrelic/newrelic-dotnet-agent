@@ -168,7 +168,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 _instructions->Append(_X("call void [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::EnsureInitialized(string)"));
 
                 // Get the Func holding a reference to NewRelic.Agent.Core.AgentShim.GetFinishTracerDelegateParameterWrapper
-                _instructions->Append(_X("call object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetAgentShimFinishTracerDelegateMethod()"));
+                _instructions->Append(_X("call object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetAgentShimFinishTracerDelegateFunc()"));
                 _instructions->Append(CEE_CASTCLASS, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Func`2<object[], class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Action`2<object, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception>>"));
             }
             else

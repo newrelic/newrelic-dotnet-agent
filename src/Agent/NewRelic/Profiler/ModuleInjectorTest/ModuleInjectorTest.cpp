@@ -138,11 +138,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 _X("System.CannotUnloadAppDomainException.GetMethodFromAppDomainStorageOrReflectionOrThrow"),
                 _X("System.CannotUnloadAppDomainException.StoreMethodInAppDomainStorageOrThrow"),
                 _X("System.CannotUnloadAppDomainException.EnsureInitialized"),
-                _X("System.CannotUnloadAppDomainException.GetMethodInfoFromAgentCache"),
-                _X("System.CannotUnloadAppDomainException.GetMethodCacheLookupMethod"),
-                _X("System.CannotUnloadAppDomainException.GetAgentShimFinishTracerDelegateMethod"),
-                _X("System.CannotUnloadAppDomainException.StoreAgentShimFinishTracerDelegateMethod"),
-                _X("System.CannotUnloadAppDomainException.StoreMethodCacheLookupMethod")
+                _X("System.CannotUnloadAppDomainException.InvokeAgentMethodInvokerFunc"),
+                _X("System.CannotUnloadAppDomainException.GetAgentMethodInvokerObject"),
+                _X("System.CannotUnloadAppDomainException.GetAgentShimFinishTracerDelegateFunc"),
+                _X("System.CannotUnloadAppDomainException.StoreAgentShimFinishTracerDelegateFunc"),
+                _X("System.CannotUnloadAppDomainException.StoreAgentMethodInvokerFunc")
             };
 
             auto modulePtr = std::make_shared<MockModule>();
@@ -184,11 +184,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.GetMethodFromAppDomainStorageOrReflectionOrThrow"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreMethodInAppDomainStorageOrThrow"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.EnsureInitialized"),
-                expectedAssembly + _X("System.CannotUnloadAppDomainException.GetMethodInfoFromAgentCache"),
-                expectedAssembly + _X("System.CannotUnloadAppDomainException.GetMethodCacheLookupMethod"),
-                expectedAssembly + _X("System.CannotUnloadAppDomainException.GetAgentShimFinishTracerDelegateMethod"),
-                expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreAgentShimFinishTracerDelegateMethod"),
-                expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreMethodCacheLookupMethod")
+                expectedAssembly + _X("System.CannotUnloadAppDomainException.GetAgentMethodInvokerObject"),
+                expectedAssembly + _X("System.CannotUnloadAppDomainException.InvokeAgentMethodInvokerFunc"),
+                expectedAssembly + _X("System.CannotUnloadAppDomainException.GetAgentShimFinishTracerDelegateFunc"),
+                expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreAgentShimFinishTracerDelegateFunc"),
+                expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreAgentMethodInvokerFunc")
             };
 
             auto modulePtr = std::make_shared<MockModule>();
