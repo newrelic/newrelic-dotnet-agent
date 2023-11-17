@@ -8,13 +8,24 @@ using Serilog.Events;
 
 namespace NewRelic.Agent.Core
 {
+    /// <summary>
+    /// Adds a tid property to the log event containing the current managed thread id
+    /// </summary>
     [NrExcludeFromCodeCoverage]
     internal class ThreadIdEnricher : ILogEventEnricher
     {
+        private LogEventProperty _tidProperty;
+
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                "tid", Thread.CurrentThread.ManagedThreadId));
+            var threadId = Thread.CurrentThread.ManagedThreadId;
+
+            var prop = _tidProperty;
+
+            if (prop == null || (int?)((ScalarValue)prop.Value).Value != threadId)
+                _tidProperty = prop = propertyFactory.CreateProperty("tid", threadId);
+
+            logEvent.AddPropertyIfAbsent(prop);
         }
     }
 }
