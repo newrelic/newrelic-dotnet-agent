@@ -67,8 +67,8 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
                 ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetAgentShimFinishTracerDelegateMethod"), _X("object"), _X(""))
             };
 
-            // When injecting HELPER METHODS into the System.Private.CoreLib assembly, theses references should be local.
-            // They cannot reference [System.Private.CoreLib] since these methods are being rewritten in System.Private.CoreLib.
+            // When injecting HELPER METHODS into the Core Lib assembly, theses references should be local.
+            // They cannot reference an assembly since these methods are being rewritten in the Core Lib so only types available in that lib can be used.
             constexpr std::array<ManagedMethodToInject, 12> methodImplsToInject{
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("LoadAssemblyOrThrow"), _X("class System.Reflection.Assembly"), _X("string")),
                 ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetTypeViaReflectionOrThrow"), _X("class System.Type"), _X("string,string")),
@@ -86,7 +86,7 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
 
             const auto is_coreLib = module.GetIsThisTheCoreLibAssembly();
 
-            // If instrumenting System.Private.CoreLib, use local (to the assembly) references
+            // If instrumenting Core Lib, use local (to the assembly) references
             // otherwise use external references
             auto methods = is_coreLib
                 ? methodImplsToInject

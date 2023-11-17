@@ -109,11 +109,11 @@ namespace NewRelic.Agent.Core
         }
 
         /// <summary>
-        /// This method is used to work around .net framework ad .net < 6.0 not supporting generic delegates
+        /// This method is used to work around .net framework and .net < 6.0 not supporting generic delegates
         /// with 11 parameters.
         /// </summary>
         /// <param name="parameters">An array of boxed parameters for the GetFinishTracerDelegate method.</param>
-        /// <returns><The delegate to invoke when a method completes or results in an exception./returns>
+        /// <returns>The delegate to invoke when a method completes or results in an exception.</returns>
         public static Action<object, Exception> GetFinishTracerDelegateParameterWrapper(object[] parameters)
         {
             return GetFinishTracerDelegate(

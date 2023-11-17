@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Reflection;
 using System;
 using NUnit.Framework;
 using NewRelic.Testing.Assertions;
@@ -14,64 +13,82 @@ namespace NewRelic.Agent.Core
         [Test]
         public void GetMethodCacheFuncShouldReturnAFuncAsAnObject()
         {
-            var methodReference = ProfilerAgentMethodCallCache.GetMethodCacheFunc();
-            Assert.IsAssignableFrom(typeof(Func<string, string, string, Type[], MethodInfo>), methodReference);
+            var methodReference = ProfilerAgentMethodCallCache.GetInvokerFromCache();
+            Assert.IsAssignableFrom(typeof(Func<string, string, string, Type[], Type, object[], object>), methodReference);
         }
 
         [Test]
-        public void ShouldGetMethodWithNoParameters()
+        public void ShouldInvokeMethodWithNoParameters()
         {
-            var cacheGetter = (Func<string, string, string, Type[], MethodInfo>)ProfilerAgentMethodCallCache.GetMethodCacheFunc();
+            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodCallCache.GetInvokerFromCache();
 
             var typeName = typeof(TestingClass).AssemblyQualifiedName;
             var methodName = nameof(TestingClass.MethodWithNoParams);
             var cacheKey = string.Concat(typeName, "|", methodName);
 
-            var methodInfoFromCache = cacheGetter.Invoke(cacheKey, typeName, methodName, null);
+            var result1 = invoker.Invoke(cacheKey, typeName, methodName, null, typeof(string), null);
+            var result2 = invoker.Invoke(cacheKey, typeName, methodName, Array.Empty<Type>(), typeof(string), null);
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(methodInfoFromCache),
-                () => Assert.AreEqual(methodName, methodInfoFromCache.Invoke(null, null))
+                () => Assert.IsNotNull(result1),
+                () => Assert.AreEqual(methodName, result1),
+                () => Assert.AreEqual(result1, result2)
             );
         }
 
         [Test]
-        public void ShouldGetMethodWithParameters()
+        public void ShouldInvokeMethodWithParameters()
         {
-            var cacheGetter = (Func<string, string, string, Type[], MethodInfo>)ProfilerAgentMethodCallCache.GetMethodCacheFunc();
+            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodCallCache.GetInvokerFromCache();
 
             var typeName = typeof(TestingClass).AssemblyQualifiedName;
             var methodName = nameof(TestingClass.MethodWithParams);
             var cacheKey = string.Concat(typeName, "|", methodName);
+            var parameterValue = "param_value";
 
-            var methodInfoFromCache = cacheGetter.Invoke(cacheKey, typeName, methodName, new Type[] { typeof(string) });
+            var result = invoker.Invoke(cacheKey, typeName, methodName, new Type[] { typeof(string) }, typeof(string), new object[] { parameterValue });
 
-            var expectedMethodResult = $"{methodName} + param_value";
+            var expectedMethodResult = $"{methodName} + {parameterValue}";
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(methodInfoFromCache),
-                () => Assert.AreEqual(expectedMethodResult, methodInfoFromCache.Invoke(null, new object[] { "param_value" }))
+                () => Assert.IsNotNull(result),
+                () => Assert.AreEqual(expectedMethodResult, result)
             );
         }
 
         [Test]
-        public void ShouldGetWrongMethodIfCacheKeyNotUniqueEnough()
+        public void ShouldInvokeWrongMethodIfCacheKeyNotUniqueEnough()
         {
-            var cacheGetter = (Func<string, string, string, Type[], MethodInfo>)ProfilerAgentMethodCallCache.GetMethodCacheFunc();
+            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodCallCache.GetInvokerFromCache();
 
             var typeName = typeof(TestingClass).AssemblyQualifiedName;
             var methodName = nameof(TestingClass.MethodWithOverload);
             var cacheKey = string.Concat(typeName, "|", methodName);
 
-            var overloadWith1Param = cacheGetter.Invoke(cacheKey, typeName, methodName, new Type[] { typeof(string) });
-            var overloadWith2Params = cacheGetter.Invoke(cacheKey, typeName, methodName, new Type[] { typeof(string), typeof(string) });
+            var resultWithStringParam = invoker.Invoke(cacheKey, typeName, methodName, new Type[] { typeof(string) }, typeof(string), new object[] { "param" });
 
             NrAssert.Multiple(
-                () => Assert.IsNotNull(overloadWith1Param),
-                () => Assert.IsNotNull(overloadWith2Params),
-                () => Assert.AreEqual(overloadWith2Params, overloadWith1Param),
-                // The call to the 2 parameter overload should fail because the 1 parameter overload was returned from the cache
-                () => Assert.Throws(typeof(TargetParameterCountException), () => overloadWith2Params.Invoke(null, new object[] { "param_1", "param_2" }))
+                () => Assert.IsNotNull(resultWithStringParam),
+                // The call to the bool parameter overload should fail because the string parameter overload was returned from the cache
+                () => Assert.Throws(typeof(InvalidCastException), () => invoker.Invoke(cacheKey, typeName, methodName, new Type[] { typeof(bool) }, typeof(string), new object[] { true }))
+            );
+        }
+
+        [Test]
+        public void ShouldHandleMethodsWithVoidReturnType()
+        {
+            var invoker = (Func<string, string, string, Type[], Type, object[], object>)ProfilerAgentMethodCallCache.GetInvokerFromCache();
+
+            var typeName = typeof(TestingClass).AssemblyQualifiedName;
+
+            var resultNoParam = invoker.Invoke(string.Concat(typeName, "|", nameof(TestingClass.ActionWithNoParams)), typeName, nameof(TestingClass.ActionWithNoParams), null, null, null);
+            var resultWithParam = invoker.Invoke(string.Concat(typeName, "|", nameof(TestingClass.ActionWithParam)), typeName, nameof(TestingClass.ActionWithParam), new Type[] { typeof(int) }, null, new object[] { 5 });
+
+            NrAssert.Multiple(
+                () => Assert.IsNull(resultNoParam),
+                () => Assert.IsNull(resultWithParam),
+                () => Assert.AreEqual(1, TestingClass.ActionWithNoParamsCallCount),
+                () => Assert.AreEqual(5, TestingClass.ActionWithParamLatestValue)
             );
         }
 
@@ -92,9 +109,21 @@ namespace NewRelic.Agent.Core
                 return $"{nameof(MethodWithOverload)} + {param}";
             }
 
-            public static string MethodWithOverload(string param1, string param2)
+            public static string MethodWithOverload(bool param1)
             {
-                return $"{nameof(MethodWithOverload)} + {param1} + {param2}";
+                return $"{nameof(MethodWithOverload)} + {param1}";
+            }
+
+            public static int ActionWithNoParamsCallCount = 0;
+            public static void ActionWithNoParams()
+            {
+                ActionWithNoParamsCallCount++;
+            }
+
+            public static int ActionWithParamLatestValue = 0;
+            public static void ActionWithParam(int value)
+            {
+                ActionWithParamLatestValue = value;
             }
         }
     }

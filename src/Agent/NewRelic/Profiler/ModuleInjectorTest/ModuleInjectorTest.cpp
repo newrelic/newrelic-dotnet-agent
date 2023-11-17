@@ -130,7 +130,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
         void AssertHelperMethodsWereInjected(const bool isCoreClr, const bool throwsException)
         {
-            std::array<xstring_t, 9> expectedMethods = {
+            std::array<xstring_t, 12> expectedMethods = {
                 _X("System.CannotUnloadAppDomainException.LoadAssemblyOrThrow"),
                 _X("System.CannotUnloadAppDomainException.GetTypeViaReflectionOrThrow"),
                 _X("System.CannotUnloadAppDomainException.GetMethodViaReflectionOrThrow"),
@@ -139,7 +139,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 _X("System.CannotUnloadAppDomainException.StoreMethodInAppDomainStorageOrThrow"),
                 _X("System.CannotUnloadAppDomainException.EnsureInitialized"),
                 _X("System.CannotUnloadAppDomainException.GetMethodInfoFromAgentCache"),
-                _X("System.CannotUnloadAppDomainException.GetMethodCacheLookupMethod")
+                _X("System.CannotUnloadAppDomainException.GetMethodCacheLookupMethod"),
+                _X("System.CannotUnloadAppDomainException.GetAgentShimFinishTracerDelegateMethod"),
+                _X("System.CannotUnloadAppDomainException.StoreAgentShimFinishTracerDelegateMethod"),
+                _X("System.CannotUnloadAppDomainException.StoreMethodCacheLookupMethod")
             };
 
             auto modulePtr = std::make_shared<MockModule>();
@@ -173,7 +176,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         void AssertHelperMethodReferencesWereInjected(const bool isCoreClr, const bool throwsException)
         {
             const xstring_t expectedAssembly = isCoreClr ? _X("[System.Private.CoreLib]") : _X("[mscorlib]");
-            std::array<xstring_t, 9> expectedMethods = {
+            std::array<xstring_t, 12> expectedMethods = {
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.LoadAssemblyOrThrow"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.GetTypeViaReflectionOrThrow"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.GetMethodViaReflectionOrThrow"),
@@ -182,7 +185,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreMethodInAppDomainStorageOrThrow"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.EnsureInitialized"),
                 expectedAssembly + _X("System.CannotUnloadAppDomainException.GetMethodInfoFromAgentCache"),
-                expectedAssembly + _X("System.CannotUnloadAppDomainException.GetMethodCacheLookupMethod")
+                expectedAssembly + _X("System.CannotUnloadAppDomainException.GetMethodCacheLookupMethod"),
+                expectedAssembly + _X("System.CannotUnloadAppDomainException.GetAgentShimFinishTracerDelegateMethod"),
+                expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreAgentShimFinishTracerDelegateMethod"),
+                expectedAssembly + _X("System.CannotUnloadAppDomainException.StoreMethodCacheLookupMethod")
             };
 
             auto modulePtr = std::make_shared<MockModule>();

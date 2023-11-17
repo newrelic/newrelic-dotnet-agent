@@ -320,25 +320,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // The function id is used as a tie-breaker for overloaded methods when computing the key name for the cache.
         void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda)
         {
-            if (_agentCallStrategy == AgentCallStyle::Strategy::InAgentCache)
-            {
-                auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
-                _instructions->AppendString(keyName);
-                _instructions->AppendString(assemblyPath);
-                _instructions->AppendString(className);
-                _instructions->AppendString(methodName);
-                if (argumentTypesLambda == NULL)
-                {
-                    _instructions->Append(CEE_LDNULL);
-                }
-                else
-                {
-                    argumentTypesLambda();
-                }
-
-                _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetMethodInfoFromAgentCache(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
-            }
-            else if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainCache)
+            if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainCache)
             {
                 auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
                 _instructions->AppendString(keyName);
@@ -356,10 +338,15 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
                 _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
             }
-            else
+            else if (_agentCallStrategy == AgentCallStyle::Strategy::Reflection)
             {
                 LoadType(assemblyPath, className);
                 LoadMethodInfoFromType(methodName, argumentTypesLambda);
+            }
+            else
+            {
+                LogError(L"Attempting to call LoadMethodInfo when an AgentCallStyle::Strategy that does not support loading method info is configured.");
+                throw FunctionManipulatorException();
             }
         }
 

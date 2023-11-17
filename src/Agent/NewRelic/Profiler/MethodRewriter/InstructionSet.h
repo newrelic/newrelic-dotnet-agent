@@ -346,6 +346,22 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             }
         }
 
+        void AppendTypeOfArgument(SignatureParser::ReturnTypePtr returnType)
+        {
+            auto typeToken = GetTypeTokenForReturnType(returnType);
+
+            if (typeToken != 0)
+            {
+                Append(CEE_LDTOKEN, typeToken);
+                Append(_X("call class [") + _coreLibAssemblyName + _X("]System.Type[") + _coreLibAssemblyName + _X("]System.Type::GetTypeFromHandle(valuetype[") + _coreLibAssemblyName + _X("]System.RuntimeTypeHandle)"));
+            }
+            else
+            {
+                // void return type
+                Append(CEE_LDNULL);
+            }
+        }
+
         // append a load argument instruction
         void AppendLoadArgument(uint16_t argumentIndex)
         {
@@ -539,6 +555,32 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 default:
                 {
                     LogError(L"Unhandled parameter type encountered in InstructionSet::GetTypeTokeNForParameter. Kind: ", std::hex, std::showbase, parameter->_kind, std::resetiosflags(std::ios_base::basefield|std::ios_base::showbase));
+                    throw InstructionSetException();
+                }
+            }
+        }
+
+        uint32_t GetTypeTokenForReturnType(SignatureParser::ReturnTypePtr returnType)
+        {
+            switch (returnType->_kind)
+            {
+                case SignatureParser::ReturnType::Kind::VOID_RETURN_TYPE:
+                {
+                    return 0;
+                }
+                case SignatureParser::ReturnType::Kind::TYPED_BY_REF_RETURN_TYPE:
+                {
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.TypedReference"));
+                    return token;
+                }
+                case SignatureParser::ReturnType::Kind::TYPED_RETURN_TYPE:
+                {
+                    auto typedReturnType = std::static_pointer_cast<SignatureParser::TypedReturnType>(returnType);
+                    return GetTypeTokenForType(typedReturnType->_type);
+                }
+                default:
+                {
+                    LogError(L"Unhandled return type encountered in InstructionSet::GetTypeTokenForReturnType. Kind: ", std::hex, std::showbase, returnType->_kind, std::resetiosflags(std::ios_base::basefield | std::ios_base::showbase));
                     throw InstructionSetException();
                 }
             }

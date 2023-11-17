@@ -211,7 +211,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         {
             _instructions->Append(CEE_LDARG_0);
             _instructions->AppendString(_X("NewRelic.Agent.Core.ProfilerAgentMethodCallCache"));
-            _instructions->AppendString(_X("GetMethodCacheFunc"));
+            _instructions->AppendString(_X("GetInvokerFromCache"));
             _instructions->Append(CEE_LDNULL);
             _instructions->Append(CEE_CALL, _X("class System.Reflection.MethodInfo System.CannotUnloadAppDomainException::GetMethodViaReflectionOrThrow(string,string,string,class System.Type[])"));
 
