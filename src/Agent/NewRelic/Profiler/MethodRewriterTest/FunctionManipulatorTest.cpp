@@ -24,22 +24,22 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         TEST_METHOD(construction)
         {
             auto function = std::make_shared<MockFunction>();
-            FunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::InAgentCache);
+            FunctionManipulator manipulator(function, false, AgentCallStyle::Strategy::FuncInvoke);
         }
 
-        TEST_METHOD(instrument_api_method_netframework_inagentcache)
+        TEST_METHOD(instrument_api_method_netframework_FuncInvoke)
         {
             auto function = std::make_shared<MockFunction>();
-            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::InAgentCache);
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentApi();
         }
 
-        TEST_METHOD(instrument_api_method_netframework_inagentcache_ParameterlessWithObjectReturn)
+        TEST_METHOD(instrument_api_method_netframework_FuncInvoke_ParameterlessWithObjectReturn)
         {
             auto function = std::make_shared<MockFunction>();
             MakeFunctionParameterlessWithObjectReturnType(function);
-            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::InAgentCache);
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentApi();
         }
@@ -78,21 +78,21 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             manipulator.InstrumentApi();
         }
 
-        TEST_METHOD(instrument_api_method_coreclr_inagentcache)
+        TEST_METHOD(instrument_api_method_coreclr_FuncInvoke)
         {
             auto function = std::make_shared<MockFunction>();
             function->_isCoreClr = true;
-            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::InAgentCache);
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentApi();
         }
 
-        TEST_METHOD(instrument_api_method_coreclr_inagentcache_ParameterlessWithObjectReturn)
+        TEST_METHOD(instrument_api_method_coreclr_FuncInvoke_ParameterlessWithObjectReturn)
         {
             auto function = std::make_shared<MockFunction>();
             function->_isCoreClr = true;
             MakeFunctionParameterlessWithObjectReturnType(function);
-            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::InAgentCache);
+            ApiFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentApi();
         }
@@ -135,10 +135,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             manipulator.InstrumentApi();
         }
 
-        TEST_METHOD(instrument_minimal_method_netframework_inagentcache)
+        TEST_METHOD(instrument_minimal_method_netframework_FuncInvoke)
         {
             auto function = std::make_shared<MockFunction>();
-            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::InAgentCache);
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), false, AgentCallStyle::Strategy::FuncInvoke);
 
             auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
             manipulator.InstrumentDefault(instrumentationPoint);
@@ -162,10 +162,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             manipulator.InstrumentDefault(instrumentationPoint);
         }
 
-        TEST_METHOD(instrument_minimal_method_coreclr_inagentcache)
+        TEST_METHOD(instrument_minimal_method_coreclr_FuncInvoke)
         {
             auto function = std::make_shared<MockFunction>();
-            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::InAgentCache);
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, _X("")), true, AgentCallStyle::Strategy::FuncInvoke);
 
             auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
             manipulator.InstrumentDefault(instrumentationPoint);
@@ -193,7 +193,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("ThisMethodShouldNotExist");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -202,7 +202,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("LoadAssemblyOrThrow");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -211,7 +211,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("GetTypeViaReflectionOrThrow");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -220,7 +220,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("GetMethodViaReflectionOrThrow");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -229,7 +229,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("StoreMethodInAppDomainStorageOrThrow");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -238,7 +238,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("GetMethodFromAppDomainStorage");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -247,7 +247,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("GetMethodFromAppDomainStorageOrReflectionOrThrow");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -256,7 +256,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("EnsureInitialized");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -265,7 +265,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("InvokeAgentMethodInvokerFunc");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -274,7 +274,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("GetAgentMethodInvokerObject");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -283,7 +283,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("GetAgentShimFinishTracerDelegateFunc");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -292,7 +292,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("StoreAgentMethodInvokerFunc");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -301,7 +301,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             auto function = std::make_shared<MockFunction>();
             function->_functionName = _X("StoreAgentShimFinishTracerDelegateFunc");
-            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+            HelperFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
             manipulator.InstrumentHelper();
         }
@@ -310,7 +310,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         {
             std::function<void(void)> test = []() {
                 auto function = std::make_shared<MockFunction>();
-                TestFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::InAgentCache);
+                TestFunctionManipulator manipulator(function, true, AgentCallStyle::Strategy::FuncInvoke);
 
                 manipulator.TestLoadMethodInfo(_X(""), _X(""), _X(""), function->GetFunctionId(), []() {});
             };

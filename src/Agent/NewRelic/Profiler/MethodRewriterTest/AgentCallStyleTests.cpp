@@ -19,7 +19,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter{ namespace Te
     public:
         TEST_METHOD(AgentCallStrategy_LegacyCaching_false_DisableAppDomainCaching_false_Expected_InAgent)
         {
-            RunTest(_X("false"), _X("false"), AgentCallStyle::Strategy::InAgentCache);
+            RunTest(_X("false"), _X("false"), AgentCallStyle::Strategy::FuncInvoke);
         }
 
         TEST_METHOD(AgentCallStrategy_LegacyCaching_false_DisableAppDomainCaching_true_Expected_Reflection)
@@ -39,7 +39,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter{ namespace Te
 
         TEST_METHOD(AgentCallStrategy_EnvironmentVariable_0)
         {
-            RunTest(_X("0"), _X("false"), AgentCallStyle::Strategy::InAgentCache);
+            RunTest(_X("0"), _X("false"), AgentCallStyle::Strategy::FuncInvoke);
         }
 
         TEST_METHOD(AgentCallStrategy_EnvironmentVariable_1)
@@ -49,18 +49,18 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter{ namespace Te
 
         TEST_METHOD(AgentCallStrategy_EnvironmentVariable_Empty)
         {
-            RunTest(_X(""), _X("false"), AgentCallStyle::Strategy::InAgentCache);
+            RunTest(_X(""), _X("false"), AgentCallStyle::Strategy::FuncInvoke);
         }
 
         TEST_METHOD(AgentCallStrategy_EnvironmentVariable_NotSet)
         {
-            RunTestNoEnvironmentVariablesSet(AgentCallStyle::Strategy::InAgentCache);
+            RunTestNoEnvironmentVariablesSet(AgentCallStyle::Strategy::FuncInvoke);
         }
 
-        TEST_METHOD(AgentCallStrategy_ToString_InAgentCache)
+        TEST_METHOD(AgentCallStrategy_ToString_FuncInvoke)
         {
-            const xstring_t expectedValue = _X("In Agent Cache");
-            Assert::AreEqual(expectedValue, AgentCallStyle::ToString(AgentCallStyle::Strategy::InAgentCache));
+            const xstring_t expectedValue = _X("Func Invoke");
+            Assert::AreEqual(expectedValue, AgentCallStyle::ToString(AgentCallStyle::Strategy::FuncInvoke));
         }
 
         TEST_METHOD(AgentCallStrategy_ToString_AppDomainCache)

@@ -19,7 +19,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         {
             Reflection,
             AppDomainCache,
-            InAgentCache
+            FuncInvoke
         };
 
         AgentCallStyle(std::shared_ptr<ISystemCalls> systemCalls) : _systemCalls(systemCalls) {}
@@ -36,14 +36,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 return Strategy::AppDomainCache;
             }
 
-            return Strategy::InAgentCache;
+            return Strategy::FuncInvoke;
         }
 
         static const xstring_t ToString(const Strategy agentCallStrategy)
         {
-            if (agentCallStrategy == Strategy::InAgentCache)
+            if (agentCallStrategy == Strategy::FuncInvoke)
             {
-                return _X("In Agent Cache");
+                return _X("Func Invoke");
             }
 
             if (agentCallStrategy == Strategy::AppDomainCache)

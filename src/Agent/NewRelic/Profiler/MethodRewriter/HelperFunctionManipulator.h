@@ -199,14 +199,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         void BuildGetAgentMethodInvokerObject()
         {
             _instructions->Append(CEE_VOLATILE);
-            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_methodCache"));
+            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_agentMethodFunc"));
             _instructions->Append(CEE_RET);
         }
 
         void BuildGetAgentShimFinishTracerDelegateFunc()
         {
             _instructions->Append(CEE_VOLATILE);
-            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_tracerFunc"));
+            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_agentShimFunc"));
             _instructions->Append(CEE_RET);
         }
 
@@ -223,7 +223,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_CALLVIRT, _X("instance object System.Reflection.MethodBase::Invoke(object, object[])"));
 
             _instructions->Append(CEE_VOLATILE);
-            _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_methodCache"));
+            _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_agentMethodFunc"));
             _instructions->Append(CEE_RET);
         }
 
@@ -240,14 +240,14 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(CEE_CALLVIRT, _X("instance object System.Reflection.MethodBase::Invoke(object, object[])"));
 
             _instructions->Append(CEE_VOLATILE);
-            _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_tracerFunc"));
+            _instructions->Append(CEE_STSFLD, _X("object __NRInitializer__::_agentShimFunc"));
             _instructions->Append(CEE_RET);
         }
 
         void BuildEnsureInitializedMethod()
         {
             _instructions->Append(CEE_VOLATILE);
-            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_methodCache"));
+            _instructions->Append(CEE_LDSFLD, _X("object __NRInitializer__::_agentMethodFunc"));
             auto afterInit = _instructions->AppendJump(CEE_BRTRUE);
 
             _instructions->Append(CEE_LDARG_0);

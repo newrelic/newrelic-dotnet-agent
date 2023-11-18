@@ -45,7 +45,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             TryCatch(
                 [&]()
                 {
-                    if (_agentCallStrategy == AgentCallStyle::Strategy::InAgentCache)
+                    if (_agentCallStrategy == AgentCallStyle::Strategy::FuncInvoke)
                     {
                         // result =  System.CannotUnloadAppDomainException.InvokeAgentMethodInvokerFunc("C:\path\to\NewRelic.Agent.Core", "NewRelic_Delegate_API_<function name><function signature>", "NewRelic.Core.AgentApi", "<function name>", new System.Type[] { <parameter types> }, <return type>, new object[] { <method parameters> })
 

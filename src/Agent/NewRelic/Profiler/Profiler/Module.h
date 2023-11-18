@@ -106,8 +106,8 @@ namespace NewRelic { namespace Profiler
             auto dataFieldAttributes = CorFieldAttr::fdPublic | CorFieldAttr::fdStatic;
             BYTEVECTOR(dataFieldSignature, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_FIELD, CorElementType::ELEMENT_TYPE_OBJECT);
             mdFieldDef dataFieldToken;
-            ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_methodCache"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
-            ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_tracerFunc"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
+            ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_agentMethodFunc"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
+            ThrowOnError(_metaDataEmit->DefineField, nrHelperType, _X("_agentShimFunc"), dataFieldAttributes, dataFieldSignature.data(), (uint32_t)dataFieldSignature.size(), 0, nullptr, 0, &dataFieldToken);
         }
 
         virtual void InjectCoreLibSecuritySafeMethodReference(const xstring_t& methodName, const xstring_t& className, const ByteVector& signature) override

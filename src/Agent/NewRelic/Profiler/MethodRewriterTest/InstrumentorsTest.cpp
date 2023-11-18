@@ -24,7 +24,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             DefaultInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -37,7 +37,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             DefaultInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsTrue(result);
         }
@@ -49,7 +49,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             DefaultInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -61,7 +61,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             DefaultInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -75,7 +75,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             DefaultInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsTrue(result);
         }
@@ -87,7 +87,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             DefaultInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -99,7 +99,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             DefaultInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -113,7 +113,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             DefaultInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -125,7 +125,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             DefaultInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -137,7 +137,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             ApiInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -149,7 +149,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             ApiInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsTrue(result);
         }
@@ -162,7 +162,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             ApiInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -175,7 +175,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             ApiInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -187,7 +187,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             HelperInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), true, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), true, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -198,7 +198,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             HelperInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), true, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), true, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -209,7 +209,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             HelperInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -221,7 +221,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             HelperInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), true, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), true, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -233,7 +233,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             HelperInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -247,7 +247,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             HelperInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), true, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), true, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -261,7 +261,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             HelperInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), false, AgentCallStyle::Strategy::FuncInvoke);
 
             Assert::IsFalse(result);
         }
@@ -455,7 +455,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
             HelperInstrumentor instrumentor;
 
-            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), isCoreClr, AgentCallStyle::Strategy::InAgentCache);
+            auto result = instrumentor.Instrument(function, GetInstrumentationSettings(), isCoreClr, AgentCallStyle::Strategy::FuncInvoke);
 
             // The method returns false even in the success case
             Assert::IsFalse(result);

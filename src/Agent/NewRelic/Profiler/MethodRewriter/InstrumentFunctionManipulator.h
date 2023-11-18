@@ -161,7 +161,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             // oterwise we are using Func.Invoke and it will look like
             // tracer = delegates.Invoke(new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
 
-            if (_agentCallStrategy == AgentCallStyle::Strategy::InAgentCache)
+            if (_agentCallStrategy == AgentCallStyle::Strategy::FuncInvoke)
             {
                 // Ensure that the managed agent is loaded
                 _instructions->AppendString(_instrumentationSettings->GetCorePath());
@@ -233,7 +233,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(_X("stelem.ref"));
 
             // make the call to GetTracer
-            if (_agentCallStrategy == AgentCallStyle::Strategy::InAgentCache)
+            if (_agentCallStrategy == AgentCallStyle::Strategy::FuncInvoke)
             {
                 _instructions->Append(CEE_CALLVIRT, _X("instance !1 class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Func`2<object[], class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Action`2<object, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception>>::Invoke(!0)"));
             }
