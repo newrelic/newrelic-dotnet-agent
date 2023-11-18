@@ -321,9 +321,24 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             AssertHelperMethodIsInstrumented(true, _X("InvokeAgentMethodInvokerFunc"));
         }
 
+        TEST_METHOD(HelperInstrumentor_CoreClr_ShouldInstrument_GetAgentShimFinishTracerDelegateFunc)
+        {
+            AssertHelperMethodIsInstrumented(true, _X("GetAgentShimFinishTracerDelegateFunc"));
+        }
+
         TEST_METHOD(HelperInstrumentor_CoreClr_ShouldInstrument_GetAgentMethodInvokerObject)
         {
             AssertHelperMethodIsInstrumented(true, _X("GetAgentMethodInvokerObject"));
+        }
+
+        TEST_METHOD(HelperInstrumentor_CoreClr_ShouldInstrument_StoreAgentMethodInvokerFunc)
+        {
+            AssertHelperMethodIsInstrumented(true, _X("StoreAgentMethodInvokerFunc"));
+        }
+
+        TEST_METHOD(HelperInstrumentor_CoreClr_ShouldInstrument_StoreAgentShimFinishTracerDelegateFunc)
+        {
+            AssertHelperMethodIsInstrumented(true, _X("StoreAgentShimFinishTracerDelegateFunc"));
         }
 
         TEST_METHOD(HelperInstrumentor_CoreClr_ShouldInstrument_EnsureInitialized)
@@ -386,9 +401,24 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             AssertHelperMethodIsInstrumented(false, _X("InvokeAgentMethodInvokerFunc"));
         }
 
+        TEST_METHOD(HelperInstrumentor_NetFramework_ShouldInstrument_GetAgentShimFinishTracerDelegateFunc)
+        {
+            AssertHelperMethodIsInstrumented(false, _X("GetAgentShimFinishTracerDelegateFunc"));
+        }
+
         TEST_METHOD(HelperInstrumentor_NetFramework_ShouldInstrument_GetAgentMethodInvokerObject)
         {
             AssertHelperMethodIsInstrumented(false, _X("GetAgentMethodInvokerObject"));
+        }
+
+        TEST_METHOD(HelperInstrumentor_NetFramework_ShouldInstrument_StoreAgentMethodInvokerFunc)
+        {
+            AssertHelperMethodIsInstrumented(false, _X("StoreAgentMethodInvokerFunc"));
+        }
+
+        TEST_METHOD(HelperInstrumentor_NetFramework_ShouldInstrument_StoreAgentShimFinishTracerDelegateFunc)
+        {
+            AssertHelperMethodIsInstrumented(false, _X("StoreAgentShimFinishTracerDelegateFunc"));
         }
 
         TEST_METHOD(HelperInstrumentor_NetFramework_ShouldInstrument_EnsureInitialized)

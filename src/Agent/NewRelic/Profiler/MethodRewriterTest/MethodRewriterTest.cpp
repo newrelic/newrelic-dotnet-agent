@@ -309,6 +309,33 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetAgentMethodInvokerObject")));
         }
 
+        TEST_METHOD(ShouldInstrumentFunction_StoreAgentMethodInvokerObject)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("StoreAgentMethodInvokerObject")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_StoreAgentShimFinishTracerDelegateFunc)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("StoreAgentShimFinishTracerDelegateFunc")));
+        }
+
+        TEST_METHOD(ShouldInstrumentFunction_GetAgentShimFinishTracerDelegateFunc)
+        {
+            auto function = std::make_shared<MockFunction>();
+
+            auto methodRewriter = GetMethodRewriterWithConfigurationForFunction(function);
+
+            Assert::IsTrue(methodRewriter->ShouldInstrumentFunction(_X("GetAgentShimFinishTracerDelegateFunc")));
+        }
+
     private:
         Configuration::InstrumentationConfigurationPtr GetInstrumentationConfigurationForFunction(std::shared_ptr<MockFunction> function)
         {
