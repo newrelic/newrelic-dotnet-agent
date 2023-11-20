@@ -156,107 +156,54 @@ namespace NewRelic.Agent.Core
         }
 
         [Test]
-        public void test_ways_to_disable_logging()
+        [TestCase(null, false, false)]
+        [TestCase("0", true, false)]
+        [TestCase("0", false, false)]
+        [TestCase("false", true, false)]
+        [TestCase("false", false, false)]
+        [TestCase("1", true, true)]
+        [TestCase("1", false, true)]
+        [TestCase("true", true, true)]
+        [TestCase("true", false, true)]
+        [TestCase("not a valid bool", true, true)]
+        [TestCase("not a valid bool", false, false)]
+        public void test_ways_to_disable_logging(string envVarValue, bool logsEnabledInConfig, bool expectedLogConfig)
         {
             ILogConfig config;
 
-            config = GetLogConfig("debug");
-            Assert.IsTrue(config.Enabled);
-
-            config = LogConfigFixtureWithLogEnabled(false);
-            Assert.IsFalse(config.Enabled);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", "0");
-            config = LogConfigFixtureWithLogEnabled(true);
-            Assert.IsFalse(config.Enabled);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", "false");
-            config = LogConfigFixtureWithLogEnabled(true);
-            Assert.IsFalse(config.Enabled);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", "1");
-            config = LogConfigFixtureWithLogEnabled(true);
-            Assert.IsTrue(config.Enabled);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", "true");
-            config = LogConfigFixtureWithLogEnabled(true);
-            Assert.IsTrue(config.Enabled);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", "not a valid bool");
-            config = LogConfigFixtureWithLogEnabled(true);
-            Assert.IsTrue(config.Enabled);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", "0");
-            config = LogConfigFixtureWithLogEnabled(false);
-            Assert.IsFalse(config.Enabled);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", "false");
-            config = LogConfigFixtureWithLogEnabled(false);
-            Assert.IsFalse(config.Enabled);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", "1");
-            config = LogConfigFixtureWithLogEnabled(false);
-            Assert.IsTrue(config.Enabled);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", "true");
-            config = LogConfigFixtureWithLogEnabled(false);
-            Assert.IsTrue(config.Enabled);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", "not a valid bool");
-            config = LogConfigFixtureWithLogEnabled(false);
-            Assert.IsFalse(config.Enabled);
+            if (envVarValue != null)
+            {
+                SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", envVarValue);
+            }
+            config = LogConfigFixtureWithLogEnabled(logsEnabledInConfig);
+            Assert.AreEqual(config.Enabled, expectedLogConfig);
         }
 
         [Test]
-        public void test_ways_to_enable_console_logging()
+        [TestCase(null, false, false)]
+        [TestCase("0", true, false)]
+        [TestCase("0", false, false)]
+        [TestCase("false", true, false)]
+        [TestCase("false", false, false)]
+        [TestCase("1", true, true)]
+        [TestCase("1", false, true)]
+        [TestCase("true", true, true)]
+        [TestCase("true", false, true)]
+        [TestCase("not a valid bool", true, true)]
+        [TestCase("not a valid bool", false, false)]
+        public void test_ways_to_enable_console_logging(string envVarValue, bool consoleLogEnabledInConfig, bool expectedConsoleLogConfig)
         {
             ILogConfig config;
 
-            config = GetLogConfig("debug");
-            Assert.IsFalse(config.Console);
-
             config = LogConfigFixtureWithConsoleEnabled(true);
             Assert.IsTrue(config.Console);
 
-            SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", "0");
-            config = LogConfigFixtureWithConsoleEnabled(true);
-            Assert.IsFalse(config.Console);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", "false");
-            config = LogConfigFixtureWithConsoleEnabled(true);
-            Assert.IsFalse(config.Console);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", "1");
-            config = LogConfigFixtureWithConsoleEnabled(true);
-            Assert.IsTrue(config.Console);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", "true");
-            config = LogConfigFixtureWithConsoleEnabled(true);
-            Assert.IsTrue(config.Console);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", "not a valid bool");
-            config = LogConfigFixtureWithConsoleEnabled(true);
-            Assert.IsTrue(config.Console);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", "0");
-            config = LogConfigFixtureWithConsoleEnabled(false);
-            Assert.IsFalse(config.Console);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", "false");
-            config = LogConfigFixtureWithConsoleEnabled(false);
-            Assert.IsFalse(config.Console);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", "1");
-            config = LogConfigFixtureWithConsoleEnabled(false);
-            Assert.IsTrue(config.Console);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", "true");
-            config = LogConfigFixtureWithConsoleEnabled(false);
-            Assert.IsTrue(config.Console);
-
-            SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", "not a valid bool");
-            config = LogConfigFixtureWithConsoleEnabled(false);
-            Assert.IsFalse(config.Console);
+            if (envVarValue != null)
+            {
+                SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", envVarValue);
+            }
+            config = LogConfigFixtureWithConsoleEnabled(consoleLogEnabledInConfig);
+            Assert.AreEqual(config.Console, expectedConsoleLogConfig);
         }
 
 
