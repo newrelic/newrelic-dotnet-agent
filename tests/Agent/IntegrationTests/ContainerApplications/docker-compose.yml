@@ -83,7 +83,7 @@ services:
         extends:
             service: smoketestapp
         depends_on:
-            - kafka-broker
+            - kafka-broker1
         environment:
             - NEW_RELIC_KAFKA_TOPIC=${NEW_RELIC_KAFKA_TOPIC}
             - NEW_RELIC_KAFKA_CONTAINER_NAME=${NEW_RELIC_KAFKA_CONTAINER_NAME}
@@ -92,12 +92,32 @@ services:
         extends:
             service: smoketestapp
         depends_on:
-            - kafka-broker
+            - kafka-broker2
         environment:
             - NEW_RELIC_KAFKA_TOPIC=${NEW_RELIC_KAFKA_TOPIC}
             - NEW_RELIC_KAFKA_CONTAINER_NAME=${NEW_RELIC_KAFKA_CONTAINER_NAME}
 
-    kafka-broker:
+    kafka-broker1:
+        image: confluentinc/cp-kafka:7.5.0
+        container_name: ${NEW_RELIC_KAFKA_CONTAINER_NAME}
+        environment:
+          KAFKA_BROKER_ID: 1
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${NEW_RELIC_KAFKA_CONTAINER_NAME}:29092,PLAINTEXT_HOST://${NEW_RELIC_KAFKA_CONTAINER_NAME}:9092
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_NODE_ID: 1
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@${NEW_RELIC_KAFKA_CONTAINER_NAME}:29093
+          KAFKA_LISTENERS: PLAINTEXT://${NEW_RELIC_KAFKA_CONTAINER_NAME}:29092,CONTROLLER://${NEW_RELIC_KAFKA_CONTAINER_NAME}:29093,PLAINTEXT_HOST://:9092
+          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+          CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+
+    kafka-broker2:
         image: confluentinc/cp-kafka:7.5.0
         container_name: ${NEW_RELIC_KAFKA_CONTAINER_NAME}
         environment:
