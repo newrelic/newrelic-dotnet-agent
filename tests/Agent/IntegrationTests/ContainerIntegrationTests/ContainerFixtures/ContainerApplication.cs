@@ -201,8 +201,10 @@ public class ContainerApplication : RemoteApplication
             }
         }
 
+#if DEBUG
         // Cleanup the networks with no attached containers. Mainly for testings on dev laptops - they can build up and block runs.
         Process.Start("docker", "network prune -f");
+#endif
     }
 
     protected virtual void WaitForAppServerToStartListening(Process process, bool captureStandardOutput)
