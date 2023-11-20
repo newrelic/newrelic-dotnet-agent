@@ -189,6 +189,7 @@ public class ContainerApplication : RemoteApplication
     private void CleanupContainer()
     {
         Console.WriteLine($"[{AppName} {DateTime.Now}] Cleaning up container and images related to {ContainerName} container.");
+        TestLogger?.WriteLine($"[{AppName}] Cleaning up container and images related to {ContainerName} container.");
         // ensure there's no stray containers or images laying around
         Process.Start("docker", $"container rm --force {ContainerName}");
         Process.Start("docker", $"image rm --force {ContainerName}");
@@ -197,6 +198,8 @@ public class ContainerApplication : RemoteApplication
         {
             foreach (var dep in DockerDependencies)
             {
+                Console.WriteLine($"[{AppName} {DateTime.Now}] Removing dependent container: {dep}.");
+                TestLogger?.WriteLine($"[{AppName}] Removing dependent container: {dep}.");
                 Process.Start("docker", $"container rm --force {dep}");
             }
         }
