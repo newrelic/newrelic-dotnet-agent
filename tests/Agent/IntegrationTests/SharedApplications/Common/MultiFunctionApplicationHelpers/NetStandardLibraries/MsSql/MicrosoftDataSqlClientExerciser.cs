@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
@@ -88,7 +88,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             {
                 await connection.OpenAsync();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'", connection))
+                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE LastName = 'Doe'", connection))
                 {
                     using (var reader = await command.ExecuteReaderAsync())
                     {
