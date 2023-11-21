@@ -9,11 +9,21 @@
   </PropertyGroup>
  
   <ItemGroup>
-    <PackageReference Include="LibGit2Sharp" Version="0.24.1">
-      <NoWarn>NU1701</NoWarn>
-    </PackageReference>
+    <PackageReference Include="LibGit2Sharp" Version="0.24.1" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="LibGit2Sharp" Version="0.24.1" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="LibGit2Sharp" Version="0.28.0" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="LibGit2Sharp" Version="0.28.0" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="LibGit2Sharp" Version="0.28.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="LibGit2Sharp" Version="0.28.0" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="LibGit2Sharp" Version="0.28.0" Condition="'$(TargetFramework)' == 'net8.0'" />
 
-    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="1.0.205" />
+    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="1.0.205" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="1.0.205" Condition="'$(TargetFramework)' == 'net471'" />
+    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.320" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.320" Condition="'$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.320" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.320" Condition="'$(TargetFramework)' == 'net7.0'" />
+    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.320" Condition="'$(TargetFramework)' == 'net8.0'" />
     
     <!-- log4net .NET framework references -->
     <PackageReference Include="log4net" Version="1.2.10" Condition="'$(TargetFramework)' == 'net462'" />
