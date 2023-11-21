@@ -18,11 +18,16 @@ namespace sicily
         private:
             void TestParser(std::wstring testString)
             {
+                TestParser(testString, testString);
+            }
+
+            void TestParser(const xstring_t& testString, const xstring_t& expectedParsedString)
+            {
                 Scanner scanner(testString);
                 Parser parser;
                 ast::TypePtr rootType = parser.Parse(scanner);
                 Assert::IsTrue(rootType != nullptr, L"rootType was nullptr");
-                Assert::AreEqual(std::wstring(testString), rootType->ToString());
+                Assert::AreEqual(expectedParsedString, rootType->ToString());
             }
 
         public:
@@ -184,6 +189,90 @@ namespace sicily
             TEST_METHOD(TestParser27)
             {
                 TestParser(L"instance !0 class [mscorlib]System.Tuple`2<class [mscorlib]System.Action`1<object[]>, class [mscorlib]System.Action`1<object[]>>::get_Item1()");
+            }
+
+            TEST_METHOD(TestField)
+            {
+                TestParser(L"int32 __NRInitializer__::_isAgentAssemblyLoaded");
+            }
+
+            TEST_METHOD(TestMethodWithRefParams)
+            {
+                TestParser(L"int32 System.Threading.Interlocked::CompareExchange(int32&, int32, int32)");
+            }
+
+            TEST_METHOD(EmptyStringToParseThrowsException)
+            {
+                Assert::ExpectException<UnexpectedEndTokenException>([this]() {TestParser(_X("")); });
+            }
+
+            TEST_METHOD(ParsingIncompleteInstanceMethodThrowsException)
+            {
+                Assert::ExpectException<UnexpectedEndTokenException>([this]() {TestParser(_X("instance void")); });
+            }
+
+            TEST_METHOD(ParsingInvalidMethodTypeThrowsException)
+            {
+                Assert::ExpectException<UnexpectedTypeKindException>([this]() {TestParser(_X("instance void void")); });
+            }
+
+            TEST_METHOD(ParseComplexClassName)
+            {
+                TestParser(_X("class [assemblyname]Foo1_2Bar.__something"));
+            }
+
+            TEST_METHOD(ParseClassNameWithSlashes)
+            {
+                TestParser(_X("class [assemblyname]Foo/Bar"));
+            }
+
+            TEST_METHOD(ParseClassNameWithSpacesBeforeDotss)
+            {
+                // Foo .Bar -> Foo.Bar
+                TestParser(_X("class [assemblyname]Foo .Bar"), _X("class [assemblyname]Foo.Bar"));
+            }
+
+            TEST_METHOD(ParsingGenericClassWithIncorrectGenericCountThrowsException)
+            {
+                Assert::ExpectException<GenericArgumentCountMismatchException>([this]() { TestParser(_X("class [mscorlib]System.Action`1<object[], object>")); });
+            }
+
+            TEST_METHOD(ParsingRawClassNameThrowsException)
+            {
+                Assert::ExpectException<ExpectedTypeDescriptorException>([this]() { TestParser(_X("instance Foo")); });
+            }
+
+            TEST_METHOD(ParsingUnexpectedTokenThrowsException)
+            {
+                Assert::ExpectException<UnhandledTokenException>([this]() { TestParser(_X("instance ,")); });
+            }
+
+            TEST_METHOD(ParseMethodWithManyTypes)
+            {
+                TestParser(_X("void MyClass::MyMethod<object>(bool, uint32, int32, string&, valuetype Foo)"), _X("void MyClass::MyMethod<object>(bool, unsigned int32, int32, string&, valuetype Foo)"));
+            }
+
+            TEST_METHOD(ParsingBadAssemblyNameThrowsException)
+            {
+                Assert::ExpectException<UnexpectedTokenException>([this]() { TestParser(_X("[BadAssembly")); });
+            }
+
+            TEST_METHOD(ParsingBadColonPlacementThrowsException)
+            {
+                Assert::ExpectException<UnexpectedEndOfStreamException>([this]() { TestParser(_X("Foo:")); });
+                Assert::ExpectException<UnexpectedCharacterException>([this]() { TestParser(_X("Foo:Bar")); });
+            }
+
+            TEST_METHOD(ParsingUnhandledCharacterThrowsException)
+            {
+                Assert::ExpectException<UnhandledCharacterException>([this]() { TestParser(_X("^")); });
+            }
+
+            TEST_METHOD(ParsingTracerFuncType)
+            {
+                // The expected signature transforms uint32 and uint64 to unsigned int32 and unsigned int64
+                TestParser(_X("class [System.Private.CoreLib]System.Func`12<string, uint32, string, string, class [System.Private.CoreLib]System.Type, string, string, string, object, object[], uint64, class [System.Private.CoreLib]System.Action`2<object, class [System.Private.CoreLib]System.Exception>>"),
+                    _X("class [System.Private.CoreLib]System.Func`12<string, unsigned int32, string, string, class [System.Private.CoreLib]System.Type, string, string, string, object, object[], unsigned int64, class [System.Private.CoreLib]System.Action`2<object, class [System.Private.CoreLib]System.Exception>>"));
             }
         };
     }

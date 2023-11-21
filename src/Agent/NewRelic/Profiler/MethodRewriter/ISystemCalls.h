@@ -7,6 +7,7 @@
 #include <string>
 #include <set>
 #include "../Common/xplat.h"
+#include "../Common/Strings.h"
 #include "../Logging/DefaultFileLogLocation.h"
 
 namespace NewRelic { namespace Profiler { namespace MethodRewriter {
@@ -45,6 +46,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         virtual bool GetForceProfiling()
         {
             return TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
+        }
+
+        virtual bool GetIsLegacyCachingEnabled()
+        {
+            return GetEnvironmentBool(_X("NEW_RELIC_ENABLE_LEGACY_CACHING"), false);
         }
 
         virtual bool GetIsAppDomainCachingDisabled()
@@ -91,6 +97,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
     private:
         bool _isCoreClr = false;
+
         /// <summary>
         /// Gets an environment variable that should be a boolean
         /// </summary>

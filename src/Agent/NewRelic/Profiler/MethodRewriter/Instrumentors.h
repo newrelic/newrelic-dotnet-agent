@@ -7,6 +7,7 @@
 #include "../Logging/Logger.h"
 #include "../Common/Strings.h"
 #include "IFunction.h"
+#include "AgentCallStyle.h"
 #include "FunctionManipulator.h"
 #include "ApiFunctionManipulator.h"
 #include "HelperFunctionManipulator.h"
@@ -21,13 +22,13 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     // Interface for different classes that can all instrument a function
     struct IInstrumentor
     {
-        virtual bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) = 0;
+        virtual bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) = 0;
     };
 
     // The default instrumentor, injects our usual set of bytes into the user's function
     struct DefaultInstrumentor : public IInstrumentor
     {
-        bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) override
+        bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) override
         {
             auto instrumentationPoint = instrumentationSettings->GetInstrumentationConfiguration()->TryGetInstrumentationPoint(function);
             if (instrumentationPoint == nullptr)
@@ -72,7 +73,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
             LogInfo(L"Instrumenting method: ", function->ToString());
 
-            InstrumentFunctionManipulator manipulator(function, instrumentationSettings);
+            InstrumentFunctionManipulator manipulator(function, instrumentationSettings, isCoreClr, agentCallStrategy);
             if (!function->IsValid()) {
                 // we might have mucked the method up trying to re-write multiple RETs
                 LogInfo(L"Skipping invalid method: ", function->ToString());
@@ -90,7 +91,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     // An instrumentor for the New Relic API functions
     struct ApiInstrumentor : public IInstrumentor
     {
-        bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) override
+        bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) override
         {
             if (function->GetTypeName() == _X("NewRelic.Api.Agent.NewRelic"))
             {
@@ -101,7 +102,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 }
 
                 LogInfo(L"Instrumenting API method: ", function->ToString());
-                ApiFunctionManipulator manipulator(function, instrumentationSettings);
+                ApiFunctionManipulator manipulator(function, instrumentationSettings, isCoreClr, agentCallStrategy);
                 manipulator.InstrumentApi();
                 return true;
             }
@@ -116,9 +117,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     // An instrumentor for the methods we inject into mscorlib
     struct HelperInstrumentor : public IInstrumentor
     {
-        bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) override
+        bool Instrument(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) override
         {
-            if (!Strings::EndsWith(function->GetModuleName(), _X("mscorlib.dll")))
+            const auto expectedHelperAssemblyName = isCoreClr ? _X("System.Private.CoreLib.dll") : _X("mscorlib.dll");
+            if (!Strings::EndsWith(function->GetModuleName(), expectedHelperAssemblyName))
                 return false;
             
             if (function->GetTypeName() != _X("System.CannotUnloadAppDomainException"))
@@ -133,11 +135,17 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 function->GetFunctionName() != _X("GetMethodViaReflectionOrThrow") &&
                 function->GetFunctionName() != _X("GetMethodFromAppDomainStorage") &&
                 function->GetFunctionName() != _X("GetMethodFromAppDomainStorageOrReflectionOrThrow") &&
-                function->GetFunctionName() != _X("StoreMethodInAppDomainStorageOrThrow"))
+                function->GetFunctionName() != _X("StoreMethodInAppDomainStorageOrThrow") &&
+                function->GetFunctionName() != _X("InvokeAgentMethodInvokerFunc") &&
+                function->GetFunctionName() != _X("GetAgentShimFinishTracerDelegateFunc") &&
+                function->GetFunctionName() != _X("GetAgentMethodInvokerObject") &&
+                function->GetFunctionName() != _X("StoreAgentMethodInvokerFunc") &&
+                function->GetFunctionName() != _X("StoreAgentShimFinishTracerDelegateFunc") &&
+                function->GetFunctionName() != _X("EnsureInitialized"))
                 return false;
 
             LogInfo(L"Instrumenting helper method: ", function->ToString());
-            HelperFunctionManipulator manipulator(function);
+            HelperFunctionManipulator manipulator(function, isCoreClr, agentCallStrategy);
             manipulator.InstrumentHelper();
             return false;
         }

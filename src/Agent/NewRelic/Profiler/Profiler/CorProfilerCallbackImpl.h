@@ -9,12 +9,15 @@
 #include "../Configuration/Configuration.h"
 #include "../Configuration/InstrumentationConfiguration.h"
 #include "../Logging/Logger.h"
+#include "../MethodRewriter/AgentCallStyle.h"
 #include "../MethodRewriter/CustomInstrumentation.h"
 #include "../MethodRewriter/MethodRewriter.h"
+#include "../ModuleInjector/ModuleInjector.h"
 #include "../SignatureParser/Exceptions.h"
 #include "../ThreadProfiler/ThreadProfiler.h"
 #include "Function.h"
 #include "FunctionResolver.h"
+#include "Module.h"
 #include "Win32Helpers.h"
 #include "guids.h"
 #include <fstream>
@@ -27,8 +30,6 @@
 #ifdef PAL_STDCPP_COMPAT
 #include "UnixSystemCalls.h"
 #else
-#include "../ModuleInjector/ModuleInjector.h"
-#include "Module.h"
 #include "SystemCalls.h"
 #include <shellapi.h>
 #endif
@@ -69,10 +70,6 @@ namespace NewRelic { namespace Profiler {
 
     private:
         std::atomic<int> _referenceCount;
-
-#ifndef PAL_STDCPP_COMPAT
-        std::shared_ptr<ModuleInjector::ModuleInjector> _moduleInjector;
-#endif
 
     public:
         CorProfilerCallbackImpl()
@@ -248,14 +245,14 @@ namespace NewRelic { namespace Profiler {
                 }
 
                 auto instrumentationConfiguration = InitializeInstrumentationConfig();
-                auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath);
+                auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath, _isCoreClr);
                 this->SetMethodRewriter(methodRewriter);
 
                 LogTrace("Checking to see if we should instrument this process.");
                 auto forceProfiling = _systemCalls->GetForceProfiling();
-                auto processPath = Strings::ToUpper(_systemCalls->GetProcessPath());
-                auto commandLine = _systemCalls->GetProgramCommandLine();
-                auto parentProcessPath = Strings::ToUpper(_systemCalls->GetParentProcessPath());
+                auto processPath = Strings::ToUpper(SystemCalls::GetProcessPath());
+                auto commandLine = SystemCalls::GetProgramCommandLine();
+                auto parentProcessPath = Strings::ToUpper(SystemCalls::GetParentProcessPath());
                 auto appPoolId = GetAppPoolId(_systemCalls);
                 LogInfo(L"Command line: ", commandLine);
                 if (!forceProfiling && !configuration->ShouldInstrument(processPath, parentProcessPath, appPoolId, commandLine, _isCoreClr)) {
@@ -265,11 +262,14 @@ namespace NewRelic { namespace Profiler {
 
                 _functionResolver = std::make_shared<FunctionResolver>(_corProfilerInfo4);
 
+                MethodRewriter::AgentCallStyle agentCallStyle(_systemCalls);
+                _agentCallStrategy = agentCallStyle.GetConfiguredCallingStrategy();
+
                 ConfigureEventMask(pICorProfilerInfoUnk);
 
                 LogRuntimeInfo(runtimeInfo);
 
-                LogMessageIfAppDomainCachingIsDisabled();
+                LogMessageAboutConfiguredAgentCallStyle();
 
                 LogInfo(L"Profiler initialized");
                 return S_OK;
@@ -282,82 +282,48 @@ namespace NewRelic { namespace Profiler {
 
         virtual HRESULT __stdcall ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus) override
         {
-            if (_isCoreClr)
+            // if the module did not load correctly then we don't want to mess with it
+            if (FAILED(hrStatus))
             {
-                if (SUCCEEDED(hrStatus)) {
-                    try {
-                        auto assemblyName = GetAssemblyName(moduleId);
+                return hrStatus;
+            }
 
-                        if (GetMethodRewriter()->ShouldInstrumentAssembly(assemblyName)) {
-                            LogTrace("Assembly module loaded: ", assemblyName);
-
-                            auto instrumentationPoints = std::make_shared<Configuration::InstrumentationPointSet>(GetMethodRewriter()->GetAssemblyInstrumentation(assemblyName));
-                            auto methodDefs = GetMethodDefs(moduleId, instrumentationPoints);
-
-                            if (methodDefs != nullptr) {
-                                RejitModuleFunctions(moduleId, methodDefs);
-                            }
-                        }
-                    }
-                    catch (...) {
-                    }
-                }
+            // if reflection is used we do not need to inject any helper types or references into the module
+            if (_agentCallStrategy == MethodRewriter::AgentCallStyle::Strategy::Reflection)
+            {
                 return S_OK;
             }
-            else
+
+            LogTrace("Module Injection Started. ", moduleId);
+
+            ModuleInjector::IModulePtr module;
+            try
             {
-#ifndef PAL_STDCPP_COMPAT
-
-                // if the module did not load correctly then we don't want to mess with it
-                if (FAILED(hrStatus))
-                {
-                    return hrStatus;
-                }
-
-                LogTrace("Module Injection Started. ", moduleId);
-
-                ModuleInjector::IModulePtr module;
-                try
-                {
-                    module = std::make_shared<Module>(_corProfilerInfo4, moduleId);
-                }
-                catch (const NewRelic::Profiler::MessageException& exception)
-                {
-                    (void)exception;
-                    return S_OK;
-                }
-                catch (...)
-                {
-                    LogError(L"An exception was thrown while getting details about a module.");
-                    return E_FAIL;
-                }
-
-                try
-                {
-                    _moduleInjector->InjectIntoModule(*module);
-                }
-                catch (...)
-                {
-                    LogError(L"An exception was thrown while attempting to inject into a module.");
-                    return E_FAIL;
-                }
-
-                LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
-#endif
+                module = std::make_shared<Module>(_corProfilerInfo4, moduleId, _isCoreClr);
+            }
+            catch (const NewRelic::Profiler::MessageException& exception)
+            {
+                (void)exception;
                 return S_OK;
             }
-        }
-
-
-        virtual DWORD OverrideEventMask(DWORD eventMask)
-        {
-#ifndef PAL_STDCPP_COMPAT
-            if (!_isCoreClr)
+            catch (...)
             {
-                _moduleInjector.reset(new ModuleInjector::ModuleInjector());
+                LogError(L"An exception was thrown while getting details about a module.");
+                return E_FAIL;
             }
-#endif
-            return eventMask;
+
+            try
+            {
+                ModuleInjector::ModuleInjector::InjectIntoModule(*module, _isCoreClr);
+            }
+            catch (...)
+            {
+                LogError(L"An exception was thrown while attempting to inject into a module.");
+                return E_FAIL;
+            }
+
+            LogTrace("Module Injection Finished. ", moduleId, " : ", module->GetModuleName());
+            return S_OK;
         }
 
         virtual void ConfigureEventMask(IUnknown* pICorProfilerInfoUnk)
@@ -534,7 +500,7 @@ namespace NewRelic { namespace Profiler {
 
             try {
                 // instrument the method
-                methodRewriter->Instrument(function);
+                methodRewriter->Instrument(function, _agentCallStrategy);
             } catch (NewRelic::Profiler::SignatureParser::SignatureParserException exception) {
                 // Dont call function->ToString() since that might cause Signature to be parsed again
                 // Printing the FunctionName should be enough to provide enough debugging context
@@ -631,7 +597,7 @@ namespace NewRelic { namespace Profiler {
             auto oldMethodRewriter = GetMethodRewriter();
             auto oldInstrumentationPoints = oldMethodRewriter->GetInstrumentationConfiguration()->GetInstrumentationPoints();
 
-            SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath));
+            SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath, _isCoreClr));
 
             auto oldInstrumentationByAssembly = GroupByAssemblyName(oldInstrumentationPoints);
             auto newInstrumentationByAssembly = GroupByAssemblyName(instrumentationConfiguration->GetInstrumentationPoints());
@@ -835,13 +801,13 @@ namespace NewRelic { namespace Profiler {
         MethodRewriter::MethodRewriterPtr _methodRewriter;
         CComPtr<ICorProfilerInfo4> _corProfilerInfo4;
         ThreadProfiler::ThreadProfiler _threadProfiler;
-        std::shared_ptr<SystemCalls> _systemCalls;
+        std::shared_ptr<MethodRewriter::ISystemCalls> _systemCalls;
         std::shared_ptr<FunctionResolver> _functionResolver;
         MethodRewriter::CustomInstrumentationBuilder _customInstrumentationBuilder;
         MethodRewriter::CustomInstrumentation _customInstrumentation;
+        MethodRewriter::AgentCallStyle::Strategy _agentCallStrategy;
 
-        DWORD _eventMask = OverrideEventMask(
-            COR_PRF_MONITOR_JIT_COMPILATION | COR_PRF_MONITOR_MODULE_LOADS | COR_PRF_USE_PROFILE_IMAGES | COR_PRF_MONITOR_THREADS | COR_PRF_ENABLE_STACK_SNAPSHOT | COR_PRF_ENABLE_REJIT | (DWORD)COR_PRF_DISABLE_ALL_NGEN_IMAGES);
+        DWORD _eventMask = COR_PRF_MONITOR_JIT_COMPILATION | COR_PRF_MONITOR_MODULE_LOADS | COR_PRF_USE_PROFILE_IMAGES | COR_PRF_MONITOR_THREADS | COR_PRF_ENABLE_STACK_SNAPSHOT | COR_PRF_ENABLE_REJIT | (DWORD)COR_PRF_DISABLE_ALL_NGEN_IMAGES;
 
         xstring_t _productName = _X("");
         xstring_t _agentCoreDllPath = _X("");
@@ -858,7 +824,7 @@ namespace NewRelic { namespace Profiler {
             std::atomic_store(&_methodRewriter, methodRewriter);
         }
 
-        static xstring_t GetGlobalConfigurationFromDisk(std::shared_ptr<SystemCalls> systemCalls)
+        static xstring_t GetGlobalConfigurationFromDisk(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
         {
             auto newRelicHome = GetNewRelicHomePath(systemCalls);
             auto configuration = GetConfigurationFromDisk(systemCalls, newRelicHome);
@@ -871,10 +837,10 @@ namespace NewRelic { namespace Profiler {
             return configuration.first;
         }
 
-        static std::pair<xstring_t, bool> GetLocalConfigurationFromDisk(std::shared_ptr<SystemCalls> systemCalls)
+        static std::pair<xstring_t, bool> GetLocalConfigurationFromDisk(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
         {
             try {
-                auto applicationPath = systemCalls->GetProcessDirectoryPath();
+                auto applicationPath = SystemCalls::GetProcessDirectoryPath();
                 return GetConfigurationFromDisk(systemCalls, applicationPath);
             } catch (...) {
                 LogWarn(L"There was an error reading the local newrelic.config file. Using the settings in the global newrelic.config file instead.");
@@ -882,7 +848,7 @@ namespace NewRelic { namespace Profiler {
             }
         }
 
-        static std::pair<xstring_t, bool> GetConfigurationFromDisk(std::shared_ptr<SystemCalls> systemCalls, xstring_t path)
+        static std::pair<xstring_t, bool> GetConfigurationFromDisk(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls, xstring_t path)
         {
             auto configPath = path + PATH_SEPARATOR + _X("newrelic.config");
 
@@ -894,9 +860,9 @@ namespace NewRelic { namespace Profiler {
             return std::make_pair(_X(""), false);
         }
 
-        static xstring_t GetApplicationConfigurationFromDisk(std::shared_ptr<SystemCalls> systemCalls)
+        static xstring_t GetApplicationConfigurationFromDisk(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
         {
-            auto applicationPath = systemCalls->GetProcessPath();
+            auto applicationPath = SystemCalls::GetProcessPath();
             auto applicationConfigPath = applicationPath + _X(".config");
 
             if (!systemCalls->FileExists(applicationConfigPath))
@@ -905,7 +871,7 @@ namespace NewRelic { namespace Profiler {
             return ReadFile(applicationConfigPath);
         }
 
-        Configuration::InstrumentationXmlSetPtr GetInstrumentationXmlsFromDisk(std::shared_ptr<SystemCalls> systemCalls)
+        Configuration::InstrumentationXmlSetPtr GetInstrumentationXmlsFromDisk(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
         {
             Configuration::InstrumentationXmlSetPtr instrumentationXmls(new Configuration::InstrumentationXmlSet());
 
@@ -1032,7 +998,7 @@ namespace NewRelic { namespace Profiler {
             throw ProfilerException();
         }
 
-        FilePaths GetXmlFilesInExtensionsDirectory(std::shared_ptr<SystemCalls> systemCalls)
+        FilePaths GetXmlFilesInExtensionsDirectory(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
         {
             auto rootExtensionsDirectory = GetNewRelicHomePath(systemCalls) + PATH_SEPARATOR + _X("extensions");
             if (!systemCalls->DirectoryExists(rootExtensionsDirectory)) {
@@ -1041,21 +1007,21 @@ namespace NewRelic { namespace Profiler {
                 LogInfo(L"Loading instrumentation from ", rootExtensionsDirectory);
             }
 
-            auto xmlFiles = GetXmlFilesInDirectory(systemCalls, rootExtensionsDirectory);
+            auto xmlFiles = GetXmlFilesInDirectory(rootExtensionsDirectory);
 
             auto runtimeExtensionsDirectory = rootExtensionsDirectory + PATH_SEPARATOR + GetRuntimeExtensionsDirectoryName();
             if (systemCalls->DirectoryExists(runtimeExtensionsDirectory)) {
                 LogInfo(L"Loading instrumentation from ", runtimeExtensionsDirectory);
-                auto runtimeExtensionsDirectoryXmlFiles = GetXmlFilesInDirectory(systemCalls, runtimeExtensionsDirectory);
+                auto runtimeExtensionsDirectoryXmlFiles = GetXmlFilesInDirectory(runtimeExtensionsDirectory);
                 xmlFiles.insert(runtimeExtensionsDirectoryXmlFiles.begin(), runtimeExtensionsDirectoryXmlFiles.end());
             }
 
             return xmlFiles;
         }
 
-        static FilePaths GetXmlFilesInDirectory(std::shared_ptr<SystemCalls> systemCalls, xstring_t directoryPath)
+        static FilePaths GetXmlFilesInDirectory(xstring_t directoryPath)
         {
-            return systemCalls->GetFilesInDirectory(directoryPath, _X("xml"));
+            return SystemCalls::GetFilesInDirectory(directoryPath, _X("xml"));
         }
 
         static LARGE_INTEGER GetFrequency()
@@ -1157,12 +1123,9 @@ namespace NewRelic { namespace Profiler {
             return S_OK;
         }
 
-        void LogMessageIfAppDomainCachingIsDisabled()
+        void LogMessageAboutConfiguredAgentCallStyle()
         {
-            if (_systemCalls->GetIsAppDomainCachingDisabled())
-            {
-                LogInfo("The use of AppDomain for method information caching is disabled via the 'NEW_RELIC_DISABLE_APPDOMAIN_CACHING' environment variable.");
-            }
+            LogInfo(_X("Calls to the managed agent will use the calling strategy - "), MethodRewriter::AgentCallStyle::ToString(_agentCallStrategy));
         }
 
         std::unique_ptr<xstring_t> GetAgentCoreDllPath()

@@ -14,9 +14,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     class InstrumentFunctionManipulator : FunctionManipulator
     {
     public:
-        InstrumentFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) : 
-            FunctionManipulator(function), 
-            _instrumentationSettings(instrumentationSettings)
+        InstrumentFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) :
+            FunctionManipulator(function, isCoreClr, agentCallStrategy),
+            _instrumentationSettings(instrumentationSettings),
+            _tracerLocalIndex(0),
+            _resultLocalIndex(0),
+            _userExceptionLocalIndex(0)
         {
             if (_function->Preprocess()) {
                 Initialize();
@@ -94,10 +97,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 {
                     // directly invoke delegate to finish the tracer
                     loadTracerFunc();
-                    _instructions->Append(_X("castclass  class [mscorlib]System.Action`2<object,class [mscorlib]System.Exception>"));
+                    _instructions->Append(_X("castclass  class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Action`2<object, class[") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception>"));
                     loadReturnValueFunc();
                     loadExceptionFunc();
-                    _instructions->Append(CEE_CALLVIRT, _X("instance void [mscorlib]System.Action`2<object,class [mscorlib]System.Exception>::Invoke(!0,!1)"));
+                    _instructions->Append(CEE_CALLVIRT, _X("instance void [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Action`2<object,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception>::Invoke(!0,!1)"));
                 },
                 [&]() { _instructions->Append(CEE_POP); }
             );
@@ -153,12 +156,29 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
         void CallGetTracer(NewRelic::Profiler::Configuration::InstrumentationPointPtr instrumentationPoint)
         {
-            LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentShim"), _X("GetFinishTracerDelegate"), 0, nullptr, !_function->IsCoreClr());
-              
-            // tracer = delegates[0].Invoke(null, new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
-            _instructions->Append(_X("ldnull"));
+            // if we are using MethodInfo.Invoke the invocation will look like
+            // tracer = delegates.Invoke(null, new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
+            // oterwise we are using Func.Invoke and it will look like
+            // tracer = delegates.Invoke(new object[] { tracerFactoryName, tracerFactoryArgs, metricName, assemblyName, type, typeName, functionName, argumentSignatureString, this, new object[], functionId });
+
+            if (_agentCallStrategy == AgentCallStyle::Strategy::FuncInvoke)
+            {
+                // Ensure that the managed agent is loaded
+                _instructions->AppendString(_instrumentationSettings->GetCorePath());
+                _instructions->Append(_X("call void [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::EnsureInitialized(string)"));
+
+                // Get the Func holding a reference to NewRelic.Agent.Core.AgentShim.GetFinishTracerDelegateParameterWrapper
+                _instructions->Append(_X("call object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetAgentShimFinishTracerDelegateFunc()"));
+                _instructions->Append(CEE_CASTCLASS, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Func`2<object[], class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Action`2<object, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception>>"));
+            }
+            else
+            {
+                LoadMethodInfo(_instrumentationSettings->GetCorePath(), _X("NewRelic.Agent.Core.AgentShim"), _X("GetFinishTracerDelegate"), 0, nullptr);
+                _instructions->Append(_X("ldnull"));
+            }
+
             _instructions->Append(_X("ldc.i4.s   11"));
-            _instructions->Append(_X("newarr     [mscorlib]System.Object"));
+            _instructions->Append(_X("newarr     [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Object"));
             _instructions->Append(_X("dup"));
             _instructions->Append(_X("ldc.i4.0"));
             _instructions->Append(_X("ldstr      ") + instrumentationPoint->TracerFactoryName);
@@ -166,7 +186,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(_X("dup"));
             _instructions->Append(_X("ldc.i4.1"));
             _instructions->Append(CEE_LDC_I4, instrumentationPoint->TracerFactoryArgs);
-            _instructions->Append(_X("box [mscorlib]System.UInt32"));
+            _instructions->Append(_X("box [") + _instructions->GetCoreLibAssemblyName() + _X("]System.UInt32"));
             _instructions->Append(_X("stelem.ref"));
             _instructions->Append(_X("dup"));
             _instructions->Append(_X("ldc.i4.2"));
@@ -179,7 +199,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(_X("dup"));
             _instructions->Append(_X("ldc.i4.4"));
             _instructions->Append(CEE_LDTOKEN, _function->GetTypeToken());
-            _instructions->Append(_X("call class [mscorlib]System.Type [mscorlib]System.Type::GetTypeFromHandle(valuetype [mscorlib]System.RuntimeTypeHandle)"));
+            _instructions->Append(_X("call class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type::GetTypeFromHandle(valuetype [") + _instructions->GetCoreLibAssemblyName() + _X("]System.RuntimeTypeHandle)"));
             _instructions->Append(_X("stelem.ref"));
             _instructions->Append(_X("dup"));
             _instructions->Append(_X("ldc.i4.5"));
@@ -209,10 +229,18 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->Append(_X("ldc.i4.s 10"));
             // It's important to upcast the function id here.  It's an int on WIN32
             _instructions->Append(CEE_LDC_I8, (uint64_t)_function->GetFunctionId());
-            _instructions->Append(_X("box [mscorlib]System.UInt64"));
+            _instructions->Append(_X("box [") + _instructions->GetCoreLibAssemblyName() + _X("]System.UInt64"));
             _instructions->Append(_X("stelem.ref"));
+
             // make the call to GetTracer
-            InvokeMethodInfo();
+            if (_agentCallStrategy == AgentCallStyle::Strategy::FuncInvoke)
+            {
+                _instructions->Append(CEE_CALLVIRT, _X("instance !1 class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Func`2<object[], class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Action`2<object, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception>>::Invoke(!0)"));
+            }
+            else
+            {
+                InvokeMethodInfo();
+            }
 
             _instructions->AppendStoreLocal(_tracerLocalIndex);
         }
@@ -221,8 +249,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         {
             LogTrace(_function->ToString() + _X(": Generating locals for default instrumentation."));
             auto tokenizer = _function->GetTokenizer();
-            _tracerLocalIndex = AppendToLocalsSignature(_X("class [mscorlib]System.Object"), tokenizer, _newLocalVariablesSignature);
-            _userExceptionLocalIndex = AppendToLocalsSignature(_X("class [mscorlib]System.Exception"), tokenizer, _newLocalVariablesSignature);
+            _tracerLocalIndex = AppendToLocalsSignature(_X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Object"), tokenizer, _newLocalVariablesSignature);
+            _userExceptionLocalIndex = AppendToLocalsSignature(_X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Exception"), tokenizer, _newLocalVariablesSignature);
             
             if (_methodSignature->_returnType->_kind != SignatureParser::ReturnType::Kind::VOID_RETURN_TYPE)
                 _resultLocalIndex = AppendReturnTypeLocal(_newLocalVariablesSignature, _methodSignature);

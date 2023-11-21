@@ -21,11 +21,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
     class InstructionSet
     {
     public:
-        InstructionSet(sicily::codegen::ITokenizerPtr tokenizer, ExceptionHandlerManipulatorPtr exceptionHandlerManipulator) :
+        InstructionSet(sicily::codegen::ITokenizerPtr tokenizer, ExceptionHandlerManipulatorPtr exceptionHandlerManipulator, const bool isCoreClr) :
             _tokenizer(tokenizer),
             _exceptionHandlerManipulator(exceptionHandlerManipulator),
             _userCodeOffset(0),
-            _labelCounter(0)
+            _labelCounter(0),
+            _coreLibAssemblyName(isCoreClr ? _X("System.Private.CoreLib") : _X("mscorlib"))
         {
             // we need a little over 400 bytes to store the bytes we inject so lets allocate at least that many up front, if we need more the vector will re-allocate
             _bytes.reserve(500);
@@ -341,7 +342,23 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             if (typeToken != 0)
             {
                 Append(CEE_LDTOKEN, typeToken);
-                Append(_X("call class [mscorlib]System.Type [mscorlib]System.Type::GetTypeFromHandle(valuetype [mscorlib]System.RuntimeTypeHandle)"));
+                Append(_X("call class [") + _coreLibAssemblyName + _X("]System.Type[") + _coreLibAssemblyName + _X("]System.Type::GetTypeFromHandle(valuetype[") + _coreLibAssemblyName + _X("]System.RuntimeTypeHandle)"));
+            }
+        }
+
+        void AppendTypeOfArgument(SignatureParser::ReturnTypePtr returnType)
+        {
+            auto typeToken = GetTypeTokenForReturnType(returnType);
+
+            if (typeToken != 0)
+            {
+                Append(CEE_LDTOKEN, typeToken);
+                Append(_X("call class [") + _coreLibAssemblyName + _X("]System.Type[") + _coreLibAssemblyName + _X("]System.Type::GetTypeFromHandle(valuetype[") + _coreLibAssemblyName + _X("]System.RuntimeTypeHandle)"));
+            }
+            else
+            {
+                // void return type
+                Append(CEE_LDNULL);
             }
         }
 
@@ -427,13 +444,13 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
         void AppendCatchStart(xstring_t fullyQualifiedClassName)
         {
-            auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), fullyQualifiedClassName);
+            auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, fullyQualifiedClassName);
             AppendCatchStart(token);
         }
 
         void AppendCatchStart()
         {
-            auto exceptionToken = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.Exception"));
+            auto exceptionToken = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.Exception"));
             AppendCatchStart(exceptionToken);
         }
 
@@ -472,6 +489,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             return _userCodeOffset;
         }
 
+        const xstring_t GetCoreLibAssemblyName() const
+        {
+            return _coreLibAssemblyName;
+        }
+
     private:
         void Append(const ByteVector& newBytes)
         {
@@ -490,7 +512,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 }
                 case SignatureParser::ReturnType::Kind::TYPED_BY_REF_RETURN_TYPE:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.TypedReference"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.TypedReference"));
                     return token;
                 }
                 case SignatureParser::ReturnType::Kind::TYPED_RETURN_TYPE:
@@ -522,7 +544,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 }
                 case SignatureParser::Parameter::Kind::TYPED_BY_REF_PARAMETER:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.TypedReference"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.TypedReference"));
                     return token;
                 }
                 case SignatureParser::Parameter::Kind::TYPED_PARAMETER:
@@ -538,88 +560,114 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             }
         }
 
+        uint32_t GetTypeTokenForReturnType(SignatureParser::ReturnTypePtr returnType)
+        {
+            switch (returnType->_kind)
+            {
+                case SignatureParser::ReturnType::Kind::VOID_RETURN_TYPE:
+                {
+                    return 0;
+                }
+                case SignatureParser::ReturnType::Kind::TYPED_BY_REF_RETURN_TYPE:
+                {
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.TypedReference"));
+                    return token;
+                }
+                case SignatureParser::ReturnType::Kind::TYPED_RETURN_TYPE:
+                {
+                    auto typedReturnType = std::static_pointer_cast<SignatureParser::TypedReturnType>(returnType);
+                    return GetTypeTokenForType(typedReturnType->_type);
+                }
+                default:
+                {
+                    LogError(L"Unhandled return type encountered in InstructionSet::GetTypeTokenForReturnType. Kind: ", std::hex, std::showbase, returnType->_kind, std::resetiosflags(std::ios_base::basefield | std::ios_base::showbase));
+                    throw InstructionSetException();
+                }
+            }
+        }
+
         uint32_t GetTypeTokenForType(SignatureParser::TypePtr type)
         {
             switch (type->_kind)
             {
                 case SignatureParser::Type::Kind::BOOLEAN:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.Boolean"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.Boolean"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::CHAR:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.Char"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.Char"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::SBYTE:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.SByte"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.SByte"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::BYTE:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.Byte"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.Byte"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::INT16:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.Int16"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.Int16"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::UINT16:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.UInt16"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.UInt16"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::INT32:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.Int32"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.Int32"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::UINT32:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.UInt32"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.UInt32"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::INT64:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.Int64"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.Int64"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::UINT64:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.UInt64"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.UInt64"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::SINGLE:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.Single"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.Single"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::DOUBLE:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.Double"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.Double"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::INTPTR:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.IntPtr"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.IntPtr"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::UINTPTR:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.UIntPtr"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.UIntPtr"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::OBJECT:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.Object"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.Object"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::STRING:
                 {
-                    auto token = _tokenizer->GetTypeRefToken(_X("mscorlib"), _X("System.String"));
+                    auto token = _tokenizer->GetTypeRefToken(_coreLibAssemblyName, _X("System.String"));
                     return token;
                 }
                 case SignatureParser::Type::Kind::ARRAY:
@@ -787,6 +835,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         uint32_t _userCodeOffset;
         // counter for generating unique jump labels
         uint32_t _labelCounter;
+        const xstring_t _coreLibAssemblyName;
     };
 
     typedef std::shared_ptr<InstructionSet> InstructionSetPtr;

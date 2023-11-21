@@ -8,6 +8,7 @@
 #include "../Common/CorStandIn.h"
 #include "../Common/Strings.h"
 #include "../Logging/Logger.h"
+#include "../Profiler/Exceptions.h"
 #include "../Sicily/Sicily.h"
 #include "IModule.h"
 
@@ -19,7 +20,7 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
         struct ManagedMethodToInject
         {
             //null terminated character string NTCS
-            using ntcs_t = const wchar_t* const;
+            using ntcs_t = const xchar_t* const;
             ntcs_t TypeName;
             ntcs_t MethodName;
             ntcs_t ReturnType;
@@ -30,52 +31,91 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
         };
 
     public:
-        static void InjectIntoModule(IModule& module)
+        static void InjectIntoModule(IModule& module, const bool isCoreClr)
         {
-            //for background on the methodology and rationale, see:
-            //  https://social.msdn.microsoft.com/Forums/en-US/f8bf431a-7a83-4dfb-bbf7-ef23b1e30904/profiling-silverlight-with-securitysafecriticalattributesecuritycriticalattribute-and-injected-il
+            // When injecting method REFERENCES into an assembly, theses references should have
+            // the external assembly identifier to System.Private.CoreLib
+            constexpr std::array<ManagedMethodToInject, 12> methodReferencesToInjectCoreClr{
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("LoadAssemblyOrThrow"), _X("class [System.Private.CoreLib]System.Reflection.Assembly"), _X("string")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetTypeViaReflectionOrThrow"), _X("class [System.Private.CoreLib]System.Type"), _X("string,string")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetMethodViaReflectionOrThrow"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo"), _X("string,string,string,class [System.Private.CoreLib]System.Type[]")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorage"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo"), _X("string")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo"), _X("string,string,string,string,class [System.Private.CoreLib]System.Type[]")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("class [System.Private.CoreLib]System.Reflection.MethodInfo,string")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("StoreAgentMethodInvokerFunc"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("StoreAgentShimFinishTracerDelegateFunc"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"),_X("EnsureInitialized"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("InvokeAgentMethodInvokerFunc"), _X("object"), _X("string,string,string,string,class [System.Private.CoreLib]System.Type[],class [System.Private.CoreLib]System.Type,object[]")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetAgentMethodInvokerObject"), _X("object"), _X("")),
+                ManagedMethodToInject(_X("[System.Private.CoreLib]System.CannotUnloadAppDomainException"), _X("GetAgentShimFinishTracerDelegateFunc"), _X("object"), _X(""))
+            };
 
             // When injecting method REFERENCES into an assembly, theses references should have
             // the external assembly identifier to mscorlib
-            constexpr std::array<ManagedMethodToInject, 6> methodReferencesToInject{
-                ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"LoadAssemblyOrThrow", L"class [mscorlib]System.Reflection.Assembly", L"string"),
-                ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"GetTypeViaReflectionOrThrow", L"class [mscorlib]System.Type", L"string,string"),
-                ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"GetMethodViaReflectionOrThrow", L"class [mscorlib]System.Reflection.MethodInfo", L"string,string,string,class [mscorlib]System.Type[]"),
-                ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"GetMethodFromAppDomainStorage", L"class [mscorlib]System.Reflection.MethodInfo", L"string"),
-                ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"GetMethodFromAppDomainStorageOrReflectionOrThrow", L"class [mscorlib]System.Reflection.MethodInfo", L"string,string,string,string,class [mscorlib]System.Type[]"),
-                ManagedMethodToInject(L"[mscorlib]System.CannotUnloadAppDomainException", L"StoreMethodInAppDomainStorageOrThrow", L"void", L"class [mscorlib]System.Reflection.MethodInfo,string")
+            constexpr std::array<ManagedMethodToInject, 12> methodReferencesToInjectNetFramework{
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("LoadAssemblyOrThrow"), _X("class [mscorlib]System.Reflection.Assembly"), _X("string")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetTypeViaReflectionOrThrow"), _X("class [mscorlib]System.Type"), _X("string,string")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetMethodViaReflectionOrThrow"), _X("class [mscorlib]System.Reflection.MethodInfo"), _X("string,string,string,class [mscorlib]System.Type[]")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorage"), _X("class [mscorlib]System.Reflection.MethodInfo"), _X("string")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class [mscorlib]System.Reflection.MethodInfo"), _X("string,string,string,string,class [mscorlib]System.Type[]")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("class [mscorlib]System.Reflection.MethodInfo,string")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("StoreAgentMethodInvokerFunc"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("StoreAgentShimFinishTracerDelegateFunc"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("EnsureInitialized"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("InvokeAgentMethodInvokerFunc"), _X("object"), _X("string,string,string,string,class [mscorlib]System.Type[],class [mscorlib]System.Type,object[]")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetAgentMethodInvokerObject"), _X("object"), _X("")),
+                ManagedMethodToInject(_X("[mscorlib]System.CannotUnloadAppDomainException"), _X("GetAgentShimFinishTracerDelegateFunc"), _X("object"), _X(""))
             };
 
-            // When injecting HELPER METHODS into the mscorlib assembly, theses references should be local.
-            // They cannot reference [mscorlib] since these methods are being rewritten in mscorlib.
-            constexpr std::array<ManagedMethodToInject, 6> methodImplsToInject {
-                ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"LoadAssemblyOrThrow", L"class System.Reflection.Assembly", L"string"),
-                ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"GetTypeViaReflectionOrThrow", L"class System.Type", L"string,string"),
-                ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"GetMethodViaReflectionOrThrow", L"class System.Reflection.MethodInfo", L"string,string,string,class System.Type[]"),
-                ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"GetMethodFromAppDomainStorage", L"class System.Reflection.MethodInfo", L"string"),
-                ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"GetMethodFromAppDomainStorageOrReflectionOrThrow", L"class System.Reflection.MethodInfo", L"string,string,string,string,class System.Type[]"),
-                ManagedMethodToInject(L"System.CannotUnloadAppDomainException", L"StoreMethodInAppDomainStorageOrThrow", L"void", L"class System.Reflection.MethodInfo,string")
+            // When injecting HELPER METHODS into the Core Lib assembly, theses references should be local.
+            // They cannot reference an assembly since these methods are being rewritten in the Core Lib so only types available in that lib can be used.
+            constexpr std::array<ManagedMethodToInject, 12> methodImplsToInject{
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("LoadAssemblyOrThrow"), _X("class System.Reflection.Assembly"), _X("string")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetTypeViaReflectionOrThrow"), _X("class System.Type"), _X("string,string")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetMethodViaReflectionOrThrow"), _X("class System.Reflection.MethodInfo"), _X("string,string,string,class System.Type[]")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorage"), _X("class System.Reflection.MethodInfo"), _X("string")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetMethodFromAppDomainStorageOrReflectionOrThrow"), _X("class System.Reflection.MethodInfo"), _X("string,string,string,string,class System.Type[]")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("StoreMethodInAppDomainStorageOrThrow"), _X("void"), _X("class System.Reflection.MethodInfo,string")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("StoreAgentMethodInvokerFunc"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("StoreAgentShimFinishTracerDelegateFunc"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("EnsureInitialized"), _X("void"), _X("string")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("InvokeAgentMethodInvokerFunc"), _X("object"), _X("string,string,string,string,class System.Type[],class System.Type,object[]")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetAgentMethodInvokerObject"), _X("object"), _X("")),
+                ManagedMethodToInject(_X("System.CannotUnloadAppDomainException"), _X("GetAgentShimFinishTracerDelegateFunc"), _X("object"), _X(""))
             };
 
-            const auto is_mscorlib = module.GetIsThisTheMscorlibAssembly();
+            const auto is_coreLib = module.GetIsThisTheCoreLibAssembly();
 
-            // If instrumenting mscorlib, use local (to the assembly) references
+            // If instrumenting Core Lib, use local (to the assembly) references
             // otherwise use external references
-            auto methods = is_mscorlib
+            auto methods = is_coreLib
                 ? methodImplsToInject
-                : methodReferencesToInject;
+                : (isCoreClr ? methodReferencesToInjectCoreClr : methodReferencesToInjectNetFramework);
 
-            if (!is_mscorlib && !EnsureReferenceToMscorlib(module))
+            if (!is_coreLib && !EnsureReferenceToCoreLib(module))
             {
-                LogInfo(L"Unable to inject reference to mscorlib into ", module.GetModuleName(), L".  This module will not be instrumented.");
+                LogInfo(L"Unable to inject reference to Core Library into ", module.GetModuleName(), L".  This module will not be instrumented.");
                 return;
             }
 
-            LogDebug(L"Injecting ", ((is_mscorlib) ? L"" : L"references to "), L"helper methods into ", module.GetModuleName());
+            if (is_coreLib)
+            {
+                LogDebug(L"Injecting New Relic helper type into ", module.GetModuleName());
+                try
+                {
+                    module.InjectNRHelperType();
+                }
+                catch (NewRelic::Profiler::Win32Exception&)
+                {
+                    LogError(L"Failed to inject New Relic helper type into ", module.GetModuleName());
+                }
+            }
 
-            //inject the methods if mscorlib and inject references into all other assemblies. (pointer to member function to select method to call in loop)
-            const auto workerFunc{ (is_mscorlib) ? &IModule::InjectStaticSecuritySafeMethod : &IModule::InjectMscorlibSecuritySafeMethodReference };
-            std::wstring signatum;
+            LogDebug(L"Injecting ", ((is_coreLib) ? L"" : L"references to "), L"helper methods into ", module.GetModuleName());
+
+            //inject the methods if this is the Core Lib and inject references into all other assemblies. (pointer to member function to select method to call in loop)
+            const auto workerFunc{ (is_coreLib) ? &IModule::InjectStaticSecuritySafeMethod : &IModule::InjectCoreLibSecuritySafeMethodReference };
+            xstring_t signatum;
             signatum.reserve(200);
             for (const auto& managedMethod : methods)
             {
@@ -83,10 +123,10 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
                 {
                     //create standard signature string
                     signatum.assign(managedMethod.ReturnType)
-                        .append(1, L' ').append(managedMethod.TypeName)
-                        .append(L"::", 2).append(managedMethod.MethodName)
-                        .append(1, L'(').append(managedMethod.ParameterTypes)
-                        .append(1, L')');
+                        .append(1, _X(' ')).append(managedMethod.TypeName)
+                        .append(_X("::"), 2).append(managedMethod.MethodName)
+                        .append(1, _X('(')).append(managedMethod.ParameterTypes)
+                        .append(1, _X(')'));
                     auto signature = ToSignature(signatum, module.GetTokenizer());
 
                     //inject method or references...
@@ -94,13 +134,11 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
                 }
                 catch (NewRelic::Profiler::Win32Exception&)
                 {
-                    //exception in an error if we are injecting methods, otherwise, just neat to know.
-                    //if is mscorlib, allow the loop to proceed.  if not, break out of the loop
-                    if (is_mscorlib)
+                    if (is_coreLib)
                     {
                         LogError(L"Failed to tokenize method signature: ", signatum, L". Proceeding to next method.");
                     }
-                    else 
+                    else
                     {
                         LogTrace(L"Failed to tokenize method signature: ", signatum, L". Skipping injection of other method references for this module.");
                     }
@@ -109,7 +147,7 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
         }
 
     private:
-        static ByteVector ToSignature(const std::wstring& signature, const sicily::codegen::ITokenizerPtr& tokenizer)
+        static ByteVector ToSignature(const xstring_t& signature, const sicily::codegen::ITokenizerPtr& tokenizer)
         {
             sicily::Scanner scanner(signature);
             sicily::Parser parser;
@@ -118,52 +156,14 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
             return generator.TypeToBytes(type);
         }
 
-        static bool EnsureReferenceToMscorlib(IModule& module)
+        static bool EnsureReferenceToCoreLib(IModule& module)
         {
-            // If this is the NetStandard assembly, it already has a reference to mscorlib, so no need to do anything
-            // Otherwise if this already has a reference to mscorlib, nothing to do.
-            if (module.GetIsThisTheNetStandardAssembly() || module.GetHasRefMscorlib())
+            if (!module.NeedsReferenceToCoreLib())
             {
                 return true;
             }
 
-            try
-            {
-                LogDebug(L"Attempting to Inject reference to mscorlib into netstandard Module  ", module.GetModuleName());
-
-                // if the assembly wasn't in the existing references try to define a new one
-                ASSEMBLYMETADATA amd;
-                ZeroMemory(&amd, sizeof(amd));
-                amd.usMajorVersion = 4;
-                amd.usMinorVersion = 0;
-                amd.usBuildNumber = 0;
-                amd.usRevisionNumber = 0;
-
-                auto metaDataAssemblyEmit = module.GetMetaDataAssemblyEmit();
-                mdAssemblyRef assemblyToken;
-                const BYTE pubToken[] = { 0xB7, 0x7A, 0x5C, 0x56, 0x19, 0x34, 0xE0, 0x89 };
-
-                auto injectResult = metaDataAssemblyEmit->DefineAssemblyRef(pubToken, sizeof(pubToken), L"mscorlib", &amd, NULL, 0, 0, &assemblyToken);
-                if (injectResult == S_OK)
-                {
-                    module.SetMscorlibAssemblyRef(assemblyToken);
-                    LogDebug(L"Attempting to Inject reference to mscorlib into netstandard Module  ", module.GetModuleName(), L" - Success: ", assemblyToken);
-
-                    return true;
-                }
-                else
-                {
-                    LogDebug(L"Attempting to Inject reference to mscorlib into netstandard Module  ", module.GetModuleName(), L" - FAIL: ", injectResult);
-
-                    return false;
-                }
-            }
-            catch (NewRelic::Profiler::Win32Exception& ex)
-            {
-                LogError(L"Attempting to Inject reference to mscorlib into netstandard Module  ", module.GetModuleName(), L" - ERROR: ", ex._message);
-                return false;
-            }
+            return module.InjectReferenceToCoreLib();
         }
-
     };
 }}}

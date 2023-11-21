@@ -11,8 +11,8 @@
 #include "../Common/Macros.h"
 #include "Exceptions.h"
 #include "../Common/CorStandIn.h"
+#include "AgentCallStyle.h"
 #include "IFunction.h"
-#include "ISystemCalls.h"
 #include "InstructionSet.h"
 #include "InstantiatedGenericType.h"
 #include "ExceptionHandlerManipulator.h"
@@ -21,12 +21,6 @@
 #include "../Sicily/codegen/ByteCodeGenerator.h"
 #include "../SignatureParser/SignatureParser.h"
 #include "IFunctionHeaderInfo.h"
-
-#ifdef PAL_STDCPP_COMPAT
-#include "../Profiler/UnixSystemCalls.h"
-#else
-#include "../Profiler/SystemCalls.h"
-#endif
 
 namespace NewRelic { namespace Profiler { namespace MethodRewriter
 {
@@ -50,14 +44,16 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         ByteVector _oldCodeBytes;
         ByteVector _newLocalVariablesSignature;
         SignatureParser::MethodSignaturePtr _methodSignature;
-        std::shared_ptr<SystemCalls> _systemCalls;
+        bool _isCoreClr;
+        const AgentCallStyle::Strategy _agentCallStrategy;
 
     public:
-        FunctionManipulator(IFunctionPtr function) :
+        FunctionManipulator(IFunctionPtr function, const bool isCoreClr, const AgentCallStyle::Strategy agentCallStrategy) :
             _function(function),
             _newHeader(sizeof(COR_ILMETHOD_FAT)),
             _methodSignature(SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end())),
-            _systemCalls(std::make_shared<SystemCalls>())
+            _isCoreClr(isCoreClr),
+            _agentCallStrategy(agentCallStrategy)
         {
         }
 
@@ -65,7 +61,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         void Initialize() {
             ExtractHeaderBodyAndExtra();
             ExtractLocalVariablesSignature();
-            _instructions = std::make_shared<InstructionSet>(_function->GetTokenizer(), _exceptionHandlerManipulator);
+            _instructions = std::make_shared<InstructionSet>(_function->GetTokenizer(), _exceptionHandlerManipulator, _isCoreClr);
         }
 
         // rewrite this method with something else; handle FatalFunctionManipulatorException specially!
@@ -227,7 +223,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 // create a Type array big enough to hold all of the method parameters
                 uint16_t parameterCount = uint16_t(_methodSignature->_parameters->size());
                 _instructions->Append(CEE_LDC_I4, uint32_t(parameterCount));
-                _instructions->Append(CEE_NEWARR, _X("[mscorlib]System.Type"));
+                _instructions->Append(CEE_NEWARR, _X("[") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type"));
 
                 // pack the type of each method parameter into our new Type[]
                 for (uint16_t i = 0; i < parameterCount; ++i)
@@ -249,7 +245,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             // create an object array big enough to hold all of the method parameters
             uint16_t parameterCount = uint16_t(_methodSignature->_parameters->size());
             _instructions->Append(CEE_LDC_I4, uint32_t(parameterCount));
-            _instructions->Append(CEE_NEWARR, _X("[mscorlib]System.Object"));
+            _instructions->Append(CEE_NEWARR, _X("[") + _instructions->GetCoreLibAssemblyName() + _X("]System.Object"));
+
             // pack all method parameters into our new object[]
             for (uint16_t i = 0; i < parameterCount; ++i)
             {
@@ -263,20 +260,26 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 _instructions->Append(CEE_STELEM_REF);
             }
         }
-
+#ifdef DEBUG
         void WriteLineToConsole(xstring_t message)
         {
-            _instructions->AppendString(message);
-            _instructions->Append(CEE_CALL, _X("void [mscorlib]System.Console::WriteLine(string)"));
+            // System.Console is not available in System.Private.CoreLib it is defined in System.Console which is not already a reference
+            // in all assemblies. For now we can just allow this DEBUG build only writing in .net framework apps.
+            if (!_isCoreClr)
+            {
+                _instructions->AppendString(message);
+                _instructions->Append(CEE_CALL, _X("void [mscorlib]System.Console::WriteLine(string)"));
+            }
         }
+#endif
 
         // Load the assembly using its full path and then load the given type from the assembly.
         void LoadType(xstring_t assemblyPath, xstring_t typeName)
         {
             _instructions->AppendString(assemblyPath);
-            _instructions->Append(CEE_CALL, _X("class [mscorlib]System.Reflection.Assembly [mscorlib]System.Reflection.Assembly::LoadFrom(string)"));
+            _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.Assembly [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.Assembly::LoadFrom(string)"));
             _instructions->AppendString(typeName);
-            _instructions->Append(CEE_CALLVIRT, _X("instance class [mscorlib]System.Type [mscorlib]System.Reflection.Assembly::GetType(string)"));
+            _instructions->Append(CEE_CALLVIRT, _X("instance class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.Assembly::GetType(string)"));
 #ifdef DEBUG
             _instructions->Append(CEE_DUP);
             auto afterMissing = _instructions->AppendJump(CEE_BRTRUE);
@@ -291,12 +294,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             _instructions->AppendString(methodName);
             if (argumentTypesLambda == NULL)
             {
-                _instructions->Append(CEE_CALLVIRT, _X("instance class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.Type::GetMethod(string)"));
+                _instructions->Append(CEE_CALLVIRT, _X("instance class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type::GetMethod(string)"));
             }
             else
             {
                 argumentTypesLambda();
-                _instructions->Append(CEE_CALLVIRT, _X("instance class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.Type::GetMethod(string, class [mscorlib]System.Type[])"));
+                _instructions->Append(CEE_CALLVIRT, _X("instance class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type::GetMethod(string, class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
             }
 #ifdef DEBUG
             _instructions->Append(CEE_DUP);
@@ -309,15 +312,15 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         // Call MethodBase.Invoke(object, object[])
         void InvokeMethodInfo()
         {
-            _instructions->Append(CEE_CALLVIRT, _X("instance object [mscorlib]System.Reflection.MethodBase::Invoke(object, object[])"));
+            _instructions->Append(CEE_CALLVIRT, _X("instance object [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodBase::Invoke(object, object[])"));
         }
 
         // Load the MethodInfo instance for the given class and method onto the stack.
-        // The MethodInfo will be cached in the AppDomain to improve performance if useCache is true.
-        // The function id is used as a tie-breaker for overloaded methods when computing the key name for the app domain cache.
-        void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda, bool useCache)
+        // The MethodInfo will be cached or not based on the configured agentCallStrategy.
+        // The function id is used as a tie-breaker for overloaded methods when computing the key name for the cache.
+        void LoadMethodInfo(xstring_t assemblyPath, xstring_t className, xstring_t methodName, uintptr_t functionId, std::function<void()> argumentTypesLambda)
         {
-            if (useCache && !_systemCalls->GetIsAppDomainCachingDisabled())
+            if (_agentCallStrategy == AgentCallStyle::Strategy::AppDomainCache)
             {
                 auto keyName = className + _X(".") + methodName + _X("_") + to_xstring((unsigned long)functionId);
                 _instructions->AppendString(keyName);
@@ -332,13 +335,18 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
                 {
                     argumentTypesLambda();
                 }
-                
-                _instructions->Append(CEE_CALL, _X("class [mscorlib]System.Reflection.MethodInfo [mscorlib]System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [mscorlib]System.Type[])"));
+
+                _instructions->Append(CEE_CALL, _X("class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Reflection.MethodInfo [") + _instructions->GetCoreLibAssemblyName() + _X("]System.CannotUnloadAppDomainException::GetMethodFromAppDomainStorageOrReflectionOrThrow(string,string,string,string,class [") + _instructions->GetCoreLibAssemblyName() + _X("]System.Type[])"));
             }
-            else
+            else if (_agentCallStrategy == AgentCallStyle::Strategy::Reflection)
             {
                 LoadType(assemblyPath, className);
                 LoadMethodInfoFromType(methodName, argumentTypesLambda);
+            }
+            else
+            {
+                LogError(L"Attempting to call LoadMethodInfo when an AgentCallStyle::Strategy that does not support loading method info is configured.");
+                throw FunctionManipulatorException();
             }
         }
 
@@ -347,7 +355,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         void LoadArray(std::list<std::function<void()>> elementLoadLambdas)
         {
             _instructions->Append(CEE_LDC_I4, uint32_t(elementLoadLambdas.size()));
-            _instructions->Append(CEE_NEWARR, _X("[mscorlib]System.Object"));
+            _instructions->Append(CEE_NEWARR, _X("[") + _instructions->GetCoreLibAssemblyName() + _X("]System.Object"));
+
             uint32_t index = 0;
 
             for (auto func : elementLoadLambdas)
@@ -400,20 +409,20 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             instructions->Append(_X("ret"));
         }
 
-        static void ThrowException(const InstructionSetPtr& instructions, const xstring_t& message, const bool& inMscorlib = false)
+        static void ThrowException(const InstructionSetPtr& instructions, const xstring_t& message, const bool& inCoreLib)
         {
-            auto exception = inMscorlib ? _X("instance void System.Exception::.ctor(string)") : _X("instance void [[mscorlib]]System.Exception::.ctor(string)");
+            auto exception = inCoreLib ? _X("instance void System.Exception::.ctor(string)") : (_X("instance void [[") + instructions->GetCoreLibAssemblyName() + _X("]]System.Exception::.ctor(string)"));
 
             instructions->AppendString(message);
             instructions->Append(CEE_NEWOBJ, exception);
             instructions->Append(CEE_THROW);
         }
 
-        static void ThrowExceptionIfStackItemIsNull(const InstructionSetPtr& instructions, const xstring_t& message, const bool& inMscorlib = false)
+        static void ThrowExceptionIfStackItemIsNull(const InstructionSetPtr& instructions, const xstring_t& message, const bool& inCoreLib)
         {
             instructions->Append(CEE_DUP);
             auto afterThrow = instructions->AppendJump(CEE_BRTRUE);
-            ThrowException(instructions, message, inMscorlib);
+            ThrowException(instructions, message, inCoreLib);
             instructions->AppendLabel(afterThrow);
         }
 

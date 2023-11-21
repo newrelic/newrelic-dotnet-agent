@@ -65,13 +65,13 @@ namespace NewRelic { namespace Profiler
             return std::unique_ptr<xstring_t>(new xstring_t(valueString.get()));
         }
 
-        virtual xstring_t GetProgramCommandLine()
+        static xstring_t GetProgramCommandLine()
         {
             auto commandLine = GetCommandLineW();
             return commandLine;
         }
 
-        virtual xstring_t GetProcessPath()
+        static xstring_t GetProcessPath()
         {
             const int MAX_PROCESS_PATH = 1024;
             wchar_t moduleName[MAX_PROCESS_PATH];
@@ -86,7 +86,7 @@ namespace NewRelic { namespace Profiler
             return moduleName;
         }
 
-        virtual xstring_t GetParentProcessPath()
+        static xstring_t GetParentProcessPath()
         {
             const int MAX_PROCESS_PATH = 1024;
             wchar_t moduleName[MAX_PROCESS_PATH] = L"";
@@ -128,10 +128,10 @@ namespace NewRelic { namespace Profiler
             return moduleName;
         }
 
-        virtual uint32_t GetParentProcessId()
+        static uint32_t GetParentProcessId()
         {
             uint32_t ppid = 0;
-            const uint32_t pid = GetCurrentProcessId();
+            const uint32_t pid = ::GetCurrentProcessId();
             const HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
             if (hSnapshot == INVALID_HANDLE_VALUE)
@@ -164,7 +164,7 @@ namespace NewRelic { namespace Profiler
         }
 
 
-        virtual xstring_t GetProcessDirectoryPath()
+        static xstring_t GetProcessDirectoryPath()
         {
             const int MAX_PROCESS_PATH = 1024;
             wchar_t path[MAX_PROCESS_PATH];

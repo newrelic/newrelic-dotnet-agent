@@ -23,7 +23,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
     class MethodRewriter {
     public:
-        MethodRewriter(Configuration::InstrumentationConfigurationPtr instrumentationConfiguration, const xstring_t& corePath)
+        MethodRewriter(Configuration::InstrumentationConfigurationPtr instrumentationConfiguration, const xstring_t& corePath, const bool isCoreClr)
             : _instrumentationConfiguration(instrumentationConfiguration)
             , _instrumentedAssemblies(new std::set<xstring_t>())
             , _instrumentedFunctionNames(new std::set<xstring_t>())
@@ -32,6 +32,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             , _apiInstrumentor(std::make_unique<ApiInstrumentor>())
             , _defaultInstrumentor(std::make_unique<DefaultInstrumentor>())
             , _corePath(corePath)
+            , _isCoreClr(isCoreClr)
         {
             Initialize();
         }
@@ -41,6 +42,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             // We have to instrument mscorlib to add our hooks.  Yes, this is a little brittle
             // and it should probably live closer to the code that mucks with these methods.
             _instrumentedAssemblies->emplace(_X("mscorlib"));
+            _instrumentedAssemblies->emplace(_X("System.Private.CoreLib"));
             _instrumentedTypes->emplace(_X("System.CannotUnloadAppDomainException"));
             _instrumentedFunctionNames->emplace(_X("GetAppDomainBoolean"));
             _instrumentedFunctionNames->emplace(_X("GetThreadLocalBoolean"));
@@ -51,6 +53,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _instrumentedFunctionNames->emplace(_X("GetTypeViaReflectionOrThrow"));
             _instrumentedFunctionNames->emplace(_X("LoadAssemblyOrThrow"));
             _instrumentedFunctionNames->emplace(_X("StoreMethodInAppDomainStorageOrThrow"));
+            _instrumentedFunctionNames->emplace(_X("GetAgentMethodInvokerObject"));
+            _instrumentedFunctionNames->emplace(_X("GetAgentShimFinishTracerDelegateFunc"));
+            _instrumentedFunctionNames->emplace(_X("StoreAgentShimFinishTracerDelegateFunc"));
+            _instrumentedFunctionNames->emplace(_X("StoreAgentMethodInvokerObject"));
+            _instrumentedFunctionNames->emplace(_X("EnsureInitialized"));
+            _instrumentedFunctionNames->emplace(_X("InvokeAgentMethodInvokerFunc"));
 
             auto instrumentationPoints = _instrumentationConfiguration->GetInstrumentationPoints();
 
@@ -98,13 +106,13 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         }
 
         // instrument the provided method (if necessary)
-        void Instrument(IFunctionPtr function)
+        void Instrument(IFunctionPtr function, const AgentCallStyle::Strategy agentCallStrategy)
         {
             LogTrace("Possibly instrumenting: ", function->ToString());
 
             InstrumentationSettingsPtr instrumentationSettings = std::make_shared<InstrumentationSettings>(_instrumentationConfiguration, _corePath);
 
-            if (_helperInstrumentor->Instrument(function, instrumentationSettings) || _apiInstrumentor->Instrument(function, instrumentationSettings) || _defaultInstrumentor->Instrument(function, instrumentationSettings)) {
+            if (_helperInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr, agentCallStrategy) || _apiInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr, agentCallStrategy) || _defaultInstrumentor->Instrument(function, instrumentationSettings, _isCoreClr, agentCallStrategy)) {
             }
         }
 
@@ -118,6 +126,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
         std::unique_ptr<HelperInstrumentor> _helperInstrumentor;
         std::unique_ptr<ApiInstrumentor> _apiInstrumentor;
         std::unique_ptr<DefaultInstrumentor> _defaultInstrumentor;
+        bool _isCoreClr;
 
         static bool InSet(std::shared_ptr<std::set<xstring_t>> set, xstring_t value)
         {

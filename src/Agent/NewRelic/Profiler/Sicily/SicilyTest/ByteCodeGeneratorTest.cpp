@@ -32,7 +32,7 @@ namespace sicily
 
                 void TestPrimitive(ast::PrimitiveType::PrimitiveKind kind, unsigned char expectedByte)
                 {
-                    ast::TypePtr type(new ast::PrimitiveType(kind));
+                    ast::TypePtr type(new ast::PrimitiveType(kind, false));
                     ByteVector actualBytes = CreateBadFoodByteCodeGenerator().TypeToBytes(type);
                     BYTEVECTOR(expectedBytes, {expectedByte});
                     Assert::AreEqual(expectedBytes, actualBytes);
@@ -116,7 +116,7 @@ namespace sicily
 
                 TEST_METHOD(TestArrayTypeToBytes)
                 {
-                    ast::TypePtr innerType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL));
+                    ast::TypePtr innerType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kBOOL, false));
                     ast::TypePtr type(new ast::ArrayType(innerType));
                     ByteVector actualBytes = CreateBadFoodByteCodeGenerator().TypeToBytes(type);
                     // bool[] == 0x1d 0x02
@@ -135,7 +135,7 @@ namespace sicily
 
                 TEST_METHOD(TestGenericTypeToBytes)
                 {
-                    ast::PrimitiveTypePtr objectType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT));
+                    ast::PrimitiveTypePtr objectType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT, false));
                     ast::ArrayTypePtr objectArrayType(new ast::ArrayType(objectType));
                     ast::TypeListPtr genericParamTypes(new ast::TypeList());
                     genericParamTypes->Add(objectArrayType);
@@ -150,12 +150,12 @@ namespace sicily
                 TEST_METHOD(TestMethodTypeToBytes)
                 {
                     ast::ClassTypePtr targetType(new ast::ClassType(L"MyClass", L"MyAssembly"));
-                    ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kVOID));
+                    ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kVOID, false));
                     ast::TypeListPtr argTypes(new ast::TypeList());
-                    ast::PrimitiveTypePtr arg1Type(new ast::PrimitiveType(ast::PrimitiveType::PrimitiveKind::kBOOL));
+                    ast::PrimitiveTypePtr arg1Type(new ast::PrimitiveType(ast::PrimitiveType::PrimitiveKind::kBOOL, false));
                     argTypes->Add(arg1Type);
                     ast::TypeListPtr genericTypes(new ast::TypeList());
-                    ast::PrimitiveTypePtr generic1Type(new ast::PrimitiveType(ast::PrimitiveType::PrimitiveKind::kOBJECT));
+                    ast::PrimitiveTypePtr generic1Type(new ast::PrimitiveType(ast::PrimitiveType::PrimitiveKind::kOBJECT, false));
                     genericTypes->Add(generic1Type);
                     ast::TypePtr type(new ast::MethodType(targetType, L"MyMethod", returnType, true, argTypes, genericTypes));
 
@@ -166,15 +166,47 @@ namespace sicily
                     Assert::AreEqual(expectedBytes, actualBytes);
                 }
 
+                TEST_METHOD(TestMethodTypeToBytesWithRefParam)
+                {
+                    ast::ClassTypePtr targetType(new ast::ClassType(L"MyClass", L"MyAssembly"));
+                    ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kVOID, false));
+                    ast::TypeListPtr argTypes(new ast::TypeList());
+                    ast::PrimitiveTypePtr arg1Type(new ast::PrimitiveType(ast::PrimitiveType::PrimitiveKind::kBOOL, true));
+                    argTypes->Add(arg1Type);
+                    ast::TypeListPtr genericTypes(new ast::TypeList());
+                    ast::PrimitiveTypePtr generic1Type(new ast::PrimitiveType(ast::PrimitiveType::PrimitiveKind::kOBJECT, false));
+                    genericTypes->Add(generic1Type);
+                    ast::TypePtr type(new ast::MethodType(targetType, L"MyMethod", returnType, true, argTypes, genericTypes));
+
+                    auto actualBytes = CreateBadFoodByteCodeGenerator().TypeToBytes(type);
+                    // HASTHIS GENERIC GenParamCount ParamCount RetType Param*
+                    // (0x20 | 0x10) 0x01 0x01 0x01 0x02
+                    BYTEVECTOR(expectedBytes, 0x30, 0x01, 0x01, 0x01, 0x02, 0x10);
+                    Assert::AreEqual(expectedBytes, actualBytes);
+                }
+
+                TEST_METHOD(TestFieldTypeToBytes)
+                {
+                    ast::ClassTypePtr targetType(new ast::ClassType(L"MyClass", L"MyAssembly"));
+                    ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kI4, false));
+                    ast::TypePtr type(new ast::FieldType(targetType, L"MyField", returnType));
+
+                    auto actualBytes = CreateBadFoodByteCodeGenerator().TypeToBytes(type);
+                    // RetType 
+                    // 0x08
+                    BYTEVECTOR(expectedBytes, 0x08);
+                    Assert::AreEqual(expectedBytes, actualBytes);
+                }
+
                 TEST_METHOD(TestGenericMethodInstantiationToSignature)
                 {
                     ast::ClassTypePtr targetType(new ast::ClassType(L"MyClass", L"MyAssembly"));
-                    ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kVOID));
+                    ast::PrimitiveTypePtr returnType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kVOID, false));
                     ast::TypeListPtr argTypes(new ast::TypeList());
-                    ast::PrimitiveTypePtr arg1Type(new ast::PrimitiveType(ast::PrimitiveType::PrimitiveKind::kBOOL));
+                    ast::PrimitiveTypePtr arg1Type(new ast::PrimitiveType(ast::PrimitiveType::PrimitiveKind::kBOOL, false));
                     argTypes->Add(arg1Type);
                     ast::TypeListPtr genericTypes(new ast::TypeList());
-                    ast::PrimitiveTypePtr generic1Type(new ast::PrimitiveType(ast::PrimitiveType::PrimitiveKind::kOBJECT));
+                    ast::PrimitiveTypePtr generic1Type(new ast::PrimitiveType(ast::PrimitiveType::PrimitiveKind::kOBJECT, false));
                     genericTypes->Add(generic1Type);
                     ast::MethodTypePtr type(new ast::MethodType(targetType, L"MyMethod", returnType, true, argTypes, genericTypes));
 
@@ -187,7 +219,7 @@ namespace sicily
 
                 TEST_METHOD(TestGenericClassInstantiationToSignature)
                 {
-                    ast::PrimitiveTypePtr objectType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT));
+                    ast::PrimitiveTypePtr objectType(new ast::PrimitiveType(PrimitiveType::PrimitiveKind::kOBJECT, false));
                     ast::ArrayTypePtr objectArrayType(new ast::ArrayType(objectType));
                     ast::TypeListPtr genericParamTypes(new ast::TypeList());
                     genericParamTypes->Add(objectArrayType);

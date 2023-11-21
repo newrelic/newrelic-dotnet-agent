@@ -17,7 +17,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
     public:
         TEST_METHOD(append_short)
         {
-            auto instructionSet = InstructionSet(nullptr, nullptr);
+            auto instructionSet = InstructionSet(nullptr, nullptr, false);
 
             instructionSet.Append(CEE_LDNULL, (uint16_t)0xDEAD);
 
@@ -33,7 +33,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
         TEST_METHOD(append_integer)
         {
-            auto instructionSet = InstructionSet(nullptr, nullptr);
+            auto instructionSet = InstructionSet(nullptr, nullptr, false);
 
             instructionSet.Append(CEE_LDC_I4, (uint32_t)0xDEADBEEF);
             
@@ -51,7 +51,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 
         TEST_METHOD(append_long)
         {
-            auto instructionSet = InstructionSet(nullptr, nullptr);
+            auto instructionSet = InstructionSet(nullptr, nullptr, false);
 
             instructionSet.Append(CEE_LDC_I8, (uint64_t)0xBEEBDEADBEEFABBE);
 

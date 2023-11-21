@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include "../Common/xplat.h"
 #ifdef PAL_STDCPP_COMPAT
 #include "../Profiler/UnixSystemCalls.h"
 #else
@@ -25,7 +26,13 @@ namespace NewRelic { namespace Profiler { namespace Configuration { namespace Te
 
         virtual std::unique_ptr<xstring_t> TryGetEnvironmentVariable(const xstring_t& variableName) override
         {
-            return std::make_unique<xstring_t>(environmentVariables[variableName]);
+            auto search = environmentVariables.find(variableName);
+            if (search != environmentVariables.end())
+            {
+                return std::make_unique<xstring_t>(search->second);
+            }
+
+            return nullptr;
         }
 
         virtual bool FileExists(const xstring_t&) override

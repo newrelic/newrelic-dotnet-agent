@@ -27,6 +27,7 @@ namespace sicily {
         TOK_COMMA,
         TOK_ID,
         TOK_NUM,
+        TOK_AMPERSAND,
 
         TOK_INSTANCE,
         TOK_CLASS,
@@ -36,6 +37,8 @@ namespace sicily {
         TOK_VOID,
         TOK_BOOL,
         TOK_UINT32,
+        TOK_INT32,
+        TOK_UINT64
     };
 
     struct SemInfo {
