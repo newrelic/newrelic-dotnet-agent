@@ -11,7 +11,6 @@
 #include "../MethodRewriter/MethodRewriter.h"
 #include "CppUnitTest.h"
 #include "MockFunction.h"
-#include "MockSystemCalls.h"
 #include "UnreferencedFunctions.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;

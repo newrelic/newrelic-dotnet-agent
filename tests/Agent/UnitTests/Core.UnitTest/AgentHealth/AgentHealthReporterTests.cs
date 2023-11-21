@@ -9,6 +9,7 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -26,10 +27,12 @@ namespace NewRelic.Agent.Core.AgentHealth
         private AgentHealthReporter _agentHealthReporter;
         private List<MetricWireModel> _publishedMetrics;
         private ConfigurationAutoResponder _configurationAutoResponder;
+        private bool _enableLogging;
 
         [SetUp]
         public void SetUp()
         {
+            _enableLogging = true;
             var configuration = GetDefaultConfiguration();
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
@@ -45,13 +48,14 @@ namespace NewRelic.Agent.Core.AgentHealth
             _configurationAutoResponder.Dispose();
         }
 
-        private static IConfiguration GetDefaultConfiguration()
+        private IConfiguration GetDefaultConfiguration()
         {
             var configuration = Mock.Create<IConfiguration>();
             Mock.Arrange(() => configuration.LogEventCollectorEnabled).Returns(true);
             Mock.Arrange(() => configuration.LogDecoratorEnabled).Returns(true);
             Mock.Arrange(() => configuration.LogMetricsCollectorEnabled).Returns(true);
             Mock.Arrange(() => configuration.InfiniteTracingCompression).Returns(true);
+            Mock.Arrange(() => configuration.LoggingEnabled).Returns(() => _enableLogging);
             return configuration;
         }
 
@@ -424,6 +428,40 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
             CollectionAssert.IsNotSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
+        }
+
+        [Test]
+        public void LoggingDisabledSupportabilityMetricsPresent()
+        {
+            _enableLogging = false;
+            Log.FileLoggingHasFailed = true;
+            _agentHealthReporter.CollectMetrics();
+
+            var expectedMetricNamesAndValues = new Dictionary<string, long>
+            {
+                { "Supportability/DotNET/AgentLogging/Disabled", 1 },
+                { "Supportability/DotNET/AgentLogging/DisabledDueToError", 1 },
+            };
+            var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+
+            CollectionAssert.IsSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
+
+            Log.FileLoggingHasFailed = false;
+        }
+
+        [Test]
+        public void LoggingDisabledSupportabilityMetricsMissing()
+        {
+            Log.FileLoggingHasFailed = false;
+            _agentHealthReporter.CollectMetrics();
+
+            var expectedMetricNamesAndValues = new Dictionary<string, long>
+            {
+                { "Supportability/DotNET/AgentLogging/Disabled", 1 },
+                { "Supportability/DotNET/AgentLogging/DisabledDueToError", 1 },
+            };
+            Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/DotNET/AgentLogging/Disabled"));
+            Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/DotNET/AgentLogging/DisabledDueToError"));
         }
     }
 }

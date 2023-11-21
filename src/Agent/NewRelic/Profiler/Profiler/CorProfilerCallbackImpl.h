@@ -207,10 +207,29 @@ namespace NewRelic { namespace Profiler {
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
-                HRESULT loggingInitResult = InitializeLogging();
-                if (FAILED(loggingInitResult))
+                // A bit of a catch-22: we want to load the config file first in case there are logging
+                // settings, but we also want to log if there are issues with the config file.
+                // So first, we try to load the config file...
+                NewRelic::Profiler::Configuration::ConfigurationPtr configuration;
+                bool configFailed = false;
+                try
                 {
-                    return loggingInitResult;
+                    configuration = InitializeConfigAndSetLogLevel();
+                }
+                catch (...)
+                {
+                    configFailed = true;
+                }
+
+                // ...then we initialize the log
+                InitializeLogging();
+
+                // If we failed to load the config file, try again. Not because we expect it
+                // to succeed, but because we want to log the error. We couldn't do that the
+                // first time because the logger hadn't been initialized yet
+                if (configFailed)
+                {
+                    configuration = InitializeConfigAndSetLogLevel();
                 }
 
                 LogTrace(_productName);
@@ -222,7 +241,6 @@ namespace NewRelic { namespace Profiler {
                 //Init does not start threads or requires cleanup. RequestProfile will create the threads for the TP.
                 _threadProfiler.Init(_corProfilerInfo4);
 
-                auto configuration = InitializeConfigAndSetLogLevel();
 
                 HRESULT corePathInitResult = InitializeAndSetAgentCoreDllPath(_productName);
                 if (FAILED(corePathInitResult)) {
@@ -1064,21 +1082,24 @@ namespace NewRelic { namespace Profiler {
             return millisecondsInteger;
         }
 
-        HRESULT InitializeLogging()
+        void InitializeLogging()
         {
-            // if logging fails to initialize then just bail
-            try {
-                xstring_t logfilename(nrlog::DefaultFileLogLocation(_systemCalls).GetPathAndFileName());
-                std::string wlogfilename(std::begin(logfilename), std::end(logfilename));
-                nrlog::StdLog.get_dest().open(wlogfilename);
-                nrlog::StdLog.get_dest().exceptions(std::wostream::failbit | std::wostream::badbit);
-                LogInfo("Logger initialized.");
-            } catch (...) {
-                printf("Unable to initialize the New Relic .NET Agent log file.  Please make sure the logs directory is writeable.\n");
-                // we can't log errors if the logger failed to initialize
-                return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
+            // Only need to initialize the file if we're doing file logging
+            if (nrlog::StdLog.GetEnabled() && !nrlog::StdLog.GetConsoleLogging())
+            {
+                try {
+                    xstring_t logfilename(nrlog::DefaultFileLogLocation(_systemCalls).GetPathAndFileName());
+                    std::string wlogfilename(std::begin(logfilename), std::end(logfilename));
+                    nrlog::StdLog.get_dest().open(wlogfilename);
+                    nrlog::StdLog.get_dest().exceptions(std::wostream::failbit | std::wostream::badbit);
+                    LogInfo("Logger initialized.");
+                }
+                catch (...) {
+                    // If we fail to create a log file, there's no sense in trying to log going forward.
+                    // We want the Profiler continue to run, though, so swallow the exception
+                    nrlog::StdLog.SetEnabled(false);
+                }
             }
-            return S_OK;
         }
 
         std::shared_ptr<Configuration::Configuration> InitializeConfigAndSetLogLevel()
@@ -1089,7 +1110,20 @@ namespace NewRelic { namespace Profiler {
 
             auto configuration = std::make_shared<Configuration::Configuration>(globalNewRelicConfigurationXml, localNewRelicConfigurationXml, applicationConfigurationXml, _systemCalls);
             nrlog::StdLog.SetLevel(configuration->GetLoggingLevel());
-            LogInfo(L"<-- New logging level set: ", nrlog::GetLevelString(nrlog::StdLog.GetLevel()));
+            nrlog::StdLog.SetConsoleLogging(_systemCalls->GetConsoleLoggingEnabled(configuration->GetConsoleLogging()));
+            nrlog::StdLog.SetEnabled(_systemCalls->GetLoggingEnabled(configuration->GetLoggingEnabled()));
+            nrlog::StdLog.SetInitalized();
+
+            if (nrlog::StdLog.GetEnabled())
+            {
+                LogInfo(L"<-- New logging level set: ", nrlog::GetLevelString(nrlog::StdLog.GetLevel()));
+                if (nrlog::StdLog.GetConsoleLogging())
+                {
+                    LogInfo(L"Console logging enabled");
+                }
+            }
+            // While we would like to indicate that logging is disabled somehow, there's of
+            // course no log to write to
 
             return configuration;
         }

@@ -32,6 +32,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             : _agentEnabled(true)
             , _agentEnabledInLocalConfig(false)
             , _logLevel(Logger::Level::LEVEL_INFO)
+            , _consoleLogging(false)
+            , _loggingEnabled(true)
             , _processes(new Processes())
             , _applicationPoolsWhiteList(new ApplicationPools())
             , _applicationPoolsBlackList(new ApplicationPools())
@@ -118,6 +120,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             : _agentEnabled(agentEnabled)
             , _agentEnabledInLocalConfig(false)
             , _logLevel(logLevel)
+            , _consoleLogging(false)
+            , _loggingEnabled(true)
             , _processes(processes)
             , _applicationPoolsWhiteList(whiteList)
             , _applicationPoolsBlackList(blackList)
@@ -188,10 +192,21 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             return _logLevel;
         }
 
+        bool GetConsoleLogging()
+        {
+            return _consoleLogging;
+        }
+        bool GetLoggingEnabled()
+        {
+            return _loggingEnabled;
+        }
+
     private:
         bool _agentEnabled;
         bool _agentEnabledInLocalConfig;
         Logger::Level _logLevel;
+        bool _consoleLogging;
+        bool _loggingEnabled;
         ProcessesPtr _processes;
         ApplicationPoolsPtr _applicationPoolsWhiteList;
         ApplicationPoolsPtr _applicationPoolsBlackList;
@@ -249,6 +264,18 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
             auto logNode = configurationNode->first_node(_X("log"), 0, false);
             if (logNode == nullptr)
                 return;
+
+            auto consoleAttribute = logNode->first_attribute(_X("console"), 0, false);
+            if (consoleAttribute != nullptr)
+            {
+                _consoleLogging = Strings::AreEqualCaseInsensitive(consoleAttribute->value(), _X("true"));
+            }
+
+            auto enabledAttribute = logNode->first_attribute(_X("enabled"), 0, false);
+            if (enabledAttribute != nullptr)
+            {
+                _loggingEnabled = Strings::AreEqualCaseInsensitive(enabledAttribute->value(), _X("true"));
+            }
 
             auto logLevelAttribute = logNode->first_attribute(_X("level"), 0, false);
             if (logLevelAttribute == nullptr)

@@ -457,5 +457,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 { "the", "end" }
             };
         }
+
+        public bool LoggingEnabled => true;
     }
 }

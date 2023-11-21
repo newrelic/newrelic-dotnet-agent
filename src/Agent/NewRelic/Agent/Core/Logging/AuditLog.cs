@@ -38,12 +38,12 @@ namespace NewRelic.Agent.Core.Logging
 
         public static LoggerConfiguration IncludeOnlyAuditLog(this LoggerConfiguration loggerConfiguration)
         {
-            return loggerConfiguration.Filter.ByIncludingOnly($"{LogLevelExtensions.AuditLevel} is not null");
+            return loggerConfiguration.Filter.ByIncludingOnly(logEvent => logEvent.Properties.ContainsKey(LogLevelExtensions.AuditLevel));
         }
 
         public static LoggerConfiguration ExcludeAuditLog(this LoggerConfiguration loggerConfiguration)
         {
-            return loggerConfiguration.Filter.ByIncludingOnly($"{LogLevelExtensions.AuditLevel} is null");
+            return loggerConfiguration.Filter.ByIncludingOnly(logEvent => !logEvent.Properties.ContainsKey(LogLevelExtensions.AuditLevel));
         }
     }
 }

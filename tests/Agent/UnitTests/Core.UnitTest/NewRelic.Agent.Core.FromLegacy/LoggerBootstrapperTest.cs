@@ -7,6 +7,7 @@ using NewRelic.Core.Logging;
 using NUnit.Framework;
 using System.IO;
 using NewRelic.Testing.Assertions;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core
 {
@@ -14,6 +15,41 @@ namespace NewRelic.Agent.Core
     [TestFixture]
     public class LoggerBootstrapperTest
     {
+        private Func<string, string> _originalGetEnvironmentVar;
+        private Dictionary<string, string> _envVars = new Dictionary<string, string>();
+
+        private void SetEnvironmentVar(string name, string value)
+        {
+            _envVars[name] = value;
+        }
+
+        private void ClearEnvironmentVars() =>_envVars.Clear();
+
+        private string MockGetEnvironmentVar(string name)
+        {
+            if (_envVars.TryGetValue(name, out var value)) return value;
+            return null;
+        }
+
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            _originalGetEnvironmentVar = ConfigurationLoader.GetEnvironmentVar;
+            ConfigurationLoader.GetEnvironmentVar = MockGetEnvironmentVar;
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            ConfigurationLoader.GetEnvironmentVar = _originalGetEnvironmentVar;
+        }
+
+        [SetUp]
+        public void Setup()
+        {
+            ClearEnvironmentVars();
+        }
+
         [Test]
         public static void No_log_levels_are_enabled_when_config_log_is_off()
         {
@@ -111,6 +147,66 @@ namespace NewRelic.Agent.Core
             Assert.IsFalse(config.Console);
         }
 
+        [Test]
+        public static void Fatal_exception_can_be_recorded()
+        {
+            Assert.IsFalse(Log.FileLoggingHasFailed);
+            Log.FileLoggingHasFailed = true;
+            Assert.IsTrue(Log.FileLoggingHasFailed);
+        }
+
+        [Test]
+        [TestCase(null, false, false)]
+        [TestCase("0", true, false)]
+        [TestCase("0", false, false)]
+        [TestCase("false", true, false)]
+        [TestCase("false", false, false)]
+        [TestCase("1", true, true)]
+        [TestCase("1", false, true)]
+        [TestCase("true", true, true)]
+        [TestCase("true", false, true)]
+        [TestCase("not a valid bool", true, true)]
+        [TestCase("not a valid bool", false, false)]
+        public void test_ways_to_disable_logging(string envVarValue, bool logsEnabledInConfig, bool expectedLogConfig)
+        {
+            ILogConfig config;
+
+            if (envVarValue != null)
+            {
+                SetEnvironmentVar("NEW_RELIC_LOG_ENABLED", envVarValue);
+            }
+            config = LogConfigFixtureWithLogEnabled(logsEnabledInConfig);
+            Assert.AreEqual(config.Enabled, expectedLogConfig);
+        }
+
+        [Test]
+        [TestCase(null, false, false)]
+        [TestCase("0", true, false)]
+        [TestCase("0", false, false)]
+        [TestCase("false", true, false)]
+        [TestCase("false", false, false)]
+        [TestCase("1", true, true)]
+        [TestCase("1", false, true)]
+        [TestCase("true", true, true)]
+        [TestCase("true", false, true)]
+        [TestCase("not a valid bool", true, true)]
+        [TestCase("not a valid bool", false, false)]
+        public void test_ways_to_enable_console_logging(string envVarValue, bool consoleLogEnabledInConfig, bool expectedConsoleLogConfig)
+        {
+            ILogConfig config;
+
+            config = LogConfigFixtureWithConsoleEnabled(true);
+            Assert.IsTrue(config.Console);
+
+            if (envVarValue != null)
+            {
+                SetEnvironmentVar("NEW_RELIC_LOG_CONSOLE", envVarValue);
+            }
+            config = LogConfigFixtureWithConsoleEnabled(consoleLogEnabledInConfig);
+            Assert.AreEqual(config.Console, expectedConsoleLogConfig);
+        }
+
+
         private static ILogConfig GetLogConfig(string logLevel)
         {
             var xml = string.Format(
@@ -160,6 +256,43 @@ namespace NewRelic.Agent.Core
                 "   <log level=\"{0}\" console=\"true\"/>" +
                 "</configuration>",
                 logLevel);
+
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
+            return configuration.LogConfig;
+        }
+        private static ILogConfig LogConfigFixtureWithLogEnabled(bool enabled)
+        {
+            var xml = string.Format(
+                "<configuration xmlns=\"urn:newrelic-config\">" +
+                "   <service licenseKey=\"dude\"/>" +
+                "   <application>" +
+                "       <name>Test</name>" +
+                "   </application>" +
+                "   <log level=\"debug\" console=\"true\" enabled=\"{0}\" />" +
+                "</configuration>",
+                enabled.ToString().ToLower());
+
+            var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
+            Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);
+
+            var configuration = ConfigurationLoader.InitializeFromXml(xml, configSchemaSource);
+            return configuration.LogConfig;
+        }
+
+        private static ILogConfig LogConfigFixtureWithConsoleEnabled(bool enabled)
+        {
+            var xml = string.Format(
+                "<configuration xmlns=\"urn:newrelic-config\">" +
+                "   <service licenseKey=\"dude\"/>" +
+                "   <application>" +
+                "       <name>Test</name>" +
+                "   </application>" +
+                "   <log level=\"debug\" console=\"{0}\" />" +
+                "</configuration>",
+                enabled.ToString().ToLower());
 
             var xsdFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Configuration.xsd");
             Func<string> configSchemaSource = () => File.ReadAllText(xsdFile);

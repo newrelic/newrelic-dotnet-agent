@@ -23,6 +23,8 @@ namespace NewRelic.Core.Logging
             Logger = logger;
         }
 
+        public static bool FileLoggingHasFailed { get; set; }
+
         #region Error
 
         /// <summary>

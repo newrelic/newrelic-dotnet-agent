@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Linq;
@@ -49,7 +49,7 @@ namespace NewRelic.Agent.IntegrationTests.Configuration
             var match = IsCore ? CORE_LOG : FRAMEWORK_LOG;
 
             // Profiler should flag correctly regardless
-            Assert.True(_fixture.ProfilerLog.GetFileLines().Any(l => l.EndsWith(match)),
+            Assert.True(_fixture.ProfilerLog.GetFileLines().Any(l => l.Contains(match)),
                 $"Expected '{match}' in Profiler, but was not found.");
         }
     }

@@ -45,6 +45,9 @@ namespace NewRelic {
                     TEST_METHOD_INITIALIZE(MethodSetup)
                     {
                         StdLog.SetLevel(Level::LEVEL_INFO);
+                        StdLog.SetConsoleLogging(false);
+                        StdLog.SetEnabled(true);
+                        StdLog.SetInitalized();
                     }
 
                     TEST_METHOD(logger_verify_string_representation_of_levels)
@@ -182,7 +185,7 @@ namespace NewRelic {
                             LogError(L"Data too large to compress. ", std::hex, std::showbase, dataToCompress, std::resetiosflags(std::ios_base::basefield | std::ios_base::showbase));
                             AssertRegex(ERROR_PREFIX_REGEX L"Data too large to compress\\. 0xdeadbeef\n");
                         }
-                        { 
+                        {
                             //wchar_t NBTS
                             LogTrace(L"This is a small message.");
                             AssertRegex(TRACE_PREFIX_REGEX L"This is a small message\\.\n");
@@ -260,8 +263,8 @@ namespace NewRelic {
                         }
                         {
 
-                            wchar_t *source = L"<xml name:=foo>";
-                            const rapidxml::parse_error exception("what string", source+9);
+                            wchar_t* source = L"<xml name:=foo>";
+                            const rapidxml::parse_error exception("what string", source + 9);
                             LogError(L"Exception thrown while attempting to parse configuration file. ", exception.what(), L" at ", exception.where<wchar_t>());
                             AssertRegex(ERROR_PREFIX_REGEX L"Exception thrown while attempting to parse configuration file\\. what string at :=foo>\n");
                         }
@@ -317,7 +320,58 @@ namespace NewRelic {
                             auto str = StdLog.get_dest().str();
                             AssertRegex(ERROR_PREFIX_REGEX LR"X(Encountered unsupported instruction while attempting to generate byte code. Instruction: whipit.good)X" L"\n");
                         }
-                }
+                    }
+                    TEST_METHOD(logger_test_console)
+                    {
+                        StdLog.SetLevel(Level::LEVEL_TRACE);
+                        StdLog.SetConsoleLogging(true);
+                        ResetStdLog();
+
+                        LogInfo("blah blah blah");
+                        LogWarn("A warning");
+                        LogError("An error");
+
+                        AssertMessageCount(0);
+                    }
+
+                    TEST_METHOD(logger_test_console_restrictions)
+                    {
+                        ResetStdLog();
+                        StdLog.SetLevel(Level::LEVEL_TRACE);
+                        StdLog.SetConsoleLogging(true);
+                        Assert::AreEqual(StdLog.GetLevel(), Level::LEVEL_INFO);
+
+                        ResetStdLog();
+                        StdLog.SetConsoleLogging(false);
+                        StdLog.SetLevel(Level::LEVEL_TRACE);
+                        Assert::AreEqual(StdLog.GetLevel(), Level::LEVEL_TRACE);
+
+                        ResetStdLog();
+                        StdLog.SetLevel(Level::LEVEL_WARN);
+                        StdLog.SetConsoleLogging(true);
+                        Assert::AreEqual(StdLog.GetLevel(), Level::LEVEL_WARN);
+
+                        // Disabling console logging should revert to the original log level
+                        StdLog.SetConsoleLogging(true);
+                        StdLog.SetLevel(Level::LEVEL_DEBUG);
+                        Assert::AreEqual(StdLog.GetLevel(), Level::LEVEL_INFO);
+                        StdLog.SetConsoleLogging(false);
+                        Assert::AreEqual(StdLog.GetLevel(), Level::LEVEL_DEBUG);
+                    }
+
+                    TEST_METHOD(logger_test_disabled)
+                    {
+                        StdLog.SetLevel(Level::LEVEL_TRACE);
+                        StdLog.SetEnabled(false);
+                        ResetStdLog();
+
+                        LogInfo("blah blah blah");
+                        LogWarn("A warning");
+                        LogError("An error");
+
+                        AssertMessageCount(0);
+                    }
+
 
 
                     //------------------------------------------------------------
