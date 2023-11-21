@@ -49,19 +49,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
         virtual bool GetIsAppDomainCachingDisabled()
         {
-            auto value = TryGetEnvironmentVariable(_X("NEW_RELIC_DISABLE_APPDOMAIN_CACHING"));
-
-            if (value == nullptr)
-            {
-                return false;
-            }
-
-            if(Strings::AreEqualCaseInsensitive(*value, _X("true")) || Strings::AreEqualCaseInsensitive(*value, _X("1")))
-            {
-                return true;
-            }
-
-            return false;
+            return GetEnvironmentBool(_X("NEW_RELIC_DISABLE_APPDOMAIN_CACHING"), false);
         }
 
         virtual std::unique_ptr<xstring_t> GetProfilerDelay()
@@ -89,8 +77,48 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             return TryGetEnvironmentVariable(_X("APP_POOL_ID"));
         }
 
+        virtual bool GetLoggingEnabled(bool fallback)
+        {
+            return GetEnvironmentBool(_X("NEW_RELIC_LOG_ENABLED"), fallback);
+        }
+
+        virtual bool GetConsoleLoggingEnabled(bool fallback)
+        {
+            return GetEnvironmentBool(_X("NEW_RELIC_LOG_CONSOLE"), fallback);
+        }
+
+
+
     private:
         bool _isCoreClr = false;
+        /// <summary>
+        /// Gets an environment variable that should be a boolean
+        /// </summary>
+        /// <param name="variableName">Name of the environment variable to fetch</param>
+        /// <param name="fallback">If the environment variable doesn't
+        /// exist, or the value isn't 0/1/true/false, return the given fallback value</param>
+        /// <returns>The value of the environment variable, or the fallback</returns>
+        bool GetEnvironmentBool(const xstring_t& variableName, bool fallback)
+        {
+            auto value = TryGetEnvironmentVariable(variableName);
+
+            if (value == nullptr)
+            {
+                return fallback;
+            }
+
+            if (Strings::AreEqualCaseInsensitive(*value, _X("true")) || Strings::AreEqualCaseInsensitive(*value, _X("1")))
+            {
+                return true;
+            }
+
+            if (Strings::AreEqualCaseInsensitive(*value, _X("false")) || Strings::AreEqualCaseInsensitive(*value, _X("0")))
+            {
+                return false;
+            }
+
+            return fallback;
+        }
     };
     typedef std::shared_ptr<ISystemCalls> ISystemCallsPtr;
     typedef std::set<xstring_t> FilePaths;

@@ -182,7 +182,6 @@
   <ItemGroup>
     <ClInclude Include="MockFunction.h" />
     <ClInclude Include="MockFunctionHeaderInfo.h" />
-    <ClInclude Include="MockSystemCalls.h" />
     <ClInclude Include="MockTokenizer.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TestTemplates.h" />

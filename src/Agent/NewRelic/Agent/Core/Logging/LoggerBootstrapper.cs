@@ -31,10 +31,7 @@ namespace NewRelic.Agent.Core
 
         private static InMemorySink _inMemorySink = new InMemorySink();
 
-        public static void UpdateLoggingLevel(string newLogLevel)
-        {
-            _loggingLevelSwitch.MinimumLevel = newLogLevel.MapToSerilogLogLevel();
-        }
+        public static void SetLoggingLevel(string newLogLevel) => _loggingLevelSwitch.MinimumLevel = newLogLevel.MapToSerilogLogLevel();
 
         public static void Initialize()
         {
@@ -54,7 +51,7 @@ namespace NewRelic.Agent.Core
         /// <remarks>This should only be called once, as soon as you have a valid config.</remarks>
         public static void ConfigureLogger(ILogConfig config)
         {
-            SetupLogLevel(config);
+            SetLoggingLevel(config.LogLevel);
 
             AuditLog.IsAuditLogEnabled = config.IsAuditLogEnabled;
 
@@ -78,6 +75,8 @@ namespace NewRelic.Agent.Core
             Log.Logger = configuredLogger;
 
             NewRelic.Core.Logging.Log.Initialize(new Logger());
+
+            Log.Logger.Information("Log level set to {0}", config.LogLevel);
         }
 
         private static void EchoInMemoryLogsToConfiguredLogger(ILogger configuredLogger)
@@ -89,12 +88,6 @@ namespace NewRelic.Agent.Core
 
             _inMemorySink.Dispose();
         }
-
-        /// <summary>
-        /// Sets the log level for logger to either the level provided by the config or an public default.
-        /// </summary>
-        /// <param name="config">The LogConfig to look for the level setting in.</param>
-        private static void SetupLogLevel(ILogConfig config) => _loggingLevelSwitch.MinimumLevel = config.LogLevel.MapToSerilogLogLevel();
 
         private static LoggerConfiguration ConfigureInMemoryLogSink(this LoggerConfiguration loggerConfiguration)
         {
@@ -195,6 +188,10 @@ namespace NewRelic.Agent.Core
         /// <param name="config">The configuration for the appender.</param>
         private static LoggerConfiguration ConfigureFileSink(this LoggerConfiguration loggerConfiguration, ILogConfig config)
         {
+            if (!config.Enabled)
+            {
+                return loggerConfiguration;
+            }
             string logFileName = config.GetFullLogFileName();
 
             try
@@ -215,6 +212,7 @@ namespace NewRelic.Agent.Core
                 Log.Logger.Warning(ex, "Unexpected exception when configuring file sink.");
 
                 // Fallback to the event log sink if we cannot setup a file logger.
+                NewRelic.Core.Logging.Log.FileLoggingHasFailed = true;
                 Log.Logger.Warning("Falling back to EventLog sink.");
                 loggerConfiguration.ConfigureEventLogSink();
             }
@@ -227,7 +225,7 @@ namespace NewRelic.Agent.Core
         /// </summary>
         private static LoggerConfiguration ConfigureAuditLogSink(this LoggerConfiguration loggerConfiguration, ILogConfig config)
         {
-            if (!config.IsAuditLogEnabled) return loggerConfiguration;
+            if (!config.IsAuditLogEnabled || !config.Enabled) return loggerConfiguration;
 
             string logFileName = config.GetFullLogFileName().Replace(".log", "_audit.log");
 

@@ -131,9 +131,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
 
-
-        private string AgentLogFileName { get { return CommonUtils.GetAgentLogFileNameFromNewRelicConfig(DestinationNewRelicConfigFilePath); } }
-
         #endregion
 
         #region Abstract/Virtual
@@ -226,10 +223,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         protected string DestinationLocalNewRelicConfigFilePath { get { return Path.Combine(DestinationApplicationDirectoryPath, "newrelic.config"); } }
 
         public string DestinationNewRelicExtensionsDirectoryPath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "extensions"); } }
-
-        private AgentLogFile _agentLogFile;
-
-        public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, this, AgentLogFileName, Timing.TimeToWaitForLog));
 
         public ProfilerLogFile ProfilerLog { get { return new ProfilerLogFile(DefaultLogFileDirectoryPath, Timing.TimeToConnect); } }
 

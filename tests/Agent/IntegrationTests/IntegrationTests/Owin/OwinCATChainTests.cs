@@ -40,7 +40,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 {
                     _fixture.ExecuteTraceRequestChainHttpClient();
 
-                    _fixture.ReceiverApplication.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(2));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.AnalyticsEventDataLogLineRegex, TimeSpan.FromMinutes(2));
                 }
             );
 
@@ -53,7 +53,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             var senderAppTxEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
             Assert.NotNull(senderAppTxEvent);
 
-            var receiverAppTxEvent = _fixture.ReceiverApplication.AgentLog.GetTransactionEvents().FirstOrDefault();
+            var receiverAppTxEvent = _fixture.ReceiverAppAgentLog.GetTransactionEvents().FirstOrDefault();
             Assert.NotNull(receiverAppTxEvent);
 
             var expectedSenderAttributes = new List<string>

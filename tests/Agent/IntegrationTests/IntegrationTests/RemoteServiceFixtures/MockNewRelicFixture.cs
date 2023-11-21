@@ -135,7 +135,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             {
                 base.Initialize();
 
-                RemoteApplication.AgentLog.WaitForLogLine(AgentLogFile.ShutdownLogLineRegex, TimeSpan.FromMinutes(2));
+                AgentLog.WaitForLogLine(AgentLogFile.ShutdownLogLineRegex, TimeSpan.FromMinutes(2));
                 MockNewRelicApplication.Shutdown();
                 MockNewRelicApplication.CapturedOutput?.WriteProcessOutputToLog("MockNewRelic application:");
             }
@@ -150,7 +150,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public override void ShutdownRemoteApplication()
         {
             base.ShutdownRemoteApplication();
-            RemoteApplication.AgentLog.WaitForLogLine(AgentLogFile.ShutdownLogLineRegex, TimeSpan.FromMinutes(2));
+            AgentLog.WaitForLogLine(AgentLogFile.ShutdownLogLineRegex, TimeSpan.FromMinutes(2));
             MockNewRelicApplication.Shutdown();
         }
 

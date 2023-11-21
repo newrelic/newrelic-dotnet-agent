@@ -5,6 +5,8 @@ namespace NewRelic.Agent.Core.Config
 {
     public interface ILogConfig
     {
+        bool Enabled { get; }
+
         string LogLevel { get; }
 
         string GetFullLogFileName();

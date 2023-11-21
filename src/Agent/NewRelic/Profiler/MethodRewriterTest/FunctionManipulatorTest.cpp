@@ -8,7 +8,6 @@
 
 #include "../Common/Macros.h"
 #include "MockFunction.h"
-#include "MockSystemCalls.h"
 #include "../MethodRewriter/FunctionManipulator.h"
 #include "../MethodRewriter/InstrumentFunctionManipulator.h"
 
