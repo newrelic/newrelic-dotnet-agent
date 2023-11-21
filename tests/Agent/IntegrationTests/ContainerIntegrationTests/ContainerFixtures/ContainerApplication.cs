@@ -189,6 +189,7 @@ public class ContainerApplication : RemoteApplication
     private void CleanupContainer()
     {
         Console.WriteLine($"[{AppName} {DateTime.Now}] Cleaning up container and images related to {ContainerName} container.");
+        TestLogger?.WriteLine($"[{AppName}] Cleaning up container and images related to {ContainerName} container.");
         // ensure there's no stray containers or images laying around
         Process.Start("docker", $"container rm --force {ContainerName}");
         Process.Start("docker", $"image rm --force {ContainerName}");
@@ -197,12 +198,16 @@ public class ContainerApplication : RemoteApplication
         {
             foreach (var dep in DockerDependencies)
             {
+                Console.WriteLine($"[{AppName} {DateTime.Now}] Removing dependent container: {dep}.");
+                TestLogger?.WriteLine($"[{AppName}] Removing dependent container: {dep}.");
                 Process.Start("docker", $"container rm --force {dep}");
             }
         }
 
+#if DEBUG
         // Cleanup the networks with no attached containers. Mainly for testings on dev laptops - they can build up and block runs.
         Process.Start("docker", "network prune -f");
+#endif
     }
 
     protected virtual void WaitForAppServerToStartListening(Process process, bool captureStandardOutput)
