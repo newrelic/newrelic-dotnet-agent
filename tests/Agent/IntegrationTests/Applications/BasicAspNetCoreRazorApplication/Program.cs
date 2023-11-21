@@ -69,7 +69,7 @@ namespace BasicAspNetCoreRazorApplication
 
             AppLifecycleManager.WaitForTestCompletion(_port);
 
-            ct.Cancel();
+            await ct.CancelAsync();
 
             await task;
         }
