@@ -60,7 +60,7 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public override string AppName => $"ContainerApplication: {_dotnetVersion}-{_distroTag}_{_targetArch}";
+    public override string AppName => $"{_dockerComposeServiceName}_{_dotnetVersion}-{_distroTag}_{_targetArch}";
 
     private string ContainerName => $"{_dockerComposeServiceName}_{_dotnetVersion}-{_distroTag}_{_targetArch}".ToLower(); // must be lowercase
 
