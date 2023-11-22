@@ -1483,6 +1483,21 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.AppDomainCachingDisabled;
         }
 
+        [TestCase(null, ExpectedResult = false)]
+        [TestCase("invalidValue", ExpectedResult = false)]
+        [TestCase("False", ExpectedResult = false)]
+        [TestCase("false", ExpectedResult = false)]
+        [TestCase("0", ExpectedResult = false)]
+        [TestCase("1", ExpectedResult = true)]
+        [TestCase("True", ExpectedResult = true)]
+        [TestCase("true", ExpectedResult = true)]
+        public bool LegacyCachingEnabledWorksAsExpected(string environmentLegacyCachingEnabled)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_ENABLE_LEGACY_CACHING")).Returns(environmentLegacyCachingEnabled);
+
+            return _defaultConfig.LegacyCachingEnabled;
+        }
+
         [TestCase(true, null, ExpectedResult = true)]
         [TestCase(false, null, ExpectedResult = false)]
         [TestCase(true, "true", ExpectedResult = true)]

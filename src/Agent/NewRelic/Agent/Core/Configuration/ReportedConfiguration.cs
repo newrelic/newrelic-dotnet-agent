@@ -605,6 +605,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.app_domain_caching_disabled")]
         public bool AppDomainCachingDisabled => _configuration.AppDomainCachingDisabled;
 
+        [JsonProperty("agent.legacy_caching_enabled")]
+        public bool LegacyCachingEnabled => _configuration.LegacyCachingEnabled;
+
         [JsonProperty("agent.force_new_transaction_on_new_thread_enabled")]
         public bool ForceNewTransactionOnNewThread => _configuration.ForceNewTransactionOnNewThread;
 

@@ -2033,6 +2033,14 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
+        public virtual bool LegacyCachingEnabled
+        {
+            get
+            {
+                return EnvironmentOverrides(false, "NEW_RELIC_ENABLE_LEGACY_CACHING");
+            }
+        }
+
         public virtual bool ForceNewTransactionOnNewThread
         {
             get

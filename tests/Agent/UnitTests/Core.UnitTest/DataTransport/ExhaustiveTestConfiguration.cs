@@ -421,6 +421,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public bool AppDomainCachingDisabled => true;
 
+        public bool LegacyCachingEnabled => false;
+
         public bool ForceNewTransactionOnNewThread => true;
 
         public bool CodeLevelMetricsEnabled => true;
