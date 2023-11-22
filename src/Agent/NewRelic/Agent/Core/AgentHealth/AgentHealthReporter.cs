@@ -671,6 +671,14 @@ namespace NewRelic.Agent.Core.AgentHealth
             }
         }
 
+        public void ReportIfLegacyCachingEnabled()
+        {
+            if (_configuration.LegacyCachingEnabled)
+            {
+                ReportSupportabilityCountMetric(MetricNames.SupportabilityLegacyCachingEnabled);
+            }
+        }
+
         public void ReportLogForwardingConfiguredValues()
         {
             ReportSupportabilityCountMetric(MetricNames.GetSupportabilityLogMetricsConfiguredName(_configuration.LogMetricsCollectorEnabled));
@@ -694,6 +702,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
             ReportLogForwardingConfiguredValues();
             ReportIfAppDomainCachingDisabled();
+            ReportIfLegacyCachingEnabled();
             ReportInfiniteTracingOneTimeMetrics();
             ReportIfLoggingDisabled();
         }
