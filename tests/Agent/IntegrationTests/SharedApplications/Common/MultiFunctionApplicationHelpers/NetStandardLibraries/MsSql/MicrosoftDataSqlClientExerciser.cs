@@ -16,16 +16,8 @@ using System.Threading;
 namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
 {
     [Library]
-    public class MicrosoftDataSqlClientExerciser
+    public class MicrosoftDataSqlClientExerciser : MsSqlExerciserBase
     {
-
-        private const string InsertPersonMsSql = "INSERT INTO {0} (FirstName, LastName, Email) VALUES('Testy', 'McTesterson', 'testy@mctesterson.com')";
-        private const string DeletePersonMsSql = "DELETE FROM {0} WHERE Email = 'testy@mctesterson.com'";
-        private const string CountPersonMsSql = "SELECT COUNT(*) FROM {0} WITH(nolock)";
-        private static readonly string CreateProcedureStatement = @"CREATE OR ALTER PROCEDURE [dbo].[{0}] {1} AS RETURN 0";
-        private const string CreatePersonTableMsSql = "CREATE TABLE {0} (FirstName varchar(20) NOT NULL, LastName varchar(20) NOT NULL, Email varchar(50) NOT NULL)";
-        private const string DropPersonTableMsSql = "IF (OBJECT_ID('{0}') IS NOT NULL) DROP TABLE {0}";
-        private const string DropProcedureSql = "IF (OBJECT_ID('{0}') IS NOT NULL) DROP PROCEDURE {0}";
 
         [LibraryMethod]
         [Transaction]
@@ -38,7 +30,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             {
                 connection.Open();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'", connection))
+                using (var command = new SqlCommand(SelectPersonByFirstNameMsSql, connection))
                 {
 
                     using (var reader = command.ExecuteReader())
@@ -88,7 +80,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             {
                 await connection.OpenAsync();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE LastName = 'Doe'", connection))
+                using (var command = new SqlCommand(SelectPersonByLastNameMsSql, connection))
                 {
                     using (var reader = await command.ExecuteReaderAsync())
                     {
@@ -137,7 +129,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             {
                 connection.Open();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = @FN", connection))
+                using (var command = new SqlCommand(SelectPersonByParameterizedFirstNameMsSql, connection))
                 {
                     command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@FN" : "FN", "O'Keefe"));
                     using (var reader = command.ExecuteReader())
@@ -168,7 +160,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             {
                 await connection.OpenAsync();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE LastName = @LN", connection))
+                using (var command = new SqlCommand(SelectPersonByParameterizedLastNameMsSql, connection))
                 {
                     command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@LN" : "LN", "Lee"));
                     using (var reader = await command.ExecuteReaderAsync())
