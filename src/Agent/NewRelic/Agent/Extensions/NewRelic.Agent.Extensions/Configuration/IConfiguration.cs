@@ -195,6 +195,7 @@ namespace NewRelic.Agent.Configuration
         IEnumerable<string> ContextDataInclude { get; }
         IEnumerable<string> ContextDataExclude { get; }
         bool AppDomainCachingDisabled { get; }
+        bool LegacyCachingEnabled { get; }
         bool ForceNewTransactionOnNewThread { get; }
         bool CodeLevelMetricsEnabled {  get; }
         TimeSpan MetricsHarvestCycle { get; }

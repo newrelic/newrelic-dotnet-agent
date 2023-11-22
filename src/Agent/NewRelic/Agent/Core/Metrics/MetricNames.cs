@@ -830,8 +830,9 @@ namespace NewRelic.Agent.Core.Metrics
             return SupportabilityInstallTypePs + installType;
         }
 
-        // AppDomain caching disabled
+        // Injected code agent call style metric names
         public const string SupportabilityAppDomainCachingDisabled = "Supportability/DotNET/AppDomainCaching/Disabled";
+        public const string SupportabilityLegacyCachingEnabled = "Supportability/DotNET/LegacyCaching/Enabled";
 
         public const string SupportabilityLoggingDisabled = "Supportability/DotNET/AgentLogging/Disabled";
         public const string SupportabilityLoggingFatalError = "Supportability/DotNET/AgentLogging/DisabledDueToError";

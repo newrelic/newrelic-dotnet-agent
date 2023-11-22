@@ -28,11 +28,15 @@ namespace NewRelic.Agent.Core.AgentHealth
         private List<MetricWireModel> _publishedMetrics;
         private ConfigurationAutoResponder _configurationAutoResponder;
         private bool _enableLogging;
+        private bool _disableAppDomainCache;
+        private bool _enableLegacyCache;
 
         [SetUp]
         public void SetUp()
         {
             _enableLogging = true;
+            _disableAppDomainCache = false;
+            _enableLegacyCache = false;
             var configuration = GetDefaultConfiguration();
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
@@ -56,6 +60,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             Mock.Arrange(() => configuration.LogMetricsCollectorEnabled).Returns(true);
             Mock.Arrange(() => configuration.InfiniteTracingCompression).Returns(true);
             Mock.Arrange(() => configuration.LoggingEnabled).Returns(() => _enableLogging);
+            Mock.Arrange(() => configuration.AppDomainCachingDisabled).Returns(() => _disableAppDomainCache);
+            Mock.Arrange(() => configuration.LegacyCachingEnabled).Returns(() => _enableLegacyCache);
             return configuration;
         }
 
@@ -462,6 +468,44 @@ namespace NewRelic.Agent.Core.AgentHealth
             };
             Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/DotNET/AgentLogging/Disabled"));
             Assert.False(_publishedMetrics.Any(x => x.MetricName.Name == "Supportability/DotNET/AgentLogging/DisabledDueToError"));
+        }
+
+        [Test]
+        public void ReportsInjectedCodeCallStyleMetricsOnlyOnce()
+        {
+            _enableLegacyCache = true;
+            _disableAppDomainCache = true;
+
+            var expectedOneTimeMetrics = new Dictionary<string, long>
+            {
+                { "Supportability/DotNET/AppDomainCaching/Disabled", 1 },
+                { "Supportability/DotNET/LegacyCaching/Enabled", 1 }
+            };
+
+            _agentHealthReporter.CollectMetrics();
+            var firstCollectionMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+            CollectionAssert.IsSubsetOf(expectedOneTimeMetrics, firstCollectionMetricNamesAndValues);
+
+            _agentHealthReporter.CollectMetrics();
+            var secondCollectionMetricNames = _publishedMetrics.Select(x => x.MetricName);
+            CollectionAssert.IsNotSubsetOf(expectedOneTimeMetrics.Keys, secondCollectionMetricNames);
+        }
+
+        [Test]
+        public void DoesNotReportInjectedCodeCallStyleMetricsWhenDefaultValueIsConfigured()
+        {
+            _enableLegacyCache = false;
+            _disableAppDomainCache = false;
+
+            var expectedOneTimeMetrics = new Dictionary<string, long>
+            {
+                { "Supportability/DotNET/AppDomainCaching/Disabled", 1 },
+                { "Supportability/DotNET/LegacyCaching/Enabled", 1 }
+            };
+
+            _agentHealthReporter.CollectMetrics();
+            var secondCollectionMetricNames = _publishedMetrics.Select(x => x.MetricName);
+            CollectionAssert.IsNotSubsetOf(expectedOneTimeMetrics.Keys, secondCollectionMetricNames);
         }
     }
 }
