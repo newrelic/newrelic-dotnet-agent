@@ -160,7 +160,7 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
         [LibraryMethod]
         [Transaction]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public async Task<string> MsSqlAsync_WithParameterizedQuery(string tableName, bool paramsWithAtSign)
+        public async Task<string> MsSqlAsync_WithParameterizedQuery(bool paramsWithAtSign)
         {
             var teamMembers = new List<string>();
 
@@ -168,9 +168,9 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
             {
                 await connection.OpenAsync();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = @FN", connection))
+                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE LastName = @LN", connection))
                 {
-                    command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@FN" : "FN", "O'Keefe"));
+                    command.Parameters.Add(new SqlParameter(paramsWithAtSign ? "@LN" : "LN", "Lee"));
                     using (var reader = await command.ExecuteReaderAsync())
                     {
                         while (await reader.ReadAsync())
@@ -182,25 +182,6 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql
                             }
                         }
                     }
-                }
-
-                var insertSql = string.Format(InsertPersonMsSql, tableName);
-                var countSql = string.Format(CountPersonMsSql, tableName);
-                var deleteSql = string.Format(DeletePersonMsSql, tableName);
-
-                using (var command = new SqlCommand(insertSql, connection))
-                {
-                    var insertCount = await command.ExecuteNonQueryAsync();
-                }
-
-                using (var command = new SqlCommand(countSql, connection))
-                {
-                    var teamMemberCount = await command.ExecuteScalarAsync();
-                }
-
-                using (var command = new SqlCommand(deleteSql, connection))
-                {
-                    var deleteCount = await command.ExecuteNonQueryAsync();
                 }
             }
 
