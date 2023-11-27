@@ -20,20 +20,33 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     {
         private readonly ConsoleDynamicMethodFixture _fixture;
         private readonly string _expectedTransactionName;
+        private readonly string _expectedAsyncTransactionName;
         private readonly string _tableName;
+        private readonly string _asyncTableName;
+        private readonly string _libraryName;
 
-        public MsSqlTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName) : base(fixture)
+        public MsSqlTestsBase(TFixture fixture, ITestOutputHelper output, string excerciserName, string libraryName) : base(fixture)
         {
             MsSqlWarmupHelper.WarmupMsSql();
 
             _fixture = fixture;
             _fixture.TestLogger = output;
             _expectedTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSql";
+            _expectedAsyncTransactionName = $"OtherTransaction/Custom/MultiFunctionApplicationHelpers.NetStandardLibraries.MsSql.{excerciserName}/MsSqlAsync";
+
+            //Using different table names for the sync and async calls prevents sql traces from being merged
             _tableName = Utilities.GenerateTableName();
+            _asyncTableName = Utilities.GenerateTableName();
+            _libraryName = libraryName;
 
             _fixture.AddCommand($"{excerciserName} CreateTable {_tableName}");
+            _fixture.AddCommand($"{excerciserName} CreateTable {_asyncTableName}");
             _fixture.AddCommand($"{excerciserName} MsSql {_tableName}");
+            _fixture.AddCommand($"{excerciserName} MsSqlAsync {_asyncTableName}");
+            _fixture.AddCommand($"{excerciserName} Wait 5000"); // TBD if this is really necessary
+
             _fixture.AddCommand($"{excerciserName} DropTable {_tableName}");
+            _fixture.AddCommand($"{excerciserName} DropTable {_asyncTableName}");
 
             _fixture.AddActions
             (
@@ -55,6 +68,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 },
                 exerciseApplication: () =>
                 {
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.SqlTraceDataLogLineRegex, TimeSpan.FromMinutes(1));
                 }
             );
@@ -64,10 +78,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         [Fact]
         public void Test()
         {
-            var expectedDatastoreCallCount = 4;
-            //This value is dictated by the query that is being run as part of this test. In this case, we're running a query that returns a single row.
-            //This results in a call to Read, NextResult and then a final Read. Therefore the call count for the Iterate metric should be 3.
-            var expectedIterateCallCount = 3;
+            var expectedDatastoreCallCount = 8;
+            //This value is dictated by the queries that are being run as part of this test. In this case, we're running two queries that each return a single row.
+            //This results in a call to Read, NextResult and then a final Read. Therefore the overall call count for the Iterate metric should be 6.
+            var expectedIterateCallCount = 6;
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -75,41 +89,46 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/all", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", callCount = expectedDatastoreCallCount },
+
+                new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/Open", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"DotNet/{_libraryName}.SqlConnection/OpenAsync", callCount = 1 },
+
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)}/default", callCount = expectedDatastoreCallCount},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/teammembers/select", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = _expectedTransactionName},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 4 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 2 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = _expectedTransactionName},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = _expectedAsyncTransactionName},
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/select", callCount = 1, metricScope = _expectedTransactionName},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/select", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/select", callCount = 1, metricScope = _expectedAsyncTransactionName},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/insert", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/insert", callCount = 1, metricScope = _expectedTransactionName},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/insert", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/insert", callCount = 1, metricScope = _expectedAsyncTransactionName},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/delete", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_tableName}/delete", callCount = 1, metricScope = _expectedTransactionName},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/delete", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_asyncTableName}/delete", callCount = 1, metricScope = _expectedAsyncTransactionName},
                 new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = _expectedTransactionName}
+                new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount / 2, metricScope = _expectedTransactionName},
+                new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount / 2, metricScope = _expectedAsyncTransactionName}
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 // The operation metric should not be scoped because the statement metric is scoped instead
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", metricScope = _expectedTransactionName },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", metricScope = _expectedTransactionName },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", metricScope = _expectedTransactionName }
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", metricScope = _expectedTransactionName },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", metricScope = _expectedAsyncTransactionName },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", metricScope = _expectedAsyncTransactionName },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", metricScope = _expectedAsyncTransactionName }
             };
             var expectedTransactionTraceSegments = new List<string>
             {
-                $"Datastore/statement/MSSQL/teammembers/select"
-            };
-
-            var expectedTransactionTraceSegmentParameters = new List<Assertions.ExpectedSegmentParameter>
-            {
-                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "explain_plan" },
-                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "sql", parameterValue = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = ?"},
-                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "host", parameterValue = CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)},
-                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "port_path_or_id", parameterValue = "default"},
-                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "database_name", parameterValue = "NewRelic"}
-
+                "Datastore/statement/MSSQL/teammembers/select"
             };
 
             var expectedTransactionEventIntrinsicAttributes = new List<string>
@@ -117,11 +136,34 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 "databaseDuration"
             };
 
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+            var syncTransactionSample = _fixture.AgentLog.TryGetTransactionSample(_expectedTransactionName);
+            var syncTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_expectedTransactionName);
+            var asyncTransactionSample = _fixture.AgentLog.TryGetTransactionSample(_expectedAsyncTransactionName);
+            var asyncTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_expectedAsyncTransactionName);
+            var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
+
+            // Some variable expectations based on which transaction was sampled
+            var sampledTransactionSample = syncTransactionSample != null ? syncTransactionSample : asyncTransactionSample;
+            var firstOrLastNameQueried = syncTransactionSample != null ? "FirstName" : "LastName";
+
+            var expectedTransactionTraceSegmentParameters = new List<Assertions.ExpectedSegmentParameter>
+            {
+                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "explain_plan" },
+                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "sql", parameterValue = $"SELECT * FROM NewRelic.dbo.TeamMembers WHERE {firstOrLastNameQueried} = ?"},
+                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "host", parameterValue = CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)},
+                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "port_path_or_id", parameterValue = "default"},
+                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "database_name", parameterValue = "NewRelic"}
+
+            };
+
+
+            // There should be a total of 8 traces: 4 for the sync methods and 4 for the async methods.
             var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
             {
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = _expectedTransactionName,
+                    TransactionName = _expectedTransactionName, //sync select
                     Sql = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = ?",
                     DatastoreMetricName = "Datastore/statement/MSSQL/teammembers/select",
 
@@ -129,7 +171,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 },
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = _expectedTransactionName,
+                    TransactionName = _expectedAsyncTransactionName, //async select - note querying LastName
+                    Sql = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE LastName = ?",
+                    DatastoreMetricName = "Datastore/statement/MSSQL/teammembers/select",
+
+                    HasExplainPlan = true
+                },
+                new Assertions.ExpectedSqlTrace
+                {
+                    TransactionName = _expectedTransactionName, //sync count
                     Sql = $"SELECT COUNT(*) FROM {_tableName} WITH(nolock)",
                     DatastoreMetricName = $"Datastore/statement/MSSQL/{_tableName}/select",
 
@@ -137,7 +187,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 },
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = _expectedTransactionName,
+                    TransactionName = _expectedAsyncTransactionName, //async count
+                    Sql = $"SELECT COUNT(*) FROM {_asyncTableName} WITH(nolock)",
+                    DatastoreMetricName = $"Datastore/statement/MSSQL/{_asyncTableName}/select",
+
+                    HasExplainPlan = true
+                },
+                new Assertions.ExpectedSqlTrace
+                {
+                    TransactionName = _expectedTransactionName, //sync insert
                     Sql = $"INSERT INTO {_tableName} (FirstName, LastName, Email) VALUES(?, ?, ?)",
                     DatastoreMetricName = $"Datastore/statement/MSSQL/{_tableName}/insert",
 
@@ -145,33 +203,46 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
                 },
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = _expectedTransactionName,
+                    TransactionName = _expectedAsyncTransactionName, //async insert
+                    Sql = $"INSERT INTO {_asyncTableName} (FirstName, LastName, Email) VALUES(?, ?, ?)",
+                    DatastoreMetricName = $"Datastore/statement/MSSQL/{_asyncTableName}/insert",
+
+                    HasExplainPlan = true
+                },
+                new Assertions.ExpectedSqlTrace
+                {
+                    TransactionName = _expectedTransactionName, //sync delete
                     Sql = $"DELETE FROM {_tableName} WHERE Email = ?",
                     DatastoreMetricName = $"Datastore/statement/MSSQL/{_tableName}/delete",
+
+                    HasExplainPlan = true
+                },
+                new Assertions.ExpectedSqlTrace
+                {
+                    TransactionName = _expectedAsyncTransactionName, //async delete
+                    Sql = $"DELETE FROM {_asyncTableName} WHERE Email = ?",
+                    DatastoreMetricName = $"Datastore/statement/MSSQL/{_asyncTableName}/delete",
 
                     HasExplainPlan = true
                 }
             };
 
-            var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample(_expectedTransactionName);
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(_expectedTransactionName);
-            var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
-
             NrAssert.Multiple(
-                () => Assert.NotNull(transactionSample),
-                () => Assert.NotNull(transactionEvent)
+                () => Assert.NotNull(sampledTransactionSample),
+                () => Assert.NotNull(syncTransactionEvent),
+                () => Assert.NotNull(asyncTransactionEvent)
                 );
 
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
-                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, sampledTransactionSample),
 
-                () => Assertions.TransactionTraceSegmentParametersExist(expectedTransactionTraceSegmentParameters, transactionSample),
+                () => Assertions.TransactionTraceSegmentParametersExist(expectedTransactionTraceSegmentParameters, sampledTransactionSample),
 
-                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, transactionEvent),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, syncTransactionEvent),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, asyncTransactionEvent),
                 () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
             );
         }
@@ -184,7 +255,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "SystemDataExerciser")
+                  excerciserName: "SystemDataExerciser",
+                  libraryName: "System.Data.SqlClient")
         {
         }
     }
@@ -196,7 +268,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "SystemDataSqlClientExerciser")
+                  excerciserName: "SystemDataSqlClientExerciser",
+                  libraryName: "System.Data.SqlClient")
         {
         }
     }
@@ -208,7 +281,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "SystemDataSqlClientExerciser")
+                  excerciserName: "SystemDataSqlClientExerciser",
+                  libraryName: "System.Data.SqlClient")
         {
         }
     }
@@ -220,7 +294,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser")
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  libraryName: "Microsoft.Data.SqlClient")
         {
         }
     }
@@ -232,7 +307,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser")
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  libraryName: "Microsoft.Data.SqlClient")
         {
         }
     }
@@ -244,7 +320,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser")
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  libraryName: "Microsoft.Data.SqlClient")
         {
         }
     }
@@ -256,7 +333,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
             : base(
                   fixture: fixture,
                   output: output,
-                  excerciserName: "MicrosoftDataSqlClientExerciser")
+                  excerciserName: "MicrosoftDataSqlClientExerciser",
+                  libraryName: "Microsoft.Data.SqlClient")
         {
         }
     }
