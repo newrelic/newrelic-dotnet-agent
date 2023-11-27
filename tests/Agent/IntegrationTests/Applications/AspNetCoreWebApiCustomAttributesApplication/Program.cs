@@ -34,7 +34,7 @@ namespace AspNetCoreWebApiCustomAttributesApplication
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .UseUrls(string.Format(@"http://localhost:{0}/", _port))
+                .UseUrls(string.Format(@"http://127.0.0.1:{0}/", _port))
                 .Build();
     }
 }

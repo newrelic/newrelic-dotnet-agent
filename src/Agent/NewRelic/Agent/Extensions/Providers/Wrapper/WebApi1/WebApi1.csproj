@@ -5,6 +5,9 @@
     <AssemblyName>NewRelic.Providers.Wrapper.WebApi1</AssemblyName>
     <Description>Web API 1 Wrapper Provider for New Relic .NET Agent</Description>
   </PropertyGroup>
+  <PropertyGroup>
+    <NoWarn>NU1903</NoWarn> <!-- System.Net.Http 2.0 has a high security vulnerability, but we have to reference that pacakage -->
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Net.Http" Version="2.0.20710.0" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="4.0.20710.0" />

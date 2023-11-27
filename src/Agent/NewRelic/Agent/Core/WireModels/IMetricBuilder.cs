@@ -205,5 +205,8 @@ namespace NewRelic.Agent.Core.WireModels
         MetricWireModel TryBuildSupportabilityLoggingEventsSentMetric(int loggingEventCount);
 
         MetricWireModel TryBuildSupportabilityLoggingEventsDroppedMetric(int droppedCount);
+
+        MetricWireModel TryBuildCountMetric(string metricName, long count);
+        MetricWireModel TryBuildByteMetric(string metricName, long totalBytes, long? exclusiveBytes = null);
     }
 }

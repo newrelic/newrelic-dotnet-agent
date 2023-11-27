@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -20,8 +21,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public bool Found => File.Exists(_filePath);
 
-        public AgentLogFile(string logDirectoryPath, RemoteApplication remoteApplication, string fileName = "", TimeSpan? timeoutOrZero = null, bool throwIfNotFound = true)
-            : base(remoteApplication)
+        public AgentLogFile(string logDirectoryPath, ITestOutputHelper testLogger, string fileName = "", TimeSpan? timeoutOrZero = null, bool throwIfNotFound = true)
+            : base(testLogger)
         {
             Contract.Assert(logDirectoryPath != null);
 

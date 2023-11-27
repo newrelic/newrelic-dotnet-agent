@@ -176,12 +176,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ConfigOverrideTest.cpp" />
     <ClCompile Include="ShouldInstrumentTest.cpp" />
     <ClCompile Include="ConfigurationTest.cpp" />
     <ClCompile Include="InstrumentationConfigurationTest.cpp" />
     <ClCompile Include="InstrumentationPointTest.cpp" />
     <ClCompile Include="StringsTest.cpp" />
     <ClCompile Include="TestModuleAttributes.cpp" />
+    <ClInclude Include="MockSystemCalls.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ConfigurationTestTemplates.h" />
     <ClInclude Include="UnreferencedFunctions.h" />

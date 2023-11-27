@@ -2085,7 +2085,6 @@ namespace NewRelic.Agent.Core.Configuration
             _diagnosticsCaptureAgentTimingFrequency = configFreq;
         }
 
-
         private bool? _forceSynchronousTimingCalculationHttpClient;
         public bool ForceSynchronousTimingCalculationHttpClient
         {
@@ -2094,6 +2093,17 @@ namespace NewRelic.Agent.Core.Configuration
                 return _forceSynchronousTimingCalculationHttpClient.HasValue
                     ? _forceSynchronousTimingCalculationHttpClient.Value
                     : (_forceSynchronousTimingCalculationHttpClient = TryGetAppSettingAsBoolWithDefault("ForceSynchronousTimingCalculation.HttpClient", false)).Value;
+            }
+        }
+
+        private bool? _enableAspNetCore6PlusBrowserInjection;
+        public bool EnableAspNetCore6PlusBrowserInjection
+        {
+            get
+            {
+                return _enableAspNetCore6PlusBrowserInjection.HasValue
+                    ? _enableAspNetCore6PlusBrowserInjection.Value
+                    : (_enableAspNetCore6PlusBrowserInjection = TryGetAppSettingAsBoolWithDefault("EnableAspNetCore6PlusBrowserInjection", false)).Value;
             }
         }
 
@@ -2764,6 +2774,8 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         #endregion
+
+        public bool LoggingEnabled => _localConfiguration.log.Enabled;
 
         private const bool CaptureTransactionTraceAttributesDefault = true;
         private const bool CaptureErrorCollectorAttributesDefault = true;

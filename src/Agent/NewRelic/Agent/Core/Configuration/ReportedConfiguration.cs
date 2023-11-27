@@ -575,6 +575,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("agent.force_synchronous_timing_calculation_for_http_client")]
         public bool ForceSynchronousTimingCalculationHttpClient => _configuration.ForceSynchronousTimingCalculationHttpClient;
 
+        [JsonProperty("agent.enable_asp_net_core_6plus_browser_injection")]
+        public bool EnableAspNetCore6PlusBrowserInjection => _configuration.EnableAspNetCore6PlusBrowserInjection;
+
         [JsonProperty("agent.exclude_new_relic_header")]
         public bool ExcludeNewrelicHeader => _configuration.ExcludeNewrelicHeader;
 
@@ -643,6 +646,9 @@ namespace NewRelic.Agent.Core.Configuration
 
         [JsonProperty("stackexchangeredis_cleanup.cycle")]
         public TimeSpan StackExchangeRedisCleanupCycle => _configuration.StackExchangeRedisCleanupCycle;
+
+        [JsonProperty("agent.logging_enabled")]
+        public bool LoggingEnabled => _configuration.LoggingEnabled;
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
         {

@@ -10,6 +10,7 @@ namespace NewRelic.Agent.Core
     /// <summary>
     /// Maps serilog log level to corresponding "legacy" log4net loglevel and adds the mapped value as a property named NRLogLevel
     /// </summary>
+    [NrExcludeFromCodeCoverage]
     internal class NrLogLevelEnricher : ILogEventEnricher
     {
         [NrExcludeFromCodeCoverage]

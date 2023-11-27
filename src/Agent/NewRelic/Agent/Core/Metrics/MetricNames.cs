@@ -160,6 +160,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string OtherTransactionPrefix = "OtherTransaction";
         public const string WebTransactionPrefix = "WebTransaction";
         public const string SupportabilityPayloadsDroppedDueToMaxPayloadLimitPrefix = Supportability + PathSeparator + "DotNet/Collector" + PathSeparator + "MaxPayloadSizeLimit";
+        public const string KafkaMessageBrokerConsume = "Consume";
 
         public static readonly char PathSeparatorChar = PathSeparator[0];
         public static readonly char[] PathSeparatorCharArray = { PathSeparatorChar };
@@ -199,6 +200,7 @@ namespace NewRelic.Agent.Core.Metrics
                 });
         }
 
+        
         public static MetricName GetCustom(string suffix)
         {
             return MetricName.Create(Custom, suffix);
@@ -357,6 +359,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string MessageBrokerNamed = "Named";
         public const string MessageBrokerTemp = "Temp";
         public const string Msmq = "MSMQ";
+        public const string Serialization = "Serialization";
 
         public static MetricName GetMessageBroker(MessageBrokerDestinationType type, MessageBrokerAction action,
             string vendor, string queueName)
@@ -365,6 +368,14 @@ namespace NewRelic.Agent.Core.Metrics
             return (queueName != null)
                 ? MetricName.Create(MessageBrokerPrefix, vendor, normalizedType, action, MessageBrokerNamed, queueName)
                 : MetricName.Create(MessageBrokerPrefix, vendor, normalizedType, action, MessageBrokerTemp);
+        }
+
+        public static MetricName GetMessageBrokerSerialization(MessageBrokerDestinationType type, MessageBrokerAction action,
+            string vendor, string queueName, string kind)
+        {
+            var normalizedType = NormalizeMessageBrokerDestinationTypeForMetricName(type);
+            return MetricName.Create(MessageBrokerPrefix, vendor, normalizedType, action, MessageBrokerNamed, queueName, Serialization, kind);
+
         }
 
         private static MessageBrokerDestinationType NormalizeMessageBrokerDestinationTypeForMetricName(
@@ -381,6 +392,14 @@ namespace NewRelic.Agent.Core.Metrics
             }
 
             return type;
+        }
+
+        private const string KakfaTopic = "Topic";
+        private const string KakfaReceived = "Received";
+        private const string KakfaMessages = "Messages";
+        public static MetricName GetKafkaMessagesReceivedPerConsume(string topic)
+        {
+            return MetricName.Create(Message, "Kafka", KakfaTopic, MessageBrokerNamed, topic, KakfaReceived, KakfaMessages);
         }
 
         #endregion MessageBroker
@@ -814,6 +833,9 @@ namespace NewRelic.Agent.Core.Metrics
         // AppDomain caching disabled
         public const string SupportabilityAppDomainCachingDisabled = "Supportability/DotNET/AppDomainCaching/Disabled";
 
+        public const string SupportabilityLoggingDisabled = "Supportability/DotNET/AgentLogging/Disabled";
+        public const string SupportabilityLoggingFatalError = "Supportability/DotNET/AgentLogging/DisabledDueToError";
+
         #endregion Supportability
 
         #region Distributed Trace Metrics
@@ -1045,6 +1067,7 @@ namespace NewRelic.Agent.Core.Metrics
         public const string SupportabilityLoggingEventsSent = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Sent";
         public const string SupportabilityLoggingEventsCollected = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Seen";
         public const string SupportabilityLoggingEventsDropped = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Dropped";
+        public const string SupportabilityLoggingEventEmpty = SupportabilityLoggingEventsPs + Forwarding + PathSeparator + "Empty";
 
         public static string GetLoggingMetricsLinesBySeverityName(string logLevel)
         {

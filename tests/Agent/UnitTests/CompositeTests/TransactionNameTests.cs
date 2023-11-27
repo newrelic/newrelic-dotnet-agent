@@ -177,6 +177,33 @@ namespace CompositeTests
             NrAssert.Multiple(
                 () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
                 () => Assert.AreEqual("OtherTransaction/Message/vendor/Queue/Named/dest", transactionTrace.TransactionMetricName)
+            );
+        }
+
+        [Test]
+        public void SetKafkaMessageBrokerTransactionName_UpdatesTransactionNameCorrectly()
+        {
+            var transaction = _agent.CreateTransaction(
+                isWeb: true,
+                category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+                transactionDisplayName: "name",
+                doNotTrackAsUnitOfWork: true);
+            transaction.SetKafkaMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, "vendor", "dest", TransactionNamePriority.Route);
+            var segment = _agent.StartTransactionSegmentOrThrow("simpleName");
+            segment.End();
+            transaction.End();
+
+            _compositeTestAgent.Harvest();
+
+            var expectedMetrics = new[]
+            {
+                new ExpectedMetric {Name = "OtherTransaction/Message/vendor/Topic/Consume/Named/dest"}
+            };
+            var actualMetrics = _compositeTestAgent.Metrics.ToList();
+            var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+            NrAssert.Multiple(
+                () => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
+                () => Assert.AreEqual("OtherTransaction/Message/vendor/Topic/Consume/Named/dest", transactionTrace.TransactionMetricName)
                 );
         }
 

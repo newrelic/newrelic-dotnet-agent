@@ -291,6 +291,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 MetricBuilder.TryBuildClientApplicationMetric(referrerCrossProcessId, catResponseTime, catResponseTime, txStats);
             }
 
+            // Capture required Kafka metrics
+            if (immutableTransaction.TransactionName.Name.StartsWith("Message/Kafka/Topic/Consume/Named"))
+            {
+
+                MetricBuilder.TryBuildKafkaMessagesReceivedMetric(immutableTransaction.TransactionName.Name, 1, txStats);
+            }
+
             using (_agentTimerService.StartNew("CollectMetrics"))
             {
                 _metricAggregator.Collect(txStats);

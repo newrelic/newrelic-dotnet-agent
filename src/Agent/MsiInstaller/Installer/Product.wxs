@@ -465,6 +465,15 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="ElasticsearchWrapperComponent" Guid="{9C233889-69DD-4B8B-A1A6-ABAC6E27A716}">
         <File Id="ElasticsearchWrapperFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Elasticsearch.dll"/>
       </Component>
+      <Component Id="MassTransitWrapperComponent" Guid="{E133AC42-B96B-46E5-BB9B-0E001AB6EC73}">
+        <File Id="MassTransitWrapperFile" Name="NewRelic.Providers.Wrapper.MassTransit.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.MassTransit.dll"/>
+      </Component>
+      <Component Id="MassTransitLegacyWrapperComponent" Guid="{E44779CC-4C76-4AB1-9CE3-5C225A7202FB}">
+        <File Id="MassTransitLegacyWrapperFile" Name="NewRelic.Providers.Wrapper.MassTransitLegacy.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.dll"/>
+      </Component>
+      <Component Id="KafkaWrapperComponent" Guid="{BE97F5F5-A392-48A0-8888-B2973EA09490}">
+        <File Id="KafkaWrapperFile" Name="NewRelic.Providers.Wrapper.Kafka.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Kafka.dll"/>
+      </Component>
 
       <!-- Reference libraries -->
       <Component Id="NewRelicCoreReferenceComponent" Guid="{C196ED1E-0FBA-4D36-9C34-E969B0C9E8C9}">
@@ -520,9 +529,21 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreNServiceBusWrapperComponent" Guid="{E315AE98-119D-4E46-BACB-C28CF6016C19}">
         <File Id="CoreNServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.NServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.NServiceBus.dll"/>
-      </Component>  
+      </Component>
       <Component Id="CoreElasticsearchWrapperComponent" Guid="{531A713C-B46C-41C8-8B21-49CBD4C0A459}">
         <File Id="CoreElasticsearchWrapperFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Elasticsearch.dll"/>
+      </Component>
+      <Component Id="CoreMassTransitWrapperComponent" Guid="{9E905BC4-D844-4E9C-AC2E-560C837CDDB8}">
+        <File Id="CoreMassTransitWrapperFile" Name="NewRelic.Providers.Wrapper.MassTransit.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.MassTransit.dll"/>
+      </Component>
+      <Component Id="CoreMassTransitLegacyWrapperComponent" Guid="{8E94ECF6-B1A8-4D83-BDE8-71055FA33C34}">
+        <File Id="CoreMassTransitLegacyWrapperFile" Name="NewRelic.Providers.Wrapper.MassTransitLegacy.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.dll"/>
+      </Component>
+      <Component Id="CoreKafkaWrapperComponent" Guid="{6CA6D5A4-A204-4B04-A6B5-13D8B3E736C2}">
+        <File Id="CoreKafkaWrapperFile" Name="NewRelic.Providers.Wrapper.Kafka.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Kafka.dll"/>
+      </Component>
+      <Component Id="CoreAspNetCore6PlusWrapperComponent" Guid="{3B7C5E60-BA9D-4B1C-8B16-B16025B075C0}">
+        <File Id="CoreAspNetCore6PlusWrapperFile" Name="NewRelic.Providers.Wrapper.AspNetCore6Plus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AspNetCore6Plus.dll"/>
       </Component>
 
       <!-- Reference libraries -->
@@ -629,6 +650,15 @@ SPDX-License-Identifier: Apache-2.0
       <Component Id="ElasticsearchInstrumentationComponent" Guid="{42D85537-D0AB-44EB-8BE5-4B2EEB26DE91}">
         <File Id="ElasticsearchInstrumentationFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml"/>
       </Component>
+      <Component Id="MassTransitInstrumentationComponent" Guid="{D8DBC7D6-0337-4441-A5BB-C6670300144A}">
+        <File Id="MassTransitInstrumentationFile" Name="NewRelic.Providers.Wrapper.MassTransit.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.MassTransit.Instrumentation.xml"/>
+      </Component>
+      <Component Id="MassTransitLegacyInstrumentationComponent" Guid="{FAD302C1-07BE-4770-85E4-F6EE25E287F3}">
+        <File Id="MassTransitLegacyInstrumentationFile" Name="NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml"/>
+      </Component>
+      <Component Id="KafkaInstrumentationComponent" Guid="{9FC86A0E-CACD-4DA8-84F8-20997C904913}">
+        <File Id="KafkaInstrumentationFile" Name="NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml"/>
+      </Component>
     </ComponentGroup>
 
     <ComponentGroup Id="CoreNewRelic.Agent.Extensions.Instrumentation" Directory="CoreExtensionsFolder">
@@ -676,6 +706,18 @@ SPDX-License-Identifier: Apache-2.0
       </Component>
       <Component Id="CoreElasticsearchInstrumentationComponent" Guid="{02EFBFF6-9DA8-4138-A03F-E9502B631A76}">
         <File Id="CoreElasticsearchInstrumentationFile" Name="NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Elasticsearch.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreMassTransitInstrumentationComponent" Guid="{7420F63A-BEC7-47E4-A8B3-B81A270DBEB9}">
+        <File Id="CoreMassTransitInstrumentationFile" Name="NewRelic.Providers.Wrapper.MassTransit.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.MassTransit.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreMassTransitLegacyInstrumentationComponent" Guid="{A55ED281-B7FA-4BBC-B760-47495EB19BC1}">
+        <File Id="CoreMassTransitLegacyInstrumentationFile" Name="NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.MassTransitLegacy.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreKafkaInstrumentationComponent" Guid="{B2C4F83B-A339-4DBD-B8C4-760C8F72F9FC}">
+        <File Id="CoreKafkaInstrumentationFile" Name="NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.Kafka.Instrumentation.xml"/>
+      </Component>
+      <Component Id="CoreAspNetCore6PlusInstrumentationComponent" Guid="{1CC1E672-5AA5-4F6F-A736-748EA556653A}">
+        <File Id="CoreAspNetCore6PlusInstrumentationFile" Name="NewRelic.Providers.Wrapper.AspNetCore6Plus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)_coreclr\extensions\NewRelic.Providers.Wrapper.AspNetCore6Plus.Instrumentation.xml"/>
       </Component>
     </ComponentGroup>
 

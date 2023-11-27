@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.19.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.19.1...v10.19.2) (2023-11-09)
+
+
+### Fixes
+
+* ASP.NET Core 6+ browser agent injection is disabled by default. ([e571ac1](https://github.com/newrelic/newrelic-dotnet-agent/commit/e571ac1094a86b6717a0d356432e067727f25130))
+
+## [10.19.1](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.19.0...v10.19.1) (2023-11-08)
+
+
+### Fixes
+
+* Add defensive coding and exception handling during ASP.NET Core 6+ browser injection. ([#2035](https://github.com/newrelic/newrelic-dotnet-agent/issues/2035)) ([#2038](https://github.com/newrelic/newrelic-dotnet-agent/issues/2038)) ([5ddd0ea](https://github.com/newrelic/newrelic-dotnet-agent/commit/5ddd0ea6cd196da5a9aa4b00a8c097c111211251))
+
+## [10.19.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.18.0...v10.19.0) (2023-11-07)
+
+
+### New features
+
+* Add a supportability metric (Supportability/Logging/Forwarding/Empty) when an "empty" log event is not forwarded. Resolves [#1472](https://github.com/newrelic/newrelic-dotnet-agent/issues/1472) ([1db5335](https://github.com/newrelic/newrelic-dotnet-agent/commit/1db5335d2ada4e6e1a9b1da7f406a3e9fc1ef8e3))
+* Add automatic browser agent injection for ASP.NET Core v6+ web applications. ([14c6bb1](https://github.com/newrelic/newrelic-dotnet-agent/commit/14c6bb15030e1744bdd85a46610c1fc269bb58c4))
+* Add automatic instrumentation for ASP.NET Core v6+ Razor Pages. ([14c6bb1](https://github.com/newrelic/newrelic-dotnet-agent/commit/14c6bb15030e1744bdd85a46610c1fc269bb58c4))
+* Add automatic instrumentation of MassTransit clients v7.1.0 and newer. [#1282](https://github.com/newrelic/newrelic-dotnet-agent/issues/1282) ([3b79002](https://github.com/newrelic/newrelic-dotnet-agent/commit/3b790029242d92abf6c766af81715ab474c2384c))
+* Add new span attributes to more closely match OTel spec. This includes server.address and server.port for database calls, and thread.id where appropriate. ([9500d4d](https://github.com/newrelic/newrelic-dotnet-agent/commit/9500d4d52fe583015799bdb02e9b2585b3769b6f))
+* Allow forwarding of logs where context data is present but the message and exception are missing. Previously, logs with no message or exception were not forwarded, even if they held context data. ([1db5335](https://github.com/newrelic/newrelic-dotnet-agent/commit/1db5335d2ada4e6e1a9b1da7f406a3e9fc1ef8e3))
+* Enable auto-instrumentation for Confluent.Kafka versions 1.4.0 to 2.x.x. ([#1990](https://github.com/newrelic/newrelic-dotnet-agent/issues/1990)) ([9f8d22f](https://github.com/newrelic/newrelic-dotnet-agent/commit/9f8d22fc383020bcee20c12bc2b3321c345ba8d9))
+* Update RabbitMQ instrumentation to capture more message consumption scenarios. ([3b79002](https://github.com/newrelic/newrelic-dotnet-agent/commit/3b790029242d92abf6c766af81715ab474c2384c))
+
+
+### Fixes
+
+* Ensure log lines are written to the audit log file when audit logging is enabled. ([#2028](https://github.com/newrelic/newrelic-dotnet-agent/issues/2028)) ([#2029](https://github.com/newrelic/newrelic-dotnet-agent/issues/2029)) ([c6b940d](https://github.com/newrelic/newrelic-dotnet-agent/commit/c6b940d1c51e79acfa918504bf3adbfbb3e379e5))
+* Fix a segfault when using sendDataOnExit with Linux on Docker. ([#2018](https://github.com/newrelic/newrelic-dotnet-agent/issues/2018)) ([3ac75a0](https://github.com/newrelic/newrelic-dotnet-agent/commit/3ac75a0073bee60859475d3fa1f08e8edfe932ee))
+* Reduce exception logging on CallVendorApi failures. Resolves [#2005](https://github.com/newrelic/newrelic-dotnet-agent/issues/2005) ([#2006](https://github.com/newrelic/newrelic-dotnet-agent/issues/2006)) ([bf4102b](https://github.com/newrelic/newrelic-dotnet-agent/commit/bf4102b75ef4bc036ba4c5ae8f1da2ad12cbe1be))
+
 ## [10.18.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.17.0...v10.18.0) (2023-10-17)
 
 

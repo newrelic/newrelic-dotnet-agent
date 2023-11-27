@@ -53,6 +53,7 @@ namespace NewRelic.Agent.Core.Segments
             Data.AttachSegmentDataState(this);
             Combinable = false;
             IsLeaf = false;
+            IsAsync = methodCallData.IsAsync;
         }
 
         /// <summary>
@@ -75,6 +76,7 @@ namespace NewRelic.Agent.Core.Segments
             Data.AttachSegmentDataState(this);
             Combinable = false;
             IsLeaf = true;
+            IsAsync = methodCallData.IsAsync;
         }
 
         /// <summary>
@@ -105,6 +107,7 @@ namespace NewRelic.Agent.Core.Segments
             }
 
             SpanId = segment.SpanId;
+            IsAsync = segment.IsAsync;
         }
 
         public bool IsDone
@@ -207,6 +210,15 @@ namespace NewRelic.Agent.Core.Segments
             _transactionSegmentState.CallStackPop(this);
         }
 
+        public void SetMessageBrokerDestination(string destination)
+        {
+            if (SegmentData is MessageBrokerSegmentData)
+            {
+                var messageBrokerSegmentData = SegmentData as MessageBrokerSegmentData;
+                messageBrokerSegmentData!.Destination = destination;
+            }
+        }
+
         private const long NoEndTime = -1;
         internal static NoOpSegment NoOpSegment = new NoOpSegment();
         protected readonly static IEnumerable<KeyValuePair<string, object>> EmptyImmutableParameters = new KeyValuePair<string, object>[0];
@@ -228,6 +240,8 @@ namespace NewRelic.Agent.Core.Segments
         /// Returns the thread id of the current thread when this segment was created.
         /// </summary>
         public int ThreadId { get; private set; }
+
+        public bool IsAsync { get; private set; }
 
         // used to set the ["unfinished"] parameter, not for real-time state of segment
         public bool Unfinished { get; private set; }
@@ -335,6 +349,11 @@ namespace NewRelic.Agent.Core.Segments
                 AttribDefs.CodeFunction.TrySetValue(attribValues, codeFunction);
             }
 
+            if (!IsAsync)
+            {
+                AttribDefs.ThreadId.TrySetValue(attribValues, ThreadId);
+            }
+
             Data.SetSpanTypeSpecificAttributes(attribValues);
 
             return attribValues;
@@ -400,7 +419,7 @@ namespace NewRelic.Agent.Core.Segments
 
         public string ToStringForFinestLogging()
         {
-            return $"Id={UniqueId},ParentId={ParentUniqueId?.ToString() ?? "Root"},Name={Data.GetTransactionTraceName()},IsLeaf={IsLeaf},Combinable={Combinable},MethodCallData={MethodCallData}";
+            return $"Id={UniqueId},ParentId={ParentUniqueId?.ToString() ?? "Root"},Name={GetTransactionTraceName()},IsLeaf={IsLeaf},Combinable={Combinable},MethodCallData={MethodCallData}";
         }
 
         public ISegmentExperimental SetSegmentData(ISegmentData segmentData)
@@ -441,5 +460,6 @@ namespace NewRelic.Agent.Core.Segments
         {
             return EnumNameCache<SpanCategory>.GetName(Data.SpanCategory);
         }
+
     }
 }

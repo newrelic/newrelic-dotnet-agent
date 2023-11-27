@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -45,8 +46,8 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
 
                     _fixture.ExecuteTraceRequestChain("WebRequestCallNext", "WebRequestCallNext", "CallEnd", headers);
 
-                    _fixture.FirstCallApplication.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
-                    _fixture.SecondCallApplication.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
+                    _fixture.FirstCallAppAgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
+                    _fixture.SecondCallAppAgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
                     _fixture.AgentLog.WaitForLogLines(AgentLogBase.TransactionTransformCompletedLogLineRegex, TimeSpan.FromSeconds(15), ExpectedTransactionCount);
                 }
             );
@@ -56,14 +57,14 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
         [Fact]
         public void Test()
         {
-            var senderAppTxEvent = _fixture.FirstCallApplication.AgentLog.GetTransactionEvents().FirstOrDefault();
+            var senderAppTxEvent = _fixture.FirstCallAppAgentLog.GetTransactionEvents().FirstOrDefault();
             Assert.NotNull(senderAppTxEvent);
 
-            var receiverAppTxEvents = _fixture.SecondCallApplication.AgentLog.GetTransactionEvents().FirstOrDefault();
+            var receiverAppTxEvents = _fixture.SecondCallAppAgentLog.GetTransactionEvents().FirstOrDefault();
             Assert.NotNull(receiverAppTxEvents);
 
-            var senderAppSpanEvents = _fixture.FirstCallApplication.AgentLog.GetSpanEvents();
-            var receiverAppSpanEvents = _fixture.SecondCallApplication.AgentLog.GetSpanEvents();
+            var senderAppSpanEvents = _fixture.FirstCallAppAgentLog.GetSpanEvents();
+            var receiverAppSpanEvents = _fixture.SecondCallAppAgentLog.GetSpanEvents();
 
             Assert.Equal(senderAppTxEvent.IntrinsicAttributes["guid"], receiverAppTxEvents.IntrinsicAttributes["parentId"]);
 
@@ -78,7 +79,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
             }
 
             var senderRootSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/FirstCall/WebRequestCallNext/{nextUrl}").FirstOrDefault();
-            var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "External/localhost/Stream/GET").FirstOrDefault();
+            var externalSpanEvent = senderAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == $"External/{RemoteApplication.DestinationServerName}/Stream/GET").FirstOrDefault();
 
             var receiverRootSpanEvent = receiverAppSpanEvents.Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == "WebTransaction/MVC/SecondCall/WebRequestCallNext/{nextUrl}").FirstOrDefault();
 
@@ -102,8 +103,8 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
                 new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", callCount = 1 }
             };
 
-            var accountId = _fixture.SecondCallApplication.AgentLog.GetAccountId();
-            var appId = _fixture.SecondCallApplication.AgentLog.GetApplicationId();
+            var accountId = _fixture.SecondCallAppAgentLog.GetAccountId();
+            var appId = _fixture.SecondCallAppAgentLog.GetApplicationId();
 
             var receiverExpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -120,8 +121,8 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
                 new Assertions.ExpectedMetric { metricName = @"Supportability/TraceContext/TraceState/NoNrEntry", callCount = 1 }
             };
 
-            var senderActualMetrics = _fixture.FirstCallApplication.AgentLog.GetMetrics();
-            var receiverActualMetrics = _fixture.SecondCallApplication.AgentLog.GetMetrics();
+            var senderActualMetrics = _fixture.FirstCallAppAgentLog.GetMetrics();
+            var receiverActualMetrics = _fixture.SecondCallAppAgentLog.GetMetrics();
 
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(senderExpectedMetrics, senderActualMetrics),

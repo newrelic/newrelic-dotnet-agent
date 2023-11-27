@@ -43,7 +43,11 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<float, double> DatabaseDuration { get; }
         AttributeDefinition<string, string> DbCollection { get; }
         AttributeDefinition<string, string> DbInstance { get; }
+        AttributeDefinition<string, string> DbOperation { get; }
+        AttributeDefinition<string, string> DbServerAddress { get; }
+        AttributeDefinition<long, long> DbServerPort { get; }
         AttributeDefinition<string, string> DbStatement { get; }
+        AttributeDefinition<string, string> DbSystem { get; }
         AttributeDefinition<string, string> DistributedTraceId { get; }
         AttributeDefinition<TimeSpan, double> Duration { get; }
         AttributeDefinition<bool, bool> IsErrorExpected { get; }
@@ -91,6 +95,8 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> RequestUri { get; }
         AttributeDefinition<int?, string> ResponseStatus { get; }
         AttributeDefinition<bool, bool> Sampled { get; }
+        AttributeDefinition<string, string> ServerAddress { get; }
+        AttributeDefinition<long, long> ServerPort { get; }
         AttributeDefinition<SpanCategory, string> SpanCategory { get; }
         AttributeDefinition<string, string> SpanErrorClass { get; }
         AttributeDefinition<string, string> SpanErrorMessage { get; }
@@ -102,6 +108,7 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> SyntheticsMonitorIdForTraces { get; }
         AttributeDefinition<string, string> SyntheticsResourceId { get; }
         AttributeDefinition<string, string> SyntheticsResourceIdForTraces { get; }
+        AttributeDefinition<long, long> ThreadId { get; }
         AttributeDefinition<DateTime, long> Timestamp { get; }
         AttributeDefinition<DateTime, long> TimestampForError { get; }
         AttributeDefinition<TimeSpan, double> TotalTime { get; }
@@ -476,6 +483,12 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
 
+        private AttributeDefinition<long, long> _threadId;
+        public AttributeDefinition<long, long> ThreadId => _threadId ?? (_threadId =
+            AttributeDefinitionBuilder.CreateLong("thread.id", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
         private AttributeDefinition<string, string> _component;
         public AttributeDefinition<string, string> Component => _component ?? (_component =
             AttributeDefinitionBuilder.CreateString("component", AttributeClassification.Intrinsics)
@@ -513,6 +526,18 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
 
+        private AttributeDefinition<string, string> _dbSystem;
+        public AttributeDefinition<string, string> DbSystem => _dbSystem ?? (_dbSystem =
+            AttributeDefinitionBuilder.CreateString("db.system", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _dbOperation;
+        public AttributeDefinition<string, string> DbOperation => _dbOperation ?? (_dbOperation =
+            AttributeDefinitionBuilder.CreateString("db.operation", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
         private AttributeDefinition<string, string> _dbCollection;
         public AttributeDefinition<string, string> DbCollection => _dbCollection ?? (_dbCollection =
             AttributeDefinitionBuilder.CreateString("db.collection", AttributeClassification.AgentAttributes)
@@ -546,7 +571,31 @@ namespace NewRelic.Agent.Core.Attributes
 
         private AttributeDefinition<string, string> _httpMethod;
         public AttributeDefinition<string, string> HttpMethod => _httpMethod ?? (_httpMethod =
-            AttributeDefinitionBuilder.CreateString("http.method", AttributeClassification.AgentAttributes)
+            AttributeDefinitionBuilder.CreateString("http.request.method", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _serverAddress;
+        public AttributeDefinition<string, string> ServerAddress => _serverAddress ?? (_serverAddress =
+            AttributeDefinitionBuilder.CreateString("server.address", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<long, long> _serverPort;
+        public AttributeDefinition<long, long> ServerPort => _serverPort ?? (_serverPort =
+            AttributeDefinitionBuilder.CreateLong("server.port", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _dbServerAddress;
+        public AttributeDefinition<string, string> DbServerAddress => _dbServerAddress ?? (_dbServerAddress =
+            AttributeDefinitionBuilder.CreateString("server.address", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<long, long> _dbServerPort;
+        public AttributeDefinition<long, long> DbServerPort => _dbServerPort ?? (_dbServerPort =
+            AttributeDefinitionBuilder.CreateLong("server.port", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
 

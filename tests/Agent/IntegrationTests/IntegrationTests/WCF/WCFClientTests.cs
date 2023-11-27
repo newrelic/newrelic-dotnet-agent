@@ -38,14 +38,16 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
         [Fact]
         public override void Metrics()
         {
+            var serverName = _bindingToTest == WCFBindingType.NetTcp ? "127.0.0.1" :  "localhost";
+
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric(){ metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncThrowException", callCount = 2 },
-                new Assertions.ExpectedMetric(){ metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncGetData", callCount = 2 /*Begin/End + Event Based Async*/  },
-                new Assertions.ExpectedMetric(){ metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncThrowException", callCount = 4 /*Begin/End + Event Based Async*/ },
-                new Assertions.ExpectedMetric(){ metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncGetData" , callCount = 1 },
-                new Assertions.ExpectedMetric(){ metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncThrowException", callCount = 2  },
-                new Assertions.ExpectedMetric(){ metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncGetData", callCount = 1  },
+                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncThrowException", callCount = 2 },
+                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncGetData", callCount = 2 /*Begin/End + Event Based Async*/  },
+                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncThrowException", callCount = 4 /*Begin/End + Event Based Async*/ },
+                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncGetData" , callCount = 1 },
+                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncThrowException", callCount = 2  },
+                new Assertions.ExpectedMetric(){ metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncGetData", callCount = 1  },
 
                 new Assertions.ExpectedMetric(){ metricName = "DotNet/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/ThrowException",
                     metricScope = "OtherTransaction/Custom/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/ThrowException", callCount = _countClientInvocationMethodsToTest * 2 },
@@ -59,17 +61,17 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
 
             var catExcludedMetrics = new[]
             {
-                new Assertions.ExpectedMetric() { metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncGetData",
+                new Assertions.ExpectedMetric() { metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncGetData",
                     metricScope = "OtherTransaction/Custom/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/GetData" },
-                new Assertions.ExpectedMetric() { metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncGetData",
+                new Assertions.ExpectedMetric() { metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncGetData",
                     metricScope = "OtherTransaction/Custom/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/GetData" },
-                new Assertions.ExpectedMetric() { metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncGetData",
+                new Assertions.ExpectedMetric() { metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncGetData",
                     metricScope = "OtherTransaction/Custom/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/GetData" },
-                new Assertions.ExpectedMetric() { metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncThrowException",
+                new Assertions.ExpectedMetric() { metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Sync_SyncThrowException",
                     metricScope = "OtherTransaction/Custom/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/ThrowException" },
-                new Assertions.ExpectedMetric() { metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncThrowException",
+                new Assertions.ExpectedMetric() { metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.Begin_SyncThrowException",
                     metricScope = "OtherTransaction/Custom/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/ThrowException" },
-                new Assertions.ExpectedMetric() { metricName = $"External/localhost/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncThrowException",
+                new Assertions.ExpectedMetric() { metricName = $"External/{serverName}/Stream/{SharedWcfLibraryNamespace}.IWcfClient.TAP_SyncThrowException",
                     metricScope = "OtherTransaction/Custom/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/ThrowException" },
             };
 
@@ -138,14 +140,16 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client
             var countExpectedCreate = _countClientInvocationMethodsToTest * COUNT_SVC_METHODS      //1 for each WCF Client call
                                     + _countClientInvocationMethodsToTest;                         //1 for GetData's HTTP call on the service
 
+            var serverName = _bindingToTest == WCFBindingType.NetTcp ? "127.0.0.1" :  "localhost";
+
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric(){ callCount = _countClientInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"ExternalApp/localhost/{CATCrossProcessID_Service}/all" },
-                new Assertions.ExpectedMetric(){ callCount = _countClientInvocationMethodsToTest, metricName = $"ExternalTransaction/localhost/{CATCrossProcessID_Service}/WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData"},
-                new Assertions.ExpectedMetric(){ callCount = _countClientInvocationMethodsToTest, metricName = $"ExternalTransaction/localhost/{CATCrossProcessID_Service}/WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData",
+                new Assertions.ExpectedMetric(){ callCount = _countClientInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"ExternalApp/{serverName}/{CATCrossProcessID_Service}/all" },
+                new Assertions.ExpectedMetric(){ callCount = _countClientInvocationMethodsToTest, metricName = $"ExternalTransaction/{serverName}/{CATCrossProcessID_Service}/WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData"},
+                new Assertions.ExpectedMetric(){ callCount = _countClientInvocationMethodsToTest, metricName = $"ExternalTransaction/{serverName}/{CATCrossProcessID_Service}/WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncGetData",
                     metricScope = "OtherTransaction/Custom/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/GetData"},
-                new Assertions.ExpectedMetric(){ callCount = _countClientInvocationMethodsToTest * 2, metricName = $"ExternalTransaction/localhost/{CATCrossProcessID_Service}/WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException"},
-                new Assertions.ExpectedMetric(){ callCount = _countClientInvocationMethodsToTest * 2, metricName = $"ExternalTransaction/localhost/{CATCrossProcessID_Service}/WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException",
+                new Assertions.ExpectedMetric(){ callCount = _countClientInvocationMethodsToTest * 2, metricName = $"ExternalTransaction/{serverName}/{CATCrossProcessID_Service}/WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException"},
+                new Assertions.ExpectedMetric(){ callCount = _countClientInvocationMethodsToTest * 2, metricName = $"ExternalTransaction/{serverName}/{CATCrossProcessID_Service}/WebTransaction/WCF/{SharedWcfLibraryNamespace}.IWcfService.SyncThrowException",
                     metricScope = "OtherTransaction/Custom/ConsoleMultiFunctionApplicationFW.NetFrameworkLibraries.WCF.WCFClient/ThrowException"},
 
                 new Assertions.ExpectedMetric(){ metricName = "Supportability/CrossApplicationTracing/Request/Create/Success" , callCount = countExpectedCreate },//16

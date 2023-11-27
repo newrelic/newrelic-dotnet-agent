@@ -37,6 +37,12 @@ namespace NewRelic.Agent.Core.Utilities
                 { "GenericHostWebHostBuilderExtensionsWrapper",                                                     Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
                 { "NewRelic.Providers.Wrapper.AspNetCore.InvokeActionMethodAsync",                                  Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
 
+                { "BuildCommonServicesWrapper6Plus",                                                                Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
+                { "GenericHostWebHostBuilderExtensionsWrapper6Plus",                                                Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
+                { "InvokeActionMethodAsyncWrapper6Plus",                                                            Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
+                { "ResponseCompressionBodyOnWriteWrapper",                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
+                { "PageActionInvokeHandlerAsyncWrapper6Plus",                                                       Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore6Plus.dll") },
+
                 { "ResolveAppWrapper",                                                                              Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Owin.dll") },
 
                 { "AspNet.CreateEventExecutionStepsTracer",                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNet.dll") },
@@ -67,9 +73,19 @@ namespace NewRelic.Agent.Core.Utilities
                 { "OpenConnectionWrapperAsync",                                                                     Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
 
                 //The NewRelic.Providers.Wrapper.SerilogLogging.dll depends on the Serilog.dll; therefore, it should
-                //only be loaded by the agent when Serilog is used otherwise assembly load exception will occur.
-                { "SerilogCreateLoggerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") },
-                { "SerilogDispatchWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") }
+                //only be loaded by the agent when Serilog is used otherwise an assembly load exception will occur.
+                { "SerilogCreateLoggerWrapper",                                                                      Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") },
+                { "SerilogDispatchWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.SerilogLogging.dll") },
+
+                // Both NewRelic.Providers.Wrapper.MassTransit.dll and NewRelic.Providers.Wrapper.MassTransitLegacy.dll depend on MassTransit assemblies;
+                // therefore, they should only be loaded by the agent when MassTransit is used, otherwise assembly load exceptions will occur.
+                { "TransportConfigWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransit.dll") },
+                { "TransportConfigLegacyWrapper",                                                                    Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.MassTransitLegacy.dll") },
+
+              // Kafka
+                { "KafkaProducerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
+                { "KafkaSerializerWrapper",                                                                        Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") },
+                { "KafkaConsumerWrapper",                                                                          Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Kafka.dll") }
             };
 
             var nonAutoReflectedAssemblies = _dynamicLoadWrapperAssemblies.Values.Distinct().ToList();

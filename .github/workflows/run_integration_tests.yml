@@ -44,7 +44,7 @@ jobs:
       unbounded-tests-matrix: ${{ steps.configure_unbounded_tests_matrix.outputs.matrix }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@1b05615854632b887b69ae1be8cbefe72d3ae423 # v2.6.0
+        uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
         with:
           egress-policy: audit 
 
@@ -55,7 +55,7 @@ jobs:
             namespaces="[ 'AgentFeatures', 'AgentLogs', 'AgentMetrics', 'Api', 'AppDomainCaching', 'AspNetCore', 'BasicInstrumentation', 'CatInbound', 'CatOutbound', 'CodeLevelMetrics', 'Configuration', \
           'CSP', 'CustomAttributes', 'CustomInstrumentation', 'DataTransmission', 'DistributedTracing', 'Errors', 'HttpClientInstrumentation', 'InfiniteTracing', 'Logging.ContextData', \
           'Logging.HsmAndCsp', 'Logging.LocalDecoration', 'Logging.LogLevelDetection', 'Logging.MaxSamplesStored', 'Logging.MetricsAndForwarding', 'Logging.ZeroMaxSamplesStored', \
-          'Owin', 'ReJit.NetCore', 'ReJit.NetFramework', 'RequestHandling', 'RequestHeadersCapture.AspNet', 'RequestHeadersCapture.AspNetCore', 'RequestHeadersCapture.EnvironmentVariables', \
+          'Owin', 'MassTransit', 'ReJit.NetCore', 'ReJit.NetFramework', 'RequestHandling', 'RequestHeadersCapture.AspNet', 'RequestHeadersCapture.AspNetCore', 'RequestHeadersCapture.EnvironmentVariables', \
           'RequestHeadersCapture.Owin', 'RequestHeadersCapture.WCF', 'RestSharp', 'WCF.Client.IIS.ASPDisabled', 'WCF.Client.IIS.ASPEnabled', 'WCF.Client.Self', \
           'WCF.Service.IIS.ASPDisabled', 'WCF.Service.IIS.ASPEnabled', 'WCF.Service.Self' ]"
           else
@@ -100,7 +100,7 @@ jobs:
       
     steps:
       - name: Checkout
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
 
@@ -228,7 +228,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
 

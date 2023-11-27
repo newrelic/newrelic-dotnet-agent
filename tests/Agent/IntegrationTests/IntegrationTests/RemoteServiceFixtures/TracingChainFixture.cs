@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
@@ -17,8 +16,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         private string _applicationDirectoryName;
         private string _executableName;
         private string _targetFramework;
+        private AgentLogFile _recieverAppAgentLog;
 
         public RemoteApplication ReceiverApplication { get; set; }
+        public AgentLogFile ReceiverAppAgentLog => _recieverAppAgentLog ?? (_recieverAppAgentLog = new AgentLogFile(ReceiverApplication.DefaultLogFileDirectoryPath, TestLogger, string.Empty, Timing.TimeToWaitForLog));
         public RemoteWebApplication SenderApplication => (RemoteWebApplication)RemoteApplication;
 
         public TracingChainFixture(string ApplicationDirectoryName, string ExecutableName, string TargetFramework) : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))
@@ -37,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             base.Initialize();
 
-            WriteApplicationAgentLogToTestLogger(nameof(ReceiverApplication), ReceiverApplication);
+            WriteApplicationAgentLogToTestLogger(nameof(ReceiverApplication), ReceiverAppAgentLog);
         }
 
         public override void ShutdownRemoteApplication()
@@ -54,14 +55,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             base.Dispose();
         }
 
-        private void WriteApplicationAgentLogToTestLogger(string applicationName, RemoteApplication application)
+        private void WriteApplicationAgentLogToTestLogger(string applicationName, AgentLogFile agentLog)
         {
             TestLogger?.WriteLine("");
             TestLogger?.WriteLine($"===== Begin {applicationName} log file =====");
 
             try
             {
-                TestLogger?.WriteLine(application.AgentLog.GetFullLogAsString());
+                TestLogger?.WriteLine(agentLog.GetFullLogAsString());
             }
             catch (Exception)
             {
@@ -109,7 +110,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public HttpResponseHeaders ExecuteTraceRequestChainHttpWebRequest(IEnumerable<KeyValuePair<string, string>> headers)
         {
             const string action = "Index";
-            var queryString = $"?chainedServerName={ReceiverApplication.DestinationServerName}&chainedPortNumber={ReceiverApplication.Port}&chainedAction={action}";
+            var queryString = $"?chainedServerName={DestinationServerName}&chainedPortNumber={ReceiverApplication.Port}&chainedAction={action}";
 
             var address = $"http://{DestinationServerName}:{Port}/Default/ChainedWebRequest{queryString}";
 
@@ -130,8 +131,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void ExecuteTraceRequestChainHttpClient(IEnumerable<KeyValuePair<string, string>> headers = null)
         {
             // the test calls the senderUrl, passing in the receiverUrl as a parameter
-            var senderBaseUrl = $"http://localhost:{RemoteApplication.Port}";
-            var receiverBaseUrl = $"http://localhost:{ReceiverApplication.Port}";
+            var senderBaseUrl = $"http://{DestinationServerName}:{RemoteApplication.Port}";
+            var receiverBaseUrl = $"http://{DestinationServerName}:{ReceiverApplication.Port}";
 
             var receiverUrl = $"{receiverBaseUrl}/api/CallEnd";
             var senderUrl = $"{senderBaseUrl}/api/CallNext?nextUrl={receiverUrl}";
@@ -143,8 +144,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void ExecuteTraceRequestChainRestSharp(IEnumerable<KeyValuePair<string, string>> headers)
         {
-            var secondCallUrl = $"http://localhost:{ReceiverApplication.Port}/api/RestAPI";
-            var firstCallUrl = $"http://localhost:{SenderApplication.Port}/DistributedTracing/MakeExternalCallUsingRestClient?externalCallUrl={secondCallUrl}";
+            var secondCallUrl = $"http://{DestinationServerName}:{ReceiverApplication.Port}/api/RestAPI";
+            var firstCallUrl = $"http://{DestinationServerName}:{SenderApplication.Port}/DistributedTracing/MakeExternalCallUsingRestClient?externalCallUrl={secondCallUrl}";
 
             GetStringAndAssertEqual(firstCallUrl, "Worked", headers);
         }

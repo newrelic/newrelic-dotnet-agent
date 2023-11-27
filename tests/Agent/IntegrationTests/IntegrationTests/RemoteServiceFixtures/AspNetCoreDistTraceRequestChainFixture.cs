@@ -18,6 +18,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public RemoteService FirstCallApplication { get; set; }
         public RemoteService SecondCallApplication { get; set; }
 
+        private AgentLogFile _firstCallAppAgentLog;
+        private AgentLogFile _secondCallAppAgentLog;
+
+        public AgentLogFile FirstCallAppAgentLog => _firstCallAppAgentLog ?? (_firstCallAppAgentLog = new AgentLogFile(FirstCallApplication.DefaultLogFileDirectoryPath, TestLogger, string.Empty, Timing.TimeToWaitForLog));
+        public AgentLogFile SecondCallAppAgentLog => _secondCallAppAgentLog ?? (_secondCallAppAgentLog = new AgentLogFile(SecondCallApplication.DefaultLogFileDirectoryPath, TestLogger, string.Empty, Timing.TimeToWaitForLog));
+
         public AspNetCoreDistTraceRequestChainFixture()
             : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net7.0", ApplicationType.Bounded, true, true, true))
         {
@@ -41,9 +47,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void ExecuteTraceRequestChain(string firstAppAction, string secondAppAction, string thirdAppAction, IEnumerable<KeyValuePair<string, string>> headers = null)
         {
-            var firstCallBaseUrl = $"http://localhost:{FirstCallApplication.Port}/FirstCall";
-            var secondCallBaseUrl = $"http://localhost:{SecondCallApplication.Port}/SecondCall";
-            var lastCallBaseUrl = $"http://localhost:{RemoteApplication.Port}/LastCall";
+            var firstCallBaseUrl = $"http://{DestinationServerName}:{FirstCallApplication.Port}/FirstCall";
+            var secondCallBaseUrl = $"http://{DestinationServerName}:{SecondCallApplication.Port}/SecondCall";
+            var lastCallBaseUrl = $"http://{DestinationServerName}:{RemoteApplication.Port}/LastCall";
 
             var lastCallUrl = $"{lastCallBaseUrl}/{thirdAppAction}";
             var secondCallUrl = $"{secondCallBaseUrl}/{secondAppAction}?nextUrl={lastCallUrl}";
@@ -82,18 +88,18 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             base.Initialize();
 
-            WriteApplicationAgentLogToTestLogger(nameof(FirstCallApplication), FirstCallApplication);
-            WriteApplicationAgentLogToTestLogger(nameof(SecondCallApplication), SecondCallApplication);
+            WriteApplicationAgentLogToTestLogger(nameof(FirstCallApplication), FirstCallAppAgentLog);
+            WriteApplicationAgentLogToTestLogger(nameof(SecondCallApplication), SecondCallAppAgentLog);
         }
 
-        private void WriteApplicationAgentLogToTestLogger(string applicationName, RemoteService application)
+        private void WriteApplicationAgentLogToTestLogger(string applicationName, AgentLogFile agentLog)
         {
             TestLogger?.WriteLine("");
             TestLogger?.WriteLine($"===== Begin {applicationName} log file =====");
 
             try
             {
-                TestLogger?.WriteLine(application.AgentLog.GetFullLogAsString());
+                TestLogger?.WriteLine(agentLog.GetFullLogAsString());
             }
             catch (Exception)
             {

@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -47,8 +46,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         public readonly RemoteApplication RemoteApplication;
 
         public string UniqueFolderName { get { return RemoteApplication.UniqueFolderName; } }
+        private string AgentLogFileName { get { return CommonUtils.GetAgentLogFileNameFromNewRelicConfig(DestinationNewRelicConfigFilePath); } }
 
-        public AgentLogFile AgentLog { get { return RemoteApplication.AgentLog; } }
+
+        private AgentLogFile _agentLogFile;
+        public bool AgentLogExpected { get; set; } = true;
+
+        public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, TestLogger, AgentLogFileName, Timing.TimeToWaitForLog, AgentLogExpected));
+
 
         public ProfilerLogFile ProfilerLog { get { return RemoteApplication.ProfilerLog; } }
 
@@ -325,17 +330,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 finally
                 {
-                    TestLogger?.WriteLine("===== Begin Agent log file =====");
-                    try
+                    if (AgentLogExpected)
                     {
-                        TestLogger?.WriteLine(AgentLog.GetFullLogAsString());
+                        TestLogger?.WriteLine("===== Begin Agent log file =====");
+                        try
+                        {
+                            TestLogger?.WriteLine(AgentLog.GetFullLogAsString());
+                        }
+                        catch (Exception)
+                        {
+                            TestLogger?.WriteLine("No log file found.");
+                        }
+                        TestLogger?.WriteLine("----- End of Agent log file -----");
                     }
-                    catch (Exception)
-                    {
-                        TestLogger?.WriteLine("No log file found.");
-                    }
-                    TestLogger?.WriteLine("----- End of Agent log file -----");
-
                 }
             }
         }

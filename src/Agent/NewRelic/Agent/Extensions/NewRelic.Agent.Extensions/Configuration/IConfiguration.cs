@@ -182,6 +182,7 @@ namespace NewRelic.Agent.Configuration
         string ProcessHostDisplayName { get; }
         int DatabaseStatementCacheCapacity { get; }
         bool ForceSynchronousTimingCalculationHttpClient { get; }
+        bool EnableAspNetCore6PlusBrowserInjection { get; }
         bool ExcludeNewrelicHeader { get; }
         bool ApplicationLoggingEnabled { get; }
         bool LogMetricsCollectorEnabled { get; }
@@ -204,5 +205,6 @@ namespace NewRelic.Agent.Configuration
         TimeSpan SqlTracesHarvestCycle { get; }
         TimeSpan UpdateLoadedModulesCycle { get; }
         TimeSpan StackExchangeRedisCleanupCycle { get; }
+        bool LoggingEnabled { get; }
     }
 }

@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Api
 {
@@ -37,6 +38,17 @@ namespace NewRelic.Agent.Api
         /// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
         /// <returns></returns>
         ITransaction CreateTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, Action wrapperOnCreate = null);
+
+
+        /// <summary>
+        /// Create a new transaction for processing a request, conforming to the naming requirements of the Kafka spec.
+        /// </summary>
+        /// <param name="destinationType"></param>
+        /// <param name="brokerVendorName">The name of the message broker vendor. Must not be null.</param>
+        /// <param name="destination">The destination queue of the message being handled. Can be null.</param>
+        /// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
+        /// <returns></returns>
+        ITransaction CreateKafkaTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, Action wrapperOnCreate = null);
 
         /// <summary>
         /// Create a new transaction for processing a request.
@@ -91,6 +103,19 @@ namespace NewRelic.Agent.Api
         /// <param name="contentType">The type of content in the stream.</param>
         /// <param name="requestPath">The path of the request</param>
         Stream TryGetStreamInjector(Stream stream, Encoding encoding, string contentType, string requestPath);
+
+        /// <summary>
+        /// Used by AspNetCore6Plus, injects the RUM script if various conditions are met. Assumes (perhaps boldly) that the
+        /// page content is UTF-8 encoded.
+        /// 
+        /// This method should be called as late as possible (i.e. just before the stream is read) to ensure that the metadata passed in (encoding, contentType, etc) is no longer volatile.
+        /// </summary>
+        /// <param name="contentType">The type of content in the stream.</param>
+        /// <param name="requestPath">The path of the request</param>
+        /// <param name="buffer">A UTF-8 encoded buffer of the content for this request</param>
+        /// <param name="baseStream">The stream into which the script (and buffer) should be injected</param>
+        /// <returns></returns>
+        Task TryInjectBrowserScriptAsync(string contentType, string requestPath, byte[] buffer, Stream baseStream);
 
         /// <summary>
         /// Returns the Trace Metadata of the currently executing transaction.

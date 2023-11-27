@@ -60,7 +60,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 }
             }
 
-            Assert.True(false, @"Did not receive a stable response (less than 1 second) after 5 minutes of attempts every 6 seconds.");
+            Assert.Fail(@"Did not receive a stable response (less than 1 second) after 5 minutes of attempts every 6 seconds.");
         }
 
         public void Get()

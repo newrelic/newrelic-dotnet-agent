@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<extension xmlns="urn:newrelic-extension">
+
+  <instrumentation>
+
+    <tracerFactory name="TransportConfigLegacyWrapper">
+
+      <match assemblyName="MassTransit" className="MassTransit.Registration.TransportRegistrationBusFactory`1" minVersion="7.1.0" maxVersion="8.0.0">
+        <exactMethodMatcher methodName="CreateBus" />
+      </match>
+      <match assemblyName="MassTransit" className="MassTransit.BusFactoryExtensions" minVersion="7.1.0" maxVersion="8.0.0">
+        <exactMethodMatcher methodName="Build" parameters="MassTransit.IBusFactory,MassTransit.Configuration.IBusConfiguration,System.Collections.Generic.IEnumerable`1[GreenPipes.ValidationResult]" />
+      </match>
+    </tracerFactory>
+
+  </instrumentation>
+</extension>
