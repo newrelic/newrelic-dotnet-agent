@@ -69,7 +69,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
                     configModifier.ConfigureFasterSpanEventsHarvestCycle(15);
 
                     configModifier.ForceTransactionTraces();
-                    configModifier.SetLogLevel("finest");
                 },
                 exerciseApplication: () =>
                 {
