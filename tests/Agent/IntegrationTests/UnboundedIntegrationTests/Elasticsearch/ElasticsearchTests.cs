@@ -43,7 +43,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
 
-            //_fixture.AddCommand("RootCommands LaunchDebugger");
             _fixture.AddCommand($"ElasticsearchExerciser SetClient {clientType}");
 
             // Async operations
