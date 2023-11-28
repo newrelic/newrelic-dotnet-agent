@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 
@@ -43,6 +43,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
             _fixture.SetTimeout(TimeSpan.FromMinutes(2));
 
+            //_fixture.AddCommand("RootCommands LaunchDebugger");
             _fixture.AddCommand($"ElasticsearchExerciser SetClient {clientType}");
 
             // Async operations
@@ -175,9 +176,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Elasticsearch
 
             var operationDatastoreSpans = spanEvents.Where(@event => @event.IntrinsicAttributes["traceId"].ToString().Equals(traceId) && @event.IntrinsicAttributes["name"].ToString().Contains("Datastore/statement/Elasticsearch"));
 
-            var operationDatastoreAgentAttributes = operationDatastoreSpans.FirstOrDefault().AgentAttributes;
+            var operationDatastoreAgentAttributes = operationDatastoreSpans.FirstOrDefault()?.AgentAttributes;
 
-            var uri = operationDatastoreAgentAttributes.Where(x => x.Key == "peer.address").FirstOrDefault().Value;
+            var uri = operationDatastoreAgentAttributes?.Where(x => x.Key == "peer.address").FirstOrDefault().Value;
 
             NrAssert.Multiple
             (
