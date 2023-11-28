@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [10.20.0](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.19.2...v10.20.0) (2023-11-21)
+
+
+### New features
+
+* Allow the agent to run in environments with read-only filesystems. ([#2085](https://github.com/newrelic/newrelic-dotnet-agent/issues/2085)) ([09ab29d](https://github.com/newrelic/newrelic-dotnet-agent/commit/09ab29dabeef358cb8c6c035c4d726f5c14f0029))
+
+
+### Fixes
+
+* Defensively handle null source address in MassTransit instrumentation. ([#2055](https://github.com/newrelic/newrelic-dotnet-agent/issues/2055)) ([0249582](https://github.com/newrelic/newrelic-dotnet-agent/commit/024958260f628da018be883eb1b446713091760e))
+* During browser agent injection, don't set ContentLength if headers have already been sent. Resolves [#2051](https://github.com/newrelic/newrelic-dotnet-agent/issues/2051) ([#2059](https://github.com/newrelic/newrelic-dotnet-agent/issues/2059)) ([c191aa6](https://github.com/newrelic/newrelic-dotnet-agent/commit/c191aa6035de4d0d95b94d8adbc80560745d06e0))
+* Remove dependency on Serilog.Expressions. Resolves [#2083](https://github.com/newrelic/newrelic-dotnet-agent/issues/2083). ([9e355f3](https://github.com/newrelic/newrelic-dotnet-agent/commit/9e355f3507130394e0660e1eb7c99e6d368f6bfc))
+
 ## [10.19.2](https://github.com/newrelic/newrelic-dotnet-agent/compare/v10.19.1...v10.19.2) (2023-11-09)
 
 
