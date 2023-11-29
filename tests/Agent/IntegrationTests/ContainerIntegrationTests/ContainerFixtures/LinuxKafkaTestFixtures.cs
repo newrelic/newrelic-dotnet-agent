@@ -13,8 +13,9 @@ public abstract class LinuxKafkaTestFixtureBase : ContainerFixture
         string distroTag,
         ContainerApplication.Architecture containerArchitecture,
         string dockerfile,
-        string dotnetVersion) :
-        base(new ContainerApplication(applicationDirectoryName, distroTag, containerArchitecture, dotnetVersion, dockerfile))
+        string dotnetVersion,
+        string dockerComposeFile = "docker-compose-kafka.yml") :
+        base(new ContainerApplication(applicationDirectoryName, distroTag, containerArchitecture, dotnetVersion, dockerfile, dockerComposeFile))
     {
     }
 

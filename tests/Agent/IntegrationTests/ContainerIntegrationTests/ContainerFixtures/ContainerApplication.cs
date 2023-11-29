@@ -16,6 +16,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
 public class ContainerApplication : RemoteApplication
 {
     private readonly string _dockerfile;
+    private readonly string _dockerComposeFile;
     private readonly string _dotnetVersion;
     private readonly string _distroTag;
     private readonly string _targetArch;
@@ -36,13 +37,16 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public ContainerApplication(string applicationDirectoryName, string distroTag, Architecture containerArchitecture, string dotnetVersion, string dockerfile) : base(applicationType: ApplicationType.Container, isCoreApp: true)
+    public ContainerApplication(string applicationDirectoryName, string distroTag, Architecture containerArchitecture,
+        string dotnetVersion, string dockerfile, string dockerComposeFile = "docker-compose.yml") : base(applicationType: ApplicationType.Container, isCoreApp: true)
     {
         ApplicationDirectoryName = applicationDirectoryName;
         _dockerComposeServiceName = applicationDirectoryName;
         _distroTag = distroTag;
         _dotnetVersion = dotnetVersion;
         _dockerfile = dockerfile;
+        _dockerComposeFile = dockerComposeFile;
+
         DockerDependencies = new List<string>();
 
         switch (containerArchitecture)
@@ -75,7 +79,7 @@ public class ContainerApplication : RemoteApplication
     {
         CleanupContainer();
 
-        var arguments = $"compose up --abort-on-container-exit --force-recreate {_dockerComposeServiceName}";
+        var arguments = $"compose -f {_dockerComposeFile} up --abort-on-container-exit --force-recreate {_dockerComposeServiceName}";
 
         var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
         var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;
