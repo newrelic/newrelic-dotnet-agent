@@ -23,6 +23,7 @@
 #include <string>
 #include <thread>
 #include <utility>
+#include <codecvt>
 
 #ifdef PAL_STDCPP_COMPAT
 #include "UnixSystemCalls.h"
@@ -1091,6 +1092,8 @@ namespace NewRelic { namespace Profiler {
                     xstring_t logfilename(nrlog::DefaultFileLogLocation(_systemCalls).GetPathAndFileName());
                     std::string wlogfilename(std::begin(logfilename), std::end(logfilename));
                     nrlog::StdLog.get_dest().open(wlogfilename);
+                    // Imbue with locale and codecvt facet is used to allow the log file to write non-ascii chars to the log
+                    nrlog::StdLog.get_dest().imbue(std::locale(std::locale::classic(), new std::codecvt_utf8<wchar_t>));
                     nrlog::StdLog.get_dest().exceptions(std::wostream::failbit | std::wostream::badbit);
                     LogInfo("Logger initialized.");
                 }
