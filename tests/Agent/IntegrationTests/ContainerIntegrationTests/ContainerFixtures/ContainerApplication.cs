@@ -16,6 +16,7 @@ namespace NewRelic.Agent.ContainerIntegrationTests.ContainerFixtures;
 public class ContainerApplication : RemoteApplication
 {
     private readonly string _dockerfile;
+    private readonly string _dockerComposeFile;
     private readonly string _dotnetVersion;
     private readonly string _distroTag;
     private readonly string _targetArch;
@@ -36,13 +37,16 @@ public class ContainerApplication : RemoteApplication
         }
     }
 
-    public ContainerApplication(string applicationDirectoryName, string distroTag, Architecture containerArchitecture, string dotnetVersion, string dockerfile) : base(applicationType: ApplicationType.Container, isCoreApp: true)
+    public ContainerApplication(string applicationDirectoryName, string distroTag, Architecture containerArchitecture,
+        string dotnetVersion, string dockerfile, string dockerComposeFile = "docker-compose.yml") : base(applicationType: ApplicationType.Container, isCoreApp: true)
     {
         ApplicationDirectoryName = applicationDirectoryName;
         _dockerComposeServiceName = applicationDirectoryName;
         _distroTag = distroTag;
         _dotnetVersion = dotnetVersion;
         _dockerfile = dockerfile;
+        _dockerComposeFile = dockerComposeFile;
+
         DockerDependencies = new List<string>();
 
         switch (containerArchitecture)
@@ -75,7 +79,7 @@ public class ContainerApplication : RemoteApplication
     {
         CleanupContainer();
 
-        var arguments = $"compose up --abort-on-container-exit --force-recreate {_dockerComposeServiceName}";
+        var arguments = $"compose -f {_dockerComposeFile} -p {_dockerComposeServiceName.ToLower()} up --abort-on-container-exit --remove-orphans --force-recreate {_dockerComposeServiceName}";
 
         var newRelicHomeDirectoryPath = DestinationNewRelicHomeDirectoryPath;
         var profilerLogDirectoryPath = DefaultLogFileDirectoryPath;
@@ -179,30 +183,18 @@ public class ContainerApplication : RemoteApplication
 
         // stop and remove the container, no need to kill RemoteProcess, as it will die when this command runs
         // wait up to 5 seconds for the app to terminate gracefully before forcefully closing it
-        Process.Start("docker", $"container stop {ContainerName} -t 5");
+        Process.Start("docker", $"compose -p {_dockerComposeServiceName.ToLower()} down --rmi local --remove-orphans");
 
         Thread.Sleep(TimeSpan.FromSeconds(5)); // give things a chance to settle before destroying the container
-
-        CleanupContainer();
     }
 
     private void CleanupContainer()
     {
         Console.WriteLine($"[{AppName} {DateTime.Now}] Cleaning up container and images related to {ContainerName} container.");
         TestLogger?.WriteLine($"[{AppName}] Cleaning up container and images related to {ContainerName} container.");
-        // ensure there's no stray containers or images laying around
-        Process.Start("docker", $"container rm --force {ContainerName}");
-        Process.Start("docker", $"image rm --force {ContainerName}");
 
-        if (DockerDependencies.Count > 0)
-        {
-            foreach (var dep in DockerDependencies)
-            {
-                Console.WriteLine($"[{AppName} {DateTime.Now}] Removing dependent container: {dep}.");
-                TestLogger?.WriteLine($"[{AppName}] Removing dependent container: {dep}.");
-                Process.Start("docker", $"container rm --force {dep}");
-            }
-        }
+        Process.Start("docker", $"compose -p {_dockerComposeServiceName.ToLower()} down --rmi local --remove-orphans");
+
 
 #if DEBUG
         // Cleanup the networks with no attached containers. Mainly for testings on dev laptops - they can build up and block runs.
