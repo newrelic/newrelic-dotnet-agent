@@ -70,7 +70,6 @@ services:
            
 networks:
     default:
-        name: ${NETWORK_NAME}
         driver: bridge
         driver_opts:
           com.docker.network.bridge.enable_icc: "true"
