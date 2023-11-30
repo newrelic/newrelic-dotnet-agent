@@ -204,10 +204,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     #endregion
 
     #region System.Data.SqlClient (.NET Core/5+ only)
+
+    // Set to net7 since the package this relies on does not currently support net8.
     [NetCoreTest]
-    public class MsSqlQueryParamTests_SystemDataSqlClient_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MsSqlQueryParamTests_SystemDataSqlClient_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public MsSqlQueryParamTests_SystemDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MsSqlQueryParamTests_SystemDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -217,10 +219,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
+    // Set to net7 since the package this relies on does not currently support net8.
     [NetCoreTest]
-    public class MsSqlQueryParamTests_SystemDataSqlClient_NoAtSigns_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MsSqlQueryParamTests_SystemDataSqlClient_NoAtSigns_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public MsSqlQueryParamTests_SystemDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MsSqlQueryParamTests_SystemDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -317,10 +320,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
+    // Set to net7 since the package this relies on does not currently support net8.
     [NetCoreTest]
-    public class MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MsSqlQueryParamTests_MicrosoftDataSqlClient_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
@@ -330,10 +334,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
         }
     }
 
+    // Set to net7 since the package this relies on does not currently support net8.
     [NetCoreTest]
-    public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCoreLatest>
+    public class MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest : MsSqlQueryParamTestsBase<ConsoleDynamicMethodFixtureCore70>
     {
-        public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCoreLatest fixture, ITestOutputHelper output)
+        public MsSqlQueryParamTests_MicrosoftDataSqlClient_NoAtSigns_CoreLatest(ConsoleDynamicMethodFixtureCore70 fixture, ITestOutputHelper output)
             : base(
                   fixture: fixture,
                   output: output,
